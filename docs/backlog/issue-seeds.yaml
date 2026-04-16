@@ -1,0 +1,87 @@
+issue_seed_version: "1.2"
+issues:
+  - id: GAP-001
+    title: Trial-First Planning Alignment
+    type: AFK
+    blocked_by: []
+    user_stories: [1, 18, 31]
+  - id: GAP-002
+    title: Runnable Skeleton And Verification Bootstrap
+    type: AFK
+    blocked_by: [GAP-001]
+    user_stories: [1, 18, 38]
+  - id: GAP-003
+    title: Sample Control Pack And Repo Admission Minimums
+    type: AFK
+    blocked_by: [GAP-001]
+    user_stories: [2, 18, 19, 38]
+  - id: GAP-004
+    title: Deterministic Task Intake And Repo Resolution
+    type: AFK
+    blocked_by: [GAP-002, GAP-003]
+    user_stories: [1, 2, 23, 24, 39]
+  - id: GAP-005
+    title: Read-Only Governed Tool Runner
+    type: AFK
+    blocked_by: [GAP-004]
+    user_stories: [3, 8, 18, 25, 31]
+  - id: GAP-006
+    title: Evidence Timeline And Task Output
+    type: AFK
+    blocked_by: [GAP-004, GAP-005]
+    user_stories: [13, 14, 27, 39]
+  - id: GAP-007
+    title: CLI Or Scripted Trial Entrypoint
+    type: AFK
+    blocked_by: [GAP-004, GAP-005, GAP-006]
+    user_stories: [1, 5, 18, 37, 39]
+  - id: GAP-008
+    title: Isolated Workspace Allocation
+    type: AFK
+    blocked_by: [GAP-007]
+    user_stories: [17, 18, 37, 39]
+  - id: GAP-009
+    title: Write Policy Defaults And Approval Decision
+    type: HITL
+    blocked_by: [GAP-003, GAP-008]
+    user_stories: [20, 28, 40]
+  - id: GAP-010
+    title: Approval Service And Interruption Flow
+    type: AFK
+    blocked_by: [GAP-008, GAP-009]
+    user_stories: [7, 9, 20, 27, 28, 40]
+  - id: GAP-011
+    title: Write-Side Tool Governance And Rollback References
+    type: AFK
+    blocked_by: [GAP-008, GAP-009, GAP-010]
+    user_stories: [8, 9, 10, 25, 26, 31]
+  - id: GAP-012
+    title: Quick And Full Verification Runner
+    type: AFK
+    blocked_by: [GAP-011]
+    user_stories: [2, 11, 12, 16, 36]
+  - id: GAP-013
+    title: Delivery Handoff And Replay References
+    type: AFK
+    blocked_by: [GAP-006, GAP-011, GAP-012]
+    user_stories: [14, 35, 36]
+  - id: GAP-014
+    title: Eval And Trace Baseline
+    type: AFK
+    blocked_by: [GAP-006, GAP-012, GAP-013]
+    user_stories: [15, 33]
+  - id: GAP-015
+    title: Second-Repo Reuse Pilot
+    type: AFK
+    blocked_by: [GAP-003, GAP-007, GAP-012, GAP-014]
+    user_stories: [2, 18, 37, 38]
+  - id: GAP-016
+    title: Minimal Approval And Evidence Console
+    type: AFK
+    blocked_by: [GAP-010, GAP-013]
+    user_stories: [27, 34, 40]
+  - id: GAP-017
+    title: Waiver Recovery And Control Rollback Runbooks
+    type: AFK
+    blocked_by: [GAP-014, GAP-015, GAP-016]
+    user_stories: [27, 29, 40]

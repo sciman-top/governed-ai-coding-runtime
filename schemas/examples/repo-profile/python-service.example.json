@@ -1,0 +1,164 @@
+{
+  "schema_version": "1.0",
+  "repo_id": "python-service-sample",
+  "display_name": "Python Service Sample",
+  "primary_language": "python",
+  "repo_root_locator": {
+    "kind": "workspace_anchor",
+    "value": "python-service"
+  },
+  "build_commands": [
+    {
+      "id": "build-wheel",
+      "command": "uv build",
+      "required": true,
+      "description": "Build the distributable package."
+    }
+  ],
+  "test_commands": [
+    {
+      "id": "pytest-all",
+      "command": "uv run pytest -q",
+      "required": true,
+      "description": "Run unit and integration tests."
+    }
+  ],
+  "lint_commands": [
+    {
+      "id": "ruff-check",
+      "command": "uv run ruff check .",
+      "required": true,
+      "description": "Static lint gate."
+    }
+  ],
+  "typecheck_commands": [
+    {
+      "id": "pyright",
+      "command": "uv run pyright",
+      "required": true,
+      "description": "Type-check the service."
+    }
+  ],
+  "contract_commands": [
+    {
+      "id": "api-contracts",
+      "command": "uv run pytest tests/contracts -q",
+      "required": true,
+      "description": "Run API contract regression checks."
+    }
+  ],
+  "invariant_commands": [
+    {
+      "id": "migration-safety",
+      "command": "uv run pytest tests/invariants -q",
+      "required": false,
+      "description": "Verify persistence invariants."
+    }
+  ],
+  "risk_defaults": {
+    "default_write_tier": "medium",
+    "blocked_command_patterns": [
+      "git reset --hard",
+      "rm -rf",
+      "dropdb"
+    ],
+    "approval_required_command_patterns": [
+      "alembic upgrade head",
+      "uv publish"
+    ]
+  },
+  "approval_defaults": {
+    "medium_write_requires_approval": true,
+    "high_requires_explicit_approval": true
+  },
+  "tool_allowlist": [
+    "shell",
+    "apply_patch",
+    "rg",
+    "git",
+    "python"
+  ],
+  "path_policies": {
+    "read_allow": [
+      "src/**",
+      "tests/**",
+      "docs/**",
+      "pyproject.toml",
+      "README.md"
+    ],
+    "write_allow": [
+      "src/**",
+      "tests/**",
+      "docs/**",
+      "pyproject.toml",
+      "README.md"
+    ],
+    "blocked": [
+      "infra/prod/**",
+      "secrets/**",
+      ".env*"
+    ]
+  },
+  "branch_policy": {
+    "default_branch": "main",
+    "working_branch_prefix": "codex/",
+    "allow_direct_push": false
+  },
+  "delivery_format": {
+    "summary_template": "goal-plan-changes-verification-risks",
+    "include_patch": false,
+    "include_pr_body": true
+  },
+  "repo_map_strategy": "hybrid",
+  "quick_gate_commands": [
+    {
+      "id": "quick-lint",
+      "command": "uv run ruff check src tests",
+      "required": true,
+      "description": "Fast lint gate."
+    },
+    {
+      "id": "quick-test",
+      "command": "uv run pytest tests/unit -q",
+      "required": true,
+      "description": "Fast unit smoke."
+    }
+  ],
+  "full_gate_commands": [
+    {
+      "id": "build",
+      "command": "uv build",
+      "required": true,
+      "description": "Canonical build gate."
+    },
+    {
+      "id": "test",
+      "command": "uv run pytest -q",
+      "required": true,
+      "description": "Canonical test gate."
+    },
+    {
+      "id": "contract",
+      "command": "uv run pytest tests/contracts -q",
+      "required": true,
+      "description": "Canonical contract gate."
+    },
+    {
+      "id": "hotspot",
+      "command": "uv run python -m scripts.doctor",
+      "required": false,
+      "not_applicable": true,
+      "description": "Hotspot gate placeholder until a doctor command exists."
+    }
+  ],
+  "extra_eval_suites": [
+    "python-service-smoke",
+    "api-regression"
+  ],
+  "context_files": [
+    "README.md",
+    "docs/architecture.md",
+    "docs/runbooks/release.md"
+  ],
+  "reviewer_handoff_template": "Include API surface changes, migration notes, and rollback commands."
+}

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-agent-platform.local/schemas/verification-gates.schema.json",
+  "title": "Verification Gates Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "gate_levels",
+    "canonical_order",
+    "escalation_rules",
+    "required_output_fields"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "gate_levels": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "enum": [
+          "quick",
+          "full"
+        ],
+        "type": "string"
+      }
+    },
+    "canonical_order": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "enum": [
+          "build",
+          "test",
+          "contract_or_invariant",
+          "hotspot_or_health_check"
+        ],
+        "type": "string"
+      }
+    },
+    "escalation_rules": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "required_output_fields": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

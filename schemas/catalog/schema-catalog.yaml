@@ -1,0 +1,44 @@
+schema_catalog_version: "1.1"
+items:
+  - name: control-registry
+    path: schemas/jsonschema/control-registry.schema.json
+    source_spec: docs/specs/control-registry-spec.md
+  - name: repo-profile
+    path: schemas/jsonschema/repo-profile.schema.json
+    source_spec: docs/specs/repo-profile-spec.md
+  - name: tool-contract
+    path: schemas/jsonschema/tool-contract.schema.json
+    source_spec: docs/specs/tool-contract-spec.md
+  - name: hook-contract
+    path: schemas/jsonschema/hook-contract.schema.json
+    source_spec: docs/specs/hook-contract-spec.md
+  - name: skill-manifest
+    path: schemas/jsonschema/skill-manifest.schema.json
+    source_spec: docs/specs/skill-manifest-spec.md
+  - name: knowledge-source
+    path: schemas/jsonschema/knowledge-source.schema.json
+    source_spec: docs/specs/knowledge-source-spec.md
+  - name: waiver-and-exception
+    path: schemas/jsonschema/waiver-and-exception.schema.json
+    source_spec: docs/specs/waiver-and-exception-spec.md
+  - name: provenance-and-attestation
+    path: schemas/jsonschema/provenance-and-attestation.schema.json
+    source_spec: docs/specs/provenance-and-attestation-spec.md
+  - name: repo-map-context-shaping
+    path: schemas/jsonschema/repo-map-context-shaping.schema.json
+    source_spec: docs/specs/repo-map-context-shaping-spec.md
+  - name: risk-tier-approval-policy
+    path: schemas/jsonschema/risk-tier-approval-policy.schema.json
+    source_spec: docs/specs/risk-tier-and-approval-spec.md
+  - name: task-lifecycle
+    path: schemas/jsonschema/task-lifecycle.schema.json
+    source_spec: docs/specs/task-lifecycle-and-state-machine-spec.md
+  - name: evidence-bundle
+    path: schemas/jsonschema/evidence-bundle.schema.json
+    source_spec: docs/specs/evidence-bundle-spec.md
+  - name: verification-gates
+    path: schemas/jsonschema/verification-gates.schema.json
+    source_spec: docs/specs/verification-gates-spec.md
+  - name: eval-trace-policy
+    path: schemas/jsonschema/eval-trace-policy.schema.json
+    source_spec: docs/specs/eval-and-trace-grading-spec.md

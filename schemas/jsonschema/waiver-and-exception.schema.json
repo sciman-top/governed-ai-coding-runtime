@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/waiver-and-exception.schema.json",
+  "title": "Waiver And Exception Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "waiver_id",
+    "subject_type",
+    "subject_ref",
+    "reason",
+    "owner",
+    "approver",
+    "created_at",
+    "expires_at",
+    "recovery_plan",
+    "evidence_link",
+    "status"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "waiver_id": {
+      "pattern": "^[a-z0-9_.-]+$",
+      "type": "string"
+    },
+    "subject_type": {
+      "enum": [
+        "control",
+        "gate",
+        "policy",
+        "approval",
+        "repo_profile"
+      ],
+      "type": "string"
+    },
+    "subject_ref": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "approver": {
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "expires_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "recovery_plan": {
+      "type": "string"
+    },
+    "evidence_link": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "proposed",
+        "active",
+        "expired",
+        "revoked",
+        "superseded",
+        "fulfilled"
+      ],
+      "type": "string"
+    },
+    "repo_id": {
+      "type": "string"
+    },
+    "control_id": {
+      "type": "string"
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "supersedes": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

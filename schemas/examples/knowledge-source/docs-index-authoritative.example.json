@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "source_id": "docs-index-authoritative",
+  "display_name": "Project Docs Index",
+  "source_kind": "file",
+  "location": "docs/README.md",
+  "trust_tier": "authoritative",
+  "freshness_policy": {
+    "mode": "versioned"
+  },
+  "owner": "kernel-docs",
+  "access_policy": "read_only",
+  "serialization_format": "markdown",
+  "repo_scope": [
+    "governed-ai-coding-runtime"
+  ],
+  "tags": [
+    "index",
+    "docs"
+  ],
+  "cache_ttl_s": 3600,
+  "precedence": 10,
+  "notes": "Canonical index for repository-level design and execution documents."
+}

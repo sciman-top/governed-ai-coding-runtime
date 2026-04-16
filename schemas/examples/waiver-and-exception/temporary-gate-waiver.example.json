@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "waiver_id": "waive.hotspot.python-service",
+  "subject_type": "gate",
+  "subject_ref": "full-gate.hotspot",
+  "reason": "The target repository has not landed a doctor command yet, but build, test, and contract checks already exist.",
+  "owner": "platform-owner",
+  "approver": "governance-reviewer",
+  "created_at": "2026-04-17T10:00:00Z",
+  "expires_at": "2026-05-31T23:59:59Z",
+  "recovery_plan": "Add a repo-local doctor command and remove this waiver before enabling enforce mode.",
+  "evidence_link": "docs/change-evidence/20260417-schema-examples-and-sample-profiles.md",
+  "status": "active",
+  "repo_id": "python-service-sample",
+  "control_id": "verification-hotspot",
+  "task_id": "gap-005-admission-validator",
+  "notes": "Illustrates time-bounded hotspot waiver semantics."
+}

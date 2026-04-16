@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/eval-trace-policy.schema.json",
+  "title": "Eval And Trace Grading Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "required_eval_suites",
+    "required_trace_fields",
+    "trace_grading"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "required_eval_suites": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "smoke",
+          "regression",
+          "adversarial",
+          "cost"
+        ],
+        "type": "string"
+      }
+    },
+    "required_trace_fields": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "trace_grading": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "phase": {
+          "enum": [
+            "phase1_emit_only",
+            "phase2_thresholds",
+            "phase3_gate_enforced"
+          ],
+          "type": "string"
+        },
+        "minimum_coverage_rate": {
+          "minimum": 0,
+          "type": "number",
+          "maximum": 1
+        },
+        "replay_readiness_required": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "phase",
+        "minimum_coverage_rate"
+      ]
+    },
+    "freshness_days": {
+      "minimum": 1,
+      "type": "integer"
+    }
+  }
+}
+

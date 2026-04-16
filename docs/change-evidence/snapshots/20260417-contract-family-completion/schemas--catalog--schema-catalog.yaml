@@ -1,0 +1,26 @@
+schema_catalog_version: "1.0"
+items:
+  - name: control-registry
+    path: schemas/jsonschema/control-registry.schema.json
+    source_spec: docs/specs/control-registry-spec.md
+  - name: repo-profile
+    path: schemas/jsonschema/repo-profile.schema.json
+    source_spec: docs/specs/repo-profile-spec.md
+  - name: tool-contract
+    path: schemas/jsonschema/tool-contract.schema.json
+    source_spec: docs/specs/tool-contract-spec.md
+  - name: risk-tier-approval-policy
+    path: schemas/jsonschema/risk-tier-approval-policy.schema.json
+    source_spec: docs/specs/risk-tier-and-approval-spec.md
+  - name: task-lifecycle
+    path: schemas/jsonschema/task-lifecycle.schema.json
+    source_spec: docs/specs/task-lifecycle-and-state-machine-spec.md
+  - name: evidence-bundle
+    path: schemas/jsonschema/evidence-bundle.schema.json
+    source_spec: docs/specs/evidence-bundle-spec.md
+  - name: verification-gates
+    path: schemas/jsonschema/verification-gates.schema.json
+    source_spec: docs/specs/verification-gates-spec.md
+  - name: eval-trace-policy
+    path: schemas/jsonschema/eval-trace-policy.schema.json
+    source_spec: docs/specs/eval-and-trace-grading-spec.md

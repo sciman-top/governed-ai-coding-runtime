@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/knowledge-source.schema.json",
+  "title": "Knowledge Source",
+  "type": "object",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "source_kind": {
+            "const": "memory_bridge"
+          }
+        },
+        "required": [
+          "source_kind"
+        ]
+      },
+      "then": {
+        "not": {
+          "properties": {
+            "trust_tier": {
+              "const": "authoritative"
+            }
+          },
+          "required": [
+            "trust_tier"
+          ]
+        }
+      }
+    }
+  ],
+  "required": [
+    "schema_version",
+    "source_id",
+    "display_name",
+    "source_kind",
+    "location",
+    "trust_tier",
+    "freshness_policy",
+    "owner",
+    "access_policy",
+    "serialization_format"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "source_id": {
+      "pattern": "^[a-z0-9_.-]+$",
+      "type": "string"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "source_kind": {
+      "enum": [
+        "file",
+        "directory",
+        "web_doc",
+        "schema",
+        "repo_map",
+        "registry",
+        "memory_bridge",
+        "manual"
+      ],
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "trust_tier": {
+      "enum": [
+        "authoritative",
+        "reviewed",
+        "reference",
+        "untrusted"
+      ],
+      "type": "string"
+    },
+    "freshness_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "immutable",
+            "versioned",
+            "ttl",
+            "manual_refresh"
+          ],
+          "type": "string"
+        },
+        "ttl_seconds": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      }
+    },
+    "owner": {
+      "type": "string"
+    },
+    "access_policy": {
+      "enum": [
+        "read_only",
+        "approved_read",
+        "restricted"
+      ],
+      "type": "string"
+    },
+    "serialization_format": {
+      "type": "string"
+    },
+    "repo_scope": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "cache_ttl_s": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "precedence": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

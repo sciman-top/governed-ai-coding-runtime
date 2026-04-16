@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/provenance-and-attestation.schema.json",
+  "title": "Provenance And Attestation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "attestation_id",
+    "subject_type",
+    "subject_ref",
+    "subject_digest",
+    "predicate_type",
+    "producer",
+    "generated_at",
+    "materials",
+    "verification_status"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "verification_status": {
+            "const": "verified"
+          }
+        },
+        "required": [
+          "verification_status"
+        ]
+      },
+      "then": {
+        "anyOf": [
+          {
+            "required": [
+              "statement_ref"
+            ]
+          },
+          {
+            "required": [
+              "signature_refs"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "attestation_id": {
+      "pattern": "^[a-z0-9_.-]+$",
+      "type": "string"
+    },
+    "subject_type": {
+      "enum": [
+        "artifact",
+        "control_pack",
+        "schema_bundle",
+        "release",
+        "evidence_bundle"
+      ],
+      "type": "string"
+    },
+    "subject_ref": {
+      "type": "string"
+    },
+    "subject_digest": {
+      "type": "string"
+    },
+    "predicate_type": {
+      "type": "string"
+    },
+    "producer": {
+      "type": "string"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "materials": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "uri",
+          "version_or_digest"
+        ],
+        "properties": {
+          "uri": {
+            "type": "string"
+          },
+          "version_or_digest": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "verification_status": {
+      "enum": [
+        "unverified",
+        "verified",
+        "failed",
+        "waived"
+      ],
+      "type": "string"
+    },
+    "build_ref": {
+      "type": "string"
+    },
+    "control_pack_ref": {
+      "type": "string"
+    },
+    "repo_id": {
+      "type": "string"
+    },
+    "statement_ref": {
+      "type": "string"
+    },
+    "signature_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

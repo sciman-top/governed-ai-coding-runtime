@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-agent-platform.local/schemas/control-registry.schema.json",
+  "title": "Control Registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "controls"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "controls": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "class": {
+                  "const": "progressive"
+                }
+              },
+              "required": [
+                "class"
+              ]
+            },
+            "then": {
+              "required": [
+                "observe_to_enforce"
+              ]
+            }
+          },
+          {
+            "oneOf": [
+              {
+                "required": [
+                  "rollback_ref"
+                ]
+              },
+              {
+                "properties": {
+                  "rollback_not_applicable": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "rollback_not_applicable"
+                ]
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "control_id": {
+            "pattern": "^[a-z0-9_.-]+$",
+            "type": "string"
+          },
+          "plane": {
+            "enum": [
+              "task_intake",
+              "runtime_policy",
+              "approval",
+              "tool_contract",
+              "evidence",
+              "verification",
+              "eval",
+              "rollback"
+            ],
+            "type": "string"
+          },
+          "owner": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "class": {
+            "enum": [
+              "hard",
+              "progressive",
+              "advisory"
+            ],
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "observe",
+              "enforce",
+              "advisory"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "active",
+              "deprecated",
+              "retired"
+            ],
+            "type": "string"
+          },
+          "source_of_truth": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "artifacts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "rollback_ref": {
+            "type": "string"
+          },
+          "rollback_not_applicable": {
+            "type": "boolean"
+          },
+          "observability_signals": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "applies_to": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "global": {
+                "type": "boolean"
+              },
+              "repo_ids": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "task_classes": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            }
+          },
+          "observe_to_enforce": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "minimum_observe_days": {
+                "minimum": 1,
+                "type": "integer"
+              },
+              "promotion_criteria": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            }
+          }
+        },
+        "required": [
+          "control_id",
+          "plane",
+          "owner",
+          "class",
+          "mode",
+          "status",
+          "source_of_truth",
+          "artifacts",
+          "observability_signals",
+          "applies_to"
+        ]
+      }
+    }
+  }
+}

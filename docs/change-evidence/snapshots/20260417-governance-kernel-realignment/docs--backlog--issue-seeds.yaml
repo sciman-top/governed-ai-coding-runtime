@@ -1,0 +1,72 @@
+issue_seed_version: "1.0"
+issues:
+  - id: GAP-001
+    title: Monorepo And Dev Bootstrap
+    type: AFK
+    blocked_by: []
+    user_stories: [1, 18, 38]
+  - id: GAP-002
+    title: Contracts Package And Schema Baseline
+    type: AFK
+    blocked_by: [GAP-001]
+    user_stories: [1, 21, 24, 31, 32]
+  - id: GAP-003
+    title: Repository Profile Registry And Loader
+    type: AFK
+    blocked_by: [GAP-002]
+    user_stories: [2, 18, 19, 37, 38]
+  - id: GAP-004
+    title: Control Registry And Policy Resolution
+    type: AFK
+    blocked_by: [GAP-002]
+    user_stories: [7, 25, 26, 29, 32]
+  - id: GAP-005
+    title: Task Store And Deterministic Lifecycle
+    type: AFK
+    blocked_by: [GAP-002]
+    user_stories: [1, 5, 23, 24, 39]
+  - id: GAP-006
+    title: Medium-Tier Approval Default Decision
+    type: HITL
+    blocked_by: [GAP-002]
+    user_stories: [20, 28, 40]
+  - id: GAP-007
+    title: Risk Tier And Approval Service
+    type: AFK
+    blocked_by: [GAP-004, GAP-005, GAP-006]
+    user_stories: [7, 9, 20, 27, 28, 40]
+  - id: GAP-008
+    title: Governed Tool Runner And Contract Enforcement
+    type: AFK
+    blocked_by: [GAP-003, GAP-004, GAP-007]
+    user_stories: [3, 8, 25, 26, 31, 37]
+  - id: GAP-009
+    title: Evidence Bundle And Audit Event Store
+    type: AFK
+    blocked_by: [GAP-005, GAP-007, GAP-008]
+    user_stories: [10, 13, 14, 27, 39]
+  - id: GAP-010
+    title: Quick And Full Verification Runner
+    type: AFK
+    blocked_by: [GAP-003, GAP-004, GAP-008]
+    user_stories: [2, 11, 12, 16, 36]
+  - id: GAP-011
+    title: Single-Agent Session Bootstrap With Isolated Workspace
+    type: AFK
+    blocked_by: [GAP-003, GAP-005, GAP-008, GAP-010]
+    user_stories: [4, 5, 6, 17, 18, 37, 39]
+  - id: GAP-012
+    title: Delivery Handoff Bundle
+    type: AFK
+    blocked_by: [GAP-009, GAP-010, GAP-011]
+    user_stories: [14, 35, 36]
+  - id: GAP-013
+    title: Task Review And Approval Console
+    type: AFK
+    blocked_by: [GAP-007, GAP-009, GAP-011, GAP-012]
+    user_stories: [27, 34, 40]
+  - id: GAP-014
+    title: Eval And Trace Emission Baseline
+    type: AFK
+    blocked_by: [GAP-009, GAP-010, GAP-011]
+    user_stories: [15, 33]

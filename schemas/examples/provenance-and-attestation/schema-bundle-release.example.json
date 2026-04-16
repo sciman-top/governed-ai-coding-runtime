@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "attestation_id": "schema-bundle.release-2026-04-17",
+  "subject_type": "schema_bundle",
+  "subject_ref": "schemas/catalog/schema-catalog.yaml",
+  "subject_digest": "sha256:schema-catalog-2026-04-17",
+  "predicate_type": "https://slsa.dev/provenance/v1",
+  "producer": "github-actions://governed-ai-coding-runtime/schema-release",
+  "generated_at": "2026-04-17T12:00:00Z",
+  "materials": [
+    {
+      "uri": "docs/specs/repo-profile-spec.md",
+      "version_or_digest": "sha256:repo-profile-spec-2026-04-17"
+    },
+    {
+      "uri": "docs/specs/hook-contract-spec.md",
+      "version_or_digest": "sha256:hook-contract-spec-2026-04-17"
+    }
+  ],
+  "verification_status": "verified",
+  "repo_id": "governed-ai-coding-runtime",
+  "statement_ref": "attestations/schema-bundle-2026-04-17.intoto.jsonl",
+  "notes": "Illustrates a verified attestation that points to a statement artifact."
+}

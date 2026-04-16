@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "hook_id": "prewrite.path_guard",
+  "display_name": "Pre-write Path Guard",
+  "stage": "before_write",
+  "mode": "blocking",
+  "handler_ref": "control-packs/kernel/hooks/prewrite-path-guard.ps1",
+  "timeout_ms": 5000,
+  "failure_policy": "fail_closed",
+  "sandbox_boundary": "workspace_only",
+  "input_schema_ref": "schemas/jsonschema/tool-contract.schema.json",
+  "output_schema_ref": "schemas/jsonschema/evidence-bundle.schema.json",
+  "observability_fields": [
+    "task_id",
+    "repo_id",
+    "requested_path",
+    "decision"
+  ],
+  "repo_selector": [
+    "python-service-sample",
+    "typescript-webapp-sample"
+  ],
+  "control_ids": [
+    "path-write-allowlist"
+  ],
+  "approval_on_failure": true,
+  "retry_policy": "none",
+  "notes": "Blocks writes outside the repo profile allowlist."
+}

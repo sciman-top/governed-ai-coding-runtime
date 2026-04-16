@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/evidence-bundle.schema.json",
+  "title": "Evidence Bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_id",
+    "repo_id",
+    "goal",
+    "non_goals",
+    "acceptance_criteria",
+    "assumptions",
+    "commands_run",
+    "tool_calls",
+    "files_changed",
+    "approvals",
+    "verification_results",
+    "rollback_ref",
+    "final_outcome",
+    "open_questions",
+    "created_at",
+    "completed_at"
+  ],
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "repo_id": {
+      "type": "string"
+    },
+    "goal": {
+      "type": "string"
+    },
+    "non_goals": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "acceptance_criteria": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "assumptions": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "commands_run": {
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "command": {
+            "type": "string"
+          },
+          "exit_code": {
+            "type": "integer"
+          },
+          "started_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "completed_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "output_ref": {
+            "type": "string"
+          }
+        }
+      },
+      "type": "array"
+    },
+    "tool_calls": {
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tool_name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "trace_ref": {
+            "type": "string"
+          }
+        }
+      },
+      "type": "array"
+    },
+    "files_changed": {
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "change_type": {
+            "type": "string"
+          }
+        }
+      },
+      "type": "array"
+    },
+    "approvals": {
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "approval_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "approver": {
+            "type": "string"
+          },
+          "decided_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        }
+      },
+      "type": "array"
+    },
+    "verification_results": {
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "gate_level": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "artifact_ref": {
+            "type": "string"
+          }
+        }
+      },
+      "type": "array"
+    },
+    "rollback_ref": {
+      "type": "string"
+    },
+    "final_outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "risk_note": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ]
+    },
+    "open_questions": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "context_snapshot_ref": {
+      "type": "string"
+    },
+    "repo_profile_ref": {
+      "type": "string"
+    },
+    "prompt_registry_ref": {
+      "type": "string"
+    },
+    "failure_signature": {
+      "type": "string"
+    },
+    "replay_case_ref": {
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "completed_at": {
+      "format": "date-time",
+      "type": "string"
+    }
+  }
+}
+

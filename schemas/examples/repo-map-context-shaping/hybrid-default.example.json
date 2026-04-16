@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0",
+  "strategy_id": "repo-map-hybrid-default",
+  "mode": "hybrid",
+  "max_tokens": 6000,
+  "ranking_signals": [
+    "entrypoint",
+    "import_degree",
+    "manual_boost"
+  ],
+  "include_rules": [
+    "src/**",
+    "tests/**",
+    "README.md"
+  ],
+  "exclude_rules": [
+    "dist/**",
+    "node_modules/**",
+    ".next/**"
+  ],
+  "serialization_format": "markdown_map",
+  "symbol_kinds": [
+    "module",
+    "class",
+    "function"
+  ],
+  "fallback_files": [
+    "README.md",
+    "docs/architecture/compatibility-matrix.md"
+  ],
+  "freshness_policy": "refresh_on_branch_change",
+  "stop_conditions": [
+    "max_tokens",
+    "max_files:40"
+  ],
+  "notes": "Illustrates a bounded hybrid repo-map strategy with explicit fallback files."
+}

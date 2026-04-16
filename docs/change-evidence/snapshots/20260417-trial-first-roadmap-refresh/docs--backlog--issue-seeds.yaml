@@ -1,0 +1,92 @@
+issue_seed_version: "1.1"
+issues:
+  - id: GAP-001
+    title: Governance Kernel Boundary And Doc Realignment
+    type: AFK
+    blocked_by: []
+    user_stories: [1, 18, 31]
+  - id: GAP-002
+    title: Governance Contract Family Completion
+    type: AFK
+    blocked_by: [GAP-001]
+    user_stories: [1, 21, 24, 31, 32]
+  - id: GAP-003
+    title: Control Registry Maturity And Waiver Model
+    type: AFK
+    blocked_by: [GAP-002]
+    user_stories: [7, 25, 26, 29, 32]
+  - id: GAP-004
+    title: Sample Repo Profiles And Control Packs
+    type: AFK
+    blocked_by: [GAP-002]
+    user_stories: [2, 18, 19, 37, 38]
+  - id: GAP-005
+    title: Compatibility Validator And Repo Admission Checks
+    type: AFK
+    blocked_by: [GAP-002, GAP-004]
+    user_stories: [2, 11, 12, 16, 36]
+  - id: GAP-006
+    title: Monorepo And Dev Bootstrap Around Governance Kernel
+    type: AFK
+    blocked_by: [GAP-003, GAP-005]
+    user_stories: [1, 18, 38]
+  - id: GAP-007
+    title: Quick And Full Verification Runner
+    type: AFK
+    blocked_by: [GAP-004, GAP-005, GAP-006]
+    user_stories: [2, 11, 12, 16, 36]
+  - id: GAP-008
+    title: Repo Map And Context Shaper
+    type: AFK
+    blocked_by: [GAP-004, GAP-005, GAP-006]
+    user_stories: [4, 18, 37, 38]
+  - id: GAP-009
+    title: Task Store And Deterministic Lifecycle
+    type: AFK
+    blocked_by: [GAP-003, GAP-006]
+    user_stories: [1, 5, 23, 24, 39]
+  - id: GAP-010
+    title: Policy Decision Log And Evidence Bundle Writer
+    type: AFK
+    blocked_by: [GAP-003, GAP-007, GAP-009]
+    user_stories: [10, 13, 14, 27, 39]
+  - id: GAP-011
+    title: Governed Tool Runner And Contract Enforcement
+    type: AFK
+    blocked_by: [GAP-003, GAP-004, GAP-006, GAP-007]
+    user_stories: [3, 8, 25, 26, 31, 37]
+  - id: GAP-012
+    title: Medium-Tier Approval Default Decision
+    type: HITL
+    blocked_by: [GAP-003]
+    user_stories: [20, 28, 40]
+  - id: GAP-013
+    title: Risk Tier And Approval Service
+    type: AFK
+    blocked_by: [GAP-011, GAP-009, GAP-012]
+    user_stories: [7, 9, 20, 27, 28, 40]
+  - id: GAP-014
+    title: Single-Agent Session Bootstrap With Isolated Workspace
+    type: AFK
+    blocked_by: [GAP-007, GAP-008, GAP-009, GAP-011]
+    user_stories: [4, 5, 6, 17, 18, 37, 39]
+  - id: GAP-015
+    title: Eval And Trace Baseline With Golden Tasks
+    type: AFK
+    blocked_by: [GAP-010, GAP-014]
+    user_stories: [15, 33]
+  - id: GAP-016
+    title: Delivery Handoff Bundle And Replay References
+    type: AFK
+    blocked_by: [GAP-010, GAP-014, GAP-015]
+    user_stories: [14, 35, 36]
+  - id: GAP-017
+    title: Second-Repo Reuse Pilot
+    type: AFK
+    blocked_by: [GAP-004, GAP-005, GAP-014, GAP-015]
+    user_stories: [2, 18, 37, 38]
+  - id: GAP-018
+    title: Task Review And Approval Console
+    type: AFK
+    blocked_by: [GAP-013, GAP-016]
+    user_stories: [27, 34, 40]

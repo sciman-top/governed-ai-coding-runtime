@@ -1,0 +1,171 @@
+{
+  "schema_version": "1.0",
+  "repo_id": "typescript-webapp-sample",
+  "display_name": "TypeScript Webapp Sample",
+  "primary_language": "typescript",
+  "repo_root_locator": {
+    "kind": "workspace_anchor",
+    "value": "webapp"
+  },
+  "build_commands": [
+    {
+      "id": "build-webapp",
+      "command": "pnpm build",
+      "required": true,
+      "description": "Build the production application."
+    }
+  ],
+  "test_commands": [
+    {
+      "id": "vitest-all",
+      "command": "pnpm test -- --run",
+      "required": true,
+      "description": "Run component and integration tests."
+    }
+  ],
+  "lint_commands": [
+    {
+      "id": "eslint",
+      "command": "pnpm lint",
+      "required": true,
+      "description": "Static lint gate."
+    }
+  ],
+  "typecheck_commands": [
+    {
+      "id": "tsc",
+      "command": "pnpm typecheck",
+      "required": true,
+      "description": "TypeScript compilation check."
+    }
+  ],
+  "contract_commands": [
+    {
+      "id": "playwright-smoke",
+      "command": "pnpm test:e2e -- --project=chromium",
+      "required": false,
+      "description": "Browser contract smoke."
+    }
+  ],
+  "invariant_commands": [
+    {
+      "id": "bundle-budget",
+      "command": "pnpm check:bundle-budget",
+      "required": true,
+      "description": "Frontend hotspot invariant."
+    }
+  ],
+  "risk_defaults": {
+    "default_write_tier": "medium",
+    "blocked_command_patterns": [
+      "git reset --hard",
+      "rm -rf",
+      "pnpm publish --tag latest"
+    ],
+    "approval_required_command_patterns": [
+      "pnpm db:migrate deploy",
+      "pnpm release",
+      "pnpm publish"
+    ]
+  },
+  "approval_defaults": {
+    "medium_write_requires_approval": true,
+    "high_requires_explicit_approval": true
+  },
+  "tool_allowlist": [
+    "shell",
+    "apply_patch",
+    "rg",
+    "git",
+    "node",
+    "pnpm"
+  ],
+  "path_policies": {
+    "read_allow": [
+      "app/**",
+      "src/**",
+      "components/**",
+      "tests/**",
+      "docs/**",
+      "package.json",
+      "pnpm-lock.yaml",
+      "README.md"
+    ],
+    "write_allow": [
+      "app/**",
+      "src/**",
+      "components/**",
+      "tests/**",
+      "docs/**",
+      "package.json",
+      "README.md"
+    ],
+    "blocked": [
+      "infra/prod/**",
+      "public/secrets/**",
+      ".env*",
+      "pnpm-lock.yaml"
+    ]
+  },
+  "branch_policy": {
+    "default_branch": "main",
+    "working_branch_prefix": "codex/",
+    "allow_direct_push": false
+  },
+  "delivery_format": {
+    "summary_template": "goal-plan-changes-verification-risks",
+    "include_patch": false,
+    "include_pr_body": true
+  },
+  "repo_map_strategy": "hybrid",
+  "quick_gate_commands": [
+    {
+      "id": "quick-lint",
+      "command": "pnpm lint",
+      "required": true,
+      "description": "Fast lint gate."
+    },
+    {
+      "id": "quick-typecheck",
+      "command": "pnpm typecheck",
+      "required": true,
+      "description": "Fast type-check gate."
+    }
+  ],
+  "full_gate_commands": [
+    {
+      "id": "build",
+      "command": "pnpm build",
+      "required": true,
+      "description": "Canonical build gate."
+    },
+    {
+      "id": "test",
+      "command": "pnpm test -- --run",
+      "required": true,
+      "description": "Canonical test gate."
+    },
+    {
+      "id": "contract",
+      "command": "pnpm test:e2e -- --project=chromium",
+      "required": false,
+      "description": "Canonical browser contract gate."
+    },
+    {
+      "id": "hotspot",
+      "command": "pnpm check:bundle-budget",
+      "required": true,
+      "description": "Canonical hotspot gate."
+    }
+  ],
+  "extra_eval_suites": [
+    "ui-regression-smoke",
+    "accessibility-smoke"
+  ],
+  "context_files": [
+    "README.md",
+    "docs/ui-guidelines.md",
+    "docs/architecture/frontend.md"
+  ],
+  "reviewer_handoff_template": "Include affected routes, screenshots, and rollback notes."
+}

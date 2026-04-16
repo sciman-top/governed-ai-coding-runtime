@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-agent-platform.local/schemas/task-lifecycle.schema.json",
+  "title": "Task Lifecycle Definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "states",
+    "required_transitions",
+    "state_metadata_required_fields"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "states": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "created",
+          "scoped",
+          "planned",
+          "awaiting_approval",
+          "executing",
+          "verifying",
+          "delivered",
+          "failed",
+          "rolled_back",
+          "cancelled"
+        ],
+        "type": "string"
+      }
+    },
+    "terminal_states": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "delivered",
+          "failed",
+          "rolled_back",
+          "cancelled"
+        ],
+        "type": "string"
+      }
+    },
+    "required_transitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "condition": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "from",
+          "to"
+        ]
+      }
+    },
+    "state_metadata_required_fields": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

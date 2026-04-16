@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/hook-contract.schema.json",
+  "title": "Hook Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "blocking"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "not": {
+          "properties": {
+            "failure_policy": {
+              "const": "warn_only"
+            }
+          },
+          "required": [
+            "failure_policy"
+          ]
+        }
+      }
+    }
+  ],
+  "required": [
+    "schema_version",
+    "hook_id",
+    "display_name",
+    "stage",
+    "mode",
+    "handler_ref",
+    "timeout_ms",
+    "failure_policy",
+    "sandbox_boundary",
+    "input_schema_ref",
+    "output_schema_ref",
+    "observability_fields"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "hook_id": {
+      "pattern": "^[a-z0-9_.-]+$",
+      "type": "string"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "stage": {
+      "enum": [
+        "before_session_start",
+        "after_session_start",
+        "before_tool_request",
+        "after_tool_result",
+        "before_write",
+        "after_write",
+        "before_verification",
+        "after_verification",
+        "before_delivery",
+        "after_delivery"
+      ],
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "advisory",
+        "blocking",
+        "emitting"
+      ],
+      "type": "string"
+    },
+    "handler_ref": {
+      "type": "string"
+    },
+    "timeout_ms": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "failure_policy": {
+      "enum": [
+        "fail_closed",
+        "fail_open",
+        "warn_only"
+      ],
+      "type": "string"
+    },
+    "sandbox_boundary": {
+      "type": "string"
+    },
+    "input_schema_ref": {
+      "type": "string"
+    },
+    "output_schema_ref": {
+      "type": "string"
+    },
+    "observability_fields": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "repo_selector": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "control_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "approval_on_failure": {
+      "type": "boolean"
+    },
+    "retry_policy": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

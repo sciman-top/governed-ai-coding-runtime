@@ -1,0 +1,430 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/repo-profile.schema.json",
+  "title": "Repository Profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "repo_id",
+    "display_name",
+    "primary_language",
+    "repo_root_locator",
+    "build_commands",
+    "test_commands",
+    "lint_commands",
+    "typecheck_commands",
+    "risk_defaults",
+    "approval_defaults",
+    "tool_allowlist",
+    "path_policies",
+    "branch_policy",
+    "delivery_format"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "repo_id": {
+      "pattern": "^[a-zA-Z0-9_.-]+$",
+      "type": "string"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "primary_language": {
+      "type": "string"
+    },
+    "repo_root_locator": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "local_path",
+            "workspace_anchor",
+            "git_remote",
+            "manual"
+          ],
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "value"
+      ]
+    },
+    "build_commands": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "not_applicable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "command"
+        ]
+      }
+    },
+    "test_commands": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "not_applicable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "command"
+        ]
+      }
+    },
+    "lint_commands": {
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "not_applicable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "command"
+        ]
+      },
+      "type": "array"
+    },
+    "typecheck_commands": {
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "not_applicable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "command"
+        ]
+      },
+      "type": "array"
+    },
+    "contract_commands": {
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "not_applicable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "command"
+        ]
+      },
+      "type": "array"
+    },
+    "invariant_commands": {
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "not_applicable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "command"
+        ]
+      },
+      "type": "array"
+    },
+    "risk_defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_write_tier": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        },
+        "blocked_command_patterns": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "approval_required_command_patterns": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "default_write_tier",
+        "blocked_command_patterns"
+      ]
+    },
+    "approval_defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "medium_write_requires_approval": {
+          "type": "boolean"
+        },
+        "high_requires_explicit_approval": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "high_requires_explicit_approval"
+      ]
+    },
+    "tool_allowlist": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "path_policies": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "read_allow": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "write_allow": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "blocked": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "read_allow",
+        "write_allow",
+        "blocked"
+      ]
+    },
+    "branch_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_branch": {
+          "type": "string"
+        },
+        "working_branch_prefix": {
+          "type": "string"
+        },
+        "allow_direct_push": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "default_branch",
+        "working_branch_prefix",
+        "allow_direct_push"
+      ]
+    },
+    "delivery_format": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "summary_template": {
+          "type": "string"
+        },
+        "include_patch": {
+          "type": "boolean"
+        },
+        "include_pr_body": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "summary_template"
+      ]
+    },
+    "repo_map_strategy": {
+      "enum": [
+        "none",
+        "symbol_graph",
+        "repo_map",
+        "hybrid"
+      ],
+      "type": "string"
+    },
+    "quick_gate_commands": {
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "not_applicable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "command"
+        ]
+      },
+      "type": "array"
+    },
+    "full_gate_commands": {
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "not_applicable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "command"
+        ]
+      },
+      "type": "array"
+    },
+    "extra_eval_suites": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "context_files": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "reviewer_handoff_template": {
+      "type": "string"
+    }
+  }
+}
+

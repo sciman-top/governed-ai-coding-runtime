@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0",
+  "skill_id": "repo-map-audit",
+  "display_name": "Repo Map Audit",
+  "version": "0.1.0",
+  "description": "Builds a bounded repo map summary and flags missing context anchors.",
+  "entrypoint": "skills/repo-map-audit/SKILL.md",
+  "input_modes": [
+    "file_context",
+    "shell"
+  ],
+  "risk_tier": "medium",
+  "capabilities": [
+    "repo_map_summary",
+    "context_budget_check"
+  ],
+  "provenance": {
+    "source": "local_repo",
+    "version_or_digest": "sha256:repo-map-audit-v0.1.0"
+  },
+  "compatibility": {
+    "minimum_kernel_version": "0.1.0",
+    "required_contracts": [
+      "repo-map-context-shaping",
+      "knowledge-source"
+    ]
+  },
+  "default_enabled": false,
+  "requires_approval": false,
+  "repo_scopes": [
+    "python-service-sample",
+    "typescript-webapp-sample"
+  ],
+  "tool_dependencies": [
+    "rg"
+  ],
+  "knowledge_dependencies": [
+    "docs-index-authoritative",
+    "repo-map-hybrid-default"
+  ],
+  "tags": [
+    "context",
+    "analysis"
+  ],
+  "notes": "Illustrates a medium-risk skill that depends on shell access but stays read-oriented."
+}

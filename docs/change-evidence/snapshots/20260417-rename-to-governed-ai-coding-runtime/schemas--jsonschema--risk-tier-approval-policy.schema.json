@@ -1,0 +1,244 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-agent-platform.local/schemas/risk-tier-approval-policy.schema.json",
+  "title": "Risk Tier And Approval Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "tiers",
+    "operation_groups"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "tiers": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "low": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "approval_mode": {
+              "type": "string"
+            },
+            "required_evidence_fields": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "approval_mode",
+            "required_evidence_fields"
+          ]
+        },
+        "medium": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "approval_mode": {
+              "type": "string"
+            },
+            "required_evidence_fields": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "approval_mode",
+            "required_evidence_fields"
+          ]
+        },
+        "high": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "approval_mode": {
+              "const": "explicit_user_approval",
+              "type": "string"
+            },
+            "required_evidence_fields": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "approval_mode",
+            "required_evidence_fields"
+          ]
+        }
+      },
+      "required": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "operation_groups": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tool_calls": {
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "tier": {
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ],
+                "type": "string"
+              },
+              "approval": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "mode": {
+                    "enum": [
+                      "auto_execute",
+                      "pre_publish_confirmation",
+                      "explicit_user_approval"
+                    ],
+                    "type": "string"
+                  },
+                  "steps": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                }
+              }
+            },
+            "required": [
+              "id",
+              "description",
+              "tier"
+            ]
+          },
+          "type": "array"
+        },
+        "file_write_scopes": {
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "tier": {
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ],
+                "type": "string"
+              },
+              "approval": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "mode": {
+                    "enum": [
+                      "auto_execute",
+                      "pre_publish_confirmation",
+                      "explicit_user_approval"
+                    ],
+                    "type": "string"
+                  },
+                  "steps": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                }
+              }
+            },
+            "required": [
+              "id",
+              "description",
+              "tier"
+            ]
+          },
+          "type": "array"
+        },
+        "irreversible_actions": {
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "tier": {
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ],
+                "type": "string"
+              },
+              "approval": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "mode": {
+                    "enum": [
+                      "auto_execute",
+                      "pre_publish_confirmation",
+                      "explicit_user_approval"
+                    ],
+                    "type": "string"
+                  },
+                  "steps": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                }
+              }
+            },
+            "required": [
+              "id",
+              "description",
+              "tier"
+            ]
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "tool_calls",
+        "file_write_scopes",
+        "irreversible_actions"
+      ]
+    }
+  }
+}

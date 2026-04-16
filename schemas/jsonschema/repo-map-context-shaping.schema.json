@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/repo-map-context-shaping.schema.json",
+  "title": "Repo Map And Context Shaping",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "strategy_id",
+    "mode",
+    "max_tokens",
+    "ranking_signals",
+    "include_rules",
+    "exclude_rules",
+    "serialization_format"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "none"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "properties": {
+          "ranking_signals": {
+            "maxItems": 0
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "strategy_id": {
+      "pattern": "^[a-z0-9_.-]+$",
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "none",
+        "file_graph",
+        "symbol_graph",
+        "hybrid"
+      ],
+      "type": "string"
+    },
+    "max_tokens": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "ranking_signals": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "entrypoint",
+          "import_degree",
+          "test_proximity",
+          "recent_change",
+          "path_priority",
+          "manual_boost"
+        ],
+        "type": "string"
+      }
+    },
+    "include_rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "exclude_rules": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "serialization_format": {
+      "enum": [
+        "file_list",
+        "symbol_outline",
+        "markdown_map",
+        "json_map"
+      ],
+      "type": "string"
+    },
+    "symbol_kinds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "fallback_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "freshness_policy": {
+      "type": "string"
+    },
+    "stop_conditions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}
