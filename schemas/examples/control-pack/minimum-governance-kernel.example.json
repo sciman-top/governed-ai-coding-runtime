@@ -1,0 +1,109 @@
+{
+  "schema_version": "0.1",
+  "pack_id": "kernel.minimum-governance",
+  "display_name": "Minimum Governance Kernel",
+  "version": "0.1.0",
+  "owner": "platform-governance",
+  "lifecycle_status": "draft",
+  "scope": "kernel",
+  "summary": "Reference metadata pack for the first governed AI coding trial loop.",
+  "activation": {
+    "default_mode": "observe",
+    "requires_operator_ack": true,
+    "rollout_notes": [
+      "Use observe mode until runtime gate runner and evidence emission are executable.",
+      "Move individual controls to enforce only after their evidence signals exist."
+    ]
+  },
+  "includes": {
+    "controls": [
+      {
+        "ref": "control.task.lifecycle.valid_transition",
+        "required": true
+      },
+      {
+        "ref": "control.tool_contract.fail_closed",
+        "required": true
+      },
+      {
+        "ref": "control.evidence.bundle.required",
+        "required": true
+      }
+    ],
+    "hooks": [
+      {
+        "ref": "hook.pre_write_path_guard",
+        "version": "0.1.0",
+        "required": true
+      }
+    ],
+    "skills": [
+      {
+        "ref": "skill.repo_map_audit",
+        "version": "0.1.0",
+        "required": false
+      }
+    ],
+    "knowledge_sources": [
+      {
+        "ref": "knowledge.docs_index_authoritative",
+        "required": true
+      }
+    ],
+    "verification_gates": [
+      {
+        "ref": "gate.schema_integrity",
+        "required": true
+      },
+      {
+        "ref": "gate.script_parse",
+        "required": true
+      }
+    ],
+    "eval_suites": [
+      {
+        "ref": "eval.smoke.governed_readonly_trial",
+        "required": false
+      }
+    ]
+  },
+  "repo_profile_requirements": {
+    "required_gate_names": [
+      "build",
+      "test",
+      "contract_or_invariant",
+      "hotspot_or_health_check"
+    ],
+    "required_tool_refs": [
+      "tool.shell.readonly",
+      "tool.file.readonly"
+    ],
+    "required_path_policy_refs": [
+      "policy.path_scope.default"
+    ]
+  },
+  "compatibility": {
+    "minimum_kernel_version": "0.1.0",
+    "schema_refs": [
+      "schemas/jsonschema/control-registry.schema.json",
+      "schemas/jsonschema/hook-contract.schema.json",
+      "schemas/jsonschema/skill-manifest.schema.json",
+      "schemas/jsonschema/knowledge-source.schema.json",
+      "schemas/jsonschema/verification-gates.schema.json",
+      "schemas/jsonschema/eval-trace-policy.schema.json"
+    ],
+    "supported_repo_profile_versions": [
+      "0.1"
+    ]
+  },
+  "provenance": {
+    "source_ref": "docs/specs/control-pack-spec.md",
+    "attestation_ref": "schemas/examples/provenance-and-attestation/schema-bundle-release.example.json",
+    "generated_at": "2026-04-17T00:00:00Z",
+    "materials": [
+      "docs/adrs/0005-governance-kernel-and-control-packs-before-platform-breadth.md",
+      "docs/architecture/minimum-viable-governance-loop.md"
+    ]
+  },
+  "rollback_ref": "Remove this pack reference from repo admission inputs before disabling individual kernel controls."
+}

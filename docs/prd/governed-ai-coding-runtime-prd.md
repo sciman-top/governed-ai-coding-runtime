@@ -2,6 +2,8 @@
 
 ## Document Map
 
+- Product:
+  - `docs/product/interaction-model.md`
 - Architecture:
   - `docs/architecture/governed-ai-coding-runtime-target-architecture.md`
   - `docs/architecture/minimum-viable-governance-loop.md`
@@ -13,10 +15,19 @@
   - `docs/adrs/0001-control-plane-first.md`
   - `docs/adrs/0002-no-multi-repo-distribution-in-mvp.md`
   - `docs/adrs/0003-single-agent-baseline-first.md`
+  - `docs/adrs/0004-rename-project-to-governed-ai-coding-runtime.md`
+  - `docs/adrs/0005-governance-kernel-and-control-packs-before-platform-breadth.md`
 - Specs:
   - `docs/specs/control-registry-spec.md`
+  - `docs/specs/control-pack-spec.md`
   - `docs/specs/repo-profile-spec.md`
   - `docs/specs/tool-contract-spec.md`
+  - `docs/specs/hook-contract-spec.md`
+  - `docs/specs/skill-manifest-spec.md`
+  - `docs/specs/knowledge-source-spec.md`
+  - `docs/specs/waiver-and-exception-spec.md`
+  - `docs/specs/provenance-and-attestation-spec.md`
+  - `docs/specs/repo-map-context-shaping-spec.md`
   - `docs/specs/risk-tier-and-approval-spec.md`
   - `docs/specs/task-lifecycle-and-state-machine-spec.md`
   - `docs/specs/evidence-bundle-spec.md`
@@ -253,10 +264,22 @@ Implementation should follow the adopted decision chain:
 - `ADR-0001`: control-plane-first
 - `ADR-0002`: no multi-repo distribution in MVP
 - `ADR-0003`: single-agent baseline first
+- `ADR-0005`: governance kernel and control packs before platform breadth
+
+The active naming decision is captured by:
+- `ADR-0004`: rename project to Governed AI Coding Runtime
 
 Implementation contracts should be taken from:
+- `docs/specs/control-registry-spec.md`
+- `docs/specs/control-pack-spec.md`
 - `docs/specs/repo-profile-spec.md`
 - `docs/specs/tool-contract-spec.md`
+- `docs/specs/hook-contract-spec.md`
+- `docs/specs/skill-manifest-spec.md`
+- `docs/specs/knowledge-source-spec.md`
+- `docs/specs/waiver-and-exception-spec.md`
+- `docs/specs/provenance-and-attestation-spec.md`
+- `docs/specs/repo-map-context-shaping-spec.md`
 - `docs/specs/risk-tier-and-approval-spec.md`
 - `docs/specs/task-lifecycle-and-state-machine-spec.md`
 - `docs/specs/evidence-bundle-spec.md`

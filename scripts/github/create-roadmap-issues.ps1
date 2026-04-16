@@ -151,7 +151,7 @@ Create the minimum runnable repository baseline for the first governed trial.
 - Planning alignment
 - apps / packages / infra / tests bootstrap
 - Local verification entrypoints and CI minimums
-- Sample control pack and repo admission minimums
+- Runtime-consumable sample control pack and repo admission minimums
 
 ## Dependencies
 - None
@@ -161,6 +161,7 @@ Create the minimum runnable repository baseline for the first governed trial.
 - [ ] Missing implementation skeleton exists
 - [ ] Local verification entrypoint and minimum CI are documented
 - [ ] Repo admission minimums are explicit
+- [ ] Sample control-pack metadata is promoted into a runtime-consumable pack
 "@
   }
   @{
@@ -305,7 +306,9 @@ Make the first trial slice enforceable through minimum repo admission rules.
 - [Epic] Runnable Baseline And Trial Bootstrap
 
 ## Acceptance Criteria
-- [ ] At least one control pack exists with owner and version
+- [ ] Control pack metadata validates against the control-pack schema
+- [ ] At least one runtime-consumable control pack exists with owner, version, and scope
+- [ ] The pack references controls, hooks, and gates without weakening kernel semantics
 - [ ] Admission minimums cover commands, tools, and path policy
 - [ ] Invalid repos fail before startup
 "@

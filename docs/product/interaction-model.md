@@ -37,6 +37,7 @@ Needs a concise handoff package: what changed, what was run, what passed, what w
 ## Core Product Capabilities
 - task intake with goal, scope, acceptance criteria, and budgets
 - repo profile resolution
+- control pack selection and admission checks
 - governed workspace or worktree startup
 - tool policy enforcement
 - risk classification and approval interruption

@@ -6,8 +6,8 @@
 The current repository captures the product definition, architecture, roadmap, backlog, schema drafts, and bootstrap planning scripts before runtime code is introduced.
 
 ## Current Baseline
-- Available now: PRD, architecture, ADRs, roadmap, backlog, JSON Schema drafts, schema examples, sample repo profiles, and a GitHub issue seeding script.
-- Not landed yet: `apps/`, `packages/`, `infra/`, `tests/`, runtime services, CI, sample control packs, and executable workers.
+- Available now: PRD, architecture, ADRs, roadmap, backlog, JSON Schema drafts, schema examples, sample control-pack metadata, sample repo profiles, and a GitHub issue seeding script.
+- Not landed yet: `apps/`, `packages/`, `infra/`, `tests/`, runtime services, CI, runtime-consumable control packs, and executable workers.
 - The active documentation index lives in [docs/README.md](docs/README.md).
 
 ## Repository Map
@@ -52,6 +52,6 @@ $errors
 ## Immediate Next Steps
 1. Bootstrap `apps/`, `packages/`, `infra/`, and `tests/` while preserving the current docs/spec baseline.
 2. Add local and CI verification entrypoints for schema, example, docs, and script integrity.
-3. Add sample control pack and tool contract instances so the schema layer becomes broader executable reference material.
+3. Promote the sample control-pack metadata and tool contract drafts into runtime-consumable reference material.
 
 

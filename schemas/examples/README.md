@@ -11,8 +11,10 @@ Provide minimal but realistic JSON instances that exercise the repository's curr
 - `provenance-and-attestation/`: provenance and attestation examples
 - `repo-map-context-shaping/`: repo-map strategy examples
 - `repo-profile/`: sample target-repository profiles
+- `control-pack/`: sample control-pack metadata
 
 ## Example Files
+- `control-pack/minimum-governance-kernel.example.json`
 - `hook-contract/pre-write-path-guard.example.json`
 - `skill-manifest/repo-map-audit.example.json`
 - `knowledge-source/docs-index-authoritative.example.json`
@@ -26,6 +28,9 @@ Provide minimal but realistic JSON instances that exercise the repository's curr
 Each example should validate against its matching schema:
 
 ```powershell
+Get-Content -Raw 'schemas/examples/control-pack/minimum-governance-kernel.example.json' |
+  Test-Json -SchemaFile 'schemas/jsonschema/control-pack.schema.json'
+
 Get-Content -Raw 'schemas/examples/hook-contract/pre-write-path-guard.example.json' |
   Test-Json -SchemaFile 'schemas/jsonschema/hook-contract.schema.json'
 
@@ -54,4 +59,5 @@ Get-Content -Raw 'schemas/examples/repo-profile/typescript-webapp.example.json' 
 ## Notes
 - These examples are intentionally small enough to be easy to audit.
 - The repo-profile examples demonstrate `same kernel, different profiles` across Python and TypeScript targets.
+- The control-pack example demonstrates bundle metadata; it does not contain executable policy or hook code.
 - They are reference assets, not normative defaults for every repository.

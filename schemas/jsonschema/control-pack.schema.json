@@ -1,0 +1,275 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/control-pack.schema.json",
+  "title": "Control Pack",
+  "type": "object",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "activation": {
+            "properties": {
+              "default_mode": {
+                "const": "enforce"
+              }
+            },
+            "required": [
+              "default_mode"
+            ]
+          }
+        },
+        "required": [
+          "activation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "includes": {
+            "properties": {
+              "controls": {
+                "minItems": 1
+              }
+            },
+            "required": [
+              "controls"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "required": [
+    "schema_version",
+    "pack_id",
+    "display_name",
+    "version",
+    "owner",
+    "lifecycle_status",
+    "scope",
+    "activation",
+    "includes",
+    "compatibility",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "pack_id": {
+      "pattern": "^[a-z0-9_.-]+$",
+      "type": "string"
+    },
+    "display_name": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "version": {
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?$",
+      "type": "string"
+    },
+    "owner": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "lifecycle_status": {
+      "enum": [
+        "draft",
+        "active",
+        "deprecated",
+        "retired"
+      ],
+      "type": "string"
+    },
+    "scope": {
+      "enum": [
+        "kernel",
+        "repository",
+        "organization"
+      ],
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "activation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "default_mode",
+        "requires_operator_ack"
+      ],
+      "properties": {
+        "default_mode": {
+          "enum": [
+            "observe",
+            "enforce",
+            "advisory"
+          ],
+          "type": "string"
+        },
+        "requires_operator_ack": {
+          "type": "boolean"
+        },
+        "rollout_notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "includes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "controls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifact_ref"
+          }
+        },
+        "hooks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifact_ref"
+          }
+        },
+        "skills": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifact_ref"
+          }
+        },
+        "knowledge_sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifact_ref"
+          }
+        },
+        "verification_gates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifact_ref"
+          }
+        },
+        "eval_suites": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifact_ref"
+          }
+        }
+      },
+      "minProperties": 1
+    },
+    "repo_profile_requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required_gate_names": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "build",
+              "test",
+              "lint",
+              "typecheck",
+              "contract_or_invariant",
+              "hotspot_or_health_check"
+            ],
+            "type": "string"
+          }
+        },
+        "required_tool_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "required_path_policy_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minimum_kernel_version",
+        "schema_refs"
+      ],
+      "properties": {
+        "minimum_kernel_version": {
+          "type": "string"
+        },
+        "schema_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "supported_repo_profile_versions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_ref",
+        "generated_at"
+      ],
+      "properties": {
+        "source_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "attestation_ref": {
+          "type": "string"
+        },
+        "generated_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "rollback_ref": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "artifact_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ref"
+      ],
+      "properties": {
+        "ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

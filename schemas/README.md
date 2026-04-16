@@ -5,6 +5,7 @@ Machine-readable schema drafts and example instances for the platform's core gov
 
 ## JSON Schema Drafts
 - `jsonschema/control-registry.schema.json`
+- `jsonschema/control-pack.schema.json`
 - `jsonschema/repo-profile.schema.json`
 - `jsonschema/tool-contract.schema.json`
 - `jsonschema/hook-contract.schema.json`
@@ -24,6 +25,7 @@ Machine-readable schema drafts and example instances for the platform's core gov
 
 ## Example Instances
 - `examples/README.md`
+- `examples/control-pack/minimum-governance-kernel.example.json`
 - `examples/hook-contract/pre-write-path-guard.example.json`
 - `examples/skill-manifest/repo-map-audit.example.json`
 - `examples/knowledge-source/docs-index-authoritative.example.json`
@@ -37,4 +39,5 @@ Machine-readable schema drafts and example instances for the platform's core gov
 - These are initial drafts aligned with `docs/specs/*`.
 - They define contract shape, not storage or transport implementation.
 - Example instances are intentionally minimal and should validate against their matching schema.
+- The control-pack example is metadata only; it is not an executable runtime control pack yet.
 - They should be revised once the first runtime package exists.

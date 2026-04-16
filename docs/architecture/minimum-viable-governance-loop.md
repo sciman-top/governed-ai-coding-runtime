@@ -50,6 +50,7 @@ Define the smallest governance loop that makes AI coding execution controllable,
 - task object
 - repo profile
 - control registry
+- control pack metadata
 - risk tier model
 - approval model
 - evidence bundle

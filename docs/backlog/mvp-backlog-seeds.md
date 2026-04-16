@@ -6,14 +6,14 @@ Seed implementation work for a governance kernel that becomes trialable quickly,
 ## Current Baseline
 - PRD, architecture, ADRs, roadmap, backlog, schema drafts, and the GitHub issue seeding script already exist.
 - Root `README.md` and project `AGENTS.md` already act as the repo entry contract.
-- Landed: governance contract families, schema examples, and two sample repo profiles.
-- Missing: sample control packs; compatibility validation; repo admission checks; `apps/`, `packages/`, `infra/`, `tests/`; local verification entrypoints; CI; and executable services.
+- Landed: governance contract families, schema examples, sample control-pack metadata, and two sample repo profiles.
+- Missing: runtime-consumable sample control packs; compatibility validation; repo admission checks; `apps/`, `packages/`, `infra/`, `tests/`; local verification entrypoints; CI; and executable services.
 
 ## P0
 1. Keep roadmap, backlog, issue seeds, and the seeding script synchronized around a trial-first plan.
 2. Bootstrap `apps/`, `packages/`, `infra/`, and `tests/`.
 3. Add local verification entrypoints and minimum CI for schema, docs, and script integrity.
-4. Add at least one sample control pack and define repo admission minimums.
+4. Promote at least one sample control-pack metadata record into a runtime-consumable sample control pack and define repo admission minimums.
 5. Keep root `README.md`, project `AGENTS.md`, roadmap, backlog, script, and schema catalog synchronized as implementation begins.
 
 ## P1

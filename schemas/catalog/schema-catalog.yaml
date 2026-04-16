@@ -1,8 +1,11 @@
-schema_catalog_version: "1.1"
+schema_catalog_version: "1.2"
 items:
   - name: control-registry
     path: schemas/jsonschema/control-registry.schema.json
     source_spec: docs/specs/control-registry-spec.md
+  - name: control-pack
+    path: schemas/jsonschema/control-pack.schema.json
+    source_spec: docs/specs/control-pack-spec.md
   - name: repo-profile
     path: schemas/jsonschema/repo-profile.schema.json
     source_spec: docs/specs/repo-profile-spec.md

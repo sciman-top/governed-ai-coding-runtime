@@ -15,11 +15,19 @@ This plan assumes the following documents are the active design inputs:
   - `docs/adrs/0001-control-plane-first.md`
   - `docs/adrs/0002-no-multi-repo-distribution-in-mvp.md`
   - `docs/adrs/0003-single-agent-baseline-first.md`
+  - `docs/adrs/0004-rename-project-to-governed-ai-coding-runtime.md`
   - `docs/adrs/0005-governance-kernel-and-control-packs-before-platform-breadth.md`
 - Specs:
   - `docs/specs/control-registry-spec.md`
+  - `docs/specs/control-pack-spec.md`
   - `docs/specs/repo-profile-spec.md`
   - `docs/specs/tool-contract-spec.md`
+  - `docs/specs/hook-contract-spec.md`
+  - `docs/specs/skill-manifest-spec.md`
+  - `docs/specs/knowledge-source-spec.md`
+  - `docs/specs/waiver-and-exception-spec.md`
+  - `docs/specs/provenance-and-attestation-spec.md`
+  - `docs/specs/repo-map-context-shaping-spec.md`
   - `docs/specs/risk-tier-and-approval-spec.md`
   - `docs/specs/task-lifecycle-and-state-machine-spec.md`
   - `docs/specs/evidence-bundle-spec.md`
@@ -32,8 +40,8 @@ This plan assumes the following documents are the active design inputs:
 - `docs/`, `schemas/`, and `scripts/github/create-roadmap-issues.ps1` already exist.
 - Root `README.md` and project `AGENTS.md` already exist as repo entry contracts.
 - The repository is still `docs-first / contracts-first`; `apps/`, `packages/`, `infra/`, and `tests/` have not been bootstrapped yet.
-- The governance-kernel contract family, schema examples, and two sample repo profiles are landed.
-- Sample control packs, compatibility validators, executable services, local verification entrypoints, and CI are not landed yet.
+- The governance-kernel contract family, schema examples, sample control-pack metadata, and two sample repo profiles are landed.
+- Executable sample control packs, compatibility validators, executable services, local verification entrypoints, and CI are not landed yet.
 
 ## Goal
 - Deliver an MVP governance kernel for governed AI coding in 90 days.
@@ -92,7 +100,7 @@ A 90-day MVP is successful only if it can do all of the following:
 
 ### Add now
 - implementation skeleton and local verification entrypoints
-- minimum control pack and repo admission baseline
+- runtime-consumable sample control pack and repo admission baseline
 - durable task intake and repo profile resolution
 - read-only governed session shell and evidence timeline
 - CLI or scripted operator entrypoint for the first trial
@@ -115,7 +123,7 @@ A 90-day MVP is successful only if it can do all of the following:
 ### Phase 0: Runnable Baseline (Week 1)
 - bootstrap `apps/`, `packages/`, `infra/`, and `tests/`
 - define local verification entrypoints and CI minimums
-- add sample control pack plus repo admission minimums
+- promote the sample control-pack metadata into a runtime-consumable sample control pack plus repo admission minimums
 - keep roadmap, backlog, issue seeds, and seeding script aligned with the trial-first plan
 
 **Expected benefit**
@@ -182,7 +190,7 @@ A 90-day MVP is successful only if it can do all of the following:
 - create `apps/`, `packages/`, `infra/`, and `tests/`
 - add a local verification entrypoint for schema, docs, and script integrity
 - add CI for schema checks, doc integrity, and script parsing
-- add at least one sample control pack and document repo admission minimums
+- promote at least one sample control-pack metadata record into a runtime-consumable pack and document repo admission minimums
 
 **Acceptance**
 - implementation skeleton exists
@@ -365,7 +373,7 @@ A 90-day MVP is successful only if it can do all of the following:
 
 ### First 8 tasks
 1. Initialize implementation skeleton and local verification entrypoints
-2. Add sample control pack and repo admission minimums
+2. Promote sample control-pack metadata into a runtime-consumable pack and repo admission minimums
 3. Implement task intake and repo profile resolution
 4. Implement read-only governed tool runner
 5. Implement evidence timeline and first trial output
@@ -404,10 +412,18 @@ Seed backlog document:
 - `docs/adrs/0001-control-plane-first.md`
 - `docs/adrs/0002-no-multi-repo-distribution-in-mvp.md`
 - `docs/adrs/0003-single-agent-baseline-first.md`
+- `docs/adrs/0004-rename-project-to-governed-ai-coding-runtime.md`
 - `docs/adrs/0005-governance-kernel-and-control-packs-before-platform-breadth.md`
 - `docs/specs/control-registry-spec.md`
+- `docs/specs/control-pack-spec.md`
 - `docs/specs/repo-profile-spec.md`
 - `docs/specs/tool-contract-spec.md`
+- `docs/specs/hook-contract-spec.md`
+- `docs/specs/skill-manifest-spec.md`
+- `docs/specs/knowledge-source-spec.md`
+- `docs/specs/waiver-and-exception-spec.md`
+- `docs/specs/provenance-and-attestation-spec.md`
+- `docs/specs/repo-map-context-shaping-spec.md`
 - `docs/specs/risk-tier-and-approval-spec.md`
 - `docs/specs/task-lifecycle-and-state-machine-spec.md`
 - `docs/specs/evidence-bundle-spec.md`

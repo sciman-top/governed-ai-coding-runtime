@@ -30,6 +30,7 @@
 | Evidence bundle schema | Unified governance | replay, audit, and review need one evidence language | repos may add extra evidence fields |
 | Eval categories | Unified governance | final outcome / trajectory / safety should stay comparable | repos may add repo-specific evals |
 | Replay / rollback model | Unified governance | failure recovery must be deterministic | repos may provide extra compensation hooks |
+| Control pack metadata schema | Unified governance | reusable control bundles need stable package semantics | repos may select approved packs, not redefine pack semantics |
 | Repository profile schema | Unified governance | profiles need one contract across repos | repos fill values only in allowed fields |
 | Build command | Repository inheritance | command is repo-specific but contract is shared | override through repo profile |
 | Test command | Repository inheritance | same as build | override through repo profile |
@@ -42,6 +43,7 @@
 | Approval escalation thresholds | Repository override | some repos may require stronger review | can only escalate, not weaken platform minimums |
 | Context shaping hints / repo map hints | Repository override | repo topology differs and may benefit from hints | allowed if bounded to profile schema |
 | Handoff template hints | Repository override | different repos need different review summaries | allowed as additive metadata |
+| Additional control pack activation | Repository override | some repos may need stricter local control bundles | can only add or require stricter packs |
 | Repository business logic | Not in platform | belongs to product code, not runtime governance | not applicable |
 | Generic enterprise workflow automation | Not in platform | would blur product identity | defer beyond MVP |
 | Memory-first personalization stack | Not in platform | weak ROI before evidence/replay/approval are solved | defer |
@@ -56,6 +58,7 @@
 - approvals
 - policy enforcement
 - tool safety semantics
+- control pack metadata semantics
 - evidence language
 - validation completion rules
 

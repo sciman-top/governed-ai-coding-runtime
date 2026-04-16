@@ -25,12 +25,14 @@
 
 ## Roadmap And Execution
 - [90-Day Plan](./roadmap/governed-ai-coding-runtime-90-day-plan.md)
+- [Phase 0 Runnable Baseline Implementation Plan](./plans/phase-0-runnable-baseline-implementation-plan.md)
 - [MVP Backlog Seeds](./backlog/mvp-backlog-seeds.md)
 - [Issue-Ready Backlog](./backlog/issue-ready-backlog.md)
 - [Issue Seeds YAML](./backlog/issue-seeds.yaml)
 
 ## Reviews
 - [Project Audit And Optimization (2026-04-17)](./reviews/2026-04-17-project-audit-and-optimization.md)
+- [Second Project Audit And Plan Hardening (2026-04-17)](./reviews/2026-04-17-second-project-audit-and-plan-hardening.md)
 
 ## Research
 - [Benchmark And Borrowing Notes](./research/benchmark-and-borrowing-notes.md)
@@ -45,6 +47,7 @@
 
 ## Specs
 - [Control Registry Spec](./specs/control-registry-spec.md)
+- [Control Pack Spec](./specs/control-pack-spec.md)
 - [Repo Profile Spec](./specs/repo-profile-spec.md)
 - [Tool Contract Spec](./specs/tool-contract-spec.md)
 - [Hook Contract Spec](./specs/hook-contract-spec.md)
@@ -65,6 +68,7 @@
 - [Schema Catalog](../schemas/catalog/schema-catalog.yaml)
 
 ## Example Instances
+- [Minimum Governance Kernel Control Pack Sample](../schemas/examples/control-pack/minimum-governance-kernel.example.json)
 - [Python Service Repo Profile Sample](../schemas/examples/repo-profile/python-service.example.json)
 - [TypeScript Webapp Repo Profile Sample](../schemas/examples/repo-profile/typescript-webapp.example.json)
 
@@ -79,4 +83,4 @@
 8. ADRs
 9. Specs
 10. Schemas
-11. Project Audit And Optimization
+11. Second Project Audit And Plan Hardening

@@ -13,7 +13,7 @@ Governed AI Coding Runtime MVP
 
 ## Current Baseline
 - PRD, architecture, ADRs, roadmap docs, schema drafts, and `scripts/github/create-roadmap-issues.ps1` already exist.
-- The governance-kernel contract family, schema examples, and sample repo profiles are landed.
+- The governance-kernel contract family, schema examples, sample control-pack metadata, and sample repo profiles are landed.
 - The next backlog should bootstrap a runnable trial loop before broad platform buildout.
 
 ## Seeds
@@ -47,10 +47,12 @@ Governed AI Coding Runtime MVP
 - Blocked by: GAP-001
 - User stories: 2, 18, 19, 38
 - What to build:
-  - at least one sample control pack
+  - a runtime-consumable sample control pack derived from the control-pack metadata contract
   - minimum repo admission checks for the first runnable slice
 - Acceptance criteria:
+  - [ ] control pack metadata validates against `schemas/jsonschema/control-pack.schema.json`
   - [ ] sample control pack has version, owner, and scope metadata
+  - [ ] runtime-consumable pack references controls/hooks/gates without weakening kernel semantics
   - [ ] admission minimums cover commands, tools, and path policy
   - [ ] invalid repos fail before session startup
 
