@@ -35,15 +35,17 @@ This plan assumes the following documents are the active design inputs:
   - `docs/specs/evidence-bundle-spec.md`
   - `docs/specs/verification-gates-spec.md`
   - `docs/specs/eval-and-trace-grading-spec.md`
+  - `docs/specs/repo-admission-minimums-spec.md`
 - Backlog seeds:
   - `docs/backlog/mvp-backlog-seeds.md`
 
 ## Current Baseline
-- `docs/`, `schemas/`, and `scripts/github/create-roadmap-issues.ps1` already exist.
-- Root `README.md` and project `AGENTS.md` already exist as repo entry contracts.
-- The repository is still `docs-first / contracts-first`; `apps/`, `packages/`, `infra/`, and `tests/` have not been bootstrapped yet.
-- The governance-kernel contract family, schema examples, sample control-pack metadata, and two sample repo profiles are landed.
-- Executable sample control packs, compatibility validators, executable services, local verification entrypoints, and CI are not landed yet.
+- `docs/`, `schemas/`, `scripts/github/create-roadmap-issues.ps1`, root `README.md`, and project `AGENTS.md` exist as repo entry contracts.
+- The repository is still `docs-first / contracts-first`, but `apps/`, `packages/`, `infra/`, and `tests/` have been bootstrapped.
+- The governance-kernel contract family, schema examples, sample control-pack metadata, runtime-consumable control-pack asset, and two sample repo profiles are landed.
+- Local verification entrypoints, CI wiring, runtime contract tests, first scripted trial entrypoint, write governance contracts, verification/handoff/eval contracts, second-repo pilot checks, minimal control console facade, and operator runbooks are landed.
+- Production runtime services, durable workflow workers, package build artifacts, deployment targets, and a real doctor/hotspot command are not landed yet.
+- Current execution status: Phase 0 through Phase 4 backlog items are implemented through `GAP-017`; remaining work is closeout review, commit grouping, and post-MVP planning.
 
 ## Goal
 - Deliver an MVP governance kernel for final-state-best-practice governed AI coding in 90 days.
@@ -215,7 +217,7 @@ A 90-day MVP is successful only if it can do all of the following:
 - implementation skeleton exists
 - local verification entrypoint is documented
 - CI can run the minimum repository checks
-- repo admission minimums are explicit
+- repo admission minimums are explicit in `docs/specs/repo-admission-minimums-spec.md`
 - Codex-compatible operation is described as an adapter, not as kernel behavior
 
 ### Week 2
@@ -455,6 +457,7 @@ Seed backlog document:
 - `docs/specs/evidence-bundle-spec.md`
 - `docs/specs/verification-gates-spec.md`
 - `docs/specs/eval-and-trace-grading-spec.md`
+- `docs/specs/repo-admission-minimums-spec.md`
 - `docs/backlog/mvp-backlog-seeds.md`
 
 ## References

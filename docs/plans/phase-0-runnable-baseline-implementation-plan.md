@@ -11,6 +11,8 @@
 ---
 
 ## Source Inputs
+- Latest review baseline: `docs/reviews/2026-04-17-pre-implementation-deep-audit-and-doc-refresh.md`
+- Latest review evidence: `docs/change-evidence/20260417-pre-implementation-deep-audit-and-doc-refresh.md`
 - Product scope: `docs/prd/governed-ai-coding-runtime-prd.md`
 - Minimum loop: `docs/architecture/minimum-viable-governance-loop.md`
 - Roadmap: `docs/roadmap/governed-ai-coding-runtime-90-day-plan.md`
@@ -18,6 +20,10 @@
 - Repo rules: `AGENTS.md`
 - Control pack spec: `docs/specs/control-pack-spec.md`
 - Schema catalog: `schemas/catalog/schema-catalog.yaml`
+
+## Current Operator Starting Point
+- Treat Task 0 as mandatory: freeze or explicitly carry forward the current dirty worktree before adding runtime-oriented files.
+- Use `docs/plans/README.md`, `docs/backlog/README.md`, `docs/reviews/README.md`, and `docs/change-evidence/README.md` as the scoped navigation layer instead of re-running a whole-repo discovery pass each time.
 
 ## Phase 0 Boundaries
 

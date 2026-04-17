@@ -6,8 +6,8 @@ Seed implementation work for a final-state-best-practice governance kernel that 
 ## Current Baseline
 - PRD, architecture, ADRs, roadmap, backlog, schema drafts, and the GitHub issue seeding script already exist.
 - Root `README.md` and project `AGENTS.md` already act as the repo entry contract.
-- Landed: governance contract families, schema examples, sample control-pack metadata, and two sample repo profiles.
-- Missing: runtime-consumable sample control packs; compatibility validation; repo admission checks; `apps/`, `packages/`, `infra/`, `tests/`; local verification entrypoints; CI; and executable services.
+- Landed: governance contract families, schema examples, sample control-pack metadata, runtime-consumable control-pack asset, two sample repo profiles, repo admission checks, skeleton directories, local verification entrypoints, CI, runtime contract tests, first trial entrypoint, write governance contracts, delivery/eval contracts, second-repo pilot checks, minimal control console facade, and runbooks.
+- Missing: production runtime services, durable workers, real package build artifacts, deployment targets, and a real doctor/hotspot command.
 
 ## P0
 1. Keep roadmap, backlog, issue seeds, and the seeding script synchronized around a trial-first plan.

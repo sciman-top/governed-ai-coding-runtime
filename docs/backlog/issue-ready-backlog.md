@@ -15,8 +15,8 @@ Governed AI Coding Runtime MVP
 
 ## Current Baseline
 - PRD, architecture, ADRs, roadmap docs, schema drafts, and `scripts/github/create-roadmap-issues.ps1` already exist.
-- The governance-kernel contract family, schema examples, sample control-pack metadata, and sample repo profiles are landed.
-- The next backlog should bootstrap a runnable trial loop before broad platform buildout.
+- The governance-kernel contract family, schema examples, sample control-pack metadata, runtime-consumable control-pack asset, sample repo profiles, local verifier, CI wiring, and runtime contract layer are landed.
+- Current backlog execution has reached the `GAP-017` endpoint; the next step is closeout review or a new post-MVP backlog.
 
 ## Seeds
 
@@ -29,11 +29,11 @@ Governed AI Coding Runtime MVP
   - align roadmap, backlog, issue seeds, and seeding script around a 2-3 week first trial slice
   - keep planning assets tied to the existing PRD and ADR boundary
 - Acceptance criteria:
-  - [ ] final-state best practice is positioned as a long-term quality target, not as first-slice infrastructure scope
-  - [ ] roadmap, backlog, issue seeds, and seeding script describe the same trial-first order
-  - [ ] first runnable slice is explicit
-  - [ ] 90-day MVP criteria still preserve approval, evidence, verification, and reuse goals
-  - [ ] Codex-first compatibility and generic agent adapter contracts are represented consistently
+  - [x] final-state best practice is positioned as a long-term quality target, not as first-slice infrastructure scope
+  - [x] roadmap, backlog, issue seeds, and seeding script describe the same trial-first order
+  - [x] first runnable slice is explicit
+  - [x] 90-day MVP criteria still preserve approval, evidence, verification, and reuse goals
+  - [x] Codex-first compatibility and generic agent adapter contracts are represented consistently
 
 ### GAP-002 Runnable Skeleton And Verification Bootstrap
 - Type: AFK
@@ -43,9 +43,9 @@ Governed AI Coding Runtime MVP
   - create `apps/`, `packages/`, `infra/`, and `tests/`
   - add local and CI verification entrypoints around schemas, docs, and scripts
 - Acceptance criteria:
-  - [ ] implementation skeleton exists and is documented
-  - [ ] local verification entrypoint is defined
-  - [ ] CI can run schema, docs, and script integrity checks
+  - [x] implementation skeleton exists and is documented
+  - [x] local verification entrypoint is defined
+  - [x] CI can run schema, docs, and script integrity checks
 
 ### GAP-003 Sample Control Pack And Repo Admission Minimums
 - Type: AFK
@@ -55,11 +55,11 @@ Governed AI Coding Runtime MVP
   - a runtime-consumable sample control pack derived from the control-pack metadata contract
   - minimum repo admission checks for the first runnable slice
 - Acceptance criteria:
-  - [ ] control pack metadata validates against `schemas/jsonschema/control-pack.schema.json`
-  - [ ] sample control pack has version, owner, and scope metadata
-  - [ ] runtime-consumable pack references controls/hooks/gates without weakening kernel semantics
-  - [ ] admission minimums cover commands, tools, and path policy
-  - [ ] invalid repos fail before session startup
+  - [x] control pack metadata validates against `schemas/jsonschema/control-pack.schema.json`
+  - [x] sample control pack has version, owner, and scope metadata
+  - [x] runtime-consumable pack references controls/hooks/gates without weakening kernel semantics
+  - [x] admission minimums cover commands, tools, and path policy
+  - [x] invalid repos fail before session startup
 
 ### GAP-004 Deterministic Task Intake And Repo Resolution
 - Type: AFK
@@ -70,9 +70,9 @@ Governed AI Coding Runtime MVP
   - deterministic startup-state validation
   - repo profile resolution
 - Acceptance criteria:
-  - [ ] task intake requires goal, scope, acceptance, repo, and budgets
-  - [ ] illegal startup transitions fail closed
-  - [ ] repo resolution attaches the correct profile inputs
+  - [x] task intake requires goal, scope, acceptance, repo, and budgets
+  - [x] illegal startup transitions fail closed
+  - [x] repo resolution attaches the correct profile inputs
 
 ### GAP-005 Read-Only Governed Tool Runner
 - Type: AFK
@@ -82,9 +82,9 @@ Governed AI Coding Runtime MVP
   - read-only governed tool request path
   - tool contract validation for the first trial slice
 - Acceptance criteria:
-  - [ ] read-only tools validate against contract
-  - [ ] blocked tools fail closed
-  - [ ] one repo can execute a bounded read-only session
+  - [x] read-only tools validate against contract
+  - [x] blocked tools fail closed
+  - [x] one repo can execute a bounded read-only session
 
 ### GAP-006 Evidence Timeline And Task Output
 - Type: AFK
@@ -94,9 +94,9 @@ Governed AI Coding Runtime MVP
   - evidence timeline for task creation, decisions, commands, and outputs
   - task result output for operator review
 - Acceptance criteria:
-  - [ ] evidence captures task, decisions, commands, and outputs structurally
-  - [ ] task output is reviewable without reconstructing raw logs
-  - [ ] evidence is queryable by task id
+  - [x] evidence captures task, decisions, commands, and outputs structurally
+  - [x] task output is reviewable without reconstructing raw logs
+  - [x] evidence is queryable by task id
 
 ### GAP-007 Codex-Compatible CLI Or Scripted Trial Entrypoint
 - Type: AFK
@@ -107,11 +107,11 @@ Governed AI Coding Runtime MVP
   - an agent adapter capability declaration for invocation mode, auth ownership, workspace control, event visibility, mutation model, continuation model, and evidence model
   - first-run operator flow documentation
 - Acceptance criteria:
-  - [ ] an operator can start the first trial through one documented entrypoint
-  - [ ] entrypoint attaches repo profile and budgets
-  - [ ] Codex authentication remains owned by the upstream Codex CLI/App workflow
-  - [ ] one read-only governed task runs end-to-end
-  - [ ] unsupported agent capabilities degrade to observe-only, advisory, or manual-handoff mode
+  - [x] an operator can start the first trial through one documented entrypoint
+  - [x] entrypoint attaches repo profile and budgets
+  - [x] Codex authentication remains owned by the upstream Codex CLI/App workflow
+  - [x] one read-only governed task runs end-to-end
+  - [x] unsupported agent capabilities degrade to observe-only, advisory, or manual-handoff mode
 
 ### GAP-008 Isolated Workspace Allocation
 - Type: AFK
@@ -121,9 +121,9 @@ Governed AI Coding Runtime MVP
   - isolated workspace or worktree allocation
   - path-scope enforcement for write-side preparation
 - Acceptance criteria:
-  - [ ] write-side work does not target arbitrary live directories
-  - [ ] workspace allocation is tied to task lifecycle
-  - [ ] path policy is injected from the repo profile
+  - [x] write-side work does not target arbitrary live directories
+  - [x] workspace allocation is tied to task lifecycle
+  - [x] path policy is injected from the repo profile
 
 ### GAP-009 Write Policy Defaults And Approval Decision
 - Type: HITL
@@ -133,9 +133,9 @@ Governed AI Coding Runtime MVP
   - explicit decision on medium-tier and high-tier write defaults
   - policy record for downstream implementation
 - Acceptance criteria:
-  - [ ] medium-tier behavior is documented
-  - [ ] high-tier behavior remains explicit approval
-  - [ ] downstream issues can implement against the chosen default
+  - [x] medium-tier behavior is documented
+  - [x] high-tier behavior remains explicit approval
+  - [x] downstream issues can implement against the chosen default
 
 ### GAP-010 Approval Service And Interruption Flow
 - Type: AFK
@@ -145,9 +145,9 @@ Governed AI Coding Runtime MVP
   - approval request object and state handling
   - approval interruption interface wired into task state
 - Acceptance criteria:
-  - [ ] approval supports create, approve, reject, revoke, and timeout
-  - [ ] approval results are persisted
-  - [ ] audit trail includes approval decisions
+  - [x] approval supports create, approve, reject, revoke, and timeout
+  - [x] approval results are persisted
+  - [x] audit trail includes approval decisions
 
 ### GAP-011 Write-Side Tool Governance And Rollback References
 - Type: AFK
@@ -157,9 +157,9 @@ Governed AI Coding Runtime MVP
   - write-side governed tool path
   - rollback references for risky writes
 - Acceptance criteria:
-  - [ ] approval-required writes pause before execution
-  - [ ] blocked writes fail closed
-  - [ ] risky writes carry rollback references
+  - [x] approval-required writes pause before execution
+  - [x] blocked writes fail closed
+  - [x] risky writes carry rollback references
 
 ### GAP-012 Quick And Full Verification Runner
 - Type: AFK
@@ -170,9 +170,9 @@ Governed AI Coding Runtime MVP
   - full gate path
   - escalation rules and artifact output
 - Acceptance criteria:
-  - [ ] canonical order is enforced
-  - [ ] escalation conditions are explicit
-  - [ ] verification output attaches to evidence
+  - [x] canonical order is enforced
+  - [x] escalation conditions are explicit
+  - [x] verification output attaches to evidence
 
 ### GAP-013 Delivery Handoff And Replay References
 - Type: AFK
@@ -183,9 +183,9 @@ Governed AI Coding Runtime MVP
   - changed files list
   - validation status, risk notes, and replay references
 - Acceptance criteria:
-  - [ ] handoff package is generated per completed task
-  - [ ] package distinguishes fully validated vs partially validated
-  - [ ] replay info is included for failed or interrupted paths
+  - [x] handoff package is generated per completed task
+  - [x] package distinguishes fully validated vs partially validated
+  - [x] replay info is included for failed or interrupted paths
 
 ### GAP-014 Eval And Trace Baseline
 - Type: AFK
@@ -196,9 +196,9 @@ Governed AI Coding Runtime MVP
   - required trace field emission
   - minimum golden task set and trace grading
 - Acceptance criteria:
-  - [ ] required eval suites are recorded
-  - [ ] required trace fields are emitted
-  - [ ] trace grading distinguishes missing evidence from poor outcome quality
+  - [x] required eval suites are recorded
+  - [x] required trace fields are emitted
+  - [x] trace grading distinguishes missing evidence from poor outcome quality
 
 ### GAP-015 Second-Repo Reuse Pilot
 - Type: AFK
@@ -209,10 +209,10 @@ Governed AI Coding Runtime MVP
   - validate compatibility and run the minimum governed loop
   - represent at least one additional agent product shape through the same adapter capability contract
 - Acceptance criteria:
-  - [ ] second repo uses the same kernel semantics
-  - [ ] only repo-profile values or stricter overrides differ
-  - [ ] no kernel fork is required for the pilot
-  - [ ] future agent compatibility gaps are tracked as adapter work, not governance-kernel rewrites
+  - [x] second repo uses the same kernel semantics
+  - [x] only repo-profile values or stricter overrides differ
+  - [x] no kernel fork is required for the pilot
+  - [x] future agent compatibility gaps are tracked as adapter work, not governance-kernel rewrites
 
 ### GAP-016 Minimal Approval And Evidence Console
 - Type: AFK
@@ -221,9 +221,9 @@ Governed AI Coding Runtime MVP
 - What to build:
   - minimal console for task list, approvals, evidence, and replay-oriented inspection
 - Acceptance criteria:
-  - [ ] user can approve or reject pending steps
-  - [ ] user can inspect evidence by task
-  - [ ] console scope stays control-plane focused
+  - [x] user can approve or reject pending steps
+  - [x] user can inspect evidence by task
+  - [x] console scope stays control-plane focused
 
 ### GAP-017 Waiver Recovery And Control Rollback Runbooks
 - Type: AFK
@@ -232,6 +232,6 @@ Governed AI Coding Runtime MVP
 - What to build:
   - runbooks for failed rollout, expired waiver handling, and control rollback
 - Acceptance criteria:
-  - [ ] minimum operator runbooks exist
-  - [ ] progressive controls point to rollback behavior
-  - [ ] repeated trial operation has documented recovery paths
+  - [x] minimum operator runbooks exist
+  - [x] progressive controls point to rollback behavior
+  - [x] repeated trial operation has documented recovery paths
