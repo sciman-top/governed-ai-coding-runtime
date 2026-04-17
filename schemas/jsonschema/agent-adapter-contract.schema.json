@@ -1,0 +1,230 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/agent-adapter-contract.schema.json",
+  "title": "Agent Adapter Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "adapters"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "adapters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "event_visibility": {
+                  "enum": [
+                    "logs_only",
+                    "transcript_only",
+                    "none"
+                  ]
+                }
+              },
+              "required": [
+                "event_visibility"
+              ]
+            },
+            "then": {
+              "properties": {
+                "unsupported_capability_behavior": {
+                  "enum": [
+                    "degrade_to_observe_only",
+                    "degrade_to_advisory",
+                    "degrade_to_manual_handoff"
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "adapter_id": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "product_family": {
+            "type": "string"
+          },
+          "lifecycle_status": {
+            "type": "string",
+            "enum": [
+              "experimental",
+              "supported",
+              "deprecated"
+            ]
+          },
+          "invocation_mode": {
+            "type": "string",
+            "enum": [
+              "interactive_cli",
+              "non_interactive_cli",
+              "mcp",
+              "app_server",
+              "ide_bridge",
+              "cloud_agent",
+              "browser_ui",
+              "manual_handoff"
+            ]
+          },
+          "auth_ownership": {
+            "type": "string",
+            "enum": [
+              "user_owned_upstream_auth",
+              "service_owned_auth",
+              "delegated_token",
+              "unsupported"
+            ]
+          },
+          "workspace_control": {
+            "type": "string",
+            "enum": [
+              "managed_worktree",
+              "managed_workspace",
+              "upstream_sandbox",
+              "external_workspace",
+              "read_only",
+              "unknown"
+            ]
+          },
+          "event_visibility": {
+            "type": "string",
+            "enum": [
+              "structured_jsonl",
+              "mcp_events",
+              "app_protocol_events",
+              "logs_only",
+              "transcript_only",
+              "none"
+            ]
+          },
+          "mutation_model": {
+            "type": "string",
+            "enum": [
+              "direct_workspace_write",
+              "patch_output",
+              "git_diff",
+              "pull_request",
+              "handoff_only",
+              "read_only"
+            ]
+          },
+          "continuation_model": {
+            "type": "string",
+            "enum": [
+              "resume_id",
+              "fork_id",
+              "session_id",
+              "stateless",
+              "manual"
+            ]
+          },
+          "evidence_model": {
+            "type": "string",
+            "enum": [
+              "structured_trace",
+              "command_log",
+              "transcript",
+              "diff_artifact",
+              "external_artifact",
+              "manual_summary"
+            ]
+          },
+          "supported_governance_modes": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "observe_only",
+                "advisory",
+                "enforced",
+                "strict"
+              ]
+            }
+          },
+          "minimum_required_runtime_controls": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "unsupported_capability_behavior": {
+            "type": "string",
+            "enum": [
+              "fail_closed",
+              "degrade_to_observe_only",
+              "degrade_to_advisory",
+              "degrade_to_manual_handoff"
+            ]
+          },
+          "command_template": {
+            "type": "string"
+          },
+          "mcp_server_ref": {
+            "type": "string"
+          },
+          "app_server_ref": {
+            "type": "string"
+          },
+          "ide_bridge_ref": {
+            "type": "string"
+          },
+          "browser_automation_ref": {
+            "type": "string"
+          },
+          "output_schema_ref": {
+            "type": "string"
+          },
+          "known_limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommended_default_mode": {
+            "type": "string",
+            "enum": [
+              "observe_only",
+              "advisory",
+              "enforced",
+              "strict"
+            ]
+          },
+          "compatibility_notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "adapter_id",
+          "display_name",
+          "product_family",
+          "lifecycle_status",
+          "invocation_mode",
+          "auth_ownership",
+          "workspace_control",
+          "event_visibility",
+          "mutation_model",
+          "continuation_model",
+          "evidence_model",
+          "supported_governance_modes",
+          "minimum_required_runtime_controls",
+          "unsupported_capability_behavior"
+        ]
+      }
+    }
+  }
+}

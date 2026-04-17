@@ -1,4 +1,4 @@
-schema_catalog_version: "1.2"
+schema_catalog_version: "1.3"
 items:
   - name: control-registry
     path: schemas/jsonschema/control-registry.schema.json
@@ -12,6 +12,9 @@ items:
   - name: tool-contract
     path: schemas/jsonschema/tool-contract.schema.json
     source_spec: docs/specs/tool-contract-spec.md
+  - name: agent-adapter-contract
+    path: schemas/jsonschema/agent-adapter-contract.schema.json
+    source_spec: docs/specs/agent-adapter-contract-spec.md
   - name: hook-contract
     path: schemas/jsonschema/hook-contract.schema.json
     source_spec: docs/specs/hook-contract-spec.md

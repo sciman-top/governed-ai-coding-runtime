@@ -110,7 +110,7 @@ Ensure-Milestone
 
 $initiativeBody = @"
 ## Goal
-Deliver an MVP governance kernel for governed AI coding in 90 days while producing a first trialable governed loop within 2-3 weeks.
+Deliver an MVP governance kernel for final-state-best-practice governed AI coding in 90 days while producing a first trialable governed loop within 2-3 weeks.
 
 ## Success Criteria
 - [ ] One target repo can run a governed read-only task end-to-end within the first 2-3 weeks
@@ -119,6 +119,8 @@ Deliver an MVP governance kernel for governed AI coding in 90 days while produci
 - [ ] Evidence bundles and required trace fields are emitted
 - [ ] Completed tasks produce a delivery handoff bundle
 - [ ] Second-repo compatibility pilot passes without a kernel fork
+- [ ] Codex CLI/App compatible operation is proven as the first adapter path
+- [ ] Future agent product shapes can be represented through the same adapter capability contract
 - [ ] Rollback and waiver recovery notes are documented
 
 ## In Scope
@@ -126,7 +128,8 @@ Deliver an MVP governance kernel for governed AI coding in 90 days while produci
 - Runnable baseline, repo admission, and local verification
 - Deterministic task intake and repo resolution
 - Governed tool execution, approval, verification, and evidence
-- CLI/scripted early trial flow
+- Codex-compatible CLI/scripted early trial flow
+- Agent adapter capability contract
 - Second-repo reuse pilot
 
 ## Out of Scope
@@ -135,6 +138,8 @@ Deliver an MVP governance kernel for governed AI coding in 90 days while produci
 - Memory-first personalization platform
 - Skill marketplace or promotion workflow
 - Broad deployment automation as the platform identity
+- Upstream agent UX replacement
+- Product-specific adapter sprawl before stable capability contracts exist
 "@
 
 New-RoadmapIssue -Title "[Initiative] 90-Day Governed AI Coding Runtime MVP" -Labels @("initiative", "platform") -Body $initiativeBody
@@ -152,16 +157,18 @@ Create the minimum runnable repository baseline for the first governed trial.
 - apps / packages / infra / tests bootstrap
 - Local verification entrypoints and CI minimums
 - Runtime-consumable sample control pack and repo admission minimums
+- Agent adapter capability contract and Codex CLI/App compatibility assumptions
 
 ## Dependencies
 - None
 
 ## Acceptance Criteria
-- [ ] Planning artifacts describe the same trial-first order
+- [ ] Planning artifacts describe the same final-state and trial-first order
 - [ ] Missing implementation skeleton exists
 - [ ] Local verification entrypoint and minimum CI are documented
 - [ ] Repo admission minimums are explicit
 - [ ] Sample control-pack metadata is promoted into a runtime-consumable pack
+- [ ] Codex-compatible operation is described as an adapter, not as kernel behavior
 "@
   }
   @{
@@ -169,14 +176,15 @@ Create the minimum runnable repository baseline for the first governed trial.
     Labels = @("epic", "phase:1-trial", "backend", "platform")
     Body   = @"
 ## Goal
-Run the first operator-visible governed session through a CLI or scripted path.
+Run the first operator-visible governed session through a Codex-compatible CLI or scripted path.
 
 ## Scope
 - Deterministic task intake
 - Repo profile resolution
 - Read-only governed tool path
 - Evidence timeline and task output
-- CLI or scripted trial entrypoint
+- Codex-compatible CLI or scripted trial entrypoint
+- Observe-only, advisory, enforced, and strict governance modes for trial use
 
 ## Dependencies
 - [Epic] Runnable Baseline And Trial Bootstrap
@@ -185,6 +193,7 @@ Run the first operator-visible governed session through a CLI or scripted path.
 - [ ] One repo can run a read-only governed task end-to-end
 - [ ] Evidence captures task, decisions, commands, and outputs
 - [ ] Operator can inspect output without reconstructing raw logs
+- [ ] Adapter gaps are recorded as compatibility work, not kernel drift
 "@
   }
   @{
@@ -264,11 +273,11 @@ foreach ($epic in $epics) {
 if (-not $SkipTasks) {
   $tasks = @(
     @{
-      Title  = "[Task] Align planning artifacts around the first trial slice"
+      Title  = "[Task] Align planning artifacts around final-state and trial-first positioning"
       Labels = @("task", "phase:0-baseline", "docs", "platform")
       Body   = @"
 ## Goal
-Keep roadmap, backlog, issue seeds, and the seeding script synchronized around the same first trial slice.
+Keep roadmap, backlog, issue seeds, and the seeding script synchronized around final-state best practice and the same first trial slice.
 
 ## Dependencies
 - [Epic] Runnable Baseline And Trial Bootstrap
@@ -277,6 +286,7 @@ Keep roadmap, backlog, issue seeds, and the seeding script synchronized around t
 - [ ] Planning artifacts describe the same order and success criteria
 - [ ] First runnable slice is explicit
 - [ ] 90-day MVP criteria still preserve approval, evidence, verification, and reuse goals
+- [ ] Codex-first compatibility and generic agent adapter contracts are represented consistently
 "@
     }
     @{
@@ -346,11 +356,11 @@ Run bounded read-only execution and persist what happened.
 "@
     }
     @{
-      Title  = "[Task] Add CLI or scripted entrypoint for the first governed trial"
+      Title  = "[Task] Add Codex-compatible CLI or scripted entrypoint for the first governed trial"
       Labels = @("task", "phase:1-trial", "platform", "docs")
       Body   = @"
 ## Goal
-Give an operator one documented path to run the first trial slice.
+Give an operator one Codex-compatible documented path to run the first trial slice.
 
 ## Dependencies
 - [Epic] First Read-Only Governed Trial Slice
@@ -358,7 +368,9 @@ Give an operator one documented path to run the first trial slice.
 ## Acceptance Criteria
 - [ ] Operator can start the first trial through one documented entrypoint
 - [ ] Entry path attaches repo profile and budgets
+- [ ] Codex authentication remains owned by the upstream Codex CLI/App workflow
 - [ ] One read-only governed task runs end-to-end
+- [ ] Unsupported agent capabilities degrade to observe-only, advisory, or manual-handoff mode
 "@
     }
     @{

@@ -33,6 +33,7 @@
 ## Reviews
 - [Project Audit And Optimization (2026-04-17)](./reviews/2026-04-17-project-audit-and-optimization.md)
 - [Second Project Audit And Plan Hardening (2026-04-17)](./reviews/2026-04-17-second-project-audit-and-plan-hardening.md)
+- [FinalStateBestPractices Original Mapping Review (2026-04-17)](./reviews/2026-04-17-final-state-best-practices-original-mapping.md)
 
 ## Research
 - [Benchmark And Borrowing Notes](./research/benchmark-and-borrowing-notes.md)
@@ -44,12 +45,14 @@
 - [ADR-0003: Single-Agent Baseline First](./adrs/0003-single-agent-baseline-first.md)
 - [ADR-0004: Rename Project To Governed AI Coding Runtime](./adrs/0004-rename-project-to-governed-ai-coding-runtime.md)
 - [ADR-0005: Governance Kernel And Control Packs Before Platform Breadth](./adrs/0005-governance-kernel-and-control-packs-before-platform-breadth.md)
+- [ADR-0006: Final-State Best Practice And Agent Compatibility](./adrs/0006-final-state-best-practice-agent-compatibility.md)
 
 ## Specs
 - [Control Registry Spec](./specs/control-registry-spec.md)
 - [Control Pack Spec](./specs/control-pack-spec.md)
 - [Repo Profile Spec](./specs/repo-profile-spec.md)
 - [Tool Contract Spec](./specs/tool-contract-spec.md)
+- [Agent Adapter Contract Spec](./specs/agent-adapter-contract-spec.md)
 - [Hook Contract Spec](./specs/hook-contract-spec.md)
 - [Skill Manifest Spec](./specs/skill-manifest-spec.md)
 - [Knowledge Source Spec](./specs/knowledge-source-spec.md)
@@ -75,12 +78,15 @@
 ## Recommended Reading Order
 1. PRD
 2. Interaction Model
-3. Target Architecture
+3. Final State Best Practices
 4. Governance Boundary Matrix
 5. Minimum Viable Governance Loop
-6. 90-Day Plan
-7. Issue-Ready Backlog
-8. ADRs
-9. Specs
-10. Schemas
-11. Second Project Audit And Plan Hardening
+6. MVP Stack Vs Target Stack
+7. Compatibility Matrix
+8. Target Architecture
+9. 90-Day Plan
+10. Issue-Ready Backlog
+11. ADRs
+12. Specs
+13. Schemas
+14. Second Project Audit And Plan Hardening

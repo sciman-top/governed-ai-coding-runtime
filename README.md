@@ -17,16 +17,17 @@ The current repository captures the product definition, architecture, roadmap, b
 
 ## Read First
 1. [docs/README.md](docs/README.md)
-2. [Interaction Model](docs/product/interaction-model.md)
-3. [AI Coding PRD](docs/prd/governed-ai-coding-runtime-prd.md)
-4. [Target Architecture](docs/architecture/governed-ai-coding-runtime-target-architecture.md)
+2. [AI Coding PRD](docs/prd/governed-ai-coding-runtime-prd.md)
+3. [Interaction Model](docs/product/interaction-model.md)
+4. [Final State Best Practices](docs/FinalStateBestPractices.md)
 5. [Minimum Viable Governance Loop](docs/architecture/minimum-viable-governance-loop.md)
 6. [MVP Stack Vs Target Stack](docs/architecture/mvp-stack-vs-target-stack.md)
 7. [Compatibility Matrix](docs/architecture/compatibility-matrix.md)
-8. [90-Day Plan](docs/roadmap/governed-ai-coding-runtime-90-day-plan.md)
-9. [Issue-Ready Backlog](docs/backlog/issue-ready-backlog.md)
-10. [Schemas README](schemas/README.md)
-11. [Project AGENTS](AGENTS.md)
+8. [Target Architecture](docs/architecture/governed-ai-coding-runtime-target-architecture.md)
+9. [90-Day Plan](docs/roadmap/governed-ai-coding-runtime-90-day-plan.md)
+10. [Issue-Ready Backlog](docs/backlog/issue-ready-backlog.md)
+11. [Schemas README](schemas/README.md)
+12. [Project AGENTS](AGENTS.md)
 
 ## Naming
 The active project name is `governed-ai-coding-runtime`.

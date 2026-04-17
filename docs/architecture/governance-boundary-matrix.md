@@ -27,6 +27,7 @@
 | Approval semantics | Unified governance | 风险中断与恢复必须全平台一致 | repos may strengthen triggers, not redefine states |
 | Risk taxonomy | Unified governance | risk level 必须跨仓可比较 | repos may map more commands into higher tiers |
 | Tool execution contract | Unified governance | tool requests must be validated consistently | repos cannot bypass contract |
+| Agent adapter capability contract | Unified governance | agent products must map into one compatibility language | adapters may declare capabilities but cannot redefine kernel semantics |
 | Evidence bundle schema | Unified governance | replay, audit, and review need one evidence language | repos may add extra evidence fields |
 | Eval categories | Unified governance | final outcome / trajectory / safety should stay comparable | repos may add repo-specific evals |
 | Replay / rollback model | Unified governance | failure recovery must be deterministic | repos may provide extra compensation hooks |
@@ -43,6 +44,7 @@
 | Approval escalation thresholds | Repository override | some repos may require stronger review | can only escalate, not weaken platform minimums |
 | Context shaping hints / repo map hints | Repository override | repo topology differs and may benefit from hints | allowed if bounded to profile schema |
 | Handoff template hints | Repository override | different repos need different review summaries | allowed as additive metadata |
+| Preferred compatible agent adapter | Repository override | repo/operator workflows may prefer Codex CLI/App, MCP, IDE, or manual handoff | allowed if the selected adapter satisfies kernel controls |
 | Additional control pack activation | Repository override | some repos may need stricter local control bundles | can only add or require stricter packs |
 | Repository business logic | Not in platform | belongs to product code, not runtime governance | not applicable |
 | Generic enterprise workflow automation | Not in platform | would blur product identity | defer beyond MVP |
@@ -58,6 +60,7 @@
 - approvals
 - policy enforcement
 - tool safety semantics
+- agent adapter capability semantics
 - control pack metadata semantics
 - evidence language
 - validation completion rules
@@ -67,6 +70,7 @@
 - their path hints
 - their stricter local constraints
 - their additional repo-specific checks
+- their preferred compatible adapter within platform-approved capability bounds
 
 ### What repos must not own
 - redefining task lifecycle semantics

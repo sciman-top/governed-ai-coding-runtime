@@ -1,7 +1,7 @@
-issue_seed_version: "1.2"
+issue_seed_version: "1.3"
 issues:
   - id: GAP-001
-    title: Trial-First Planning Alignment
+    title: Final-State And Trial-First Planning Alignment
     type: AFK
     blocked_by: []
     user_stories: [1, 18, 31]
@@ -31,7 +31,7 @@ issues:
     blocked_by: [GAP-004, GAP-005]
     user_stories: [13, 14, 27, 39]
   - id: GAP-007
-    title: CLI Or Scripted Trial Entrypoint
+    title: Codex-Compatible CLI Or Scripted Trial Entrypoint
     type: AFK
     blocked_by: [GAP-004, GAP-005, GAP-006]
     user_stories: [1, 5, 18, 37, 39]

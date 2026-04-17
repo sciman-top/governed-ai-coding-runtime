@@ -16,11 +16,13 @@
   - `docs/adrs/0003-single-agent-baseline-first.md`
   - `docs/adrs/0004-rename-project-to-governed-ai-coding-runtime.md`
   - `docs/adrs/0005-governance-kernel-and-control-packs-before-platform-breadth.md`
+  - `docs/adrs/0006-final-state-best-practice-agent-compatibility.md`
 - Specs:
   - `docs/specs/control-registry-spec.md`
   - `docs/specs/control-pack-spec.md`
   - `docs/specs/repo-profile-spec.md`
   - `docs/specs/tool-contract-spec.md`
+  - `docs/specs/agent-adapter-contract-spec.md`
   - `docs/specs/hook-contract-spec.md`
   - `docs/specs/skill-manifest-spec.md`
   - `docs/specs/knowledge-source-spec.md`
@@ -37,6 +39,7 @@
 - 为 `governed-ai-coding-runtime` 提供一份从零开始可落地的终态架构说明。
 - 明确控制面、执行面、数据/知识面、观测/保证面的边界。
 - 固定 `MCP`、`A2A`、状态机、事件总线、审批、审计之间的职责分工。
+- 明确终态最佳实践是长期目标，MVP 是验证该目标的最小治理闭环。
 
 ## Non-Goals
 - 不把本文档写成产品需求文档。
@@ -49,6 +52,7 @@
 - 权限：默认最小权限，高风险写操作必须审批。
 - 约束：成本预算、时延预算、上下文窗口、人工审批频率都有限。
 - 目标：优先得到可治理、可验证、可审计、可回滚的系统，不追求无限自治。
+- 兼容：上游 AI coding 产品会持续变化，内核必须通过能力契约适配产品形态，而不是依赖某一个 agent 的 UI 或会话模型。
 
 ## Core Position
 默认首选：
@@ -57,7 +61,8 @@
 
 一句话解释：
 - `single-agent + tools` 作为 baseline 必须先存在，但不能承担最终治理职责。
-- 真正的“终态最佳实践”不是让 Agent 更自由，而是让治理、审批、回滚、验证更确定。
+- 真正的“终态最佳实践”不是让 Agent 更自由，也不是让治理更重，而是让治理、审批、回滚、验证更确定，并且只在风险需要时增加摩擦。
+- Agent 产品是可替换的 execution frontend；task、policy、approval、evidence、verification、rollback 是稳定的治理内核。
 
 ## Architecture Overview
 
@@ -98,7 +103,7 @@
           v
 +-------------------------------------------------------------------------+
 |                  Integration / Adapter Boundary                         |
-| MCP Clients | A2A Gateway | SaaS Connectors | Browser | Shell | RPA     |
+| Agent Adapters | MCP Clients | A2A Gateway | Browser | Shell | RPA      |
 +-------------------------------------------------------------------------+
 ```
 
@@ -172,6 +177,11 @@
 - 用途：关键状态流转、暂停、恢复、超时、重试、补偿、人工接管。
 - 必须 deterministic，不能交给 LLM 自由决定。
 
+### Agent Adapter Contract
+- 用途：把 Codex CLI/App、Claude Code、OpenClaw、Hermes、IDE 插件、云端 coding agent、浏览器自动化 agent、未来未知产品形态映射到统一运行时能力。
+- 必须描述：调用方式、认证归属、workspace 控制、事件可见性、变更模型、续跑模型、证据导出模型。
+- 不负责：改变 task lifecycle、审批语义、证据 schema、验证顺序或 rollback 规则。
+
 ## Recommended Stack
 
 ### Backend
@@ -213,6 +223,7 @@
 - Internal service-to-service: `gRPC`
 - Tool / context integration: `MCP`
 - Cross-agent collaboration: `A2A`
+- Agent frontend integration: capability-based adapter contract, Codex CLI/App first
 
 ## Why This Stack
 - `Python`：AI/runtime/tooling 生态成熟，跨平台友好。
@@ -221,6 +232,7 @@
 - `OPA`：让权限和风险判定脱离 prompt 与业务代码。
 - `OpenTelemetry`：统一 trace、metrics、event 字段，降低观测漂移。
 - `Next.js`：管理台、审批页、回放页和审计页的开发效率高。
+- Agent adapter contract：避免把内核绑定到某个上游 agent 产品，同时允许先兼容 Codex CLI/App。
 
 ## Minimum Viable Governance Loop
 
@@ -238,6 +250,7 @@
 4. Governed execution
    - agent 只通过 Tool Runner 请求能力。
    - Risk / Policy Engine 决定是允许、审批还是阻断。
+   - 对低风险路径允许 observe-only 或 advisory 模式，避免治理拖慢普通编码。
 5. Approval interruption
    - 高风险动作暂停 workflow。
    - 人类批准、拒绝、撤回或超时。
@@ -269,6 +282,8 @@ Detailed loop spec:
 | Plan drafting | agent worker | limited | require validation |
 | Tool suggestion | agent worker | limited | policy pre-check |
 | Local optimization in sandbox | agent worker + sandbox | limited | rollback / discard |
+| Agent product selection | adapter registry + user preference | limited | fall back to compatible adapter or manual handoff |
+| Governance friction mode | deterministic policy + repo profile | no | enforce risk-proportional minimum |
 
 ## Governance Boundary Summary
 
@@ -279,6 +294,7 @@ Detailed loop spec:
 - approval semantics
 - risk taxonomy
 - tool execution contract
+- agent adapter capability contract
 - evidence and audit schema
 - replay / rollback semantics
 - eval categories
@@ -296,12 +312,14 @@ Detailed loop spec:
 - stronger approval requirements
 - repo-specific context shaping hints
 - repo-specific extra gates
+- preferred compatible agent adapter when multiple adapters are available
 
 ### Not in the hub
 - repository business logic
 - self-modifying policy logic
 - memory-first personalization stack in MVP
 - full deployment governance in MVP
+- upstream agent authentication ownership for user-authenticated tools such as Codex CLI/App
 
 Detailed matrix:
 - `docs/architecture/governance-boundary-matrix.md`
@@ -317,6 +335,7 @@ The architecture should borrow mechanisms, not copy product identity.
 - `Aider repo map`: compact repo context shaping
 - `Cline`: fine-grained permissions and approval surfaces
 - `OpenAI Cookbook` and official docs: structured outputs, evals, tool use, safety, state semantics
+- `Codex CLI/App`: first adapter target for user-authenticated coding sessions and local operator workflow compatibility
 
 ### Not worth copying directly
 - graph-first mental model as the system identity
@@ -348,6 +367,7 @@ Related specs:
 - `docs/specs/repo-profile-spec.md`
 - `docs/specs/control-pack-spec.md`
 - `docs/specs/tool-contract-spec.md`
+- `docs/specs/agent-adapter-contract-spec.md`
 - `docs/specs/risk-tier-and-approval-spec.md`
 
 The platform owns:

@@ -17,11 +17,13 @@
   - `docs/adrs/0003-single-agent-baseline-first.md`
   - `docs/adrs/0004-rename-project-to-governed-ai-coding-runtime.md`
   - `docs/adrs/0005-governance-kernel-and-control-packs-before-platform-breadth.md`
+  - `docs/adrs/0006-final-state-best-practice-agent-compatibility.md`
 - Specs:
   - `docs/specs/control-registry-spec.md`
   - `docs/specs/control-pack-spec.md`
   - `docs/specs/repo-profile-spec.md`
   - `docs/specs/tool-contract-spec.md`
+  - `docs/specs/agent-adapter-contract-spec.md`
   - `docs/specs/hook-contract-spec.md`
   - `docs/specs/skill-manifest-spec.md`
   - `docs/specs/knowledge-source-spec.md`
@@ -54,7 +56,9 @@ From the user's perspective, the current pain points are:
 
 The problem to solve is therefore:
 
-Create a governed execution platform for AI coding that allows developers to use their preferred coding agents while placing those agents inside a deterministic runtime shell that controls scope, permissions, approvals, validation, auditing, and rollback.
+Create a final-state-best-practice governed execution platform for AI coding that allows developers to use their preferred coding agents while placing those agents inside a deterministic runtime shell that controls scope, permissions, approvals, validation, auditing, and rollback.
+
+The platform must remain useful as upstream coding agents become stronger. Its durable value is not better code generation. Its durable value is stable repository-owned governance, evidence, verification, approval, and recovery semantics across changing agent products.
 
 ## Solution
 
@@ -74,6 +78,8 @@ From the user's perspective, the platform works like this:
 
 The product is not a new IDE and not a generic chatbot. It is the governed runtime and control layer around AI coding agents.
 
+The long-term target is final-state best practice for governed AI coding: agent-agnostic execution, risk-proportional control, evidence-first delivery, and compatibility with current and future agent product shapes.
+
 Its core user value is:
 
 - safer AI coding
@@ -85,19 +91,23 @@ Its core user value is:
 ## Product Goals
 
 ### Primary Goals
+- Define and evolve toward final-state best practice for governed AI coding execution.
 - Make AI coding tasks governable without forcing users to abandon their preferred coding agents.
 - Turn repository-aware AI coding into a stateful, validated workflow rather than a one-shot chat interaction.
 - Make approvals, evidence, validation, replay, and rollback first-class runtime behaviors.
+- Preserve upstream agent effectiveness by applying governance only where risk and delivery confidence justify it.
 
 ### Secondary Goals
 - Allow the same governed runtime model to work across multiple repositories through repository profiles.
 - Enable gradual rollout from solo usage to small-team usage without redesigning the core control model.
+- Support new agent products through an adapter contract rather than product-specific kernel assumptions.
 
 ### Non-Goals
 - Building a new IDE.
 - Replacing all coding agents with one proprietary interface.
 - Making fully autonomous multi-agent behavior the default.
 - Turning the MVP into a generic enterprise automation platform.
+- Adding blanket approval friction to every agent action.
 
 ## MVP Capability Boundary
 
@@ -117,6 +127,9 @@ The MVP must support the following end-to-end coding loop:
 - The platform must support repository profiles that declare build, test, lint, typecheck, contract, and invariant commands.
 - The platform must support a governed tool layer for shell, file mutation, git, browser, package manager, and repository-aware helper tools.
 - The platform must classify actions into at least three governance buckets: safe, approval-required, and blocked.
+- The platform must support risk-proportional governance modes, starting with observe-only/advisory behavior where enforcement would create unnecessary friction.
+- The platform must define an agent adapter contract that can describe CLI, MCP, app-server, IDE, browser-automation, cloud-agent, and manual-handoff execution shapes.
+- The first adapter priority should be compatible with the user's current Codex CLI/App workflow without taking ownership of upstream Codex authentication.
 - The platform must support explicit pause and resume across long-running tasks.
 - The platform must persist validation outcomes as task-level evidence.
 - The platform must support isolated execution workspaces or worktrees.
@@ -265,6 +278,7 @@ Implementation should follow the adopted decision chain:
 - `ADR-0002`: no multi-repo distribution in MVP
 - `ADR-0003`: single-agent baseline first
 - `ADR-0005`: governance kernel and control packs before platform breadth
+- `ADR-0006`: final-state best practice and agent compatibility
 
 The active naming decision is captured by:
 - `ADR-0004`: rename project to Governed AI Coding Runtime
@@ -274,6 +288,7 @@ Implementation contracts should be taken from:
 - `docs/specs/control-pack-spec.md`
 - `docs/specs/repo-profile-spec.md`
 - `docs/specs/tool-contract-spec.md`
+- `docs/specs/agent-adapter-contract-spec.md`
 - `docs/specs/hook-contract-spec.md`
 - `docs/specs/skill-manifest-spec.md`
 - `docs/specs/knowledge-source-spec.md`
@@ -286,12 +301,15 @@ Implementation contracts should be taken from:
 - `docs/specs/verification-gates-spec.md`
 
 - The product will target AI coding first, not generic enterprise automation. This keeps the MVP focused on repository-bound engineering tasks.
+- The product will use final-state best practice as its north star while implementing through small, validated governance loops.
 - The primary architecture will be control-plane-first with durable workflows for task execution and deterministic policy enforcement for governance-critical decisions.
 - The initial product model will be "single-agent baseline inside a governed shell," not multi-agent by default.
+- The initial compatibility priority will be Codex CLI/App because it matches the current primary user workflow, but Codex-specific behavior must remain adapter-owned and must not leak into kernel semantics.
 - The platform will define a task object as the core execution unit. A task will carry goal, scope, acceptance criteria, repo target, risk level, execution budgets, approvals, evidence, and validation outcomes.
 - Repository onboarding will be based on repository profiles that define the repository's commands, allowed tools, approval rules, and required gates.
 - High-risk actions will be modeled explicitly, not inferred only through prompt behavior. Risk classes will drive approval and execution behavior.
 - Tool execution will be separated from agent reasoning. The agent can request tool use, but a deterministic tool governance layer must validate the request before execution.
+- The system will distinguish between observe-only, advisory, enforced, and strict governance modes so low-risk work is not slowed down by high-risk controls.
 - The system will distinguish between safe tools, approval-required tools, and blocked tools.
 - The platform will support isolated execution environments for AI coding tasks so that repository mutations happen in controlled workspaces rather than arbitrary live directories.
 - Build, test, lint, typecheck, and repository-specific contract/invariant checks will be modeled as part of task lifecycle completion, not optional post-processing.
@@ -301,6 +319,7 @@ Implementation contracts should be taken from:
 - Audit and evidence will be append-oriented and queryable from a console so that the user can replay or inspect task history.
 - The console will focus on task review, approvals, evidence inspection, validation outcomes, and failure analysis before it expands into broader admin features.
 - The platform must support multiple AI coding agents as execution front-ends, but the governance model must remain stable regardless of which agent is used.
+- Future agent products must integrate through declared capabilities such as invocation mode, auth ownership, workspace control, event visibility, mutation model, continuation model, and evidence model.
 - Policy, prompt, tool, and repository-profile definitions will be versioned so that runtime behavior changes can be traced and evaluated.
 - Evaluation will include final outcome quality, trajectory quality, regression, and safety checks. The platform must be testable as a governed runtime, not only as a coding assistant.
 - The MVP will optimize for a solo developer using one or a few repositories, while leaving room to scale toward team usage later.

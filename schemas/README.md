@@ -8,6 +8,7 @@ Machine-readable schema drafts and example instances for the platform's core gov
 - `jsonschema/control-pack.schema.json`
 - `jsonschema/repo-profile.schema.json`
 - `jsonschema/tool-contract.schema.json`
+- `jsonschema/agent-adapter-contract.schema.json`
 - `jsonschema/hook-contract.schema.json`
 - `jsonschema/skill-manifest.schema.json`
 - `jsonschema/knowledge-source.schema.json`

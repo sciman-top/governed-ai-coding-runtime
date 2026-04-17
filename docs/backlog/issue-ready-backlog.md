@@ -10,6 +10,8 @@ Governed AI Coding Runtime MVP
 - no multi-repo distribution in MVP
 - reuse is proven through compatible repo profiles, not mirrored source trees
 - the first 2-3 weeks should produce a runnable governed trial slice
+- final-state best practice is the north star, while the MVP remains a narrow tracer bullet
+- Codex CLI/App compatibility is the first adapter priority, but kernel semantics remain agent-agnostic
 
 ## Current Baseline
 - PRD, architecture, ADRs, roadmap docs, schema drafts, and `scripts/github/create-roadmap-issues.ps1` already exist.
@@ -18,17 +20,20 @@ Governed AI Coding Runtime MVP
 
 ## Seeds
 
-### GAP-001 Trial-First Planning Alignment
+### GAP-001 Final-State And Trial-First Planning Alignment
 - Type: AFK
 - Blocked by: None
 - User stories: 1, 18, 31
 - What to build:
+  - align PRD, ADRs, architecture, roadmap, backlog, issue seeds, and seeding script around final-state best practice as the north star
   - align roadmap, backlog, issue seeds, and seeding script around a 2-3 week first trial slice
   - keep planning assets tied to the existing PRD and ADR boundary
 - Acceptance criteria:
+  - [ ] final-state best practice is positioned as a long-term quality target, not as first-slice infrastructure scope
   - [ ] roadmap, backlog, issue seeds, and seeding script describe the same trial-first order
   - [ ] first runnable slice is explicit
   - [ ] 90-day MVP criteria still preserve approval, evidence, verification, and reuse goals
+  - [ ] Codex-first compatibility and generic agent adapter contracts are represented consistently
 
 ### GAP-002 Runnable Skeleton And Verification Bootstrap
 - Type: AFK
@@ -93,17 +98,20 @@ Governed AI Coding Runtime MVP
   - [ ] task output is reviewable without reconstructing raw logs
   - [ ] evidence is queryable by task id
 
-### GAP-007 CLI Or Scripted Trial Entrypoint
+### GAP-007 Codex-Compatible CLI Or Scripted Trial Entrypoint
 - Type: AFK
 - Blocked by: GAP-004, GAP-005, GAP-006
 - User stories: 1, 5, 18, 37, 39
 - What to build:
-  - a CLI or scripted entrypoint for the first trial slice
+  - a Codex CLI/App compatible CLI or scripted entrypoint for the first trial slice
+  - an agent adapter capability declaration for invocation mode, auth ownership, workspace control, event visibility, mutation model, continuation model, and evidence model
   - first-run operator flow documentation
 - Acceptance criteria:
   - [ ] an operator can start the first trial through one documented entrypoint
   - [ ] entrypoint attaches repo profile and budgets
+  - [ ] Codex authentication remains owned by the upstream Codex CLI/App workflow
   - [ ] one read-only governed task runs end-to-end
+  - [ ] unsupported agent capabilities degrade to observe-only, advisory, or manual-handoff mode
 
 ### GAP-008 Isolated Workspace Allocation
 - Type: AFK
@@ -199,10 +207,12 @@ Governed AI Coding Runtime MVP
 - What to build:
   - register a second target repository
   - validate compatibility and run the minimum governed loop
+  - represent at least one additional agent product shape through the same adapter capability contract
 - Acceptance criteria:
   - [ ] second repo uses the same kernel semantics
   - [ ] only repo-profile values or stricter overrides differ
   - [ ] no kernel fork is required for the pilot
+  - [ ] future agent compatibility gaps are tracked as adapter work, not governance-kernel rewrites
 
 ### GAP-016 Minimal Approval And Evidence Console
 - Type: AFK

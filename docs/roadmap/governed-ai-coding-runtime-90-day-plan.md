@@ -17,11 +17,13 @@ This plan assumes the following documents are the active design inputs:
   - `docs/adrs/0003-single-agent-baseline-first.md`
   - `docs/adrs/0004-rename-project-to-governed-ai-coding-runtime.md`
   - `docs/adrs/0005-governance-kernel-and-control-packs-before-platform-breadth.md`
+  - `docs/adrs/0006-final-state-best-practice-agent-compatibility.md`
 - Specs:
   - `docs/specs/control-registry-spec.md`
   - `docs/specs/control-pack-spec.md`
   - `docs/specs/repo-profile-spec.md`
   - `docs/specs/tool-contract-spec.md`
+  - `docs/specs/agent-adapter-contract-spec.md`
   - `docs/specs/hook-contract-spec.md`
   - `docs/specs/skill-manifest-spec.md`
   - `docs/specs/knowledge-source-spec.md`
@@ -44,9 +46,10 @@ This plan assumes the following documents are the active design inputs:
 - Executable sample control packs, compatibility validators, executable services, local verification entrypoints, and CI are not landed yet.
 
 ## Goal
-- Deliver an MVP governance kernel for governed AI coding in 90 days.
+- Deliver an MVP governance kernel for final-state-best-practice governed AI coding in 90 days.
 - Put a first trialable governed loop in operator hands within 2-3 weeks.
 - Keep the first executable loop auditable, replayable, approval-aware, and rollbackable.
+- Make Codex CLI/App compatible operation the first adapter proof while keeping the kernel agent-agnostic.
 
 ## Trial-First Definition
 
@@ -55,6 +58,7 @@ A first trial is successful only if it can do all of the following:
 - load one repo profile and minimum control inputs
 - create a durable task with goal, scope, acceptance criteria, and budgets
 - start a governed read-only session through a CLI or scripted entrypoint
+- support a Codex CLI/App compatible operator path without taking ownership of upstream Codex authentication
 - execute bounded read-only tools against one target repository
 - emit evidence and decision logs for the session
 - let the operator inspect what happened without reconstructing raw logs manually
@@ -67,6 +71,7 @@ A 90-day MVP is successful only if it can do all of the following:
 - emit evidence, decision logs, rollback references, and required trace fields
 - generate a delivery handoff bundle
 - prove compatibility on a second target repository without forking kernel semantics
+- prove that at least one additional agent product shape can be represented by the same adapter capability contract, even if it only runs in observe-only or manual-handoff mode
 
 ## Scope
 
@@ -79,6 +84,8 @@ A 90-day MVP is successful only if it can do all of the following:
 - evidence, trace, and replay-oriented output
 - CLI or scripted operator flow for early trials
 - second-repo reuse proof
+- Codex CLI/App compatible first adapter path
+- generic agent adapter capability contract
 
 ### Out of Scope
 - multi-repo distribution hub behavior
@@ -87,6 +94,8 @@ A 90-day MVP is successful only if it can do all of the following:
 - skill marketplace or promotion workflow
 - broad deployment automation as the platform identity
 - org-scale enterprise tenancy and RBAC complexity
+- replacing upstream agent UX or authentication
+- deep integrations with every new AI coding product before a stable capability surface exists
 
 ## Roadmap Principles
 - Ship the smallest runnable governed slice before adding platform width.
@@ -95,6 +104,9 @@ A 90-day MVP is successful only if it can do all of the following:
 - Treat repo reuse as `same kernel, different profiles`, not as source mirroring.
 - Only allow repo overrides that tighten or extend governance.
 - Add UI only when it removes operator pain from approval, evidence, or replay.
+- Treat final-state best practice as the north star, not as permission to front-load all target-state infrastructure.
+- Treat new agent products as adapters; do not let the first adapter redefine kernel semantics.
+- Keep governance friction proportional to risk.
 
 ## What To Add / What To Weaken / What To Defer
 
@@ -104,12 +116,15 @@ A 90-day MVP is successful only if it can do all of the following:
 - durable task intake and repo profile resolution
 - read-only governed session shell and evidence timeline
 - CLI or scripted operator entrypoint for the first trial
+- Codex CLI/App compatible first operator path
+- draft agent adapter capability contract
 
 ### Weaken intentionally
 - contract-family expansion work that is already completed
 - console breadth before the first runnable slice exists
 - A2A or federation positioning in MVP materials
 - deployment automation as a default path
+- strict enforcement for low-risk exploratory work
 
 ### Defer explicitly
 - memory-first architecture
@@ -117,6 +132,8 @@ A 90-day MVP is successful only if it can do all of the following:
 - skill marketplace and promotion lifecycle
 - multi-repo distribution and backflow sync
 - enterprise-grade organization model
+- deep IDE replacement UX
+- broad product-specific adapter catalog
 
 ## Phases
 
@@ -124,6 +141,7 @@ A 90-day MVP is successful only if it can do all of the following:
 - bootstrap `apps/`, `packages/`, `infra/`, and `tests/`
 - define local verification entrypoints and CI minimums
 - promote the sample control-pack metadata into a runtime-consumable sample control pack plus repo admission minimums
+- define the initial agent adapter capability contract and Codex CLI/App compatibility assumptions
 - keep roadmap, backlog, issue seeds, and seeding script aligned with the trial-first plan
 
 **Expected benefit**
@@ -136,7 +154,7 @@ A 90-day MVP is successful only if it can do all of the following:
 - implement deterministic task intake and repo profile resolution
 - implement a governed read-only tool path
 - implement evidence timeline and task result output
-- add a CLI or scripted entrypoint for one operator-driven trial path
+- add a CLI or scripted entrypoint for one Codex-compatible operator-driven trial path
 
 **Expected benefit**
 - validates the product thesis with a real governed session before write-side complexity arrives
@@ -191,12 +209,14 @@ A 90-day MVP is successful only if it can do all of the following:
 - add a local verification entrypoint for schema, docs, and script integrity
 - add CI for schema checks, doc integrity, and script parsing
 - promote at least one sample control-pack metadata record into a runtime-consumable pack and document repo admission minimums
+- document the first agent adapter contract and Codex CLI/App compatibility posture
 
 **Acceptance**
 - implementation skeleton exists
 - local verification entrypoint is documented
 - CI can run the minimum repository checks
 - repo admission minimums are explicit
+- Codex-compatible operation is described as an adapter, not as kernel behavior
 
 ### Week 2
 **Goal**
@@ -207,12 +227,14 @@ A 90-day MVP is successful only if it can do all of the following:
 - implement deterministic lifecycle validation for intake and startup states
 - implement repo profile resolution and admission checks
 - define the first operator-facing CLI or scripted entrypoint contract
+- define observe-only/advisory/enforced/strict friction modes for trial use
 
 **Acceptance**
 - a task can be created with required fields
 - illegal intake transitions fail closed
 - invalid repo profile cannot enter startup
 - operator entrypoint contract is explicit
+- low-risk trial paths are not forced through high-friction approval behavior
 
 ### Week 3
 **Goal**
@@ -223,12 +245,14 @@ A 90-day MVP is successful only if it can do all of the following:
 - implement evidence timeline and task result output
 - run one repo through a read-only governed session end-to-end
 - capture operator feedback from the first trial
+- capture which adapter capabilities were available from the selected agent frontend
 
 **Acceptance**
 - one governed session can run a read-only task end-to-end
 - evidence captures task, decisions, commands, and outputs
 - operator can inspect trial output without digging through raw logs
 - first-trial feedback is recorded for backlog reprioritization
+- adapter gaps are recorded as compatibility work, not kernel drift
 
 ### Week 4
 **Goal**
@@ -414,10 +438,12 @@ Seed backlog document:
 - `docs/adrs/0003-single-agent-baseline-first.md`
 - `docs/adrs/0004-rename-project-to-governed-ai-coding-runtime.md`
 - `docs/adrs/0005-governance-kernel-and-control-packs-before-platform-breadth.md`
+- `docs/adrs/0006-final-state-best-practice-agent-compatibility.md`
 - `docs/specs/control-registry-spec.md`
 - `docs/specs/control-pack-spec.md`
 - `docs/specs/repo-profile-spec.md`
 - `docs/specs/tool-contract-spec.md`
+- `docs/specs/agent-adapter-contract-spec.md`
 - `docs/specs/hook-contract-spec.md`
 - `docs/specs/skill-manifest-spec.md`
 - `docs/specs/knowledge-source-spec.md`

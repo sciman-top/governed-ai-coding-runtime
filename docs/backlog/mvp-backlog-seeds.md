@@ -1,7 +1,7 @@
 # MVP Backlog Seeds
 
 ## Purpose
-Seed implementation work for a governance kernel that becomes trialable quickly, then expands into controlled write, delivery assurance, and bounded multi-repo reuse.
+Seed implementation work for a final-state-best-practice governance kernel that becomes trialable quickly, then expands into controlled write, delivery assurance, agent compatibility, and bounded multi-repo reuse.
 
 ## Current Baseline
 - PRD, architecture, ADRs, roadmap, backlog, schema drafts, and the GitHub issue seeding script already exist.
@@ -14,13 +14,15 @@ Seed implementation work for a governance kernel that becomes trialable quickly,
 2. Bootstrap `apps/`, `packages/`, `infra/`, and `tests/`.
 3. Add local verification entrypoints and minimum CI for schema, docs, and script integrity.
 4. Promote at least one sample control-pack metadata record into a runtime-consumable sample control pack and define repo admission minimums.
-5. Keep root `README.md`, project `AGENTS.md`, roadmap, backlog, script, and schema catalog synchronized as implementation begins.
+5. Define the initial agent adapter capability contract and Codex CLI/App compatibility posture.
+6. Keep root `README.md`, project `AGENTS.md`, roadmap, backlog, script, and schema catalog synchronized as implementation begins.
 
 ## P1
 1. Implement deterministic task intake and repo profile resolution.
 2. Implement a governed read-only tool path for the first operator trial.
 3. Implement an evidence timeline and task result output.
-4. Add a CLI or scripted entrypoint that can run the first read-only governed session.
+4. Add a Codex CLI/App compatible CLI or scripted entrypoint that can run the first read-only governed session.
+5. Define observe-only, advisory, enforced, and strict governance modes for trial use.
 
 ## P2
 1. Implement isolated workspace or worktree allocation.
@@ -33,6 +35,7 @@ Seed implementation work for a governance kernel that becomes trialable quickly,
 2. Add delivery handoff and replay references.
 3. Add minimum eval suites, required trace fields, and trace grading baseline.
 4. Prove compatibility on a second target repository without changing kernel semantics.
+5. Represent at least one additional agent product shape through the same adapter capability contract.
 
 ## P4
 1. Add minimum operator surfaces for approvals and evidence inspection.
@@ -50,3 +53,5 @@ Seed implementation work for a governance kernel that becomes trialable quickly,
 - skill marketplace or promotion lifecycle
 - memory-first personalization stack in MVP
 - default multi-agent orchestration
+- upstream agent UX replacement
+- product-specific adapter sprawl before stable capability contracts exist
