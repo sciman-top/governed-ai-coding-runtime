@@ -168,7 +168,7 @@ The final product is considered functionally complete only when all of the follo
 - artifact store
 - operational quick/full gate runner
 - replay pipeline
-- operator UI
+- minimal operator surface with CLI-first delivery and stable read models for a later UI
 - runtime health and status query surface
 
 **Exit check**
@@ -183,6 +183,7 @@ The final product is considered functionally complete only when all of the follo
 - quickstart
 - sample repo profiles
 - end-to-end demo flow
+- richer operator UI shell on top of the Full Runtime control surface
 - packaging and release criteria
 - adapter baseline and degrade behavior
 

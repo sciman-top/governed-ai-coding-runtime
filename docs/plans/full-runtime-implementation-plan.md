@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Execute `GAP-024` through `GAP-028` so the Foundation runtime substrate becomes a real governed runtime path with worker execution, managed workspaces, persisted artifacts, operational verification, replay data, and operator-facing status surfaces.
+**Goal:** Execute `GAP-024` through `GAP-028` so the Foundation runtime substrate becomes a real governed runtime path with worker execution, managed workspaces, persisted artifacts, operational verification, replay data, and a CLI-first operator surface that can later support a UI.
 
-**Architecture:** Build on the existing Python contract substrate rather than replacing it. Keep the first Full Runtime slice single-machine and file-backed: a local runtime package owns task execution, workspace allocation, artifact persistence, verification orchestration, and replay metadata, while the operator surface stays thin and reads from the same local state. Defer packaging polish, public quickstart, and broad adapter expansion to later stages.
+**Architecture:** Build on the existing Python contract substrate rather than replacing it. Keep the first Full Runtime slice single-machine and file-backed: a local runtime package owns task execution, workspace allocation, artifact persistence, verification orchestration, replay metadata, and a stable read model for operators. Deliver a CLI-first operator surface in this stage and defer a richer UI shell until a later stage, after runtime read models and query surfaces stabilize.
 
 **Tech Stack:** Python 3.x standard library and dataclass models under `packages/contracts/`, local filesystem persistence under repo-owned runtime directories, PowerShell 7+ verification and doctor entrypoints under `scripts/`, Markdown specs/evidence under `docs/`, JSON Schema draft 2020-12 under `schemas/jsonschema/`.
 
@@ -45,7 +45,7 @@
   - managed runtime workspaces tied to stored task runs
   - an artifact store and replay persistence
   - an operational quick/full verification runner over executed runs
-  - an operator-facing runtime status or task query surface
+  - a stable operator-facing runtime status or task query surface
 
 ## Full Runtime Boundaries
 
@@ -77,6 +77,8 @@
 - `packages/contracts/src/governed_ai_coding_runtime_contracts/artifact_store.py`
 - `packages/contracts/src/governed_ai_coding_runtime_contracts/replay.py`
 - `packages/contracts/src/governed_ai_coding_runtime_contracts/runtime_status.py`
+- `docs/specs/runtime-operator-surface-spec.md`
+- `schemas/jsonschema/runtime-operator-surface.schema.json`
 - `scripts/run-governed-task.py`
 - `tests/runtime/test_execution_runtime.py`
 - `tests/runtime/test_worker.py`
@@ -92,14 +94,17 @@
 - `docs/roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md`
 - `docs/specs/task-lifecycle-and-state-machine-spec.md`
 - `docs/specs/evidence-bundle-spec.md`
+- `docs/specs/runtime-operator-surface-spec.md`
 - `docs/specs/verification-gates-spec.md`
 - `docs/specs/repo-profile-spec.md`
 - `docs/specs/agent-adapter-contract-spec.md`
 - `schemas/jsonschema/task-lifecycle.schema.json`
 - `schemas/jsonschema/evidence-bundle.schema.json`
+- `schemas/jsonschema/runtime-operator-surface.schema.json`
 - `schemas/jsonschema/verification-gates.schema.json`
 - `schemas/jsonschema/repo-profile.schema.json`
 - `schemas/jsonschema/agent-adapter-contract.schema.json`
+- `schemas/catalog/schema-catalog.yaml`
 - `packages/contracts/src/governed_ai_coding_runtime_contracts/task_store.py`
 - `packages/contracts/src/governed_ai_coding_runtime_contracts/workflow.py`
 - `packages/contracts/src/governed_ai_coding_runtime_contracts/verification_runner.py`
@@ -213,10 +218,12 @@
 - [ ] Update tests to cover quick/full execution paths, artifact persistence, and classification behavior.
 - [ ] Keep gate execution local and repo-scoped; distributed runners belong to later stages.
 
-### Task 4: Land GAP-027 Minimal Operator Surface
+### Task 4: Land GAP-027 Minimal Operator Surface (CLI-First)
 
 **Files:**
 - Create: `packages/contracts/src/governed_ai_coding_runtime_contracts/runtime_status.py`
+- Create: `docs/specs/runtime-operator-surface-spec.md`
+- Create: `schemas/jsonschema/runtime-operator-surface.schema.json`
 - Create: `scripts/run-governed-task.py`
 - Modify: `README.md`
 - Modify: `README.zh-CN.md`
@@ -224,19 +231,21 @@
 - Modify: `docs/README.md`
 - Test: `tests/runtime/test_runtime_status.py`
 
-**Purpose:** Expose a thin operator-facing surface for task list, task status, approvals, evidence references, and replay references without building a full UI stack yet.
+**Purpose:** Expose a thin operator-facing control surface for task list, task status, approvals, evidence references, and replay references without committing this stage to a web UI shell.
 
 **Acceptance criteria:**
 - Operators can inspect current and recent tasks from a stable local surface.
 - The surface can show approvals, verification state, evidence links, and replay links without raw log digging.
 - The surface stays control-plane focused and local-first.
+- The runtime status/read model is explicit enough to back a later UI without changing task or artifact semantics.
 
 **Steps:**
 - [ ] Define a runtime status/read model that projects task, run, approval, verification, and artifact state from persisted records.
+- [ ] Add a spec/schema pair for the operator surface read model so future UI work builds on stable runtime-facing structures.
 - [ ] Add a minimal CLI entrypoint that can create a task, run it, and print operator-oriented status.
 - [ ] Document the operator path in root/docs entry files.
 - [ ] Add tests for task query output, empty-state handling, and replay/evidence visibility.
-- [ ] Keep the first surface CLI-based; defer web UI to a later vertical slice unless the CLI becomes insufficient during execution.
+- [ ] Keep the first surface CLI-based; explicitly defer a richer UI shell to `Public Usable Release` after the read model stabilizes.
 
 ### Task 5: Land GAP-028 Runtime Health, Status Query Surface, And Full Runtime Handoff
 

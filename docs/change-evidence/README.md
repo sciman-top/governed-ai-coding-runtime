@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260418 Full Runtime CLI-First Planning Realignment](./20260418-full-runtime-cli-first-planning-realignment.md)
+  - evidence companion for changing `GAP-027` to a CLI-first operator surface and moving the richer UI shell to `Public Usable Release`
 - [20260417 Foundation Execution Plan](./20260417-foundation-execution-plan.md)
   - evidence companion for advancing the active queue from `Vision` to `Foundation` and adding the executable Foundation plan
 - [20260417 Full Lifecycle Functional Planning](./20260417-full-lifecycle-functional-planning.md)

@@ -145,19 +145,21 @@ Governed AI Coding Runtime Full Functional Lifecycle
   - [ ] gate artifacts are persisted and queryable
   - [ ] risky files or artifacts are surfaced distinctly in delivery state
 
-### GAP-027 Operator UI For Task, Approval, Evidence, And Replay
+### GAP-027 Minimal Operator Surface For Task, Approval, Evidence, And Replay
 - Type: AFK
 - Blocked by: GAP-025, GAP-026
 - User stories: 14, 27, 34, 40
 - What to build:
-  - minimal operator UI
+  - minimal operator surface
   - task list
   - approval queue
   - evidence and replay views
+  - CLI-first operator path backed by stable runtime read models
 - Acceptance criteria:
   - [ ] operators can inspect tasks, approvals, evidence, and replay without raw log digging
-  - [ ] the UI remains control-plane focused
-  - [ ] a failed task can be inspected from the UI without reconstructing history manually
+  - [ ] the surface remains control-plane focused
+  - [ ] a failed task can be inspected from the operator surface without reconstructing history manually
+  - [ ] the first delivery can be CLI-first as long as it preserves a stable read model for a later UI
 
 ### GAP-028 Health, Status, And Runtime Query Surface
 - Type: AFK
@@ -182,10 +184,12 @@ Governed AI Coding Runtime Full Functional Lifecycle
   - single-machine deployment path
   - quickstart instructions
   - bootstrapping path for the complete runtime
+  - first richer operator UI shell on top of the Full Runtime read model
 - Acceptance criteria:
   - [ ] the complete runtime can be started on one machine with a documented path
   - [ ] quickstart covers task creation, execution, approval, verification, and evidence inspection
   - [ ] the setup path does not depend on private maintainer knowledge
+  - [ ] operator-facing runtime flows are no longer limited to the CLI-first control surface
 
 ### GAP-030 Sample Repo Profiles And End-To-End Demo Flow
 - Type: AFK
