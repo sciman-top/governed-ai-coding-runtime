@@ -7,6 +7,7 @@ Machine-readable schema drafts and example instances for the platform's core gov
 - `jsonschema/control-registry.schema.json`
 - `jsonschema/control-pack.schema.json`
 - `jsonschema/repo-profile.schema.json`
+- `jsonschema/repo-admission-minimums.schema.json`
 - `jsonschema/tool-contract.schema.json`
 - `jsonschema/agent-adapter-contract.schema.json`
 - `jsonschema/hook-contract.schema.json`
@@ -23,6 +24,10 @@ Machine-readable schema drafts and example instances for the platform's core gov
 
 ## Catalog
 - `catalog/schema-catalog.yaml`
+
+## Runtime-Consumable Metadata
+- `control-packs/README.md`
+- `control-packs/minimum-governance-kernel.control-pack.json`
 
 ## Example Instances
 - `examples/README.md`
@@ -41,4 +46,5 @@ Machine-readable schema drafts and example instances for the platform's core gov
 - They define contract shape, not storage or transport implementation.
 - Example instances are intentionally minimal and should validate against their matching schema.
 - The control-pack example is metadata only; it is not an executable runtime control pack yet.
+- `schemas/control-packs/` is the stable location for runtime-consumable metadata references derived from the validated examples.
 - They should be revised once the first runtime package exists.
