@@ -22,5 +22,7 @@ This directory holds the human and machine planning artifacts that bridge strate
   - keep the script, backlog markdown, and YAML aligned when planning changes are made
 
 ## Current Execution Posture
-- The active next-step document is the [Phase 0 Runnable Baseline Implementation Plan](../plans/phase-0-runnable-baseline-implementation-plan.md).
-- Do not start GAP implementation ad hoc from this directory without first passing the Phase 0 Task 0 dirty-worktree check.
+- The 90-day MVP backlog has reached its current endpoint at `GAP-017`.
+- There is no active post-MVP executable backlog in this directory yet.
+- Treat new implementation beyond `GAP-017` as new planning work: create a post-MVP roadmap/backlog first, then sync `issue-ready-backlog.md`, `issue-seeds.yaml`, and `scripts/github/create-roadmap-issues.ps1`.
+- Historical phase plans under `docs/plans/` remain evidence of how the MVP was executed; they are not the current next-step queue.
