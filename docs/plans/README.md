@@ -4,6 +4,9 @@
 This directory holds executable implementation plans that translate strategy and backlog into ordered work.
 
 ## Current Authoritative Plan
+- [Full Runtime Implementation Plan](./full-runtime-implementation-plan.md)
+  - Status: current active execution plan after Foundation closeout
+  - Scope: `GAP-024` through `GAP-028` covering worker execution, managed workspaces, artifact persistence, operational verification, replay data, and runtime status surfaces
 - [Foundation Runtime Substrate Implementation Plan](./foundation-runtime-substrate-implementation-plan.md)
   - Status: completed Foundation execution plan kept as implementation history
   - Scope: `GAP-020` through `GAP-023` covering clarification and compatibility maturity, live build and doctor gates, durable task persistence skeleton, and control lifecycle or evidence completeness checks
@@ -18,7 +21,7 @@ This directory holds executable implementation plans that translate strategy and
    - [20260417 Foundation Execution Plan](../change-evidence/20260417-foundation-execution-plan.md)
 3. Use the roadmap and backlog to choose the next implementation queue:
    - `Full Runtime / GAP-024` is now the active next-stage queue
-   - author a dedicated `Full Runtime` execution plan before treating any new plan file as the authoritative checklist
+   - use [Full Runtime Implementation Plan](./full-runtime-implementation-plan.md) as the current checklist
    - keep evidence in `docs/change-evidence/`
 
 ## Boundaries

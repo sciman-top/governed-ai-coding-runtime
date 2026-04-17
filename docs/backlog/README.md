@@ -7,9 +7,6 @@ This directory holds the human and machine planning artifacts that bridge strate
 - [MVP Backlog Seeds](./mvp-backlog-seeds.md)
   - historical seed list for the completed 90-day MVP
   - use this to understand how `Phase 0` through `Phase 4` were sequenced
-- [Post-MVP Backlog Seeds](./post-mvp-backlog-seeds.md)
-  - historical bridge plan between the MVP and the later full-lifecycle plan
-  - keep this as planning history, not the active queue
 - [Full Lifecycle Backlog Seeds](./full-lifecycle-backlog-seeds.md)
   - active phase-level seed list for the final function-first lifecycle
   - use this for current sequencing and scope checks

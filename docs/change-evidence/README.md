@@ -8,8 +8,6 @@ This directory stores dated evidence for planning, schema, script, and documenta
   - evidence companion for advancing the active queue from `Vision` to `Foundation` and adding the executable Foundation plan
 - [20260417 Full Lifecycle Functional Planning](./20260417-full-lifecycle-functional-planning.md)
   - evidence companion for the new active full-lifecycle roadmap, backlog, issue seeds, and seeding script alignment
-- [20260417 Post-MVP Lifecycle Planning](./20260417-post-mvp-lifecycle-planning.md)
-  - evidence companion for the earlier intermediate post-MVP planning bridge
 - [20260417 Phase 0 Runnable Baseline](./20260417-phase-0-runnable-baseline.md)
   - historical evidence companion for the Phase 0 runnable-baseline execution branch that was later superseded by the mainline runtime substrate
 - [20260417 MVP Backlog Closeout Handoff](./20260417-mvp-backlog-closeout-handoff.md)
