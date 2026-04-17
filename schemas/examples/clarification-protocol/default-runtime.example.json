@@ -1,0 +1,22 @@
+{
+  "issue_id": "gap-020",
+  "trigger_threshold": 2,
+  "question_cap": 3,
+  "current_mode": "direct_fix",
+  "triggered_mode": "clarify_required",
+  "supported_scenarios": [
+    "plan",
+    "requirement",
+    "bugfix",
+    "acceptance"
+  ],
+  "reset_on_confirmation": true,
+  "required_evidence_fields": [
+    "issue_id",
+    "attempt_count",
+    "clarification_mode",
+    "clarification_scenario",
+    "clarification_questions",
+    "clarification_answers"
+  ]
+}

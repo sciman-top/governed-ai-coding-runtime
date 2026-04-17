@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/clarification-protocol.schema.json",
+  "title": "Clarification Protocol",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "issue_id",
+    "trigger_threshold",
+    "question_cap",
+    "current_mode",
+    "triggered_mode",
+    "supported_scenarios",
+    "reset_on_confirmation",
+    "required_evidence_fields"
+  ],
+  "properties": {
+    "issue_id": {
+      "type": "string"
+    },
+    "trigger_threshold": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "question_cap": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
+    "current_mode": {
+      "type": "string",
+      "enum": [
+        "direct_fix",
+        "clarify_required"
+      ]
+    },
+    "triggered_mode": {
+      "type": "string",
+      "enum": [
+        "direct_fix",
+        "clarify_required"
+      ]
+    },
+    "supported_scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "plan",
+          "requirement",
+          "bugfix",
+          "acceptance"
+        ]
+      }
+    },
+    "reset_on_confirmation": {
+      "type": "boolean"
+    },
+    "required_evidence_fields": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

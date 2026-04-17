@@ -11,6 +11,7 @@ Define the per-repository configuration inherited by governed sessions.
 - display_name
 - primary_language
 - repo_root_locator
+- rollout_posture
 - build_commands
 - test_commands
 - lint_commands
@@ -29,6 +30,7 @@ Define the per-repository configuration inherited by governed sessions.
 - extra_eval_suites
 - context_files
 - reviewer_handoff_template
+- compatibility_signals
 
 ## Inheritance Model
 1. platform defaults
@@ -49,8 +51,32 @@ Repo profiles may not override:
 - control registry semantics
 - rollback reference requirement
 
+## Rollout Posture
+- `current_mode`: currently active execution posture for this repo
+- `target_mode`: desired posture once compatibility and evidence are strong enough
+- `promotion_condition_ref`: optional link to the promotion rule or runbook
+
+Valid posture values:
+- observe
+- advisory
+- enforced
+
+## Compatibility Signals
+Each signal records:
+- capability
+- status
+- degrade_to
+- reason
+
+Signal `status` values:
+- full_support
+- partial_support
+- unsupported
+
 ## Verification
 A repo profile is valid only if:
 - all required commands are present or explicitly marked not applicable
 - all path policies compile into deterministic allow/deny checks
 - quick and full gates have unambiguous command order
+- rollout posture uses a supported governance posture name
+- compatibility degrade behavior is explicit whenever support is partial or unsupported

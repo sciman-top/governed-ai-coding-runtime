@@ -66,6 +66,10 @@ def generic_process_adapter_declaration() -> dict:
         "display_name": "Generic Process CLI",
         "product_family": "generic_process",
         "lifecycle_status": "experimental",
+        "rollout_posture": {
+            "current_mode": "observe",
+            "target_mode": "advisory",
+        },
         "invocation_mode": "non_interactive_cli",
         "auth_ownership": "unsupported",
         "workspace_control": "external_workspace",
@@ -82,6 +86,14 @@ def generic_process_adapter_declaration() -> dict:
         ],
         "unsupported_capability_behavior": "degrade_to_advisory",
         "compatibility_notes": "Generic process agents need stricter post-run evidence because event visibility is logs-only.",
+        "compatibility_signals": [
+            {
+                "capability": "structured_events",
+                "status": "partial_support",
+                "degrade_to": "advisory",
+                "reason": "adapter exposes logs only",
+            }
+        ],
     }
 
 

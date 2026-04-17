@@ -3,6 +3,21 @@
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
+_MINIMUM_COMPLETION_FIELDS = [
+    "task_id",
+    "repo_id",
+    "goal",
+    "commands_run",
+    "tool_calls",
+    "files_changed",
+    "approvals",
+    "required_evidence",
+    "verification_results",
+    "rollback_ref",
+    "final_outcome",
+    "open_questions",
+]
+
 
 @dataclass(frozen=True, slots=True)
 class EvidenceEvent:
@@ -17,6 +32,13 @@ class TaskOutput:
     task_id: str
     event_count: int
     latest_summary: str
+
+
+@dataclass(frozen=True, slots=True)
+class EvidenceBundleAssessment:
+    ready_for_completion: bool
+    missing_required_fields: list[str]
+    advisory_findings: list[str]
 
 
 @dataclass(slots=True)
@@ -52,3 +74,22 @@ def build_task_output(task_id: str, timeline: EvidenceTimeline) -> TaskOutput:
             latest_summary = summary
             break
     return TaskOutput(task_id=task_id, event_count=len(events), latest_summary=latest_summary)
+
+
+def assess_evidence_bundle(bundle: dict) -> EvidenceBundleAssessment:
+    missing_required_fields = [
+        field_name
+        for field_name in _MINIMUM_COMPLETION_FIELDS
+        if field_name not in bundle
+    ]
+    advisory_findings: list[str] = []
+
+    for result in bundle.get("verification_results", []):
+        if result.get("status") == "advisory":
+            advisory_findings.append(f"verification:{result.get('gate_level', 'unknown')}:advisory")
+
+    return EvidenceBundleAssessment(
+        ready_for_completion=len(missing_required_fields) == 0,
+        missing_required_fields=missing_required_fields,
+        advisory_findings=advisory_findings,
+    )

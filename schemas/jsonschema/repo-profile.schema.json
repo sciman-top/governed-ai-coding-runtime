@@ -10,6 +10,7 @@
     "display_name",
     "primary_language",
     "repo_root_locator",
+    "rollout_posture",
     "build_commands",
     "test_commands",
     "lint_commands",
@@ -55,6 +56,35 @@
       "required": [
         "kind",
         "value"
+      ]
+    },
+    "rollout_posture": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "current_mode": {
+          "type": "string",
+          "enum": [
+            "observe",
+            "advisory",
+            "enforced"
+          ]
+        },
+        "target_mode": {
+          "type": "string",
+          "enum": [
+            "observe",
+            "advisory",
+            "enforced"
+          ]
+        },
+        "promotion_condition_ref": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "current_mode",
+        "target_mode"
       ]
     },
     "build_commands": {
@@ -424,6 +454,43 @@
     },
     "reviewer_handoff_template": {
       "type": "string"
+    },
+    "compatibility_signals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "capability": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "full_support",
+              "partial_support",
+              "unsupported"
+            ]
+          },
+          "degrade_to": {
+            "type": "string",
+            "enum": [
+              "observe",
+              "advisory",
+              "enforced",
+              "blocked",
+              "fail_closed"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "capability",
+          "status"
+        ]
+      }
     }
   }
 }

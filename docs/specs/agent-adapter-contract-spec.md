@@ -13,6 +13,7 @@ The contract describes capabilities, not vendor identity. Codex CLI/App, Claude 
 - display_name
 - product_family
 - lifecycle_status
+- rollout_posture
 - invocation_mode
 - auth_ownership
 - workspace_control
@@ -26,6 +27,7 @@ The contract describes capabilities, not vendor identity. Codex CLI/App, Claude 
 
 ## Optional Fields
 - command_template
+- posture_resolution_order
 - mcp_server_ref
 - app_server_ref
 - ide_bridge_ref
@@ -34,6 +36,7 @@ The contract describes capabilities, not vendor identity. Codex CLI/App, Claude 
 - known_limitations
 - recommended_default_mode
 - compatibility_notes
+- compatibility_signals
 
 ## Enumerations
 
@@ -41,6 +44,11 @@ The contract describes capabilities, not vendor identity. Codex CLI/App, Claude 
 - experimental
 - supported
 - deprecated
+
+### rollout_posture.current_mode / target_mode
+- observe
+- advisory
+- enforced
 
 ### invocation_mode
 - interactive_cli
@@ -109,6 +117,11 @@ The contract describes capabilities, not vendor identity. Codex CLI/App, Claude 
 - degrade_to_advisory
 - degrade_to_manual_handoff
 
+### compatibility_signals.status
+- full_support
+- partial_support
+- unsupported
+
 ## Invariants
 - Agent adapters may not redefine task lifecycle states.
 - Agent adapters may not weaken approval requirements for high-risk actions.
@@ -116,6 +129,8 @@ The contract describes capabilities, not vendor identity. Codex CLI/App, Claude 
 - User-owned upstream authentication, such as Codex CLI/App login, must remain outside platform credential ownership unless a separate explicit integration decision is accepted.
 - If event visibility is weak, the runtime must compensate with stricter post-run diff, gate, and evidence checks or degrade the adapter mode.
 - Unsupported capabilities must degrade explicitly rather than silently pretending full enforcement exists.
+- rollout posture must make the current and target enforcement level machine-readable
+- compatibility signals must describe the degrade behavior that preserves honest execution semantics when full support is absent
 
 ## Non-Goals
 - Defining one universal agent protocol.

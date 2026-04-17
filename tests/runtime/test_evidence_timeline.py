@@ -43,6 +43,48 @@ class EvidenceTimelineTests(unittest.TestCase):
         self.assertEqual(output.event_count, 2)
         self.assertEqual(output.latest_summary, "read-only session accepted")
 
+    def test_evidence_quality_flags_missing_required_evidence_separately(self) -> None:
+        module = importlib.import_module("governed_ai_coding_runtime_contracts.evidence")
+
+        assessment = module.assess_evidence_bundle(
+            {
+                "task_id": "task-1",
+                "repo_id": "repo-1",
+                "goal": "land clarification policy",
+                "verification_results": [],
+                "final_outcome": {"status": "blocked"},
+                "open_questions": [],
+            }
+        )
+
+        self.assertFalse(assessment.ready_for_completion)
+        self.assertIn("commands_run", assessment.missing_required_fields)
+        self.assertEqual(assessment.advisory_findings, [])
+
+    def test_evidence_quality_keeps_advisory_weaknesses_distinct_from_missing_fields(self) -> None:
+        module = importlib.import_module("governed_ai_coding_runtime_contracts.evidence")
+
+        assessment = module.assess_evidence_bundle(
+            {
+                "task_id": "task-1",
+                "repo_id": "repo-1",
+                "goal": "land clarification policy",
+                "commands_run": [{"command": "python -m unittest", "exit_code": 0}],
+                "tool_calls": [],
+                "files_changed": [],
+                "approvals": [],
+                "required_evidence": [{"kind": "verification_log", "status": "advisory_only"}],
+                "verification_results": [{"gate_level": "test", "status": "advisory"}],
+                "rollback_ref": "git:HEAD~1",
+                "final_outcome": {"status": "completed"},
+                "open_questions": [],
+            }
+        )
+
+        self.assertTrue(assessment.ready_for_completion)
+        self.assertEqual(assessment.missing_required_fields, [])
+        self.assertIn("verification:test:advisory", assessment.advisory_findings)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -28,6 +28,7 @@ class RepoProfileContractTests(unittest.TestCase):
 
         self.assertEqual(profile.repo_id, "python-service-sample")
         self.assertEqual(profile.primary_language, "python")
+        self.assertEqual(profile.rollout_posture["current_mode"], "advisory")
         if not hasattr(profile, "command_ids"):
             self.fail("RepoProfile.command_ids is not implemented")
         self.assertEqual(profile.command_ids("build"), ["build-wheel"])
@@ -38,6 +39,7 @@ class RepoProfileContractTests(unittest.TestCase):
         raw = {
             "repo_id": "bad-repo",
             "primary_language": "python",
+            "rollout_posture": {"current_mode": "observe", "target_mode": "advisory"},
             "build_commands": [{"id": "build", "command": "uv build"}],
             "test_commands": [{"id": "test", "command": "uv run pytest"}],
             "contract_commands": [{"id": "contract", "command": "uv run pytest tests/contracts"}],

@@ -65,6 +65,35 @@
               "deprecated"
             ]
           },
+          "rollout_posture": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "current_mode": {
+                "type": "string",
+                "enum": [
+                  "observe",
+                  "advisory",
+                  "enforced"
+                ]
+              },
+              "target_mode": {
+                "type": "string",
+                "enum": [
+                  "observe",
+                  "advisory",
+                  "enforced"
+                ]
+              },
+              "promotion_condition_ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "current_mode",
+              "target_mode"
+            ]
+          },
           "invocation_mode": {
             "type": "string",
             "enum": [
@@ -174,6 +203,18 @@
           "command_template": {
             "type": "string"
           },
+          "posture_resolution_order": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "enum": [
+                "observe",
+                "advisory",
+                "enforced"
+              ]
+            }
+          },
           "mcp_server_ref": {
             "type": "string"
           },
@@ -206,6 +247,43 @@
           },
           "compatibility_notes": {
             "type": "string"
+          },
+          "compatibility_signals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "capability": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "full_support",
+                    "partial_support",
+                    "unsupported"
+                  ]
+                },
+                "degrade_to": {
+                  "type": "string",
+                  "enum": [
+                    "observe",
+                    "advisory",
+                    "enforced",
+                    "blocked",
+                    "fail_closed"
+                  ]
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "capability",
+                "status"
+              ]
+            }
           }
         },
         "required": [
@@ -213,6 +291,7 @@
           "display_name",
           "product_family",
           "lifecycle_status",
+          "rollout_posture",
           "invocation_mode",
           "auth_ownership",
           "workspace_control",

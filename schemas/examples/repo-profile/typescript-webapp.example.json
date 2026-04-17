@@ -7,6 +7,11 @@
     "kind": "workspace_anchor",
     "value": "webapp"
   },
+  "rollout_posture": {
+    "current_mode": "observe",
+    "target_mode": "advisory",
+    "promotion_condition_ref": "docs/runbooks/control-rollback.md"
+  },
   "build_commands": [
     {
       "id": "build-webapp",
@@ -166,6 +171,14 @@
     "README.md",
     "docs/ui-guidelines.md",
     "docs/architecture/frontend.md"
+  ],
+  "compatibility_signals": [
+    {
+      "capability": "browser_contract_gate",
+      "status": "partial_support",
+      "degrade_to": "advisory",
+      "reason": "browser coverage is optional during early admission"
+    }
   ],
   "reviewer_handoff_template": "Include affected routes, screenshots, and rollback notes."
 }

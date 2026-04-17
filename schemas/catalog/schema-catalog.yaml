@@ -9,6 +9,9 @@ items:
   - name: repo-profile
     path: schemas/jsonschema/repo-profile.schema.json
     source_spec: docs/specs/repo-profile-spec.md
+  - name: clarification-protocol
+    path: schemas/jsonschema/clarification-protocol.schema.json
+    source_spec: docs/specs/clarification-protocol-spec.md
   - name: repo-admission-minimums
     path: schemas/jsonschema/repo-admission-minimums.schema.json
     source_spec: docs/specs/repo-admission-minimums-spec.md

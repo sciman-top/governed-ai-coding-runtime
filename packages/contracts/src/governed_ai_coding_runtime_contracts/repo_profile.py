@@ -10,12 +10,18 @@ class RepoProfile:
     repo_id: str
     primary_language: str
     path_policies: dict
+    rollout_posture: dict
+    compatibility_signals: list[dict]
     raw: dict
 
     @classmethod
     def from_dict(cls, raw: dict) -> "RepoProfile":
         repo_id = _required_string(raw, "repo_id")
         primary_language = _required_string(raw, "primary_language")
+        rollout_posture = raw.get("rollout_posture")
+        if not isinstance(rollout_posture, dict):
+            msg = "rollout_posture is required"
+            raise ValueError(msg)
         path_policies = raw.get("path_policies")
         if not isinstance(path_policies, dict):
             msg = "path_policies is required"
@@ -33,7 +39,18 @@ class RepoProfile:
         if not (raw.get("contract_commands") or raw.get("invariant_commands")):
             msg = "contract or invariant command is required"
             raise ValueError(msg)
-        return cls(repo_id=repo_id, primary_language=primary_language, path_policies=path_policies, raw=raw)
+        compatibility_signals = raw.get("compatibility_signals", [])
+        if not isinstance(compatibility_signals, list):
+            msg = "compatibility_signals must be a list"
+            raise ValueError(msg)
+        return cls(
+            repo_id=repo_id,
+            primary_language=primary_language,
+            path_policies=path_policies,
+            rollout_posture=rollout_posture,
+            compatibility_signals=compatibility_signals,
+            raw=raw,
+        )
 
     def command_ids(self, group: str) -> list[str]:
         command_key = f"{group}_commands"

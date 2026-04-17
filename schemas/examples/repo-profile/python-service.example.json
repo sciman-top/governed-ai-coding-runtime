@@ -7,6 +7,11 @@
     "kind": "workspace_anchor",
     "value": "python-service"
   },
+  "rollout_posture": {
+    "current_mode": "advisory",
+    "target_mode": "enforced",
+    "promotion_condition_ref": "docs/runbooks/control-rollback.md"
+  },
   "build_commands": [
     {
       "id": "build-wheel",
@@ -159,6 +164,12 @@
     "README.md",
     "docs/architecture.md",
     "docs/runbooks/release.md"
+  ],
+  "compatibility_signals": [
+    {
+      "capability": "structured_events",
+      "status": "full_support"
+    }
   ],
   "reviewer_handoff_template": "Include API surface changes, migration notes, and rollback commands."
 }

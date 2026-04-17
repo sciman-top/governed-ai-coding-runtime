@@ -27,6 +27,10 @@ def codex_cli_adapter_declaration() -> dict:
         "display_name": "Codex CLI/App Compatible",
         "product_family": "codex",
         "lifecycle_status": "experimental",
+        "rollout_posture": {
+            "current_mode": "observe",
+            "target_mode": "advisory",
+        },
         "invocation_mode": "manual_handoff",
         "auth_ownership": "user_owned_upstream_auth",
         "workspace_control": "read_only",
@@ -43,6 +47,14 @@ def codex_cli_adapter_declaration() -> dict:
         ],
         "unsupported_capability_behavior": "degrade_to_manual_handoff",
         "compatibility_notes": "Upstream Codex authentication remains user-owned and outside runtime credential control.",
+        "compatibility_signals": [
+            {
+                "capability": "interactive_control_plane",
+                "status": "partial_support",
+                "degrade_to": "advisory",
+                "reason": "manual handoff keeps Codex integration explicit during early runtime phases",
+            }
+        ],
     }
 
 

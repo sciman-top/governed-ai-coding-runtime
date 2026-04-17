@@ -15,6 +15,7 @@
     "tool_calls",
     "files_changed",
     "approvals",
+    "required_evidence",
     "verification_results",
     "rollback_ref",
     "final_outcome",
@@ -131,6 +132,37 @@
       },
       "type": "array"
     },
+    "required_evidence": {
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "present",
+              "missing_mandatory",
+              "missing_allowed",
+              "advisory_only"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "artifact_ref": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "status"
+        ]
+      },
+      "type": "array"
+    },
     "verification_results": {
       "items": {
         "type": "object",
@@ -140,7 +172,13 @@
             "type": "string"
           },
           "status": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "passed",
+              "failed",
+              "advisory",
+              "skipped_not_applicable"
+            ]
           },
           "artifact_ref": {
             "type": "string"
@@ -157,7 +195,13 @@
       "additionalProperties": false,
       "properties": {
         "status": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "completed",
+            "blocked",
+            "failed",
+            "abandoned"
+          ]
         },
         "summary": {
           "type": "string"
