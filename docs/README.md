@@ -32,6 +32,8 @@
 
 ## Project Entry
 - [Root README](../README.md)
+- [中文 README](../README.zh-CN.md)
+- [English README](../README.en.md)
 - [Project AGENTS](../AGENTS.md)
 
 ## Verification Quickstart
@@ -49,6 +51,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Run
 - [Final State Best Practices](./FinalStateBestPractices.md)
 
 ## Product
+- [中文使用说明](../README.zh-CN.md)
+- [English Usage Guide](../README.en.md)
 - [Interaction Model](./product/interaction-model.md)
 - [First Read-Only Trial](./product/first-readonly-trial.md)
 - [Write Policy Defaults](./product/write-policy-defaults.md)

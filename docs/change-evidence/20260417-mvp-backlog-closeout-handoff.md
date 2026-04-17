@@ -7,6 +7,8 @@ Close out the current `issue-ready-backlog.md` execution chain after completing 
 - Roadmap status: `docs/roadmap/governed-ai-coding-runtime-90-day-plan.md`
 - Backlog status: `docs/backlog/issue-ready-backlog.md`
 - Root status: `README.md`
+- Chinese usage guide: `README.zh-CN.md`
+- English usage guide: `README.en.md`
 - Docs index status: `docs/README.md`
 - Runtime contracts: `packages/contracts/src/governed_ai_coding_runtime_contracts/`
 - Runtime tests: `tests/runtime/`
