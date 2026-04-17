@@ -115,6 +115,12 @@
     "include_pr_body": true
   },
   "repo_map_strategy": "hybrid",
+  "task_lifecycle": {
+    "persistence_kind": "file_json",
+    "store_root": ".runtime/tasks",
+    "supports_pause_resume": true,
+    "supports_retry_timeout": true
+  },
   "quick_gate_commands": [
     {
       "id": "quick-lint",
@@ -132,7 +138,7 @@
   "full_gate_commands": [
     {
       "id": "build",
-      "command": "uv build",
+      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1",
       "required": true,
       "description": "Canonical build gate."
     },
@@ -150,10 +156,9 @@
     },
     {
       "id": "hotspot",
-      "command": "uv run python -m scripts.doctor",
-      "required": false,
-      "not_applicable": true,
-      "description": "Hotspot gate placeholder until a doctor command exists."
+      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1",
+      "required": true,
+      "description": "Canonical doctor gate."
     }
   ],
   "extra_eval_suites": [

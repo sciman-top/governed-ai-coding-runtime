@@ -440,6 +440,33 @@
       },
       "type": "array"
     },
+    "task_lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "persistence_kind": {
+          "type": "string",
+          "enum": [
+            "file_json"
+          ]
+        },
+        "store_root": {
+          "type": "string"
+        },
+        "supports_pause_resume": {
+          "type": "boolean"
+        },
+        "supports_retry_timeout": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "persistence_kind",
+        "store_root",
+        "supports_pause_resume",
+        "supports_retry_timeout"
+      ]
+    },
     "extra_eval_suites": {
       "items": {
         "type": "string"

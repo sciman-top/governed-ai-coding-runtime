@@ -8,6 +8,7 @@
     "schema_version",
     "gate_levels",
     "canonical_order",
+    "live_gate_bindings",
     "escalation_rules",
     "required_output_fields"
   ],
@@ -37,6 +38,42 @@
           "hotspot_or_health_check"
         ],
         "type": "string"
+      }
+    },
+    "live_gate_bindings": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "gate_id": {
+            "type": "string",
+            "enum": [
+              "build",
+              "test",
+              "contract",
+              "doctor"
+            ]
+          },
+          "canonical_name": {
+            "type": "string",
+            "enum": [
+              "build",
+              "test",
+              "contract_or_invariant",
+              "hotspot_or_health_check"
+            ]
+          },
+          "command": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "gate_id",
+          "canonical_name",
+          "command"
+        ]
       }
     },
     "escalation_rules": {

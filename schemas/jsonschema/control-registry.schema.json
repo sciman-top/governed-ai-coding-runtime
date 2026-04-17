@@ -107,6 +107,24 @@
             ],
             "type": "string"
           },
+          "lifecycle_status": {
+            "enum": [
+              "draft",
+              "trial",
+              "active",
+              "deprecated",
+              "retired"
+            ],
+            "type": "string"
+          },
+          "last_reviewed_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "next_review_at": {
+            "format": "date-time",
+            "type": "string"
+          },
           "source_of_truth": {
             "minLength": 1,
             "type": "string"
@@ -174,6 +192,9 @@
           "class",
           "mode",
           "status",
+          "lifecycle_status",
+          "last_reviewed_at",
+          "next_review_at",
           "source_of_truth",
           "artifacts",
           "observability_signals",

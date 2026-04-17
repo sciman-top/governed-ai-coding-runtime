@@ -27,6 +27,7 @@ Define the per-repository configuration inherited by governed sessions.
 - repo_map_strategy
 - quick_gate_commands
 - full_gate_commands
+- task_lifecycle
 - extra_eval_suites
 - context_files
 - reviewer_handoff_template
@@ -72,6 +73,13 @@ Signal `status` values:
 - full_support
 - partial_support
 - unsupported
+
+## Task Lifecycle
+Repos may declare local persistence hints for the Foundation task store:
+- `persistence_kind`
+- `store_root`
+- `supports_pause_resume`
+- `supports_retry_timeout`
 
 ## Verification
 A repo profile is valid only if:

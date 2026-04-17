@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("All", "Contract", "Docs", "Runtime", "Scripts")]
+  [ValidateSet("All", "Build", "Contract", "Doctor", "Docs", "Runtime", "Scripts")]
   [string]$Check = "All"
 )
 
@@ -167,6 +167,15 @@ function Invoke-ContractChecks {
   Invoke-SchemaCatalogPairing
 }
 
+function Invoke-BuildChecks {
+  & pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
+  if ($LASTEXITCODE -ne 0) {
+    throw "Runtime build checks failed"
+  }
+
+  Write-CheckOk "runtime-build"
+}
+
 function Invoke-DocsChecks {
   Invoke-ActiveMarkdownLinkCheck
   Invoke-BacklogYamlIdCheck
@@ -194,14 +203,27 @@ function Invoke-RuntimeChecks {
   Write-CheckOk "runtime-unittest"
 }
 
+function Invoke-DoctorChecks {
+  & pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1
+  if ($LASTEXITCODE -ne 0) {
+    throw "Runtime doctor checks failed"
+  }
+
+  Write-CheckOk "runtime-doctor"
+}
+
 switch ($Check) {
+  "Build" { Invoke-BuildChecks }
   "Contract" { Invoke-ContractChecks }
+  "Doctor" { Invoke-DoctorChecks }
   "Docs" { Invoke-DocsChecks }
   "Runtime" { Invoke-RuntimeChecks }
   "Scripts" { Invoke-ScriptChecks }
   "All" {
+    Invoke-BuildChecks
     Invoke-RuntimeChecks
     Invoke-ContractChecks
+    Invoke-DoctorChecks
     Invoke-DocsChecks
     Invoke-ScriptChecks
   }

@@ -1,13 +1,14 @@
 # Governed AI Coding Runtime English Guide
 
 ## Current Status
-The current planned backlog is complete through `Phase 4 / GAP-017`.
+`Foundation / GAP-020` through `GAP-023` are complete, and the active execution queue now starts at `Full Runtime / GAP-024`.
 
 This repository is usable today as a governed runtime contract layer, not as a deployable product service.
 
 Available now:
 
 - Repository verification over docs, schemas, catalog, scripts, and runtime contract tests.
+- Foundation-grade build and doctor gates.
 - A first scripted read-only trial.
 - Python contract primitives for task intake, repo profiles, approvals, write governance, verification, delivery handoff, eval/trace, second-repo pilot checks, and a minimal control-console facade.
 
@@ -17,7 +18,7 @@ Not available yet:
 - No database or durable workflow worker.
 - No real web console.
 - No package build artifact or release pipeline.
-- `build` and `hotspot/doctor` gates are still `gate_na`.
+- `build` and `hotspot/doctor` now have Foundation-grade live entrypoints, but they are not production packaging or service-health checks yet.
 
 ## How To Use
 
@@ -26,6 +27,14 @@ Run from the repository root:
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1
 ```
 
 This checks:
@@ -132,11 +141,8 @@ For product planning:
 ## Completion Level
 Completed:
 
-- `Phase 0`: Runnable Baseline
-- `Phase 1`: First Trial Slice
-- `Phase 2`: Controlled Write Slice
-- `Phase 3`: Delivery Assurance Slice
-- `Phase 4`: Reuse And Operator Hardening
+- MVP contract and verification slices through `Phase 4`
+- The next active implementation queue is `Full Runtime / GAP-024+`
 
 Current verification baseline:
 
@@ -146,7 +152,7 @@ Current verification baseline:
 ## Recommended Next Productization Step
 If the project continues toward a deployable runtime, the next slice should likely:
 
-1. Add real Python package metadata and a build gate.
+1. Add real Python package metadata and a fuller release build.
 2. Add durable storage or a workflow worker.
 3. Connect the current `ControlPlaneConsole` facade to a CLI or minimal web UI.
-4. Add a real doctor/hotspot command and replace the remaining `gate_na` entries.
+4. Expand the Foundation doctor into a richer runtime health entrypoint.

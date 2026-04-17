@@ -14,7 +14,7 @@ Phase 1 starts with pure Python domain models for:
 - write policy default resolution
 - approval request state handling, interruption state, and audit trail primitives
 - write-side tool governance decisions with rollback references
-- quick and full verification runner plans with evidence artifacts
+- quick and full verification runner plans with live build/test/contract/doctor commands and evidence artifacts
 - delivery handoff packages with validation status and replay references
 - eval baseline records and trace grading primitives
 - second-repo reuse pilot checks and generic process adapter compatibility gaps

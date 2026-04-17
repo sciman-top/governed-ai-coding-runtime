@@ -25,7 +25,7 @@ class DeliveryHandoffTests(unittest.TestCase):
         artifact = verification_runner.build_verification_artifact(
             plan,
             "docs/change-evidence/example.md",
-            {"test": "pass", "contract/invariant": "pass"},
+            {"test": "pass", "contract": "pass"},
         )
 
         package = delivery_handoff.build_handoff_package(
@@ -51,7 +51,7 @@ class DeliveryHandoffTests(unittest.TestCase):
             verification_runner.build_verification_artifact(
                 full_plan,
                 "docs/change-evidence/full.md",
-                {"build": "pass", "test": "pass", "contract/invariant": "pass", "hotspot": "pass"},
+                {"build": "pass", "test": "pass", "contract": "pass", "doctor": "pass"},
             ),
             [],
             ["pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All"],
@@ -62,7 +62,7 @@ class DeliveryHandoffTests(unittest.TestCase):
             verification_runner.build_verification_artifact(
                 quick_plan,
                 "docs/change-evidence/partial.md",
-                {"test": "pass", "contract/invariant": "pass"},
+                {"test": "pass", "contract": "pass"},
             ),
             ["build gate not applicable"],
             ["pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime"],
@@ -78,7 +78,7 @@ class DeliveryHandoffTests(unittest.TestCase):
         artifact = verification_runner.build_verification_artifact(
             plan,
             "docs/change-evidence/failed.md",
-            {"test": "fail", "contract/invariant": "not_run"},
+            {"test": "fail", "contract": "not_run"},
         )
 
         with self.assertRaises(ValueError):

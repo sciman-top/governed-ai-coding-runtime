@@ -22,6 +22,9 @@ Controls covered by this registry:
 - class
 - mode
 - status
+- lifecycle_status
+- last_reviewed_at
+- next_review_at
 - source_of_truth
 - artifacts
 - rollback_ref
@@ -54,6 +57,8 @@ Controls covered by this registry:
 - each control must name a rollback reference or explicit `rollback_not_applicable`
 - progressive controls must define an observe-to-enforce condition
 - hard controls cannot be enabled without at least one observability signal
+- controls intended for enforced use must carry review cadence metadata
+- missing rollback visibility or missing observability must keep a control unhealthy for enforced mode
 
 ## Open Questions
 - should controls support repo-specific status overrides in the registry itself or only via repo profiles?

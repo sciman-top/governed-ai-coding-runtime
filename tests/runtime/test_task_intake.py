@@ -62,6 +62,11 @@ class TaskIntakeContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.validate_transition("created", "delivered")
 
+    def test_validate_transition_accepts_pause_and_retry_transitions(self) -> None:
+        module = importlib.import_module("governed_ai_coding_runtime_contracts.task_intake")
+        self.assertTrue(module.validate_transition("executing", "paused"))
+        self.assertTrue(module.validate_transition("failed", "planned"))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -85,6 +85,28 @@ class EvidenceTimelineTests(unittest.TestCase):
         self.assertEqual(assessment.missing_required_fields, [])
         self.assertIn("verification:test:advisory", assessment.advisory_findings)
 
+    def test_evidence_completeness_flags_missing_rollback_reference(self) -> None:
+        module = importlib.import_module("governed_ai_coding_runtime_contracts.evidence")
+
+        assessment = module.assess_evidence_bundle(
+            {
+                "task_id": "task-1",
+                "repo_id": "repo-1",
+                "goal": "land control completeness",
+                "commands_run": [{"command": "python -m unittest", "exit_code": 0}],
+                "tool_calls": [],
+                "files_changed": [],
+                "approvals": [],
+                "required_evidence": [{"kind": "verification_log", "status": "present"}],
+                "verification_results": [{"gate_level": "test", "status": "passed"}],
+                "final_outcome": {"status": "completed"},
+                "open_questions": [],
+            }
+        )
+
+        self.assertFalse(assessment.ready_for_completion)
+        self.assertIn("rollback_ref", assessment.missing_required_fields)
+
 
 if __name__ == "__main__":
     unittest.main()

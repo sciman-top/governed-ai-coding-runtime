@@ -5,13 +5,19 @@ This directory holds the human and machine planning artifacts that bridge strate
 
 ## Artifact Roles
 - [MVP Backlog Seeds](./mvp-backlog-seeds.md)
-  - phase-level seed list
-  - use this for broad sequencing and scope checks
+  - historical seed list for the completed 90-day MVP
+  - use this to understand how `Phase 0` through `Phase 4` were sequenced
+- [Post-MVP Backlog Seeds](./post-mvp-backlog-seeds.md)
+  - historical bridge plan between the MVP and the later full-lifecycle plan
+  - keep this as planning history, not the active queue
+- [Full Lifecycle Backlog Seeds](./full-lifecycle-backlog-seeds.md)
+  - active phase-level seed list for the final function-first lifecycle
+  - use this for current sequencing and scope checks
 - [Issue-Ready Backlog](./issue-ready-backlog.md)
-  - current human-readable implementation backlog
+  - current human-readable full-lifecycle implementation backlog
   - use this for dependencies, acceptance criteria, and execution order
 - [Issue Seeds YAML](./issue-seeds.yaml)
-  - machine-readable issue ids, types, blockers, and user-story mapping
+  - machine-readable active issue ids, types, blockers, and user-story mapping
   - use this for drift checks and automation
 
 ## Script Relationship
@@ -22,7 +28,14 @@ This directory holds the human and machine planning artifacts that bridge strate
   - keep the script, backlog markdown, and YAML aligned when planning changes are made
 
 ## Current Execution Posture
-- The 90-day MVP backlog has reached its current endpoint at `GAP-017`.
-- There is no active post-MVP executable backlog in this directory yet.
-- Treat new implementation beyond `GAP-017` as new planning work: create a post-MVP roadmap/backlog first, then sync `issue-ready-backlog.md`, `issue-seeds.yaml`, and `scripts/github/create-roadmap-issues.ps1`.
-- Historical phase plans under `docs/plans/` remain evidence of how the MVP was executed; they are not the current next-step queue.
+- The 90-day MVP backlog reached its endpoint at `GAP-017`.
+- `Vision / GAP-018` and `GAP-019` are complete through planning alignment and capability freeze.
+- `Foundation / GAP-020` through `GAP-023` are complete on the current branch baseline.
+- The active executable queue now starts at `Full Runtime / GAP-024` and is defined by:
+  - [Full Lifecycle Plan](../roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
+  - [Full Lifecycle Backlog Seeds](./full-lifecycle-backlog-seeds.md)
+  - [Issue-Ready Backlog](./issue-ready-backlog.md)
+  - [Issue Seeds YAML](./issue-seeds.yaml)
+- The completed Foundation execution checklist remains useful implementation history:
+  - [Foundation Runtime Substrate Implementation Plan](../plans/foundation-runtime-substrate-implementation-plan.md)
+- Historical phase plans under `docs/plans/` remain evidence of earlier work; they are not the current next-step queue unless a later stage explicitly points back to them.

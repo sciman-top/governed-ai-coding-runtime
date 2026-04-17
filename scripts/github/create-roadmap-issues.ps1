@@ -2,7 +2,7 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$Repo,
 
-  [string]$Milestone = "90-Day Governed AI Coding Runtime MVP",
+  [string]$Milestone = "Governed AI Coding Runtime Full Lifecycle",
 
   [string]$Assignee = "@me",
 
@@ -87,11 +87,11 @@ $labels = @(
   @{ Name = "initiative"; Color = "5319E7"; Description = "Top-level initiative" }
   @{ Name = "epic"; Color = "1D76DB"; Description = "Epic issue" }
   @{ Name = "task"; Color = "0E8A16"; Description = "Task issue" }
-  @{ Name = "phase:0-baseline"; Color = "BFD4F2"; Description = "Runnable baseline phase" }
-  @{ Name = "phase:1-trial"; Color = "BFDADC"; Description = "First trial slice phase" }
-  @{ Name = "phase:2-write"; Color = "FBCA04"; Description = "Controlled write phase" }
-  @{ Name = "phase:3-assurance"; Color = "D93F0B"; Description = "Delivery assurance phase" }
-  @{ Name = "phase:4-hardening"; Color = "C5DEF5"; Description = "Reuse and hardening phase" }
+  @{ Name = "phase:vision"; Color = "BFD4F2"; Description = "Vision alignment phase" }
+  @{ Name = "phase:foundation"; Color = "BFDADC"; Description = "Foundation phase" }
+  @{ Name = "phase:full-runtime"; Color = "FBCA04"; Description = "Full runtime phase" }
+  @{ Name = "phase:public-release"; Color = "D93F0B"; Description = "Public usable release phase" }
+  @{ Name = "phase:maintenance"; Color = "C5DEF5"; Description = "Maintenance phase" }
   @{ Name = "backend"; Color = "0052CC"; Description = "Backend work" }
   @{ Name = "platform"; Color = "6F42C1"; Description = "Platform work" }
   @{ Name = "security"; Color = "B60205"; Description = "Security and policy" }
@@ -100,6 +100,7 @@ $labels = @(
   @{ Name = "contracts"; Color = "0E8A16"; Description = "Contracts and schemas" }
   @{ Name = "docs"; Color = "C2E0C6"; Description = "Documentation and planning" }
   @{ Name = "frontend"; Color = "FBCA04"; Description = "Operator surface work" }
+  @{ Name = "product"; Color = "F9D0C4"; Description = "Product shape and lifecycle work" }
 )
 
 foreach ($label in $labels) {
@@ -110,158 +111,147 @@ Ensure-Milestone
 
 $initiativeBody = @"
 ## Goal
-Deliver an MVP governance kernel for final-state-best-practice governed AI coding in 90 days while producing a first trialable governed loop within 2-3 weeks.
+Turn the completed MVP governance kernel into a complete single-machine self-hosted governed AI coding runtime.
 
 ## Success Criteria
-- [ ] One target repo can run a governed read-only task end-to-end within the first 2-3 weeks
-- [ ] High-risk writes require approval and carry rollback references
-- [ ] Quick and full verification states are emitted in canonical order
-- [ ] Evidence bundles and required trace fields are emitted
-- [ ] Completed tasks produce a delivery handoff bundle
-- [ ] Second-repo compatibility pilot passes without a kernel fork
-- [ ] Codex CLI/App compatible operation is proven as the first adapter path
-- [ ] Future agent product shapes can be represented through the same adapter capability contract
-- [ ] Rollback and waiver recovery notes are documented
+- [ ] Final product shape and capability boundary are frozen
+- [ ] Real build and doctor or hotspot commands replace the remaining placeholders
+- [ ] Durable task persistence and workflow skeleton are landed
+- [ ] Execution workers, artifact storage, gate running, and replay exist as working runtime paths
+- [ ] A minimal operator UI exists for task, approval, evidence, replay, and runtime status
+- [ ] A new user can follow quickstart docs and run a real governed task on one machine
+- [ ] Compatibility, upgrade, deprecation, and retirement rules are explicit enough for ongoing maintenance
 
 ## In Scope
-- Governance kernel contracts already landed in the repo
-- Runnable baseline, repo admission, and local verification
-- Deterministic task intake and repo resolution
-- Governed tool execution, approval, verification, and evidence
-- Codex-compatible CLI/scripted early trial flow
-- Agent adapter capability contract
-- Second-repo reuse pilot
+- final product alignment
+- foundation maturity work
+- full runtime implementation
+- public usable release path
+- minimal maintenance boundary
 
-## Out of Scope
-- Multi-repo distribution hub behavior
-- Default multi-agent orchestration
-- Memory-first personalization platform
-- Skill marketplace or promotion workflow
-- Broad deployment automation as the platform identity
-- Upstream agent UX replacement
-- Product-specific adapter sprawl before stable capability contracts exist
+## Out Of Scope
+- commercial packaging
+- enterprise org model
+- marketplace or promotion workflow
+- default multi-agent orchestration
+- memory-first product identity
+- deployment automation as the default completion path
 "@
 
-New-RoadmapIssue -Title "[Initiative] 90-Day Governed AI Coding Runtime MVP" -Labels @("initiative", "platform") -Body $initiativeBody
+New-RoadmapIssue -Title "[Initiative] Governed AI Coding Runtime Full Functional Lifecycle" -Labels @("initiative", "platform") -Body $initiativeBody
 
 $epics = @(
   @{
-    Title  = "[Epic] Runnable Baseline And Trial Bootstrap"
-    Labels = @("epic", "phase:0-baseline", "platform", "docs", "devops")
+    Title  = "[Epic] Vision Alignment"
+    Labels = @("epic", "phase:vision", "product", "docs", "platform")
     Body   = @"
 ## Goal
-Create the minimum runnable repository baseline for the first governed trial.
+Freeze the final product shape, capability boundary, and lifecycle stages for the project.
 
 ## Scope
-- Planning alignment
-- apps / packages / infra / tests bootstrap
-- Local verification entrypoints and CI minimums
-- Runtime-consumable sample control pack and repo admission minimums
-- Agent adapter capability contract and Codex CLI/App compatibility assumptions
+- full lifecycle alignment
+- final capability boundary
+- non-goal boundary
 
 ## Dependencies
 - None
 
 ## Acceptance Criteria
-- [ ] Planning artifacts describe the same final-state and trial-first order
-- [ ] Missing implementation skeleton exists
-- [ ] Local verification entrypoint and minimum CI are documented
-- [ ] Repo admission minimums are explicit
-- [ ] Sample control-pack metadata is promoted into a runtime-consumable pack
-- [ ] Codex-compatible operation is described as an adapter, not as kernel behavior
+- [ ] active planning docs describe the same lifecycle stages
+- [ ] final capability boundary is explicit
+- [ ] the project is described as a complete runtime target rather than only contracts or tooling
 "@
   }
   @{
-    Title  = "[Epic] First Read-Only Governed Trial Slice"
-    Labels = @("epic", "phase:1-trial", "backend", "platform")
+    Title  = "[Epic] Foundation"
+    Labels = @("epic", "phase:foundation", "platform", "contracts", "backend")
     Body   = @"
 ## Goal
-Run the first operator-visible governed session through a Codex-compatible CLI or scripted path.
+Make the completed MVP capable of supporting the full product runtime.
 
 ## Scope
-- Deterministic task intake
-- Repo profile resolution
-- Read-only governed tool path
-- Evidence timeline and task output
-- Codex-compatible CLI or scripted trial entrypoint
-- Observe-only, advisory, enforced, and strict governance modes for trial use
+- clarification, rollout, compatibility, and evidence maturity
+- real build and doctor gates
+- durable task store skeleton
+- workflow skeleton
+- control lifecycle metadata
 
 ## Dependencies
-- [Epic] Runnable Baseline And Trial Bootstrap
+- [Epic] Vision Alignment
 
 ## Acceptance Criteria
-- [ ] One repo can run a read-only governed task end-to-end
-- [ ] Evidence captures task, decisions, commands, and outputs
-- [ ] Operator can inspect output without reconstructing raw logs
-- [ ] Adapter gaps are recorded as compatibility work, not kernel drift
+- [ ] key runtime controls are no longer documentation-only
+- [ ] build and doctor gates are live
+- [ ] task state is durable enough for later runtime work
 "@
   }
   @{
-    Title  = "[Epic] Controlled Write And Approval"
-    Labels = @("epic", "phase:2-write", "backend", "security")
+    Title  = "[Epic] Full Runtime"
+    Labels = @("epic", "phase:full-runtime", "platform", "backend", "frontend")
     Body   = @"
 ## Goal
-Extend the read-only trial into a controlled write path with workspace isolation and approvals.
+Land the complete runtime path for one governed AI coding task.
 
 ## Scope
-- Isolated workspace or worktree allocation
-- Write policy defaults
-- Approval service and interruption flow
-- Write-side governed tool path
-- Rollback references
-- Quick verification
+- execution worker
+- artifact store
+- operational gate runner
+- replay pipeline
+- operator UI
+- runtime health and status surface
 
 ## Dependencies
-- [Epic] First Read-Only Governed Trial Slice
+- [Epic] Foundation
 
 ## Acceptance Criteria
-- [ ] High-risk writes require explicit approval
-- [ ] Write-side tools carry rollback references
-- [ ] Quick verification runs before delivery claims
+- [ ] a real governed task can run end-to-end
+- [ ] approval, verification, evidence, and replay work on the runtime path
+- [ ] operators can inspect runtime state from a control-plane UI
 "@
   }
   @{
-    Title  = "[Epic] Delivery Assurance And Replay"
-    Labels = @("epic", "phase:3-assurance", "backend", "eval")
+    Title  = "[Epic] Public Usable Release"
+    Labels = @("epic", "phase:public-release", "platform", "docs", "devops")
     Body   = @"
 ## Goal
-Turn governed execution into validated delivery with evidence, replay, and trace quality.
+Make the full runtime understandable and runnable by a new user on one machine.
 
 ## Scope
-- Full verification and escalation rules
-- Delivery handoff bundle
-- Replay references
-- Required trace fields and minimum eval baseline
+- single-machine deployment
+- quickstart
+- sample repo profiles
+- demo flow
+- packaging and release criteria
+- adapter baseline and degrade behavior
 
 ## Dependencies
-- [Epic] Controlled Write And Approval
+- [Epic] Full Runtime
 
 ## Acceptance Criteria
-- [ ] Quick and full verification states are distinct and recorded
-- [ ] Completed tasks produce a handoff bundle
-- [ ] Trace and eval baseline can run on trial tasks
+- [ ] a new user can clone the repo and run the runtime from docs
+- [ ] sample profiles and demo flow work end-to-end
+- [ ] release and packaging expectations are explicit
 "@
   }
   @{
-    Title  = "[Epic] Second-Repo Reuse And Operator Hardening"
-    Labels = @("epic", "phase:4-hardening", "platform", "eval", "frontend", "devops")
+    Title  = "[Epic] Maintenance Boundary"
+    Labels = @("epic", "phase:maintenance", "platform", "docs", "product")
     Body   = @"
 ## Goal
-Prove bounded multi-repo reuse and add only the operator surfaces needed for repeated use.
+Keep the project maintainable after the first usable release without adding heavy operational overhead.
 
 ## Scope
-- Second target repo profile
-- Compatibility pilot
-- Minimum approval/evidence console
-- Waiver recovery and control rollback runbooks
+- compatibility and upgrade policy
+- maintenance and triage rules
+- deprecation and retirement policy
 
 ## Dependencies
-- [Epic] Delivery Assurance And Replay
+- [Epic] Public Usable Release
 
 ## Acceptance Criteria
-- [ ] Second repo uses the same kernel semantics
-- [ ] Console scope stays control-plane focused
-- [ ] Runbooks exist for failed rollout and expired waiver handling
+- [ ] upgrade and compatibility expectations are explicit
+- [ ] maintenance boundary is documented
+- [ ] deprecated or retired capabilities remain traceable
 "@
   }
 )
@@ -273,168 +263,180 @@ foreach ($epic in $epics) {
 if (-not $SkipTasks) {
   $tasks = @(
     @{
-      Title  = "[Task] Align planning artifacts around final-state and trial-first positioning"
-      Labels = @("task", "phase:0-baseline", "docs", "platform")
+      Title  = "[Task] Align the full functional lifecycle and freeze the final product shape"
+      Labels = @("task", "phase:vision", "product", "docs", "platform")
       Body   = @"
 ## Goal
-Keep roadmap, backlog, issue seeds, and the seeding script synchronized around final-state best practice and the same first trial slice.
+Align active planning docs around the full functional lifecycle and final product shape.
 
 ## Dependencies
-- [Epic] Runnable Baseline And Trial Bootstrap
+- [Epic] Vision Alignment
 
 ## Acceptance Criteria
-- [ ] Planning artifacts describe the same order and success criteria
-- [ ] First runnable slice is explicit
-- [ ] 90-day MVP criteria still preserve approval, evidence, verification, and reuse goals
-- [ ] Codex-first compatibility and generic agent adapter contracts are represented consistently
+- [ ] active planning docs use the same lifecycle stages
+- [ ] the project is described as a complete single-machine self-hosted runtime target
+- [ ] MVP remains historical baseline rather than active next-step queue
 "@
     }
     @{
-      Title  = "[Task] Initialize implementation skeleton and verification entrypoints"
-      Labels = @("task", "phase:0-baseline", "platform", "devops")
+      Title  = "[Task] Freeze the final capability boundary and non-goal boundary"
+      Labels = @("task", "phase:vision", "product", "docs", "platform")
       Body   = @"
 ## Goal
-Bootstrap the missing implementation skeleton and minimum verification foundation.
+Make final product completeness and non-goals explicit.
 
 ## Dependencies
-- [Epic] Runnable Baseline And Trial Bootstrap
+- [Epic] Vision Alignment
 
 ## Acceptance Criteria
-- [ ] apps / packages / infra / tests directories exist
-- [ ] Local verification entrypoint is documented
-- [ ] CI runs schema, docs, and script integrity checks
+- [ ] final capability groups are explicit
+- [ ] non-goals remain outside the active queue
+- [ ] final product completeness can be judged without ad hoc interpretation
 "@
     }
     @{
-      Title  = "[Task] Add sample control pack and repo admission minimums"
-      Labels = @("task", "phase:0-baseline", "contracts", "platform")
+      Title  = "[Task] Formalize clarification, rollout, compatibility, and evidence maturity"
+      Labels = @("task", "phase:foundation", "contracts", "platform", "security")
       Body   = @"
 ## Goal
-Make the first trial slice enforceable through minimum repo admission rules.
+Turn the remaining governance semantics into formal runtime policy.
 
 ## Dependencies
-- [Epic] Runnable Baseline And Trial Bootstrap
+- [Epic] Foundation
 
 ## Acceptance Criteria
-- [ ] Control pack metadata validates against the control-pack schema
-- [ ] At least one runtime-consumable control pack exists with owner, version, and scope
-- [ ] The pack references controls, hooks, and gates without weakening kernel semantics
-- [ ] Admission minimums cover commands, tools, and path policy
-- [ ] Invalid repos fail before startup
+- [ ] clarification is formal runtime policy
+- [ ] rollout state supports observe, advisory, and enforced modes
+- [ ] compatibility is machine-checkable
+- [ ] evidence maturity distinguishes missing evidence from weak outcomes
 "@
     }
     @{
-      Title  = "[Task] Implement deterministic task intake and repo profile resolution"
-      Labels = @("task", "phase:1-trial", "backend", "platform")
+      Title  = "[Task] Add real build and doctor gates"
+      Labels = @("task", "phase:foundation", "backend", "devops", "platform")
       Body   = @"
 ## Goal
-Create the durable task and startup inputs for the first trial slice.
+Replace the remaining build and hotspot placeholders with live commands.
 
 ## Dependencies
-- [Epic] First Read-Only Governed Trial Slice
+- [Epic] Foundation
 
 ## Acceptance Criteria
-- [ ] Task intake requires goal, scope, acceptance, repo, and budgets
-- [ ] Illegal startup transitions fail closed
-- [ ] Repo profile resolution attaches the correct runtime inputs
+- [ ] build no longer depends on gate_na
+- [ ] doctor or hotspot no longer depends on gate_na
+- [ ] canonical gate order can run with live commands
 "@
     }
     @{
-      Title  = "[Task] Implement read-only governed tool path and evidence timeline"
-      Labels = @("task", "phase:1-trial", "backend", "platform")
+      Title  = "[Task] Add the durable task store and workflow skeleton"
+      Labels = @("task", "phase:foundation", "backend", "platform")
       Body   = @"
 ## Goal
-Run bounded read-only execution and persist what happened.
+Make task state durable enough to support the full runtime.
 
 ## Dependencies
-- [Epic] First Read-Only Governed Trial Slice
+- [Epic] Foundation
 
 ## Acceptance Criteria
-- [ ] Read-only tools validate against contract
-- [ ] Evidence captures task, decisions, commands, and outputs
-- [ ] One repo can execute a bounded read-only session
+- [ ] task state survives process boundaries
+- [ ] workflow transitions stay deterministic
+- [ ] lifecycle data is no longer trapped in in-memory primitives
 "@
     }
     @{
-      Title  = "[Task] Add Codex-compatible CLI or scripted entrypoint for the first governed trial"
-      Labels = @("task", "phase:1-trial", "platform", "docs")
+      Title  = "[Task] Add control lifecycle metadata and evidence completeness checks"
+      Labels = @("task", "phase:foundation", "contracts", "platform", "eval")
       Body   = @"
 ## Goal
-Give an operator one Codex-compatible documented path to run the first trial slice.
+Track control lifecycle state and validate evidence completeness.
 
 ## Dependencies
-- [Epic] First Read-Only Governed Trial Slice
+- [Epic] Foundation
 
 ## Acceptance Criteria
-- [ ] Operator can start the first trial through one documented entrypoint
-- [ ] Entry path attaches repo profile and budgets
-- [ ] Codex authentication remains owned by the upstream Codex CLI/App workflow
-- [ ] One read-only governed task runs end-to-end
-- [ ] Unsupported agent capabilities degrade to observe-only, advisory, or manual-handoff mode
+- [ ] controls track lifecycle and review state
+- [ ] evidence completeness can fail missing required fields
+- [ ] rollback and observability links are explicit per control
 "@
     }
     @{
-      Title  = "[Task] Implement isolated workspace allocation and write policy defaults"
-      Labels = @("task", "phase:2-write", "backend", "platform")
+      Title  = "[Task] Add the execution worker and managed workspace runtime"
+      Labels = @("task", "phase:full-runtime", "backend", "platform")
       Body   = @"
 ## Goal
-Prepare the runtime for safe write-side execution.
+Run real governed tasks through a worker and managed workspace.
 
 ## Dependencies
-- [Epic] Controlled Write And Approval
+- [Epic] Full Runtime
 
 ## Acceptance Criteria
-- [ ] Write-side execution does not target arbitrary live directories
-- [ ] Workspace allocation is tied to task lifecycle
-- [ ] Medium/high write policy defaults are explicit
+- [ ] governed tasks execute through a worker
+- [ ] workspaces are lifecycle-bound and policy-aware
+- [ ] worker execution preserves approval and rollback semantics
 "@
     }
     @{
-      Title  = "[Task] Implement approval service and write-side tool governance"
-      Labels = @("task", "phase:2-write", "backend", "security")
+      Title  = "[Task] Add artifact storage, replay plumbing, and the operational gate runner"
+      Labels = @("task", "phase:full-runtime", "backend", "platform", "eval")
       Body   = @"
 ## Goal
-Require approval and rollback-aware policy before risky writes execute.
+Persist artifacts and make verification and replay operational.
 
 ## Dependencies
-- [Epic] Controlled Write And Approval
+- [Epic] Full Runtime
 
 ## Acceptance Criteria
-- [ ] Approval supports create / approve / reject / revoke / timeout
-- [ ] Approval-required writes pause before execution
-- [ ] Risky writes carry rollback references
+- [ ] artifacts persist outside stdout or transcript-only output
+- [ ] quick and full gates run against real task executions
+- [ ] failed tasks leave enough data for replay-oriented diagnosis
 "@
     }
     @{
-      Title  = "[Task] Implement quick/full verification and delivery handoff"
-      Labels = @("task", "phase:3-assurance", "backend", "eval")
+      Title  = "[Task] Add the operator UI and runtime health or status surfaces"
+      Labels = @("task", "phase:full-runtime", "frontend", "platform", "backend")
       Body   = @"
 ## Goal
-Make governed execution produce validated delivery artifacts.
+Give operators a control-plane surface for tasks, approvals, evidence, replay, and runtime status.
 
 ## Dependencies
-- [Epic] Delivery Assurance And Replay
+- [Epic] Full Runtime
 
 ## Acceptance Criteria
-- [ ] Canonical quick/full verification order is enforced
-- [ ] Completed tasks produce a handoff bundle
-- [ ] Replay references are present for failed or interrupted paths
+- [ ] operators can inspect tasks, approvals, evidence, and replay without raw log digging
+- [ ] runtime health and task query surfaces are stable
+- [ ] the UI remains control-plane focused
 "@
     }
     @{
-      Title  = "[Task] Add eval baseline, second-repo pilot, and minimum operator hardening"
-      Labels = @("task", "phase:4-hardening", "eval", "platform", "frontend", "devops")
+      Title  = "[Task] Add single-machine deployment, quickstart, sample profiles, and release criteria"
+      Labels = @("task", "phase:public-release", "docs", "devops", "platform")
       Body   = @"
 ## Goal
-Prove the kernel is measurable, reusable, and operable after the first trial loop succeeds.
+Make the full runtime publicly usable on one machine.
 
 ## Dependencies
-- [Epic] Second-Repo Reuse And Operator Hardening
+- [Epic] Public Usable Release
 
 ## Acceptance Criteria
-- [ ] Minimum eval suites and required trace fields exist
-- [ ] Second repo passes compatibility validation without a kernel fork
-- [ ] Minimum approval/evidence console and runbooks exist for repeated use
+- [ ] the runtime can be started on one machine with a documented path
+- [ ] sample repo profiles and a demo flow work end-to-end
+- [ ] release and packaging expectations are explicit
+"@
+    }
+    @{
+      Title  = "[Task] Add adapter baseline, compatibility policy, and maintenance boundary"
+      Labels = @("task", "phase:maintenance", "product", "docs", "platform")
+      Body   = @"
+## Goal
+Keep the project maintainable after the first usable release.
+
+## Dependencies
+- [Epic] Maintenance Boundary
+
+## Acceptance Criteria
+- [ ] adapter compatibility and degrade behavior are explicit
+- [ ] upgrade expectations are explicit
+- [ ] maintenance, deprecation, and retirement remain traceable
 "@
     }
   )

@@ -123,6 +123,12 @@
     "include_pr_body": true
   },
   "repo_map_strategy": "hybrid",
+  "task_lifecycle": {
+    "persistence_kind": "file_json",
+    "store_root": ".runtime/tasks",
+    "supports_pause_resume": true,
+    "supports_retry_timeout": true
+  },
   "quick_gate_commands": [
     {
       "id": "quick-lint",

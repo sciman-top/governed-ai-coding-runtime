@@ -23,14 +23,15 @@ class VerificationRunnerTests(unittest.TestCase):
 
         plan = verification_runner.build_verification_plan("full")
 
-        self.assertEqual([gate.name for gate in plan.gates], ["build", "test", "contract/invariant", "hotspot"])
+        self.assertEqual([gate.gate_id for gate in plan.gates], ["build", "test", "contract", "doctor"])
+        self.assertEqual([gate.canonical_name for gate in plan.gates], ["build", "test", "contract_or_invariant", "hotspot_or_health_check"])
 
     def test_quick_plan_keeps_test_before_contract(self) -> None:
         verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
 
         plan = verification_runner.build_verification_plan("quick")
 
-        self.assertEqual([gate.name for gate in plan.gates], ["test", "contract/invariant"])
+        self.assertEqual([gate.gate_id for gate in plan.gates], ["test", "contract"])
 
     def test_escalation_conditions_are_explicit(self) -> None:
         verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
@@ -47,11 +48,12 @@ class VerificationRunnerTests(unittest.TestCase):
         artifact = verification_runner.build_verification_artifact(
             plan=plan,
             evidence_link="docs/change-evidence/example.md",
-            results={"test": "pass", "contract/invariant": "pass"},
+            results={"build": "pass", "test": "pass", "contract": "pass", "doctor": "pass"},
         )
 
         self.assertEqual(artifact.evidence_link, "docs/change-evidence/example.md")
         self.assertEqual(artifact.results["test"], "pass")
+        self.assertEqual(artifact.gate_order, ["build", "test", "contract", "doctor"])
 
 
 if __name__ == "__main__":

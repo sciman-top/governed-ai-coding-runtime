@@ -21,3 +21,10 @@ Run them through the repository verifier:
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime
 ```
+
+Foundation build and doctor checks are available through:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Build
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Doctor
+```

@@ -11,17 +11,25 @@ Define the quick and full verification model for governed AI coding.
 - intended for inner-loop feedback
 - may skip expensive checks
 - must not weaken high-risk pre-delivery requirements
+- uses the live `test` and `contract` gate ids
 
 ### full
 - required before delivery of medium/high-risk changes
 - required after explicit approval paths
 - must run the canonical order
+- uses the live gate ids `build`, `test`, `contract`, and `doctor`
 
 ## Canonical Order
 1. build
 2. test
 3. contract_or_invariant
 4. hotspot_or_health_check
+
+## Live Gate Bindings
+- `build` -> `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`
+- `test` -> `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`
+- `contract` -> `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`
+- `doctor` -> `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`
 
 ## Escalation Rules
 Full gate must run when:
@@ -32,6 +40,9 @@ Full gate must run when:
 
 ## Required Output
 - gate_level
+- gate_id
+- canonical_name
+- command
 - status
 - duration_ms
 - failed_steps

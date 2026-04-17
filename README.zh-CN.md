@@ -1,12 +1,13 @@
 # Governed AI Coding Runtime 中文使用说明
 
 ## 当前状态
-当前计划任务已经执行到 `Phase 4 / GAP-017` 末尾，当前 backlog 范围内的优化计划已经收口。
+`Foundation / GAP-020` 到 `GAP-023` 已完成，当前活跃执行队列已经切到 `Full Runtime / GAP-024` 与后续阶段。
 
 本项目现在可以使用，但要按正确边界理解：
 
 - 可以用作“治理运行时契约层”。
 - 可以运行仓库验证和 runtime contract tests。
+- 可以运行 Foundation 级 build 与 doctor 门禁。
 - 可以运行第一个只读 trial 脚本。
 - 可以作为后续实现生产 runtime service、worker、UI、持久化层的基础。
 
@@ -16,7 +17,7 @@
 - 没有数据库或 durable workflow worker。
 - 没有真实 Web 控制台。
 - 没有包构建产物或发布流程。
-- `build` 与 `hotspot/doctor` 门禁仍是 `gate_na`。
+- `build` 与 `hotspot/doctor` 已有 Foundation 级真实入口，但还不是生产级构建与服务健康检查。
 
 ## 你可以怎样使用
 
@@ -25,6 +26,14 @@
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1
 ```
 
 这个命令会执行：
@@ -131,11 +140,8 @@ PY
 ## 当前完成度
 当前已完成：
 
-- `Phase 0`: Runnable Baseline
-- `Phase 1`: First Trial Slice
-- `Phase 2`: Controlled Write Slice
-- `Phase 3`: Delivery Assurance Slice
-- `Phase 4`: Reuse And Operator Hardening
+- `Phase 0` 到 `Phase 4` 的 MVP 合约层与验证基线
+- 当前下一执行队列是 `Full Runtime / GAP-024+`
 
 当前验证基线：
 
@@ -145,7 +151,7 @@ PY
 ## 下一步建议
 如果继续推进产品化，建议下一阶段优先做：
 
-1. 增加真实 Python package 配置和 build gate。
+1. 增加真实 Python package 元数据与更完整发布构建。
 2. 增加 durable storage 或 workflow worker。
 3. 把当前 `ControlPlaneConsole` facade 接到 CLI 或最小 Web UI。
-4. 增加真实 doctor/hotspot 命令，替换 `gate_na`。
+4. 把 Foundation doctor 扩展为更接近服务健康检查的入口。

@@ -2,14 +2,17 @@
 
 ## Current Baseline
 - This repository is currently `docs-first / contracts-first`.
-- `docs/`, `schemas/`, `scripts/github/create-roadmap-issues.ps1`, top-level skeleton directories for `apps/`, `packages/`, `infra/`, and `tests/`, `scripts/verify-repo.ps1`, `.github/workflows/verify.yml`, one runtime-consumable control-pack asset, and tested runtime contract primitives are present.
-- Phase 0 through Phase 4 backlog items are implemented through the current `GAP-017` backlog endpoint.
-- Production runtime services, durable workers, real package build artifacts, and deployment targets are not landed yet.
+- `docs/`, `schemas/`, top-level skeleton directories, `scripts/verify-repo.ps1`, `scripts/build-runtime.ps1`, `scripts/doctor-runtime.ps1`, `.github/workflows/verify.yml`, and tested runtime contract primitives are present.
+- MVP contract slices and the `Foundation / GAP-020` through `GAP-023` substrate are complete, and the active execution queue now starts at `Full Runtime / GAP-024`.
+- Production runtime services, durable workers, full package release artifacts, and deployment targets are not landed yet.
 
 ## Current Working Set
-- [Latest Deep Audit Review](./reviews/2026-04-17-pre-implementation-deep-audit-and-doc-refresh.md)
-- [Latest Audit Evidence](./change-evidence/20260417-pre-implementation-deep-audit-and-doc-refresh.md)
-- [Current Closeout Evidence](./change-evidence/20260417-mvp-backlog-closeout-handoff.md)
+- [Full Lifecycle Plan](./roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
+- [Full Lifecycle Backlog Seeds](./backlog/full-lifecycle-backlog-seeds.md)
+- [Issue-Ready Backlog](./backlog/issue-ready-backlog.md)
+- [Foundation Runtime Substrate Implementation Plan](./plans/foundation-runtime-substrate-implementation-plan.md)
+- [20260417 Foundation Execution Plan](./change-evidence/20260417-foundation-execution-plan.md)
+- [GAP-020 Task 1 Evidence](./change-evidence/20260417-gap-020-task-1-clarification-compatibility-evidence.md)
 - [Phase 0 Runnable Baseline Implementation Plan](./plans/phase-0-runnable-baseline-implementation-plan.md)
 - [Project AGENTS](../AGENTS.md)
 
@@ -26,9 +29,10 @@
 - [Runbooks Index](./runbooks/README.md)
 
 ## Current Execution Posture
-- The current MVP backlog has been executed through `GAP-017`; the next work should be closeout review, commit grouping, or a new post-MVP plan.
-- The working tree is intentionally dirty until the maintainer chooses commit grouping; do not revert unrelated accumulated changes.
-- Active verification for this repo currently means runtime contract tests plus scoped checks over live docs, schemas, examples, catalog, and planning scripts; `docs/change-evidence/` remains historical evidence, not active product surface.
+- `Foundation / GAP-020` through `GAP-023` are complete on the current branch baseline.
+- The active execution queue is `Full Runtime / GAP-024` forward.
+- Active verification for this repo now means `build -> test -> contract/invariant -> doctor`, with docs and script checks still included in `verify-repo -Check All`.
+- `docs/change-evidence/` remains historical evidence, not active product surface.
 
 ## Project Entry
 - [Root README](../README.md)
@@ -41,7 +45,17 @@
 pwsh -NoProfile -ExecutionPolicy Bypass -File ../scripts/verify-repo.ps1 -Check All
 ```
 
-Runtime contract tests can be run directly from the repository root:
+Foundation build and doctor commands can be run directly from the repository root:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1
+```
+
+Runtime contract tests can also be run directly:
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime
@@ -77,8 +91,11 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Run
 - [Plans Index](./plans/README.md)
 - [Backlog Index](./backlog/README.md)
 - [90-Day Plan](./roadmap/governed-ai-coding-runtime-90-day-plan.md)
+- [Full Lifecycle Plan](./roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
+- [Foundation Runtime Substrate Implementation Plan](./plans/foundation-runtime-substrate-implementation-plan.md)
 - [Phase 0 Runnable Baseline Implementation Plan](./plans/phase-0-runnable-baseline-implementation-plan.md)
 - [MVP Backlog Seeds](./backlog/mvp-backlog-seeds.md)
+- [Full Lifecycle Backlog Seeds](./backlog/full-lifecycle-backlog-seeds.md)
 - [Issue-Ready Backlog](./backlog/issue-ready-backlog.md)
 - [Issue Seeds YAML](./backlog/issue-seeds.yaml)
 

@@ -12,6 +12,7 @@ Define the canonical state machine for AI coding tasks.
 - planned
 - awaiting_approval
 - executing
+- paused
 - verifying
 - delivered
 - failed
@@ -23,11 +24,19 @@ Define the canonical state machine for AI coding tasks.
 - scoped -> planned
 - planned -> executing
 - planned -> awaiting_approval
+- planned -> cancelled
 - awaiting_approval -> executing
+- awaiting_approval -> cancelled
 - executing -> verifying
+- executing -> paused
 - verifying -> delivered
+- verifying -> paused
 - executing -> failed
 - verifying -> failed
+- paused -> executing
+- paused -> verifying
+- paused -> cancelled
+- failed -> planned
 - failed -> rolled_back
 
 ## State Metadata
@@ -41,8 +50,18 @@ Each state transition should capture:
 - evidence_ref
 - timestamp
 
+Persistent task records must also capture:
+- current_state
+- transition_history
+- retry_count
+- timeout_at
+- last_failure_reason
+- resume_state
+
 ## Invariants
 - execution cannot begin without a scoped task
 - high-risk execution cannot skip `awaiting_approval`
 - delivery cannot occur before verification
 - rollback cannot occur without a failure or explicit cancellation path
+- pause must preserve the deterministic state the workflow should resume into
+- retry must increment persisted retry metadata instead of creating a fresh anonymous task
