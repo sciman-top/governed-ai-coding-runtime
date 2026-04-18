@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/repo-attachment-binding.schema.json",
+  "title": "Repo Attachment Binding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "binding_id",
+    "target_repo_root",
+    "repo_profile_ref",
+    "light_pack_path",
+    "runtime_state_root",
+    "mutable_state_roots",
+    "adapter_preference",
+    "gate_profile",
+    "doctor_posture"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "binding_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target_repo_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "repo_profile_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "light_pack_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "runtime_state_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mutable_state_roots": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tasks",
+        "runs",
+        "approvals",
+        "artifacts",
+        "replay"
+      ],
+      "properties": {
+        "tasks": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runs": {
+          "type": "string",
+          "minLength": 1
+        },
+        "approvals": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifacts": {
+          "type": "string",
+          "minLength": 1
+        },
+        "replay": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "adapter_preference": {
+      "type": "string",
+      "enum": [
+        "native_attach",
+        "process_bridge",
+        "manual_handoff"
+      ]
+    },
+    "gate_profile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "doctor_posture": {
+      "type": "string",
+      "enum": [
+        "missing_light_pack",
+        "invalid_light_pack",
+        "stale_binding",
+        "healthy"
+      ]
+    }
+  }
+}

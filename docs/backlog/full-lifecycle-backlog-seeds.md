@@ -7,7 +7,10 @@ Seed the function-first full lifecycle of the project so it can evolve from a co
 - `Phase 0` through `Phase 4` are complete through `GAP-017`.
 - The repository already contains runtime contracts, verifier entrypoints, sample repo profiles, a runtime-consumable control pack, and MVP-era governance primitives.
 - The repository now contains the local single-machine runtime baseline through `Maintenance Baseline / GAP-034`.
-- The new active queue is `Interactive Session Productization / GAP-035` through `GAP-039`.
+- `Interactive Session Productization / GAP-035` through `GAP-039` are complete on the current branch baseline.
+- `Strategy Alignment Gates / GAP-040` through `GAP-044` are complete on the current branch baseline and remain encoded as satisfied dependencies around the completed productization queue.
+- There is no open `GAP-*` execution queue in the current seeded set (`GAP-018` through `GAP-044`).
+- Any next-stage work must be introduced as a new synchronized `GAP-*` set across roadmap, backlog, issue-ready markdown, and issue seeds.
 
 ## Vision
 1. Freeze the initial product shape and capability boundary.
@@ -41,11 +44,31 @@ Seed the function-first full lifecycle of the project so it can evolve from a co
 3. Treat this stage as the local baseline hardening layer, not the final lifecycle endpoint.
 
 ## Interactive Session Productization
-1. Add a generic target-repo attachment pack and onboarding flow.
-2. Add an attach-first session bridge and governed interaction surface.
-3. Add a direct Codex adapter and evidence mapping path.
-4. Add capability-tiered adapters for non-Codex AI tools.
-5. Add multi-repo trial feedback capture and a reusable onboarding kit.
+1. Preserve the generic target-repo attachment pack and onboarding flow.
+2. Preserve the attach-first session bridge and governed interaction surface.
+3. Preserve the direct Codex adapter and evidence mapping path.
+4. Preserve capability-tiered adapters for non-Codex AI tools.
+5. Preserve multi-repo trial feedback capture and the reusable onboarding kit.
+
+## Strategy Alignment Gates
+1. `Strategy Alignment Gate A` is complete on the current branch baseline:
+   - runtime governance borrowing matrix
+   - source-of-truth versus runtime contract bundle ADR
+   - repo-native contract bundle architecture
+2. `Strategy Alignment Gate B` is complete on the current branch baseline:
+   - PolicyDecision contract with `allow`, `escalate`, and `deny`
+3. Verification and reconciliation are complete on the current branch baseline before broad `GAP-038` and `GAP-039` expansion:
+   - local/CI same-contract verification
+   - backlog and issue-seed reconciliation
+4. These gates remain encoded in `issue-seeds.yaml` so rendered GitHub task dependencies match the roadmap:
+   - `GAP-035` waits for `GAP-042`
+   - `GAP-036` and `GAP-037` wait for `GAP-043`
+   - `GAP-038` and `GAP-039` wait for `GAP-044`
+
+## Next Queue Policy
+1. Do not reopen `GAP-018` through `GAP-044` unless a verified regression requires it.
+2. Introduce any next active queue as new IDs beyond `GAP-044`.
+3. Add new IDs only after acceptance criteria and dependency wiring are explicit in both markdown and seed YAML.
 
 ## Explicit Non-Goals
 - commercial packaging

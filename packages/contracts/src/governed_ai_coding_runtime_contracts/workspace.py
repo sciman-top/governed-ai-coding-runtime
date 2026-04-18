@@ -1,6 +1,7 @@
 """Isolated workspace allocation primitives."""
 
 from dataclasses import dataclass
+import fnmatch
 from pathlib import PurePosixPath
 import re
 from typing import Any
@@ -87,7 +88,7 @@ def _normalize_relative_path(target_path: str) -> PurePosixPath:
 
 def _matches(path: PurePosixPath, pattern: str) -> bool:
     normalized_pattern = pattern.replace("\\", "/")
-    return path.match(normalized_pattern)
+    return fnmatch.fnmatch(path.as_posix(), normalized_pattern)
 
 
 def _required_string(value: str, field_name: str) -> str:

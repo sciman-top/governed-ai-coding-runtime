@@ -10,7 +10,45 @@
     "canonical_order",
     "live_gate_bindings",
     "escalation_rules",
-    "required_output_fields"
+    "required_output_fields",
+    "execution_contexts",
+    "same_contract_inputs"
+  ],
+  "allOf": [
+    {
+      "properties": {
+        "execution_contexts": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "context_id"
+            ],
+            "properties": {
+              "context_id": {
+                "const": "local"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "execution_contexts": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "context_id"
+            ],
+            "properties": {
+              "context_id": {
+                "const": "ci"
+              }
+            }
+          }
+        }
+      }
+    }
   ],
   "properties": {
     "schema_version": {
@@ -91,6 +129,53 @@
     },
     "runtime_binding_fields": {
       "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "execution_contexts": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "context_id",
+          "purpose",
+          "defense_role",
+          "same_contract_inputs"
+        ],
+        "properties": {
+          "context_id": {
+            "type": "string",
+            "enum": [
+              "local",
+              "ci"
+            ]
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "defense_role": {
+            "type": "string",
+            "enum": [
+              "first_line_feedback",
+              "last_line_of_defense"
+            ]
+          },
+          "same_contract_inputs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "same_contract_inputs": {
+      "type": "array",
+      "minItems": 1,
       "items": {
         "type": "string"
       }

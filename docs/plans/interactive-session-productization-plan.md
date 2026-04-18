@@ -1,5 +1,11 @@
 # Interactive Session Productization Plan
 
+## Status
+- Completed planning realignment.
+- Do not execute this file as the active implementation checklist.
+- Current active execution entrypoint: [Interactive Session Productization Implementation Plan](./interactive-session-productization-implementation-plan.md).
+- Current audit guardrail: [Hybrid Final-State And Plan Reconciliation](../reviews/2026-04-18-hybrid-final-state-and-plan-reconciliation.md).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Execute `GAP-035` through `GAP-039` so the current local runtime baseline evolves into a generic, attach-first, interactive governed AI coding runtime that can onboard many target repositories and integrate with real AI coding sessions.

@@ -4,9 +4,15 @@
 This directory holds executable implementation plans that translate strategy and backlog into ordered work.
 
 ## Current Authoritative Plan
+- [Interactive Session Productization Implementation Plan](./interactive-session-productization-implementation-plan.md)
+  - Status: completed execution plan kept as the productization closeout checklist
+  - Scope: `GAP-035` through `GAP-039` covering target-repo attachment, session bridge, direct Codex adapter, generic adapter tiers, multi-repo trial loop, and closeout evidence
 - [Interactive Session Productization Plan](./interactive-session-productization-plan.md)
-  - Status: active execution plan
-  - Scope: `GAP-035` through `GAP-039` covering generic target-repo attachment, attach-first session bridge, direct Codex integration, capability-tiered adapters, and multi-repo trial feedback capture
+  - Status: completed planning realignment kept as history
+  - Scope: created the `GAP-035` through `GAP-039` queue and generic attachment blueprint; use the implementation plan above for current execution
+- [Governance Runtime Strategy Alignment Plan](./governance-runtime-strategy-alignment-plan.md)
+  - Status: completed coordination plan kept as strategy-alignment history and closeout rationale
+  - Scope: external mechanism borrowing, source-of-truth versus runtime bundle decision, PolicyDecision contract, local/CI same-contract verification, and backlog/issue-seed alignment
 - [Maintenance Implementation Plan](./maintenance-implementation-plan.md)
   - Status: completed execution plan kept as the local baseline maintenance checklist
   - Scope: `GAP-033` through `GAP-034` covering compatibility and upgrade policy, maintenance and triage rules, and deprecation or retirement visibility through runtime status and doctor checks
@@ -25,15 +31,19 @@ This directory holds executable implementation plans that translate strategy and
 
 ## How To Use This Directory
 1. Read the latest audit review:
-   - [Pre-Implementation Deep Audit And Doc Refresh](../reviews/2026-04-17-pre-implementation-deep-audit-and-doc-refresh.md)
+   - [Hybrid Final-State And Plan Reconciliation](../reviews/2026-04-18-hybrid-final-state-and-plan-reconciliation.md)
 2. Read the latest supporting evidence:
    - [20260417 Foundation Execution Plan](../change-evidence/20260417-foundation-execution-plan.md)
    - [20260418 Full Runtime Execution Plan](../change-evidence/20260418-full-runtime-execution-plan.md)
    - [20260418 Public Usable Release Execution Plan](../change-evidence/20260418-public-usable-release-execution-plan.md)
    - [20260418 Maintenance Execution Plan](../change-evidence/20260418-maintenance-execution-plan.md)
+   - [20260418 Governance Runtime Strategy Alignment Closeout](../change-evidence/20260418-governance-runtime-strategy-alignment-closeout.md)
+   - [20260418 Governance Runtime Strategy Alignment Plan](../change-evidence/20260418-governance-runtime-strategy-alignment-plan.md)
 3. Use the roadmap and backlog to understand current posture:
    - the local runtime baseline through `Maintenance Baseline / GAP-034` is complete on the current branch baseline
-   - use [Interactive Session Productization Plan](./interactive-session-productization-plan.md) as the active next-step entrypoint
+   - use [Interactive Session Productization Implementation Plan](./interactive-session-productization-implementation-plan.md) as the completed productization execution history
+   - use [Governance Runtime Strategy Alignment Plan](./governance-runtime-strategy-alignment-plan.md) as the completed alignment record for `GAP-040` through `GAP-044`
+   - use [Local Baseline To Hybrid Final-State Migration Matrix](../architecture/local-baseline-to-hybrid-final-state-migration-matrix.md) when comparing completed plans or landed baseline code against the new hybrid final-state target
    - use [Maintenance Implementation Plan](./maintenance-implementation-plan.md) as the latest completed baseline closeout history
    - keep future maintenance evidence in `docs/change-evidence/`
 
@@ -41,4 +51,4 @@ This directory holds executable implementation plans that translate strategy and
 - Plans here should be execution-oriented, not a duplicate of the PRD or architecture docs.
 - Roadmap timing stays in `docs/roadmap/`.
 - Gap ordering and dependencies stay in `docs/backlog/`.
-- Historical plans remain useful evidence, but only one plan should be treated as the active next-step entrypoint at a time.
+- Historical plans remain useful evidence. The active productization entrypoint is singular, and completed cross-cutting gate plans should remain as rationale rather than be treated as a second active execution queue.

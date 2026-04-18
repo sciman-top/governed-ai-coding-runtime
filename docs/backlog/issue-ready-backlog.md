@@ -20,7 +20,8 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Full Runtime / GAP-024` through `GAP-028` are now complete on the current branch baseline.
 - `Public Usable Release / GAP-029` through `GAP-032` are now complete on the current branch baseline.
 - `Maintenance Baseline / GAP-033` through `GAP-034` are now complete on the current branch baseline.
-- `Interactive Session Productization / GAP-035` through `GAP-039` are the active next-step queue.
+- `Strategy Alignment Gates / GAP-040` through `GAP-044` are now complete on the current branch baseline.
+- `Interactive Session Productization / GAP-035` through `GAP-039` are complete on the current branch baseline.
 
 ## Vision
 
@@ -276,70 +277,144 @@ Governed AI Coding Runtime Full Functional Lifecycle
 
 ### GAP-035 Generic Target-Repo Attachment Pack And Onboarding Flow
 - Type: AFK
-- Blocked by: GAP-032, GAP-034
+- Blocked by: GAP-032, GAP-034, GAP-042
 - User stories: 18, 38, 42, 46
-- Status: active next-step queue
+- Status: complete on current branch baseline
 - What to build:
   - repo-local declarative light pack
   - target-repo bootstrap and attach flow
   - machine-local runtime binding that keeps mutable state out of the target repo
 - Acceptance criteria:
-  - [ ] a new target repo can be attached without copying the runtime into it
-  - [ ] repo-local light pack contents are explicit, minimal, and portable
-  - [ ] target-repo onboarding produces a stable runtime binding and doctor-visible posture
+  - [x] a new target repo can be attached without copying the runtime into it
+  - [x] repo-local light pack contents are explicit, minimal, and portable
+  - [x] target-repo onboarding produces a stable runtime binding and doctor-visible posture
 
 ### GAP-036 Attach-First Session Bridge And Governed Interaction Surface
 - Type: AFK
-- Blocked by: GAP-035
+- Blocked by: GAP-035, GAP-043
 - User stories: 1, 5, 41, 43
-- Status: active next-step queue
+- Status: complete on current branch baseline
 - What to build:
   - attach-first session bridge
   - governed in-session commands for task start, approval, gate runs, and evidence inspection
   - launch-second fallback when live session attach is unavailable
+  - PolicyDecision normalization so execution-like session commands expose `allow` / `escalate` / `deny` instead of raw local-baseline `allowed` / `paused` / fail-closed outcomes
 - Acceptance criteria:
-  - [ ] the preferred user flow runs inside an active AI coding session rather than only through batch CLI
-  - [ ] governed actions are callable without replacing the upstream AI tool UI
-  - [ ] launch mode remains available as an explicit compatibility fallback
+  - [x] the preferred user flow runs inside an active AI coding session rather than only through batch CLI
+  - [x] governed actions are callable without replacing the upstream AI tool UI
+  - [x] launch mode remains available as an explicit compatibility fallback
+  - [x] execution-like session commands expose `PolicyDecision` outcomes rather than raw legacy write-governance statuses
 
 ### GAP-037 Direct Codex Adapter And Evidence Mapping
 - Type: HITL
-- Blocked by: GAP-035, GAP-036
+- Blocked by: GAP-035, GAP-036, GAP-043
 - User stories: 2, 11, 31, 41, 43
-- Status: active next-step queue
+- Status: complete on current branch baseline
 - What to build:
   - direct Codex adapter for interactive governed use
   - session-to-task binding and mutation capture
   - evidence mapping for Codex-driven file changes, tool calls, and gate runs
 - Acceptance criteria:
-  - [ ] at least one real Codex path is direct rather than manual-handoff only
-  - [ ] runtime evidence can attribute Codex-driven changes and verification output to one governed task
-  - [ ] unsupported Codex capabilities degrade explicitly instead of being implied silently
+  - [x] at least one real Codex path is direct rather than manual-handoff only
+  - [x] runtime evidence can attribute Codex-driven changes and verification output to one governed task
+  - [x] unsupported Codex capabilities degrade explicitly instead of being implied silently
 
 ### GAP-038 Capability-Tiered Adapter Framework For Multiple AI Tools
 - Type: AFK
-- Blocked by: GAP-035, GAP-036
+- Blocked by: GAP-035, GAP-036, GAP-044
 - User stories: 20, 31, 37, 44
-- Status: active next-step queue
+- Status: complete on current branch baseline
 - What to build:
   - capability tiers for native attach, process bridge, and manual handoff
   - adapter registry updates for non-Codex tools
   - explicit governance guarantees per capability tier
 - Acceptance criteria:
-  - [ ] adapters can declare attach strength without changing kernel semantics
-  - [ ] non-Codex tools have an honest compatibility posture
-  - [ ] degrade and fail-closed behaviors remain explicit and operator-visible
+  - [x] adapters can declare attach strength without changing kernel semantics
+  - [x] non-Codex tools have an honest compatibility posture
+  - [x] degrade and fail-closed behaviors remain explicit and operator-visible
 
 ### GAP-039 Multi-Repo Trial Loop And Generic Onboarding Kit
 - Type: HITL
-- Blocked by: GAP-035, GAP-036, GAP-037, GAP-038
+- Blocked by: GAP-035, GAP-036, GAP-037, GAP-038, GAP-044
 - User stories: 14, 37, 38, 39, 45
-- Status: active next-step queue
+- Status: complete on current branch baseline
 - What to build:
   - reusable onboarding kit for arbitrary target repos
   - multi-repo trial execution and feedback capture
   - evidence-backed iteration path for onboarding friction, adapter gaps, and gate drift
 - Acceptance criteria:
-  - [ ] multiple real repositories can run through the attach flow without kernel rewrites
-  - [ ] onboarding, adapter, and gate failures are captured as structured trial evidence
-  - [ ] the product can evolve from real trial data instead of repo-specific one-off fixes
+  - [x] multiple real repositories can run through the attach flow without kernel rewrites
+  - [x] onboarding, adapter, and gate failures are captured as structured trial evidence
+  - [x] the product can evolve from real trial data instead of repo-specific one-off fixes
+
+## Strategy Alignment Gates
+
+### GAP-040 Runtime Governance Borrowing Matrix
+- Type: AFK
+- Blocked by: None
+- User stories: 29, 31, 37, 44
+- Status: complete in Strategy Alignment baseline
+- What to build:
+  - borrowing matrix for Microsoft Agent Governance Toolkit, OPA, Keycard, Coder AI Governance, MCP, GAAI-style repo files, OpenHands, SWE-agent, Hermes-like agents, oh-my-codex or oh-my-claudecode-style wrappers, NeMo Guardrails, and Guardrails AI
+  - product-layer classification for each reference
+  - explicit borrow and avoid guidance
+- Acceptance criteria:
+  - [x] each reference is classified by layer rather than copied as product identity
+  - [x] each row includes borrow, avoid, impact, confidence, and official or primary source
+  - [x] matrix conclusions preserve the project's runtime/action governance identity
+
+### GAP-041 Source-Of-Truth And Runtime Bundle ADR
+- Type: HITL
+- Blocked by: GAP-040
+- User stories: 18, 21, 29, 38
+- Status: complete in Strategy Alignment baseline
+- What to build:
+  - ADR-0007 for source-of-truth versus runtime contract bundle boundaries
+  - decision that `docs/`, `schemas/`, and `packages/contracts/` remain the repository source of truth
+  - decision that repo-local light packs or `.governed-ai/`-style bundles are generated or validated runtime-consumable attachment surfaces
+- Acceptance criteria:
+  - [x] ADR rejects hand-maintaining two competing contract copies
+  - [x] ADR links the decision to ADR-0005 and ADR-0006
+  - [x] ADR gives GAP-035 a stable boundary for repo-local light packs
+
+### GAP-042 Repo-Native Contract Bundle Architecture
+- Type: AFK
+- Blocked by: GAP-041
+- User stories: 18, 31, 38, 46
+- Status: complete in Strategy Alignment baseline
+- What to build:
+  - architecture document for repo-native contract bundle contents
+  - mapping from repo profile, gates, write policy, approval policy, adapter capabilities, PolicyDecision, evidence, handoff, and rollback references to existing source-of-truth docs and schemas
+  - state placement rules for repo-local declarations versus machine-local runtime state
+- Acceptance criteria:
+  - [x] GAP-035 light-pack scope is described as the runtime bundle attachment shape
+  - [x] mutable task, run, approval, artifact, and replay state remains machine-local
+  - [x] local and CI consumers are described as reading the same contract inputs
+
+### GAP-043 PolicyDecision Contract
+- Type: AFK
+- Blocked by: GAP-042
+- User stories: 7, 8, 20, 27, 31, 43
+- Status: complete in Strategy Alignment baseline
+- What to build:
+  - PolicyDecision spec, JSON Schema, Python contract, and runtime tests
+  - `allow`, `escalate`, and `deny` decision statuses
+  - decision basis, evidence reference, approval reference, and remediation hint fields
+- Acceptance criteria:
+  - [x] `allow`, `escalate`, and `deny` are schema-backed and tested
+  - [x] `deny` fails closed and does not produce an executable action
+  - [x] `escalate` carries approval intent without conflating approval with execution
+
+### GAP-044 Local/CI Same-Contract Verification And Alignment Closeout
+- Type: AFK
+- Blocked by: GAP-042, GAP-043
+- User stories: 11, 12, 22, 36, 44
+- Status: complete in Strategy Alignment baseline
+- What to build:
+  - verification spec update for local and CI same-contract inputs
+  - docs/script regression coverage for non-ASCII markdown path collection and ignored worktree docs
+  - backlog, issue-seed, and seeding script reconciliation for the strategy alignment gates
+- Acceptance criteria:
+  - [x] local and CI verification are described as consuming the same repo contract inputs
+  - [x] docs verification handles non-ASCII markdown paths and ignored worktree markdown robustly
+  - [x] issue seeding renders GAP-040 through GAP-044 without changing GAP-035 through GAP-039 semantics

@@ -7,6 +7,7 @@
   - `docs/architecture/minimum-viable-governance-loop.md`
 - Boundary classification:
   - `docs/architecture/governance-boundary-matrix.md`
+  - `docs/architecture/repo-native-contract-bundle.md`
 - Research:
   - `docs/research/benchmark-and-borrowing-notes.md`
   - `docs/research/repo-governance-hub-borrowing-review.md`
@@ -34,6 +35,7 @@
   - `docs/specs/evidence-bundle-spec.md`
   - `docs/specs/verification-gates-spec.md`
   - `docs/specs/eval-and-trace-grading-spec.md`
+  - `docs/specs/policy-decision-spec.md`
 
 ## Goal
 - 为 `governed-ai-coding-runtime` 提供一份从零开始可落地的终态架构说明。
@@ -127,11 +129,14 @@ target repo
 这意味着：
 - 仓库内只保留轻量声明和接入元数据
 - 运行态状态、证据、回放、审批放在机器级 runtime
-- 用户继续使用 `Codex CLI/App`、`Claude Code`、`Cowrk` 等上游工具
+- 用户继续使用 `Codex CLI/App`、`Claude Code` 或其他上游 AI coding 工具
 - runtime 默认附着到当前会话，而不是要求用户先进入另一个替代 shell
 
 详细蓝图见：
 - `docs/architecture/generic-target-repo-attachment-blueprint.md`
+- `docs/architecture/repo-native-contract-bundle.md`
+
+这里的 `repo-local light pack` / `repo-native contract bundle` 是 attach/bind 边界，不是治理内核替换方案。人类和 agent 仍然在 `docs/`、`schemas/`、`packages/contracts/` 里维护 source-of-truth；target repo 只接收轻量声明和接入元数据，mutable runtime state 继续留在 machine-local runtime。
 
 ## Four Planes
 
@@ -204,9 +209,14 @@ target repo
 - 必须 deterministic，不能交给 LLM 自由决定。
 
 ### Agent Adapter Contract
-- 用途：把 Codex CLI/App、Claude Code、OpenClaw、Hermes、IDE 插件、云端 coding agent、浏览器自动化 agent、未来未知产品形态映射到统一运行时能力。
+- 用途：把 Codex CLI/App、Claude Code、IDE 插件、云端 coding agent、浏览器自动化 agent、未来未知产品形态映射到统一运行时能力。
 - 必须描述：调用方式、认证归属、workspace 控制、事件可见性、变更模型、续跑模型、证据导出模型。
 - 不负责：改变 task lifecycle、审批语义、证据 schema、验证顺序或 rollback 规则。
+
+### Repo-Native Contract Bundle
+- 用途：把 source-of-truth 中稳定的 repo policy、gate、adapter、policy-decision 和 delivery references materialize 成 target repo 可挂接的轻量声明面。
+- 必须描述：repo-local declarations、machine-local state placement、local/CI same-contract consumption。
+- 不负责：替换 kernel、复制 mutable runtime state、或让 target repo 承担 governance runtime implementation。
 
 ### Attach-First / Launch-Second
 - `attach-first`：最佳默认路径。runtime 在已有 AI 会话中暴露 governed actions。

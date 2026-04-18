@@ -7,6 +7,7 @@ Make adapter compatibility posture explicit, especially when upstream capability
 - Codex remains the first adapter priority.
 - The runtime is honest about weak capability surfaces.
 - Unsupported capabilities do not silently degrade into a posture that looks fully governed.
+- Generic adapter posture is expressed through `native_attach`, `process_bridge`, and `manual_handoff`.
 
 ## Rules
 - `full_support` preserves the requested posture when the repo also supports it.
@@ -24,3 +25,15 @@ Make adapter compatibility posture explicit, especially when upstream capability
 - Codex-first compatibility is explicit.
 - Structured upstream event visibility is still partial.
 - The local runtime compensates with artifact-backed status, verification, evidence, and replay outputs.
+
+## Launch-Second Fallback
+- Native attach remains the preferred posture when available.
+- Process bridge launch mode is explicit and must not be described as native attach.
+- Process bridge results must capture process output, exit code, changed-file discovery, and verification references.
+- When process bridge is unavailable, the runtime degrades to manual handoff instead of pretending execution is governed through a stronger adapter tier.
+
+## Tier Guarantees
+- `native_attach` guarantees an attached session boundary plus same-contract verification.
+- `process_bridge` guarantees a captured process boundary plus same-contract verification.
+- `manual_handoff` guarantees explicit handoff posture plus same-contract verification.
+- Tier guarantees must be documented and machine-readable on the adapter contract surface.

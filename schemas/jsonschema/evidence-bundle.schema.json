@@ -247,6 +247,44 @@
         "type": "string"
       }
     },
+    "trial_feedback": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "trial_id": {
+          "type": "string"
+        },
+        "repo_id": {
+          "type": "string"
+        },
+        "adapter_tier": {
+          "type": "string",
+          "enum": [
+            "native_attach",
+            "process_bridge",
+            "manual_handoff"
+          ]
+        },
+        "follow_up_categories": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "repo_specific",
+              "onboarding_generic",
+              "adapter_generic",
+              "contract_generic"
+            ]
+          }
+        }
+      },
+      "required": [
+        "trial_id",
+        "repo_id",
+        "adapter_tier",
+        "follow_up_categories"
+      ]
+    },
     "created_at": {
       "format": "date-time",
       "type": "string"

@@ -128,7 +128,7 @@ The higher-priority interactive surface is the session bridge inside the active 
 - repo-aware at task startup and verification time
 
 ## Agent Compatibility Position
-The runtime should treat AI coding products as replaceable execution frontends. The kernel should not know whether the active frontend is Codex CLI/App, Claude Code, Cowrk, OpenClaw, Hermes, an IDE plugin, a cloud coding worker, or a future agent product.
+The runtime should treat AI coding products as replaceable execution frontends. The kernel should not know whether the active frontend is Codex CLI/App, Claude Code, an IDE plugin, a cloud coding worker, browser automation, or a future agent product.
 
 Adapters should declare capabilities:
 - invocation mode

@@ -7,6 +7,7 @@ Explain how to use this repository alongside Codex CLI/App today without oversta
 - This project is **Codex CLI/App compatible first**, but it is **not yet a direct Codex execution adapter**.
 - The current runtime can bootstrap local state, load repo profiles, track tasks, run governed verification gates, persist evidence and replay artifacts, and expose runtime status.
 - The current runtime does **not** directly invoke Codex to perform real coding work through a managed adapter worker.
+- A Codex adapter contract now exists to classify capability posture. It does not by itself prove live native attach or managed Codex execution.
 
 ## What Works Today
 
@@ -26,6 +27,7 @@ The first Codex-related path is intentionally conservative:
 See:
 - [First Read-Only Trial](./first-readonly-trial.md)
 - [Adapter Degrade Policy](./adapter-degrade-policy.md)
+- [Codex Direct Adapter](./codex-direct-adapter.md)
 
 ### 3. Runtime Smoke Task
 `python scripts/run-governed-task.py run --json` proves the local governed runtime path:
@@ -65,6 +67,7 @@ Recommended when you want an explicit governed wrapper around a bounded task.
 - no managed adapter worker that captures Codex prompts, edits, tool calls, or diffs as first-class runtime events
 - no long-running Codex session orchestration inside this runtime
 - no claim that the current smoke task represents real Codex-produced code changes
+- no claim that the Codex adapter contract means native attach is available in every host environment
 
 ## Future Boundary For A Direct Codex Adapter
 If a future direct Codex adapter is added, it should satisfy all of the following:

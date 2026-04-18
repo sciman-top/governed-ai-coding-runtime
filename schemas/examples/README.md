@@ -12,6 +12,8 @@ Provide minimal but realistic JSON instances that exercise the repository's curr
 - `repo-map-context-shaping/`: repo-map strategy examples
 - `repo-profile/`: sample target-repository profiles
 - `control-pack/`: sample control-pack metadata
+- `policy-decision/`: policy decision examples
+- `agent-adapter-contract/`: sample adapter posture examples
 
 ## Example Files
 - `control-pack/minimum-governance-kernel.example.json`
@@ -23,6 +25,9 @@ Provide minimal but realistic JSON instances that exercise the repository's curr
 - `repo-map-context-shaping/hybrid-default.example.json`
 - `repo-profile/python-service.example.json`
 - `repo-profile/typescript-webapp.example.json`
+- `policy-decision/escalate-write.example.json`
+- `agent-adapter-contract/manual-handoff.example.json`
+- `agent-adapter-contract/process-bridge.example.json`
 
 ## Validation
 Each example should validate against its matching schema:
@@ -54,10 +59,20 @@ Get-Content -Raw 'schemas/examples/repo-profile/python-service.example.json' |
 
 Get-Content -Raw 'schemas/examples/repo-profile/typescript-webapp.example.json' |
   Test-Json -SchemaFile 'schemas/jsonschema/repo-profile.schema.json'
+
+Get-Content -Raw 'schemas/examples/policy-decision/escalate-write.example.json' |
+  Test-Json -SchemaFile 'schemas/jsonschema/policy-decision.schema.json'
+
+Get-Content -Raw 'schemas/examples/agent-adapter-contract/manual-handoff.example.json' |
+  Test-Json -SchemaFile 'schemas/jsonschema/agent-adapter-contract.schema.json'
+
+Get-Content -Raw 'schemas/examples/agent-adapter-contract/process-bridge.example.json' |
+  Test-Json -SchemaFile 'schemas/jsonschema/agent-adapter-contract.schema.json'
 ```
 
 ## Notes
 - These examples are intentionally small enough to be easy to audit.
 - The repo-profile examples demonstrate `same kernel, different profiles` across Python and TypeScript targets.
 - The control-pack example demonstrates bundle metadata; it does not contain executable policy or hook code.
+- The adapter examples demonstrate honest fallback posture for non-Codex integrations.
 - They are reference assets, not normative defaults for every repository.

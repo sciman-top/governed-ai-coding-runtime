@@ -1,17 +1,29 @@
 # Governed AI Coding Runtime English Guide
 
 ## Current Status
-`Foundation / GAP-020` through `GAP-023`, `Full Runtime / GAP-024` through `GAP-028`, `Public Usable Release / GAP-029` through `GAP-032`, and `Maintenance Baseline / GAP-033` through `GAP-034` are complete.
+`Foundation / GAP-020` through `GAP-023`, `Full Runtime / GAP-024` through `GAP-028`, `Public Usable Release / GAP-029` through `GAP-032`, `Maintenance Baseline / GAP-033` through `GAP-034`, and `Interactive Session Productization / GAP-035` through `GAP-039` are complete.
 
-That means the local single-machine runtime baseline is landed. It does not mean the final product boundary is complete.
+That means the first landed hybrid productization boundary is now present. It does not mean every upstream host already has a full runtime-owned real-write execution path.
 
-This repository is usable today as a local governed runtime baseline with explicit maintenance policy. The active next-step queue is now `Interactive Session Productization / GAP-035..039`.
+This repository is usable today as a local governed runtime with the first attach-first productization slice landed; `Strategy Alignment Gates / GAP-040..044` are complete on the current branch baseline and remain encoded as satisfied hardening dependencies around that result.
+
+Positioning and non-goals:
+
+- governance/runtime layer for AI coding agents, not another execution host
+- not a wrapper-first orchestration product
+- not a generation-guardrail product
+- strategy doc: [Positioning And Competitive Layering](docs/strategy/positioning-and-competitive-layering.md)
+- borrowing matrix: [Runtime Governance Borrowing Matrix](docs/research/runtime-governance-borrowing-matrix.md)
+- boundary ADR: [ADR-0007 Source-Of-Truth And Runtime Contract Bundle](docs/adrs/0007-source-of-truth-and-runtime-contract-bundle.md)
 
 Available now:
 
 - Repository verification over docs, schemas, catalog, scripts, and runtime contract tests.
 - Foundation-grade build and doctor gates.
 - A first scripted read-only trial.
+- A safe-mode Codex adapter smoke trial that reports task, binding, evidence, and verification wiring.
+- A profile-based multi-repo trial runner that reports per-repo posture, adapter tier, verification refs, evidence refs, and follow-ups.
+- Attachment of an external target repo such as `D:\OneDrive\CODE\ClassroomToolkit`, including `.governed-ai` light-pack generation or validation plus status/doctor/session-bridge posture checks.
 - A CLI-first governed runtime smoke path with persisted artifacts, verification outputs, evidence bundles, handoff packages, replay references, and runtime status.
 - Python contract primitives for task intake, repo profiles, approvals, write governance, execution runtime, artifact/replay persistence, verification, delivery handoff, eval/trace, second-repo pilot checks, and a minimal control-console facade.
 
@@ -20,8 +32,23 @@ Not available yet:
 - No database or multi-machine workflow worker.
 - The package bundle is a local distribution directory, not an installer or published channel.
 - The richer operator UI is a local HTML surface, not a long-running web service.
-- No direct Codex adapter yet; Codex CLI/App remains a compatible current-state boundary rather than a fully runtime-owned coding backend.
-- No generic target-repo attachment pack or attach-first session bridge yet.
+- The current Codex path is still best described as honest smoke-trial, posture, and evidence wiring, not a production-grade runtime-owned real-write backend for external repos.
+
+## Can I Use This With Another Repo?
+Yes, with the current boundary.
+
+For a repo such as `D:\OneDrive\CODE\ClassroomToolkit`, you can already:
+
+- generate or validate `.governed-ai/repo-profile.json` and `.governed-ai/light-pack.json`
+- bind repo-local declarations to machine-local runtime state
+- inspect attachment posture through `status` and `doctor`
+- request posture or gate plans through `session-bridge`
+- run Codex smoke-trial and multi-repo trial surfaces against that attached posture
+
+What you should **not** claim yet:
+
+- that Codex CLI has been fully taken over by this runtime for external repositories
+- that real high-risk writes already have a full runtime-owned approval/execution/rollback loop in those repos
 
 ## How To Use
 
@@ -56,6 +83,7 @@ This checks:
 
 Quickstart:
 - [Single-Machine Runtime Quickstart](docs/quickstart/single-machine-runtime-quickstart.md)
+- [Single-Machine Runtime Quickstart (Chinese)](docs/quickstart/single-machine-runtime-quickstart.zh-CN.md)
 - [Codex CLI/App Integration Guide](docs/product/codex-cli-app-integration-guide.md)
 - [Codex CLI/App 集成指南](docs/product/codex-cli-app-integration-guide.zh-CN.md)
 
@@ -93,7 +121,26 @@ Expected output is JSON with:
 - `auth_ownership`
 - `unsupported_capability_behavior`
 
-### 3. Run One Governed Task End To End
+### 3. Run The Codex Adapter Smoke Trial
+This trial defaults to safe mode. It proves the direct-adapter contract surface, not a real high-risk write path.
+
+```powershell
+python scripts/run-codex-adapter-trial.py `
+  --repo-id "python-service" `
+  --task-id "task-codex-trial" `
+  --binding-id "binding-python-service"
+```
+
+Expected output includes:
+
+- `adapter_tier`
+- `task_id`
+- `binding_id`
+- `evidence_refs`
+- `verification_refs`
+- `unsupported_capability_behavior`
+
+### 4. Run One Governed Task End To End
 The `run-governed-task.py` path below should currently be read as a runtime smoke path, not as direct Codex-driven coding execution.
 
 ```powershell
@@ -113,7 +160,60 @@ Expected output includes:
 - `evidence_refs`
 - `artifact_refs`
 
-### 4. Use Runtime Contract Primitives
+### 5. Run The Multi-Repo Trial Runner
+The runner defaults to the two sample repo profiles already present in the repository.
+
+```powershell
+python scripts/run-multi-repo-trial.py
+```
+
+Expected per-repo output includes:
+
+- `attachment_posture`
+- `adapter_tier`
+- `verification_refs`
+- `evidence_refs`
+- `handoff_refs`
+- `follow_ups`
+
+### 6. Use It With An Existing Repo
+For an external repo such as `D:\OneDrive\CODE\ClassroomToolkit`, start here:
+
+- [Use With An Existing Repo](docs/quickstart/use-with-existing-repo.md)
+- [Use With An Existing Repo (Chinese)](docs/quickstart/use-with-existing-repo.zh-CN.md)
+- [Target Repo Attachment Flow](docs/product/target-repo-attachment-flow.md)
+- [Target Repo Attachment Flow (Chinese)](docs/product/target-repo-attachment-flow.zh-CN.md)
+
+That guide includes a concrete `ClassroomToolkit` attachment command.
+
+Daily one-command check:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-check.ps1 `
+  -AttachmentRoot "D:\OneDrive\CODE\ClassroomToolkit" `
+  -AttachmentRuntimeStateRoot "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit" `
+  -Mode "quick"
+```
+
+Two-mode one-command flow:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow.ps1 `
+  -FlowMode "daily" `
+  -AttachmentRoot "D:\OneDrive\CODE\ClassroomToolkit" `
+  -AttachmentRuntimeStateRoot "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit" `
+  -Mode "quick"
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-classroomtoolkit.ps1 -FlowMode "daily"
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -Target "skills-manager" -FlowMode "daily" -SkipVerifyAttachment
+```
+
+### 7. Use Runtime Contract Primitives
 Core code lives in:
 
 ```text
@@ -161,12 +261,16 @@ For tool usage:
 1. [This guide](README.en.md)
 2. [Docs Index](docs/README.md)
 3. [First Read-Only Trial](docs/product/first-readonly-trial.md)
-4. [Write Policy Defaults](docs/product/write-policy-defaults.md)
-5. [Approval Flow](docs/product/approval-flow.md)
-6. [Write-Side Tool Governance](docs/product/write-side-tool-governance.md)
-7. [Verification Runner](docs/product/verification-runner.md)
-8. [Delivery Handoff](docs/product/delivery-handoff.md)
-9. [Runbooks](docs/runbooks/README.md)
+4. [Use With An Existing Repo](docs/quickstart/use-with-existing-repo.md)
+5. [Use With An Existing Repo (Chinese)](docs/quickstart/use-with-existing-repo.zh-CN.md)
+5. [Codex Direct Adapter](docs/product/codex-direct-adapter.md)
+6. [Multi-Repo Trial Loop](docs/product/multi-repo-trial-loop.md)
+7. [Write Policy Defaults](docs/product/write-policy-defaults.md)
+8. [Approval Flow](docs/product/approval-flow.md)
+9. [Write-Side Tool Governance](docs/product/write-side-tool-governance.md)
+10. [Verification Runner](docs/product/verification-runner.md)
+11. [Delivery Handoff](docs/product/delivery-handoff.md)
+12. [Runbooks](docs/runbooks/README.md)
 
 For product planning:
 
@@ -174,8 +278,10 @@ For product planning:
 2. [Issue-Ready Backlog](docs/backlog/issue-ready-backlog.md)
 3. [PRD](docs/prd/governed-ai-coding-runtime-prd.md)
 4. [Target Architecture](docs/architecture/governed-ai-coding-runtime-target-architecture.md)
-5. [Generic Target-Repo Attachment Blueprint](docs/architecture/generic-target-repo-attachment-blueprint.md)
-6. [Interactive Session Productization Plan](docs/plans/interactive-session-productization-plan.md)
+5. [Positioning And Competitive Layering](docs/strategy/positioning-and-competitive-layering.md)
+6. [Generic Target-Repo Attachment Blueprint](docs/architecture/generic-target-repo-attachment-blueprint.md)
+7. [Interactive Session Productization Implementation Plan](docs/plans/interactive-session-productization-implementation-plan.md)
+8. [Governance Runtime Strategy Alignment Plan](docs/plans/governance-runtime-strategy-alignment-plan.md)
 
 ## Completion Level
 Completed:
@@ -185,9 +291,10 @@ Completed:
 - `Public Usable Release / GAP-029` through `GAP-032`
 - `Maintenance Baseline / GAP-033` through `GAP-034`
 
-Active next queue:
+Current productization slice:
 
-- `Interactive Session Productization / GAP-035` through `GAP-039`
+- `Interactive Session Productization / GAP-035` through `GAP-039` are complete on the current branch baseline
+- `Strategy Alignment Gates / GAP-040` through `GAP-044` are complete on the current branch baseline
 
 Current verification baseline:
 

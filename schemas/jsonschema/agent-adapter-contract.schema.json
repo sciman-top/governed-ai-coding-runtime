@@ -65,6 +65,14 @@
               "deprecated"
             ]
           },
+          "adapter_tier": {
+            "type": "string",
+            "enum": [
+              "native_attach",
+              "process_bridge",
+              "manual_handoff"
+            ]
+          },
           "rollout_posture": {
             "type": "object",
             "additionalProperties": false,
@@ -191,6 +199,13 @@
               "type": "string"
             }
           },
+          "governance_guarantees": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
           "unsupported_capability_behavior": {
             "type": "string",
             "enum": [
@@ -291,6 +306,7 @@
           "display_name",
           "product_family",
           "lifecycle_status",
+          "adapter_tier",
           "rollout_posture",
           "invocation_mode",
           "auth_ownership",
@@ -301,6 +317,7 @@
           "evidence_model",
           "supported_governance_modes",
           "minimum_required_runtime_controls",
+          "governance_guarantees",
           "unsupported_capability_behavior"
         ]
       }

@@ -27,8 +27,8 @@ class IssueSeedingScriptTests(unittest.TestCase):
         )
 
         summary = json.loads(completed.stdout)
-        self.assertEqual(summary["issue_seed_version"], "3.1")
-        self.assertEqual(summary["issue_count"], 22)
+        self.assertEqual(summary["issue_seed_version"], "3.2")
+        self.assertEqual(summary["issue_count"], 27)
         self.assertEqual(summary["first_issue_id"], "GAP-018")
         self.assertEqual(summary["gap_027_title"], "Minimal Operator Surface For Task, Approval, Evidence, And Replay")
 
@@ -91,6 +91,67 @@ class IssueSeedingScriptTests(unittest.TestCase):
         self.assertIn("complete through `GAP-024` to `GAP-028`", rendered["body"])
         self.assertIn("## Acceptance Criteria", rendered["body"])
         self.assertIn("complete through `GAP-024` to `GAP-028`", rendered["body"])
+
+    def test_validate_only_can_render_strategy_alignment_epic(self) -> None:
+        script = ROOT / "scripts" / "github" / "create-roadmap-issues.ps1"
+
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(script),
+                "-ValidateOnly",
+                "-EpicId",
+                "Strategy Alignment Gates",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            cwd=ROOT,
+        )
+
+        rendered = json.loads(completed.stdout)
+        self.assertEqual(rendered["epic_id"], "Strategy Alignment Gates")
+        self.assertEqual(rendered["title"], "[Epic] Strategy Alignment Gates")
+        self.assertIn("fuse the governance-runtime positioning work", rendered["body"])
+        self.assertIn("borrowing matrix", rendered["body"])
+
+    def test_strategy_alignment_gates_are_rendered_as_productization_dependencies(self) -> None:
+        script = ROOT / "scripts" / "github" / "create-roadmap-issues.ps1"
+
+        expectations = {
+            "GAP-035": "GAP-042",
+            "GAP-036": "GAP-043",
+            "GAP-037": "GAP-043",
+            "GAP-038": "GAP-044",
+            "GAP-039": "GAP-044",
+        }
+
+        for issue_id, expected_dependency in expectations.items():
+            with self.subTest(issue_id=issue_id):
+                completed = subprocess.run(
+                    [
+                        "pwsh",
+                        "-NoProfile",
+                        "-ExecutionPolicy",
+                        "Bypass",
+                        "-File",
+                        str(script),
+                        "-ValidateOnly",
+                        "-IssueId",
+                        issue_id,
+                    ],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                    cwd=ROOT,
+                )
+
+                rendered = json.loads(completed.stdout)
+                self.assertIn(expected_dependency, rendered["body"])
 
     def test_validate_only_can_render_initiative_body_from_lifecycle_plan(self) -> None:
         script = ROOT / "scripts" / "github" / "create-roadmap-issues.ps1"
@@ -163,10 +224,11 @@ class IssueSeedingScriptTests(unittest.TestCase):
         )
 
         summary = json.loads(completed.stdout)
-        self.assertEqual(summary["issue_seed_version"], "3.1")
-        self.assertEqual(summary["rendered_tasks"], 22)
-        self.assertEqual(summary["rendered_epics"], 6)
+        self.assertEqual(summary["issue_seed_version"], "3.2")
+        self.assertEqual(summary["rendered_tasks"], 27)
+        self.assertEqual(summary["rendered_epics"], 7)
         self.assertTrue(summary["rendered_initiative"])
+        self.assertEqual(summary["rendered_issue_creation_tasks"], 27)
 
 
 if __name__ == "__main__":

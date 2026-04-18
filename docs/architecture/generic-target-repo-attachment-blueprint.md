@@ -23,7 +23,7 @@ target repo
   |  repo-local light pack
   v
 +-------------------------------+
-| .governed/                    |
+| .governed-ai/                 |
 | repo-profile                  |
 | gate commands                 |
 | path/risk policy              |
@@ -45,7 +45,7 @@ target repo
                 v
 +---------------+---------------+
 | AI session frontend           |
-| Codex / Claude / Cowrk / ...  |
+| Codex / Claude Code / other tools |
 | native attach or process      |
 +-------------------------------+
 ```
@@ -63,6 +63,12 @@ It should contain:
 - approval defaults
 - optional adapter preference
 - optional repo-local bootstrap hints
+
+The current concrete attachment directory is `.governed-ai/`, with:
+- `repo-profile.json`
+- `light-pack.json`
+
+`scripts/attach-target-repo.py` creates or validates this directory. Existing light packs are validated by default and are only regenerated when overwrite is requested.
 
 It should not contain:
 

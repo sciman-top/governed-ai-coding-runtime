@@ -107,6 +107,54 @@ class EvidenceTimelineTests(unittest.TestCase):
         self.assertFalse(assessment.ready_for_completion)
         self.assertIn("rollback_ref", assessment.missing_required_fields)
 
+    def test_adapter_evidence_summary_counts_codex_events(self) -> None:
+        module = importlib.import_module("governed_ai_coding_runtime_contracts.evidence")
+        timeline = module.EvidenceTimeline()
+        timeline.append("task-1", "adapter_file_change", {"path": "src/service.py"})
+        timeline.append("task-1", "adapter_tool_call", {"tool": "apply_patch"})
+        timeline.append("task-1", "adapter_gate_run", {"artifact_ref": "artifacts/task-1/test.txt"})
+        timeline.append("task-1", "adapter_approval_event", {"approval_id": "approval-123"})
+        timeline.append("task-1", "adapter_handoff", {"handoff_ref": "artifacts/task-1/handoff.json"})
+
+        summary = module.summarize_adapter_evidence("task-1", timeline)
+
+        self.assertEqual(summary.file_change_count, 1)
+        self.assertEqual(summary.tool_call_count, 1)
+        self.assertEqual(summary.gate_run_count, 1)
+        self.assertEqual(summary.approval_event_count, 1)
+        self.assertEqual(summary.handoff_ref_count, 1)
+
+    def test_evidence_bundle_can_embed_multi_repo_trial_feedback(self) -> None:
+        module = importlib.import_module("governed_ai_coding_runtime_contracts.evidence")
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+        plan = verification_runner.build_verification_plan("quick")
+        artifact = verification_runner.build_verification_artifact(
+            plan,
+            "docs/change-evidence/trial.md",
+            {"test": "pass", "contract": "pass"},
+        )
+
+        bundle = module.build_evidence_bundle(
+            task_id="task-trial",
+            repo_id="python-service",
+            goal="exercise trial evidence",
+            acceptance_criteria=["trial record is linked"],
+            verification_artifact=artifact,
+            rollback_ref="git:HEAD~1",
+            final_status="completed",
+            final_summary="trial completed",
+            artifact_refs=["artifacts/task-trial/evidence/bundle.json"],
+            trial_feedback={
+                "trial_id": "trial-001",
+                "repo_id": "python-service",
+                "adapter_tier": "process_bridge",
+                "follow_up_categories": ["repo_specific", "adapter_generic"],
+            },
+        )
+
+        self.assertEqual(bundle["trial_feedback"]["trial_id"], "trial-001")
+        self.assertEqual(bundle["trial_feedback"]["adapter_tier"], "process_bridge")
+
 
 if __name__ == "__main__":
     unittest.main()

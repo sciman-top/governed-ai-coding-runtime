@@ -11,6 +11,31 @@ Bootstrap, run, inspect, and clean up the governed runtime on one machine withou
 For current Codex usage guidance, see:
 - [Codex CLI/App Integration Guide](../product/codex-cli-app-integration-guide.md)
 - [Codex CLI/App 集成指南](../product/codex-cli-app-integration-guide.zh-CN.md)
+- [Codex Direct Adapter](../product/codex-direct-adapter.md)
+- [Use With An Existing Repo](./use-with-existing-repo.md)
+
+## Run A Codex Adapter Smoke Trial
+This is distinct from the existing read-only scripted trial and from the local runtime smoke task.
+
+```powershell
+python scripts/run-codex-adapter-trial.py `
+  --repo-id "python-service" `
+  --task-id "task-codex-trial" `
+  --binding-id "binding-python-service"
+```
+
+Expected JSON output includes:
+- `adapter_tier`
+- `task_id`
+- `binding_id`
+- `evidence_refs`
+- `verification_refs`
+- `unsupported_capability_behavior`
+
+Interpretation boundary:
+- this proves the current direct Codex adapter contract surface is wired
+- it does not prove a real high-risk write path
+- it does not replace the local runtime smoke task below
 
 ## Prerequisites
 - Windows with PowerShell 7+

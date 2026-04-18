@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.6",
+  "adapters": [
+    {
+      "adapter_id": "generic-process-bridge",
+      "display_name": "Generic Process Bridge",
+      "product_family": "generic",
+      "lifecycle_status": "experimental",
+      "adapter_tier": "process_bridge",
+      "rollout_posture": {
+        "current_mode": "advisory",
+        "target_mode": "enforced"
+      },
+      "invocation_mode": "non_interactive_cli",
+      "auth_ownership": "user_owned_upstream_auth",
+      "workspace_control": "external_workspace",
+      "event_visibility": "logs_only",
+      "mutation_model": "direct_workspace_write",
+      "continuation_model": "manual",
+      "evidence_model": "command_log",
+      "supported_governance_modes": [
+        "advisory",
+        "enforced"
+      ],
+      "minimum_required_runtime_controls": [
+        "policy_decision",
+        "session_bridge",
+        "verification_runner",
+        "delivery_handoff"
+      ],
+      "governance_guarantees": [
+        "captured process boundary",
+        "runtime-visible adapter posture",
+        "same-contract verification required"
+      ],
+      "unsupported_capability_behavior": "degrade_to_advisory",
+      "known_limitations": [
+        "no native attach"
+      ],
+      "compatibility_signals": [
+        {
+          "capability": "native_attach",
+          "status": "unsupported",
+          "degrade_to": "advisory",
+          "reason": "process bridge fallback is active"
+        }
+      ]
+    }
+  ]
+}

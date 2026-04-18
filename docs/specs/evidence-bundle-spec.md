@@ -33,6 +33,7 @@ Define the minimum evidence bundle persisted for every governed task.
 - replay_case_ref
 - runtime_artifact_refs
 - verification_artifact_refs
+- trial_feedback
 
 ## Quality Classifiers
 
@@ -61,6 +62,7 @@ Define the minimum evidence bundle persisted for every governed task.
 - every write action must reference either a rollback path or explicit no-rollback rationale
 - missing mandatory evidence must be represented explicitly and must be distinguishable from weak but present advisory evidence
 - advisory verification results may coexist with successful completion, but they may not silently satisfy a missing mandatory evidence requirement
+- when multi-repo onboarding or adapter feedback is relevant, `trial_feedback` should carry the structured trial reference instead of burying it in free-form notes
 
 ## Storage Note
 The storage backend is implementation-specific. In the first Full Runtime stage, evidence should resolve to local artifact paths under the governed runtime artifact store rather than transcript-only output.

@@ -24,33 +24,25 @@
 
 ## 一、当前阶段
 
-本项目当前已经具备“治理运行时契约层”的基础能力，可用于：
+本项目当前已经落地“本地单机治理运行时基线”，完成范围包括 `Foundation / GAP-020..023`、`Full Runtime / GAP-024..028`、`Public Usable Release / GAP-029..032`、`Maintenance Baseline / GAP-033..034`，并且已经完成 `Strategy Alignment Gates / GAP-040..044` 作为产品化队列的硬化依赖。
 
-- 仓库健康验证
-- Foundation 级 build 与 doctor 门禁
-- 第一个只读 trial
-- 一组核心 contract primitives
+当前已明确存在的核心能力包括：
 
-当前已明确存在的核心模块包括：
+- 仓库完整验证、runtime contract tests、build 与 doctor 门禁
+- task intake、repo profile、workspace isolation、write policy、approval
+- execution runtime、artifact/replay、verification runner、delivery handoff
+- eval trace、runtime status、operator UI / control console facade
+- package bundle、compatibility/upgrade policy、maintenance/deprecation/retirement policy
+- `PolicyDecision` contract、repo-native contract bundle architecture、local/CI same-contract verification 语义
 
-- task intake
-- repo profile
-- workspace isolation
-- write policy
-- approval
-- verification runner
-- delivery handoff
-- eval trace
-- control console facade
-
-本项目**已经可用，但尚不是完整可直接部署的生产级 runtime service**。  
+本项目**已经可作为本地 governed runtime baseline 使用，但尚不是最终的 attach-first 跨仓产品边界**。
 当前仍缺：
 
-- 生产级 runtime service
-- durable workflow worker / durable storage
-- 稳定 operator surface
-- 完整发布构建与包分发能力
-- 更成熟的持久化与服务化运行形态
+- 通用 target-repo attachment pack / light pack 生成与校验
+- attach-first session bridge 和 launch-second fallback
+- direct Codex adapter 与 evidence mapping
+- capability-tiered 多 AI 工具适配框架
+- 多仓 trial loop 与 onboarding kit
 
 ---
 
@@ -150,7 +142,7 @@
 
 而是：
 
-> **Repo-native Contract Spec + Host Adapters + Policy Decision Service + Verification Plane**
+> **Repo-native Contract Bundle + Host Adapters + Policy Decision Interface + Verification And Delivery Plane**
 
 也就是：
 
@@ -183,7 +175,7 @@ MCP 是重要接入面之一，但不是完整治理面的唯一抓手。
 ```mermaid
 flowchart TD
     A[Developer / AI Host<br/>Codex / Claude Code / Cursor / Others] --> B[Host Adapter<br/>Plugin / Hook / Wrapper / MCP Connector]
-    B --> C[Policy Decision Service<br/>Policy-as-Code / Risk Tier / Approval Rules]
+    B --> C[Policy Decision Interface<br/>Policy-as-Code / Risk Tier / Approval Rules]
 
     C -->|Allow| D[Execute Action<br/>Read / Write / Tool Use / Patch]
     C -->|Escalate| E[Approval Flow<br/>Human / Policy Escalation]
@@ -192,7 +184,7 @@ flowchart TD
     E --> D
     F --> A
 
-    D --> G[Verification Plane<br/>Quick / Full Verification]
+    D --> G[Verification And Delivery Plane<br/>Quick / Full Verification]
     G -->|Pass| H[Delivery Handoff<br/>Evidence / Audit / Rollback Ref]
     G -->|Fail| I[Failure Evidence / Error Stack / Rollback]
     I --> A
@@ -202,7 +194,7 @@ flowchart TD
 
 ## 七、四层架构
 
-## 7.1 第一层：Repo-native Contract Spec
+## 7.1 第一层：Repo-native Contract Bundle
 
 这是项目最核心的一层。
 
@@ -294,7 +286,7 @@ flowchart TD
 
 ---
 
-## 7.3 第三层：Policy Decision Service
+## 7.3 第三层：Policy Decision Interface
 
 第三层负责做“是否允许执行”的独立判定。
 
@@ -396,7 +388,7 @@ CI Gate 不应只是一个附属点，而应被明确视为**最后防线**。
 
 1. 宿主产生代码修改或工具调用请求
 2. Host Adapter 捕获关键上下文
-3. 将请求送交 Policy Decision Service
+3. 将请求送交 Policy Decision Interface
 4. 策略层返回三类结果之一：
    - Allow
    - Escalate
@@ -407,7 +399,7 @@ CI Gate 不应只是一个附属点，而应被明确视为**最后防线**。
 
 当动作执行完成后：
 
-1. 统一进入 Verification Plane
+1. 统一进入 Verification And Delivery Plane
 2. 执行 quick 或 full verification
 3. 验证通过：
    - 生成 Delivery Handoff
@@ -648,94 +640,50 @@ MCP 是重要接入面之一，但不应被误认为完整治理面。
 
 ## 十二、最优发展路线图（Roadmap）
 
-## 12.1 Phase 1：停止与宿主正面竞争，坐实治理内核
+## 12.1 已完成：本地治理内核与策略边界
 
-短期内的战略重点应该是：
+已完成的 `GAP-020..034` 与 `GAP-040..044` 应被理解为两类基础：
 
-- 停止扩展通用宿主能力
-- 不再试图做另一个 oh-my-claude / oh-my-codex
-- 不再与原生 CLI 比拼基础执行、基础交互、基础编排
+- 本地单机 runtime baseline：task、approval、artifact、replay、verification、handoff、status、package、maintenance policy
+- 策略对齐门禁：borrowing matrix、ADR-0007、repo-native bundle architecture、`PolicyDecision` contract、local/CI same-contract verification
 
-转而集中强化：
-
-- repo-native contract spec
-- write policy / risk tier
-- approval state model
-- verification profiles
-- delivery handoff
-- audit evidence
-- rollback contracts
-
-### 这一阶段的目标
-
-让项目明确成为：
-
-> **治理运行时契约内核**
+这一阶段的价值是把项目从“文档和契约愿景”推进到“可运行、可验证、可留痕的治理内核”。
 
 ---
 
-## 12.2 Phase 2：做官方 Host Adapters，而不是重做宿主
+## 12.2 当前：Target-Repo Attachment 与 Session Bridge
 
-中期应发布：
+当前活跃队列是 `Interactive Session Productization / GAP-035..039`。优先级应是：
 
-- governed-codex / Codex wrapper
-- Codex plugin / skills / hook support
-- Claude plugin / hooks / skills
-- 基础 MCP connector
-- GitHub / CI integration
+- `GAP-035`: target-repo attachment pack / light pack 生成与校验
+- `GAP-036`: attach-first session bridge 与 governed in-session commands
+- `GAP-037`: direct Codex adapter 与 evidence mapping
+- `GAP-038`: capability-tiered adapter framework
+- `GAP-039`: multi-repo trial loop 与 onboarding kit
 
-### 这一阶段的目标
-
-让开发者能继续正常使用熟悉的宿主，而你的项目在关键动作前后自动介入：
-
-- 本地自动感知
-- 风险动作升级
-- 验证闭环执行
-- 交付证据沉淀
+这一阶段的目标是让本地 baseline 变成可以挂接多个真实仓库、真实 AI coding 会话的产品路径。
 
 ---
 
-## 12.3 Phase 3：将 Policy-as-Code 独立为统一决策中枢
+## 12.3 后续：扩展适配器，而不是重做宿主
 
-把策略判定从：
+当 Codex-first 路径跑通后，再扩展非 Codex adapter。扩展顺序应由能力契约和 trial evidence 驱动，而不是由“支持尽可能多宿主”的口号驱动。
 
-- prompt
-- markdown
-- plugin 内部逻辑
-- shell 脚本
-- 单个 connector
+优先保留三个适配等级：
 
-中抽离出来，形成统一 policy decision service。
+- native attach
+- process bridge
+- manual handoff / advisory
 
-### 这一阶段要解决的问题
-
-- 宿主之间规则不一致
-- 本地与 CI 判定不一致
-- 审批矩阵分散
-- 风险级别不可复用
-- 规则难以审计
-
-### 这一阶段的目标
-
-无论是 Codex、Claude、Cursor、Windsurf，还是未来宿主，都能共享同一套治理决策逻辑。
+任何弱集成都必须显式降级，不能被描述成强治理保证。
 
 ---
 
-## 12.4 Phase 4：补齐完整 Runtime Service
+## 12.4 后续：服务化与团队化只在边界稳定后推进
 
-最后才进入更重的服务化阶段：
+更重的 runtime service、durable workflow worker、dashboard、组织级策略分发、托管部署等能力，应在 attach/bundle/policy/verification 语义稳定之后再推进。
 
-- durable storage
-- workflow worker
-- operator surface
-- dashboard / status surface
-- 发布构建与分发
-- 组织级策略分发
-- 更成熟的多环境治理运行时
-
-### 这一阶段的目标
-
-把项目从“治理契约层”推进为“完整治理运行时服务”，但前提是前面三层已经稳定，不再与宿主层发生战略混淆。
+这一阶段的目标不是改变产品身份，而是把已经稳定的混合形态扩展到更可靠的运行与协作环境。
 
 ---
 
@@ -746,9 +694,10 @@ MCP 是重要接入面之一，但不应被误认为完整治理面。
 
 ### 当前阶段
 
-- 已具备基础治理契约层能力
-- 可做仓库验证、只读 trial、基础门禁与核心 contract primitives
-- 尚未成为完整生产级 runtime service
+- 已完成本地单机 governed runtime baseline
+- 已完成 `PolicyDecision`、repo-native bundle architecture、local/CI same-contract verification 等策略硬化门禁
+- 当前活跃队列是 `GAP-035..039`：target-repo attachment、session bridge、direct Codex adapter、adapter tiers、multi-repo trial
+- 尚未完成最终 attach-first 跨仓产品边界
 
 ### 非目标
 
@@ -823,7 +772,7 @@ MCP 是重要接入面之一，但不应被误认为完整治理面。
 
 它的最佳形态不是“只做 MCP Server”，而是：
 
-> **Repo-native Contract Spec + Host Adapters + Policy Decision Service + Verification Plane**
+> **Repo-native Contract Bundle + Host Adapters + Policy Decision Interface + Verification And Delivery Plane**
 
 它不应与宿主竞争“谁更强”，而应成为宿主之上的那层：
 

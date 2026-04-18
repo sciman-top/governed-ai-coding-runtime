@@ -4,6 +4,72 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260419 Backlog Active Queue Status Sync](./20260419-backlog-active-queue-status-sync.md)
+  - evidence companion for resolving backlog posture drift so completed `GAP-035` through `GAP-044` are no longer described as an active queue
+- [20260419 Relative Paths And Multi-Target Presets](./20260419-relative-paths-and-multi-target-presets.md)
+  - evidence companion for relative-path normalization and preset flows for classroomtoolkit, self-runtime, and skills-manager targets
+- [20260418 Attached Write Execution Loop](./20260418-attached-write-execution-loop.md)
+  - evidence companion for closing the first attached-repo write loop with persisted approvals, decision command, and controlled write execution
+- [20260418 ClassroomToolkit Preset Flow](./20260418-classroomtoolkit-preset-flow.md)
+  - evidence companion for adding a zero-parameter-style ClassroomToolkit preset wrapper on top of the two-mode runtime flow
+- [20260418 Two-Mode Runtime Flow](./20260418-two-mode-runtime-flow.md)
+  - evidence companion for adding one-command `onboard/daily` flow and wiring attachment + runtime-check into a single script
+- [20260418 One-Command Runtime Check](./20260418-one-command-runtime-check.md)
+  - evidence companion for the attachment-aware one-command runtime check script and bilingual usage-entry updates
+- [20260418 Attached Write Governance Gate](./20260418-attached-write-governance-gate.md)
+  - evidence companion for attached target-repo pre-write governance checks, path-policy matching hardening, and the `govern-attachment-write` CLI surface
+- [20260418 Bilingual Usage Guides And Path Semantics](./20260418-bilingual-usage-guides-and-path-semantics.md)
+  - evidence companion for Chinese/English usage-guide parity, path-change semantics, and self-attachment clarification
+- [20260418 Attached Repo Gate Execution](./20260418-attached-repo-gate-execution.md)
+  - evidence companion for attachment-aware gate-plan resolution and executing declared verification gates inside an attached target repo
+- [20260418 Existing Repo Usage Guide](./20260418-existing-repo-usage-guide.md)
+  - evidence companion for clarifying external-repo usage, adding the `ClassroomToolkit` attachment example, and documenting the current supported boundary
+- [20260418 Interactive Session Productization Closeout](./20260418-interactive-session-productization-closeout.md)
+  - closeout evidence for `GAP-035` through `GAP-039`, including backlog/roadmap reconciliation, final gate proof, and residual boundary notes
+- [20260418 Multi-Repo Trial Evidence Model](./20260418-multi-repo-trial-evidence-model.md)
+  - evidence companion for `GAP-039 Task 12`, adding structured multi-repo trial records, evidence-bundle linkage, and trial follow-up categorization
+- [20260418 Non-Codex Adapter Fixtures](./20260418-non-codex-adapter-fixtures.md)
+  - evidence companion for `GAP-038 Task 11`, adding generic manual-handoff and process-bridge adapter fixtures plus contract/docs validation coverage
+- [20260418 Adapter Capability Tiers](./20260418-adapter-capability-tiers.md)
+  - evidence companion for `GAP-038 Task 10`, adding generic adapter tiers, governance guarantees, Codex projection into the generic contract, and spec/schema updates
+- [20260418 Codex Direct Smoke Trial](./20260418-codex-direct-smoke-trial.md)
+  - evidence companion for `GAP-037 Task 9`, adding the safe-mode Codex adapter smoke trial, stable trial refs, CLI entrypoint, and quickstart/README boundary clarification
+- [20260418 Codex Session Evidence Mapping](./20260418-codex-session-evidence-mapping.md)
+  - evidence companion for `GAP-037 Task 8`, mapping Codex session file changes, tool calls, gate runs, approvals, handoff refs, and adapter flow kind into runtime evidence and delivery handoff models
+- [20260418 Codex Direct Adapter Contract](./20260418-codex-direct-adapter-contract.md)
+  - evidence companion for `GAP-037 Task 7`, adding the Codex adapter profile contract, native/process/manual tier classification, explicit unsupported capability recording, and Codex docs updates
+- [20260418 Launch-Second Fallback](./20260418-launch-second-fallback.md)
+  - evidence companion for `GAP-036 Task 6`, adding explicit process bridge launch capture, launch CLI support, minimal adapter fallback resolution, and manual handoff fallback
+- [20260418 Local Session Bridge Entrypoint](./20260418-local-session-bridge-entrypoint.md)
+  - evidence companion for `GAP-036 Task 5`, adding the local session bridge entrypoint, bridge handler, verification-plan requests, explicit degrade results, and write-governance PolicyDecision normalization
+- [20260418 Session Bridge Command Contract](./20260418-session-bridge-command-contract.md)
+  - evidence companion for `GAP-036 Task 4`, adding the session bridge command spec, schema, Python contract, PolicyDecision execution semantics, and product doc
+- [20260418 Attachment Posture Status Doctor](./20260418-attachment-posture-status-doctor.md)
+  - evidence companion for `GAP-035 Task 3`, surfacing attachment posture through runtime status and doctor while preserving local-baseline status behavior
+- [20260418 Target Repo Light Pack Generator](./20260418-target-repo-light-pack-generator.md)
+  - evidence companion for `GAP-035 Task 2`, adding the target repo light-pack generator, validator, CLI help surface, and attachment flow documentation
+- [20260418 Repo Attachment Binding Contract](./20260418-repo-attachment-binding-contract.md)
+  - evidence companion for `GAP-035 Task 1`, adding the repo attachment binding spec, schema, Python contract, package export, and machine-local state invariant tests
+- [20260418 Hybrid Final-State Deep Audit Fixes](./20260418-hybrid-final-state-deep-audit-fixes.md)
+  - evidence companion for the deep follow-up audit that aligned `PolicyDecision` spec/schema/Python parity, refreshed stale positioning text, and removed final-state wording drift
+- [20260418 Hybrid Final-State Plan Reconciliation](./20260418-hybrid-final-state-plan-reconciliation.md)
+  - evidence companion for reconciling the hybrid final-state definition, active productization plan, terminology mapping, and review navigation
+- [20260418 Governance Runtime Strategy Alignment Closeout](./20260418-governance-runtime-strategy-alignment-closeout.md)
+  - evidence companion for closing `GAP-040` through `GAP-044` with the borrowing matrix, strategy docs, ADR-0007, backlog posture reconciliation, and full gate proof
+- [20260418 Local CI Same-Contract Verification](./20260418-local-ci-same-contract-verification.md)
+  - evidence companion for `GAP-044 Task 6` covering same-contract verification semantics and non-ASCII markdown path regression coverage
+- [20260418 Repo-Native Contract Bundle And PolicyDecision](./20260418-repo-native-contract-bundle-and-policy-decision.md)
+  - evidence companion for `GAP-042` and `GAP-043` boundary hardening through the bundle architecture doc and the first `PolicyDecision` contract
+- [20260418 Local Baseline To Hybrid Final-State Migration Matrix](./20260418-local-baseline-to-hybrid-final-state-migration-matrix.md)
+  - evidence companion for the decision bridge that separates reusable local baseline slices from hybrid final-state boundary changes
+- [20260418 Interactive Session Productization Implementation Plan](./20260418-interactive-session-productization-implementation-plan.md)
+  - evidence companion for adding the medium-granularity implementation plan that decomposes `GAP-035` through `GAP-039`
+- [20260418 Strategy Alignment Deep Audit Fixes](./20260418-strategy-alignment-deep-audit-fixes.md)
+  - evidence companion for the deep audit fixes that corrected strategy-gate dependency encoding, issue-seeding creation coverage, entry-doc alignment, and Codex platform diagnostics
+- [20260418 Strategy Alignment Roadmap Backlog Fusion](./20260418-strategy-alignment-roadmap-backlog-fusion.md)
+  - evidence companion for integrating `GAP-040` through `GAP-044` Strategy Alignment Gates into roadmap, backlog, issue seeds, and issue-seeding automation while preserving `GAP-035` through `GAP-039`
+- [20260418 Governance Runtime Strategy Alignment Plan](./20260418-governance-runtime-strategy-alignment-plan.md)
+  - evidence companion for adding a bounded strategy-alignment plan covering external borrowing, positioning, source-of-truth versus runtime bundle boundaries, PolicyDecision, and local/CI same-contract verification planning
 - [20260418 Interactive Session Productization Realignment](./20260418-interactive-session-productization-realignment.md)
   - evidence companion for changing the final product boundary from "local lifecycle complete" to "generic attach-first interactive productization" and for rebasing the active queue to `GAP-035` through `GAP-039`
 - [20260418 Codex Integration Documentation Clarification](./20260418-codex-integration-documentation-clarification.md)

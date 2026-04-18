@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/session-bridge-command.schema.json",
+  "title": "Session Bridge Command",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "command_id",
+    "command_type",
+    "task_id",
+    "repo_binding_id",
+    "adapter_id",
+    "risk_tier",
+    "execution_mode",
+    "payload"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "command_type": {
+            "enum": [
+              "run_quick_gate",
+              "run_full_gate"
+            ]
+          }
+        },
+        "required": [
+          "command_type"
+        ]
+      },
+      "then": {
+        "required": [
+          "policy_decision_ref"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "execution_mode": {
+            "const": "execute"
+          }
+        },
+        "required": [
+          "execution_mode"
+        ]
+      },
+      "then": {
+        "required": [
+          "policy_decision_ref"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "execution_mode": {
+            "const": "requires_approval"
+          }
+        },
+        "required": [
+          "execution_mode"
+        ]
+      },
+      "then": {
+        "required": [
+          "escalation_context"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command_type": {
+            "const": "request_approval"
+          }
+        },
+        "required": [
+          "command_type"
+        ]
+      },
+      "then": {
+        "required": [
+          "escalation_context"
+        ]
+      }
+    }
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "command_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "command_type": {
+      "type": "string",
+      "enum": [
+        "bind_task",
+        "show_repo_posture",
+        "request_approval",
+        "run_quick_gate",
+        "run_full_gate",
+        "inspect_evidence",
+        "inspect_status"
+      ]
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "repo_binding_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "adapter_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "risk_tier": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "execution_mode": {
+      "type": "string",
+      "enum": [
+        "read_only",
+        "execute",
+        "requires_approval"
+      ]
+    },
+    "payload": {
+      "type": "object"
+    },
+    "policy_decision_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "escalation_context": {
+      "type": [
+        "object",
+        "null"
+      ]
+    }
+  }
+}

@@ -1,4 +1,4 @@
-issue_seed_version: "3.1"
+issue_seed_version: "3.2"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment
@@ -88,25 +88,50 @@ issues:
   - id: GAP-035
     title: Generic Target-Repo Attachment Pack And Onboarding Flow
     type: AFK
-    blocked_by: [GAP-032, GAP-034]
+    blocked_by: [GAP-032, GAP-034, GAP-042]
     user_stories: [18, 38, 42, 46]
   - id: GAP-036
     title: Attach-First Session Bridge And Governed Interaction Surface
     type: AFK
-    blocked_by: [GAP-035]
+    blocked_by: [GAP-035, GAP-043]
     user_stories: [1, 5, 41, 43]
   - id: GAP-037
     title: Direct Codex Adapter And Evidence Mapping
     type: HITL
-    blocked_by: [GAP-035, GAP-036]
+    blocked_by: [GAP-035, GAP-036, GAP-043]
     user_stories: [2, 11, 31, 41, 43]
   - id: GAP-038
     title: Capability-Tiered Adapter Framework For Multiple AI Tools
     type: AFK
-    blocked_by: [GAP-035, GAP-036]
+    blocked_by: [GAP-035, GAP-036, GAP-044]
     user_stories: [20, 31, 37, 44]
   - id: GAP-039
     title: Multi-Repo Trial Loop And Generic Onboarding Kit
     type: HITL
-    blocked_by: [GAP-035, GAP-036, GAP-037, GAP-038]
+    blocked_by: [GAP-035, GAP-036, GAP-037, GAP-038, GAP-044]
     user_stories: [14, 37, 38, 39, 45]
+  - id: GAP-040
+    title: Runtime Governance Borrowing Matrix
+    type: AFK
+    blocked_by: []
+    user_stories: [29, 31, 37, 44]
+  - id: GAP-041
+    title: Source-Of-Truth And Runtime Bundle ADR
+    type: HITL
+    blocked_by: [GAP-040]
+    user_stories: [18, 21, 29, 38]
+  - id: GAP-042
+    title: Repo-Native Contract Bundle Architecture
+    type: AFK
+    blocked_by: [GAP-041]
+    user_stories: [18, 31, 38, 46]
+  - id: GAP-043
+    title: PolicyDecision Contract
+    type: AFK
+    blocked_by: [GAP-042]
+    user_stories: [7, 8, 20, 27, 31, 43]
+  - id: GAP-044
+    title: Local/CI Same-Contract Verification And Alignment Closeout
+    type: AFK
+    blocked_by: [GAP-042, GAP-043]
+    user_stories: [11, 12, 22, 36, 44]

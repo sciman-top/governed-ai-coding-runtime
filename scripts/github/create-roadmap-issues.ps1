@@ -355,6 +355,12 @@ function Get-EpicDefinitions {
       StageName = "Interactive Session Productization"
       Labels = @("epic", "phase:interactive-session", "platform", "product", "docs", "frontend", "backend")
     }
+    @{
+      Id = "Strategy Alignment Gates"
+      Title = "[Epic] Strategy Alignment Gates"
+      StageName = "Strategy Alignment Gates"
+      Labels = @("epic", "phase:strategy-alignment", "platform", "product", "docs", "contracts")
+    }
   )
 }
 
@@ -510,6 +516,34 @@ $nonGoals
 "@
 }
 
+function Get-TaskLabels {
+  param([string]$IssueId)
+
+  switch -Regex ($IssueId) {
+    '^GAP-01[8-9]$' { return @("task", "phase:vision", "product", "docs", "platform") }
+    '^GAP-02[0-3]$' { return @("task", "phase:foundation", "platform", "contracts", "backend") }
+    '^GAP-02[4-8]$' { return @("task", "phase:full-runtime", "platform", "backend", "eval") }
+    '^GAP-0(29|30|31|32)$' { return @("task", "phase:public-release", "platform", "docs", "devops") }
+    '^GAP-0(33|34)$' { return @("task", "phase:maintenance", "platform", "docs", "product") }
+    '^GAP-0(35|36|37|38|39)$' { return @("task", "phase:interactive-session", "platform", "product", "docs") }
+    '^GAP-04[0-4]$' { return @("task", "phase:strategy-alignment", "platform", "docs", "contracts") }
+    default { throw "No task label mapping defined for $IssueId" }
+  }
+}
+
+function Get-TaskDefinitions {
+  param([object[]]$IssueSeeds)
+
+  return @(
+    foreach ($issue in $IssueSeeds) {
+      [pscustomobject]@{
+        IssueId = $issue.id
+        Labels = @(Get-TaskLabels -IssueId $issue.id)
+      }
+    }
+  )
+}
+
 function Ensure-Command {
   param([string]$Name)
   if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) {
@@ -598,6 +632,17 @@ if ($ValidateOnly) {
       $renderedTasks += 1
     }
 
+    $renderedIssueCreationTasks = 0
+    $taskDefinitions = @(Get-TaskDefinitions -IssueSeeds $seedData.issues)
+    foreach ($task in $taskDefinitions) {
+      if (-not $seedMap.ContainsKey($task.IssueId)) {
+        throw "Task issue seed not found for $($task.IssueId)"
+      }
+
+      [void](Render-TaskIssueBody -Seed $seedMap[$task.IssueId] -BacklogTask $backlogTaskMap[$task.IssueId])
+      $renderedIssueCreationTasks += 1
+    }
+
     $renderedEpics = 0
     foreach ($epicDefinition in $epicDefinitions) {
       [void](Render-EpicIssueBody -EpicId $epicDefinition.Id -Stage $lifecyclePlan.stages[$epicDefinition.StageName])
@@ -609,6 +654,7 @@ if ($ValidateOnly) {
     [pscustomobject]@{
       issue_seed_version = $seedData.version
       rendered_tasks = $renderedTasks
+      rendered_issue_creation_tasks = $renderedIssueCreationTasks
       rendered_epics = $renderedEpics
       rendered_initiative = $true
     } | ConvertTo-Json -Compress
@@ -677,6 +723,7 @@ $labels = @(
   @{ Name = "phase:public-release"; Color = "D93F0B"; Description = "Public usable release phase" }
   @{ Name = "phase:maintenance"; Color = "C5DEF5"; Description = "Maintenance phase" }
   @{ Name = "phase:interactive-session"; Color = "0B5FFF"; Description = "Interactive session productization phase" }
+  @{ Name = "phase:strategy-alignment"; Color = "8A63D2"; Description = "Strategy alignment gate phase" }
   @{ Name = "backend"; Color = "0052CC"; Description = "Backend work" }
   @{ Name = "platform"; Color = "6F42C1"; Description = "Platform work" }
   @{ Name = "security"; Color = "B60205"; Description = "Security and policy" }
@@ -704,267 +751,7 @@ foreach ($epicDefinition in $epicDefinitions) {
 }
 
 if (-not $SkipTasks) {
-  $tasks = @(
-    @{
-      IssueId = "GAP-018"
-      Labels = @("task", "phase:vision", "product", "docs", "platform")
-      Body   = @"
-## Goal
-Align active planning docs around the full functional lifecycle and final product shape.
-
-## Dependencies
-- [Epic] Vision Alignment
-
-## Acceptance Criteria
-- [ ] active planning docs use the same lifecycle stages
-- [ ] the project is described as a governed runtime target rather than only a local single-machine script bundle
-- [ ] MVP remains historical baseline rather than active next-step queue
-"@
-    }
-    @{
-      IssueId = "GAP-019"
-      Labels = @("task", "phase:vision", "product", "docs", "platform")
-      Body   = @"
-## Goal
-Make final product completeness and non-goals explicit.
-
-## Dependencies
-- [Epic] Vision Alignment
-
-## Acceptance Criteria
-- [ ] final capability groups are explicit
-- [ ] non-goals remain outside the active queue
-- [ ] final product completeness can be judged without ad hoc interpretation
-"@
-    }
-    @{
-      IssueId = "GAP-020"
-      Labels = @("task", "phase:foundation", "contracts", "platform", "security")
-      Body   = @"
-## Goal
-Turn the remaining governance semantics into formal runtime policy.
-
-## Dependencies
-- [Epic] Foundation
-
-## Acceptance Criteria
-- [ ] clarification is formal runtime policy
-- [ ] rollout state supports observe, advisory, and enforced modes
-- [ ] compatibility is machine-checkable
-- [ ] evidence maturity distinguishes missing evidence from weak outcomes
-"@
-    }
-    @{
-      IssueId = "GAP-021"
-      Labels = @("task", "phase:foundation", "backend", "devops", "platform")
-      Body   = @"
-## Goal
-Replace the remaining build and hotspot placeholders with live commands.
-
-## Dependencies
-- [Epic] Foundation
-
-## Acceptance Criteria
-- [ ] build no longer depends on gate_na
-- [ ] doctor or hotspot no longer depends on gate_na
-- [ ] canonical gate order can run with live commands
-"@
-    }
-    @{
-      IssueId = "GAP-022"
-      Labels = @("task", "phase:foundation", "backend", "platform")
-      Body   = @"
-## Goal
-Make task state durable enough to support the full runtime.
-
-## Dependencies
-- [Epic] Foundation
-
-## Acceptance Criteria
-- [ ] task state survives process boundaries
-- [ ] workflow transitions stay deterministic
-- [ ] lifecycle data is no longer trapped in in-memory primitives
-"@
-    }
-    @{
-      IssueId = "GAP-023"
-      Labels = @("task", "phase:foundation", "contracts", "platform", "eval")
-      Body   = @"
-## Goal
-Track control lifecycle state and validate evidence completeness.
-
-## Dependencies
-- [Epic] Foundation
-
-## Acceptance Criteria
-- [ ] controls track lifecycle and review state
-- [ ] evidence completeness can fail missing required fields
-- [ ] rollback and observability links are explicit per control
-"@
-    }
-    @{
-      IssueId = "GAP-024"
-      Labels = @("task", "phase:full-runtime", "backend", "platform")
-      Body   = @"
-## Goal
-Run real governed tasks through a worker and managed workspace.
-
-## Dependencies
-- [Epic] Full Runtime
-
-## Acceptance Criteria
-- [ ] governed tasks execute through a worker
-- [ ] workspaces are lifecycle-bound and policy-aware
-- [ ] worker execution preserves approval and rollback semantics
-"@
-    }
-    @{
-      IssueId = "GAP-025"
-      Labels = @("task", "phase:full-runtime", "backend", "platform", "eval")
-      Body   = @"
-## Goal
-Persist artifacts and make verification and replay operational.
-
-## Dependencies
-- [Epic] Full Runtime
-
-## Acceptance Criteria
-- [ ] artifacts persist outside stdout or transcript-only output
-- [ ] quick and full gates run against real task executions
-- [ ] failed tasks leave enough data for replay-oriented diagnosis
-"@
-    }
-    @{
-      IssueId = "GAP-027"
-      Labels = @("task", "phase:full-runtime", "frontend", "platform", "backend")
-      Body   = @"
-## Goal
-Give operators a control-plane surface for tasks, approvals, evidence, replay, and runtime status.
-
-## Dependencies
-- [Epic] Full Runtime
-
-## Acceptance Criteria
-- [ ] operators can inspect tasks, approvals, evidence, and replay without raw log digging
-- [ ] runtime health and task query surfaces are stable
-- [ ] the surface remains control-plane focused
-- [ ] the first delivery may be CLI-first as long as it keeps a stable read model for a later UI
-"@
-    }
-    @{
-      IssueId = "GAP-029"
-      Labels = @("task", "phase:public-release", "docs", "devops", "platform")
-      Body   = @"
-## Goal
-Make the full runtime publicly usable on one machine.
-
-## Dependencies
-- [Epic] Public Usable Release
-
-## Acceptance Criteria
-- [ ] the runtime can be started on one machine with a documented path
-- [ ] sample repo profiles and a demo flow work end-to-end
-- [ ] release and packaging expectations are explicit
-"@
-    }
-    @{
-      IssueId = "GAP-033"
-      Labels = @("task", "phase:maintenance", "product", "docs", "platform")
-      Body   = @"
-## Goal
-Keep the project maintainable after the first usable release.
-
-## Dependencies
-- [Epic] Maintenance Boundary
-
-## Acceptance Criteria
-- [ ] adapter compatibility and degrade behavior are explicit
-- [ ] upgrade expectations are explicit
-- [ ] maintenance, deprecation, and retirement remain traceable
-- [ ] maintenance policy remains visible in runtime status and doctor checks
-"@
-    }
-    @{
-      Title  = "[Task] Add generic target-repo attachment and onboarding flow"
-      Labels = @("task", "phase:interactive-session", "product", "docs", "platform", "backend")
-      Body   = @"
-## Goal
-Make arbitrary target repositories attachable through a lightweight repo-local pack and machine-local runtime binding.
-
-## Dependencies
-- [Epic] Interactive Session Productization
-
-## Acceptance Criteria
-- [ ] a new repo can attach without copying the runtime into it
-- [ ] repo-local pack contents stay declarative and portable
-- [ ] onboarding posture is visible to the runtime and doctor surfaces
-"@
-    }
-    @{
-      Title  = "[Task] Add the attach-first session bridge and governed interaction surface"
-      Labels = @("task", "phase:interactive-session", "frontend", "platform", "product")
-      Body   = @"
-## Goal
-Expose governed actions from inside active AI coding sessions, with launch mode as fallback.
-
-## Dependencies
-- [Epic] Interactive Session Productization
-
-## Acceptance Criteria
-- [ ] the preferred operator flow runs inside an active AI coding session
-- [ ] the runtime can fall back to launch mode when attach is unavailable
-- [ ] governed actions do not require replacing the upstream tool UI
-"@
-    }
-    @{
-      Title  = "[Task] Add the direct Codex adapter and evidence mapping path"
-      Labels = @("task", "phase:interactive-session", "platform", "backend", "product")
-      Body   = @"
-## Goal
-Make at least one real Codex path direct rather than manual-handoff only.
-
-## Dependencies
-- [Epic] Interactive Session Productization
-
-## Acceptance Criteria
-- [ ] the runtime can bind a governed task to a direct Codex execution path
-- [ ] Codex-driven changes and verification outputs map into task evidence
-- [ ] unsupported capabilities degrade explicitly
-"@
-    }
-    @{
-      Title  = "[Task] Add capability tiers for non-Codex AI tools"
-      Labels = @("task", "phase:interactive-session", "platform", "product", "docs")
-      Body   = @"
-## Goal
-Generalize adapters beyond Codex through explicit capability tiers.
-
-## Dependencies
-- [Epic] Interactive Session Productization
-
-## Acceptance Criteria
-- [ ] native attach, process bridge, and manual handoff tiers are explicit
-- [ ] non-Codex tools have honest compatibility posture
-- [ ] fail-closed and degrade rules remain visible
-"@
-    }
-    @{
-      Title  = "[Task] Add the multi-repo trial loop and generic onboarding kit"
-      Labels = @("task", "phase:interactive-session", "product", "docs", "eval", "platform")
-      Body   = @"
-## Goal
-Evolve onboarding and adapters from real usage across multiple repositories.
-
-## Dependencies
-- [Epic] Interactive Session Productization
-
-## Acceptance Criteria
-- [ ] multiple repos can run through the attach flow without kernel rewrites
-- [ ] onboarding and adapter gaps are captured as structured evidence
-- [ ] the runtime ships with a reusable onboarding kit for new repos
-"@
-    }
-  )
+  $tasks = @(Get-TaskDefinitions -IssueSeeds $seedData.issues)
 
   foreach ($task in $tasks) {
     if (-not $seedMap.ContainsKey($task.IssueId)) {

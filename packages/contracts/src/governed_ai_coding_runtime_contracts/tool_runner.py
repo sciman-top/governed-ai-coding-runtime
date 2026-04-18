@@ -1,6 +1,7 @@
 """Read-only governed tool request validation."""
 
 from dataclasses import dataclass
+import fnmatch
 from pathlib import PurePosixPath
 from typing import Any
 
@@ -50,9 +51,10 @@ def run_readonly_session(
 def _is_allowed_path(target_path: str, path_policies: dict) -> bool:
     normalized = target_path.replace("\\", "/").lstrip("/")
     path = PurePosixPath(normalized)
+    path_text = path.as_posix()
 
     for blocked in path_policies.get("blocked", []):
-        if path.match(blocked):
+        if fnmatch.fnmatch(path_text, blocked.replace("\\", "/")):
             return False
 
-    return any(path.match(pattern) for pattern in path_policies.get("read_allow", []))
+    return any(fnmatch.fnmatch(path_text, pattern.replace("\\", "/")) for pattern in path_policies.get("read_allow", []))

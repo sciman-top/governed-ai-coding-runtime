@@ -8,7 +8,7 @@ This directory holds the human and machine planning artifacts that bridge strate
   - historical seed list for the completed 90-day MVP
   - use this to understand how `Phase 0` through `Phase 4` were sequenced
 - [Full Lifecycle Backlog Seeds](./full-lifecycle-backlog-seeds.md)
-  - active phase-level seed list for the full lifecycle including the interactive session productization queue
+  - phase-level seed list for the full lifecycle from `GAP-018` through `GAP-044`
   - use this for current sequencing and scope checks
 - [Issue-Ready Backlog](./issue-ready-backlog.md)
   - current human-readable full-lifecycle implementation backlog
@@ -25,7 +25,7 @@ This directory holds the human and machine planning artifacts that bridge strate
   - task issue bodies are now rendered from `issue-ready-backlog.md` plus seed metadata
   - initiative and epic issue bodies are now rendered from `governed-ai-coding-runtime-full-lifecycle-plan.md`
   - `-ValidateOnly` can be used to verify the script sees the current seed set without calling GitHub
-  - `-ValidateOnly -RenderAll` renders every task, epic, and initiative body without calling GitHub
+  - `-ValidateOnly -RenderAll` renders every task, epic, and initiative body and verifies the actual task creation definitions without calling GitHub
 - Current limitation:
   - the seeding script depends on stable markdown heading structure in both the backlog and lifecycle roadmap
   - this parser contract is covered by `scripts/verify-repo.ps1 -Check Scripts`, which fails if the source docs can no longer render the issue bodies
@@ -37,7 +37,10 @@ This directory holds the human and machine planning artifacts that bridge strate
 - `Full Runtime / GAP-024` through `GAP-028` are complete on the current branch baseline.
 - `Public Usable Release / GAP-029` through `GAP-032` are complete on the current branch baseline.
 - `Maintenance Baseline / GAP-033` through `GAP-034` are complete on the current branch baseline.
-- `Interactive Session Productization / GAP-035` through `GAP-039` are the active next-step queue.
+- `Strategy Alignment Gates / GAP-040` through `GAP-044` are complete on the current branch baseline.
+- `Interactive Session Productization / GAP-035` through `GAP-039` are complete on the current branch baseline.
+- There is no open `GAP-*` execution queue in the current seeded set (`GAP-018` through `GAP-044`).
+- The next active queue must be introduced by adding new `GAP-*` seeds, backlog entries, and roadmap dependencies in one synchronized change set.
 - The active lifecycle is now anchored by:
   - [Full Lifecycle Plan](../roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
   - [Full Lifecycle Backlog Seeds](./full-lifecycle-backlog-seeds.md)
@@ -46,7 +49,9 @@ This directory holds the human and machine planning artifacts that bridge strate
 - The interactive productization direction also depends on:
   - [Generic Target-Repo Attachment Blueprint](../architecture/generic-target-repo-attachment-blueprint.md)
   - [Interaction Model](../product/interaction-model.md)
+  - [Interactive Session Productization Implementation Plan](../plans/interactive-session-productization-implementation-plan.md)
   - [Interactive Session Productization Plan](../plans/interactive-session-productization-plan.md)
+  - [Governance Runtime Strategy Alignment Plan](../plans/governance-runtime-strategy-alignment-plan.md)
 - The local baseline and maintenance surfaces still depend on:
   - [Single-Machine Runtime Quickstart](../quickstart/single-machine-runtime-quickstart.md)
   - [Public Usable Release Criteria](../product/public-usable-release-criteria.md)
@@ -57,4 +62,4 @@ This directory holds the human and machine planning artifacts that bridge strate
   - [Maintenance Implementation Plan](../plans/maintenance-implementation-plan.md)
   - [Full Runtime Implementation Plan](../plans/full-runtime-implementation-plan.md)
   - [Foundation Runtime Substrate Implementation Plan](../plans/foundation-runtime-substrate-implementation-plan.md)
-- Historical phase plans under `docs/plans/` remain evidence of earlier work; the new active implementation queue is the interactive session productization slice.
+- Historical phase plans under `docs/plans/` remain evidence of earlier work and can keep unchecked checkbox syntax for execution-history readability.

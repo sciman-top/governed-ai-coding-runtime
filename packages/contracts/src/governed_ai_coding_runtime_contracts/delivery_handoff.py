@@ -17,6 +17,9 @@ class HandoffPackage:
     validation_status: ValidationStatus
     risk_notes: list[str]
     replay_references: list[str]
+    adapter_id: str | None = None
+    adapter_flow_kind: str | None = None
+    adapter_evidence_refs: list[str] | None = None
 
 
 def build_handoff_package(
@@ -25,6 +28,9 @@ def build_handoff_package(
     verification_artifact: VerificationArtifact,
     risk_notes: list[str],
     replay_references: list[str],
+    adapter_id: str | None = None,
+    adapter_flow_kind: str | None = None,
+    adapter_evidence_refs: list[str] | None = None,
 ) -> HandoffPackage:
     _required_string(task_id, "task_id")
     if not changed_files:
@@ -41,6 +47,9 @@ def build_handoff_package(
         validation_status=validation_status,
         risk_notes=risk_notes,
         replay_references=replay_references,
+        adapter_id=adapter_id,
+        adapter_flow_kind=adapter_flow_kind,
+        adapter_evidence_refs=adapter_evidence_refs or [],
     )
 
 

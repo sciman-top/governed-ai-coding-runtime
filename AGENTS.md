@@ -18,6 +18,8 @@
 - `scripts/github/create-roadmap-issues.ps1` 只负责 backlog/issue 种子生成，不代表运行时实现已经存在。
 - 当前仓库已存在 `.git`；默认回滚优先使用 git 历史，`docs/change-evidence/snapshots/` 只作为补充留痕或无 git 场景兜底。
 - 当前证据统一落在 `docs/change-evidence/`。
+- 面向操作者的使用说明/指南/教程类文档必须保持中英双语可用；最低覆盖范围包括 `README*`、`docs/quickstart/*`、`docs/product/*guide*`、`docs/product/*flow*`、`docs/product/*commands*`、`docs/product/*trial*`、`docs/product/*pilot*`、`docs/product/*console*`、`docs/product/*criteria*`、以及其他直接描述运行步骤或操作路径的文档。
+- 纯策略、研究、架构、规划、ADR、spec/schema 配套说明默认不强制逐篇双语，但只要文档直接承担操作者使用入口，就应补齐对应中英版本或明确链接到可替代的双语入口。
 
 ## B. 仓库门禁与阻断
 | gate | status | command | reason | alternative_verification | evidence_link | expires_at |

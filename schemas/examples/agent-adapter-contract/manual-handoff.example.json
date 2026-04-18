@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.6",
+  "adapters": [
+    {
+      "adapter_id": "generic-manual-handoff",
+      "display_name": "Generic Manual Handoff",
+      "product_family": "generic",
+      "lifecycle_status": "experimental",
+      "adapter_tier": "manual_handoff",
+      "rollout_posture": {
+        "current_mode": "observe",
+        "target_mode": "advisory"
+      },
+      "invocation_mode": "manual_handoff",
+      "auth_ownership": "unsupported",
+      "workspace_control": "external_workspace",
+      "event_visibility": "none",
+      "mutation_model": "handoff_only",
+      "continuation_model": "manual",
+      "evidence_model": "manual_summary",
+      "supported_governance_modes": [
+        "observe_only",
+        "advisory"
+      ],
+      "minimum_required_runtime_controls": [
+        "policy_decision",
+        "verification_runner",
+        "delivery_handoff"
+      ],
+      "governance_guarantees": [
+        "explicit manual handoff",
+        "runtime-visible adapter posture",
+        "same-contract verification required"
+      ],
+      "unsupported_capability_behavior": "degrade_to_manual_handoff",
+      "known_limitations": [
+        "no native attach",
+        "no process bridge"
+      ],
+      "compatibility_signals": [
+        {
+          "capability": "native_attach",
+          "status": "unsupported",
+          "degrade_to": "advisory",
+          "reason": "manual handoff only"
+        }
+      ]
+    }
+  ]
+}

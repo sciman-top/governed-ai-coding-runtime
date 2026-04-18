@@ -84,6 +84,31 @@ class DeliveryHandoffTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             delivery_handoff.build_handoff_package("task-failed", ["README.md"], artifact, ["test failed"], [])
 
+    def test_handoff_can_link_codex_adapter_evidence_refs(self) -> None:
+        delivery_handoff = importlib.import_module("governed_ai_coding_runtime_contracts.delivery_handoff")
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+        plan = verification_runner.build_verification_plan("full")
+        artifact = verification_runner.build_verification_artifact(
+            plan,
+            "docs/change-evidence/full.md",
+            {"build": "pass", "test": "pass", "contract": "pass", "doctor": "pass"},
+        )
+
+        package = delivery_handoff.build_handoff_package(
+            task_id="task-codex",
+            changed_files=["src/service.py"],
+            verification_artifact=artifact,
+            risk_notes=[],
+            replay_references=["not-needed"],
+            adapter_id="codex-cli",
+            adapter_flow_kind="manual_handoff",
+            adapter_evidence_refs=["artifacts/task-codex/run-1/codex/session.json"],
+        )
+
+        self.assertEqual(package.adapter_id, "codex-cli")
+        self.assertEqual(package.adapter_flow_kind, "manual_handoff")
+        self.assertEqual(package.adapter_evidence_refs, ["artifacts/task-codex/run-1/codex/session.json"])
+
 
 if __name__ == "__main__":
     unittest.main()

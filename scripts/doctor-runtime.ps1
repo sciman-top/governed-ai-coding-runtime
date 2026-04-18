@@ -1,3 +1,8 @@
+param(
+  [string]$AttachmentRoot,
+  [string]$RuntimeStateRoot
+)
+
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
@@ -103,3 +108,33 @@ if ([string]::IsNullOrWhiteSpace($adapterResult)) {
   throw "Adapter posture visibility output missing"
 }
 Write-CheckOk "adapter-posture-visible"
+
+if (-not [string]::IsNullOrWhiteSpace($AttachmentRoot)) {
+  if ([string]::IsNullOrWhiteSpace($RuntimeStateRoot)) {
+    $RuntimeStateRoot = Join-Path ".runtime/attachments" (Split-Path -Leaf $AttachmentRoot)
+  }
+
+  $attachmentCheck = @'
+from pathlib import Path
+import sys
+
+root = Path.cwd()
+contracts_src = root / "packages" / "contracts" / "src"
+sys.path.insert(0, str(contracts_src))
+
+from governed_ai_coding_runtime_contracts.repo_attachment import inspect_attachment_posture
+
+posture = inspect_attachment_posture(
+    target_repo_root=sys.argv[1],
+    runtime_state_root=sys.argv[2],
+)
+print(posture.binding_state)
+'@
+
+  $attachmentPosture = $attachmentCheck | & $python.Source - $AttachmentRoot $RuntimeStateRoot
+  if ($LASTEXITCODE -ne 0) {
+    throw "Attachment posture check failed"
+  }
+  $normalizedAttachmentPosture = (($attachmentPosture | Select-Object -First 1).Trim()).Replace("_", "-")
+  Write-CheckOk "attachment-posture-$normalizedAttachmentPosture"
+}

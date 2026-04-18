@@ -149,7 +149,7 @@ The final product must support the following end-to-end coding loop:
 - The platform must support a repo-local light attachment pack that remains portable and declarative.
 - The platform must keep mutable runtime state machine-local rather than duplicating the kernel into each target repo.
 - The platform must support a governed tool layer for shell, file mutation, git, browser, package manager, and repository-aware helper tools.
-- The platform must classify actions into at least three governance buckets: safe, approval-required, and blocked.
+- The platform must classify actions into at least three governance buckets: safe, approval-required, and blocked, normalized at runtime through `PolicyDecision` `allow`, `escalate`, and `deny`.
 - The platform must support risk-proportional governance modes, starting with observe-only/advisory behavior where enforcement would create unnecessary friction.
 - The platform must define an agent adapter contract that can describe native attach, process bridge, CLI, MCP, app-server, IDE, browser-automation, cloud-agent, and manual-handoff execution shapes.
 - The first direct adapter priority should be compatible with the user's current Codex CLI/App workflow without taking ownership of upstream Codex authentication.
@@ -341,7 +341,7 @@ Implementation contracts should be taken from:
 - High-risk actions will be modeled explicitly, not inferred only through prompt behavior. Risk classes will drive approval and execution behavior.
 - Tool execution will be separated from agent reasoning. The agent can request tool use, but a deterministic tool governance layer must validate the request before execution.
 - The system will distinguish between observe-only, advisory, enforced, and strict governance modes so low-risk work is not slowed down by high-risk controls.
-- The system will distinguish between safe tools, approval-required tools, and blocked tools.
+- The system will distinguish between safe tools, approval-required tools, and blocked tools, while converging external execution decisions on `PolicyDecision` `allow`, `escalate`, and `deny`.
 - The platform will support isolated execution environments for AI coding tasks so that repository mutations happen in controlled workspaces rather than arbitrary live directories.
 - Build, test, lint, typecheck, and repository-specific contract/invariant checks will be modeled as part of task lifecycle completion, not optional post-processing.
 - Approval will be a first-class runtime concept. High-risk task steps will pause the workflow until approval is granted, rejected, revoked, or timed out.
@@ -381,7 +381,7 @@ Reference specs:
 - The verification pipeline must be tested to ensure required gates run before a task is marked complete.
 - The console must be tested against task review workflows, approval workflows, and failed-task inspection flows.
 - Evaluation and regression tests must confirm that policy or runtime changes do not silently weaken safety or governance guarantees.
-- Prior art inside the target codebase does not exist yet, because the repository is being created greenfield. Early test design should therefore borrow quality patterns from the existing governance ecosystem: deterministic gate checks, contract verification, failure replay readiness, and evidence-oriented validation.
+- The repository started greenfield, but it now has a local runtime baseline, contract primitives, schemas, examples, scripts, and runtime tests. New tests should extend those observable runtime behaviors first, while still borrowing quality patterns from the governance ecosystem: deterministic gate checks, contract verification, failure replay readiness, and evidence-oriented validation.
 - Repository profile tests should confirm inheritance behavior, bounded overrides, and failure when unsupported overrides attempt to weaken platform guarantees.
 - Repo-context tests should confirm that repository context shaping improves task routing without leaking excessive irrelevant context into every task.
 

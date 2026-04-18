@@ -7,6 +7,7 @@
 - 本项目当前是 **Codex CLI/App compatible first**，但**还不是 direct Codex execution adapter**。
 - 当前运行时已经能做：bootstrap 本地状态、加载 repo profile、管理任务、执行 governed verification gates、持久化 evidence/replay artifact、暴露 runtime status。
 - 当前运行时**还不能**通过受管 adapter worker 直接调用 Codex 去完成真实编码工作。
+- 当前已经有 Codex adapter contract 用来分类能力姿态，但它本身不等于 live native attach 或 managed Codex execution 已经可用。
 
 ## 今天已经可用的方式
 
@@ -26,6 +27,7 @@
 对应文档：
 - [First Read-Only Trial](./first-readonly-trial.md)
 - [Adapter Degrade Policy](./adapter-degrade-policy.md)
+- [Codex Direct Adapter](./codex-direct-adapter.md)
 
 ### 3. Runtime Smoke Task
 `python scripts/run-governed-task.py run --json` 证明的是本地 governed runtime 路径已经闭环：
@@ -65,6 +67,7 @@
 - 还没有 managed adapter worker 去捕获 Codex prompt、edit、tool call、diff 等一等事件
 - 还没有把长时间运行的 Codex 会话编排进本 runtime
 - 不能把当前 smoke task 说成“Codex 已经在 runtime 内产生真实代码修改”
+- 不能把 Codex adapter contract 说成“所有宿主环境都已经具备 native attach”
 
 ## 未来 Direct Codex Adapter 的边界
 如果以后要补 direct Codex adapter，至少应满足这些约束：

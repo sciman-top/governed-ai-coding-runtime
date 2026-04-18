@@ -57,6 +57,29 @@ Full gate must run when:
 - gate outputs should persist as artifact-backed records under the runtime artifact store
 - the canonical gate order remains `build -> test -> contract/invariant -> hotspot`
 
+## Execution Contexts
+
+### local
+- runs inside the local runtime, operator workflow, or interactive recovery path
+- may be triggered from CLI, session bridge, or operator console helpers
+- consumes the same declared repo contract inputs that CI consumes
+- provides first-line feedback before delivery
+
+### ci
+- runs in non-interactive automation after code leaves the local operator path
+- consumes the same declared repo contract inputs as local verification
+- must not invent CI-only contract semantics that drift from local verification
+- acts as the last line of defense when hooks, wrappers, adapters, or session controls are bypassed
+
+## Same-Contract Inputs
+Local and CI verification must read the same declared contract classes:
+- repo profile and repo-local attachment declarations
+- verification gate definitions and canonical order
+- policy and approval references that influence verification or delivery interpretation
+- evidence, handoff, and rollback reference expectations
+
+Differences between local and CI should come from execution context, not from different contract semantics.
+
 ## Non-Goals
 - CI provider implementation details
 - language-specific test framework rules

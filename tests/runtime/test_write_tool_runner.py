@@ -77,6 +77,21 @@ class WriteToolRunnerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             write_tool_runner.govern_write_request(request, allocation, policy, ledger)
 
+    def test_nested_src_path_is_allowed_by_write_scope(self) -> None:
+        write_tool_runner = importlib.import_module("governed_ai_coding_runtime_contracts.write_tool_runner")
+        allocation, policy, ledger = self._fixtures()
+        request = write_tool_runner.WriteToolRequest(
+            task_id="task-123",
+            tool_name="apply_patch",
+            target_path="src/nested/module/service.py",
+            tier="low",
+            rollback_reference="git diff -- src/nested/module/service.py",
+        )
+
+        decision = write_tool_runner.govern_write_request(request, allocation, policy, ledger)
+
+        self.assertEqual(decision.status, "allowed")
+
     def test_risky_writes_require_rollback_reference(self) -> None:
         write_tool_runner = importlib.import_module("governed_ai_coding_runtime_contracts.write_tool_runner")
         allocation, policy, ledger = self._fixtures()

@@ -104,6 +104,29 @@ def build_verification_plan(
     )
 
 
+def build_repo_profile_verification_plan(
+    mode: VerificationMode,
+    *,
+    profile_raw: dict,
+    task_id: str | None = None,
+    run_id: str | None = None,
+) -> VerificationPlan:
+    gates = _gates_from_repo_profile(profile_raw, mode=mode)
+    if not gates:
+        return build_verification_plan(mode, task_id=task_id, run_id=run_id)
+    return VerificationPlan(
+        mode=mode,
+        task_id=task_id,
+        run_id=run_id,
+        gates=gates,
+        escalation_conditions=[
+            "quick_failure_requires_full_or_root_cause",
+            "contract_failure_blocks_delivery",
+            "missing_required_gate_blocks_delivery",
+        ],
+    )
+
+
 def build_verification_artifact(
     plan: VerificationPlan,
     evidence_link: str,
@@ -162,3 +185,59 @@ def run_verification_plan(
         result_artifact_refs=result_artifact_refs,
         risky_artifact_refs=risky_artifact_refs,
     )
+
+
+def _gates_from_repo_profile(raw: dict, *, mode: str) -> list[VerificationGate]:
+    if mode == "quick":
+        command_groups = ["quick_gate_commands", "test_commands", "contract_commands", "invariant_commands"]
+    else:
+        command_groups = ["full_gate_commands", "build_commands", "test_commands", "contract_commands", "invariant_commands"]
+
+    gates: list[VerificationGate] = []
+    seen_gate_ids: set[str] = set()
+    for group in command_groups:
+        commands = raw.get(group, [])
+        if not isinstance(commands, list):
+            continue
+        for command in commands:
+            if not isinstance(command, dict):
+                continue
+            gate_id = _gate_id_for_group(group, command)
+            if gate_id in seen_gate_ids:
+                continue
+            gate_command = command.get("command")
+            if not isinstance(gate_command, str) or not gate_command.strip():
+                continue
+            gates.append(
+                VerificationGate(
+                    gate_id=gate_id,
+                    canonical_name=gate_id,
+                    command=gate_command.strip(),
+                    required=bool(command.get("required", True)),
+                )
+            )
+            seen_gate_ids.add(gate_id)
+
+        if mode == "quick" and seen_gate_ids.issuperset({"test", "contract"}):
+            break
+        if mode == "full" and seen_gate_ids.issuperset({"build", "test", "contract"}):
+            break
+    return gates
+
+
+def _gate_id_for_group(group: str, command: dict) -> str:
+    if group in {"quick_gate_commands", "test_commands"}:
+        return "test"
+    if group in {"contract_commands", "invariant_commands"}:
+        return "contract"
+    if group == "build_commands":
+        return "build"
+    if group == "full_gate_commands":
+        command_id = command.get("id")
+        if isinstance(command_id, str) and command_id.strip() in {"build", "test", "contract", "doctor", "hotspot"}:
+            normalized = command_id.strip()
+            return "doctor" if normalized == "hotspot" else normalized
+    command_id = command.get("id")
+    if isinstance(command_id, str) and command_id.strip():
+        return command_id.strip()
+    return group

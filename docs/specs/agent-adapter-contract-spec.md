@@ -6,13 +6,14 @@ Draft
 ## Purpose
 Define how an AI coding product is admitted as an execution frontend without changing governance-kernel semantics.
 
-The contract describes capabilities, not vendor identity. Codex CLI/App, Claude Code, OpenClaw, Hermes, IDE plugins, cloud coding workers, browser-driven tools, and future products should all map into this shape when possible.
+The contract describes capabilities, not vendor identity. Codex CLI/App, Claude Code, IDE plugins, cloud coding workers, browser-driven tools, and future products should all map into this shape when possible.
 
 ## Required Fields
 - adapter_id
 - display_name
 - product_family
 - lifecycle_status
+- adapter_tier
 - rollout_posture
 - invocation_mode
 - auth_ownership
@@ -23,6 +24,7 @@ The contract describes capabilities, not vendor identity. Codex CLI/App, Claude 
 - evidence_model
 - supported_governance_modes
 - minimum_required_runtime_controls
+- governance_guarantees
 - unsupported_capability_behavior
 
 ## Optional Fields
@@ -44,6 +46,11 @@ The contract describes capabilities, not vendor identity. Codex CLI/App, Claude 
 - experimental
 - supported
 - deprecated
+
+### adapter_tier
+- native_attach
+- process_bridge
+- manual_handoff
 
 ### rollout_posture.current_mode / target_mode
 - observe
@@ -123,12 +130,14 @@ The contract describes capabilities, not vendor identity. Codex CLI/App, Claude 
 - unsupported
 
 ## Invariants
+- adapter tier must be one of `native_attach`, `process_bridge`, or `manual_handoff`
 - Agent adapters may not redefine task lifecycle states.
 - Agent adapters may not weaken approval requirements for high-risk actions.
 - Agent adapters may not change canonical verification gate order.
 - User-owned upstream authentication, such as Codex CLI/App login, must remain outside platform credential ownership unless a separate explicit integration decision is accepted.
 - If event visibility is weak, the runtime must compensate with stricter post-run diff, gate, and evidence checks or degrade the adapter mode.
 - Unsupported capabilities must degrade explicitly rather than silently pretending full enforcement exists.
+- governance guarantees must explain what the runtime can still honestly promise at the declared adapter tier
 - rollout posture must make the current and target enforcement level machine-readable
 - compatibility signals must describe the degrade behavior that preserves honest execution semantics when full support is absent
 - managed workspace or managed worktree adapters must leave enough run-level evidence for the runtime status surface to project approvals, verification, and artifact links honestly

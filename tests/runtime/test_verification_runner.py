@@ -82,6 +82,32 @@ class VerificationRunnerTests(unittest.TestCase):
             self.assertIn("test", artifact.result_artifact_refs)
             self.assertEqual(artifact.results["contract"], "pass")
 
+    def test_repo_profile_verification_plan_prefers_declared_commands(self) -> None:
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+
+        plan = verification_runner.build_repo_profile_verification_plan(
+            "full",
+            task_id="task-profile",
+            run_id="run-profile",
+            profile_raw={
+                "full_gate_commands": [
+                    {"id": "build", "command": "dotnet build Repo.sln -c Debug"},
+                    {"id": "test", "command": "dotnet test tests/Repo.Tests.csproj -c Debug"},
+                    {"id": "contract", "command": "dotnet test tests/Repo.Tests.csproj -c Debug --filter Contract"},
+                ]
+            },
+        )
+
+        self.assertEqual([gate.gate_id for gate in plan.gates], ["build", "test", "contract"])
+        self.assertEqual(
+            [gate.command for gate in plan.gates],
+            [
+                "dotnet build Repo.sln -c Debug",
+                "dotnet test tests/Repo.Tests.csproj -c Debug",
+                "dotnet test tests/Repo.Tests.csproj -c Debug --filter Contract",
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

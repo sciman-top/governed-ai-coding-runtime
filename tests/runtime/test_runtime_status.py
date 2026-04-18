@@ -1,4 +1,5 @@
 import sys
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -138,6 +139,83 @@ class RuntimeStatusTests(unittest.TestCase):
                 snapshot.maintenance.retirement_policy_ref,
                 "docs/product/maintenance-deprecation-and-retirement-policy.md",
             )
+
+    def test_runtime_status_reports_attached_repo_posture(self) -> None:
+        repo_attachment = importlib.import_module("governed_ai_coding_runtime_contracts.repo_attachment")
+        task_store = importlib.import_module("governed_ai_coding_runtime_contracts.task_store")
+        runtime_status = importlib.import_module("governed_ai_coding_runtime_contracts.runtime_status")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            runtime_root = workspace / "runtime-state" / "attached-target"
+            target_repo = workspace / "attached-target"
+            target_repo.mkdir()
+            repo_attachment.attach_target_repo(
+                target_repo_root=str(target_repo),
+                runtime_state_root=str(runtime_root),
+                repo_id="attached-target",
+                display_name="Attached Target",
+                primary_language="python",
+                build_command="python -m compileall src",
+                test_command="python -m unittest discover",
+                contract_command="python -m unittest discover -s tests/contracts",
+                adapter_preference="manual_handoff",
+                gate_profile="default",
+            )
+            store = task_store.FileTaskStore(workspace / ".runtime" / "tasks")
+
+            snapshot = runtime_status.RuntimeStatusStore(
+                store.root_path,
+                workspace,
+                attachment_roots=[target_repo],
+                attachment_runtime_state_root=runtime_root,
+            ).snapshot()
+
+            self.assertEqual(len(snapshot.attachments), 1)
+            attachment = snapshot.attachments[0]
+            self.assertEqual(attachment.repo_id, "attached-target")
+            self.assertEqual(attachment.binding_state, "healthy")
+            self.assertEqual(attachment.adapter_preference, "manual_handoff")
+            self.assertEqual(Path(attachment.light_pack_path), (target_repo / ".governed-ai" / "light-pack.json").resolve())
+
+    def test_runtime_status_text_reports_attachment_without_tasks(self) -> None:
+        repo_attachment = importlib.import_module("governed_ai_coding_runtime_contracts.repo_attachment")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            runtime_root = workspace / "runtime-state" / "attached-target"
+            target_repo = workspace / "attached-target"
+            target_repo.mkdir()
+            repo_attachment.attach_target_repo(
+                target_repo_root=str(target_repo),
+                runtime_state_root=str(runtime_root),
+                repo_id="attached-target",
+                display_name="Attached Target",
+                primary_language="python",
+                build_command="python -m compileall src",
+                test_command="python -m unittest discover",
+                contract_command="python -m unittest discover -s tests/contracts",
+                adapter_preference="manual_handoff",
+                gate_profile="default",
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/run-governed-task.py",
+                    "status",
+                    "--attachment-root",
+                    str(target_repo),
+                    "--attachment-runtime-state-root",
+                    str(runtime_root),
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertIn("Attachment attached-target: healthy", completed.stdout)
 
 
 if __name__ == "__main__":

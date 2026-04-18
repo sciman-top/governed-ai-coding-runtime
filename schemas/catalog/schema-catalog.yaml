@@ -1,4 +1,4 @@
-schema_catalog_version: "1.3"
+schema_catalog_version: "1.7"
 items:
   - name: control-registry
     path: schemas/jsonschema/control-registry.schema.json
@@ -9,6 +9,9 @@ items:
   - name: repo-profile
     path: schemas/jsonschema/repo-profile.schema.json
     source_spec: docs/specs/repo-profile-spec.md
+  - name: repo-attachment-binding
+    path: schemas/jsonschema/repo-attachment-binding.schema.json
+    source_spec: docs/specs/repo-attachment-binding-spec.md
   - name: clarification-protocol
     path: schemas/jsonschema/clarification-protocol.schema.json
     source_spec: docs/specs/clarification-protocol-spec.md
@@ -57,3 +60,9 @@ items:
   - name: runtime-operator-surface
     path: schemas/jsonschema/runtime-operator-surface.schema.json
     source_spec: docs/specs/runtime-operator-surface-spec.md
+  - name: policy-decision
+    path: schemas/jsonschema/policy-decision.schema.json
+    source_spec: docs/specs/policy-decision-spec.md
+  - name: session-bridge-command
+    path: schemas/jsonschema/session-bridge-command.schema.json
+    source_spec: docs/specs/session-bridge-command-spec.md

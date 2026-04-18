@@ -101,7 +101,7 @@ function Invoke-ActiveMarkdownLinkCheck {
   $files = @()
   $git = Get-Command git -ErrorAction SilentlyContinue
   if ($git -and (Test-Path ".git")) {
-    $markdownPaths = & $git.Source ls-files --cached --others --exclude-standard -- "*.md"
+    $markdownPaths = & $git.Source -c core.quotepath=false ls-files --cached --others --exclude-standard -- "*.md"
     if ($LASTEXITCODE -ne 0) {
       throw "git ls-files failed while collecting active markdown files"
     }

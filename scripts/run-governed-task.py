@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import asdict
 import json
 import subprocess
 import sys
@@ -13,15 +14,25 @@ if str(CONTRACTS_SRC) not in sys.path:
     sys.path.insert(0, str(CONTRACTS_SRC))
 
 from governed_ai_coding_runtime_contracts.artifact_store import LocalArtifactStore
+from governed_ai_coding_runtime_contracts.attached_write_governance import govern_attached_write_request
+from governed_ai_coding_runtime_contracts.attached_write_execution import (
+    decide_attached_write_request,
+    execute_attached_write_request,
+)
 from governed_ai_coding_runtime_contracts.delivery_handoff import build_handoff_package
 from governed_ai_coding_runtime_contracts.evidence import build_evidence_bundle
 from governed_ai_coding_runtime_contracts.execution_runtime import ExecutionRuntime, WorkerExecutionResult
+from governed_ai_coding_runtime_contracts.repo_attachment import validate_light_pack
 from governed_ai_coding_runtime_contracts.repo_profile import load_repo_profile
 from governed_ai_coding_runtime_contracts.replay import build_replay_reference
 from governed_ai_coding_runtime_contracts.runtime_status import RuntimeStatusStore
 from governed_ai_coding_runtime_contracts.task_intake import TaskIntake
 from governed_ai_coding_runtime_contracts.task_store import FileTaskStore, TaskRecord, TaskRunRecord
-from governed_ai_coding_runtime_contracts.verification_runner import build_verification_plan, run_verification_plan
+from governed_ai_coding_runtime_contracts.verification_runner import (
+    build_repo_profile_verification_plan,
+    build_verification_plan,
+    run_verification_plan,
+)
 from governed_ai_coding_runtime_contracts.worker import SynchronousLocalWorker
 from governed_ai_coding_runtime_contracts.workflow import fail_task, transition_task
 
@@ -51,8 +62,63 @@ def main() -> int:
     run_parser.add_argument("--mode", choices=["quick", "full"], default="full")
     run_parser.add_argument("--json", action="store_true")
 
+    verify_attachment_parser = subparsers.add_parser(
+        "verify-attachment",
+        help="Execute declared verification gates for an attached target repo",
+        description="Execute declared verification gates for an attached target repo.",
+    )
+    verify_attachment_parser.add_argument("--attachment-root", required=True)
+    verify_attachment_parser.add_argument("--attachment-runtime-state-root", required=True)
+    verify_attachment_parser.add_argument("--mode", choices=["quick", "full"], default="quick")
+    verify_attachment_parser.add_argument("--task-id", required=True)
+    verify_attachment_parser.add_argument("--run-id", required=True)
+    verify_attachment_parser.add_argument("--json", action="store_true")
+
+    govern_attachment_write_parser = subparsers.add_parser(
+        "govern-attachment-write",
+        help="Evaluate attached repo write governance.",
+        description="Evaluate attached repo write governance.",
+    )
+    govern_attachment_write_parser.add_argument("--attachment-root", required=True)
+    govern_attachment_write_parser.add_argument("--attachment-runtime-state-root", required=True)
+    govern_attachment_write_parser.add_argument("--task-id", required=True)
+    govern_attachment_write_parser.add_argument("--tool-name", default="apply_patch")
+    govern_attachment_write_parser.add_argument("--target-path", required=True)
+    govern_attachment_write_parser.add_argument("--tier", choices=["low", "medium", "high"], default="medium")
+    govern_attachment_write_parser.add_argument("--rollback-reference", default="")
+    govern_attachment_write_parser.add_argument("--json", action="store_true")
+
+    decide_attachment_write_parser = subparsers.add_parser(
+        "decide-attachment-write",
+        help="Approve or reject an attached write request.",
+        description="Approve or reject an attached write request.",
+    )
+    decide_attachment_write_parser.add_argument("--attachment-runtime-state-root", required=True)
+    decide_attachment_write_parser.add_argument("--approval-id", required=True)
+    decide_attachment_write_parser.add_argument("--decision", choices=["approve", "reject"], required=True)
+    decide_attachment_write_parser.add_argument("--decided-by", default="operator")
+    decide_attachment_write_parser.add_argument("--json", action="store_true")
+
+    execute_attachment_write_parser = subparsers.add_parser(
+        "execute-attachment-write",
+        help="Execute an approved attached write request.",
+        description="Execute an approved attached write request.",
+    )
+    execute_attachment_write_parser.add_argument("--attachment-root", required=True)
+    execute_attachment_write_parser.add_argument("--attachment-runtime-state-root", required=True)
+    execute_attachment_write_parser.add_argument("--task-id", required=True)
+    execute_attachment_write_parser.add_argument("--tool-name", choices=["write_file", "append_file"], default="write_file")
+    execute_attachment_write_parser.add_argument("--target-path", required=True)
+    execute_attachment_write_parser.add_argument("--tier", choices=["low", "medium", "high"], default="medium")
+    execute_attachment_write_parser.add_argument("--rollback-reference", required=True)
+    execute_attachment_write_parser.add_argument("--content", required=True)
+    execute_attachment_write_parser.add_argument("--approval-id")
+    execute_attachment_write_parser.add_argument("--json", action="store_true")
+
     status_parser = subparsers.add_parser("status", help="Print runtime status snapshot")
     status_parser.add_argument("--json", action="store_true")
+    status_parser.add_argument("--attachment-root")
+    status_parser.add_argument("--attachment-runtime-state-root")
 
     args = parser.parse_args()
 
@@ -60,8 +126,48 @@ def main() -> int:
         payload = create_task(task_id=args.task_id, goal=args.goal, scope=args.scope, repo=args.repo)
     elif args.command == "run":
         payload = run_task(task_id=args.task_id, goal=args.goal, scope=args.scope, repo=args.repo, profile_path=args.profile, mode=args.mode)
+    elif args.command == "verify-attachment":
+        payload = run_attachment_verification(
+            attachment_root=args.attachment_root,
+            attachment_runtime_state_root=args.attachment_runtime_state_root,
+            mode=args.mode,
+            task_id=args.task_id,
+            run_id=args.run_id,
+        )
+    elif args.command == "govern-attachment-write":
+        payload = govern_attachment_write(
+            attachment_root=args.attachment_root,
+            attachment_runtime_state_root=args.attachment_runtime_state_root,
+            task_id=args.task_id,
+            tool_name=args.tool_name,
+            target_path=args.target_path,
+            tier=args.tier,
+            rollback_reference=args.rollback_reference,
+        )
+    elif args.command == "decide-attachment-write":
+        payload = decide_attachment_write(
+            attachment_runtime_state_root=args.attachment_runtime_state_root,
+            approval_id=args.approval_id,
+            decision=args.decision,
+            decided_by=args.decided_by,
+        )
+    elif args.command == "execute-attachment-write":
+        payload = execute_attachment_write(
+            attachment_root=args.attachment_root,
+            attachment_runtime_state_root=args.attachment_runtime_state_root,
+            task_id=args.task_id,
+            tool_name=args.tool_name,
+            target_path=args.target_path,
+            tier=args.tier,
+            rollback_reference=args.rollback_reference,
+            content=args.content,
+            approval_id=args.approval_id,
+        )
     else:
-        payload = snapshot_payload()
+        payload = snapshot_payload(
+            attachment_root=args.attachment_root,
+            attachment_runtime_state_root=args.attachment_runtime_state_root,
+        )
 
     if getattr(args, "json", False):
         print(json.dumps(payload, indent=2, sort_keys=True))
@@ -202,8 +308,20 @@ def run_task(*, task_id: str | None, goal: str, scope: str, repo: str, profile_p
     return snapshot_payload(task_id=refreshed.task_id)
 
 
-def snapshot_payload(*, task_id: str | None = None) -> dict:
-    snapshot = RuntimeStatusStore(TASK_ROOT, ROOT).snapshot()
+def snapshot_payload(
+    *,
+    task_id: str | None = None,
+    attachment_root: str | None = None,
+    attachment_runtime_state_root: str | None = None,
+) -> dict:
+    attachment_roots = [Path(attachment_root)] if attachment_root else None
+    runtime_state_root = Path(attachment_runtime_state_root) if attachment_runtime_state_root else None
+    snapshot = RuntimeStatusStore(
+        TASK_ROOT,
+        ROOT,
+        attachment_roots=attachment_roots,
+        attachment_runtime_state_root=runtime_state_root,
+    ).snapshot()
     payload = {
         "total_tasks": snapshot.total_tasks,
         "maintenance": {
@@ -230,24 +348,176 @@ def snapshot_payload(*, task_id: str | None = None) -> dict:
             for task in snapshot.tasks
             if task_id is None or task.task_id == task_id
         ],
+        "attachments": [
+            {
+                "repo_id": attachment.repo_id,
+                "binding_id": attachment.binding_id,
+                "binding_state": attachment.binding_state,
+                "light_pack_path": attachment.light_pack_path,
+                "adapter_preference": attachment.adapter_preference,
+                "gate_profile": attachment.gate_profile,
+                "reason": attachment.reason,
+            }
+            for attachment in snapshot.attachments
+        ],
     }
     return payload
 
 
+def run_attachment_verification(
+    *,
+    attachment_root: str,
+    attachment_runtime_state_root: str,
+    mode: str,
+    task_id: str,
+    run_id: str,
+) -> dict:
+    attachment_runtime_root = Path(attachment_runtime_state_root)
+    attachment = validate_light_pack(
+        target_repo_root=attachment_root,
+        light_pack_path=str(Path(attachment_root) / ".governed-ai" / "light-pack.json"),
+        runtime_state_root=str(attachment_runtime_root),
+    )
+    profile = load_repo_profile(attachment.repo_profile_path)
+    plan = build_repo_profile_verification_plan(
+        mode,
+        profile_raw=profile.raw,
+        task_id=task_id,
+        run_id=run_id,
+    )
+    artifact_store = LocalArtifactStore(attachment_runtime_root)
+    artifact = run_verification_plan(
+        plan,
+        artifact_store=artifact_store,
+        execute_gate=lambda gate: _execute_gate_at_root(gate.command, cwd=Path(attachment_root)),
+    )
+    return {
+        "repo_id": profile.repo_id,
+        "binding_id": attachment.binding.binding_id,
+        "mode": artifact.mode,
+        "task_id": artifact.task_id,
+        "run_id": artifact.run_id,
+        "gate_order": artifact.gate_order,
+        "results": artifact.results,
+        "result_artifact_refs": artifact.result_artifact_refs,
+        "evidence_link": artifact.evidence_link,
+    }
+
+
+def govern_attachment_write(
+    *,
+    attachment_root: str,
+    attachment_runtime_state_root: str,
+    task_id: str,
+    tool_name: str,
+    target_path: str,
+    tier: str,
+    rollback_reference: str,
+) -> dict:
+    result = govern_attached_write_request(
+        attachment_root=attachment_root,
+        attachment_runtime_state_root=attachment_runtime_state_root,
+        task_id=task_id,
+        tool_name=tool_name,
+        target_path=target_path,
+        tier=tier,
+        rollback_reference=rollback_reference,
+    )
+    return {
+        "repo_id": result.repo_id,
+        "binding_id": result.binding_id,
+        "task_id": result.task_id,
+        "target_path": result.target_path,
+        "write_tier": result.write_tier,
+        "governance_status": result.governance_status,
+        "approval_id": result.approval_id,
+        "task_state": result.task_state,
+        "reason": result.reason,
+        "policy_decision": asdict(result.policy_decision),
+    }
+
+
+def decide_attachment_write(
+    *,
+    attachment_runtime_state_root: str,
+    approval_id: str,
+    decision: str,
+    decided_by: str,
+) -> dict:
+    result = decide_attached_write_request(
+        attachment_runtime_state_root=attachment_runtime_state_root,
+        approval_id=approval_id,
+        decision=decision,
+        decided_by=decided_by,
+    )
+    return {
+        "approval_id": result.approval_id,
+        "status": result.status,
+        "decided_by": result.decided_by,
+        "reason": result.reason,
+        "approval_record_ref": result.approval_record_ref,
+    }
+
+
+def execute_attachment_write(
+    *,
+    attachment_root: str,
+    attachment_runtime_state_root: str,
+    task_id: str,
+    tool_name: str,
+    target_path: str,
+    tier: str,
+    rollback_reference: str,
+    content: str,
+    approval_id: str | None,
+) -> dict:
+    result = execute_attached_write_request(
+        attachment_root=attachment_root,
+        attachment_runtime_state_root=attachment_runtime_state_root,
+        task_id=task_id,
+        tool_name=tool_name,
+        target_path=target_path,
+        tier=tier,
+        rollback_reference=rollback_reference,
+        content=content,
+        approval_id=approval_id,
+    )
+    return {
+        "repo_id": result.repo_id,
+        "binding_id": result.binding_id,
+        "task_id": result.task_id,
+        "target_path": result.target_path,
+        "write_tier": result.write_tier,
+        "execution_status": result.execution_status,
+        "artifact_ref": result.artifact_ref,
+        "approval_id": result.approval_id,
+        "approval_status": result.approval_status,
+        "bytes_written": result.bytes_written,
+        "reason": result.reason,
+        "policy_decision": asdict(result.policy_decision),
+    }
+
+
 def render_payload(payload: dict) -> str:
+    attachment_lines = [
+        f"Attachment {attachment['repo_id']}: {attachment['binding_state']} "
+        f"({attachment['adapter_preference'] or 'adapter-unknown'})"
+        for attachment in payload["attachments"]
+    ]
     if not payload["tasks"]:
-        return "\n".join(
-            [
-                f"Total tasks: {payload['total_tasks']}",
-                f"Maintenance stage: {payload['maintenance']['stage']}",
-                "No governed tasks recorded.",
-            ]
-        )
+        lines = [
+            f"Total tasks: {payload['total_tasks']}",
+            f"Maintenance stage: {payload['maintenance']['stage']}",
+        ]
+        lines.extend(attachment_lines)
+        lines.append("No governed tasks recorded.")
+        return "\n".join(lines)
     lines = [
         f"Total tasks: {payload['total_tasks']}",
         f"Maintenance stage: {payload['maintenance']['stage']}",
         f"Maintenance policy: {payload['maintenance']['compatibility_policy_ref']}",
     ]
+    lines.extend(attachment_lines)
     for task in payload["tasks"]:
         lines.append(f"- {task['task_id']}: {task['state']} ({task['goal']})")
         if task["active_run_id"]:
@@ -260,12 +530,18 @@ def render_payload(payload: dict) -> str:
 
 
 def _execute_gate(gate) -> tuple[int, str]:
+    return _execute_gate_at_root(gate.command, cwd=ROOT)
+
+
+def _execute_gate_at_root(command: str, *, cwd: Path) -> tuple[int, str]:
     completed = subprocess.run(
-        gate.command,
+        command,
         shell=True,
         capture_output=True,
         text=True,
-        cwd=ROOT,
+        encoding="utf-8",
+        errors="replace",
+        cwd=cwd,
     )
     output = "\n".join(part for part in [completed.stdout, completed.stderr] if part).strip()
     return completed.returncode, output

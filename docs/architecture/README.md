@@ -7,9 +7,11 @@ This directory holds the architectural views that explain product boundaries, ta
 1. [Minimum Viable Governance Loop](./minimum-viable-governance-loop.md)
 2. [Governance Boundary Matrix](./governance-boundary-matrix.md)
 3. [Generic Target-Repo Attachment Blueprint](./generic-target-repo-attachment-blueprint.md)
-4. [MVP Stack Vs Target Stack](./mvp-stack-vs-target-stack.md)
-5. [Compatibility Matrix](./compatibility-matrix.md)
-6. [Governed AI Coding Runtime Target Architecture](./governed-ai-coding-runtime-target-architecture.md)
+4. [Repo-Native Contract Bundle](./repo-native-contract-bundle.md)
+5. [Local Baseline To Hybrid Final-State Migration Matrix](./local-baseline-to-hybrid-final-state-migration-matrix.md)
+6. [MVP Stack Vs Target Stack](./mvp-stack-vs-target-stack.md)
+7. [Compatibility Matrix](./compatibility-matrix.md)
+8. [Governed AI Coding Runtime Target Architecture](./governed-ai-coding-runtime-target-architecture.md)
 
 ## Document Roles
 - [Minimum Viable Governance Loop](./minimum-viable-governance-loop.md)
@@ -18,6 +20,10 @@ This directory holds the architectural views that explain product boundaries, ta
   - ownership split between kernel governance, repo inheritance, repo override, and out-of-scope concerns
 - [Generic Target-Repo Attachment Blueprint](./generic-target-repo-attachment-blueprint.md)
   - preferred attach-first product shape for repo-local packs, machine-wide runtime state, and session bridges
+- [Repo-Native Contract Bundle](./repo-native-contract-bundle.md)
+  - source-of-truth to runtime-bundle mapping for repo-local declarations versus machine-local state
+- [Local Baseline To Hybrid Final-State Migration Matrix](./local-baseline-to-hybrid-final-state-migration-matrix.md)
+  - decision bridge between completed local baseline slices and the active hybrid final-state queue
 - [MVP Stack Vs Target Stack](./mvp-stack-vs-target-stack.md)
   - tracer-bullet implementation posture versus long-term platform direction
 - [Compatibility Matrix](./compatibility-matrix.md)
@@ -27,4 +33,6 @@ This directory holds the architectural views that explain product boundaries, ta
 
 ## Usage Rule
 - If implementation scope is under debate, start with the first three documents before reading the full target architecture.
+- If the question is where repo-local declarations end and machine-local runtime state begins, read the repo-native contract bundle doc before changing attachment or packaging behavior.
+- If historical completed plans or landed local runtime code are being compared against the hybrid final state, read the migration matrix before deciding that the current baseline is either "wrong" or "already final."
 - If adapter or environment questions arise, pair this index with [docs/specs/agent-adapter-contract-spec.md](../specs/agent-adapter-contract-spec.md) and [docs/specs/repo-profile-spec.md](../specs/repo-profile-spec.md).

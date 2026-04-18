@@ -43,6 +43,16 @@ class EvidenceBundleAssessment:
     advisory_findings: list[str]
 
 
+@dataclass(frozen=True, slots=True)
+class AdapterEvidenceSummary:
+    task_id: str
+    file_change_count: int
+    tool_call_count: int
+    gate_run_count: int
+    approval_event_count: int
+    handoff_ref_count: int
+
+
 @dataclass(slots=True)
 class EvidenceTimeline:
     _events: list[EvidenceEvent] = field(default_factory=list)
@@ -97,6 +107,18 @@ def assess_evidence_bundle(bundle: dict) -> EvidenceBundleAssessment:
     )
 
 
+def summarize_adapter_evidence(task_id: str, timeline: EvidenceTimeline) -> AdapterEvidenceSummary:
+    events = timeline.for_task(task_id)
+    return AdapterEvidenceSummary(
+        task_id=task_id,
+        file_change_count=_count_events(events, "adapter_file_change"),
+        tool_call_count=_count_events(events, "adapter_tool_call"),
+        gate_run_count=_count_events(events, "adapter_gate_run"),
+        approval_event_count=_count_events(events, "adapter_approval_event"),
+        handoff_ref_count=_count_events(events, "adapter_handoff"),
+    )
+
+
 def build_evidence_bundle(
     *,
     task_id: str,
@@ -110,6 +132,7 @@ def build_evidence_bundle(
     artifact_refs: list[str],
     replay_case_ref: str | None = None,
     failure_signature: str | None = None,
+    trial_feedback: dict | None = None,
 ) -> dict:
     created_at = datetime.now(UTC).isoformat()
     verification_results = [
@@ -149,6 +172,7 @@ def build_evidence_bundle(
         "completed_at": created_at,
         "failure_signature": failure_signature,
         "replay_case_ref": replay_case_ref,
+        "trial_feedback": trial_feedback,
     }
 
 
@@ -159,3 +183,7 @@ def _verification_status(result: str) -> str:
         "advisory": "advisory",
         "not_run": "skipped_not_applicable",
     }.get(result, "skipped_not_applicable")
+
+
+def _count_events(events: list[EvidenceEvent], event_type: str) -> int:
+    return sum(1 for event in events if event.event_type == event_type)

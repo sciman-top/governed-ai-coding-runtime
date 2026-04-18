@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "task_id": "task-123",
+  "action_id": "write-src-service",
+  "risk_tier": "high",
+  "subject": "write_request:src/service.py",
+  "status": "escalate",
+  "decision_basis": [
+    "high-tier write requires approval before execution"
+  ],
+  "evidence_ref": "artifacts/task-123/policy/escalate-write.json",
+  "required_approval_ref": "approval-123"
+}
