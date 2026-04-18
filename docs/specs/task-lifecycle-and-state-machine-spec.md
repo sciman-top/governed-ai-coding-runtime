@@ -57,6 +57,27 @@ Persistent task records must also capture:
 - timeout_at
 - last_failure_reason
 - resume_state
+- current_attempt_id
+- active_run_id
+- workspace_root
+- rollback_ref
+- run_history
+
+Each persisted run in `run_history` must capture:
+- run_id
+- attempt_id
+- worker_id
+- status
+- workspace_root
+- started_at
+- finished_at
+- summary
+- evidence_refs
+- approval_ids
+- artifact_refs
+- verification_refs
+- rollback_ref
+- failure_reason
 
 ## Invariants
 - execution cannot begin without a scoped task
@@ -65,3 +86,4 @@ Persistent task records must also capture:
 - rollback cannot occur without a failure or explicit cancellation path
 - pause must preserve the deterministic state the workflow should resume into
 - retry must increment persisted retry metadata instead of creating a fresh anonymous task
+- each execution attempt must bind one active run id and one workspace root

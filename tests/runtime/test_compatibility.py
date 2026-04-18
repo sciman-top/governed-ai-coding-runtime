@@ -73,6 +73,25 @@ class CompatibilityPolicyTests(unittest.TestCase):
         self.assertEqual(result.effective_posture, "blocked")
         self.assertEqual(result.degrade_reason, "no hook interception available")
 
+    def test_unsupported_capability_without_explicit_degrade_fails_closed(self) -> None:
+        compatibility = importlib.import_module("governed_ai_coding_runtime_contracts.compatibility")
+
+        result = compatibility.resolve_runtime_posture(
+            requested_posture="enforced",
+            repo_supported_postures=["observe", "advisory", "enforced"],
+            compatibility_signals=[
+                {
+                    "capability": "structured_events",
+                    "status": "unsupported",
+                    "reason": "no structured event surface",
+                }
+            ],
+        )
+
+        self.assertEqual(result.support_level, "unsupported")
+        self.assertEqual(result.effective_posture, "blocked")
+        self.assertEqual(result.degrade_reason, "no structured event surface")
+
 
 if __name__ == "__main__":
     unittest.main()

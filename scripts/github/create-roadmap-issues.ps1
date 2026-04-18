@@ -92,6 +92,7 @@ $labels = @(
   @{ Name = "phase:full-runtime"; Color = "FBCA04"; Description = "Full runtime phase" }
   @{ Name = "phase:public-release"; Color = "D93F0B"; Description = "Public usable release phase" }
   @{ Name = "phase:maintenance"; Color = "C5DEF5"; Description = "Maintenance phase" }
+  @{ Name = "phase:interactive-session"; Color = "0B5FFF"; Description = "Interactive session productization phase" }
   @{ Name = "backend"; Color = "0052CC"; Description = "Backend work" }
   @{ Name = "platform"; Color = "6F42C1"; Description = "Platform work" }
   @{ Name = "security"; Color = "B60205"; Description = "Security and policy" }
@@ -111,23 +112,28 @@ Ensure-Milestone
 
 $initiativeBody = @"
 ## Goal
-Turn the completed MVP governance kernel into a complete single-machine self-hosted governed AI coding runtime.
+Turn the completed local runtime baseline into a generic, attach-first, interactive governed AI coding runtime that can be attached to real AI coding sessions across many repositories.
 
 ## Success Criteria
 - [ ] Final product shape and capability boundary are frozen
 - [ ] Real build and doctor or hotspot commands replace the remaining placeholders
 - [ ] Durable task persistence and workflow skeleton are landed
 - [ ] Execution workers, artifact storage, gate running, and replay exist as working runtime paths
-- [ ] A minimal operator UI exists for task, approval, evidence, replay, and runtime status
-- [ ] A new user can follow quickstart docs and run a real governed task on one machine
-- [ ] Compatibility, upgrade, deprecation, and retirement rules are explicit enough for ongoing maintenance
+- [ ] A repo-local light pack and machine-local runtime binding exist for arbitrary target repos
+- [ ] An attach-first interactive session bridge exists
+- [ ] At least one direct Codex path exists
+- [ ] At least one non-Codex tool has an explicit capability-tiered posture
+- [ ] Multi-repo trial evidence can drive onboarding and adapter evolution
 
 ## In Scope
 - final product alignment
 - foundation maturity work
 - full runtime implementation
 - public usable release path
-- minimal maintenance boundary
+- local baseline maintenance
+- target-repo attachment
+- interactive session bridging
+- adapter tiers and trial feedback
 
 ## Out Of Scope
 - commercial packaging
@@ -135,6 +141,7 @@ Turn the completed MVP governance kernel into a complete single-machine self-hos
 - marketplace or promotion workflow
 - default multi-agent orchestration
 - memory-first product identity
+- replacing upstream AI tools with a proprietary IDE shell
 - deployment automation as the default completion path
 "@
 
@@ -238,12 +245,13 @@ Make the full runtime understandable and runnable by a new user on one machine.
     Labels = @("epic", "phase:maintenance", "platform", "docs", "product")
     Body   = @"
 ## Goal
-Keep the project maintainable after the first usable release without adding heavy operational overhead.
+Keep the landed local baseline maintainable without pretending the lifecycle is finished.
 
 ## Scope
 - compatibility and upgrade policy
 - maintenance and triage rules
 - deprecation and retirement policy
+- runtime maintenance visibility through status and doctor
 
 ## Dependencies
 - [Epic] Public Usable Release
@@ -252,6 +260,31 @@ Keep the project maintainable after the first usable release without adding heav
 - [ ] upgrade and compatibility expectations are explicit
 - [ ] maintenance boundary is documented
 - [ ] deprecated or retired capabilities remain traceable
+- [ ] maintenance policy remains visible through runtime status and doctor output
+"@
+  }
+  @{
+    Title  = "[Epic] Interactive Session Productization"
+    Labels = @("epic", "phase:interactive-session", "platform", "product", "docs", "frontend", "backend")
+    Body   = @"
+## Goal
+Turn the landed local runtime baseline into a generic, interactive, attach-first product path for real AI coding sessions.
+
+## Scope
+- target-repo attachment pack and onboarding flow
+- attach-first session bridge
+- direct Codex adapter and evidence mapping
+- capability-tiered non-Codex adapters
+- multi-repo trial feedback and generic onboarding kit
+
+## Dependencies
+- [Epic] Maintenance Boundary
+
+## Acceptance Criteria
+- [ ] a new target repo can attach without copying the kernel into it
+- [ ] governed actions are callable from an active AI coding session
+- [ ] at least one Codex path is direct rather than manual-handoff only
+- [ ] multi-repo trial evidence is captured as product feedback
 "@
   }
 )
@@ -274,7 +307,7 @@ Align active planning docs around the full functional lifecycle and final produc
 
 ## Acceptance Criteria
 - [ ] active planning docs use the same lifecycle stages
-- [ ] the project is described as a complete single-machine self-hosted runtime target
+- [ ] the project is described as a governed runtime target rather than only a local single-machine script bundle
 - [ ] MVP remains historical baseline rather than active next-step queue
 "@
     }
@@ -437,6 +470,87 @@ Keep the project maintainable after the first usable release.
 - [ ] adapter compatibility and degrade behavior are explicit
 - [ ] upgrade expectations are explicit
 - [ ] maintenance, deprecation, and retirement remain traceable
+- [ ] maintenance policy remains visible in runtime status and doctor checks
+"@
+    }
+    @{
+      Title  = "[Task] Add generic target-repo attachment and onboarding flow"
+      Labels = @("task", "phase:interactive-session", "product", "docs", "platform", "backend")
+      Body   = @"
+## Goal
+Make arbitrary target repositories attachable through a lightweight repo-local pack and machine-local runtime binding.
+
+## Dependencies
+- [Epic] Interactive Session Productization
+
+## Acceptance Criteria
+- [ ] a new repo can attach without copying the runtime into it
+- [ ] repo-local pack contents stay declarative and portable
+- [ ] onboarding posture is visible to the runtime and doctor surfaces
+"@
+    }
+    @{
+      Title  = "[Task] Add the attach-first session bridge and governed interaction surface"
+      Labels = @("task", "phase:interactive-session", "frontend", "platform", "product")
+      Body   = @"
+## Goal
+Expose governed actions from inside active AI coding sessions, with launch mode as fallback.
+
+## Dependencies
+- [Epic] Interactive Session Productization
+
+## Acceptance Criteria
+- [ ] the preferred operator flow runs inside an active AI coding session
+- [ ] the runtime can fall back to launch mode when attach is unavailable
+- [ ] governed actions do not require replacing the upstream tool UI
+"@
+    }
+    @{
+      Title  = "[Task] Add the direct Codex adapter and evidence mapping path"
+      Labels = @("task", "phase:interactive-session", "platform", "backend", "product")
+      Body   = @"
+## Goal
+Make at least one real Codex path direct rather than manual-handoff only.
+
+## Dependencies
+- [Epic] Interactive Session Productization
+
+## Acceptance Criteria
+- [ ] the runtime can bind a governed task to a direct Codex execution path
+- [ ] Codex-driven changes and verification outputs map into task evidence
+- [ ] unsupported capabilities degrade explicitly
+"@
+    }
+    @{
+      Title  = "[Task] Add capability tiers for non-Codex AI tools"
+      Labels = @("task", "phase:interactive-session", "platform", "product", "docs")
+      Body   = @"
+## Goal
+Generalize adapters beyond Codex through explicit capability tiers.
+
+## Dependencies
+- [Epic] Interactive Session Productization
+
+## Acceptance Criteria
+- [ ] native attach, process bridge, and manual handoff tiers are explicit
+- [ ] non-Codex tools have honest compatibility posture
+- [ ] fail-closed and degrade rules remain visible
+"@
+    }
+    @{
+      Title  = "[Task] Add the multi-repo trial loop and generic onboarding kit"
+      Labels = @("task", "phase:interactive-session", "product", "docs", "eval", "platform")
+      Body   = @"
+## Goal
+Evolve onboarding and adapters from real usage across multiple repositories.
+
+## Dependencies
+- [Epic] Interactive Session Productization
+
+## Acceptance Criteria
+- [ ] multiple repos can run through the attach flow without kernel rewrites
+- [ ] onboarding and adapter gaps are captured as structured evidence
+- [ ] the runtime ships with a reusable onboarding kit for new repos
 "@
     }
   )

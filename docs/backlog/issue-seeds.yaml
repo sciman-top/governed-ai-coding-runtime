@@ -1,4 +1,4 @@
-issue_seed_version: "3.0"
+issue_seed_version: "3.1"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment
@@ -85,3 +85,28 @@ issues:
     type: AFK
     blocked_by: [GAP-033]
     user_stories: [21, 22, 27, 40]
+  - id: GAP-035
+    title: Generic Target-Repo Attachment Pack And Onboarding Flow
+    type: AFK
+    blocked_by: [GAP-032, GAP-034]
+    user_stories: [18, 38, 42, 46]
+  - id: GAP-036
+    title: Attach-First Session Bridge And Governed Interaction Surface
+    type: AFK
+    blocked_by: [GAP-035]
+    user_stories: [1, 5, 41, 43]
+  - id: GAP-037
+    title: Direct Codex Adapter And Evidence Mapping
+    type: HITL
+    blocked_by: [GAP-035, GAP-036]
+    user_stories: [2, 11, 31, 41, 43]
+  - id: GAP-038
+    title: Capability-Tiered Adapter Framework For Multiple AI Tools
+    type: AFK
+    blocked_by: [GAP-035, GAP-036]
+    user_stories: [20, 31, 37, 44]
+  - id: GAP-039
+    title: Multi-Repo Trial Loop And Generic Onboarding Kit
+    type: HITL
+    blocked_by: [GAP-035, GAP-036, GAP-037, GAP-038]
+    user_stories: [14, 37, 38, 39, 45]

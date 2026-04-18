@@ -39,7 +39,7 @@ def resolve_runtime_posture(
         if signal_status == "unsupported":
             support_level = "unsupported"
             degrade_reason = str(signal.get("reason", "unsupported capability"))
-            if signal.get("degrade_to") == "fail_closed":
+            if signal.get("degrade_to") in (None, "", "fail_closed"):
                 effective_posture = "blocked"
             else:
                 effective_posture = _coerce_posture(signal.get("degrade_to"), fallback="observe")

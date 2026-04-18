@@ -18,6 +18,8 @@ Phase 1 starts with pure Python domain models for:
 - delivery handoff packages with validation status and replay references
 - eval baseline records and trace grading primitives
 - second-repo reuse pilot checks and generic process adapter compatibility gaps
+- local operator HTML rendering from the runtime read model
+- maintenance policy visibility in the runtime status surface
 - minimal approval and evidence control console facade
 
 These models are intentionally runtime-only and do not imply API, database, or workflow runtime selection yet.

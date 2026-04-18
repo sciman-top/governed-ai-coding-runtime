@@ -14,23 +14,36 @@ _SAFE_SEGMENT = re.compile(r"[^A-Za-z0-9._-]+")
 class WorkspaceAllocation:
     task_id: str
     repo_id: str
+    run_id: str
+    attempt_id: str
     workspace_root: str
     path_policies: dict
 
 
-def allocate_workspace(task_id: str, repo_profile: Any, workspace_root: str | None = None) -> WorkspaceAllocation:
+def allocate_workspace(
+    task_id: str,
+    repo_profile: Any,
+    workspace_root: str | None = None,
+    *,
+    run_id: str | None = None,
+    attempt_id: str | None = None,
+) -> WorkspaceAllocation:
     normalized_task_id = _safe_segment(_required_string(task_id, "task_id"))
     repo_id = _required_string(getattr(repo_profile, "repo_id", ""), "repo_id")
     path_policies = getattr(repo_profile, "path_policies", None)
     if not isinstance(path_policies, dict):
         msg = "repo_profile.path_policies is required"
         raise ValueError(msg)
+    normalized_run_id = _safe_segment(run_id or f"{normalized_task_id}-run")
+    normalized_attempt_id = _safe_segment(attempt_id or f"{normalized_task_id}-attempt-1")
 
-    root = workspace_root or f"{_WORKSPACE_PREFIX}/{repo_id}/{normalized_task_id}"
+    root = workspace_root or f"{_WORKSPACE_PREFIX}/{repo_id}/{normalized_task_id}/{normalized_run_id}"
     normalized_root = _normalize_workspace_root(root)
     return WorkspaceAllocation(
         task_id=task_id,
         repo_id=repo_id,
+        run_id=normalized_run_id,
+        attempt_id=normalized_attempt_id,
         workspace_root=normalized_root,
         path_policies=path_policies,
     )

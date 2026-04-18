@@ -3,38 +3,40 @@
 ## Current Baseline
 - This repository is currently `docs-first / contracts-first`.
 - `docs/`, `schemas/`, top-level skeleton directories, `scripts/verify-repo.ps1`, `scripts/build-runtime.ps1`, `scripts/doctor-runtime.ps1`, `.github/workflows/verify.yml`, and tested runtime contract primitives are present.
-- MVP contract slices and the `Foundation / GAP-020` through `GAP-023` substrate are complete, and the active execution queue now starts at `Full Runtime / GAP-024`.
-- Production runtime services, durable workers, full package release artifacts, and deployment targets are not landed yet.
+- MVP contract slices, the `Foundation / GAP-020` through `GAP-023` substrate, `Full Runtime / GAP-024` through `GAP-028`, `Public Usable Release / GAP-029` through `GAP-032`, and `Maintenance Baseline / GAP-033` through `GAP-034` are complete.
+- The active next-step queue is `Interactive Session Productization / GAP-035` through `GAP-039`.
 
 ## Current Working Set
 - [Full Lifecycle Plan](./roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
-- [Full Lifecycle Backlog Seeds](./backlog/full-lifecycle-backlog-seeds.md)
 - [Issue-Ready Backlog](./backlog/issue-ready-backlog.md)
-- [Full Runtime Implementation Plan](./plans/full-runtime-implementation-plan.md)
-- [Foundation Runtime Substrate Implementation Plan](./plans/foundation-runtime-substrate-implementation-plan.md)
-- [20260417 Foundation Execution Plan](./change-evidence/20260417-foundation-execution-plan.md)
-- [GAP-020 Task 1 Evidence](./change-evidence/20260417-gap-020-task-1-clarification-compatibility-evidence.md)
-- [Phase 0 Runnable Baseline Implementation Plan](./plans/phase-0-runnable-baseline-implementation-plan.md)
-- [Project AGENTS](../AGENTS.md)
+- [Issue Seeds YAML](./backlog/issue-seeds.yaml)
+- [Interactive Session Productization Plan](./plans/interactive-session-productization-plan.md)
+- [Generic Target-Repo Attachment Blueprint](./architecture/generic-target-repo-attachment-blueprint.md)
+- [Interaction Model](./product/interaction-model.md)
+- [AI Coding PRD](./prd/governed-ai-coding-runtime-prd.md)
+- [20260418 Maintenance Execution Plan](./change-evidence/20260418-maintenance-execution-plan.md)
 
 ## Current Planning Chain
-- Strategy and boundary inputs: [AI Coding PRD](./prd/governed-ai-coding-runtime-prd.md), [Interaction Model](./product/interaction-model.md), [Target Architecture](./architecture/governed-ai-coding-runtime-target-architecture.md), and [Minimum Viable Governance Loop](./architecture/minimum-viable-governance-loop.md)
-- Execution ordering: [90-Day Plan](./roadmap/governed-ai-coding-runtime-90-day-plan.md), [Backlog Index](./backlog/README.md), [Issue-Ready Backlog](./backlog/issue-ready-backlog.md), and [Plans Index](./plans/README.md)
-- Current handoff baseline: [Latest Deep Audit Review](./reviews/2026-04-17-pre-implementation-deep-audit-and-doc-refresh.md) plus [Latest Audit Evidence](./change-evidence/20260417-pre-implementation-deep-audit-and-doc-refresh.md)
+- Strategy and boundary inputs: [AI Coding PRD](./prd/governed-ai-coding-runtime-prd.md), [Interaction Model](./product/interaction-model.md), [Generic Target-Repo Attachment Blueprint](./architecture/generic-target-repo-attachment-blueprint.md), [Target Architecture](./architecture/governed-ai-coding-runtime-target-architecture.md), and [Minimum Viable Governance Loop](./architecture/minimum-viable-governance-loop.md)
+- Execution ordering: [Backlog Index](./backlog/README.md), [Issue-Ready Backlog](./backlog/issue-ready-backlog.md), [Full Lifecycle Plan](./roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md), and [Plans Index](./plans/README.md)
+- Current implementation history: [Foundation Runtime Substrate Implementation Plan](./plans/foundation-runtime-substrate-implementation-plan.md), [Full Runtime Implementation Plan](./plans/full-runtime-implementation-plan.md), [Public Usable Release Implementation Plan](./plans/public-usable-release-implementation-plan.md), and [Maintenance Implementation Plan](./plans/maintenance-implementation-plan.md)
 
 ## Navigation Aids
 - [Plans Index](./plans/README.md)
 - [Backlog Index](./backlog/README.md)
+- [Architecture Index](./architecture/README.md)
 - [Reviews Index](./reviews/README.md)
 - [Change Evidence Index](./change-evidence/README.md)
 - [Runbooks Index](./runbooks/README.md)
 
 ## Current Execution Posture
 - `Foundation / GAP-020` through `GAP-023` are complete on the current branch baseline.
-- The active execution queue is `Full Runtime / GAP-024` forward.
-- The current execution checklist is [Full Runtime Implementation Plan](./plans/full-runtime-implementation-plan.md).
-- Active verification for this repo now means `build -> test -> contract/invariant -> doctor`, with docs and script checks still included in `verify-repo -Check All`.
-- `docs/change-evidence/` remains historical evidence, not active product surface.
+- `Full Runtime / GAP-024` through `GAP-028` are complete on the current branch baseline.
+- `Public Usable Release / GAP-029` through `GAP-032` are complete on the current branch baseline.
+- `Maintenance Baseline / GAP-033` through `GAP-034` are complete on the current branch baseline.
+- `Interactive Session Productization / GAP-035` through `GAP-039` are the active next-step queue.
+- Active verification for this repo remains `build -> test -> contract/invariant -> doctor`, with docs and script checks still included in `verify-repo -Check All`.
+- `docs/change-evidence/` remains historical evidence and planning trace, not the primary user-facing product surface.
 
 ## Project Entry
 - [Root README](../README.md)
@@ -47,8 +49,6 @@
 pwsh -NoProfile -ExecutionPolicy Bypass -File ../scripts/verify-repo.ps1 -Check All
 ```
 
-Foundation build and doctor commands can be run directly from the repository root:
-
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
 ```
@@ -57,14 +57,40 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1
 ```
 
-Runtime contract tests can also be run directly:
-
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime
 ```
 
-## Foundations
-- [Final State Best Practices](./FinalStateBestPractices.md)
+Local baseline runtime commands:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap-runtime.ps1
+```
+
+```powershell
+python scripts/run-governed-task.py status --json
+```
+
+```powershell
+python scripts/run-governed-task.py run --json
+```
+
+Operator and packaging helpers:
+
+```powershell
+python scripts/serve-operator-ui.py
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/package-runtime.ps1
+```
+
+Primary reading entrypoints:
+- [Single-Machine Runtime Quickstart](./quickstart/single-machine-runtime-quickstart.md)
+- [Codex CLI/App Integration Guide](./product/codex-cli-app-integration-guide.md)
+- [Codex CLI/App 集成指南](./product/codex-cli-app-integration-guide.zh-CN.md)
+- [Generic Target-Repo Attachment Blueprint](./architecture/generic-target-repo-attachment-blueprint.md)
+- [Interactive Session Productization Plan](./plans/interactive-session-productization-plan.md)
 
 ## Product
 - [中文使用说明](../README.zh-CN.md)
@@ -79,10 +105,17 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Run
 - [Eval And Trace Baseline](./product/eval-and-trace-baseline.md)
 - [Second-Repo Reuse Pilot](./product/second-repo-reuse-pilot.md)
 - [Minimal Approval And Evidence Console](./product/minimal-approval-evidence-console.md)
+- [Public Usable Release Criteria](./product/public-usable-release-criteria.md)
+- [Adapter Degrade Policy](./product/adapter-degrade-policy.md)
+- [Codex CLI/App Integration Guide](./product/codex-cli-app-integration-guide.md)
+- [Codex CLI/App 集成指南](./product/codex-cli-app-integration-guide.zh-CN.md)
+- [Runtime Compatibility And Upgrade Policy](./product/runtime-compatibility-and-upgrade-policy.md)
+- [Maintenance, Deprecation, And Retirement Policy](./product/maintenance-deprecation-and-retirement-policy.md)
 - [AI Coding PRD](./prd/governed-ai-coding-runtime-prd.md)
 
 ## Architecture
 - [Architecture Index](./architecture/README.md)
+- [Generic Target-Repo Attachment Blueprint](./architecture/generic-target-repo-attachment-blueprint.md)
 - [Target Architecture](./architecture/governed-ai-coding-runtime-target-architecture.md)
 - [Minimum Viable Governance Loop](./architecture/minimum-viable-governance-loop.md)
 - [Governance Boundary Matrix](./architecture/governance-boundary-matrix.md)
@@ -94,6 +127,9 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Run
 - [Backlog Index](./backlog/README.md)
 - [90-Day Plan](./roadmap/governed-ai-coding-runtime-90-day-plan.md)
 - [Full Lifecycle Plan](./roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
+- [Interactive Session Productization Plan](./plans/interactive-session-productization-plan.md)
+- [Maintenance Implementation Plan](./plans/maintenance-implementation-plan.md)
+- [Public Usable Release Implementation Plan](./plans/public-usable-release-implementation-plan.md)
 - [Full Runtime Implementation Plan](./plans/full-runtime-implementation-plan.md)
 - [Foundation Runtime Substrate Implementation Plan](./plans/foundation-runtime-substrate-implementation-plan.md)
 - [Phase 0 Runnable Baseline Implementation Plan](./plans/phase-0-runnable-baseline-implementation-plan.md)
@@ -101,105 +137,3 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Run
 - [Full Lifecycle Backlog Seeds](./backlog/full-lifecycle-backlog-seeds.md)
 - [Issue-Ready Backlog](./backlog/issue-ready-backlog.md)
 - [Issue Seeds YAML](./backlog/issue-seeds.yaml)
-
-## Reviews
-- [Reviews Index](./reviews/README.md)
-- [Project Audit And Optimization (2026-04-17)](./reviews/2026-04-17-project-audit-and-optimization.md)
-- [Second Project Audit And Plan Hardening (2026-04-17)](./reviews/2026-04-17-second-project-audit-and-plan-hardening.md)
-- [Pre-Implementation Deep Audit And Doc Refresh (2026-04-17)](./reviews/2026-04-17-pre-implementation-deep-audit-and-doc-refresh.md)
-- [FinalStateBestPractices Original Mapping Review (2026-04-17)](./reviews/2026-04-17-final-state-best-practices-original-mapping.md)
-
-## Runbooks
-- [Runbooks Index](./runbooks/README.md)
-- [Failed Rollout Recovery](./runbooks/failed-rollout-recovery.md)
-- [Expired Waiver Handling](./runbooks/expired-waiver-handling.md)
-- [Control Rollback](./runbooks/control-rollback.md)
-- [Repeated Trial Recovery](./runbooks/repeated-trial-recovery.md)
-
-## Change Evidence
-- [Change Evidence Index](./change-evidence/README.md)
-- [20260417 MVP Backlog Closeout Handoff](./change-evidence/20260417-mvp-backlog-closeout-handoff.md)
-- [20260417 Phase 1 Scripted Trial Entrypoint](./change-evidence/20260417-phase-1-scripted-trial-entrypoint.md)
-- [20260417 Phase 1 Workspace Allocation](./change-evidence/20260417-phase-1-workspace-allocation.md)
-- [20260417 Phase 1 Write Policy Defaults](./change-evidence/20260417-phase-1-write-policy-defaults.md)
-- [20260417 Phase 1 Approval Flow](./change-evidence/20260417-phase-1-approval-flow.md)
-- [20260417 Phase 1 Write-Side Tool Governance](./change-evidence/20260417-phase-1-write-side-tool-governance.md)
-- [20260417 Phase 1 Verification Runner](./change-evidence/20260417-phase-1-verification-runner.md)
-- [20260417 Phase 1 Delivery Handoff](./change-evidence/20260417-phase-1-delivery-handoff.md)
-- [20260417 Phase 1 Eval And Trace Baseline](./change-evidence/20260417-phase-1-eval-trace-baseline.md)
-- [20260417 Phase 1 Second-Repo Reuse Pilot](./change-evidence/20260417-phase-1-second-repo-reuse-pilot.md)
-- [20260417 Phase 1 Minimal Approval And Evidence Console](./change-evidence/20260417-phase-1-minimal-approval-evidence-console.md)
-- [20260417 Phase 1 Evidence Timeline](./change-evidence/20260417-phase-1-evidence-timeline.md)
-- [20260417 Phase 1 Read-Only Tool Runner](./change-evidence/20260417-phase-1-readonly-tool-runner.md)
-- [20260417 Phase 1 Task Intake And Repo Resolution](./change-evidence/20260417-phase-1-task-intake-repo-resolution.md)
-- [20260417 Pre-Implementation Deep Audit And Doc Refresh](./change-evidence/20260417-pre-implementation-deep-audit-and-doc-refresh.md)
-- [20260417 Phase 0 Runnable Baseline](./change-evidence/20260417-phase-0-runnable-baseline.md)
-
-## Repository Skeleton
-- [Apps Boundary](../apps/README.md)
-- [Packages Boundary](../packages/README.md)
-- [Contracts Package](../packages/contracts/README.md)
-- [Infra Boundary](../infra/README.md)
-- [Tests Boundary](../tests/README.md)
-
-## Research
-- [Benchmark And Borrowing Notes](./research/benchmark-and-borrowing-notes.md)
-- [repo-governance-hub Mechanism Adoption Matrix](./research/repo-governance-hub-borrowing-review.md)
-
-## Decision Records
-- [ADR-0001: Control Plane First](./adrs/0001-control-plane-first.md)
-- [ADR-0002: No Multi-Repo Distribution In MVP](./adrs/0002-no-multi-repo-distribution-in-mvp.md)
-- [ADR-0003: Single-Agent Baseline First](./adrs/0003-single-agent-baseline-first.md)
-- [ADR-0004: Rename Project To Governed AI Coding Runtime](./adrs/0004-rename-project-to-governed-ai-coding-runtime.md)
-- [ADR-0005: Governance Kernel And Control Packs Before Platform Breadth](./adrs/0005-governance-kernel-and-control-packs-before-platform-breadth.md)
-- [ADR-0006: Final-State Best Practice And Agent Compatibility](./adrs/0006-final-state-best-practice-agent-compatibility.md)
-
-## Specs
-- [Specs Index](./specs/README.md)
-- [Repo Admission Minimums Spec](./specs/repo-admission-minimums-spec.md)
-- [Control Registry Spec](./specs/control-registry-spec.md)
-- [Control Pack Spec](./specs/control-pack-spec.md)
-- [Repo Profile Spec](./specs/repo-profile-spec.md)
-- [Tool Contract Spec](./specs/tool-contract-spec.md)
-- [Agent Adapter Contract Spec](./specs/agent-adapter-contract-spec.md)
-- [Hook Contract Spec](./specs/hook-contract-spec.md)
-- [Skill Manifest Spec](./specs/skill-manifest-spec.md)
-- [Knowledge Source Spec](./specs/knowledge-source-spec.md)
-- [Waiver And Exception Spec](./specs/waiver-and-exception-spec.md)
-- [Provenance And Attestation Spec](./specs/provenance-and-attestation-spec.md)
-- [Repo Map And Context Shaping Spec](./specs/repo-map-context-shaping-spec.md)
-- [Risk Tier And Approval Spec](./specs/risk-tier-and-approval-spec.md)
-- [Task Lifecycle And State Machine Spec](./specs/task-lifecycle-and-state-machine-spec.md)
-- [Evidence Bundle Spec](./specs/evidence-bundle-spec.md)
-- [Verification Gates Spec](./specs/verification-gates-spec.md)
-- [Eval And Trace Grading Spec](./specs/eval-and-trace-grading-spec.md)
-
-## Schemas
-- [Schemas README](../schemas/README.md)
-- [Schema Examples README](../schemas/examples/README.md)
-- [Schema Catalog](../schemas/catalog/schema-catalog.yaml)
-- [Control Packs README](../schemas/control-packs/README.md)
-- [Minimum Governance Kernel Runtime Pack](../schemas/control-packs/minimum-governance-kernel.control-pack.json)
-
-## Example Instances
-- [Minimum Governance Kernel Control Pack Sample](../schemas/examples/control-pack/minimum-governance-kernel.example.json)
-- [Python Service Repo Profile Sample](../schemas/examples/repo-profile/python-service.example.json)
-- [TypeScript Webapp Repo Profile Sample](../schemas/examples/repo-profile/typescript-webapp.example.json)
-
-## Recommended Reading Order
-1. PRD
-2. Latest Deep Audit Review
-3. Phase 0 Runnable Baseline Implementation Plan
-4. Interaction Model
-5. Final State Best Practices
-6. Governance Boundary Matrix
-7. Minimum Viable Governance Loop
-8. MVP Stack Vs Target Stack
-9. Compatibility Matrix
-10. Target Architecture
-11. 90-Day Plan
-12. Issue-Ready Backlog
-13. ADRs
-14. Specs
-15. Schemas
-16. Latest Audit Evidence

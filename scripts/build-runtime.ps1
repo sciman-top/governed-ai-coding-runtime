@@ -16,7 +16,7 @@ if (-not $python) {
 
 $sourceRoots = @(
   "packages/contracts/src",
-  "scripts/run-readonly-trial.py"
+  "scripts"
 )
 
 & $python.Source -m compileall @sourceRoots

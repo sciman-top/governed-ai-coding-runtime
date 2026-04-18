@@ -1,0 +1,34 @@
+{
+  "total_tasks": 1,
+  "maintenance": {
+    "stage": "completed",
+    "compatibility_policy_ref": "docs/product/runtime-compatibility-and-upgrade-policy.md",
+    "upgrade_policy_ref": "docs/product/runtime-compatibility-and-upgrade-policy.md",
+    "triage_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+    "deprecation_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+    "retirement_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md"
+  },
+  "tasks": [
+    {
+      "task_id": "task-demo-001",
+      "current_state": "delivered",
+      "goal": "show sample runtime snapshot",
+      "active_run_id": "run-demo-001",
+      "workspace_root": ".governed-workspaces/governed-ai-coding-runtime/task-demo-001/run-demo-001",
+      "rollback_ref": "docs/runbooks/control-rollback.md",
+      "approval_ids": [],
+      "artifact_refs": [
+        "artifacts/task-demo-001/run-demo-001/execution-output/worker-summary.txt"
+      ],
+      "evidence_refs": [
+        "artifacts/task-demo-001/run-demo-001/evidence/bundle.json"
+      ],
+      "verification_refs": [
+        "artifacts/task-demo-001/run-demo-001/verification-output/build.txt",
+        "artifacts/task-demo-001/run-demo-001/verification-output/test.txt",
+        "artifacts/task-demo-001/run-demo-001/verification-output/contract.txt",
+        "artifacts/task-demo-001/run-demo-001/verification-output/doctor.txt"
+      ]
+    }
+  ]
+}

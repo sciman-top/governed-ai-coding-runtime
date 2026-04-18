@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/runtime-operator-surface.schema.json",
+  "title": "Runtime Operator Surface",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "total_tasks",
+    "maintenance",
+    "tasks"
+  ],
+  "properties": {
+    "total_tasks": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "maintenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage",
+        "compatibility_policy_ref",
+        "upgrade_policy_ref",
+        "triage_policy_ref",
+        "deprecation_policy_ref",
+        "retirement_policy_ref"
+      ],
+      "properties": {
+        "stage": {
+          "type": "string"
+        },
+        "compatibility_policy_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "upgrade_policy_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "triage_policy_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "deprecation_policy_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "retirement_policy_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "task_id",
+          "current_state",
+          "goal",
+          "approval_ids",
+          "artifact_refs",
+          "evidence_refs",
+          "verification_refs"
+        ],
+        "properties": {
+          "task_id": {
+            "type": "string"
+          },
+          "current_state": {
+            "type": "string"
+          },
+          "goal": {
+            "type": "string"
+          },
+          "active_run_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "workspace_root": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "rollback_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "approval_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "artifact_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "verification_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

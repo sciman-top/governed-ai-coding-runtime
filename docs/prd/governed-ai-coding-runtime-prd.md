@@ -53,10 +53,11 @@ From the user's perspective, the current pain points are:
 - High-risk actions such as mass edits, CI changes, branch pushes, dependency upgrades, secret-adjacent changes, and deploy-adjacent commands need approvals, but most AI coding tools do not model approvals as a first-class runtime concern.
 - There is rarely a complete evidence trail that ties together task intent, context snapshot, commands run, files changed, validation outcomes, approvals, and rollback points.
 - When AI-generated changes fail, the human often has to manually reconstruct what happened instead of replaying the task or resuming from a known state.
+- Even when local governance primitives exist, it is still too hard to attach them to live AI coding sessions across different repositories and different upstream tools.
 
 The problem to solve is therefore:
 
-Create a final-state-best-practice governed execution platform for AI coding that allows developers to use their preferred coding agents while placing those agents inside a deterministic runtime shell that controls scope, permissions, approvals, validation, auditing, and rollback.
+Create a final-state-best-practice governed execution platform for AI coding that allows developers to keep using their preferred coding agents and real repositories while placing those sessions inside a deterministic runtime layer that controls scope, permissions, approvals, validation, auditing, and rollback.
 
 The platform must remain useful as upstream coding agents become stronger. Its durable value is not better code generation. Its durable value is stable repository-owned governance, evidence, verification, approval, and recovery semantics across changing agent products.
 
@@ -68,17 +69,19 @@ From the user's perspective, the platform works like this:
 
 - A developer creates or receives a coding task against a target repository.
 - The platform converts that request into a governed task with scope, acceptance criteria, risk level, and execution budget.
-- The platform loads the repository profile, allowed tools, verification gates, and approval rules for that repository.
-- The developer starts an AI coding session through the platform using a supported agent.
+- The platform loads or generates a lightweight repo-local attachment pack for that repository.
+- The platform binds the repository to machine-local runtime state for tasks, approvals, evidence, replay, and verification.
+- The developer continues working in a supported AI coding tool such as Codex CLI/App, and the runtime attaches to that live session when possible.
+- If attach is unavailable, the runtime can launch or bridge the upstream tool as a fallback.
 - The AI can inspect code, draft a plan, edit files, and run safe commands inside a governed execution environment.
 - Before any high-risk action, the platform pauses execution and requires explicit approval.
-- The platform records every important action and validation result as evidence.
-- At the end of the task, the platform produces a validated output package: summary, changed files, verification results, open risks, and rollback information.
+- The platform records every important action, validation result, and onboarding or compatibility gap as evidence.
+- At the end of the task, the platform produces a validated output package: summary, changed files, verification results, open risks, rollback information, and trial feedback when onboarding friction is discovered.
 - If the task fails or is interrupted, the platform can pause, resume, rerun, compensate, or hand off to a human instead of losing execution state.
 
-The product is not a new IDE and not a generic chatbot. It is the governed runtime and control layer around AI coding agents.
+The product is not a new IDE and not a generic chatbot. It is the governed runtime and control layer around AI coding agents and AI coding sessions.
 
-The long-term target is final-state best practice for governed AI coding: agent-agnostic execution, risk-proportional control, evidence-first delivery, and compatibility with current and future agent product shapes.
+The long-term target is final-state best practice for governed AI coding: agent-agnostic execution, risk-proportional control, evidence-first delivery, attach-first session integration, and compatibility with current and future agent product shapes.
 
 Its core user value is:
 
@@ -87,6 +90,7 @@ Its core user value is:
 - auditable AI coding
 - recoverable AI coding
 - repository-aware AI coding
+- portable AI coding governance across many repos and tools
 
 ## Product Goals
 
@@ -96,11 +100,14 @@ Its core user value is:
 - Turn repository-aware AI coding into a stateful, validated workflow rather than a one-shot chat interaction.
 - Make approvals, evidence, validation, replay, and rollback first-class runtime behaviors.
 - Preserve upstream agent effectiveness by applying governance only where risk and delivery confidence justify it.
+- Make the preferred user flow interactive and attach-first inside real AI coding sessions.
+- Make repository onboarding lightweight, portable, and reusable across many target repos.
 
 ### Secondary Goals
 - Allow the same governed runtime model to work across multiple repositories through repository profiles.
 - Enable gradual rollout from solo usage to small-team usage without redesigning the core control model.
 - Support new agent products through an adapter contract rather than product-specific kernel assumptions.
+- Use real multi-repo trial evidence to evolve the attachment and adapter model instead of guessing universal abstractions up front.
 
 ### Non-Goals
 - Building a new IDE.
@@ -109,33 +116,51 @@ Its core user value is:
 - Turning the MVP into a generic enterprise automation platform.
 - Adding blanket approval friction to every agent action.
 
-## MVP Capability Boundary
+## Current Baseline
 
-The MVP must support the following end-to-end coding loop:
+The repository has already landed the local baseline through `GAP-034`:
 
-1. Task intake
-2. Repository profile loading
-3. Governed AI coding session startup
+- task and approval contracts
+- local runtime execution path
+- local workspaces and artifact store
+- quick or full verification
+- replay and handoff packages
+- local operator and status surfaces
+- local bootstrap, package bundle, compatibility policy, and maintenance policy
+
+This baseline is intentionally retained as product history and implementation substrate. It is not the final product boundary by itself.
+
+## Final Product Capability Boundary
+
+The final product must support the following end-to-end coding loop:
+
+1. Target-repo attachment
+2. Repository profile and light-pack resolution
+3. Governed AI session attach or launch
 4. Tool-governed reasoning and execution
 5. Approval interruption for risky actions
-6. Build / test / lint / typecheck / contract-style verification
-7. Evidence bundle generation
+6. Build / test / contract-style verification
+7. Evidence bundle and trial feedback generation
 8. Handoff output for commit / PR preparation
 
-### MVP Functional Requirements
+### Final Product Functional Requirements
 - The platform must model a coding task as a durable object with goal, scope, acceptance criteria, target repository, budgets, approvals, validations, and evidence.
 - The platform must support repository profiles that declare build, test, lint, typecheck, contract, and invariant commands.
+- The platform must support a repo-local light attachment pack that remains portable and declarative.
+- The platform must keep mutable runtime state machine-local rather than duplicating the kernel into each target repo.
 - The platform must support a governed tool layer for shell, file mutation, git, browser, package manager, and repository-aware helper tools.
 - The platform must classify actions into at least three governance buckets: safe, approval-required, and blocked.
 - The platform must support risk-proportional governance modes, starting with observe-only/advisory behavior where enforcement would create unnecessary friction.
-- The platform must define an agent adapter contract that can describe CLI, MCP, app-server, IDE, browser-automation, cloud-agent, and manual-handoff execution shapes.
-- The first adapter priority should be compatible with the user's current Codex CLI/App workflow without taking ownership of upstream Codex authentication.
+- The platform must define an agent adapter contract that can describe native attach, process bridge, CLI, MCP, app-server, IDE, browser-automation, cloud-agent, and manual-handoff execution shapes.
+- The first direct adapter priority should be compatible with the user's current Codex CLI/App workflow without taking ownership of upstream Codex authentication.
+- The preferred product flow must be interactive and attach-first inside a live AI coding session.
 - The platform must support explicit pause and resume across long-running tasks.
 - The platform must persist validation outcomes as task-level evidence.
 - The platform must support isolated execution workspaces or worktrees.
 - The platform must emit a structured handoff package at task completion.
+- The platform must capture onboarding friction, unsupported capability posture, and multi-repo trial outcomes as structured evidence.
 
-### Explicitly Deferred From MVP
+### Explicitly Deferred From MVP And Baseline Stages
 - Full A2A federation
 - Distributed multi-agent collaboration by default
 - Memory-first personalization stack
@@ -242,10 +267,16 @@ Detailed comparison notes live in:
 38. As a developer using local and remote repos, I want repository onboarding to be simple and repeatable, so that new repos can adopt governed AI coding incrementally.
 39. As a developer with interrupted work, I want the platform to preserve task context, evidence, and validation state, so that I do not lose progress when the agent session ends.
 40. As a future team user, I want the platform to support approvals, traceability, and consistent repository policies, so that it can scale from solo usage to collaborative governance later.
+41. As a developer using Codex CLI/App, I want governed commands inside my active AI session, so that I do not have to switch into a separate tool just to get governance.
+42. As a developer onboarding a new repository, I want a lightweight repo-local attach pack generated or validated automatically, so that adoption does not require copying a heavy runtime into the repo.
+43. As a platform maintainer, I want attach-first and launch-second adapter modes, so that the runtime can integrate with both existing sessions and weaker process-only tools.
+44. As a developer using different AI tools, I want adapter capability tiers and explicit degrade behavior, so that I know which governance guarantees remain available.
+45. As a platform maintainer, I want multi-repo trial feedback captured as evidence, so that onboarding and adapter design evolve from real usage instead of guesses.
+46. As a developer working across many repositories, I want machine-wide runtime state separated from repo-local declarations, so that portability stays high and runtime residue stays controlled.
 
 ## Acceptance Metrics
 
-The MVP should define success using operational metrics, not just feature completion.
+The product should define success using operational metrics, not just feature completion.
 
 ### Core Product Metrics
 - task completion rate

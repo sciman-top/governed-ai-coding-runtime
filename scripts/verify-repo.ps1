@@ -85,7 +85,8 @@ function Invoke-PowerShellParse {
 
 function Invoke-ActiveMarkdownLinkCheck {
   $files = Get-ChildItem -Recurse -File -Filter *.md | Where-Object {
-    $_.FullName -notmatch '[\\/]+docs[\\/]+change-evidence[\\/]'
+    $_.FullName -notmatch '[\\/]+docs[\\/]+change-evidence[\\/]' -and
+    $_.FullName -notmatch '[\\/]+\.runtime[\\/]'
   }
 
   $broken = [System.Collections.Generic.List[string]]::new()
@@ -142,7 +143,7 @@ function Invoke-OldProjectNameScan {
   $searchFiles = @(
     (Get-Item README.md),
     (Get-ChildItem docs, schemas, scripts -Recurse -File | Where-Object {
-      $_.Extension -in @('.md', '.json', '.ps1')
+      $_.Extension -in @('.md', '.json', '.ps1') -and $_.FullName -notmatch '[\\/]+\.runtime[\\/]'
     })
   )
 

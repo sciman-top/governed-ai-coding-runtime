@@ -32,7 +32,9 @@ foreach ($pathCheck in @(
   @{ Path = "packages/contracts/src"; Check = "runtime-path-contracts" },
   @{ Path = "schemas/catalog/schema-catalog.yaml"; Check = "runtime-path-schema-catalog" },
   @{ Path = "docs/specs"; Check = "runtime-path-specs" },
-  @{ Path = "tests/runtime"; Check = "runtime-path-tests" }
+  @{ Path = "tests/runtime"; Check = "runtime-path-tests" },
+  @{ Path = "docs/product/runtime-compatibility-and-upgrade-policy.md"; Check = "runtime-policy-compatibility" },
+  @{ Path = "docs/product/maintenance-deprecation-and-retirement-policy.md"; Check = "runtime-policy-maintenance" }
 )) {
   Assert-PathExists -Path $pathCheck.Path -CheckName $pathCheck.Check
 }
@@ -53,3 +55,51 @@ $gateCommands = @(
 foreach ($gateCommand in $gateCommands) {
   Assert-PathExists -Path $gateCommand.Path -CheckName $gateCommand.Check
 }
+
+Assert-PathExists -Path "scripts/run-governed-task.py" -CheckName "gate-command-operator"
+
+$statusJson = & $python.Source "scripts/run-governed-task.py" status --json
+if ($LASTEXITCODE -ne 0) {
+  throw "Runtime status command failed"
+}
+
+$status = $statusJson | ConvertFrom-Json
+if ($null -eq $status.total_tasks) {
+  throw "Runtime status output missing total_tasks"
+}
+if ($null -eq $status.maintenance -or [string]::IsNullOrWhiteSpace($status.maintenance.stage)) {
+  throw "Runtime status output missing maintenance stage"
+}
+Write-CheckOk "runtime-status-surface"
+Write-CheckOk "maintenance-policy-visible"
+
+$adapterCheck = @'
+from pathlib import Path
+import sys
+
+root = Path.cwd()
+contracts_src = root / "packages" / "contracts" / "src"
+sys.path.insert(0, str(contracts_src))
+
+from governed_ai_coding_runtime_contracts.compatibility import resolve_runtime_posture
+from governed_ai_coding_runtime_contracts.repo_profile import load_repo_profile
+
+profile = load_repo_profile(root / "schemas" / "examples" / "repo-profile" / "governed-ai-coding-runtime.example.json")
+result = resolve_runtime_posture(
+    requested_posture="enforced",
+    repo_supported_postures=["observe", "advisory", "enforced"],
+    compatibility_signals=profile.compatibility_signals,
+)
+if result.support_level not in ("partial_support", "full_support", "unsupported"):
+    raise SystemExit(1)
+print(result.effective_posture)
+'@
+
+$adapterResult = $adapterCheck | & $python.Source -
+if ($LASTEXITCODE -ne 0) {
+  throw "Adapter posture visibility check failed"
+}
+if ([string]::IsNullOrWhiteSpace($adapterResult)) {
+  throw "Adapter posture visibility output missing"
+}
+Write-CheckOk "adapter-posture-visible"

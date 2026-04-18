@@ -3,6 +3,8 @@
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
+from governed_ai_coding_runtime_contracts.verification_runner import VerificationArtifact
+
 _MINIMUM_COMPLETION_FIELDS = [
     "task_id",
     "repo_id",
@@ -93,3 +95,67 @@ def assess_evidence_bundle(bundle: dict) -> EvidenceBundleAssessment:
         missing_required_fields=missing_required_fields,
         advisory_findings=advisory_findings,
     )
+
+
+def build_evidence_bundle(
+    *,
+    task_id: str,
+    repo_id: str,
+    goal: str,
+    acceptance_criteria: list[str],
+    verification_artifact: VerificationArtifact,
+    rollback_ref: str,
+    final_status: str,
+    final_summary: str,
+    artifact_refs: list[str],
+    replay_case_ref: str | None = None,
+    failure_signature: str | None = None,
+) -> dict:
+    created_at = datetime.now(UTC).isoformat()
+    verification_results = [
+        {
+            "gate_level": verification_artifact.mode,
+            "status": _verification_status(result),
+            "artifact_ref": verification_artifact.result_artifact_refs.get(gate_id, ""),
+        }
+        for gate_id, result in verification_artifact.results.items()
+    ]
+    return {
+        "task_id": task_id,
+        "repo_id": repo_id,
+        "goal": goal,
+        "non_goals": [],
+        "acceptance_criteria": acceptance_criteria,
+        "assumptions": [],
+        "commands_run": [],
+        "tool_calls": [],
+        "files_changed": [],
+        "approvals": [],
+        "required_evidence": [
+            {
+                "kind": "runtime_artifacts",
+                "status": "present" if artifact_refs else "missing_mandatory",
+                "artifact_ref": artifact_refs[0] if artifact_refs else "",
+            }
+        ],
+        "verification_results": verification_results,
+        "rollback_ref": rollback_ref,
+        "final_outcome": {
+            "status": final_status,
+            "summary": final_summary,
+        },
+        "open_questions": [],
+        "created_at": created_at,
+        "completed_at": created_at,
+        "failure_signature": failure_signature,
+        "replay_case_ref": replay_case_ref,
+    }
+
+
+def _verification_status(result: str) -> str:
+    return {
+        "pass": "passed",
+        "fail": "failed",
+        "advisory": "advisory",
+        "not_run": "skipped_not_applicable",
+    }.get(result, "skipped_not_applicable")

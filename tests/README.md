@@ -28,3 +28,18 @@ Foundation build and doctor checks are available through:
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Build
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Doctor
 ```
+
+Public usable release smoke paths are available through:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap-runtime.ps1
+python scripts/serve-operator-ui.py
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/package-runtime.ps1
+```
+
+Maintenance visibility is also covered by runtime tests and doctor:
+
+```powershell
+python scripts/run-governed-task.py status --json
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1
+```

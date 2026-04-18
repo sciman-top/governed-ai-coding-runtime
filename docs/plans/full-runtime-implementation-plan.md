@@ -129,18 +129,18 @@
 - Modify: `docs/backlog/issue-ready-backlog.md`
 - Evidence: `docs/change-evidence/<date>-full-runtime-execution-plan.md`
 
-**Purpose:** Make the active next-step queue explicit and point execution at a dedicated Full Runtime plan instead of the completed Foundation plan.
+**Purpose:** Capture the completed Full Runtime execution slice that moved the repo from the Foundation substrate into a real local governed runtime path.
 
 **Acceptance criteria:**
-- Active docs say `Foundation` is complete and `Full Runtime / GAP-024` is the current queue.
+- Active docs recorded `Foundation` as complete and promoted `Full Runtime / GAP-024` as the execution queue for this completed slice.
 - `docs/plans/` exposes this plan as the active execution checklist.
 - Evidence links the Foundation closeout to the Full Runtime start.
 
 **Steps:**
-- [ ] Record the completed Foundation closeout as the prior stage input rather than the active plan.
-- [ ] Add this plan to `docs/plans/README.md` as the current authoritative execution plan.
-- [ ] Update docs indexes so the next executable queue clearly starts at `GAP-024`.
-- [ ] Create or update evidence that records the transition from Foundation closeout to Full Runtime execution.
+- [x] Record the completed Foundation closeout as the prior stage input rather than the active plan.
+- [x] Add this plan to `docs/plans/README.md` as the current authoritative execution plan.
+- [x] Update docs indexes so the next executable queue clearly starts at `GAP-024`.
+- [x] Create or update evidence that records the transition from Foundation closeout to Full Runtime execution.
 
 ### Task 1: Land GAP-024 Execution Worker And Managed Workspace Runtime
 
@@ -161,11 +161,11 @@
 - Worker execution preserves approval and rollback references.
 
 **Steps:**
-- [ ] Extend task records with run metadata needed for execution, workspace ownership, and current attempt identity.
-- [ ] Implement a runtime coordinator that loads a task, allocates a workspace, dispatches execution, and records transitions.
-- [ ] Implement a local worker interface that can execute one governed run synchronously on one machine.
-- [ ] Add tests for task-to-run initialization, workspace binding, interrupted execution, and illegal worker state transitions.
-- [ ] Keep execution local and synchronous in this stage; do not introduce queue-backed worker dispatch.
+- [x] Extend task records with run metadata needed for execution, workspace ownership, and current attempt identity.
+- [x] Implement a runtime coordinator that loads a task, allocates a workspace, dispatches execution, and records transitions.
+- [x] Implement a local worker interface that can execute one governed run synchronously on one machine.
+- [x] Add tests for task-to-run initialization, workspace binding, interrupted execution, and illegal worker state transitions.
+- [x] Keep execution local and synchronous in this stage; do not introduce queue-backed worker dispatch.
 
 ### Task 2: Land GAP-025 Artifact Store, Evidence Persistence, And Replay Data
 
@@ -187,11 +187,11 @@
 - Failed runs leave replay-oriented metadata sufficient for diagnosis.
 
 **Steps:**
-- [ ] Define a local artifact directory layout and stable artifact reference shape.
-- [ ] Implement artifact persistence helpers for command outputs, verification outputs, and handoff bundles.
-- [ ] Implement replay reference generation with failure signatures and artifact links.
-- [ ] Update evidence and delivery helpers to emit artifact-backed references instead of transcript-only fields.
-- [ ] Add tests for artifact persistence, replay reference generation, and failure-path evidence completeness.
+- [x] Define a local artifact directory layout and stable artifact reference shape.
+- [x] Implement artifact persistence helpers for command outputs, verification outputs, and handoff bundles.
+- [x] Implement replay reference generation with failure signatures and artifact links.
+- [x] Update evidence and delivery helpers to emit artifact-backed references instead of transcript-only fields.
+- [x] Add tests for artifact persistence, replay reference generation, and failure-path evidence completeness.
 
 ### Task 3: Land GAP-026 Operational Quick And Full Gate Runner
 
@@ -212,11 +212,11 @@
 - Risky output classes can be surfaced in delivery state.
 
 **Steps:**
-- [ ] Extend verification planning to bind gate runs to task/run identifiers.
-- [ ] Persist build/test/contract/hotspot results as artifact-backed verification records.
-- [ ] Add risky artifact classification for dependency, CI, release-adjacent, or other operator-relevant outputs.
-- [ ] Update tests to cover quick/full execution paths, artifact persistence, and classification behavior.
-- [ ] Keep gate execution local and repo-scoped; distributed runners belong to later stages.
+- [x] Extend verification planning to bind gate runs to task/run identifiers.
+- [x] Persist build/test/contract/hotspot results as artifact-backed verification records.
+- [x] Add risky artifact classification for dependency, CI, release-adjacent, or other operator-relevant outputs.
+- [x] Update tests to cover quick/full execution paths, artifact persistence, and classification behavior.
+- [x] Keep gate execution local and repo-scoped; distributed runners belong to later stages.
 
 ### Task 4: Land GAP-027 Minimal Operator Surface (CLI-First)
 
@@ -240,12 +240,12 @@
 - The runtime status/read model is explicit enough to back a later UI without changing task or artifact semantics.
 
 **Steps:**
-- [ ] Define a runtime status/read model that projects task, run, approval, verification, and artifact state from persisted records.
-- [ ] Add a spec/schema pair for the operator surface read model so future UI work builds on stable runtime-facing structures.
-- [ ] Add a minimal CLI entrypoint that can create a task, run it, and print operator-oriented status.
-- [ ] Document the operator path in root/docs entry files.
-- [ ] Add tests for task query output, empty-state handling, and replay/evidence visibility.
-- [ ] Keep the first surface CLI-based; explicitly defer a richer UI shell to `Public Usable Release` after the read model stabilizes.
+- [x] Define a runtime status/read model that projects task, run, approval, verification, and artifact state from persisted records.
+- [x] Add a spec/schema pair for the operator surface read model so future UI work builds on stable runtime-facing structures.
+- [x] Add a minimal CLI entrypoint that can create a task, run it, and print operator-oriented status.
+- [x] Document the operator path in root/docs entry files.
+- [x] Add tests for task query output, empty-state handling, and replay/evidence visibility.
+- [x] Keep the first surface CLI-based; explicitly defer a richer UI shell to `Public Usable Release` after the read model stabilizes.
 
 ### Task 5: Land GAP-028 Runtime Health, Status Query Surface, And Full Runtime Handoff
 
@@ -266,16 +266,16 @@
 - Active docs reflect whether `Full Runtime` is complete or which short remainder list is still open.
 
 **Steps:**
-- [ ] Extend doctor/status checks to include runtime data locations, recent run visibility, and worker readiness.
-- [ ] Run one real governed task through the runtime path and persist its artifacts.
-- [ ] Run `build`, `test`, `contract/invariant`, and `hotspot` against the Full Runtime implementation.
-- [ ] Update evidence with exact commands, exit codes, artifact locations, residual risks, and rollback notes.
-- [ ] Move the active next-step queue only after the end-to-end runtime path is verified.
+- [x] Extend doctor/status checks to include runtime data locations, recent run visibility, and worker readiness.
+- [x] Run one real governed task through the runtime path and persist its artifacts.
+- [x] Run `build`, `test`, `contract/invariant`, and `hotspot` against the Full Runtime implementation.
+- [x] Update evidence with exact commands, exit codes, artifact locations, residual risks, and rollback notes.
+- [x] Move the active next-step queue only after the end-to-end runtime path is verified.
 
 ## Checkpoints
 
 ### Checkpoint A: After Task 0
-- The active next-step queue points to `Full Runtime / GAP-024`.
+- The completed Full Runtime slice promoted the active next-step queue to `Public Usable Release / GAP-029`.
 - `docs/plans/` exposes a dedicated Full Runtime execution plan.
 
 ### Checkpoint B: After Task 1

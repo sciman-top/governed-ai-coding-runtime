@@ -4,6 +4,12 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260418 Interactive Session Productization Realignment](./20260418-interactive-session-productization-realignment.md)
+  - evidence companion for changing the final product boundary from "local lifecycle complete" to "generic attach-first interactive productization" and for rebasing the active queue to `GAP-035` through `GAP-039`
+- [20260418 Codex Integration Documentation Clarification](./20260418-codex-integration-documentation-clarification.md)
+  - evidence companion for clarifying the current manual-handoff Codex boundary and adding bilingual integration guides
+- [20260418 Maintenance Execution Plan](./20260418-maintenance-execution-plan.md)
+  - evidence companion for closing `Maintenance / GAP-033` through `GAP-034` as the local baseline maintenance slice and making maintenance policy visible through runtime status and doctor
 - [20260418 Full Runtime CLI-First Planning Realignment](./20260418-full-runtime-cli-first-planning-realignment.md)
   - evidence companion for changing `GAP-027` to a CLI-first operator surface and moving the richer UI shell to `Public Usable Release`
 - [20260417 Foundation Execution Plan](./20260417-foundation-execution-plan.md)

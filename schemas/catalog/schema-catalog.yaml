@@ -54,3 +54,6 @@ items:
   - name: eval-trace-policy
     path: schemas/jsonschema/eval-trace-policy.schema.json
     source_spec: docs/specs/eval-and-trace-grading-spec.md
+  - name: runtime-operator-surface
+    path: schemas/jsonschema/runtime-operator-surface.schema.json
+    source_spec: docs/specs/runtime-operator-surface-spec.md

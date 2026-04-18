@@ -31,6 +31,8 @@ Define the minimum evidence bundle persisted for every governed task.
 - prompt_registry_ref
 - failure_signature
 - replay_case_ref
+- runtime_artifact_refs
+- verification_artifact_refs
 
 ## Quality Classifiers
 
@@ -61,4 +63,4 @@ Define the minimum evidence bundle persisted for every governed task.
 - advisory verification results may coexist with successful completion, but they may not silently satisfy a missing mandatory evidence requirement
 
 ## Storage Note
-The storage backend is implementation-specific. This spec defines the logical shape only.
+The storage backend is implementation-specific. In the first Full Runtime stage, evidence should resolve to local artifact paths under the governed runtime artifact store rather than transcript-only output.
