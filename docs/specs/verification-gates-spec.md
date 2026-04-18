@@ -39,6 +39,8 @@ Full gate must run when:
 - quick gate reports escalation reasons
 
 ## Required Output
+- task_id
+- run_id
 - gate_level
 - gate_id
 - canonical_name
@@ -48,6 +50,12 @@ Full gate must run when:
 - failed_steps
 - reason_codes
 - artifact_refs
+- risky_artifact_refs
+
+## Runtime Binding
+- quick and full verification may bind to a persisted `task_id` and `run_id`
+- gate outputs should persist as artifact-backed records under the runtime artifact store
+- the canonical gate order remains `build -> test -> contract/invariant -> hotspot`
 
 ## Non-Goals
 - CI provider implementation details

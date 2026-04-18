@@ -1,0 +1,169 @@
+{
+  "schema_version": "1.0",
+  "repo_id": "governed-ai-coding-runtime",
+  "display_name": "Governed AI Coding Runtime",
+  "primary_language": "python",
+  "repo_root_locator": {
+    "kind": "workspace_anchor",
+    "value": "governed-ai-coding-runtime"
+  },
+  "rollout_posture": {
+    "current_mode": "advisory",
+    "target_mode": "enforced",
+    "promotion_condition_ref": "docs/product/public-usable-release-criteria.md"
+  },
+  "build_commands": [
+    {
+      "id": "runtime-build",
+      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1",
+      "required": true,
+      "description": "Compile and import the runtime package and scripts."
+    }
+  ],
+  "test_commands": [
+    {
+      "id": "runtime-tests",
+      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime",
+      "required": true,
+      "description": "Run runtime unit tests."
+    }
+  ],
+  "lint_commands": [
+    {
+      "id": "powershell-parse",
+      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Scripts",
+      "required": true,
+      "description": "Validate PowerShell script syntax."
+    }
+  ],
+  "typecheck_commands": [],
+  "contract_commands": [
+    {
+      "id": "runtime-contract",
+      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract",
+      "required": true,
+      "description": "Validate schemas, examples, and catalog pairings."
+    }
+  ],
+  "invariant_commands": [
+    {
+      "id": "runtime-doctor",
+      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1",
+      "required": true,
+      "description": "Check local runtime readiness."
+    }
+  ],
+  "risk_defaults": {
+    "default_write_tier": "medium",
+    "blocked_command_patterns": [
+      "git reset --hard",
+      "rm -rf",
+      "Remove-Item -Recurse -Force C:\\"
+    ],
+    "approval_required_command_patterns": [
+      "scripts/package-runtime.ps1"
+    ]
+  },
+  "approval_defaults": {
+    "medium_write_requires_approval": true,
+    "high_requires_explicit_approval": true
+  },
+  "tool_allowlist": [
+    "shell",
+    "apply_patch",
+    "git",
+    "python",
+    "pwsh"
+  ],
+  "path_policies": {
+    "read_allow": [
+      "docs/**",
+      "packages/**",
+      "schemas/**",
+      "scripts/**",
+      "tests/**",
+      "README*.md"
+    ],
+    "write_allow": [
+      "docs/**",
+      "packages/**",
+      "schemas/**",
+      "scripts/**",
+      "tests/**",
+      "README*.md"
+    ],
+    "blocked": [
+      "infra/prod/**",
+      "secrets/**",
+      ".env*"
+    ]
+  },
+  "branch_policy": {
+    "default_branch": "main",
+    "working_branch_prefix": "feature/",
+    "allow_direct_push": false
+  },
+  "delivery_format": {
+    "summary_template": "goal-plan-changes-verification-risks",
+    "include_patch": false,
+    "include_pr_body": true
+  },
+  "repo_map_strategy": "hybrid",
+  "task_lifecycle": {
+    "persistence_kind": "file_json",
+    "store_root": ".runtime/tasks",
+    "supports_pause_resume": true,
+    "supports_retry_timeout": true
+  },
+  "quick_gate_commands": [
+    {
+      "id": "runtime-status",
+      "command": "python scripts/run-governed-task.py status --json",
+      "required": true,
+      "description": "Emit the runtime status snapshot."
+    }
+  ],
+  "full_gate_commands": [
+    {
+      "id": "build",
+      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1",
+      "required": true,
+      "description": "Canonical build gate."
+    },
+    {
+      "id": "test",
+      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime",
+      "required": true,
+      "description": "Canonical test gate."
+    },
+    {
+      "id": "contract",
+      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract",
+      "required": true,
+      "description": "Canonical contract gate."
+    },
+    {
+      "id": "hotspot",
+      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1",
+      "required": true,
+      "description": "Canonical doctor gate."
+    }
+  ],
+  "extra_eval_suites": [
+    "runtime-smoke"
+  ],
+  "context_files": [
+    "README.md",
+    "docs/README.md",
+    "docs/quickstart/single-machine-runtime-quickstart.md"
+  ],
+  "compatibility_signals": [
+    {
+      "capability": "structured_events",
+      "status": "partial_support",
+      "degrade_to": "advisory",
+      "reason": "runtime currently relies on local artifacts and status snapshots instead of structured upstream event streams"
+    }
+  ],
+  "reviewer_handoff_template": "Include runtime artifact paths, verification gates, and rollback notes."
+}

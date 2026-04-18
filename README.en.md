@@ -1,29 +1,36 @@
 # Governed AI Coding Runtime English Guide
 
 ## Current Status
-`Foundation / GAP-020` through `GAP-023` are complete, and the active execution queue now starts at `Full Runtime / GAP-024`.
+`Foundation / GAP-020` through `GAP-023`, `Full Runtime / GAP-024` through `GAP-028`, `Public Usable Release / GAP-029` through `GAP-032`, and `Maintenance Baseline / GAP-033` through `GAP-034` are complete.
 
-This repository is usable today as a governed runtime contract layer, not as a deployable product service.
+That means the local single-machine runtime baseline is landed. It does not mean the final product boundary is complete.
+
+This repository is usable today as a local governed runtime baseline with explicit maintenance policy. The active next-step queue is now `Interactive Session Productization / GAP-035..039`.
 
 Available now:
 
 - Repository verification over docs, schemas, catalog, scripts, and runtime contract tests.
 - Foundation-grade build and doctor gates.
 - A first scripted read-only trial.
-- Python contract primitives for task intake, repo profiles, approvals, write governance, verification, delivery handoff, eval/trace, second-repo pilot checks, and a minimal control-console facade.
+- A CLI-first governed runtime smoke path with persisted artifacts, verification outputs, evidence bundles, handoff packages, replay references, and runtime status.
+- Python contract primitives for task intake, repo profiles, approvals, write governance, execution runtime, artifact/replay persistence, verification, delivery handoff, eval/trace, second-repo pilot checks, and a minimal control-console facade.
 
 Not available yet:
 
-- No production runtime service.
-- No database or durable workflow worker.
-- No stable operator surface beyond scripted or CLI-first flows plus the minimal console facade.
-- No package build artifact or release pipeline.
-- `build` and `hotspot/doctor` now have Foundation-grade live entrypoints, but they are not production packaging or service-health checks yet.
+- No database or multi-machine workflow worker.
+- The package bundle is a local distribution directory, not an installer or published channel.
+- The richer operator UI is a local HTML surface, not a long-running web service.
+- No direct Codex adapter yet; Codex CLI/App remains a compatible current-state boundary rather than a fully runtime-owned coding backend.
+- No generic target-repo attachment pack or attach-first session bridge yet.
 
 ## How To Use
 
 ### 1. Verify The Repository
 Run from the repository root:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap-runtime.ps1
+```
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All
@@ -46,6 +53,11 @@ This checks:
 - active Markdown links
 - backlog / YAML ID drift
 - PowerShell script parsing
+
+Quickstart:
+- [Single-Machine Runtime Quickstart](docs/quickstart/single-machine-runtime-quickstart.md)
+- [Codex CLI/App Integration Guide](docs/product/codex-cli-app-integration-guide.md)
+- [Codex CLI/App 集成指南](docs/product/codex-cli-app-integration-guide.zh-CN.md)
 
 Runtime contract tests only:
 
@@ -81,7 +93,27 @@ Expected output is JSON with:
 - `auth_ownership`
 - `unsupported_capability_behavior`
 
-### 3. Use Runtime Contract Primitives
+### 3. Run One Governed Task End To End
+The `run-governed-task.py` path below should currently be read as a runtime smoke path, not as direct Codex-driven coding execution.
+
+```powershell
+python scripts/run-governed-task.py status --json
+```
+
+```powershell
+python scripts/run-governed-task.py run --json
+```
+
+Expected output includes:
+
+- `task_id`
+- `state`
+- `active_run_id`
+- `verification_refs`
+- `evidence_refs`
+- `artifact_refs`
+
+### 4. Use Runtime Contract Primitives
 Core code lives in:
 
 ```text
@@ -97,10 +129,15 @@ Important modules:
 - `write_policy.py`: medium/high write policy defaults
 - `approval.py`: approval request state and audit trail
 - `write_tool_runner.py`: write-side governance and rollback references
+- `execution_runtime.py`: local task-to-run orchestration
+- `worker.py`: synchronous single-machine worker interface
+- `artifact_store.py`: local artifact persistence and risk classification
+- `replay.py`: failure signatures and replay references
 - `verification_runner.py`: quick/full verification plans and artifacts
 - `delivery_handoff.py`: delivery handoff packages
 - `eval_trace.py`: eval baseline and trace grading
 - `second_repo_pilot.py`: second repo profile reuse pilot
+- `runtime_status.py`: CLI-first operator read model
 - `control_console.py`: minimal approval/evidence console facade
 
 Example:
@@ -133,29 +170,32 @@ For tool usage:
 
 For product planning:
 
-1. [Docs Index](docs/README.md)
-2. [Full Lifecycle Plan](docs/roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
-3. [Full Runtime Implementation Plan](docs/plans/full-runtime-implementation-plan.md)
-4. [Issue-Ready Backlog](docs/backlog/issue-ready-backlog.md)
-5. [Latest Deep Audit Review](docs/reviews/2026-04-18-full-repo-deep-audit-and-planning-refresh.md)
-6. [PRD](docs/prd/governed-ai-coding-runtime-prd.md)
-7. [Target Architecture](docs/architecture/governed-ai-coding-runtime-target-architecture.md)
+1. [90-Day Plan](docs/roadmap/governed-ai-coding-runtime-90-day-plan.md)
+2. [Issue-Ready Backlog](docs/backlog/issue-ready-backlog.md)
+3. [PRD](docs/prd/governed-ai-coding-runtime-prd.md)
+4. [Target Architecture](docs/architecture/governed-ai-coding-runtime-target-architecture.md)
+5. [Generic Target-Repo Attachment Blueprint](docs/architecture/generic-target-repo-attachment-blueprint.md)
+6. [Interactive Session Productization Plan](docs/plans/interactive-session-productization-plan.md)
 
 ## Completion Level
 Completed:
 
 - MVP contract and verification slices through `Phase 4`
-- The next active implementation queue is `Full Runtime / GAP-024+`
+- `Full Runtime / GAP-024` through `GAP-028`
+- `Public Usable Release / GAP-029` through `GAP-032`
+- `Maintenance Baseline / GAP-033` through `GAP-034`
+
+Active next queue:
+
+- `Interactive Session Productization / GAP-035` through `GAP-039`
 
 Current verification baseline:
 
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`
 - `python -m unittest discover -s tests/runtime -p "test_*.py" -v`
 
-## Recommended Next Productization Step
-If the project continues toward a deployable runtime, the next slice should likely:
-
-1. Add real Python package metadata and a fuller release build.
-2. Add durable storage or a workflow worker.
-3. Connect the current `ControlPlaneConsole` facade to a CLI-first runtime status surface and keep the richer web UI for `Public Usable Release`.
-4. Expand the Foundation doctor into a richer runtime health entrypoint.
+## Maintenance Policy
+- [Codex CLI/App Integration Guide](docs/product/codex-cli-app-integration-guide.md)
+- [Codex CLI/App 集成指南](docs/product/codex-cli-app-integration-guide.zh-CN.md)
+- [Runtime Compatibility And Upgrade Policy](docs/product/runtime-compatibility-and-upgrade-policy.md)
+- [Maintenance, Deprecation, And Retirement Policy](docs/product/maintenance-deprecation-and-retirement-policy.md)

@@ -40,6 +40,7 @@
 - 明确控制面、执行面、数据/知识面、观测/保证面的边界。
 - 固定 `MCP`、`A2A`、状态机、事件总线、审批、审计之间的职责分工。
 - 明确终态最佳实践是长期目标，MVP 是验证该目标的最小治理闭环。
+- 明确终态产品默认交付形态是 `attach-first` 的交互式会话运行时，而不是只服务当前仓库的本地脚本集合。
 
 ## Non-Goals
 - 不把本文档写成产品需求文档。
@@ -47,12 +48,13 @@
 - 不把事件驱动或某个框架当成完整系统答案。
 
 ## Design Premises
-- 场景：企业级知识与执行系统，允许长链、多阶段、跨工具任务。
+- 场景：AI 编码治理系统，允许长链、多阶段、跨仓、跨工具任务。
 - 风险：中高风险混合，真实写操作默认受限。
 - 权限：默认最小权限，高风险写操作必须审批。
 - 约束：成本预算、时延预算、上下文窗口、人工审批频率都有限。
 - 目标：优先得到可治理、可验证、可审计、可回滚的系统，不追求无限自治。
 - 兼容：上游 AI coding 产品会持续变化，内核必须通过能力契约适配产品形态，而不是依赖某一个 agent 的 UI 或会话模型。
+- 交付：默认优先挂接到现有 AI 编码会话，不优先发明一个替代上游工具的新聊天壳。
 
 ## Core Position
 默认首选：
@@ -63,6 +65,7 @@
 - `single-agent + tools` 作为 baseline 必须先存在，但不能承担最终治理职责。
 - 真正的“终态最佳实践”不是让 Agent 更自由，也不是让治理更重，而是让治理、审批、回滚、验证更确定，并且只在风险需要时增加摩擦。
 - Agent 产品是可替换的 execution frontend；task、policy、approval、evidence、verification、rollback 是稳定的治理内核。
+- 默认产品模式应是 `repo-local light pack + machine-wide runtime sidecar + attach-first session bridge`。
 
 ## Architecture Overview
 
@@ -106,6 +109,29 @@
 | Agent Adapters | MCP Clients | A2A Gateway | Browser | Shell | RPA      |
 +-------------------------------------------------------------------------+
 ```
+
+## Default Delivery Shape
+
+虽然上面的四平面图适合描述逻辑边界，但对终态产品更关键的是“怎样接到真实仓库和真实 AI 会话”。
+
+默认交付形态应当是：
+
+```text
+target repo
+  -> repo-local light pack
+  -> machine-wide runtime sidecar
+  -> attach-first session bridge
+  -> upstream AI coding frontend
+```
+
+这意味着：
+- 仓库内只保留轻量声明和接入元数据
+- 运行态状态、证据、回放、审批放在机器级 runtime
+- 用户继续使用 `Codex CLI/App`、`Claude Code`、`Cowrk` 等上游工具
+- runtime 默认附着到当前会话，而不是要求用户先进入另一个替代 shell
+
+详细蓝图见：
+- `docs/architecture/generic-target-repo-attachment-blueprint.md`
 
 ## Four Planes
 
@@ -182,6 +208,11 @@
 - 必须描述：调用方式、认证归属、workspace 控制、事件可见性、变更模型、续跑模型、证据导出模型。
 - 不负责：改变 task lifecycle、审批语义、证据 schema、验证顺序或 rollback 规则。
 
+### Attach-First / Launch-Second
+- `attach-first`：最佳默认路径。runtime 在已有 AI 会话中暴露 governed actions。
+- `launch-second`：兼容与回退路径。上游工具只暴露进程边界或 attach 能力不足时，由 runtime 拉起或桥接。
+- 二者都属于 adapter 职责，不得泄漏为 kernel 语义分叉。
+
 ## Recommended Stack
 
 ### Backend
@@ -223,7 +254,7 @@
 - Internal service-to-service: `gRPC`
 - Tool / context integration: `MCP`
 - Cross-agent collaboration: `A2A`
-- Agent frontend integration: capability-based adapter contract, Codex CLI/App first
+- Agent frontend integration: capability-based adapter contract, `attach-first` when possible, Codex CLI/App first
 
 ## Why This Stack
 - `Python`：AI/runtime/tooling 生态成熟，跨平台友好。
@@ -247,6 +278,7 @@
 3. Governed session startup
    - 平台创建受控工作目录或 worktree。
    - 为 agent 注入工具权限、路径范围、预算和上下文。
+   - 若上游 AI 工具支持 attach，则优先附着到当前会话；否则降级到 launch 模式。
 4. Governed execution
    - agent 只通过 Tool Runner 请求能力。
    - Risk / Policy Engine 决定是允许、审批还是阻断。
@@ -358,6 +390,41 @@ It should define:
 - contract/invariant commands
 - tool allowlist / denylist
 - risky path patterns
+- attach preferences and compatible adapter hints
+
+## State Placement Rule
+
+终态产品需要明确区分：
+
+### Repo-local state
+- repo profile
+- repo-specific policies
+- light attach metadata
+
+### Machine-local runtime state
+- task store
+- approvals
+- artifacts
+- replay bundles
+- operator snapshots
+
+这样做的目的不是“多放一层目录”，而是保证：
+- 目标仓接入足够轻
+- 跨仓复用不需要复制 runtime
+- evidence / replay / approval 不污染业务仓主目录
+
+## Multi-Repo Trial Loop
+
+终态不是在单一示例仓里证明一次就结束，而是要支持快速接入多个真实仓并持续迭代。
+
+因此架构上必须一开始就容纳：
+- onboarding trial evidence
+- adapter capability gaps
+- gate mismatch capture
+- repo-specific friction notes
+- feedback-driven contract evolution
+
+这也是为什么 `GAP-035` 之后的活跃队列必须围绕通用接入和会话桥接展开，而不是继续把“单机本地基线已跑通”当成终态完成。
 - approval escalation rules
 - handoff / summary template hints
 

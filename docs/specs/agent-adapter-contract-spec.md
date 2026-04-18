@@ -131,6 +131,7 @@ The contract describes capabilities, not vendor identity. Codex CLI/App, Claude 
 - Unsupported capabilities must degrade explicitly rather than silently pretending full enforcement exists.
 - rollout posture must make the current and target enforcement level machine-readable
 - compatibility signals must describe the degrade behavior that preserves honest execution semantics when full support is absent
+- managed workspace or managed worktree adapters must leave enough run-level evidence for the runtime status surface to project approvals, verification, and artifact links honestly
 
 ## Non-Goals
 - Defining one universal agent protocol.

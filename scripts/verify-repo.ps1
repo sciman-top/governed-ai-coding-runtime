@@ -118,7 +118,8 @@ function Invoke-ActiveMarkdownLinkCheck {
       Get-ChildItem -Recurse -File -Filter *.md | Where-Object {
         $_.FullName -notmatch '[\\/]+docs[\\/]+change-evidence[\\/]' -and
         $_.FullName -notmatch '[\\/]+\.git[\\/]' -and
-        $_.FullName -notmatch '[\\/]+\.worktrees[\\/]'
+        $_.FullName -notmatch '[\\/]+\.worktrees[\\/]' -and
+        $_.FullName -notmatch '[\\/]+\.runtime[\\/]'
       }
     )
   }
@@ -177,7 +178,7 @@ function Invoke-OldProjectNameScan {
   $searchFiles = @(
     (Get-Item README.md),
     (Get-ChildItem docs, schemas, scripts -Recurse -File | Where-Object {
-      $_.Extension -in @('.md', '.json', '.ps1')
+      $_.Extension -in @('.md', '.json', '.ps1') -and $_.FullName -notmatch '[\\/]+\.runtime[\\/]'
     })
   )
 

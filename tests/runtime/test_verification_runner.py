@@ -1,4 +1,5 @@
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 import importlib
@@ -54,6 +55,32 @@ class VerificationRunnerTests(unittest.TestCase):
         self.assertEqual(artifact.evidence_link, "docs/change-evidence/example.md")
         self.assertEqual(artifact.results["test"], "pass")
         self.assertEqual(artifact.gate_order, ["build", "test", "contract", "doctor"])
+
+    def test_verification_plan_can_bind_to_task_and_run(self) -> None:
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+
+        plan = verification_runner.build_verification_plan("quick", task_id="task-quick", run_id="run-quick")
+
+        self.assertEqual(plan.task_id, "task-quick")
+        self.assertEqual(plan.run_id, "run-quick")
+
+    def test_verification_runner_persists_gate_outputs_as_artifacts(self) -> None:
+        artifact_store = importlib.import_module("governed_ai_coding_runtime_contracts.artifact_store")
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            store = artifact_store.LocalArtifactStore(Path(tmp_dir))
+            plan = verification_runner.build_verification_plan("quick", task_id="task-verify", run_id="run-verify")
+            artifact = verification_runner.run_verification_plan(
+                plan,
+                artifact_store=store,
+                execute_gate=lambda gate: (0, f"{gate.gate_id} passed"),
+            )
+
+            self.assertEqual(artifact.task_id, "task-verify")
+            self.assertEqual(artifact.run_id, "run-verify")
+            self.assertIn("test", artifact.result_artifact_refs)
+            self.assertEqual(artifact.results["contract"], "pass")
 
 
 if __name__ == "__main__":

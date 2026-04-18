@@ -4,19 +4,31 @@
 Define the product goal, user-facing capabilities, working model, and the minimum interaction surfaces required for `governed-ai-coding-runtime`.
 
 ## Product Thesis
-`governed-ai-coding-runtime` is not another IDE copilot and not a generic enterprise agent platform.
+`governed-ai-coding-runtime` is not another IDE copilot, not a generic enterprise agent platform, and not a replacement chat shell for upstream AI tools.
 
-It is a final-state-best-practice governed runtime around AI coding agents that makes coding execution:
+It is a governed runtime layer around AI coding sessions that makes coding execution:
 - scoped
 - approval-aware
 - verifiable
 - evidence-backed
 - replayable
+- portable across repositories
 - compatible across agent product shapes
 
 The product's job is to wrap agent execution in deterministic control-plane rules rather than to replace the agent itself.
 
 Final-state best practice means risk-proportional governance, not maximum friction. Low-risk exploration and local iteration should stay fast. Medium and high-risk actions should receive the approval, verification, evidence, and rollback controls that real engineering work requires.
+
+## Current Baseline
+The repository has already landed a local runtime baseline through `GAP-034`:
+
+- local task and evidence runtime
+- local verification and doctor gates
+- local operator surface
+- local packaging and quickstart
+- explicit compatibility, maintenance, and degrade policy
+
+That baseline is a prerequisite, not the final product boundary. The next active product queue is generic, interactive, attach-first session productization.
 
 ## Primary Users
 
@@ -37,30 +49,33 @@ Needs a concise handoff package: what changed, what was run, what passed, what w
 - Resume or replay interrupted work.
 - Distinguish "agent produced output" from "validated delivery."
 - Keep using preferred agent products without making governance dependent on one vendor or UI shape.
+- Reuse the same runtime across many repositories without copying the kernel into each one.
 
 ## Core Product Capabilities
 - task intake with goal, scope, acceptance criteria, and budgets
 - repo profile resolution
-- control pack selection and admission checks
-- governed workspace or worktree startup
+- repo-local light pack generation or validation
+- machine-local runtime binding
+- attach-first session bridge with governed in-session commands
+- launch-second fallback for weaker upstream tools
 - tool policy enforcement
 - risk classification and approval interruption
 - graduated governance modes: observe-only, advisory, enforced, and strict
-- agent adapter contract for CLI, MCP, app server, IDE, cloud-agent, browser-automation, and manual-handoff shapes
+- agent adapter contract for native attach, process bridge, and manual-handoff shapes
 - ordered verification gates
 - evidence bundle and handoff bundle generation
-- failure replay and rollback reference capture
+- failure replay, rollback reference capture, and trial feedback capture
 
 ## Canonical Workflow
 
-### 1. Create task
-The user submits a coding task with goal, scope, acceptance criteria, and target repository.
+### 1. Attach repository
+The user selects a target repository. The runtime validates or creates the repo-local light pack and binds the repo to machine-local runtime state.
 
-### 2. Load repo policy
-The runtime resolves the repository profile: tool allowlist, path scope, gate commands, risk defaults, and handoff format.
+### 2. Bind governed task
+The user or session creates a coding task with goal, scope, acceptance criteria, budgets, and adapter posture.
 
-### 3. Start governed session
-The system creates an isolated workspace, sets budgets, injects context, and starts the selected agent behind the governed tool runner.
+### 3. Attach governed session
+The runtime attaches to the active AI coding session when possible. If attach is unavailable, it falls back to launch mode.
 
 ### 4. Plan and bounded execution
 The agent inspects code, proposes or follows a plan, and requests tools through policy-checked interfaces.
@@ -71,46 +86,49 @@ High-risk actions pause the workflow until a human approves, rejects, cancels, o
 ### 6. Verification
 The runtime executes quick or full gates in canonical order and persists outputs into evidence.
 
-### 7. Delivery handoff
-The user receives a final bundle containing changed files, commands run, verification state, approvals, rollback reference, and open questions.
+### 7. Delivery handoff and trial feedback
+The user receives a final bundle containing changed files, commands run, verification state, approvals, rollback reference, open questions, and any onboarding or adapter gaps surfaced during execution.
 
 ## Interaction Surfaces
 
 ### Required
+- Session bridge: governed actions callable inside an active AI coding session
 - API: task lifecycle, approvals, evidence retrieval, replay, and registry operations
-- CLI or scripted entrypoint: useful for early operator workflows and automation
-- Minimal web console: approvals, task detail, evidence, and failed-run inspection
+- Minimal web or local console: approvals, task detail, evidence, and failed-run inspection
+- CLI or scripted entrypoint: useful for automation, replay, recovery, and fallback launch mode
 - Agent adapter contract: maps product-specific execution frontends into stable runtime capabilities
 
 ### Not Required As Product Core
 - full IDE experience
-- chat-first interface as the primary surface
+- a replacement chat UI as the primary surface
 - autonomous multi-agent orchestration UI
 - ownership of upstream agent authentication
 
 ## UI Position
 The UI is necessary, but it is a control-plane console rather than the core product identity.
 
-The minimum useful UI should cover:
+The minimum useful console should cover:
 - task list
 - task detail
 - pending approvals
 - verification results
 - evidence and audit timeline
 - failed run inspection
-- replay / handoff entrypoints
+- replay and handoff entrypoints
 
-Without this UI, approval and audit workflows become operationally awkward. With too much UI, the product risks drifting toward an IDE shell instead of a governed runtime.
+The higher-priority interactive surface is the session bridge inside the active AI coding workflow. The console remains essential for inspection, approvals, and recovery.
 
 ## Delivery Model
+- attach-first for existing AI coding sessions
+- launch-second when attach is unavailable
 - API-first for integration
 - console-backed for human approval and inspection
 - agent-agnostic at the execution boundary
-- Codex CLI/App compatible as the first adapter priority
+- Codex CLI/App as the first direct adapter priority
 - repo-aware at task startup and verification time
 
 ## Agent Compatibility Position
-The runtime should treat AI coding products as replaceable execution frontends. The kernel should not know whether the active frontend is Codex CLI/App, Claude Code, OpenClaw, Hermes, an IDE plugin, a cloud coding worker, or a future agent product.
+The runtime should treat AI coding products as replaceable execution frontends. The kernel should not know whether the active frontend is Codex CLI/App, Claude Code, Cowrk, OpenClaw, Hermes, an IDE plugin, a cloud coding worker, or a future agent product.
 
 Adapters should declare capabilities:
 - invocation mode
@@ -120,6 +138,7 @@ Adapters should declare capabilities:
 - mutation model
 - continuation or resume model
 - evidence export model
+- attach strength or compatibility tier
 
 If an agent product exposes enough structure, the runtime can enforce policy before or during execution. If it exposes limited structure, the runtime should degrade to observe-only, advisory, or manual-handoff mode while still running repository gates and capturing delivery evidence.
 
@@ -129,9 +148,11 @@ If an agent product exposes enough structure, the runtime can enforce policy bef
 - governed AI coding execution
 - repository-aware controls
 - approvals, verification, evidence, replay, rollback references
+- repo-local light packs plus machine-local runtime state
 - agent adapter contracts and risk-proportional governance modes
+- multi-repo trial feedback loops
 
-### Out of scope for MVP
+### Out of scope for MVP and baseline stages
 - generic enterprise automation
 - memory-first personalization platform
 - default multi-agent orchestration
@@ -145,4 +166,5 @@ If an agent product exposes enough structure, the runtime can enforce policy bef
 - reviewers can understand AI work from evidence without reconstructing the session
 - interrupted work can resume or replay from durable state
 - governance reduces high-risk ambiguity without slowing down ordinary low-risk coding flow
+- new repositories can attach through light packs without kernel rewrites
 - new agent products can be integrated by capability mapping instead of kernel rewrites

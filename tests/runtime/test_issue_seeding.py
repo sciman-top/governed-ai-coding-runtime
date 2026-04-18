@@ -28,7 +28,7 @@ class IssueSeedingScriptTests(unittest.TestCase):
 
         summary = json.loads(completed.stdout)
         self.assertEqual(summary["issue_seed_version"], "3.1")
-        self.assertEqual(summary["issue_count"], 17)
+        self.assertEqual(summary["issue_count"], 22)
         self.assertEqual(summary["first_issue_id"], "GAP-018")
         self.assertEqual(summary["gap_027_title"], "Minimal Operator Surface For Task, Approval, Evidence, And Replay")
 
@@ -87,10 +87,10 @@ class IssueSeedingScriptTests(unittest.TestCase):
         self.assertEqual(rendered["title"], "[Epic] Full Runtime")
         self.assertIn("## Goal", rendered["body"])
         self.assertIn("## Scope", rendered["body"])
-        self.assertIn("execution worker", rendered["body"])
-        self.assertIn("runtime health and status query surface", rendered["body"])
+        self.assertIn("land the complete local runtime path", rendered["body"])
+        self.assertIn("complete through `GAP-024` to `GAP-028`", rendered["body"])
         self.assertIn("## Acceptance Criteria", rendered["body"])
-        self.assertIn("one real governed task can run end-to-end", rendered["body"])
+        self.assertIn("complete through `GAP-024` to `GAP-028`", rendered["body"])
 
     def test_validate_only_can_render_initiative_body_from_lifecycle_plan(self) -> None:
         script = ROOT / "scripts" / "github" / "create-roadmap-issues.ps1"
@@ -115,9 +115,9 @@ class IssueSeedingScriptTests(unittest.TestCase):
         rendered = json.loads(completed.stdout)
         self.assertEqual(rendered["title"], "[Initiative] Governed AI Coding Runtime Full Functional Lifecycle")
         self.assertIn("## Goal", rendered["body"])
-        self.assertIn("single-machine self-hosted governed AI coding runtime", rendered["body"])
+        self.assertIn("generic, attach-first, interactive governed AI coding runtime", rendered["body"])
         self.assertIn("## Success Criteria", rendered["body"])
-        self.assertIn("a real governed task can be created, executed, approved, verified, handed off, replayed, and recovered", rendered["body"])
+        self.assertIn("a new target repo can be attached through a repo-local light pack", rendered["body"])
 
     def test_verify_repo_scripts_runs_issue_seeding_render_check(self) -> None:
         script = ROOT / "scripts" / "verify-repo.ps1"
@@ -164,8 +164,8 @@ class IssueSeedingScriptTests(unittest.TestCase):
 
         summary = json.loads(completed.stdout)
         self.assertEqual(summary["issue_seed_version"], "3.1")
-        self.assertEqual(summary["rendered_tasks"], 17)
-        self.assertEqual(summary["rendered_epics"], 5)
+        self.assertEqual(summary["rendered_tasks"], 22)
+        self.assertEqual(summary["rendered_epics"], 6)
         self.assertTrue(summary["rendered_initiative"])
 
 

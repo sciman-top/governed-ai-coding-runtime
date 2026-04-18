@@ -235,6 +235,18 @@
     "replay_case_ref": {
       "type": "string"
     },
+    "runtime_artifact_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "verification_artifact_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "created_at": {
       "format": "date-time",
       "type": "string"

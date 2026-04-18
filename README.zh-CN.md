@@ -1,7 +1,11 @@
 # Governed AI Coding Runtime 中文使用说明
 
 ## 当前状态
-`Foundation / GAP-020` 到 `GAP-023` 已完成，当前活跃执行队列已经切到 `Full Runtime / GAP-024` 与后续阶段。
+`Foundation / GAP-020` 到 `GAP-023`、`Full Runtime / GAP-024` 到 `GAP-028`、`Public Usable Release / GAP-029` 到 `GAP-032`、`Maintenance Baseline / GAP-033` 到 `GAP-034` 已完成。
+
+这表示“本地单机运行时基线”已经落地，不表示“最终产品边界”已经完成。
+
+当前仓库现在应该理解为一个可运行的本地 baseline，活跃下一阶段是 `Interactive Session Productization / GAP-035..039`。
 
 本项目现在可以使用，但要按正确边界理解：
 
@@ -9,20 +13,25 @@
 - 可以运行仓库验证和 runtime contract tests。
 - 可以运行 Foundation 级 build 与 doctor 门禁。
 - 可以运行第一个只读 trial 脚本。
-- 可以作为后续实现生产 runtime service、worker、UI、持久化层的基础。
+- 可以运行 CLI-first governed runtime smoke task，得到本地 artifact、verification、evidence、handoff 与 runtime status。
+- 可以直接查看 compatibility/upgrade/deprecation/retirement policy，并在 runtime status 与 operator UI 中看到维护状态。
 
 还不能作为完整产品直接部署：
 
-- 没有生产级 runtime service。
-- 没有数据库或 durable workflow worker。
-- 还没有超出 scripted/CLI-first 路径与最小 console facade 之外的稳定 operator surface。
-- 没有包构建产物或发布流程。
-- `build` 与 `hotspot/doctor` 已有 Foundation 级真实入口，但还不是生产级构建与服务健康检查。
+- 没有数据库或多机 durable workflow worker。
+- 当前 package bundle 是本地分发目录，不是外部发布渠道。
+- 当前 operator UI 是本地 HTML surface，不是长期运行的 Web 服务。
+- 当前还没有 direct Codex adapter；与 Codex CLI/App 的关系仍然是 compatibility + manual handoff，不是 runtime 内直接编排真实编码执行。
+- 当前还没有通用 target-repo 接入包，也还没有 attach-first 的会话桥接层。
 
 ## 你可以怎样使用
 
 ### 1. 验证仓库是否健康
 在仓库根目录执行：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap-runtime.ps1
+```
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All
@@ -45,6 +54,9 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1
 - active Markdown links 检查
 - backlog / YAML ID drift 检查
 - PowerShell 脚本解析检查
+
+对应 quickstart：
+- [Single-Machine Runtime Quickstart](docs/quickstart/single-machine-runtime-quickstart.md)
 
 只运行 runtime contract tests：
 
@@ -80,7 +92,27 @@ python scripts/run-readonly-trial.py `
 - `auth_ownership`
 - `unsupported_capability_behavior`
 
-### 3. 使用 runtime contract primitives
+### 3. 运行一个完整 governed task
+这里的 `run-governed-task.py` 当前应理解为 runtime smoke path，不应理解为“已经直接调用 Codex 完成真实编码”的集成入口。
+
+```powershell
+python scripts/run-governed-task.py status --json
+```
+
+```powershell
+python scripts/run-governed-task.py run --json
+```
+
+预期输出会包含：
+
+- `task_id`
+- `state`
+- `active_run_id`
+- `verification_refs`
+- `evidence_refs`
+- `artifact_refs`
+
+### 4. 使用 runtime contract primitives
 当前核心代码在：
 
 ```text
@@ -96,10 +128,15 @@ packages/contracts/src/governed_ai_coding_runtime_contracts/
 - `write_policy.py`: medium/high 写入策略默认值
 - `approval.py`: approval request 状态与审计
 - `write_tool_runner.py`: 写侧工具治理与 rollback reference
+- `execution_runtime.py`: 任务到运行实例的本地执行编排
+- `worker.py`: 同步单机 worker 接口
+- `artifact_store.py`: 本地 artifact 持久化与风险分类
+- `replay.py`: 失败签名与 replay 引用
 - `verification_runner.py`: quick/full verification plan 与 artifact
 - `delivery_handoff.py`: 交付 handoff package
 - `eval_trace.py`: eval baseline 与 trace grading
 - `second_repo_pilot.py`: 第二 repo profile reuse pilot
+- `runtime_status.py`: CLI-first operator read model
 - `control_console.py`: 最小 approval/evidence console facade
 
 示例：
@@ -117,7 +154,7 @@ print(policy.approval_mode("high"))
 PY
 ```
 
-### 4. 阅读文档的推荐顺序
+### 5. 阅读文档的推荐顺序
 如果你只想知道怎么用：
 
 1. [本文档](README.zh-CN.md)
@@ -132,29 +169,32 @@ PY
 
 如果你要理解产品规划：
 
-1. [文档索引](docs/README.md)
-2. [Full Lifecycle Plan](docs/roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
-3. [Full Runtime Implementation Plan](docs/plans/full-runtime-implementation-plan.md)
-4. [Issue-Ready Backlog](docs/backlog/issue-ready-backlog.md)
-5. [最新深度审查 Review](docs/reviews/2026-04-18-full-repo-deep-audit-and-planning-refresh.md)
-6. [PRD](docs/prd/governed-ai-coding-runtime-prd.md)
-7. [Target Architecture](docs/architecture/governed-ai-coding-runtime-target-architecture.md)
+1. [90-Day Plan](docs/roadmap/governed-ai-coding-runtime-90-day-plan.md)
+2. [Issue-Ready Backlog](docs/backlog/issue-ready-backlog.md)
+3. [PRD](docs/prd/governed-ai-coding-runtime-prd.md)
+4. [Target Architecture](docs/architecture/governed-ai-coding-runtime-target-architecture.md)
+5. [Generic Target-Repo Attachment Blueprint](docs/architecture/generic-target-repo-attachment-blueprint.md)
+6. [Interactive Session Productization Plan](docs/plans/interactive-session-productization-plan.md)
 
 ## 当前完成度
 当前已完成：
 
 - `Phase 0` 到 `Phase 4` 的 MVP 合约层与验证基线
-- 当前下一执行队列是 `Full Runtime / GAP-024+`
+- `Full Runtime / GAP-024` 到 `GAP-028`
+- `Public Usable Release / GAP-029` 到 `GAP-032`
+- `Maintenance Baseline / GAP-033` 到 `GAP-034`
+
+当前活跃队列：
+
+- `Interactive Session Productization / GAP-035` 到 `GAP-039`
 
 当前验证基线：
 
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`
 - `python -m unittest discover -s tests/runtime -p "test_*.py" -v`
 
-## 下一步建议
-如果继续推进产品化，建议下一阶段优先做：
-
-1. 增加真实 Python package 元数据与更完整发布构建。
-2. 增加 durable storage 或 workflow worker。
-3. 先把当前 `ControlPlaneConsole` facade 接到 CLI-first runtime status surface，再把更完整的 Web UI 放到 `Public Usable Release`。
-4. 把 Foundation doctor 扩展为更接近服务健康检查的入口。
+## 维护策略
+- [Codex CLI/App Integration Guide](docs/product/codex-cli-app-integration-guide.md)
+- [Codex CLI/App 集成指南](docs/product/codex-cli-app-integration-guide.zh-CN.md)
+- [Runtime Compatibility And Upgrade Policy](docs/product/runtime-compatibility-and-upgrade-policy.md)
+- [Maintenance, Deprecation, And Retirement Policy](docs/product/maintenance-deprecation-and-retirement-policy.md)

@@ -41,3 +41,4 @@ coverage/
 # Codex and agent local state
 .codex/
 .worktrees/
+.runtime/

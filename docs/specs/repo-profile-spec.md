@@ -80,6 +80,8 @@ Repos may declare local persistence hints for the Foundation task store:
 - `store_root`
 - `supports_pause_resume`
 - `supports_retry_timeout`
+- `artifact_root`
+- `replay_root`
 
 ## Verification
 A repo profile is valid only if:
@@ -88,3 +90,4 @@ A repo profile is valid only if:
 - quick and full gates have unambiguous command order
 - rollout posture uses a supported governance posture name
 - compatibility degrade behavior is explicit whenever support is partial or unsupported
+- managed workspaces and runtime-local storage roots stay on one machine in the first Full Runtime stage

@@ -1,8 +1,8 @@
 # Tests
 
-Repository tests already live here.
+Runtime tests will live here once implementation packages exist.
 
-## Current Verification Surface
+## Phase 0 Verification
 The repository integrity checks are:
 - schema JSON parsing
 - schema example validation
@@ -13,8 +13,8 @@ The repository integrity checks are:
 
 These checks are executed by `scripts/verify-repo.ps1`.
 
-## Runtime Contract Tests
-Runtime contract unit tests live under `tests/runtime/`.
+## Phase 1 Runtime Tests
+Runtime contract unit tests now live under `tests/runtime/`.
 
 Run them through the repository verifier:
 
@@ -29,4 +29,17 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Bui
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Doctor
 ```
 
-As of the current baseline, `tests/runtime/` covers the MVP governance-kernel slices plus the Foundation substrate work through `GAP-023`.
+Public usable release smoke paths are available through:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap-runtime.ps1
+python scripts/serve-operator-ui.py
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/package-runtime.ps1
+```
+
+Maintenance visibility is also covered by runtime tests and doctor:
+
+```powershell
+python scripts/run-governed-task.py status --json
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1
+```

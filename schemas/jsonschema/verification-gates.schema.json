@@ -88,6 +88,12 @@
       "items": {
         "type": "string"
       }
+    },
+    "runtime_binding_fields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
   }
 }

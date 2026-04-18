@@ -254,6 +254,7 @@ function Get-LifecyclePlanData {
       $stageName = $Matches[1]
       $currentStage = [ordered]@{
         name = $stageName
+        status = [System.Collections.Generic.List[string]]::new()
         purpose = [System.Collections.Generic.List[string]]::new()
         required_outputs = [System.Collections.Generic.List[string]]::new()
         exit_check = [System.Collections.Generic.List[string]]::new()
@@ -265,6 +266,11 @@ function Get-LifecyclePlanData {
 
     if ($line -match '^\*\*Purpose\*\*$') {
       $currentSection = if ($null -ne $currentStage) { "purpose" } else { $null }
+      continue
+    }
+
+    if ($line -match '^\*\*Status\*\*$') {
+      $currentSection = if ($null -ne $currentStage) { "status" } else { $null }
       continue
     }
 
@@ -295,6 +301,7 @@ function Get-LifecyclePlanData {
         "goal" { $goal.Add($Matches[1]); continue }
         "non_goals" { $nonGoals.Add($Matches[1]); continue }
         "completion" { $completion.Add($Matches[1]); continue }
+        "status" { $currentStage.status.Add($Matches[1]); continue }
         "purpose" { $currentStage.purpose.Add($Matches[1]); continue }
         "required_outputs" { $currentStage.required_outputs.Add($Matches[1]); continue }
         "exit_check" { $currentStage.exit_check.Add($Matches[1]); continue }
@@ -339,8 +346,14 @@ function Get-EpicDefinitions {
     @{
       Id = "Maintenance Boundary"
       Title = "[Epic] Maintenance Boundary"
-      StageName = "Maintenance"
+      StageName = "Maintenance Baseline"
       Labels = @("epic", "phase:maintenance", "platform", "docs", "product")
+    }
+    @{
+      Id = "Interactive Session Productization"
+      Title = "[Epic] Interactive Session Productization"
+      StageName = "Interactive Session Productization"
+      Labels = @("epic", "phase:interactive-session", "platform", "product", "docs", "frontend", "backend")
     }
   )
 }
@@ -439,13 +452,23 @@ function Render-EpicIssueBody {
     throw "Missing lifecycle stage for epic '$EpicId'"
   }
 
-  if ($Stage.purpose.Count -eq 0 -or $Stage.required_outputs.Count -eq 0 -or $Stage.exit_check.Count -eq 0) {
-    throw "Lifecycle stage '$EpicId' is missing required sections"
+  if ($Stage.purpose.Count -eq 0) {
+    throw "Lifecycle stage '$EpicId' is missing purpose"
+  }
+
+  if ($Stage.required_outputs.Count -eq 0 -and $Stage.status.Count -eq 0) {
+    throw "Lifecycle stage '$EpicId' is missing required outputs or status"
+  }
+
+  if ($Stage.exit_check.Count -eq 0 -and $Stage.status.Count -eq 0) {
+    throw "Lifecycle stage '$EpicId' is missing exit check or status"
   }
 
   $goal = @($Stage.purpose | ForEach-Object { "- $_" }) -join "`n"
-  $scope = @($Stage.required_outputs | ForEach-Object { "- $_" }) -join "`n"
-  $acceptance = @($Stage.exit_check | ForEach-Object { "- $_" }) -join "`n"
+  $scopeItems = if ($Stage.required_outputs.Count -gt 0) { $Stage.required_outputs } else { $Stage.status }
+  $acceptanceItems = if ($Stage.exit_check.Count -gt 0) { $Stage.exit_check } else { $Stage.status }
+  $scope = @($scopeItems | ForEach-Object { "- $_" }) -join "`n"
+  $acceptance = @($acceptanceItems | ForEach-Object { "- $_" }) -join "`n"
 
   return @"
 ## Goal
@@ -653,6 +676,7 @@ $labels = @(
   @{ Name = "phase:full-runtime"; Color = "FBCA04"; Description = "Full runtime phase" }
   @{ Name = "phase:public-release"; Color = "D93F0B"; Description = "Public usable release phase" }
   @{ Name = "phase:maintenance"; Color = "C5DEF5"; Description = "Maintenance phase" }
+  @{ Name = "phase:interactive-session"; Color = "0B5FFF"; Description = "Interactive session productization phase" }
   @{ Name = "backend"; Color = "0052CC"; Description = "Backend work" }
   @{ Name = "platform"; Color = "6F42C1"; Description = "Platform work" }
   @{ Name = "security"; Color = "B60205"; Description = "Security and policy" }
@@ -693,7 +717,7 @@ Align active planning docs around the full functional lifecycle and final produc
 
 ## Acceptance Criteria
 - [ ] active planning docs use the same lifecycle stages
-- [ ] the project is described as a complete single-machine self-hosted runtime target
+- [ ] the project is described as a governed runtime target rather than only a local single-machine script bundle
 - [ ] MVP remains historical baseline rather than active next-step queue
 "@
     }
@@ -857,6 +881,87 @@ Keep the project maintainable after the first usable release.
 - [ ] adapter compatibility and degrade behavior are explicit
 - [ ] upgrade expectations are explicit
 - [ ] maintenance, deprecation, and retirement remain traceable
+- [ ] maintenance policy remains visible in runtime status and doctor checks
+"@
+    }
+    @{
+      Title  = "[Task] Add generic target-repo attachment and onboarding flow"
+      Labels = @("task", "phase:interactive-session", "product", "docs", "platform", "backend")
+      Body   = @"
+## Goal
+Make arbitrary target repositories attachable through a lightweight repo-local pack and machine-local runtime binding.
+
+## Dependencies
+- [Epic] Interactive Session Productization
+
+## Acceptance Criteria
+- [ ] a new repo can attach without copying the runtime into it
+- [ ] repo-local pack contents stay declarative and portable
+- [ ] onboarding posture is visible to the runtime and doctor surfaces
+"@
+    }
+    @{
+      Title  = "[Task] Add the attach-first session bridge and governed interaction surface"
+      Labels = @("task", "phase:interactive-session", "frontend", "platform", "product")
+      Body   = @"
+## Goal
+Expose governed actions from inside active AI coding sessions, with launch mode as fallback.
+
+## Dependencies
+- [Epic] Interactive Session Productization
+
+## Acceptance Criteria
+- [ ] the preferred operator flow runs inside an active AI coding session
+- [ ] the runtime can fall back to launch mode when attach is unavailable
+- [ ] governed actions do not require replacing the upstream tool UI
+"@
+    }
+    @{
+      Title  = "[Task] Add the direct Codex adapter and evidence mapping path"
+      Labels = @("task", "phase:interactive-session", "platform", "backend", "product")
+      Body   = @"
+## Goal
+Make at least one real Codex path direct rather than manual-handoff only.
+
+## Dependencies
+- [Epic] Interactive Session Productization
+
+## Acceptance Criteria
+- [ ] the runtime can bind a governed task to a direct Codex execution path
+- [ ] Codex-driven changes and verification outputs map into task evidence
+- [ ] unsupported capabilities degrade explicitly
+"@
+    }
+    @{
+      Title  = "[Task] Add capability tiers for non-Codex AI tools"
+      Labels = @("task", "phase:interactive-session", "platform", "product", "docs")
+      Body   = @"
+## Goal
+Generalize adapters beyond Codex through explicit capability tiers.
+
+## Dependencies
+- [Epic] Interactive Session Productization
+
+## Acceptance Criteria
+- [ ] native attach, process bridge, and manual handoff tiers are explicit
+- [ ] non-Codex tools have honest compatibility posture
+- [ ] fail-closed and degrade rules remain visible
+"@
+    }
+    @{
+      Title  = "[Task] Add the multi-repo trial loop and generic onboarding kit"
+      Labels = @("task", "phase:interactive-session", "product", "docs", "eval", "platform")
+      Body   = @"
+## Goal
+Evolve onboarding and adapters from real usage across multiple repositories.
+
+## Dependencies
+- [Epic] Interactive Session Productization
+
+## Acceptance Criteria
+- [ ] multiple repos can run through the attach flow without kernel rewrites
+- [ ] onboarding and adapter gaps are captured as structured evidence
+- [ ] the runtime ships with a reusable onboarding kit for new repos
 "@
     }
   )

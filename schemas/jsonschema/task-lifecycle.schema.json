@@ -84,6 +84,13 @@
       "items": {
         "type": "string"
       }
+    },
+    "run_metadata_fields": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
     }
   }
 }
