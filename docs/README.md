@@ -7,12 +7,15 @@
 - `Strategy Alignment Gates / GAP-040` through `GAP-044` are complete on the current branch baseline and remain encoded as satisfied hardening dependencies around the landed `Interactive Session Productization / GAP-035` through `GAP-039` productization slice.
 
 ## Current Working Set
+- [Hybrid Final-State Master Outline](./architecture/hybrid-final-state-master-outline.md)
+- [Direct-To-Hybrid Final-State Roadmap](./roadmap/direct-to-hybrid-final-state-roadmap.md)
+- [Direct-To-Hybrid Final-State Implementation Plan](./plans/direct-to-hybrid-final-state-implementation-plan.md)
 - [Full Lifecycle Plan](./roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
 - [Issue-Ready Backlog](./backlog/issue-ready-backlog.md)
 - [Issue Seeds YAML](./backlog/issue-seeds.yaml)
-- [Interactive Session Productization Implementation Plan](./plans/interactive-session-productization-implementation-plan.md)
-- [Interactive Session Productization Plan](./plans/interactive-session-productization-plan.md)
-- [Governance Runtime Strategy Alignment Plan](./plans/governance-runtime-strategy-alignment-plan.md)
+- [Interactive Session Productization Implementation Plan](./plans/interactive-session-productization-implementation-plan.md) (history)
+- [Interactive Session Productization Plan](./plans/interactive-session-productization-plan.md) (history)
+- [Governance Runtime Strategy Alignment Plan](./plans/governance-runtime-strategy-alignment-plan.md) (history)
 - [Strategy Index](./strategy/README.md)
 - [Positioning And Competitive Layering](./strategy/positioning-and-competitive-layering.md)
 - [Runtime Governance Borrowing Matrix](./research/runtime-governance-borrowing-matrix.md)
@@ -26,7 +29,7 @@
 
 ## Current Planning Chain
 - Strategy and boundary inputs: [AI Coding PRD](./prd/governed-ai-coding-runtime-prd.md), [Interaction Model](./product/interaction-model.md), [Positioning And Competitive Layering](./strategy/positioning-and-competitive-layering.md), [Runtime Governance Borrowing Matrix](./research/runtime-governance-borrowing-matrix.md), [ADR-0007 Source-Of-Truth And Runtime Contract Bundle](./adrs/0007-source-of-truth-and-runtime-contract-bundle.md), [Generic Target-Repo Attachment Blueprint](./architecture/generic-target-repo-attachment-blueprint.md), [Repo-Native Contract Bundle](./architecture/repo-native-contract-bundle.md), [Local Baseline To Hybrid Final-State Migration Matrix](./architecture/local-baseline-to-hybrid-final-state-migration-matrix.md), [Target Architecture](./architecture/governed-ai-coding-runtime-target-architecture.md), [Minimum Viable Governance Loop](./architecture/minimum-viable-governance-loop.md), and [Governance Runtime Strategy Alignment Plan](./plans/governance-runtime-strategy-alignment-plan.md)
-- Execution ordering: [Backlog Index](./backlog/README.md), [Issue-Ready Backlog](./backlog/issue-ready-backlog.md), [Full Lifecycle Plan](./roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md), and [Plans Index](./plans/README.md)
+- Execution ordering: [Hybrid Final-State Master Outline](./architecture/hybrid-final-state-master-outline.md), [Direct-To-Hybrid Final-State Roadmap](./roadmap/direct-to-hybrid-final-state-roadmap.md), [Direct-To-Hybrid Final-State Implementation Plan](./plans/direct-to-hybrid-final-state-implementation-plan.md), [Backlog Index](./backlog/README.md), [Issue-Ready Backlog](./backlog/issue-ready-backlog.md), [Issue Seeds YAML](./backlog/issue-seeds.yaml), and [Plans Index](./plans/README.md)
 - Current implementation history: [Foundation Runtime Substrate Implementation Plan](./plans/foundation-runtime-substrate-implementation-plan.md), [Full Runtime Implementation Plan](./plans/full-runtime-implementation-plan.md), [Public Usable Release Implementation Plan](./plans/public-usable-release-implementation-plan.md), and [Maintenance Implementation Plan](./plans/maintenance-implementation-plan.md); use the migration matrix when comparing those completed slices with the active hybrid final-state queue.
 
 ## Navigation Aids
@@ -194,6 +197,9 @@ Primary reading entrypoints:
 ## Roadmap And Execution
 - [Plans Index](./plans/README.md)
 - [Backlog Index](./backlog/README.md)
+- [Hybrid Final-State Master Outline](./architecture/hybrid-final-state-master-outline.md)
+- [Direct-To-Hybrid Final-State Roadmap](./roadmap/direct-to-hybrid-final-state-roadmap.md)
+- [Direct-To-Hybrid Final-State Implementation Plan](./plans/direct-to-hybrid-final-state-implementation-plan.md)
 - [90-Day Plan](./roadmap/governed-ai-coding-runtime-90-day-plan.md)
 - [Full Lifecycle Plan](./roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
 - [Interactive Session Productization Implementation Plan](./plans/interactive-session-productization-implementation-plan.md)

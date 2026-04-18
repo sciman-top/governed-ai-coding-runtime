@@ -34,6 +34,7 @@ This directory holds executable implementation plans that translate strategy and
 
 ## How To Use This Directory
 1. Read the latest audit review:
+   - [Hybrid Final-State Executable Gap Audit](../reviews/2026-04-19-hybrid-final-state-executable-gap-audit.md)
    - [Hybrid Final-State And Plan Reconciliation](../reviews/2026-04-18-hybrid-final-state-and-plan-reconciliation.md)
 2. Read the latest supporting evidence:
    - [20260417 Foundation Execution Plan](../change-evidence/20260417-foundation-execution-plan.md)

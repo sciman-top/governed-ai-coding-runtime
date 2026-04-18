@@ -653,15 +653,16 @@ MCP 是重要接入面之一，但不应被误认为完整治理面。
 
 ## 12.2 当前：Target-Repo Attachment 与 Session Bridge
 
-当前活跃队列是 `Interactive Session Productization / GAP-035..039`。优先级应是：
+`GAP-035..039` 已作为“第一版产品化边界”落地完成。  
+当前活跃队列是 `Direct-To-Hybrid-Final-State Mainline / GAP-045..060`。优先级应是：
 
-- `GAP-035`: target-repo attachment pack / light pack 生成与校验
-- `GAP-036`: attach-first session bridge 与 governed in-session commands
-- `GAP-037`: direct Codex adapter 与 evidence mapping
-- `GAP-038`: capability-tiered adapter framework
-- `GAP-039`: multi-repo trial loop 与 onboarding kit
+- `GAP-046..049`: 先闭环 runtime-owned execution surface（session bridge execution bus、attached write chain、governed shell/git/package 路径、attached repo E2E）
+- `GAP-050..052`: 再补 live host adapter reality（live Codex handshake、event ingestion、executable adapter registry）
+- `GAP-053..054`: 再做真实 multi-repo + machine-local sidecar 收口
+- `GAP-055..056`: 然后做 service-shaped runtime extraction
+- `GAP-057..060`: 最后做 operator/CI/doctor hardening 与 claim discipline closeout
 
-这一阶段的目标是让本地 baseline 变成可以挂接多个真实仓库、真实 AI coding 会话的产品路径。
+这一阶段的目标是把“已落地的第一版产品化边界”推进到“可防御声明的完整混合终态”。
 
 ---
 
@@ -696,7 +697,7 @@ MCP 是重要接入面之一，但不应被误认为完整治理面。
 
 - 已完成本地单机 governed runtime baseline
 - 已完成 `PolicyDecision`、repo-native bundle architecture、local/CI same-contract verification 等策略硬化门禁
-- 当前活跃队列是 `GAP-035..039`：target-repo attachment、session bridge、direct Codex adapter、adapter tiers、multi-repo trial
+- 当前活跃队列是 `GAP-045..060`：治理执行面闭环、live adapter reality、真实多仓与 machine-local sidecar 收口、服务化边界提取与硬化收官
 - 尚未完成最终 attach-first 跨仓产品边界
 
 ### 非目标

@@ -9,8 +9,8 @@ Seed the function-first full lifecycle of the project so it can evolve from a co
 - The repository now contains the local single-machine runtime baseline through `Maintenance Baseline / GAP-034`.
 - `Interactive Session Productization / GAP-035` through `GAP-039` are complete on the current branch baseline.
 - `Strategy Alignment Gates / GAP-040` through `GAP-044` are complete on the current branch baseline and remain encoded as satisfied dependencies around the completed productization queue.
-- There is no open `GAP-*` execution queue in the current seeded set (`GAP-018` through `GAP-044`).
-- Any next-stage work must be introduced as a new synchronized `GAP-*` set across roadmap, backlog, issue-ready markdown, and issue seeds.
+- `Direct-To-Hybrid-Final-State Mainline / GAP-045` through `GAP-060` is the active future-facing queue.
+- `GAP-018` through `GAP-044` remain completion history and dependency context for the active queue.
 
 ## Vision
 1. Freeze the initial product shape and capability boundary.
@@ -67,8 +67,9 @@ Seed the function-first full lifecycle of the project so it can evolve from a co
 
 ## Next Queue Policy
 1. Do not reopen `GAP-018` through `GAP-044` unless a verified regression requires it.
-2. Introduce any next active queue as new IDs beyond `GAP-044`.
-3. Add new IDs only after acceptance criteria and dependency wiring are explicit in both markdown and seed YAML.
+2. Treat `GAP-045` through `GAP-060` as the active queue until explicit closeout evidence marks them complete.
+3. Introduce the next queue only as new IDs beyond `GAP-060`.
+4. Add new IDs only after acceptance criteria and dependency wiring are explicit in both markdown and seed YAML.
 
 ## Explicit Non-Goals
 - commercial packaging

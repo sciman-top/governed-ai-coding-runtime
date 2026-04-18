@@ -8,8 +8,8 @@ This directory holds the human and machine planning artifacts that bridge strate
   - historical seed list for the completed 90-day MVP
   - use this to understand how `Phase 0` through `Phase 4` were sequenced
 - [Full Lifecycle Backlog Seeds](./full-lifecycle-backlog-seeds.md)
-  - phase-level seed list for the full lifecycle from `GAP-018` through `GAP-044`
-  - use this for current sequencing and scope checks
+  - phase-level seed history for the full lifecycle baseline from `GAP-018` through `GAP-044`
+  - use this for historical sequencing context
 - [Issue-Ready Backlog](./issue-ready-backlog.md)
   - current human-readable full-lifecycle implementation backlog
   - use this for dependencies, acceptance criteria, and execution order
@@ -39,9 +39,12 @@ This directory holds the human and machine planning artifacts that bridge strate
 - `Maintenance Baseline / GAP-033` through `GAP-034` are complete on the current branch baseline.
 - `Strategy Alignment Gates / GAP-040` through `GAP-044` are complete on the current branch baseline.
 - `Interactive Session Productization / GAP-035` through `GAP-039` are complete on the current branch baseline.
-- There is no open `GAP-*` execution queue in the current seeded set (`GAP-018` through `GAP-044`).
-- The next active queue must be introduced by adding new `GAP-*` seeds, backlog entries, and roadmap dependencies in one synchronized change set.
+- `Direct-To-Hybrid-Final-State Mainline / GAP-045` through `GAP-060` is the active future-facing queue.
+- Historical `GAP-018` through `GAP-044` remain completion history and dependency context.
 - The active lifecycle is now anchored by:
+  - [Hybrid Final-State Master Outline](../architecture/hybrid-final-state-master-outline.md)
+  - [Direct-To-Hybrid Final-State Roadmap](../roadmap/direct-to-hybrid-final-state-roadmap.md)
+  - [Direct-To-Hybrid Final-State Implementation Plan](../plans/direct-to-hybrid-final-state-implementation-plan.md)
   - [Full Lifecycle Plan](../roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
   - [Full Lifecycle Backlog Seeds](./full-lifecycle-backlog-seeds.md)
   - [Issue-Ready Backlog](./issue-ready-backlog.md)

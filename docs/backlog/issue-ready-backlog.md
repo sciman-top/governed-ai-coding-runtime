@@ -579,13 +579,13 @@ The entries below are the active queue for complete hybrid final-state closure. 
 - Type: HITL
 - Blocked by: GAP-035, GAP-036, GAP-037, GAP-038, GAP-044
 - User stories: 14, 37, 38, 39, 45
-- Status: complete on current branch baseline
+- Status: complete on current branch baseline as the first productization slice; full external attached-repo closure is tracked by `GAP-053`
 - What to build:
   - reusable onboarding kit for arbitrary target repos
   - multi-repo trial execution and feedback capture
   - evidence-backed iteration path for onboarding friction, adapter gaps, and gate drift
 - Acceptance criteria:
-  - [x] multiple real repositories can run through the attach flow without kernel rewrites
+  - [x] profile-based multi-repo trial loops can run without kernel rewrites and preserve per-repo structured evidence outputs
   - [x] onboarding, adapter, and gate failures are captured as structured trial evidence
   - [x] the product can evolve from real trial data instead of repo-specific one-off fixes
 

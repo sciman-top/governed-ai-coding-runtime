@@ -125,6 +125,9 @@ Phase 5
 
 ## Task List
 
+**Cross-task evidence rule:**
+- Any task that modifies planning docs, specs, schemas, or scripts must add one new `docs/change-evidence/<date>-<slug>.md` entry that records commands, key outputs, risks, and rollback notes.
+
 ### Task 0: Close Phase 0 Planning Sync
 
 **Purpose:** Finish the planning baseline so future work executes against one canonical implementation plan instead of drifting between older historical plans.
@@ -408,93 +411,7 @@ Phase 5
 
 **Estimated scope:** Medium.
 
-### Task 10: Add Attachment-Scoped Operator Query Surfaces
-
-**Purpose:** Close the operator or control-plane visibility gap for approvals, evidence, handoff, replay, and attachment posture.
-
-**Files:**
-- Create: `packages/contracts/src/governed_ai_coding_runtime_contracts/operator_queries.py`
-- Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/session_bridge.py`
-- Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/runtime_status.py`
-- Create: `tests/runtime/test_operator_queries.py`
-- Modify: `tests/runtime/test_session_bridge.py`
-- Modify: `docs/product/minimal-approval-evidence-console.zh-CN.md`
-- Create: `docs/product/minimal-approval-evidence-console.md`
-
-**Acceptance criteria:**
-- [ ] Attachment-scoped queries can list approvals, evidence refs, handoff refs, replay refs, and posture summary for one task or binding.
-- [ ] `inspect_evidence` no longer degrades by default for the primary attached path.
-- [ ] Query results are stable enough to be reused by later service APIs and console surfaces.
-- [ ] Operator read surfaces remain read-only unless explicitly escalated elsewhere.
-
-**Verification:**
-- [ ] Run `python -m unittest tests.runtime.test_operator_queries tests.runtime.test_session_bridge -v`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
-
-**Dependencies:** Task 9.
-
-**Estimated scope:** Medium.
-
-### Task 11: Extend Same-Contract Parity To Runtime Readers And CI
-
-**Purpose:** Prevent hidden drift where verifier inputs are updated but session, adapter, or operator readers still consume older shapes.
-
-**Files:**
-- Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/verification_runner.py`
-- Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/session_bridge.py`
-- Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/adapter_registry.py`
-- Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/runtime_status.py`
-- Modify: `tests/runtime/test_verification_runner.py`
-- Modify: `tests/runtime/test_session_bridge.py`
-- Modify: `tests/runtime/test_runtime_status.py`
-- Create: `tests/runtime/test_contract_reader_parity.py`
-- Modify: `docs/change-evidence/20260418-local-ci-same-contract-verification.md`
-
-**Acceptance criteria:**
-- [ ] Runtime readers fail loudly on missing or incompatible contract fields instead of silently defaulting.
-- [ ] CI coverage includes session bridge, adapter, and attachment reader paths.
-- [ ] Contract changes can be traced to every consuming runtime reader.
-- [ ] The repository can show parity beyond verifier-only scope.
-
-**Verification:**
-- [ ] Run `python -m unittest tests.runtime.test_verification_runner tests.runtime.test_session_bridge tests.runtime.test_runtime_status tests.runtime.test_contract_reader_parity -v`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
-
-**Dependencies:** Task 10.
-
-**Estimated scope:** Medium.
-
-### Task 12: Add Remediation-Capable Attachment Doctor Behavior
-
-**Purpose:** Move doctor and posture handling from passive reporting to guided remediation and fail-closed enforcement where required.
-
-**Files:**
-- Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/repo_attachment.py`
-- Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/runtime_status.py`
-- Modify: `scripts/doctor-runtime.ps1`
-- Modify: `tests/runtime/test_runtime_doctor.py`
-- Modify: `tests/runtime/test_repo_attachment.py`
-- Modify: `docs/product/target-repo-attachment-flow.md`
-- Modify: `docs/change-evidence/20260418-attachment-posture-status-doctor.md`
-
-**Acceptance criteria:**
-- [ ] Missing, invalid, and stale bindings each have an explicit remediation path.
-- [ ] Guided remediation can point to the exact command or document needed to recover.
-- [ ] Fail-closed posture is used when execution should not continue.
-- [ ] Remediation actions are evidence-backed and rollback-aware.
-
-**Verification:**
-- [ ] Run `python -m unittest tests.runtime.test_runtime_doctor tests.runtime.test_repo_attachment -v`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
-
-**Dependencies:** Task 11.
-
-**Estimated scope:** Medium.
-
-### Task 13: Extract A Service-Shaped Control And Session API Boundary
+### Task 10: Extract A Service-Shaped Control And Session API Boundary
 
 **Purpose:** Begin the transition from script-heavy harnesses to explicit runtime services without losing current contract parity.
 
@@ -508,7 +425,6 @@ Phase 5
 - Create: `tests/service/test_session_api.py`
 - Create: `tests/service/test_operator_api.py`
 - Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/session_bridge.py`
-- Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/operator_queries.py`
 
 **Acceptance criteria:**
 - [ ] Session operations and operator reads are exposed through a service API boundary.
@@ -521,11 +437,11 @@ Phase 5
 - [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`.
 - [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
 
-**Dependencies:** Task 12.
+**Dependencies:** Task 9.
 
 **Estimated scope:** Large.
 
-### Task 14: Add Service-Shaped Persistence And Local Deployment Scaffold
+### Task 11: Add Service-Shaped Persistence And Local Deployment Scaffold
 
 **Purpose:** Make the service extraction runnable locally with durable metadata beyond filesystem-only in-memory assumptions.
 
@@ -553,9 +469,95 @@ Phase 5
 - [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
 - [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
 
-**Dependencies:** Task 13.
+**Dependencies:** Task 10.
 
 **Estimated scope:** Large.
+
+### Task 12: Add Attachment-Scoped Operator Query Surfaces
+
+**Purpose:** Close the operator or control-plane visibility gap for approvals, evidence, handoff, replay, and attachment posture.
+
+**Files:**
+- Create: `packages/contracts/src/governed_ai_coding_runtime_contracts/operator_queries.py`
+- Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/session_bridge.py`
+- Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/runtime_status.py`
+- Create: `tests/runtime/test_operator_queries.py`
+- Modify: `tests/runtime/test_session_bridge.py`
+- Modify: `docs/product/minimal-approval-evidence-console.zh-CN.md`
+- Modify: `docs/product/minimal-approval-evidence-console.md`
+
+**Acceptance criteria:**
+- [ ] Attachment-scoped queries can list approvals, evidence refs, handoff refs, replay refs, and posture summary for one task or binding.
+- [ ] `inspect_evidence` no longer degrades by default for the primary attached path.
+- [ ] Query results are stable enough to be reused by later service APIs and console surfaces.
+- [ ] Operator read surfaces remain read-only unless explicitly escalated elsewhere.
+
+**Verification:**
+- [ ] Run `python -m unittest tests.runtime.test_operator_queries tests.runtime.test_session_bridge -v`.
+- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
+
+**Dependencies:** Task 11.
+
+**Estimated scope:** Medium.
+
+### Task 13: Extend Same-Contract Parity To Runtime Readers And CI
+
+**Purpose:** Prevent hidden drift where verifier inputs are updated but session, adapter, or operator readers still consume older shapes.
+
+**Files:**
+- Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/verification_runner.py`
+- Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/session_bridge.py`
+- Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/adapter_registry.py`
+- Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/runtime_status.py`
+- Modify: `tests/runtime/test_verification_runner.py`
+- Modify: `tests/runtime/test_session_bridge.py`
+- Modify: `tests/runtime/test_runtime_status.py`
+- Create: `tests/runtime/test_contract_reader_parity.py`
+- Modify: `docs/change-evidence/20260418-local-ci-same-contract-verification.md`
+
+**Acceptance criteria:**
+- [ ] Runtime readers fail loudly on missing or incompatible contract fields instead of silently defaulting.
+- [ ] CI coverage includes session bridge, adapter, and attachment reader paths.
+- [ ] Contract changes can be traced to every consuming runtime reader.
+- [ ] The repository can show parity beyond verifier-only scope.
+
+**Verification:**
+- [ ] Run `python -m unittest tests.runtime.test_verification_runner tests.runtime.test_session_bridge tests.runtime.test_runtime_status tests.runtime.test_contract_reader_parity -v`.
+- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
+- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+
+**Dependencies:** Task 12.
+
+**Estimated scope:** Medium.
+
+### Task 14: Add Remediation-Capable Attachment Doctor Behavior
+
+**Purpose:** Move doctor and posture handling from passive reporting to guided remediation and fail-closed enforcement where required.
+
+**Files:**
+- Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/repo_attachment.py`
+- Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/runtime_status.py`
+- Modify: `scripts/doctor-runtime.ps1`
+- Modify: `tests/runtime/test_runtime_doctor.py`
+- Modify: `tests/runtime/test_repo_attachment.py`
+- Modify: `docs/product/target-repo-attachment-flow.md`
+- Modify: `docs/change-evidence/20260418-attachment-posture-status-doctor.md`
+
+**Acceptance criteria:**
+- [ ] Missing, invalid, and stale bindings each have an explicit remediation path.
+- [ ] Guided remediation can point to the exact command or document needed to recover.
+- [ ] Fail-closed posture is used when execution should not continue.
+- [ ] Remediation actions are evidence-backed and rollback-aware.
+
+**Verification:**
+- [ ] Run `python -m unittest tests.runtime.test_runtime_doctor tests.runtime.test_repo_attachment -v`.
+- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
+- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+
+**Dependencies:** Task 13.
+
+**Estimated scope:** Medium.
 
 ### Task 15: Close Out Hardening, Backlog Sync, And Final-State Claim Discipline
 
@@ -599,14 +601,16 @@ Phase 5
 - Adapter selection is executable runtime behavior instead of projection-only posture.
 - Degrade and fallback behavior remain explicit and honest.
 
-### Checkpoint C: After Tasks 8-12
+### Checkpoint C: After Tasks 8-9
 - Real attached multi-repo trials exist.
 - Machine-local runtime roots are the default posture.
-- Operator queries, runtime-reader parity, and remediation-capable doctor behavior are real.
 
-### Checkpoint D: After Tasks 13-15
+### Checkpoint D: After Tasks 10-11
 - Service-shaped control-plane and worker boundaries exist.
 - Local deployment can run the extracted runtime stack without breaking contract parity.
+
+### Checkpoint E: After Tasks 12-15
+- Operator queries, runtime-reader parity, and remediation-capable doctor behavior are real.
 - Final-state claims are backed by evidence, gates, and synced backlog truth.
 
 ## Risks And Mitigations
@@ -615,7 +619,7 @@ Phase 5
 |---|---|---|
 | Session bridge becomes a second ad hoc runtime instead of the control surface | High | Make bridge the canonical execution bus and keep CLI paths as wrappers. |
 | Live Codex integration overfits the runtime to one host | High | Force Codex through the generic registry and keep at least one non-Codex fixture path. |
-| Service extraction happens before execution truth is stable | High | Do not start Tasks 13-14 before Tasks 1-12 close their acceptance criteria. |
+| Service extraction happens before execution truth is stable | High | Do not start Tasks 10-11 before Tasks 1-9 close their acceptance criteria. |
 | Machine-local root migration breaks current users | Medium | Keep repo-root compatibility mode plus migration and rollback coverage in Task 9. |
 | Docs claim full final-state closure too early | High | Keep claim discipline in the roadmap, master outline, and Task 15 closeout evidence. |
 | Transition-stack dependencies explode too early | Medium | Introduce FastAPI, PostgreSQL, and OpenTelemetry only when the service boundary requires them; keep Temporal and other north-star pieces deferred. |

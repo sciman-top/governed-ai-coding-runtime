@@ -5,8 +5,8 @@
 - It complements:
   - `docs/architecture/hybrid-final-state-master-outline.md`
   - `docs/roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md`
-  - the future direct implementation plan
-  - the future aligned backlog and issue seeds
+  - `docs/plans/direct-to-hybrid-final-state-implementation-plan.md`
+  - aligned backlog and issue seeds
 - If a future-sequencing conflict exists between this file and the lifecycle history file, this roadmap is the active mainline and the lifecycle file remains the history record.
 
 ## Execution Inputs
@@ -278,7 +278,7 @@ The repository may claim narrower truths after earlier phases:
 5. After `Phase 4`: service-shaped runtime deployment is real.
 
 ## Companion Deliverables Required Next
-This roadmap should be followed immediately by:
+This roadmap is paired with:
 1. a direct implementation plan
 2. an aligned backlog and task list
 3. backlog or issue-seed synchronization
