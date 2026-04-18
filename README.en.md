@@ -16,7 +16,7 @@ Not available yet:
 
 - No production runtime service.
 - No database or durable workflow worker.
-- No real web console.
+- No stable operator surface beyond scripted or CLI-first flows plus the minimal console facade.
 - No package build artifact or release pipeline.
 - `build` and `hotspot/doctor` now have Foundation-grade live entrypoints, but they are not production packaging or service-health checks yet.
 
@@ -133,10 +133,13 @@ For tool usage:
 
 For product planning:
 
-1. [90-Day Plan](docs/roadmap/governed-ai-coding-runtime-90-day-plan.md)
-2. [Issue-Ready Backlog](docs/backlog/issue-ready-backlog.md)
-3. [PRD](docs/prd/governed-ai-coding-runtime-prd.md)
-4. [Target Architecture](docs/architecture/governed-ai-coding-runtime-target-architecture.md)
+1. [Docs Index](docs/README.md)
+2. [Full Lifecycle Plan](docs/roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
+3. [Full Runtime Implementation Plan](docs/plans/full-runtime-implementation-plan.md)
+4. [Issue-Ready Backlog](docs/backlog/issue-ready-backlog.md)
+5. [Latest Deep Audit Review](docs/reviews/2026-04-18-full-repo-deep-audit-and-planning-refresh.md)
+6. [PRD](docs/prd/governed-ai-coding-runtime-prd.md)
+7. [Target Architecture](docs/architecture/governed-ai-coding-runtime-target-architecture.md)
 
 ## Completion Level
 Completed:
@@ -154,5 +157,5 @@ If the project continues toward a deployable runtime, the next slice should like
 
 1. Add real Python package metadata and a fuller release build.
 2. Add durable storage or a workflow worker.
-3. Connect the current `ControlPlaneConsole` facade to a CLI or minimal web UI.
+3. Connect the current `ControlPlaneConsole` facade to a CLI-first runtime status surface and keep the richer web UI for `Public Usable Release`.
 4. Expand the Foundation doctor into a richer runtime health entrypoint.

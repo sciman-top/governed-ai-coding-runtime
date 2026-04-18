@@ -64,4 +64,11 @@ Primary command:
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All
 ```
 
+## Current Working Set / 当前工作入口
+- Lifecycle roadmap: [docs/roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md](docs/roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
+- Active execution plan: [docs/plans/full-runtime-implementation-plan.md](docs/plans/full-runtime-implementation-plan.md)
+- Execution backlog: [docs/backlog/issue-ready-backlog.md](docs/backlog/issue-ready-backlog.md)
+- Latest deep audit review: [docs/reviews/2026-04-18-full-repo-deep-audit-and-planning-refresh.md](docs/reviews/2026-04-18-full-repo-deep-audit-and-planning-refresh.md)
+- Latest audit evidence: [docs/change-evidence/20260418-full-repo-deep-audit-and-planning-refresh.md](docs/change-evidence/20260418-full-repo-deep-audit-and-planning-refresh.md)
+
 

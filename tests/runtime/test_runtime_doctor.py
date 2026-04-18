@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import shutil
 import unittest
 from pathlib import Path
 
@@ -77,6 +78,37 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
 
         self.assertIn("OK runtime-build", build_completed.stdout)
         self.assertIn("OK runtime-doctor", doctor_completed.stdout)
+
+    def test_verify_repo_docs_ignores_ignored_worktree_markdown(self) -> None:
+        script = ROOT / "scripts" / "verify-repo.ps1"
+        fixture_root = ROOT / ".worktrees" / "verify-repo-docs-fixture"
+        fixture_docs = fixture_root / "docs"
+        fixture_docs.mkdir(parents=True, exist_ok=True)
+        (fixture_docs / "README.md").write_text("[broken](../AGENTS.md)\n", encoding="utf-8")
+
+        try:
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(script),
+                    "-Check",
+                    "Docs",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+        finally:
+            shutil.rmtree(fixture_root, ignore_errors=True)
+
+        self.assertIn("OK active-markdown-links", completed.stdout)
+        self.assertIn("OK backlog-yaml-ids", completed.stdout)
+        self.assertIn("OK old-project-name-historical-only", completed.stdout)
 
 
 if __name__ == "__main__":

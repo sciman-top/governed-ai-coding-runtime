@@ -1,4 +1,4 @@
-issue_seed_version: "3.0"
+issue_seed_version: "3.1"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment
@@ -46,7 +46,7 @@ issues:
     blocked_by: [GAP-024, GAP-025]
     user_stories: [11, 12, 22, 36]
   - id: GAP-027
-    title: Operator UI For Task, Approval, Evidence, And Replay
+    title: Minimal Operator Surface For Task, Approval, Evidence, And Replay
     type: AFK
     blocked_by: [GAP-025, GAP-026]
     user_stories: [14, 27, 34, 40]

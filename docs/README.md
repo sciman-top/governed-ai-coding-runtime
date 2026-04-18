@@ -11,6 +11,8 @@
 - [Full Lifecycle Backlog Seeds](./backlog/full-lifecycle-backlog-seeds.md)
 - [Issue-Ready Backlog](./backlog/issue-ready-backlog.md)
 - [Full Runtime Implementation Plan](./plans/full-runtime-implementation-plan.md)
+- [2026-04-18 Full Repo Deep Audit And Planning Refresh](./reviews/2026-04-18-full-repo-deep-audit-and-planning-refresh.md)
+- [20260418 Full Repo Deep Audit And Planning Refresh Evidence](./change-evidence/20260418-full-repo-deep-audit-and-planning-refresh.md)
 - [Foundation Runtime Substrate Implementation Plan](./plans/foundation-runtime-substrate-implementation-plan.md)
 - [20260417 Foundation Execution Plan](./change-evidence/20260417-foundation-execution-plan.md)
 - [GAP-020 Task 1 Evidence](./change-evidence/20260417-gap-020-task-1-clarification-compatibility-evidence.md)
@@ -20,7 +22,7 @@
 ## Current Planning Chain
 - Strategy and boundary inputs: [AI Coding PRD](./prd/governed-ai-coding-runtime-prd.md), [Interaction Model](./product/interaction-model.md), [Target Architecture](./architecture/governed-ai-coding-runtime-target-architecture.md), and [Minimum Viable Governance Loop](./architecture/minimum-viable-governance-loop.md)
 - Execution ordering: [90-Day Plan](./roadmap/governed-ai-coding-runtime-90-day-plan.md), [Backlog Index](./backlog/README.md), [Issue-Ready Backlog](./backlog/issue-ready-backlog.md), and [Plans Index](./plans/README.md)
-- Current handoff baseline: [Latest Deep Audit Review](./reviews/2026-04-17-pre-implementation-deep-audit-and-doc-refresh.md) plus [Latest Audit Evidence](./change-evidence/20260417-pre-implementation-deep-audit-and-doc-refresh.md)
+- Current handoff baseline: [Latest Deep Audit Review](./reviews/2026-04-18-full-repo-deep-audit-and-planning-refresh.md) plus [Latest Audit Evidence](./change-evidence/20260418-full-repo-deep-audit-and-planning-refresh.md)
 
 ## Navigation Aids
 - [Plans Index](./plans/README.md)
@@ -33,6 +35,7 @@
 - `Foundation / GAP-020` through `GAP-023` are complete on the current branch baseline.
 - The active execution queue is `Full Runtime / GAP-024` forward.
 - The current execution checklist is [Full Runtime Implementation Plan](./plans/full-runtime-implementation-plan.md).
+- `GAP-027` is currently scoped as a CLI-first minimal operator surface, not a mandatory web UI build.
 - Active verification for this repo now means `build -> test -> contract/invariant -> doctor`, with docs and script checks still included in `verify-repo -Check All`.
 - `docs/change-evidence/` remains historical evidence, not active product surface.
 
@@ -70,6 +73,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Run
 - [中文使用说明](../README.zh-CN.md)
 - [English Usage Guide](../README.en.md)
 - [Interaction Model](./product/interaction-model.md)
+- [定位、路线图与竞品分层说明](./product/positioning-roadmap-competitive-layers.zh-CN.md)
 - [First Read-Only Trial](./product/first-readonly-trial.md)
 - [Write Policy Defaults](./product/write-policy-defaults.md)
 - [Approval Flow](./product/approval-flow.md)
@@ -104,6 +108,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Run
 
 ## Reviews
 - [Reviews Index](./reviews/README.md)
+- [Full Repo Deep Audit And Planning Refresh (2026-04-18)](./reviews/2026-04-18-full-repo-deep-audit-and-planning-refresh.md)
 - [Project Audit And Optimization (2026-04-17)](./reviews/2026-04-17-project-audit-and-optimization.md)
 - [Second Project Audit And Plan Hardening (2026-04-17)](./reviews/2026-04-17-second-project-audit-and-plan-hardening.md)
 - [Pre-Implementation Deep Audit And Doc Refresh (2026-04-17)](./reviews/2026-04-17-pre-implementation-deep-audit-and-doc-refresh.md)
@@ -118,6 +123,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Run
 
 ## Change Evidence
 - [Change Evidence Index](./change-evidence/README.md)
+- [20260418 Full Repo Deep Audit And Planning Refresh](./change-evidence/20260418-full-repo-deep-audit-and-planning-refresh.md)
 - [20260417 MVP Backlog Closeout Handoff](./change-evidence/20260417-mvp-backlog-closeout-handoff.md)
 - [20260417 Phase 1 Scripted Trial Entrypoint](./change-evidence/20260417-phase-1-scripted-trial-entrypoint.md)
 - [20260417 Phase 1 Workspace Allocation](./change-evidence/20260417-phase-1-workspace-allocation.md)

@@ -3,7 +3,7 @@
 Hand-maintained runtime contracts and domain models live here.
 
 ## Current Status
-Phase 1 starts with pure Python domain models for:
+The current repository baseline exposes pure Python runtime contracts and domain models for:
 - task intake validation
 - lifecycle transition validation
 - repo profile loading and resolution
@@ -21,3 +21,8 @@ Phase 1 starts with pure Python domain models for:
 - minimal approval and evidence control console facade
 
 These models are intentionally runtime-only and do not imply API, database, or workflow runtime selection yet.
+
+Not landed yet:
+- execution worker or managed runtime loop
+- artifact store and replay pipeline
+- stable runtime status surface beyond scripts and the minimal facade

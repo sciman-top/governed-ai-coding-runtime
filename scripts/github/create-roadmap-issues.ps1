@@ -1,16 +1,491 @@
 param(
-  [Parameter(Mandatory = $true)]
   [string]$Repo,
 
   [string]$Milestone = "Governed AI Coding Runtime Full Lifecycle",
 
   [string]$Assignee = "@me",
 
-  [switch]$SkipTasks
+  [switch]$SkipTasks,
+
+  [switch]$ValidateOnly,
+
+  [string]$IssueId,
+
+  [string]$EpicId,
+
+  [switch]$Initiative,
+
+  [switch]$RenderAll
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+function Parse-InlineArray {
+  param([string]$Value)
+
+  $trimmed = $Value.Trim()
+  if ($trimmed -eq '[]') {
+    return @()
+  }
+
+  if ($trimmed -notmatch '^\[(.*)\]$') {
+    throw "Unsupported inline array format: $Value"
+  }
+
+  $inner = $Matches[1].Trim()
+  if ([string]::IsNullOrWhiteSpace($inner)) {
+    return @()
+  }
+
+  return @(
+    $inner.Split(',') |
+      ForEach-Object { $_.Trim() } |
+      Where-Object { $_ -ne '' } |
+      ForEach-Object {
+        if ($_ -match '^"(.*)"$') {
+          $Matches[1]
+        }
+        elseif ($_ -match '^\d+$') {
+          [int]$_
+        }
+        else {
+          $_
+        }
+      }
+  )
+}
+
+function Get-IssueSeeds {
+  $path = Join-Path (Get-Location) "docs/backlog/issue-seeds.yaml"
+  if (-not (Test-Path $path)) {
+    throw "Issue seeds file not found: $path"
+  }
+
+  $content = Get-Content -Path $path
+  $version = $null
+  $issues = [System.Collections.Generic.List[object]]::new()
+  $current = $null
+
+  foreach ($line in $content) {
+    if ($line -match '^issue_seed_version:\s+"([^"]+)"\s*$') {
+      $version = $Matches[1]
+      continue
+    }
+
+    if ($line -match '^\s*-\s+id:\s+(GAP-\d+)\s*$') {
+      if ($null -ne $current) {
+        $issues.Add([pscustomobject]$current)
+      }
+
+      $current = [ordered]@{
+        id = $Matches[1]
+        title = $null
+        type = $null
+        blocked_by = @()
+        user_stories = @()
+      }
+      continue
+    }
+
+    if ($null -eq $current) {
+      continue
+    }
+
+    if ($line -match '^\s+title:\s+(.+?)\s*$') {
+      $current.title = $Matches[1]
+      continue
+    }
+
+    if ($line -match '^\s+type:\s+(.+?)\s*$') {
+      $current.type = $Matches[1]
+      continue
+    }
+
+    if ($line -match '^\s+blocked_by:\s+(.+?)\s*$') {
+      $current.blocked_by = @(Parse-InlineArray $Matches[1])
+      continue
+    }
+
+    if ($line -match '^\s+user_stories:\s+(.+?)\s*$') {
+      $current.user_stories = @(Parse-InlineArray $Matches[1])
+      continue
+    }
+  }
+
+  if ($null -ne $current) {
+    $issues.Add([pscustomobject]$current)
+  }
+
+  if ([string]::IsNullOrWhiteSpace($version)) {
+    throw "Issue seed version missing from docs/backlog/issue-seeds.yaml"
+  }
+
+  foreach ($issue in $issues) {
+    if ([string]::IsNullOrWhiteSpace($issue.id) -or [string]::IsNullOrWhiteSpace($issue.title) -or [string]::IsNullOrWhiteSpace($issue.type)) {
+      throw "Incomplete issue seed entry detected in docs/backlog/issue-seeds.yaml"
+    }
+  }
+
+  return [pscustomobject]@{
+    version = $version
+    issues = @($issues)
+  }
+}
+
+function Get-IssueSeedMap {
+  param([object]$SeedData)
+
+  $map = @{}
+  foreach ($issue in $SeedData.issues) {
+    $map[$issue.id] = $issue
+  }
+  return $map
+}
+
+function Get-BacklogTaskMap {
+  $path = Join-Path (Get-Location) "docs/backlog/issue-ready-backlog.md"
+  if (-not (Test-Path $path)) {
+    throw "Issue-ready backlog not found: $path"
+  }
+
+  $content = Get-Content -Path $path
+  $map = @{}
+  $current = $null
+  $currentSection = $null
+
+  foreach ($line in $content) {
+    if ($line -match '^### (GAP-\d+) (.+)$') {
+      if ($null -ne $current) {
+        $map[$current.id] = [pscustomobject]$current
+      }
+
+      $current = [ordered]@{
+        id = $Matches[1]
+        title = $Matches[2]
+        what_to_build = [System.Collections.Generic.List[string]]::new()
+        acceptance = [System.Collections.Generic.List[string]]::new()
+      }
+      $currentSection = $null
+      continue
+    }
+
+    if ($null -eq $current) {
+      continue
+    }
+
+    if ($line -match '^- What to build:\s*$') {
+      $currentSection = "what_to_build"
+      continue
+    }
+
+    if ($line -match '^- Acceptance criteria:\s*$') {
+      $currentSection = "acceptance"
+      continue
+    }
+
+    if ($line -match '^### ' -or $line -match '^## ') {
+      $currentSection = $null
+      continue
+    }
+
+    if ($line -match '^  - (.+?)\s*$') {
+      if ($currentSection -eq "what_to_build") {
+        $current.what_to_build.Add($Matches[1])
+      }
+      elseif ($currentSection -eq "acceptance") {
+        $current.acceptance.Add($Matches[1])
+      }
+      continue
+    }
+
+    if ($line -notmatch '^\s*$' -and $line -notmatch '^- (Type|Blocked by|User stories|Status):') {
+      $currentSection = $null
+    }
+  }
+
+  if ($null -ne $current) {
+    $map[$current.id] = [pscustomobject]$current
+  }
+
+  return $map
+}
+
+function Get-LifecyclePlanData {
+  $path = Join-Path (Get-Location) "docs/roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md"
+  if (-not (Test-Path $path)) {
+    throw "Lifecycle plan not found: $path"
+  }
+
+  $content = Get-Content -Path $path
+  $goal = [System.Collections.Generic.List[string]]::new()
+  $completion = [System.Collections.Generic.List[string]]::new()
+  $nonGoals = [System.Collections.Generic.List[string]]::new()
+  $stages = @{}
+  $currentStage = $null
+  $currentSection = $null
+
+  foreach ($line in $content) {
+    if ($line -match '^## Goal$') {
+      $currentStage = $null
+      $currentSection = "goal"
+      continue
+    }
+
+    if ($line -match '^## Product Shape$') {
+      $currentStage = $null
+      $currentSection = $null
+      continue
+    }
+
+    if ($line -match '^### Non-Goals$') {
+      $currentStage = $null
+      $currentSection = "non_goals"
+      continue
+    }
+
+    if ($line -match '^## Lifecycle Stages$') {
+      $currentStage = $null
+      $currentSection = $null
+      continue
+    }
+
+    if ($line -match '^### Stage \d+: (.+)$') {
+      $stageName = $Matches[1]
+      $currentStage = [ordered]@{
+        name = $stageName
+        purpose = [System.Collections.Generic.List[string]]::new()
+        required_outputs = [System.Collections.Generic.List[string]]::new()
+        exit_check = [System.Collections.Generic.List[string]]::new()
+      }
+      $stages[$stageName] = [pscustomobject]$currentStage
+      $currentSection = $null
+      continue
+    }
+
+    if ($line -match '^\*\*Purpose\*\*$') {
+      $currentSection = if ($null -ne $currentStage) { "purpose" } else { $null }
+      continue
+    }
+
+    if ($line -match '^\*\*Required outputs\*\*$') {
+      $currentSection = if ($null -ne $currentStage) { "required_outputs" } else { $null }
+      continue
+    }
+
+    if ($line -match '^\*\*Exit check\*\*$') {
+      $currentSection = if ($null -ne $currentStage) { "exit_check" } else { $null }
+      continue
+    }
+
+    if ($line -match '^## Lifecycle Completion Criteria$') {
+      $currentStage = $null
+      $currentSection = "completion"
+      continue
+    }
+
+    if ($line -match '^## ' -or ($line -match '^### ' -and $line -notmatch '^### Stage \d+: ')) {
+      $currentStage = $null
+      $currentSection = $null
+      continue
+    }
+
+    if ($line -match '^- (.+?)\s*$') {
+      switch ($currentSection) {
+        "goal" { $goal.Add($Matches[1]); continue }
+        "non_goals" { $nonGoals.Add($Matches[1]); continue }
+        "completion" { $completion.Add($Matches[1]); continue }
+        "purpose" { $currentStage.purpose.Add($Matches[1]); continue }
+        "required_outputs" { $currentStage.required_outputs.Add($Matches[1]); continue }
+        "exit_check" { $currentStage.exit_check.Add($Matches[1]); continue }
+      }
+    }
+  }
+
+  return [pscustomobject]@{
+    goal = @($goal)
+    completion = @($completion)
+    non_goals = @($nonGoals)
+    stages = $stages
+  }
+}
+
+function Get-EpicDefinitions {
+  return @(
+    @{
+      Id = "Vision"
+      Title = "[Epic] Vision Alignment"
+      StageName = "Vision"
+      Labels = @("epic", "phase:vision", "product", "docs", "platform")
+    }
+    @{
+      Id = "Foundation"
+      Title = "[Epic] Foundation"
+      StageName = "Foundation"
+      Labels = @("epic", "phase:foundation", "platform", "contracts", "backend")
+    }
+    @{
+      Id = "Full Runtime"
+      Title = "[Epic] Full Runtime"
+      StageName = "Full Runtime"
+      Labels = @("epic", "phase:full-runtime", "platform", "backend", "frontend")
+    }
+    @{
+      Id = "Public Usable Release"
+      Title = "[Epic] Public Usable Release"
+      StageName = "Public Usable Release"
+      Labels = @("epic", "phase:public-release", "platform", "docs", "devops")
+    }
+    @{
+      Id = "Maintenance Boundary"
+      Title = "[Epic] Maintenance Boundary"
+      StageName = "Maintenance"
+      Labels = @("epic", "phase:maintenance", "platform", "docs", "product")
+    }
+  )
+}
+
+function Get-EpicDefinitionMap {
+  param([object[]]$EpicDefinitions)
+
+  $map = @{}
+  foreach ($epic in $EpicDefinitions) {
+    $map[$epic.Id] = $epic
+    if ($epic.StageName -ne $epic.Id) {
+      $map[$epic.StageName] = $epic
+    }
+  }
+  return $map
+}
+
+function Format-SeedMetadataBlock {
+  param([object]$Seed)
+
+  $blockedBy = if ($Seed.blocked_by.Count -gt 0) {
+    $Seed.blocked_by -join ", "
+  }
+  else {
+    "None"
+  }
+
+  $userStories = if ($Seed.user_stories.Count -gt 0) {
+    ($Seed.user_stories | ForEach-Object { "$_" }) -join ", "
+  }
+  else {
+    "None"
+  }
+
+  return @"
+
+## Seed Metadata
+- Issue ID: $($Seed.id)
+- Seed type: $($Seed.type)
+- Blocked by: $blockedBy
+- User stories: $userStories
+"@
+}
+
+function Render-TaskIssueBody {
+  param(
+    [object]$Seed,
+    [object]$BacklogTask
+  )
+
+  if ($null -eq $BacklogTask) {
+    throw "Missing backlog section for $($Seed.id)"
+  }
+
+  if ($BacklogTask.what_to_build.Count -eq 0) {
+    throw "Backlog section $($Seed.id) is missing 'What to build' bullets"
+  }
+
+  if ($BacklogTask.acceptance.Count -eq 0) {
+    throw "Backlog section $($Seed.id) is missing acceptance criteria"
+  }
+
+  $goal = "Deliver $($Seed.title)."
+  $dependencies = if ($Seed.blocked_by.Count -gt 0) {
+    @($Seed.blocked_by | ForEach-Object { "- $_" }) -join "`n"
+  }
+  else {
+    "- None"
+  }
+
+  $scope = @($BacklogTask.what_to_build | ForEach-Object { "- $_" }) -join "`n"
+  $acceptance = @($BacklogTask.acceptance | ForEach-Object { "- $_" }) -join "`n"
+
+  return @"
+## Goal
+$goal
+
+## Scope
+$scope
+
+## Dependencies
+$dependencies
+
+## Acceptance Criteria
+$acceptance
+"@ + (Format-SeedMetadataBlock -Seed $Seed)
+}
+
+function Render-EpicIssueBody {
+  param(
+    [string]$EpicId,
+    [object]$Stage
+  )
+
+  if ($null -eq $Stage) {
+    throw "Missing lifecycle stage for epic '$EpicId'"
+  }
+
+  if ($Stage.purpose.Count -eq 0 -or $Stage.required_outputs.Count -eq 0 -or $Stage.exit_check.Count -eq 0) {
+    throw "Lifecycle stage '$EpicId' is missing required sections"
+  }
+
+  $goal = @($Stage.purpose | ForEach-Object { "- $_" }) -join "`n"
+  $scope = @($Stage.required_outputs | ForEach-Object { "- $_" }) -join "`n"
+  $acceptance = @($Stage.exit_check | ForEach-Object { "- $_" }) -join "`n"
+
+  return @"
+## Goal
+$goal
+
+## Scope
+$scope
+
+## Acceptance Criteria
+$acceptance
+"@
+}
+
+function Render-InitiativeBody {
+  param([object]$LifecyclePlan)
+
+  if ($LifecyclePlan.goal.Count -eq 0 -or $LifecyclePlan.completion.Count -eq 0) {
+    throw "Lifecycle plan is missing goal or completion criteria"
+  }
+
+  $goal = @($LifecyclePlan.goal | ForEach-Object { "- $_" }) -join "`n"
+  $success = @($LifecyclePlan.completion | ForEach-Object { "- $_" }) -join "`n"
+  $nonGoals = if ($LifecyclePlan.non_goals.Count -gt 0) {
+    @($LifecyclePlan.non_goals | ForEach-Object { "- $_" }) -join "`n"
+  }
+  else {
+    "- None"
+  }
+
+  return @"
+## Goal
+$goal
+
+## Success Criteria
+$success
+
+## Out Of Scope
+$nonGoals
+"@
+}
 
 function Ensure-Command {
   param([string]$Name)
@@ -81,6 +556,92 @@ function New-RoadmapIssue {
   }
 }
 
+if (-not $ValidateOnly -and [string]::IsNullOrWhiteSpace($Repo)) {
+  throw "Parameter Repo is required unless -ValidateOnly is used."
+}
+
+$seedData = Get-IssueSeeds
+$seedMap = Get-IssueSeedMap -SeedData $seedData
+$backlogTaskMap = Get-BacklogTaskMap
+$lifecyclePlan = Get-LifecyclePlanData
+$epicDefinitions = @(Get-EpicDefinitions)
+$epicDefinitionMap = Get-EpicDefinitionMap -EpicDefinitions $epicDefinitions
+
+if ($ValidateOnly) {
+  if ($RenderAll) {
+    $renderedTasks = 0
+    foreach ($issue in $seedData.issues) {
+      [void](Render-TaskIssueBody -Seed $issue -BacklogTask $backlogTaskMap[$issue.id])
+      $renderedTasks += 1
+    }
+
+    $renderedEpics = 0
+    foreach ($epicDefinition in $epicDefinitions) {
+      [void](Render-EpicIssueBody -EpicId $epicDefinition.Id -Stage $lifecyclePlan.stages[$epicDefinition.StageName])
+      $renderedEpics += 1
+    }
+
+    [void](Render-InitiativeBody -LifecyclePlan $lifecyclePlan)
+
+    [pscustomobject]@{
+      issue_seed_version = $seedData.version
+      rendered_tasks = $renderedTasks
+      rendered_epics = $renderedEpics
+      rendered_initiative = $true
+    } | ConvertTo-Json -Compress
+    exit 0
+  }
+
+  if ($Initiative) {
+    [pscustomobject]@{
+      title = "[Initiative] Governed AI Coding Runtime Full Functional Lifecycle"
+      body = (Render-InitiativeBody -LifecyclePlan $lifecyclePlan)
+    } | ConvertTo-Json -Compress
+    exit 0
+  }
+
+  if (-not [string]::IsNullOrWhiteSpace($EpicId)) {
+    if (-not $epicDefinitionMap.ContainsKey($EpicId)) {
+      throw "Epic definition not found for $EpicId"
+    }
+
+    $epicDefinition = $epicDefinitionMap[$EpicId]
+    $body = Render-EpicIssueBody -EpicId $epicDefinition.Id -Stage $lifecyclePlan.stages[$epicDefinition.StageName]
+    [pscustomobject]@{
+      epic_id = $epicDefinition.Id
+      title = $epicDefinition.Title
+      body = $body
+    } | ConvertTo-Json -Compress
+    exit 0
+  }
+
+  if (-not [string]::IsNullOrWhiteSpace($IssueId)) {
+    if (-not $seedMap.ContainsKey($IssueId)) {
+      throw "Issue seed not found for $IssueId"
+    }
+
+    $seed = $seedMap[$IssueId]
+    $title = if ($IssueId -match '^GAP-0(1[8-9]|2\d|3\d)$') { "[Task] $($seed.title)" } else { $seed.title }
+    $body = Render-TaskIssueBody -Seed $seed -BacklogTask $backlogTaskMap[$IssueId]
+
+    [pscustomobject]@{
+      issue_id = $IssueId
+      title = $title
+      body = $body
+    } | ConvertTo-Json -Compress
+    exit 0
+  }
+
+  $gap027 = $seedMap["GAP-027"]
+  [pscustomobject]@{
+    issue_seed_version = $seedData.version
+    issue_count = $seedData.issues.Count
+    first_issue_id = $seedData.issues[0].id
+    gap_027_title = $gap027.title
+  } | ConvertTo-Json -Compress
+  exit 0
+}
+
 Ensure-Command -Name "gh"
 
 $labels = @(
@@ -109,161 +670,19 @@ foreach ($label in $labels) {
 
 Ensure-Milestone
 
-$initiativeBody = @"
-## Goal
-Turn the completed MVP governance kernel into a complete single-machine self-hosted governed AI coding runtime.
-
-## Success Criteria
-- [ ] Final product shape and capability boundary are frozen
-- [ ] Real build and doctor or hotspot commands replace the remaining placeholders
-- [ ] Durable task persistence and workflow skeleton are landed
-- [ ] Execution workers, artifact storage, gate running, and replay exist as working runtime paths
-- [ ] A minimal operator UI exists for task, approval, evidence, replay, and runtime status
-- [ ] A new user can follow quickstart docs and run a real governed task on one machine
-- [ ] Compatibility, upgrade, deprecation, and retirement rules are explicit enough for ongoing maintenance
-
-## In Scope
-- final product alignment
-- foundation maturity work
-- full runtime implementation
-- public usable release path
-- minimal maintenance boundary
-
-## Out Of Scope
-- commercial packaging
-- enterprise org model
-- marketplace or promotion workflow
-- default multi-agent orchestration
-- memory-first product identity
-- deployment automation as the default completion path
-"@
+$initiativeBody = Render-InitiativeBody -LifecyclePlan $lifecyclePlan
 
 New-RoadmapIssue -Title "[Initiative] Governed AI Coding Runtime Full Functional Lifecycle" -Labels @("initiative", "platform") -Body $initiativeBody
 
-$epics = @(
-  @{
-    Title  = "[Epic] Vision Alignment"
-    Labels = @("epic", "phase:vision", "product", "docs", "platform")
-    Body   = @"
-## Goal
-Freeze the final product shape, capability boundary, and lifecycle stages for the project.
-
-## Scope
-- full lifecycle alignment
-- final capability boundary
-- non-goal boundary
-
-## Dependencies
-- None
-
-## Acceptance Criteria
-- [ ] active planning docs describe the same lifecycle stages
-- [ ] final capability boundary is explicit
-- [ ] the project is described as a complete runtime target rather than only contracts or tooling
-"@
-  }
-  @{
-    Title  = "[Epic] Foundation"
-    Labels = @("epic", "phase:foundation", "platform", "contracts", "backend")
-    Body   = @"
-## Goal
-Make the completed MVP capable of supporting the full product runtime.
-
-## Scope
-- clarification, rollout, compatibility, and evidence maturity
-- real build and doctor gates
-- durable task store skeleton
-- workflow skeleton
-- control lifecycle metadata
-
-## Dependencies
-- [Epic] Vision Alignment
-
-## Acceptance Criteria
-- [ ] key runtime controls are no longer documentation-only
-- [ ] build and doctor gates are live
-- [ ] task state is durable enough for later runtime work
-"@
-  }
-  @{
-    Title  = "[Epic] Full Runtime"
-    Labels = @("epic", "phase:full-runtime", "platform", "backend", "frontend")
-    Body   = @"
-## Goal
-Land the complete runtime path for one governed AI coding task.
-
-## Scope
-- execution worker
-- artifact store
-- operational gate runner
-- replay pipeline
-- operator UI
-- runtime health and status surface
-
-## Dependencies
-- [Epic] Foundation
-
-## Acceptance Criteria
-- [ ] a real governed task can run end-to-end
-- [ ] approval, verification, evidence, and replay work on the runtime path
-- [ ] operators can inspect runtime state from a control-plane UI
-"@
-  }
-  @{
-    Title  = "[Epic] Public Usable Release"
-    Labels = @("epic", "phase:public-release", "platform", "docs", "devops")
-    Body   = @"
-## Goal
-Make the full runtime understandable and runnable by a new user on one machine.
-
-## Scope
-- single-machine deployment
-- quickstart
-- sample repo profiles
-- demo flow
-- packaging and release criteria
-- adapter baseline and degrade behavior
-
-## Dependencies
-- [Epic] Full Runtime
-
-## Acceptance Criteria
-- [ ] a new user can clone the repo and run the runtime from docs
-- [ ] sample profiles and demo flow work end-to-end
-- [ ] release and packaging expectations are explicit
-"@
-  }
-  @{
-    Title  = "[Epic] Maintenance Boundary"
-    Labels = @("epic", "phase:maintenance", "platform", "docs", "product")
-    Body   = @"
-## Goal
-Keep the project maintainable after the first usable release without adding heavy operational overhead.
-
-## Scope
-- compatibility and upgrade policy
-- maintenance and triage rules
-- deprecation and retirement policy
-
-## Dependencies
-- [Epic] Public Usable Release
-
-## Acceptance Criteria
-- [ ] upgrade and compatibility expectations are explicit
-- [ ] maintenance boundary is documented
-- [ ] deprecated or retired capabilities remain traceable
-"@
-  }
-)
-
-foreach ($epic in $epics) {
-  New-RoadmapIssue -Title $epic.Title -Labels $epic.Labels -Body $epic.Body
+foreach ($epicDefinition in $epicDefinitions) {
+  $body = Render-EpicIssueBody -EpicId $epicDefinition.Id -Stage $lifecyclePlan.stages[$epicDefinition.StageName]
+  New-RoadmapIssue -Title $epicDefinition.Title -Labels $epicDefinition.Labels -Body $body
 }
 
 if (-not $SkipTasks) {
   $tasks = @(
     @{
-      Title  = "[Task] Align the full functional lifecycle and freeze the final product shape"
+      IssueId = "GAP-018"
       Labels = @("task", "phase:vision", "product", "docs", "platform")
       Body   = @"
 ## Goal
@@ -279,7 +698,7 @@ Align active planning docs around the full functional lifecycle and final produc
 "@
     }
     @{
-      Title  = "[Task] Freeze the final capability boundary and non-goal boundary"
+      IssueId = "GAP-019"
       Labels = @("task", "phase:vision", "product", "docs", "platform")
       Body   = @"
 ## Goal
@@ -295,7 +714,7 @@ Make final product completeness and non-goals explicit.
 "@
     }
     @{
-      Title  = "[Task] Formalize clarification, rollout, compatibility, and evidence maturity"
+      IssueId = "GAP-020"
       Labels = @("task", "phase:foundation", "contracts", "platform", "security")
       Body   = @"
 ## Goal
@@ -312,7 +731,7 @@ Turn the remaining governance semantics into formal runtime policy.
 "@
     }
     @{
-      Title  = "[Task] Add real build and doctor gates"
+      IssueId = "GAP-021"
       Labels = @("task", "phase:foundation", "backend", "devops", "platform")
       Body   = @"
 ## Goal
@@ -328,7 +747,7 @@ Replace the remaining build and hotspot placeholders with live commands.
 "@
     }
     @{
-      Title  = "[Task] Add the durable task store and workflow skeleton"
+      IssueId = "GAP-022"
       Labels = @("task", "phase:foundation", "backend", "platform")
       Body   = @"
 ## Goal
@@ -344,7 +763,7 @@ Make task state durable enough to support the full runtime.
 "@
     }
     @{
-      Title  = "[Task] Add control lifecycle metadata and evidence completeness checks"
+      IssueId = "GAP-023"
       Labels = @("task", "phase:foundation", "contracts", "platform", "eval")
       Body   = @"
 ## Goal
@@ -360,7 +779,7 @@ Track control lifecycle state and validate evidence completeness.
 "@
     }
     @{
-      Title  = "[Task] Add the execution worker and managed workspace runtime"
+      IssueId = "GAP-024"
       Labels = @("task", "phase:full-runtime", "backend", "platform")
       Body   = @"
 ## Goal
@@ -376,7 +795,7 @@ Run real governed tasks through a worker and managed workspace.
 "@
     }
     @{
-      Title  = "[Task] Add artifact storage, replay plumbing, and the operational gate runner"
+      IssueId = "GAP-025"
       Labels = @("task", "phase:full-runtime", "backend", "platform", "eval")
       Body   = @"
 ## Goal
@@ -392,7 +811,7 @@ Persist artifacts and make verification and replay operational.
 "@
     }
     @{
-      Title  = "[Task] Add the operator UI and runtime health or status surfaces"
+      IssueId = "GAP-027"
       Labels = @("task", "phase:full-runtime", "frontend", "platform", "backend")
       Body   = @"
 ## Goal
@@ -404,11 +823,12 @@ Give operators a control-plane surface for tasks, approvals, evidence, replay, a
 ## Acceptance Criteria
 - [ ] operators can inspect tasks, approvals, evidence, and replay without raw log digging
 - [ ] runtime health and task query surfaces are stable
-- [ ] the UI remains control-plane focused
+- [ ] the surface remains control-plane focused
+- [ ] the first delivery may be CLI-first as long as it keeps a stable read model for a later UI
 "@
     }
     @{
-      Title  = "[Task] Add single-machine deployment, quickstart, sample profiles, and release criteria"
+      IssueId = "GAP-029"
       Labels = @("task", "phase:public-release", "docs", "devops", "platform")
       Body   = @"
 ## Goal
@@ -424,7 +844,7 @@ Make the full runtime publicly usable on one machine.
 "@
     }
     @{
-      Title  = "[Task] Add adapter baseline, compatibility policy, and maintenance boundary"
+      IssueId = "GAP-033"
       Labels = @("task", "phase:maintenance", "product", "docs", "platform")
       Body   = @"
 ## Goal
@@ -442,6 +862,14 @@ Keep the project maintainable after the first usable release.
   )
 
   foreach ($task in $tasks) {
-    New-RoadmapIssue -Title $task.Title -Labels $task.Labels -Body $task.Body
+    if (-not $seedMap.ContainsKey($task.IssueId)) {
+      throw "Task issue seed not found for $($task.IssueId)"
+    }
+
+    $seed = $seedMap[$task.IssueId]
+    $title = "[Task] $($seed.title)"
+    $body = Render-TaskIssueBody -Seed $seed -BacklogTask $backlogTaskMap[$task.IssueId]
+
+    New-RoadmapIssue -Title $title -Labels $task.Labels -Body $body
   }
 }

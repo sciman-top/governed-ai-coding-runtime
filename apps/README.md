@@ -9,4 +9,8 @@ Future runtime application entrypoints live here.
 - `console-web/`: future approval and evidence inspection UI.
 
 ## Current Status
-No runtime services are implemented yet. Phase 0 only creates the repository boundary so later tasks have stable destinations.
+No runtime services are implemented yet.
+
+The current active stage remains `Full Runtime / GAP-024`, but it is still CLI-first and contract-layer heavy:
+- `scripts/` and `packages/contracts/` are the live execution substrate today
+- `apps/` stays reserved for later service-shaped boundaries once the runtime path and read models stabilize

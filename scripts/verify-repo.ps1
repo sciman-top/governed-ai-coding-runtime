@@ -83,9 +83,44 @@ function Invoke-PowerShellParse {
   Write-CheckOk "powershell-parse"
 }
 
+function Invoke-IssueSeedingRenderCheck {
+  $output = & pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/github/create-roadmap-issues.ps1 -ValidateOnly -RenderAll
+  if ($LASTEXITCODE -ne 0) {
+    throw "Issue seeding render check failed"
+  }
+
+  $summary = $output | ConvertFrom-Json
+  if ($summary.rendered_tasks -lt 1 -or $summary.rendered_epics -lt 1 -or -not $summary.rendered_initiative) {
+    throw "Issue seeding render check returned incomplete summary"
+  }
+
+  Write-CheckOk "issue-seeding-render"
+}
+
 function Invoke-ActiveMarkdownLinkCheck {
-  $files = Get-ChildItem -Recurse -File -Filter *.md | Where-Object {
-    $_.FullName -notmatch '[\\/]+docs[\\/]+change-evidence[\\/]'
+  $files = @()
+  $git = Get-Command git -ErrorAction SilentlyContinue
+  if ($git -and (Test-Path ".git")) {
+    $markdownPaths = & $git.Source ls-files --cached --others --exclude-standard -- "*.md"
+    if ($LASTEXITCODE -ne 0) {
+      throw "git ls-files failed while collecting active markdown files"
+    }
+
+    $files = @(
+      $markdownPaths |
+        Where-Object { $_ } |
+        ForEach-Object { Get-Item -LiteralPath (Join-Path (Get-Location) $_) } |
+        Where-Object { $_.FullName -notmatch '[\\/]+docs[\\/]+change-evidence[\\/]' }
+    )
+  }
+  else {
+    $files = @(
+      Get-ChildItem -Recurse -File -Filter *.md | Where-Object {
+        $_.FullName -notmatch '[\\/]+docs[\\/]+change-evidence[\\/]' -and
+        $_.FullName -notmatch '[\\/]+\.git[\\/]' -and
+        $_.FullName -notmatch '[\\/]+\.worktrees[\\/]'
+      }
+    )
   }
 
   $broken = [System.Collections.Generic.List[string]]::new()
@@ -184,6 +219,7 @@ function Invoke-DocsChecks {
 
 function Invoke-ScriptChecks {
   Invoke-PowerShellParse
+  Invoke-IssueSeedingRenderCheck
 }
 
 function Invoke-RuntimeChecks {

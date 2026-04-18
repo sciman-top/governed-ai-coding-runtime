@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260418 Full Repo Deep Audit And Planning Refresh](./20260418-full-repo-deep-audit-and-planning-refresh.md)
+  - evidence companion for the latest repository-wide audit, planning-chain cleanup, and active Full Runtime navigation refresh
 - [20260418 Full Runtime CLI-First Planning Realignment](./20260418-full-runtime-cli-first-planning-realignment.md)
   - evidence companion for changing `GAP-027` to a CLI-first operator surface and moving the richer UI shell to `Public Usable Release`
 - [20260417 Foundation Execution Plan](./20260417-foundation-execution-plan.md)
@@ -43,7 +45,7 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - [20260417 Phase 1 Task Intake And Repo Resolution](./20260417-phase-1-task-intake-repo-resolution.md)
   - evidence companion for the first Phase 1 runtime contract slice
 - [20260417 Pre-Implementation Deep Audit And Doc Refresh](./20260417-pre-implementation-deep-audit-and-doc-refresh.md)
-  - current evidence companion for the latest implementation handoff review
+  - historical evidence companion for the pre-Foundation implementation handoff review
 - [20260417 Phase 0 Plan Evidence](./20260417-phase-0-plan.md)
   - evidence companion for the current executable plan
 

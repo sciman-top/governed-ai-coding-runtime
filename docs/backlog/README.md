@@ -20,9 +20,15 @@ This directory holds the human and machine planning artifacts that bridge strate
 ## Script Relationship
 - GitHub issue bootstrap helper:
   - [`scripts/github/create-roadmap-issues.ps1`](../../scripts/github/create-roadmap-issues.ps1)
+- Current behavior:
+  - task titles and seed metadata are now injected from `issue-seeds.yaml`
+  - task issue bodies are now rendered from `issue-ready-backlog.md` plus seed metadata
+  - initiative and epic issue bodies are now rendered from `governed-ai-coding-runtime-full-lifecycle-plan.md`
+  - `-ValidateOnly` can be used to verify the script sees the current seed set without calling GitHub
+  - `-ValidateOnly -RenderAll` renders every task, epic, and initiative body without calling GitHub
 - Current limitation:
-  - the script still owns its issue body text directly instead of loading `issue-seeds.yaml`
-  - keep the script, backlog markdown, and YAML aligned when planning changes are made
+  - the seeding script depends on stable markdown heading structure in both the backlog and lifecycle roadmap
+  - this parser contract is covered by `scripts/verify-repo.ps1 -Check Scripts`, which fails if the source docs can no longer render the issue bodies
 
 ## Current Execution Posture
 - The 90-day MVP backlog reached its endpoint at `GAP-017`.

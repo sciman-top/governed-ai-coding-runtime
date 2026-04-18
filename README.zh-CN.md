@@ -15,7 +15,7 @@
 
 - 没有生产级 runtime service。
 - 没有数据库或 durable workflow worker。
-- 没有真实 Web 控制台。
+- 还没有超出 scripted/CLI-first 路径与最小 console facade 之外的稳定 operator surface。
 - 没有包构建产物或发布流程。
 - `build` 与 `hotspot/doctor` 已有 Foundation 级真实入口，但还不是生产级构建与服务健康检查。
 
@@ -132,10 +132,13 @@ PY
 
 如果你要理解产品规划：
 
-1. [90-Day Plan](docs/roadmap/governed-ai-coding-runtime-90-day-plan.md)
-2. [Issue-Ready Backlog](docs/backlog/issue-ready-backlog.md)
-3. [PRD](docs/prd/governed-ai-coding-runtime-prd.md)
-4. [Target Architecture](docs/architecture/governed-ai-coding-runtime-target-architecture.md)
+1. [文档索引](docs/README.md)
+2. [Full Lifecycle Plan](docs/roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
+3. [Full Runtime Implementation Plan](docs/plans/full-runtime-implementation-plan.md)
+4. [Issue-Ready Backlog](docs/backlog/issue-ready-backlog.md)
+5. [最新深度审查 Review](docs/reviews/2026-04-18-full-repo-deep-audit-and-planning-refresh.md)
+6. [PRD](docs/prd/governed-ai-coding-runtime-prd.md)
+7. [Target Architecture](docs/architecture/governed-ai-coding-runtime-target-architecture.md)
 
 ## 当前完成度
 当前已完成：
@@ -153,5 +156,5 @@ PY
 
 1. 增加真实 Python package 元数据与更完整发布构建。
 2. 增加 durable storage 或 workflow worker。
-3. 把当前 `ControlPlaneConsole` facade 接到 CLI 或最小 Web UI。
+3. 先把当前 `ControlPlaneConsole` facade 接到 CLI-first runtime status surface，再把更完整的 Web UI 放到 `Public Usable Release`。
 4. 把 Foundation doctor 扩展为更接近服务健康检查的入口。
