@@ -50,6 +50,66 @@ def main() -> int:
     gate_parser.add_argument("--attachment-runtime-state-root")
     gate_parser.set_defaults(command_type="run_gate")
 
+    inspect_evidence_parser = _add_common(
+        subparsers.add_parser("inspect-evidence", help="Inspect evidence refs for a task or run.")
+    )
+    inspect_evidence_parser.add_argument("--run-id")
+    inspect_evidence_parser.set_defaults(command_type="inspect_evidence")
+
+    inspect_handoff_parser = _add_common(
+        subparsers.add_parser("inspect-handoff", help="Inspect handoff refs for a task or run.")
+    )
+    inspect_handoff_parser.add_argument("--run-id")
+    inspect_handoff_parser.add_argument("--handoff-ref")
+    inspect_handoff_parser.set_defaults(command_type="inspect_handoff")
+
+    write_request_parser = _add_common(
+        subparsers.add_parser("write-request", help="Request governed write approval or allowance.")
+    )
+    write_request_parser.add_argument("--attachment-root", required=True)
+    write_request_parser.add_argument("--attachment-runtime-state-root", required=True)
+    write_request_parser.add_argument("--tool-name", required=True)
+    write_request_parser.add_argument("--target-path", required=True)
+    write_request_parser.add_argument("--tier", choices=["low", "medium", "high"], required=True)
+    write_request_parser.add_argument("--rollback-reference", required=True)
+    write_request_parser.set_defaults(command_type="write_request")
+
+    write_approve_parser = _add_common(
+        subparsers.add_parser("write-approve", help="Record an approval decision for a governed write.")
+    )
+    write_approve_parser.add_argument("--attachment-runtime-state-root", required=True)
+    write_approve_parser.add_argument("--approval-id", required=True)
+    write_approve_parser.add_argument("--decision", choices=["approve", "reject"], required=True)
+    write_approve_parser.add_argument("--decided-by", required=True)
+    write_approve_parser.set_defaults(command_type="write_approve")
+
+    write_execute_parser = _add_common(
+        subparsers.add_parser("write-execute", help="Execute a governed write after policy and approval checks.")
+    )
+    write_execute_parser.add_argument("--attachment-root", required=True)
+    write_execute_parser.add_argument("--attachment-runtime-state-root", required=True)
+    write_execute_parser.add_argument("--tool-name", required=True)
+    write_execute_parser.add_argument("--target-path", required=True)
+    write_execute_parser.add_argument("--tier", choices=["low", "medium", "high"], required=True)
+    write_execute_parser.add_argument("--rollback-reference", required=True)
+    write_execute_parser.add_argument("--content", required=True)
+    write_execute_parser.add_argument("--approval-id")
+    write_execute_parser.add_argument("--policy-status", choices=["allow", "escalate", "deny"], default="allow")
+    write_execute_parser.add_argument("--policy-decision-ref")
+    write_execute_parser.add_argument("--approval-ref")
+    write_execute_parser.add_argument("--remediation-hint")
+    write_execute_parser.set_defaults(command_type="write_execute")
+
+    write_status_parser = _add_common(
+        subparsers.add_parser("write-status", help="Inspect the current status of a governed write flow.")
+    )
+    write_status_parser.add_argument("--attachment-runtime-state-root")
+    write_status_parser.add_argument("--approval-id")
+    write_status_parser.add_argument("--target-path")
+    write_status_parser.add_argument("--execution-id")
+    write_status_parser.add_argument("--policy-decision-ref")
+    write_status_parser.set_defaults(command_type="write_status")
+
     launch_parser = _add_common(
         subparsers.add_parser(
             "launch",
@@ -79,6 +139,60 @@ def main() -> int:
             required_approval_ref=args.approval_ref,
             remediation_hint=args.remediation_hint,
         )
+    elif command_type == "inspect_evidence":
+        payload = {"run_id": args.run_id} if args.run_id else {}
+    elif command_type == "inspect_handoff":
+        payload = {}
+        if args.run_id:
+            payload["run_id"] = args.run_id
+        if args.handoff_ref:
+            payload["handoff_ref"] = args.handoff_ref
+    elif command_type == "write_request":
+        payload = {
+            "tool_name": args.tool_name,
+            "target_path": args.target_path,
+            "tier": args.tier,
+            "rollback_reference": args.rollback_reference,
+        }
+    elif command_type == "write_approve":
+        payload = {
+            "approval_id": args.approval_id,
+            "decision": args.decision,
+            "decided_by": args.decided_by,
+        }
+    elif command_type == "write_execute":
+        payload = {
+            "tool_name": args.tool_name,
+            "target_path": args.target_path,
+            "tier": args.tier,
+            "rollback_reference": args.rollback_reference,
+            "content": args.content,
+        }
+        if args.approval_id:
+            payload["approval_id"] = args.approval_id
+        if args.policy_decision_ref:
+            payload["policy_decision_ref"] = args.policy_decision_ref
+        policy_decision_ref = args.policy_decision_ref
+        if policy_decision_ref is None:
+            policy_decision = build_policy_decision(
+                task_id=args.task_id,
+                action_id="session:write_execute",
+                risk_tier=args.risk_tier,
+                subject=f"session_command:write_execute:{args.target_path}",
+                status=args.policy_status,
+                decision_basis=[f"session bridge CLI policy status is {args.policy_status}"],
+                evidence_ref=f"artifacts/{args.task_id}/policy/session-bridge-write-{args.policy_status}.json",
+                required_approval_ref=args.approval_ref,
+                remediation_hint=args.remediation_hint,
+            )
+    elif command_type == "write_status":
+        payload = {}
+        if args.approval_id:
+            payload["approval_id"] = args.approval_id
+        if args.target_path:
+            payload["target_path"] = args.target_path
+        if args.execution_id:
+            payload["execution_id"] = args.execution_id
 
     bridge_command_type = "bind_task" if command_type == "launch" else command_type
     command = build_session_bridge_command(
@@ -90,6 +204,7 @@ def main() -> int:
         risk_tier=args.risk_tier,
         payload=payload,
         policy_decision=policy_decision,
+        policy_decision_ref=getattr(args, "policy_decision_ref", None),
     )
     if command_type == "launch":
         capability = resolve_launch_fallback(

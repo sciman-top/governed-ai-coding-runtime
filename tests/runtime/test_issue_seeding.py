@@ -1,12 +1,27 @@
 import json
+import re
 import subprocess
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+ISSUE_SEEDS_PATH = ROOT / "docs" / "backlog" / "issue-seeds.yaml"
 
 
 class IssueSeedingScriptTests(unittest.TestCase):
+    @staticmethod
+    def _seed_version() -> str:
+        content = ISSUE_SEEDS_PATH.read_text(encoding="utf-8")
+        match = re.search(r'^issue_seed_version:\s+"([^"]+)"\s*$', content, re.MULTILINE)
+        if match is None:
+            raise AssertionError("issue_seed_version missing from issue-seeds.yaml")
+        return match.group(1)
+
+    @staticmethod
+    def _seed_count() -> int:
+        content = ISSUE_SEEDS_PATH.read_text(encoding="utf-8")
+        return len(re.findall(r"^\s*-\s+id:\s+GAP-\d+\s*$", content, re.MULTILINE))
+
     def test_validate_only_reports_seed_summary_from_yaml(self) -> None:
         script = ROOT / "scripts" / "github" / "create-roadmap-issues.ps1"
 
@@ -27,8 +42,8 @@ class IssueSeedingScriptTests(unittest.TestCase):
         )
 
         summary = json.loads(completed.stdout)
-        self.assertEqual(summary["issue_seed_version"], "3.2")
-        self.assertEqual(summary["issue_count"], 27)
+        self.assertEqual(summary["issue_seed_version"], self._seed_version())
+        self.assertEqual(summary["issue_count"], self._seed_count())
         self.assertEqual(summary["first_issue_id"], "GAP-018")
         self.assertEqual(summary["gap_027_title"], "Minimal Operator Surface For Task, Approval, Evidence, And Replay")
 
@@ -224,11 +239,11 @@ class IssueSeedingScriptTests(unittest.TestCase):
         )
 
         summary = json.loads(completed.stdout)
-        self.assertEqual(summary["issue_seed_version"], "3.2")
-        self.assertEqual(summary["rendered_tasks"], 27)
+        self.assertEqual(summary["issue_seed_version"], self._seed_version())
+        self.assertEqual(summary["rendered_tasks"], self._seed_count())
         self.assertEqual(summary["rendered_epics"], 7)
         self.assertTrue(summary["rendered_initiative"])
-        self.assertEqual(summary["rendered_issue_creation_tasks"], 27)
+        self.assertEqual(summary["rendered_issue_creation_tasks"], self._seed_count())
 
 
 if __name__ == "__main__":

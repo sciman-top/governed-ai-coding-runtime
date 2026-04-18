@@ -11,6 +11,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - internal runtime boundaries remain service-shaped even though the default delivery shape is attach-first rather than service-first
 - Codex compatibility remains the first direct adapter priority, but final product completeness cannot be Codex-only
 - non-goals remain non-goals: no enterprise org model, no marketplace, no default multi-agent orchestration, no memory-first product identity
+- the active future-facing queue is the direct-to-hybrid-final-state mainline through `GAP-045` onward, while older lifecycle `GAP` entries remain completion history
 
 ## Current Baseline
 - PRD, architecture, ADRs, specs, runtime contract primitives, repo verifier entrypoints, sample repo profiles, and a runtime-consumable control pack already exist.
@@ -22,6 +23,247 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Maintenance Baseline / GAP-033` through `GAP-034` are now complete on the current branch baseline.
 - `Strategy Alignment Gates / GAP-040` through `GAP-044` are now complete on the current branch baseline.
 - `Interactive Session Productization / GAP-035` through `GAP-039` are complete on the current branch baseline.
+- `Direct-To-Hybrid-Final-State Mainline / GAP-045` through `GAP-060` is the active future-facing queue.
+
+## Direct-To-Hybrid-Final-State Mainline
+
+The entries below are the active queue for complete hybrid final-state closure. The historical lifecycle backlog remains below as completion history and dependency context.
+
+### Phase 0: Canonical Re-Baseline
+
+### GAP-045 Phase 0 Planning Sync And Mainline Backlog Alignment
+- Type: AFK
+- Blocked by: GAP-039, GAP-044
+- User stories: 1, 23, 29, 31
+- Status: active in direct-to-final-state mainline
+- What to build:
+  - align backlog, issue seeds, and seeding script to the direct-to-final-state roadmap and implementation plan
+  - keep historical lifecycle GAP entries as completion history while promoting `Phase 0` through `Phase 5` as the active queue
+  - record planning-sync evidence and validation outputs
+- Acceptance criteria:
+  - [ ] backlog groups active work by `Phase 0` through `Phase 5`
+  - [ ] issue seeds render the new mainline without colliding with historical GAP ids
+  - [ ] plans index, backlog, issue seeds, and seeding script agree on the active future-facing queue
+
+### Phase 1: Governed Execution Surface
+
+### GAP-046 Session Bridge Execution Bus Upgrade
+- Type: AFK
+- Blocked by: GAP-045
+- User stories: 1, 5, 41, 43
+- Status: active in direct-to-final-state mainline
+- What to build:
+  - expand the session bridge from posture and planning probe into a governed execution bus
+  - add command coverage for write request, write approve, write execute, write status, gate execution, evidence inspection, and handoff inspection
+  - return stable execution ids and continuation ids for execution-like paths
+- Acceptance criteria:
+  - [ ] session bridge commands cover the runtime-owned execution surface needed by attached repos
+  - [ ] execution-like results carry stable execution identifiers rather than plan-only output
+  - [ ] unsupported capabilities still degrade explicitly instead of implying execution
+
+### GAP-047 Runtime-Owned Attached Write Chain
+- Type: HITL
+- Blocked by: GAP-046
+- User stories: 8, 10, 27, 43
+- Status: active in direct-to-final-state mainline
+- What to build:
+  - route attached write governance and execution through the session bridge
+  - bind task id, adapter or session identity, approval ref, artifact refs, handoff ref, and replay ref for each real write
+  - make CLI write paths wrappers around the same runtime-owned flow instead of parallel logic
+- Acceptance criteria:
+  - [ ] one write request can be initiated, escalated, approved, resumed, and executed through the runtime-owned session surface
+  - [ ] high-risk writes fail closed when approval state is absent or stale
+  - [ ] attached write evidence stays on one task model from request through replay
+
+### GAP-048 Governed Shell, Git, And Package Execution Coverage
+- Type: AFK
+- Blocked by: GAP-047
+- User stories: 8, 10, 17, 31
+- Status: active in direct-to-final-state mainline
+- What to build:
+  - extend governed execution beyond file writes to shell, git, and selected package-manager actions
+  - keep allow, escalate, and deny semantics on one evidence and rollback model
+  - start with bounded happy-path and fail-closed allowlist coverage rather than broad command support
+- Acceptance criteria:
+  - [ ] shell, git, and at least one package-manager dry-run path use the same governance model as file writes
+  - [ ] allow, escalate, and deny paths emit consistent evidence and rollback metadata
+  - [ ] the execution surface remains explicitly bounded and does not silently broaden
+
+### GAP-049 Attached-Repo End-To-End Governed Loop
+- Type: HITL
+- Blocked by: GAP-048
+- User stories: 14, 38, 42, 46
+- Status: active in direct-to-final-state mainline
+- What to build:
+  - prove one attached repo can complete `attach -> request write -> approve -> execute -> verify -> handoff -> replay`
+  - keep the output on the same runtime-owned task model as local runtime work
+  - record exact command sequence and resulting refs as evidence
+- Acceptance criteria:
+  - [ ] one attached repo can complete the governed medium-risk loop end to end
+  - [ ] the end-to-end output distinguishes real execution from smoke or fallback paths
+  - [ ] evidence shows the exact attached-repo command chain and refs
+
+### Phase 2: Live Host Adapter Reality
+
+### GAP-050 Live Codex Handshake And Continuation Identity
+- Type: HITL
+- Blocked by: GAP-049
+- User stories: 2, 11, 31, 41, 43
+- Status: active in direct-to-final-state mainline
+- What to build:
+  - move the direct Codex adapter from declared posture to a real handshake or probe path
+  - preserve session id, resume id, and continuation identity in the runtime task model
+  - keep live attach, process bridge, and manual handoff explicitly distinguishable
+- Acceptance criteria:
+  - [ ] the adapter can probe or handshake with a real Codex surface instead of relying only on manual flags
+  - [ ] live session and continuation identity are preserved in the runtime-owned task model
+  - [ ] unavailable live attach remains explicit posture rather than implied support
+
+### GAP-051 Real Adapter Event Ingestion And Evidence Export
+- Type: AFK
+- Blocked by: GAP-050
+- User stories: 13, 14, 15, 31, 43
+- Status: active in direct-to-final-state mainline
+- What to build:
+  - ingest real tool, diff, gate, approval, and handoff events from the adapter path
+  - export richer evidence into the runtime-owned task, evidence, and delivery model
+  - keep manual-handoff and live-ingestion evidence distinguishable
+- Acceptance criteria:
+  - [ ] tool calls, diffs, gate runs, and approval interruptions can be linked back to one runtime-owned task
+  - [ ] unsupported or partial events are recorded explicitly rather than dropped
+  - [ ] delivery handoff and replay readers can consume the richer evidence shape
+
+### GAP-052 Executable Adapter Registry And Multi-Host Selection
+- Type: AFK
+- Blocked by: GAP-051
+- User stories: 20, 31, 37, 44
+- Status: active in direct-to-final-state mainline
+- What to build:
+  - turn adapter selection, discovery, probing, and delegation into executable runtime behavior
+  - support `native_attach`, `process_bridge`, and `manual_handoff` tiers through one registry interface
+  - keep Codex first without making the runtime Codex-only
+- Acceptance criteria:
+  - [ ] adapter selection is a runtime decision based on repo and host capability, not only static projection
+  - [ ] Codex and at least one non-Codex fixture share the same registry interface
+  - [ ] degrade behavior is part of the runtime interface rather than documentation only
+
+### Phase 3: Real Multi-Repo And Machine-Local Sidecar Reality
+
+### GAP-053 Attached Multi-Repo Trial Runner
+- Type: HITL
+- Blocked by: GAP-052
+- User stories: 14, 37, 38, 39, 45
+- Status: active in direct-to-final-state mainline
+- What to build:
+  - convert the multi-repo runner from profile summary into an attached-repo execution loop
+  - run attach, doctor or status, gate request, attachment verification, optional write probe, and evidence aggregation per repo
+  - capture differentiated onboarding friction and follow-up actions from real repo runs
+- Acceptance criteria:
+  - [ ] the trial runner can accept attached repo roots or bindings instead of only repo profile paths
+  - [ ] at least two attached external repos can run without kernel rewrites
+  - [ ] trial outputs capture real gate failures, approval friction, replay quality, and follow-up items
+
+### GAP-054 Machine-Local Runtime Roots And Migration
+- Type: AFK
+- Blocked by: GAP-053
+- User stories: 1, 17, 29, 38
+- Status: active in direct-to-final-state mainline
+- What to build:
+  - normalize task, artifact, replay, and workspace placement around one machine-local runtime-root model
+  - keep repo-root `.runtime/` as compatibility mode rather than primary posture
+  - document and test migration plus rollback behavior
+- Acceptance criteria:
+  - [ ] machine-local runtime roots become the default posture for self-runtime and attached-runtime flows
+  - [ ] repo-root defaults remain available only as compatibility mode
+  - [ ] migration and rollback behavior are documented and testable
+
+### Phase 4: Service-Shaped Runtime Extraction
+
+### GAP-055 Service-Shaped Control And Session API Boundary
+- Type: AFK
+- Blocked by: GAP-054
+- User stories: 1, 11, 13, 14, 17, 39
+- Status: active in direct-to-final-state mainline
+- What to build:
+  - extract a service-shaped API boundary for session operations and operator reads
+  - make CLI entrypoints wrappers or clients rather than the only control surface
+  - introduce tracing hooks at the new boundary without breaking contract parity
+- Acceptance criteria:
+  - [ ] session operations and operator reads are exposed through a service API boundary
+  - [ ] CLI and API paths preserve contract parity
+  - [ ] observability hooks exist at the new runtime boundary
+
+### GAP-056 Service-Shaped Persistence And Local Deployment Scaffold
+- Type: AFK
+- Blocked by: GAP-055
+- User stories: 1, 5, 24, 29, 30, 39
+- Status: active in direct-to-final-state mainline
+- What to build:
+  - add local service deployment scaffolding for control-plane and worker boundaries
+  - move durable metadata and artifact handling behind stable persistence abstractions
+  - introduce transition-stack dependencies only where the service boundary requires them
+- Acceptance criteria:
+  - [ ] local service deployment can run the extracted runtime stack with durable metadata storage
+  - [ ] filesystem artifact handling remains supported through an abstraction layer
+  - [ ] the existing contract bundle and evidence model stay consumable after the persistence split
+
+### Phase 5: Hardening And Closeout
+
+### GAP-057 Attachment-Scoped Operator Query Surfaces
+- Type: AFK
+- Blocked by: GAP-056
+- User stories: 14, 27, 34, 40
+- Status: active in direct-to-final-state mainline
+- What to build:
+  - add attachment-scoped queries for approvals, evidence, handoff, replay, and posture
+  - stop degrading `inspect_evidence` for the primary attached path
+  - keep operator surfaces read-only unless explicit escalation is required elsewhere
+- Acceptance criteria:
+  - [ ] attachment-scoped queries can list approvals, evidence refs, handoff refs, replay refs, and posture summary
+  - [ ] `inspect_evidence` works on the primary attached path without default degradation
+  - [ ] operator read surfaces remain stable enough for later console reuse
+
+### GAP-058 Runtime Reader And CI Same-Contract Parity
+- Type: AFK
+- Blocked by: GAP-057
+- User stories: 11, 12, 22, 36, 44
+- Status: active in direct-to-final-state mainline
+- What to build:
+  - extend same-contract parity beyond verifier boundaries to runtime readers, adapters, and attachment consumers
+  - add CI coverage for session bridge, runtime status, adapter, and attachment reader paths
+  - fail loudly on incompatible contract shapes instead of silently defaulting
+- Acceptance criteria:
+  - [ ] runtime readers fail loudly on missing or incompatible contract fields
+  - [ ] CI coverage proves session bridge, adapter, and attachment readers consume the declared contract shape
+  - [ ] parity is demonstrable beyond verifier-only scope
+
+### GAP-059 Remediation-Capable Attachment Doctor
+- Type: AFK
+- Blocked by: GAP-058
+- User stories: 11, 12, 16, 24, 39
+- Status: active in direct-to-final-state mainline
+- What to build:
+  - add guided remediation and fail-closed enforcement for missing, invalid, and stale attachment posture
+  - map remediation steps back to exact commands or documents
+  - keep remediation evidence-backed and rollback-aware
+- Acceptance criteria:
+  - [ ] missing, invalid, and stale bindings each have an explicit remediation path
+  - [ ] fail-closed posture is used when execution should not continue
+  - [ ] remediation actions are evidence-backed and rollback-aware
+
+### GAP-060 Final-State Closeout And Claim Discipline
+- Type: HITL
+- Blocked by: GAP-059
+- User stories: 18, 29, 37, 44, 46
+- Status: active in direct-to-final-state mainline
+- What to build:
+  - sync backlog, roadmap, master outline, issue seeds, and closeout evidence to only verified completed work
+  - record final commands, outputs, residual risks, and rollback notes
+  - make final-state claims depend on executable proof rather than narrative alone
+- Acceptance criteria:
+  - [ ] roadmap, master outline, backlog, issue seeds, evidence, and gate results agree on what is complete
+  - [ ] final-state claims are made only when exit criteria are actually met
+  - [ ] closeout evidence records commands, outputs, residual risks, and rollback paths
 
 ## Vision
 

@@ -9,7 +9,12 @@ Define the first interactive command surface that host adapters can use to call 
 - `request_approval`
 - `run_quick_gate`
 - `run_full_gate`
+- `write_request`
+- `write_approve`
+- `write_execute`
+- `write_status`
 - `inspect_evidence`
+- `inspect_handoff`
 - `inspect_status`
 
 ## Required Context
@@ -46,6 +51,12 @@ Supported local subcommands:
 - `repo-posture`
 - `status`
 - `request-gate`
+- `inspect-evidence`
+- `inspect-handoff`
+- `write-request`
+- `write-approve`
+- `write-execute`
+- `write-status`
 - `launch`
 
 The local entrypoint returns structured JSON. Unsupported commands or adapter capabilities return an explicit degraded result with `unsupported_capability_behavior = manual_handoff`.
@@ -57,6 +68,19 @@ The local entrypoint returns structured JSON. Unsupported commands or adapter ca
 - when `attachment_root` and `attachment_runtime_state_root` are supplied, the gate commands come from the attached target repo light pack / repo profile instead of the local runtime repo defaults
 
 The local bridge does not silently execute a denied PolicyDecision. Denied execution-like commands fail closed before a gate request is exposed.
+
+## Write Flow
+The local session bridge now exposes the first governed write command surface:
+- `write-request` returns the governance posture for a proposed write, including approval-required state when needed
+- `write-approve` records the approval decision for a pending write request
+- `write-execute` attempts the actual write after policy and approval checks
+- `write-status` reports the current approval or execution posture for a write flow
+
+Write-flow results include a stable `execution_id` so later approval, execution, and inspection calls can stay on one runtime-owned thread.
+
+## Evidence And Handoff Inspection
+- `inspect-evidence` returns task-level evidence refs, verification refs, artifact refs, approval ids, transition evidence refs, and rollback refs
+- `inspect-handoff` returns known handoff refs and related rollback refs for a task or run
 
 ## Launch-Second Fallback
 Launch mode is explicit. It is never presented as native attach.

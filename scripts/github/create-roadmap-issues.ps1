@@ -527,6 +527,12 @@ function Get-TaskLabels {
     '^GAP-0(33|34)$' { return @("task", "phase:maintenance", "platform", "docs", "product") }
     '^GAP-0(35|36|37|38|39)$' { return @("task", "phase:interactive-session", "platform", "product", "docs") }
     '^GAP-04[0-4]$' { return @("task", "phase:strategy-alignment", "platform", "docs", "contracts") }
+    '^GAP-045$' { return @("task", "phase:rebaseline", "platform", "docs", "product") }
+    '^GAP-0(46|47|48|49)$' { return @("task", "phase:governed-execution", "platform", "backend", "product") }
+    '^GAP-0(50|51|52)$' { return @("task", "phase:live-adapter", "platform", "backend", "product", "contracts") }
+    '^GAP-0(53|54)$' { return @("task", "phase:multi-repo-sidecar", "platform", "backend", "product", "docs") }
+    '^GAP-0(55|56)$' { return @("task", "phase:service-extraction", "platform", "backend", "devops") }
+    '^GAP-0(57|58|59|60)$' { return @("task", "phase:hardening-closeout", "platform", "backend", "docs", "product") }
     default { throw "No task label mapping defined for $IssueId" }
   }
 }
@@ -690,7 +696,7 @@ if ($ValidateOnly) {
     }
 
     $seed = $seedMap[$IssueId]
-    $title = if ($IssueId -match '^GAP-0(1[8-9]|2\d|3\d)$') { "[Task] $($seed.title)" } else { $seed.title }
+    $title = if ($IssueId -match '^GAP-\d+$') { "[Task] $($seed.title)" } else { $seed.title }
     $body = Render-TaskIssueBody -Seed $seed -BacklogTask $backlogTaskMap[$IssueId]
 
     [pscustomobject]@{
@@ -724,6 +730,12 @@ $labels = @(
   @{ Name = "phase:maintenance"; Color = "C5DEF5"; Description = "Maintenance phase" }
   @{ Name = "phase:interactive-session"; Color = "0B5FFF"; Description = "Interactive session productization phase" }
   @{ Name = "phase:strategy-alignment"; Color = "8A63D2"; Description = "Strategy alignment gate phase" }
+  @{ Name = "phase:rebaseline"; Color = "0052CC"; Description = "Canonical re-baseline phase" }
+  @{ Name = "phase:governed-execution"; Color = "0E8A16"; Description = "Governed execution closure phase" }
+  @{ Name = "phase:live-adapter"; Color = "FBCA04"; Description = "Live host adapter phase" }
+  @{ Name = "phase:multi-repo-sidecar"; Color = "1D76DB"; Description = "Real multi-repo and machine-local sidecar phase" }
+  @{ Name = "phase:service-extraction"; Color = "D93F0B"; Description = "Service-shaped runtime extraction phase" }
+  @{ Name = "phase:hardening-closeout"; Color = "5319E7"; Description = "Hardening and closeout phase" }
   @{ Name = "backend"; Color = "0052CC"; Description = "Backend work" }
   @{ Name = "platform"; Color = "6F42C1"; Description = "Platform work" }
   @{ Name = "security"; Color = "B60205"; Description = "Security and policy" }

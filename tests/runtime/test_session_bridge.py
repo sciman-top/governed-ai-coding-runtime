@@ -173,6 +173,29 @@ class SessionBridgeCommandTests(unittest.TestCase):
         payload["policy_decision_ref"] = "artifacts/task-123/policy/allow.json"
         self.assertTrue(self._schema_accepts(payload))
 
+    def test_schema_rejects_write_execute_without_policy_decision_reference(self) -> None:
+        payload = {
+            "schema_version": "1.0",
+            "command_id": "cmd-write-execute",
+            "command_type": "write_execute",
+            "task_id": "task-123",
+            "repo_binding_id": "binding-python-service",
+            "adapter_id": "codex-cli",
+            "risk_tier": "medium",
+            "execution_mode": "execute",
+            "payload": {
+                "tool_name": "write_file",
+                "target_path": "docs/plan.md",
+                "tier": "medium",
+                "rollback_reference": "git diff -- docs/plan.md",
+                "content": "patched",
+            },
+        }
+
+        self.assertFalse(self._schema_accepts(payload))
+        payload["policy_decision_ref"] = "artifacts/task-123/policy/write-escalate.json"
+        self.assertTrue(self._schema_accepts(payload))
+
     def test_session_bridge_exports_from_package_root(self) -> None:
         package = importlib.import_module("governed_ai_coding_runtime_contracts")
         if not hasattr(package, "SessionBridgeCommand"):
@@ -384,21 +407,221 @@ class SessionBridgeCommandTests(unittest.TestCase):
         self.assertEqual(paused.required_approval_ref, "approval-123")
         self.assertEqual(denied.status, "deny")
 
-    def test_unsupported_session_bridge_command_returns_degrade_result(self) -> None:
+    def test_inspect_evidence_returns_task_level_refs(self) -> None:
         module = self._module()
-        command = module.build_session_bridge_command(
-            command_id="cmd-inspect-evidence",
-            command_type="inspect_evidence",
-            task_id="task-123",
-            repo_binding_id="binding-python-service",
-            adapter_id="codex-cli",
-            risk_tier="low",
-        )
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            task_store, _task_intake = self._task_modules()
+            store = task_store.FileTaskStore(workspace / ".runtime" / "tasks")
+            record = self._seed_task(workspace, task_id="task-evidence").load("task-evidence")
+            record.transition_history.append(
+                task_store.TaskTransitionRecord(
+                    previous_state="planned",
+                    next_state="running",
+                    actor_type="runtime",
+                    actor_id="session-bridge",
+                    reason="started",
+                    evidence_ref="docs/change-evidence/task-evidence-start.md",
+                    timestamp="2026-04-19T00:00:00+00:00",
+                )
+            )
+            record.run_history.append(
+                task_store.TaskRunRecord(
+                    run_id="run-evidence",
+                    attempt_id="attempt-1",
+                    worker_id="worker-1",
+                    status="completed",
+                    workspace_root=str(workspace / ".governed-workspaces" / "task-evidence"),
+                    started_at="2026-04-19T00:00:00+00:00",
+                    finished_at="2026-04-19T00:10:00+00:00",
+                    summary="evidence ready",
+                    evidence_refs=["artifacts/task-evidence/run-evidence/evidence/bundle.json"],
+                    approval_ids=["approval-123"],
+                    artifact_refs=["artifacts/task-evidence/run-evidence/execution-output/worker.txt"],
+                    verification_refs=["artifacts/task-evidence/run-evidence/verification-output/runtime.txt"],
+                    rollback_ref="git diff -- docs/plan.md",
+                )
+            )
+            store.save(record)
 
-        result = module.handle_session_bridge_command(command, task_root=ROOT / ".runtime" / "tasks", repo_root=ROOT)
+            command = module.build_session_bridge_command(
+                command_id="cmd-inspect-evidence",
+                command_type="inspect_evidence",
+                task_id="task-evidence",
+                repo_binding_id="binding-python-service",
+                adapter_id="codex-cli",
+                risk_tier="low",
+                payload={"run_id": "run-evidence"},
+            )
 
-        self.assertEqual(result.status, "degraded")
-        self.assertEqual(result.unsupported_capability_behavior, "manual_handoff")
+            result = module.handle_session_bridge_command(command, task_root=store.root_path, repo_root=workspace)
+
+            self.assertEqual(result.status, "ok")
+            self.assertEqual(result.payload["run_id"], "run-evidence")
+            self.assertIn("artifacts/task-evidence/run-evidence/evidence/bundle.json", result.payload["evidence_refs"])
+            self.assertIn("approval-123", result.payload["approval_ids"])
+            self.assertIn("docs/change-evidence/task-evidence-start.md", result.payload["transition_evidence_refs"])
+
+    def test_write_request_and_execution_flow_return_runtime_owned_refs(self) -> None:
+        module = self._module()
+        repo_attachment = importlib.import_module("governed_ai_coding_runtime_contracts.repo_attachment")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            self._seed_task(workspace, task_id="task-write-flow")
+            target_repo = workspace / "target"
+            target_repo.mkdir()
+            runtime_state_root = workspace / "runtime-state" / "target"
+            repo_attachment.attach_target_repo(
+                target_repo_root=str(target_repo),
+                runtime_state_root=str(runtime_state_root),
+                repo_id="target",
+                display_name="Target",
+                primary_language="python",
+                build_command="python -m compileall src",
+                test_command="python -m unittest discover",
+                contract_command="python -m unittest discover -s tests/contracts",
+            )
+
+            write_request = module.build_session_bridge_command(
+                command_id="cmd-write-request",
+                command_type="write_request",
+                task_id="task-write-flow",
+                repo_binding_id="binding-target",
+                adapter_id="codex-cli",
+                risk_tier="medium",
+                payload={
+                    "tool_name": "write_file",
+                    "target_path": "docs/plan.md",
+                    "tier": "medium",
+                    "rollback_reference": "git diff -- docs/plan.md",
+                },
+            )
+            request_result = module.handle_session_bridge_command(
+                write_request,
+                task_root=workspace / ".runtime" / "tasks",
+                repo_root=workspace,
+                attachment_root=target_repo,
+                attachment_runtime_state_root=runtime_state_root,
+            )
+
+            self.assertEqual(request_result.status, "approval_required")
+            approval_id = request_result.payload["approval_id"]
+            self.assertTrue(approval_id)
+            self.assertEqual(request_result.payload["policy_status"], "escalate")
+            self.assertEqual(request_result.payload["execution_id"], "task-write-flow:cmd-write-request")
+
+            approve_command = module.build_session_bridge_command(
+                command_id="cmd-write-approve",
+                command_type="write_approve",
+                task_id="task-write-flow",
+                repo_binding_id="binding-target",
+                adapter_id="codex-cli",
+                risk_tier="medium",
+                payload={
+                    "approval_id": approval_id,
+                    "decision": "approve",
+                    "decided_by": "operator",
+                },
+            )
+            approve_result = module.handle_session_bridge_command(
+                approve_command,
+                task_root=workspace / ".runtime" / "tasks",
+                repo_root=workspace,
+                attachment_runtime_state_root=runtime_state_root,
+            )
+
+            self.assertEqual(approve_result.status, "approval_recorded")
+            self.assertEqual(approve_result.payload["approval_status"], "approved")
+
+            execute_command = module.build_session_bridge_command(
+                command_id="cmd-write-execute",
+                command_type="write_execute",
+                task_id="task-write-flow",
+                repo_binding_id="binding-target",
+                adapter_id="codex-cli",
+                risk_tier="medium",
+                payload={
+                    "tool_name": "write_file",
+                    "target_path": "docs/plan.md",
+                    "tier": "medium",
+                    "rollback_reference": "git diff -- docs/plan.md",
+                    "content": "patched via session bridge",
+                    "approval_id": approval_id,
+                },
+                policy_decision_ref=request_result.payload["policy_decision_ref"],
+            )
+            execute_result = module.handle_session_bridge_command(
+                execute_command,
+                task_root=workspace / ".runtime" / "tasks",
+                repo_root=workspace,
+                attachment_root=target_repo,
+                attachment_runtime_state_root=runtime_state_root,
+            )
+
+            self.assertEqual(execute_result.status, "write_executed")
+            self.assertEqual(execute_result.payload["execution_status"], "executed")
+            self.assertTrue(execute_result.payload["artifact_ref"])
+            self.assertEqual((target_repo / "docs" / "plan.md").read_text(encoding="utf-8"), "patched via session bridge")
+
+            status_command = module.build_session_bridge_command(
+                command_id="cmd-write-status",
+                command_type="write_status",
+                task_id="task-write-flow",
+                repo_binding_id="binding-target",
+                adapter_id="codex-cli",
+                risk_tier="medium",
+                payload={"approval_id": approval_id, "target_path": "docs/plan.md"},
+            )
+            status_result = module.handle_session_bridge_command(
+                status_command,
+                task_root=workspace / ".runtime" / "tasks",
+                repo_root=workspace,
+                attachment_runtime_state_root=runtime_state_root,
+            )
+
+            self.assertEqual(status_result.status, "ok")
+            self.assertEqual(status_result.payload["approval_status"], "approved")
+
+    def test_inspect_handoff_returns_payload_and_known_refs(self) -> None:
+        module = self._module()
+        task_store, _task_intake = self._task_modules()
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            store = task_store.FileTaskStore(workspace / ".runtime" / "tasks")
+            record = self._seed_task(workspace, task_id="task-handoff").load("task-handoff")
+            record.run_history.append(
+                task_store.TaskRunRecord(
+                    run_id="run-handoff",
+                    attempt_id="attempt-1",
+                    worker_id="worker-1",
+                    status="completed",
+                    workspace_root=str(workspace / ".governed-workspaces" / "task-handoff"),
+                    started_at="2026-04-19T00:00:00+00:00",
+                    finished_at="2026-04-19T00:10:00+00:00",
+                    artifact_refs=["artifacts/task-handoff/run-handoff/handoff/package.json"],
+                    evidence_refs=[],
+                    verification_refs=[],
+                )
+            )
+            store.save(record)
+
+            command = module.build_session_bridge_command(
+                command_id="cmd-inspect-handoff",
+                command_type="inspect_handoff",
+                task_id="task-handoff",
+                repo_binding_id="binding-python-service",
+                adapter_id="codex-cli",
+                risk_tier="low",
+                payload={"handoff_ref": "artifacts/task-handoff/manual/handoff.json"},
+            )
+
+            result = module.handle_session_bridge_command(command, task_root=store.root_path, repo_root=workspace)
+
+            self.assertEqual(result.status, "ok")
+            self.assertIn("artifacts/task-handoff/manual/handoff.json", result.payload["handoff_refs"])
+            self.assertIn("artifacts/task-handoff/run-handoff/handoff/package.json", result.payload["handoff_refs"])
 
     def test_session_bridge_cli_help(self) -> None:
         completed = subprocess.run(

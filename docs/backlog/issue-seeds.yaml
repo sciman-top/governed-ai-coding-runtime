@@ -1,4 +1,4 @@
-issue_seed_version: "3.2"
+issue_seed_version: "3.3"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment
@@ -135,3 +135,83 @@ issues:
     type: AFK
     blocked_by: [GAP-042, GAP-043]
     user_stories: [11, 12, 22, 36, 44]
+  - id: GAP-045
+    title: Phase 0 Planning Sync And Mainline Backlog Alignment
+    type: AFK
+    blocked_by: [GAP-039, GAP-044]
+    user_stories: [1, 23, 29, 31]
+  - id: GAP-046
+    title: Session Bridge Execution Bus Upgrade
+    type: AFK
+    blocked_by: [GAP-045]
+    user_stories: [1, 5, 41, 43]
+  - id: GAP-047
+    title: Runtime-Owned Attached Write Chain
+    type: HITL
+    blocked_by: [GAP-046]
+    user_stories: [8, 10, 27, 43]
+  - id: GAP-048
+    title: Governed Shell, Git, And Package Execution Coverage
+    type: AFK
+    blocked_by: [GAP-047]
+    user_stories: [8, 10, 17, 31]
+  - id: GAP-049
+    title: Attached-Repo End-To-End Governed Loop
+    type: HITL
+    blocked_by: [GAP-048]
+    user_stories: [14, 38, 42, 46]
+  - id: GAP-050
+    title: Live Codex Handshake And Continuation Identity
+    type: HITL
+    blocked_by: [GAP-049]
+    user_stories: [2, 11, 31, 41, 43]
+  - id: GAP-051
+    title: Real Adapter Event Ingestion And Evidence Export
+    type: AFK
+    blocked_by: [GAP-050]
+    user_stories: [13, 14, 15, 31, 43]
+  - id: GAP-052
+    title: Executable Adapter Registry And Multi-Host Selection
+    type: AFK
+    blocked_by: [GAP-051]
+    user_stories: [20, 31, 37, 44]
+  - id: GAP-053
+    title: Attached Multi-Repo Trial Runner
+    type: HITL
+    blocked_by: [GAP-052]
+    user_stories: [14, 37, 38, 39, 45]
+  - id: GAP-054
+    title: Machine-Local Runtime Roots And Migration
+    type: AFK
+    blocked_by: [GAP-053]
+    user_stories: [1, 17, 29, 38]
+  - id: GAP-055
+    title: Service-Shaped Control And Session API Boundary
+    type: AFK
+    blocked_by: [GAP-054]
+    user_stories: [1, 11, 13, 14, 17, 39]
+  - id: GAP-056
+    title: Service-Shaped Persistence And Local Deployment Scaffold
+    type: AFK
+    blocked_by: [GAP-055]
+    user_stories: [1, 5, 24, 29, 30, 39]
+  - id: GAP-057
+    title: Attachment-Scoped Operator Query Surfaces
+    type: AFK
+    blocked_by: [GAP-056]
+    user_stories: [14, 27, 34, 40]
+  - id: GAP-058
+    title: Runtime Reader And CI Same-Contract Parity
+    type: AFK
+    blocked_by: [GAP-057]
+    user_stories: [11, 12, 22, 36, 44]
+  - id: GAP-059
+    title: Remediation-Capable Attachment Doctor
+    type: AFK
+    blocked_by: [GAP-058]
+    user_stories: [11, 12, 16, 24, 39]
+  - id: GAP-060
+    title: Final-State Closeout And Claim Discipline
+    type: HITL
+    blocked_by: [GAP-059]
+    user_stories: [18, 29, 37, 44, 46]

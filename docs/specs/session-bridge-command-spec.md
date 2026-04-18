@@ -31,7 +31,12 @@ The session bridge is the boundary between a host adapter and the machine-local 
 - request_approval
 - run_quick_gate
 - run_full_gate
+- write_request
+- write_approve
+- write_execute
+- write_status
 - inspect_evidence
+- inspect_handoff
 - inspect_status
 
 ### risk_tier
@@ -84,12 +89,21 @@ Context needed to pause for human approval rather than execute.
 
 ## Invariants
 - Every command must carry task id, repo binding id, adapter id, and risk tier.
-- `run_quick_gate` and `run_full_gate` must carry `policy_decision_ref`.
-- Execution commands require a matching PolicyDecision before they become executable.
+- `run_quick_gate`, `run_full_gate`, and `write_execute` must carry `policy_decision_ref`.
+- `write_request` creates or returns the effective PolicyDecision posture for a governed write flow.
+- Execution commands require a matching PolicyDecision or stable `policy_decision_ref` before they become executable.
 - A `deny` PolicyDecision must fail closed and must not create an executable command.
 - An `escalate` PolicyDecision must produce `execution_mode = requires_approval` and carry escalation context.
 - `request_approval` must carry escalation context.
 - Read-only commands must not require PolicyDecision.
+
+## Command Notes
+- `write_request` collects the governance posture for a proposed write and may return approval-required state.
+- `write_approve` records the human decision for a pending write approval request.
+- `write_execute` attempts the actual governed write after policy and approval checks.
+- `write_status` reports the current write-flow posture using execution id, approval id, and related refs when available.
+- `inspect_evidence` returns task-level evidence, verification, approval, artifact, and rollback refs.
+- `inspect_handoff` returns known handoff refs and related rollback refs for a task or run.
 
 ## Non-Goals
 - implementing the session bridge CLI

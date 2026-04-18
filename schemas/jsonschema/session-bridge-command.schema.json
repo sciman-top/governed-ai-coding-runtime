@@ -22,7 +22,8 @@
           "command_type": {
             "enum": [
               "run_quick_gate",
-              "run_full_gate"
+              "run_full_gate",
+              "write_execute"
             ]
           }
         },
@@ -105,7 +106,12 @@
         "request_approval",
         "run_quick_gate",
         "run_full_gate",
+        "write_request",
+        "write_approve",
+        "write_execute",
+        "write_status",
         "inspect_evidence",
+        "inspect_handoff",
         "inspect_status"
       ]
     },
