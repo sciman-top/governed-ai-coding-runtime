@@ -1,4 +1,4 @@
-issue_seed_version: "3.3"
+issue_seed_version: "3.4"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment
@@ -141,12 +141,12 @@ issues:
     blocked_by: [GAP-039, GAP-044]
     user_stories: [1, 23, 29, 31]
   - id: GAP-046
-    title: Session Bridge Execution Bus Upgrade
+    title: Remaining Session Bridge Execution Gaps Closure
     type: AFK
     blocked_by: [GAP-045]
     user_stories: [1, 5, 41, 43]
   - id: GAP-047
-    title: Runtime-Owned Attached Write Chain
+    title: Live-Session-Bound Attached Write Chain
     type: HITL
     blocked_by: [GAP-046]
     user_stories: [8, 10, 27, 43]

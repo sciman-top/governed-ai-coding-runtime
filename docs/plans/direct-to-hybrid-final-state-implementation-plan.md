@@ -26,18 +26,18 @@
   - repo attachment binding and light-pack generation or validation
   - attachment-aware verification execution
   - first attached write governance and execution loop
-  - session-bridge contract and local CLI entrypoint
+  - session-bridge write, approval, status, evidence, and handoff command surface plus local CLI entrypoint
   - Codex adapter posture plus smoke-trial evidence wiring
   - profile-based multi-repo trial model
   - `PolicyDecision` contract and same-contract verifier boundary
 - The repository still does not satisfy the complete hybrid final state because:
   - `HFG-001` through `HFG-007` remain blocking gaps
   - `HFG-H1` through `HFG-H3` remain hardening gaps
-- Phase 0 planning work is partially landed already:
+- Phase 0 planning closeout is complete on the current branch baseline:
   - master outline exists
   - direct roadmap exists
-  - this implementation plan completes the main planning package
-- Phase 0 is not complete until backlog and issue seeds are aligned to this plan.
+  - this implementation plan exists as the future-facing mainline
+  - plans index, backlog, issue seeds, and the GitHub seeding script are aligned and validated against the direct-to-final-state queue
 
 ## Source Inputs
 
@@ -132,6 +132,8 @@ Phase 5
 
 **Purpose:** Finish the planning baseline so future work executes against one canonical implementation plan instead of drifting between older historical plans.
 
+**Status:** Complete on the current branch baseline via the `2026-04-19` planning and seeding rebaseline closeout.
+
 **Files:**
 - Modify: `docs/plans/README.md`
 - Modify: `docs/backlog/issue-ready-backlog.md`
@@ -140,23 +142,23 @@ Phase 5
 - Create: `docs/change-evidence/<date>-phase-0-planning-sync.md`
 
 **Acceptance criteria:**
-- [ ] `docs/plans/README.md` marks this file as the future-facing implementation mainline.
-- [ ] Backlog items are grouped by `Phase 0` through `Phase 5` rather than only by historical productization labels.
-- [ ] Issue seeds can render the direct-to-final-state work without colliding with historical ids.
-- [ ] Historical plans remain linked as execution history, not active future mainline.
+- [x] `docs/plans/README.md` marks this file as the future-facing implementation mainline.
+- [x] Backlog items are grouped by `Phase 0` through `Phase 5` rather than only by historical productization labels.
+- [x] Issue seeds can render the direct-to-final-state work without colliding with historical ids.
+- [x] Historical plans remain linked as execution history, not active future mainline.
 
 **Verification:**
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/github/create-roadmap-issues.ps1 -ValidateOnly -RenderAll`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Scripts`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/github/create-roadmap-issues.ps1 -ValidateOnly -RenderAll`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Scripts`.
 
 **Dependencies:** None.
 
 **Estimated scope:** Small.
 
-### Task 1: Expand Session Bridge From Probe To Execution Bus
+### Task 1: Close Remaining Session Bridge Execution Gaps
 
-**Purpose:** Close the largest semantic gap between the current attach-first story and a real runtime-owned governed execution surface.
+**Purpose:** Close the remaining semantic gap between the already-landed bridge command surface and a real live-host-ready governed execution bus.
 
 **Files:**
 - Modify: `docs/specs/session-bridge-command-spec.md`
@@ -167,8 +169,8 @@ Phase 5
 - Modify: `docs/product/session-bridge-commands.md`
 
 **Acceptance criteria:**
-- [ ] Session bridge commands include `write_request`, `write_approve`, `write_execute`, `write_status`, `inspect_evidence`, `inspect_handoff`, and explicit gate execution paths.
-- [ ] Execution-like commands return stable execution ids and continuation ids.
+- [ ] Existing session bridge commands stay aligned while `run_quick_gate` and `run_full_gate` move from plan-only output to runtime-managed execution lifecycle.
+- [ ] Execution-like commands return stable execution ids and continuation ids across gate, write, approval, evidence, and handoff paths.
 - [ ] Unsupported capabilities still degrade explicitly instead of pretending execution happened.
 - [ ] Schema, product doc, Python contract, and CLI stay aligned.
 
@@ -182,9 +184,9 @@ Phase 5
 
 **Estimated scope:** Medium.
 
-### Task 2: Route Attached Write Governance Through The Session Bridge
+### Task 2: Bind Live Session Identity Into The Attached Write Flow
 
-**Purpose:** Make attached-repo write flows runtime-owned from the session surface rather than only from direct CLI invocation.
+**Purpose:** Promote the already-landed bridge-backed attached write flow from local runtime ownership to live-session-bound runtime ownership.
 
 **Files:**
 - Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/attached_write_governance.py`
@@ -197,8 +199,8 @@ Phase 5
 - Modify: `docs/product/write-side-tool-governance.md`
 
 **Acceptance criteria:**
-- [ ] A write request can be initiated, escalated, approved, resumed, and executed through the bridge.
-- [ ] Every write execution binds task id, adapter or session identity, approval ref, artifact refs, handoff ref, and replay ref.
+- [ ] The existing write request, approval, resume, and execute flow remains driven through the bridge.
+- [ ] Every attached write execution binds task id, adapter or session identity, approval ref, artifact refs, handoff ref, and replay ref.
 - [ ] Existing CLI paths become wrappers around the same runtime-owned write flow instead of parallel logic.
 - [ ] High-risk writes fail closed when approval state is absent or stale.
 
@@ -593,7 +595,7 @@ Phase 5
 ### Checkpoint A: After Tasks 0-4
 - Phase 0 planning baseline is closed.
 - Phase 1 governed execution surface is real for one attached repository.
-- Session bridge is no longer posture-only for the primary path.
+- Session bridge is no longer blocked on plan-only gate handling for the primary path.
 - Runtime-owned attached writes and governed shell or git slices are evidence-linked.
 
 ### Checkpoint B: After Tasks 5-7

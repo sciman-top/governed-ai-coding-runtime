@@ -22,49 +22,52 @@
 
 ## 结论
 - 仓库方向正确，且“混合终态第一版产品化边界”已经成立。
-- 当前基线已经具备：repo attachment、attachment-aware verification、first attached write loop、PolicyDecision contract、adapter posture contract、profile-based multi-repo trial model。
+- 当前基线已经具备：repo attachment、attachment-aware verification、first attached write loop、session bridge 的 write/evidence/handoff 命令面、PolicyDecision contract、adapter posture contract、profile-based multi-repo trial model。
 - 但当前仍不能宣称项目达到“完整混合终态”。
 - 阻断原因不是基础内核失效，而是关键能力仍停留在 contract、smoke、projection、profile-based summary 或 fallback 层。
 - 结论口径：还存在 `7` 个阻断级缺口和 `3` 个硬化级缺口。
 
 ## 阻断级缺口
 
-### HFG-001 外部目标仓真实高风险写入还不是 runtime-owned 宿主执行链
+### HFG-001 外部目标仓真实高风险写入还不是 live-host-backed runtime-owned 宿主执行链
 - 当前证据：
   - `README.md` 明确写明“外部目标仓中的真实高风险写入仍未接成完整 runtime-owned Codex 执行链”。
   - `docs/quickstart/use-with-existing-repo.md` 明确写明当前还没有“fully runtime-owned direct Codex coding path for real high-risk writes”。
   - `docs/change-evidence/20260418-interactive-session-productization-closeout.md` 明确写明当前 Codex smoke trial 仍是 safe-mode wiring proof。
+  - `packages/contracts/src/governed_ai_coding_runtime_contracts/session_bridge.py` 与 `scripts/session-bridge.py` 已经提供 `write_request` / `write_approve` / `write_execute` / `write_status`。
 - 现状判断：
-  - 现在有 attached write governance/execution 回路，但它是 runtime CLI 驱动的受控写入接口，不是“上游宿主会话内、由 runtime 实际拥有执行边界”的完整终态路径。
-  - 这意味着“有受控写接口”不等于“宿主真实执行链已经被 runtime 接管”。
+  - 当前已经存在通过 session bridge 暴露的 runtime-owned attached write flow，所以缺口不是“完全没有 runtime-owned write chain”。
+  - 当前真正未闭环的是：这条写链还没有和真实宿主会话的 live adapter/session/continuation identity 绑定，也还没有在真实 attached external repo 中证明 medium/high-risk write 的完整宿主内闭环。
 - 可执行补齐动作：
-  1. 为 session bridge 增加 write-request / write-approve / write-execute / write-status 一组命令。
-  2. 将 `attached_write_governance.py` 与 `attached_write_execution.py` 接入 session bridge，而不是只暴露在 `run-governed-task.py` CLI。
-  3. 给每一次真实写入绑定真实 adapter/session identity、approval ref、artifact ref、handoff ref、replay ref。
-  4. 增加 attached repo 端到端测试：`attach -> request medium write -> approve -> execute -> verify -> handoff -> replay`。
+  1. 把现有 bridge write flow 绑定真实 adapter/session/continuation identity，而不是只保留 local runtime refs。
+  2. 让真实 attached write execution 产出可追到同一 task 的 approval ref、artifact ref、handoff ref、replay ref。
+  3. 增加 attached external repo 端到端测试：`attach -> request medium write -> approve -> execute -> verify -> handoff -> replay`。
+  4. 保持 deny/escalate/allow fail-closed 语义，不因 live path 接入而退回到 smoke-only 证明。
 - 完成标准：
-  - 在真实 attached repo 中，一次 medium/high-risk write 能够从受治理的会话面发起、暂停、审批、恢复、执行，并产出同一 task 下的 evidence/handoff/replay。
+  - 在真实 attached repo 中，一次 medium/high-risk write 能够从受治理的宿主会话面发起、暂停、审批、恢复、执行，并产出同一 task 下的 evidence/handoff/replay。
 - 主要依据：
   - `README.md`
   - `docs/quickstart/use-with-existing-repo.md`
+  - `packages/contracts/src/governed_ai_coding_runtime_contracts/session_bridge.py`
+  - `scripts/session-bridge.py`
   - `packages/contracts/src/governed_ai_coding_runtime_contracts/attached_write_governance.py`
   - `packages/contracts/src/governed_ai_coding_runtime_contracts/attached_write_execution.py`
 
-### HFG-002 Session bridge 仍是查询与计划面，不是完整执行面
+### HFG-002 Session bridge 已越过查询面，但 gate execution 与 live-host continuation 仍未闭环
 - 当前证据：
-  - `docs/product/session-bridge-commands.md` 定义了 `inspect_evidence`，但 `packages/contracts/src/governed_ai_coding_runtime_contracts/session_bridge.py` 对未实现命令直接 degrade。
-  - `scripts/session-bridge.py` 本地入口只暴露 `bind-task`、`repo-posture`、`status`、`request-gate`、`launch`。
-  - `docs/change-evidence/20260418-local-session-bridge-entrypoint.md` 明确写明 `request-gate` 目前只请求 verification plan，不直接执行长时门禁；evidence inspection 仍 degrade 到 manual handoff。
+  - `packages/contracts/src/governed_ai_coding_runtime_contracts/session_bridge.py` 已实现 `inspect_evidence`、`inspect_handoff`、`write_request`、`write_approve`、`write_execute`、`write_status`，并返回 stable execution ids。
+  - `scripts/session-bridge.py` 已暴露 `inspect-evidence`、`inspect-handoff`、`write-request`、`write-approve`、`write-execute`、`write-status` 等本地入口。
+  - `packages/contracts/src/governed_ai_coding_runtime_contracts/session_bridge.py` 对 `run_quick_gate` / `run_full_gate` 仍只返回 verification plan，而不是 runtime-managed gate execution lifecycle。
 - 现状判断：
-  - 当前 bridge 更像“governed control probe”，不是“宿主内治理操作总线”。
-  - 这使 attach-first 成立在 posture/plan 层，但没有闭环到 execution/evidence query 层。
+  - 当前 bridge 已经不是纯 posture/probe 面，而是有一条真实的 local runtime-owned write/evidence/handoff surface。
+  - 当前真正未闭环的是：gate path 仍是 plan-only，且 bridge 结果还没有绑定真实 live host continuation identity，所以它还不是“完整宿主内治理操作总线”。
 - 可执行补齐动作：
-  1. 在 `session_bridge.py` 中实现 `inspect_evidence`。
-  2. 将 attached verification execution 纳入 bridge，而不仅仅是 plan request。
-  3. 增加 write-loop、approval-loop、delivery/handoff 查询命令。
-  4. 对 bridge 结果引入 stable execution ids，而不是只返回计划或 degrade posture。
+  1. 将 `run_quick_gate` / `run_full_gate` 从 plan request 提升为 runtime-managed execution lifecycle。
+  2. 把 gate、write、approval、evidence、handoff 的 execution/continuation identity 统一到同一 bridge result model。
+  3. 把 live host 的 session identity / continuation identity 接入 bridge 结果，而不是停留在 local-only command ids。
+  4. 继续保留已有的 evidence/handoff 查询能力，并将其挂到统一 read model 上而不是散落在局部 CLI 行为上。
 - 完成标准：
-  - bridge 可在同一命令面中完成 posture、gate execution、write governance、approval continuation、evidence query、handoff query。
+  - bridge 可在同一命令面中完成 posture、runtime-managed gate execution、write governance、approval continuation、evidence query、handoff query，并保留稳定的 execution/continuation identity。
 - 主要依据：
   - `docs/product/session-bridge-commands.md`
   - `scripts/session-bridge.py`
@@ -179,12 +182,12 @@
 
 ### HFG-H1 Operator / control-plane 还缺 attachment-scoped evidence、approval、handoff、replay 查询面
 - 当前证据：
-  - `inspect_evidence` 仍未在 session bridge 中落地。
+  - `inspect_evidence` 与 `inspect_handoff` 已在 session bridge 中落地，但它们还是 task-local read surface，不是 attachment-scoped aggregated operator query surface。
   - `packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui.py` 目前仍是 local HTML renderer，核心内容主要是 maintenance + tasks。
 - 可执行补齐动作：
-  1. 给 session bridge 增加 evidence / handoff / replay / approval 查询命令。
+  1. 在现有 bridge read commands 之上增加 attachment 维度的 approvals、evidence、handoff、replay 聚合查询。
   2. 给 operator surface 增加 attachment 维度的 approvals、evidence、handoff、replay 视图。
-  3. 让 attached write loop 的审批记录和 evidence refs 可从统一 control-plane 查询。
+  3. 让 attached write loop 的审批记录和 evidence refs 可从统一 control-plane read model 查询，而不是只依赖单 task 逐个查看。
 
 ### HFG-H2 Local/CI same-contract parity 目前只证明到 verifier boundary，没有证明到 session/adapter runtime readers
 - 当前证据：

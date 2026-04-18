@@ -163,6 +163,7 @@ function Get-BacklogTaskMap {
       $current = [ordered]@{
         id = $Matches[1]
         title = $Matches[2]
+        status = ""
         what_to_build = [System.Collections.Generic.List[string]]::new()
         acceptance = [System.Collections.Generic.List[string]]::new()
       }
@@ -181,6 +182,11 @@ function Get-BacklogTaskMap {
 
     if ($line -match '^- Acceptance criteria:\s*$') {
       $currentSection = "acceptance"
+      continue
+    }
+
+    if ($line -match '^- Status:\s*(.+?)\s*$') {
+      $current.status = $Matches[1]
       continue
     }
 
@@ -209,6 +215,16 @@ function Get-BacklogTaskMap {
   }
 
   return $map
+}
+
+function Test-BacklogTaskComplete {
+  param([object]$BacklogTask)
+
+  if ($null -eq $BacklogTask) {
+    return $false
+  }
+
+  return $BacklogTask.status -match '^complete\b'
 }
 
 function Get-LifecyclePlanData {
@@ -317,49 +333,171 @@ function Get-LifecyclePlanData {
   }
 }
 
+function Get-DirectRoadmapPhaseData {
+  $path = Join-Path (Get-Location) "docs/roadmap/direct-to-hybrid-final-state-roadmap.md"
+  if (-not (Test-Path $path)) {
+    throw "Direct roadmap not found: $path"
+  }
+
+  $content = Get-Content -Path $path
+  $phases = @{}
+  $currentPhase = $null
+  $currentSection = $null
+
+  foreach ($line in $content) {
+    if ($line -match '^## Phase (\d+): (.+)$') {
+      $phaseName = "Phase $($Matches[1]): $($Matches[2])"
+      $currentPhase = [ordered]@{
+        name = $phaseName
+        status = [System.Collections.Generic.List[string]]::new()
+        goal = [System.Collections.Generic.List[string]]::new()
+        scope = [System.Collections.Generic.List[string]]::new()
+        exit_criteria = [System.Collections.Generic.List[string]]::new()
+      }
+      $phases[$phaseName] = [pscustomobject]$currentPhase
+      $currentSection = $null
+      continue
+    }
+
+    if ($null -eq $currentPhase) {
+      continue
+    }
+
+    if ($line -match '^### Status$') {
+      $currentSection = "status"
+      continue
+    }
+
+    if ($line -match '^### Goal$') {
+      $currentSection = "goal"
+      continue
+    }
+
+    if ($line -match '^### Scope$') {
+      $currentSection = "scope"
+      continue
+    }
+
+    if ($line -match '^### Exit Criteria$') {
+      $currentSection = "exit_criteria"
+      continue
+    }
+
+    if ($line -match '^## ' -or $line -match '^### ') {
+      $currentSection = $null
+      continue
+    }
+
+    if ([string]::IsNullOrWhiteSpace($line) -or $null -eq $currentSection) {
+      continue
+    }
+
+    if ($line -match '^- (.+?)\s*$') {
+      $currentPhase[$currentSection].Add($Matches[1])
+      continue
+    }
+
+    $trimmed = $line.Trim()
+    if (-not [string]::IsNullOrWhiteSpace($trimmed)) {
+      $currentPhase[$currentSection].Add($trimmed)
+    }
+  }
+
+  return $phases
+}
+
 function Get-EpicDefinitions {
   return @(
     @{
       Id = "Vision"
       Title = "[Epic] Vision Alignment"
       StageName = "Vision"
+      Source = "lifecycle"
       Labels = @("epic", "phase:vision", "product", "docs", "platform")
     }
     @{
       Id = "Foundation"
       Title = "[Epic] Foundation"
       StageName = "Foundation"
+      Source = "lifecycle"
       Labels = @("epic", "phase:foundation", "platform", "contracts", "backend")
     }
     @{
       Id = "Full Runtime"
       Title = "[Epic] Full Runtime"
       StageName = "Full Runtime"
+      Source = "lifecycle"
       Labels = @("epic", "phase:full-runtime", "platform", "backend", "frontend")
     }
     @{
       Id = "Public Usable Release"
       Title = "[Epic] Public Usable Release"
       StageName = "Public Usable Release"
+      Source = "lifecycle"
       Labels = @("epic", "phase:public-release", "platform", "docs", "devops")
     }
     @{
       Id = "Maintenance Boundary"
       Title = "[Epic] Maintenance Boundary"
       StageName = "Maintenance Baseline"
+      Source = "lifecycle"
       Labels = @("epic", "phase:maintenance", "platform", "docs", "product")
     }
     @{
       Id = "Interactive Session Productization"
       Title = "[Epic] Interactive Session Productization"
       StageName = "Interactive Session Productization"
+      Source = "lifecycle"
       Labels = @("epic", "phase:interactive-session", "platform", "product", "docs", "frontend", "backend")
     }
     @{
       Id = "Strategy Alignment Gates"
       Title = "[Epic] Strategy Alignment Gates"
       StageName = "Strategy Alignment Gates"
+      Source = "lifecycle"
       Labels = @("epic", "phase:strategy-alignment", "platform", "product", "docs", "contracts")
+    }
+    @{
+      Id = "Phase 0"
+      Title = "[Epic] Phase 0 Canonical Re-Baseline"
+      RoadmapPhaseName = "Phase 0: Canonical Re-Baseline"
+      Source = "roadmap"
+      Labels = @("epic", "phase:rebaseline", "platform", "docs", "product")
+    }
+    @{
+      Id = "Phase 1"
+      Title = "[Epic] Phase 1 Governed Execution Surface"
+      RoadmapPhaseName = "Phase 1: Close The Governed Execution Surface"
+      Source = "roadmap"
+      Labels = @("epic", "phase:governed-execution", "platform", "backend", "product")
+    }
+    @{
+      Id = "Phase 2"
+      Title = "[Epic] Phase 2 Live Host Adapter Reality"
+      RoadmapPhaseName = "Phase 2: Close Live Host Adapter Reality"
+      Source = "roadmap"
+      Labels = @("epic", "phase:live-adapter", "platform", "backend", "product", "contracts")
+    }
+    @{
+      Id = "Phase 3"
+      Title = "[Epic] Phase 3 Multi-Repo And Machine-Local Sidecar Reality"
+      RoadmapPhaseName = "Phase 3: Close Real Multi-Repo And Machine-Local Sidecar Reality"
+      Source = "roadmap"
+      Labels = @("epic", "phase:multi-repo-sidecar", "platform", "backend", "product", "docs")
+    }
+    @{
+      Id = "Phase 4"
+      Title = "[Epic] Phase 4 Service-Shaped Runtime Extraction"
+      RoadmapPhaseName = "Phase 4: Extract Service-Shaped Runtime"
+      Source = "roadmap"
+      Labels = @("epic", "phase:service-extraction", "platform", "backend", "devops")
+    }
+    @{
+      Id = "Phase 5"
+      Title = "[Epic] Phase 5 Hardening And Closeout"
+      RoadmapPhaseName = "Phase 5: Hardening And Operational Completion"
+      Source = "roadmap"
+      Labels = @("epic", "phase:hardening-closeout", "platform", "backend", "docs", "product")
     }
   )
 }
@@ -370,8 +508,11 @@ function Get-EpicDefinitionMap {
   $map = @{}
   foreach ($epic in $EpicDefinitions) {
     $map[$epic.Id] = $epic
-    if ($epic.StageName -ne $epic.Id) {
+    if ($epic.PSObject.Properties.Name -contains "StageName" -and $epic.StageName -ne $epic.Id) {
       $map[$epic.StageName] = $epic
+    }
+    if ($epic.PSObject.Properties.Name -contains "RoadmapPhaseName" -and $epic.RoadmapPhaseName -ne $epic.Id) {
+      $map[$epic.RoadmapPhaseName] = $epic
     }
   }
   return $map
@@ -488,6 +629,67 @@ $acceptance
 "@
 }
 
+function Render-RoadmapEpicIssueBody {
+  param(
+    [string]$EpicId,
+    [object]$Phase
+  )
+
+  if ($null -eq $Phase) {
+    throw "Missing roadmap phase for epic '$EpicId'"
+  }
+
+  if ($Phase.goal.Count -eq 0) {
+    throw "Roadmap phase '$EpicId' is missing goal"
+  }
+
+  if ($Phase.scope.Count -eq 0) {
+    throw "Roadmap phase '$EpicId' is missing scope"
+  }
+
+  if ($Phase.exit_criteria.Count -eq 0) {
+    throw "Roadmap phase '$EpicId' is missing exit criteria"
+  }
+
+  $statusBlock = ""
+  if ($Phase.status.Count -gt 0) {
+    $statusBlock = @"
+## Status
+$( @($Phase.status | ForEach-Object { "- $_" }) -join "`n" )
+
+"@
+  }
+
+  $goal = @($Phase.goal | ForEach-Object { "- $_" }) -join "`n"
+  $scope = @($Phase.scope | ForEach-Object { "- $_" }) -join "`n"
+  $acceptance = @($Phase.exit_criteria | ForEach-Object { "- $_" }) -join "`n"
+
+  return @"
+$statusBlock## Goal
+$goal
+
+## Scope
+$scope
+
+## Acceptance Criteria
+$acceptance
+"@
+}
+
+function Get-EpicBody {
+  param(
+    [object]$EpicDefinition,
+    [object]$LifecyclePlan,
+    [hashtable]$DirectRoadmapPhases
+  )
+
+  if ($EpicDefinition.Source -eq "roadmap") {
+    return Render-RoadmapEpicIssueBody -EpicId $EpicDefinition.Id -Phase $DirectRoadmapPhases[$EpicDefinition.RoadmapPhaseName]
+  }
+
+  return Render-EpicIssueBody -EpicId $EpicDefinition.Id -Stage $LifecyclePlan.stages[$EpicDefinition.StageName]
+}
+
 function Render-InitiativeBody {
   param([object]$LifecyclePlan)
 
@@ -538,10 +740,17 @@ function Get-TaskLabels {
 }
 
 function Get-TaskDefinitions {
-  param([object[]]$IssueSeeds)
+  param(
+    [object[]]$IssueSeeds,
+    [hashtable]$BacklogTaskMap
+  )
 
   return @(
     foreach ($issue in $IssueSeeds) {
+      if (Test-BacklogTaskComplete -BacklogTask $BacklogTaskMap[$issue.id]) {
+        continue
+      }
+
       [pscustomobject]@{
         IssueId = $issue.id
         Labels = @(Get-TaskLabels -IssueId $issue.id)
@@ -627,6 +836,7 @@ $seedData = Get-IssueSeeds
 $seedMap = Get-IssueSeedMap -SeedData $seedData
 $backlogTaskMap = Get-BacklogTaskMap
 $lifecyclePlan = Get-LifecyclePlanData
+$directRoadmapPhases = Get-DirectRoadmapPhaseData
 $epicDefinitions = @(Get-EpicDefinitions)
 $epicDefinitionMap = Get-EpicDefinitionMap -EpicDefinitions $epicDefinitions
 
@@ -639,7 +849,7 @@ if ($ValidateOnly) {
     }
 
     $renderedIssueCreationTasks = 0
-    $taskDefinitions = @(Get-TaskDefinitions -IssueSeeds $seedData.issues)
+    $taskDefinitions = @(Get-TaskDefinitions -IssueSeeds $seedData.issues -BacklogTaskMap $backlogTaskMap)
     foreach ($task in $taskDefinitions) {
       if (-not $seedMap.ContainsKey($task.IssueId)) {
         throw "Task issue seed not found for $($task.IssueId)"
@@ -651,7 +861,7 @@ if ($ValidateOnly) {
 
     $renderedEpics = 0
     foreach ($epicDefinition in $epicDefinitions) {
-      [void](Render-EpicIssueBody -EpicId $epicDefinition.Id -Stage $lifecyclePlan.stages[$epicDefinition.StageName])
+      [void](Get-EpicBody -EpicDefinition $epicDefinition -LifecyclePlan $lifecyclePlan -DirectRoadmapPhases $directRoadmapPhases)
       $renderedEpics += 1
     }
 
@@ -681,7 +891,7 @@ if ($ValidateOnly) {
     }
 
     $epicDefinition = $epicDefinitionMap[$EpicId]
-    $body = Render-EpicIssueBody -EpicId $epicDefinition.Id -Stage $lifecyclePlan.stages[$epicDefinition.StageName]
+    $body = Get-EpicBody -EpicDefinition $epicDefinition -LifecyclePlan $lifecyclePlan -DirectRoadmapPhases $directRoadmapPhases
     [pscustomobject]@{
       epic_id = $epicDefinition.Id
       title = $epicDefinition.Title
@@ -758,12 +968,12 @@ $initiativeBody = Render-InitiativeBody -LifecyclePlan $lifecyclePlan
 New-RoadmapIssue -Title "[Initiative] Governed AI Coding Runtime Full Functional Lifecycle" -Labels @("initiative", "platform") -Body $initiativeBody
 
 foreach ($epicDefinition in $epicDefinitions) {
-  $body = Render-EpicIssueBody -EpicId $epicDefinition.Id -Stage $lifecyclePlan.stages[$epicDefinition.StageName]
+  $body = Get-EpicBody -EpicDefinition $epicDefinition -LifecyclePlan $lifecyclePlan -DirectRoadmapPhases $directRoadmapPhases
   New-RoadmapIssue -Title $epicDefinition.Title -Labels $epicDefinition.Labels -Body $body
 }
 
 if (-not $SkipTasks) {
-  $tasks = @(Get-TaskDefinitions -IssueSeeds $seedData.issues)
+  $tasks = @(Get-TaskDefinitions -IssueSeeds $seedData.issues -BacklogTaskMap $backlogTaskMap)
 
   foreach ($task in $tasks) {
     if (-not $seedMap.ContainsKey($task.IssueId)) {

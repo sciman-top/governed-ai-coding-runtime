@@ -6,7 +6,7 @@ This directory holds executable implementation plans that translate strategy and
 ## Current Authoritative Plan
 - [Direct-To-Hybrid Final-State Implementation Plan](./direct-to-hybrid-final-state-implementation-plan.md)
   - Status: active future-facing implementation mainline
-  - Scope: `Phase 0` through `Phase 5` covering governed execution closure, live adapter reality, real attached multi-repo trials, machine-local sidecar default, service-shaped runtime extraction, and final hardening or closeout discipline
+  - Scope: `Phase 0` through `Phase 5`; `Phase 0` planning closeout is complete on the current branch baseline, and the remaining active execution queue covers governed execution closure, live adapter reality, real attached multi-repo trials, machine-local sidecar default, service-shaped runtime extraction, and final hardening or closeout discipline
 - [Interactive Session Productization Implementation Plan](./interactive-session-productization-implementation-plan.md)
   - Status: completed execution plan kept as productization history
   - Scope: `GAP-035` through `GAP-039` covering target-repo attachment, session bridge, direct Codex adapter, generic adapter tiers, multi-repo trial loop, and closeout evidence

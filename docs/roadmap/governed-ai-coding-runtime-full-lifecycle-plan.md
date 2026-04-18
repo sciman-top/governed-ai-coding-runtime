@@ -30,6 +30,12 @@ This plan assumes the following documents remain the active design inputs:
 - Keep the plan focused on functional completeness, not business, community, or org-scale operations.
 - Turn the repository's current local runtime baseline into a generic, attach-first, interactive governed AI coding runtime that can be reused across many target repositories and many upstream AI coding tools.
 
+## Interpretation Guardrail
+- This file is the lifecycle history and current-posture record for the repository.
+- `Stage 7` and `Stage 8` being complete means the first landed hybrid product boundary and its strategy hardening are present on the current branch baseline.
+- `Stage 7` and `Stage 8` complete do **not** mean complete hybrid final-state closure.
+- The active future-facing queue for complete closure is `docs/roadmap/direct-to-hybrid-final-state-roadmap.md` plus `docs/plans/direct-to-hybrid-final-state-implementation-plan.md`.
+
 ## Product Shape
 
 ### Final Product Shape
@@ -192,6 +198,8 @@ The final product is considered functionally complete only when all of the follo
 - multiple target repositories can attach through light packs without kernel drift
 - interactive governed actions are usable inside an AI session
 
+Interpretation note: satisfying `Stage 7` establishes the first landed hybrid product boundary; it does not establish complete hybrid final-state closure.
+
 ### Stage 8: Strategy Alignment Gates
 **Status**
 - complete on the current branch baseline through `GAP-040` to `GAP-044`
@@ -213,6 +221,8 @@ The final product is considered functionally complete only when all of the follo
 - local/CI same-contract verification is complete before `GAP-038` broadens adapter compatibility
 - backlog, issue seeds, and seeding script render the alignment work without changing the meaning of `GAP-035` through `GAP-039`
 
+Interpretation note: satisfying `Stage 8` hardens the landed hybrid boundary and future planning discipline; it still does not establish complete hybrid final-state closure.
+
 ## Active Issue Grouping
 - `Vision`: `GAP-018` to `GAP-019`
 - `Foundation`: `GAP-020` to `GAP-023`
@@ -230,6 +240,8 @@ The final product is considered functionally complete only when all of the follo
 - `Maintenance Baseline / GAP-033` through `GAP-034` are complete through explicit compatibility and upgrade policy, maintenance and retirement policy docs, runtime maintenance status visibility, and doctor enforcement for those policy surfaces.
 - `Interactive Session Productization / GAP-035` through `GAP-039` are complete on the current branch baseline and now define the landed hybrid final-state product boundary.
 - `Strategy Alignment Gates / GAP-040` through `GAP-044` are complete on the current branch baseline and remain encoded as satisfied dependencies around `GAP-035` through `GAP-039`; `issue-seeds.yaml` still carries those constraints so future seeding stays honest.
+- `Stage 7` plus `Stage 8` complete should be read as "landed hybrid boundary + hardening dependencies complete", not as "complete hybrid final-state closure".
+- The active closure queue after that landed boundary is `GAP-045` onward in the direct-to-hybrid-final-state roadmap and implementation plan.
 - `docs/plans/foundation-runtime-substrate-implementation-plan.md`, `docs/plans/full-runtime-implementation-plan.md`, `docs/plans/public-usable-release-implementation-plan.md`, and `docs/plans/maintenance-implementation-plan.md` are execution history for completed local-baseline stages.
 
 ## Lifecycle Completion Criteria

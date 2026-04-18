@@ -52,6 +52,7 @@ The current branch baseline already includes:
 - session-bridge contract and local CLI entrypoint
 - Codex adapter posture and smoke-trial surface
 - profile-based multi-repo trial model
+- the planning closeout needed for `Phase 0`: master outline, direct roadmap, direct implementation plan, aligned plans index, aligned backlog, aligned issue seeds, and validated issue seeding script rendering
 
 The current branch baseline still does not close the hybrid final state because the executable gap audit identified:
 - `HFG-001` through `HFG-007` as blocking gaps
@@ -88,6 +89,9 @@ Interpretation:
 
 ## Phase 0: Canonical Re-Baseline
 
+### Status
+- complete on the current branch baseline after the canonical planning package, backlog truth, issue seeds, and GitHub seeding script were aligned and re-validated on `2026-04-19`
+
 ### Goal
 Turn the repository's final-state definition and forward sequence into one canonical planning baseline.
 
@@ -123,7 +127,7 @@ The repository can claim that the hybrid final state now has a canonical plannin
 ## Phase 1: Close The Governed Execution Surface
 
 ### Goal
-Turn the current partial session bridge and first attached-write loop into the first real governed execution surface.
+Turn the already-landed session-bridge write or read surface into the first live-host-ready governed execution surface.
 
 ### Primary Gaps Closed
 - `HFG-001`
@@ -131,21 +135,20 @@ Turn the current partial session bridge and first attached-write loop into the f
 - `HFG-006`
 
 ### Scope
-- implement the full session-bridge command surface needed for governed execution
-- route attached write governance and execution through the session bridge
-- add approval continuation and execution status through the same runtime surface
-- add evidence, handoff, and replay inspection through the bridge
+- promote quick/full gate paths from plan-only responses to runtime-managed execution lifecycle
+- consolidate the existing session-bridge write, approval, status, evidence, and handoff paths around one stable execution model
+- bind adapter or session or continuation identity into the attached write flow instead of stopping at local-only command ids
 - extend governed execution coverage beyond file writes to shell, git, and selected package-manager actions
 
 ### Required Outputs
-- stable execution identifiers and continuation identifiers
+- stable execution identifiers and continuation identifiers across gate, write, approval, evidence, and handoff paths
 - one runtime-owned medium-risk write loop inside an attached repository
 - same task-level linkage across approval, execution, evidence, handoff, and replay
 - end-to-end tests for `attach -> request -> approve -> execute -> verify -> handoff -> replay`
 
 ### Exit Criteria
 - one attached repository can complete a governed medium-risk write loop entirely through the runtime-owned session surface
-- session bridge is no longer posture-and-plan-only for the primary governed path
+- session bridge no longer stops at plan-only gate requests or local-only session identity for the primary governed path
 - shell, git, and file execution all use the same governance and evidence model
 
 ### Claim Allowed After Phase 1
@@ -277,13 +280,13 @@ The repository may claim narrower truths after earlier phases:
 4. After `Phase 3`: attach-first multi-repo onboarding and machine-local sidecar posture are real.
 5. After `Phase 4`: service-shaped runtime deployment is real.
 
-## Companion Deliverables Required Next
+## Companion Deliverables
 This roadmap is paired with:
 1. a direct implementation plan
 2. an aligned backlog and task list
 3. backlog or issue-seed synchronization
 
-Those companion deliverables should translate this dependency order into:
+Those companion deliverables now exist and should continue translating this dependency order into:
 - executable work batches
 - acceptance criteria
 - verification commands

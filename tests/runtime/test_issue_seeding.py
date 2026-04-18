@@ -6,6 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 ISSUE_SEEDS_PATH = ROOT / "docs" / "backlog" / "issue-seeds.yaml"
+BACKLOG_PATH = ROOT / "docs" / "backlog" / "issue-ready-backlog.md"
 
 
 class IssueSeedingScriptTests(unittest.TestCase):
@@ -21,6 +22,11 @@ class IssueSeedingScriptTests(unittest.TestCase):
     def _seed_count() -> int:
         content = ISSUE_SEEDS_PATH.read_text(encoding="utf-8")
         return len(re.findall(r"^\s*-\s+id:\s+GAP-\d+\s*$", content, re.MULTILINE))
+
+    @staticmethod
+    def _completed_backlog_issue_count() -> int:
+        content = BACKLOG_PATH.read_text(encoding="utf-8")
+        return len(re.findall(r"^- Status: complete\b", content, re.MULTILINE))
 
     def test_validate_only_reports_seed_summary_from_yaml(self) -> None:
         script = ROOT / "scripts" / "github" / "create-roadmap-issues.ps1"
@@ -241,9 +247,12 @@ class IssueSeedingScriptTests(unittest.TestCase):
         summary = json.loads(completed.stdout)
         self.assertEqual(summary["issue_seed_version"], self._seed_version())
         self.assertEqual(summary["rendered_tasks"], self._seed_count())
-        self.assertEqual(summary["rendered_epics"], 7)
+        self.assertEqual(summary["rendered_epics"], 13)
         self.assertTrue(summary["rendered_initiative"])
-        self.assertEqual(summary["rendered_issue_creation_tasks"], self._seed_count())
+        self.assertEqual(
+            summary["rendered_issue_creation_tasks"],
+            self._seed_count() - self._completed_backlog_issue_count(),
+        )
 
 
 if __name__ == "__main__":

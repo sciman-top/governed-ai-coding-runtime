@@ -74,6 +74,18 @@ The current branch baseline has already proven and landed:
 
 This means the repository is not "just ideas and scripts." It already contains a validated governance kernel and a first attach-oriented product boundary.
 
+## Capability Closure Snapshot
+Use this table to separate "already landed on the current branch baseline" from "still required before complete hybrid final-state closure."
+
+| surface | landed on current branch baseline | still missing for complete closure |
+|---|---|---|
+| Session bridge | `write_request` / `write_approve` / `write_execute` / `write_status`, `inspect_evidence`, `inspect_handoff`, status and posture reads already exist. | quick/full gate paths still return plans rather than runtime-managed execution; live host continuation identity is not yet bound end-to-end. |
+| Attached write flow | runtime-owned attached write governance and execution loop exists and is tested through the local session bridge surface. | not yet proven as a live-host-backed attached external-repo execution chain with real adapter/session identity. |
+| Codex direct adapter | posture, capability-tier projection, smoke-trial evidence mapping, and session-evidence normalization exist. | no real handshake, live attach, or runtime ingestion of real Codex session events yet. |
+| Multi-repo trial | profile-based trial model, structured records, and sample runner exist. | not yet a real attached external-repo onboarding loop with differentiated runtime-sourced outcomes. |
+| Governed execution coverage | file-write execution path exists. | shell, git, package-manager, and helper-tool execution are not yet on the same governed surface. |
+| Runtime root placement | attached flows can already point at machine-local runtime state roots. | self-runtime still defaults to repo-root `.runtime/` and repo-relative workspace roots. |
+
 ## Why The Repository Still Looks Script-Heavy
 The repository still looks script-heavy because the landed baseline is a deliberate tracer-bullet implementation, not the final deployment shape.
 
@@ -184,8 +196,8 @@ Final-state candidate stack:
 
 ## Current Blocking Gap To Complete Hybrid Final State
 The current repository does not yet satisfy the complete hybrid final state because the following blocking gaps remain:
-- external target-repo high-risk writes are not yet a runtime-owned live host execution chain
-- session bridge is still mostly posture, planning, and fallback, not the full governed execution surface
+- external target-repo high-risk writes are not yet a live-host-backed runtime-owned execution chain
+- session bridge already covers write and read commands, but quick/full gate paths are still plan-only and live-host continuation identity is not yet closed
 - Codex direct adapter is still posture plus smoke-trial plus evidence mapping, not live attach plus real event ingestion
 - multi-repo trial is still profile-based and not yet a real attached external-repo feedback loop
 - adapter registry is still mostly a capability and degrade classification surface
@@ -364,14 +376,14 @@ The repository should only claim complete hybrid final-state closure when all of
 - multi-repo trial evidence comes from real attached repositories, not only sample profiles
 - the service-shaped deployment boundary is no longer hypothetical
 
-## Planned Canonical Planning Package
-This file should be followed by three direct companions:
+## Canonical Planning Package
+The canonical planning package now consists of three direct companions:
 
 1. direct-to-final-state roadmap
 2. direct-to-final-state implementation plan
 3. aligned backlog and task list
 
-Those files should become the active mainline for future completion work.
+Those files are now the active mainline for future completion work.
 
 ## Source References
 - `docs/prd/governed-ai-coding-runtime-prd.md`

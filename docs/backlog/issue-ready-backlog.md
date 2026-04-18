@@ -23,7 +23,8 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Maintenance Baseline / GAP-033` through `GAP-034` are now complete on the current branch baseline.
 - `Strategy Alignment Gates / GAP-040` through `GAP-044` are now complete on the current branch baseline.
 - `Interactive Session Productization / GAP-035` through `GAP-039` are complete on the current branch baseline.
-- `Direct-To-Hybrid-Final-State Mainline / GAP-045` through `GAP-060` is the active future-facing queue.
+- `Direct-To-Hybrid-Final-State Mainline / GAP-045` is complete on the current branch baseline as the planning rebaseline closeout.
+- `Direct-To-Hybrid-Final-State Mainline / GAP-046` through `GAP-060` is the active future-facing queue.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -35,43 +36,43 @@ The entries below are the active queue for complete hybrid final-state closure. 
 - Type: AFK
 - Blocked by: GAP-039, GAP-044
 - User stories: 1, 23, 29, 31
-- Status: active in direct-to-final-state mainline
+- Status: complete on current branch baseline as the direct-to-final-state planning closeout
 - What to build:
   - align backlog, issue seeds, and seeding script to the direct-to-final-state roadmap and implementation plan
   - keep historical lifecycle GAP entries as completion history while promoting `Phase 0` through `Phase 5` as the active queue
   - record planning-sync evidence and validation outputs
 - Acceptance criteria:
-  - [ ] backlog groups active work by `Phase 0` through `Phase 5`
-  - [ ] issue seeds render the new mainline without colliding with historical GAP ids
-  - [ ] plans index, backlog, issue seeds, and seeding script agree on the active future-facing queue
+  - [x] backlog groups active work by `Phase 0` through `Phase 5`
+  - [x] issue seeds render the new mainline without colliding with historical GAP ids
+  - [x] plans index, backlog, issue seeds, and seeding script agree on the active future-facing queue
 
 ### Phase 1: Governed Execution Surface
 
-### GAP-046 Session Bridge Execution Bus Upgrade
+### GAP-046 Remaining Session Bridge Execution Gaps Closure
 - Type: AFK
 - Blocked by: GAP-045
 - User stories: 1, 5, 41, 43
 - Status: active in direct-to-final-state mainline
 - What to build:
-  - expand the session bridge from posture and planning probe into a governed execution bus
-  - add command coverage for write request, write approve, write execute, write status, gate execution, evidence inspection, and handoff inspection
-  - return stable execution ids and continuation ids for execution-like paths
+  - preserve the existing session bridge command surface while promoting quick/full gate paths from plan-only output to runtime-managed execution
+  - unify gate, write, approval, evidence, and handoff paths on one stable execution or continuation identity model
+  - keep explicit degrade behavior when live-host-backed execution is unavailable
 - Acceptance criteria:
-  - [ ] session bridge commands cover the runtime-owned execution surface needed by attached repos
-  - [ ] execution-like results carry stable execution identifiers rather than plan-only output
+  - [ ] session bridge commands cover the runtime-owned execution surface needed by attached repos without regressing the already-landed write/evidence/handoff paths
+  - [ ] execution-like results carry stable execution and continuation identifiers rather than plan-only output
   - [ ] unsupported capabilities still degrade explicitly instead of implying execution
 
-### GAP-047 Runtime-Owned Attached Write Chain
+### GAP-047 Live-Session-Bound Attached Write Chain
 - Type: HITL
 - Blocked by: GAP-046
 - User stories: 8, 10, 27, 43
 - Status: active in direct-to-final-state mainline
 - What to build:
-  - route attached write governance and execution through the session bridge
-  - bind task id, adapter or session identity, approval ref, artifact refs, handoff ref, and replay ref for each real write
-  - make CLI write paths wrappers around the same runtime-owned flow instead of parallel logic
+  - keep the already-landed bridge-backed attached write flow as the canonical path
+  - bind task id, adapter or session identity, approval ref, artifact refs, handoff ref, and replay ref for each real attached write
+  - make CLI write paths wrappers around the same runtime-owned live-session-bound flow instead of parallel logic
 - Acceptance criteria:
-  - [ ] one write request can be initiated, escalated, approved, resumed, and executed through the runtime-owned session surface
+  - [ ] one write request can be initiated, escalated, approved, resumed, and executed through the runtime-owned session surface with live session identity preserved
   - [ ] high-risk writes fail closed when approval state is absent or stale
   - [ ] attached write evidence stays on one task model from request through replay
 
