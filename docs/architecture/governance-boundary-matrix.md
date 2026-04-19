@@ -30,6 +30,10 @@
 | Agent adapter capability contract | Unified governance | agent products must map into one compatibility language | adapters may declare capabilities but cannot redefine kernel semantics |
 | Evidence bundle schema | Unified governance | replay, audit, and review need one evidence language | repos may add extra evidence fields |
 | Eval categories | Unified governance | final outcome / trajectory / safety should stay comparable | repos may add repo-specific evals |
+| Repo admission signal taxonomy | Unified governance | cross-repo attach decisions need one accept/warn/block language | repos may emit stricter local signals, not weaker meanings |
+| Knowledge readiness signal | Unified governance | missing knowledge posture must be visible before reuse | repos may provide stricter readiness requirements |
+| Eval readiness signal | Unified governance | partial or missing eval posture must not stay implicit | repos may require more eval coverage |
+| Attachment hygiene classification | Unified governance | attachability must distinguish healthy, degraded, and blocked states consistently | repos may tighten entry rules, not downgrade blocked posture |
 | Replay / rollback model | Unified governance | failure recovery must be deterministic | repos may provide extra compensation hooks |
 | Control pack metadata schema | Unified governance | reusable control bundles need stable package semantics | repos may select approved packs, not redefine pack semantics |
 | Repository profile schema | Unified governance | profiles need one contract across repos | repos fill values only in allowed fields |
@@ -42,6 +46,7 @@
 | Additional risky command patterns | Repository override | repos know their own risky operations best | can only make policy stricter |
 | Blocked paths | Repository override | some repos need stronger local protection | can only add blocked paths |
 | Approval escalation thresholds | Repository override | some repos may require stronger review | can only escalate, not weaken platform minimums |
+| Repo admission warning thresholds | Repository override | repos may prefer stricter warning posture before execution begins | can only add warnings or blocks, not weaken kernel blocks |
 | Context shaping hints / repo map hints | Repository override | repo topology differs and may benefit from hints | allowed if bounded to profile schema |
 | Handoff template hints | Repository override | different repos need different review summaries | allowed as additive metadata |
 | Preferred compatible agent adapter | Repository override | repo/operator workflows may prefer Codex CLI/App, MCP, IDE, or manual handoff | allowed if the selected adapter satisfies kernel controls |
@@ -61,6 +66,7 @@
 - policy enforcement
 - tool safety semantics
 - agent adapter capability semantics
+- admission signal semantics
 - control pack metadata semantics
 - evidence language
 - validation completion rules
@@ -70,6 +76,7 @@
 - their path hints
 - their stricter local constraints
 - their additional repo-specific checks
+- their stricter admission warnings or blocks
 - their preferred compatible adapter within platform-approved capability bounds
 
 ### What repos must not own
@@ -77,6 +84,7 @@
 - bypassing approvals
 - weakening evidence requirements
 - weakening core validation semantics
+- downgrading kernel admission blocks into warnings or accepts
 
 ## Related Documents
 - `docs/prd/governed-ai-coding-runtime-prd.md`

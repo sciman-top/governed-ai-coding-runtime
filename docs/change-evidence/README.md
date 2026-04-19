@@ -4,6 +4,10 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260419 GAP-063 Repo Admission And Compatibility Signal Hardening](./20260419-gap-063-repo-admission-compatibility-hardening.md)
+  - evidence companion for turning repo admission into machine-readable accept/warn/block compatibility signals with stricter-only override rules
+- [20260419 GAP-062 Trace Grading And Improvement Baseline](./20260419-gap-062-trace-grading-improvement-baseline.md)
+  - evidence companion for expanding trace grading into explicit replay/policy/outcome dimensions, adding postmortem-ready inputs, and activating the governance lane through `GAP-062`
 - [20260419 Governance Optimization Lane Epic Rendering](./20260419-governance-optimization-lane-epic-rendering.md)
   - evidence companion for promoting the governance lane from task-only seeding into a dedicated follow-on epic rendering path
 - [20260419 Hybrid Final-State Planning Chain Transition Hardening](./20260419-hybrid-final-state-planning-chain-transition-hardening.md)

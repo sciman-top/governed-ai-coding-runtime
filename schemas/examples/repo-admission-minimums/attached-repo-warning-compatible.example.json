@@ -1,0 +1,112 @@
+{
+  "schema_version": "1.1",
+  "required_inputs": [
+    "repository_identifier",
+    "repo_profile_reference",
+    "working_directory_or_checkout_locator",
+    "control_pack_reference",
+    "allowed_readonly_tools",
+    "path_scope_policy",
+    "verification_gate_commands_or_gate_na_records",
+    "knowledge_readiness_declaration_or_not_ready_signal",
+    "eval_trace_policy_reference_or_not_ready_signal",
+    "attachment_binding_or_attachment_posture_probe_result",
+    "repo_override_summary"
+  ],
+  "admission_checks": [
+    {
+      "id": "check.repo_profile.valid",
+      "description": "Repo profile validates against the shared schema.",
+      "signal_kind": "core_contract",
+      "default_status": "accept",
+      "blocking": true
+    },
+    {
+      "id": "check.knowledge.readiness",
+      "description": "Knowledge readiness is declared and reviewable.",
+      "signal_kind": "knowledge_readiness",
+      "default_status": "warn",
+      "blocking": false
+    },
+    {
+      "id": "check.eval.readiness",
+      "description": "Eval readiness is declared even when coverage is partial.",
+      "signal_kind": "eval_readiness",
+      "default_status": "warn",
+      "blocking": false
+    },
+    {
+      "id": "check.attachment.hygiene",
+      "description": "Attachment posture is healthy or explicitly degraded.",
+      "signal_kind": "attachment_hygiene",
+      "default_status": "accept",
+      "blocking": true
+    },
+    {
+      "id": "check.override.safety",
+      "description": "Repo overrides only tighten kernel behavior.",
+      "signal_kind": "override_safety",
+      "default_status": "accept",
+      "blocking": true
+    }
+  ],
+  "compatibility_signals": [
+    {
+      "signal_id": "signal.core-contract",
+      "signal_kind": "core_contract",
+      "status": "accept",
+      "reason": "Required repo profile and control pack are present and valid.",
+      "blocking": false,
+      "evidence_refs": [
+        "schemas/examples/repo-profile/python-service.example.json",
+        "schemas/examples/control-pack/minimum-governance-kernel.example.json"
+      ]
+    },
+    {
+      "signal_id": "signal.knowledge-warning",
+      "signal_kind": "knowledge_readiness",
+      "status": "warn",
+      "reason": "Knowledge sources are declared but still need stronger curation coverage.",
+      "blocking": false,
+      "evidence_refs": [
+        "docs/specs/knowledge-source-spec.md"
+      ]
+    },
+    {
+      "signal_id": "signal.eval-warning",
+      "signal_kind": "eval_readiness",
+      "status": "warn",
+      "reason": "Eval trace policy exists but repo-specific eval depth is still partial.",
+      "blocking": false,
+      "evidence_refs": [
+        "docs/specs/eval-and-trace-grading-spec.md"
+      ]
+    },
+    {
+      "signal_id": "signal.attachment-ok",
+      "signal_kind": "attachment_hygiene",
+      "status": "accept",
+      "reason": "Attachment posture is healthy and replay refs are visible.",
+      "blocking": false,
+      "evidence_refs": [
+        "docs/product/target-repo-attachment-flow.md"
+      ]
+    }
+  ],
+  "failure_behavior": {
+    "missing_repo_profile": "block_startup",
+    "invalid_control_pack": "block_startup",
+    "missing_path_policy": "block_startup",
+    "weakened_gate_semantics": "block_startup",
+    "missing_knowledge_readiness_declaration": "warn_only",
+    "missing_eval_readiness_declaration": "warn_only",
+    "missing_or_stale_attachment_posture": "block_startup",
+    "missing_optional_handoff_hints": "warn_only"
+  },
+  "non_goals": [
+    "running the governed task",
+    "mutating the target repository",
+    "approving write-side tools",
+    "creating runtime UI"
+  ]
+}

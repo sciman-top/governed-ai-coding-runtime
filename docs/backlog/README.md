@@ -40,8 +40,10 @@ This directory holds the human and machine planning artifacts that bridge strate
 - `Maintenance Baseline / GAP-033` through `GAP-034` are complete on the current branch baseline.
 - `Strategy Alignment Gates / GAP-040` through `GAP-044` are complete on the current branch baseline.
 - `Interactive Session Productization / GAP-035` through `GAP-039` are complete on the current branch baseline.
-- `Direct-To-Hybrid-Final-State Mainline / GAP-045` through `GAP-060` is the active future-facing queue.
-- `Governance Optimization Lane / GAP-061` through `GAP-068` is the planned follow-on queue and defaults to activation after `GAP-060`.
+- `Direct-To-Hybrid-Final-State Mainline / GAP-045` through `GAP-060` is complete on the current branch baseline.
+- `Governance Optimization Lane / GAP-061` is complete on the current branch baseline as lane canonicalization.
+- `Governance Optimization Lane / GAP-062` through `GAP-063` are complete on the current branch baseline.
+- `Governance Optimization Lane / GAP-064` through `GAP-068` is the active future-facing queue.
 - Historical `GAP-018` through `GAP-044` remain completion history and dependency context.
 - The active lifecycle is now anchored by:
   - [Hybrid Final-State Master Outline](../architecture/hybrid-final-state-master-outline.md)

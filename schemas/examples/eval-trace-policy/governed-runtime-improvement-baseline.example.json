@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.1",
+  "required_eval_suites": [
+    "smoke",
+    "regression",
+    "adversarial",
+    "cost"
+  ],
+  "required_trace_fields": [
+    "run_id",
+    "task_id",
+    "repo_id",
+    "issue_or_goal_ref",
+    "decision_score",
+    "reason_codes",
+    "hard_guard_hits",
+    "checkpoint_refs",
+    "rollback_ref",
+    "evidence_refs",
+    "policy_decision_refs",
+    "outcome_summary",
+    "replay_artifact_ref",
+    "review_feedback_refs"
+  ],
+  "trace_grading": {
+    "phase": "phase2_postmortem_ready",
+    "required_dimensions": [
+      "evidence_completeness",
+      "workflow_correctness",
+      "replay_readiness",
+      "outcome_quality"
+    ],
+    "minimum_dimension_coverage_rate": 1,
+    "replay_readiness_required": true,
+    "failure_classifications": [
+      "missing_evidence",
+      "policy_miss",
+      "replay_gap",
+      "poor_outcome_quality",
+      "reviewer_disagreement",
+      "repeated_failure_signature"
+    ]
+  },
+  "postmortem_inputs": {
+    "required_sources": [
+      "failed_run",
+      "review_feedback",
+      "repeated_failure_signature"
+    ],
+    "required_fields": [
+      "input_id",
+      "source_kind",
+      "summary",
+      "evidence_refs",
+      "affected_dimensions",
+      "failure_classifications",
+      "follow_up_scope",
+      "recorded_at"
+    ],
+    "required_dimension_links": true,
+    "minimum_evidence_refs": 1
+  },
+  "improvement_signal_flow": {
+    "trigger_order": [
+      "evidence_persistence",
+      "trace_grading",
+      "postmortem_input_capture",
+      "improvement_proposal_generation"
+    ],
+    "proposal_generation_mode": "human_review_required",
+    "separates_repo_specific_followups": true
+  },
+  "freshness_days": 7
+}

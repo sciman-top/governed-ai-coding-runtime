@@ -11,7 +11,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - internal runtime boundaries remain service-shaped even though the default delivery shape is attach-first rather than service-first
 - Codex compatibility remains the first direct adapter priority, but final product completeness cannot be Codex-only
 - non-goals remain non-goals: no enterprise org model, no marketplace, no default multi-agent orchestration, no memory-first product identity
-- the active future-facing queue is the direct-to-hybrid-final-state mainline anchored by completed `GAP-045` and currently executed through `GAP-046` onward, while older lifecycle `GAP` entries remain completion history
+- the active future-facing queue is the governance-optimization lane anchored by completed `GAP-061`, while older lifecycle `GAP` entries remain completion history
 
 ## Current Baseline
 - PRD, architecture, ADRs, specs, runtime contract primitives, repo verifier entrypoints, sample repo profiles, and a runtime-consumable control pack already exist.
@@ -24,8 +24,9 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Strategy Alignment Gates / GAP-040` through `GAP-044` are now complete on the current branch baseline.
 - `Interactive Session Productization / GAP-035` through `GAP-039` are complete on the current branch baseline.
 - `Direct-To-Hybrid-Final-State Mainline / GAP-045` is complete on the current branch baseline as the planning rebaseline closeout.
-- `Direct-To-Hybrid-Final-State Mainline / GAP-046` through `GAP-060` is the active future-facing queue.
-- `Governance Optimization Lane / GAP-061` through `GAP-068` is the planned follow-on queue and defaults to activation after `GAP-060`.
+- `Direct-To-Hybrid-Final-State Mainline / GAP-046` through `GAP-060` is complete on the current branch baseline.
+- `Governance Optimization Lane / GAP-061` is complete on the current branch baseline as the lane canonicalization closeout.
+- `Governance Optimization Lane / GAP-062` through `GAP-068` is the active future-facing queue.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -289,29 +290,29 @@ The entries below are the active queue for complete hybrid final-state closure. 
 - Type: AFK
 - Blocked by: GAP-061
 - User stories: 13, 15, 22, 39, 44
-- Status: planned in governance-optimization lane
+- Status: completed on current branch baseline
 - What to build:
   - stronger trace grading requirements for replay-readiness, policy visibility, and outcome quality
   - explicit postmortem input model for failed runs, reviewer feedback, and repeated failure signatures
   - governance-loop update that places trace grading and improvement proposal generation after evidence persistence
 - Acceptance criteria:
-  - [ ] traces can distinguish missing evidence, poor outcome, policy misses, and replay-readiness gaps
-  - [ ] failed runs and review feedback can feed structured postmortem inputs
-  - [ ] the optimization lane has a trace-driven improvement baseline rather than an anecdotal one
+  - [x] traces can distinguish missing evidence, poor outcome, policy misses, and replay-readiness gaps
+  - [x] failed runs and review feedback can feed structured postmortem inputs
+  - [x] the optimization lane has a trace-driven improvement baseline rather than an anecdotal one
 
 ### GAP-063 Repo Admission And Compatibility Signal Hardening
 - Type: AFK
 - Blocked by: GAP-062
 - User stories: 11, 12, 38, 44, 46
-- Status: planned in governance-optimization lane
+- Status: completed on current branch baseline
 - What to build:
   - stronger repo-admission minimums for compatibility, knowledge readiness, eval readiness, and attachment hygiene
   - clearer compatibility signal boundaries for warning versus blocking conditions
   - explicit preservation of repo-specific stricter overrides without weakening kernel rules
 - Acceptance criteria:
-  - [ ] repo admission can accept, warn, or block attached repos using machine-readable criteria
-  - [ ] knowledge and eval readiness are explicit signals rather than hidden assumptions
-  - [ ] repo overrides remain stricter-only and do not weaken kernel guarantees
+  - [x] repo admission can accept, warn, or block attached repos using machine-readable criteria
+  - [x] knowledge and eval readiness are explicit signals rather than hidden assumptions
+  - [x] repo overrides remain stricter-only and do not weaken kernel guarantees
 
 ### GAP-064 Control Rollout Matrix And Waiver Recovery
 - Type: AFK

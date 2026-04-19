@@ -46,6 +46,21 @@ Define the smallest governance loop that makes AI coding execution controllable,
 - approvals
 - final result
 
+9. Grade the trace
+- score evidence completeness, workflow correctness, replay readiness, and outcome quality
+- classify failures as missing evidence, policy miss, replay gap, poor outcome quality, reviewer disagreement, or repeated failure signature
+- keep the grade linked to immutable runtime evidence rather than overwriting it
+
+10. Capture postmortem inputs
+- normalize failed runs, reviewer feedback, and repeated failure signatures
+- link every input back to evidence refs and affected grading dimensions
+- preserve repo-specific follow-ups separately from kernel or adapter follow-ups
+
+11. Generate controlled improvement inputs
+- prepare proposal-ready signals only after evidence and trace grading exist
+- keep proposal generation human-reviewed and non-mutating
+- hand later governance tasks structured inputs instead of anecdotal summaries
+
 ## Required Building Blocks
 - task object
 - repo profile
@@ -67,3 +82,5 @@ Define the smallest governance loop that makes AI coding execution controllable,
 - a task can be replayed from evidence
 - a failed run can point to a rollback trigger
 - a repo can override bounded runtime settings without breaking kernel rules
+- trace grading can distinguish missing evidence, policy misses, replay gaps, and poor outcome quality
+- postmortem inputs can be reproduced from failed runs or reviewer feedback without reinterpreting the original trace
