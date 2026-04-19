@@ -34,7 +34,7 @@
 - 当前 operator UI 是本地 HTML surface，不是长期运行的 Web 服务。
 - 当前还不能宣称“外部目标仓里的真实高风险写入已经由本项目完整接管”。
 - 当前 direct Codex adapter 仍应理解为 honest smoke-trial / posture / evidence wiring，不是完整生产级写入控制面。
-- `GAP-045..060` 是当前直达完整混合终态的主线；`GAP-061..068` 是 `GAP-060` 之后的治理优化 follow-on lane。
+- `GAP-045..060` 是直达完整混合终态的主线且已完成；`GAP-061..068` 是 `GAP-060` 之后的治理优化 follow-on lane，现也已完成（2026-04-20），但不回写成终态闭环证明的一部分。
 
 ## 现在能否用于其他项目
 可以，但要按当前边界理解。

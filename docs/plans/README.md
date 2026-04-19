@@ -5,10 +5,10 @@ This directory holds executable implementation plans that translate strategy and
 
 ## Current Authoritative Plan
 - [Direct-To-Hybrid Final-State Implementation Plan](./direct-to-hybrid-final-state-implementation-plan.md)
-  - Status: active future-facing implementation mainline
+  - Status: completed direct closure implementation mainline (verified on 2026-04-20)
   - Scope: `Phase 0` through `Phase 5`; `Phase 0` planning closeout is complete on the current branch baseline, and the remaining active execution queue covers governed execution closure, live adapter reality, real attached multi-repo trials, machine-local sidecar default, service-shaped runtime extraction, and final hardening or closeout discipline
 - [Governance Optimization Lane Implementation Plan](./governance-optimization-lane-implementation-plan.md)
-  - Status: planned follow-on implementation lane after `GAP-060` closeout
+  - Status: completed follow-on implementation lane after `GAP-060` closeout (verified on 2026-04-20)
   - Scope: `GAP-061` through `GAP-068` covering trace grading maturity, repo admission and compatibility hardening, control rollout and waiver recovery, governed knowledge inputs, provenance coverage for governance assets, controlled improvement proposals, and lane closeout discipline
 - [Interactive Session Productization Implementation Plan](./interactive-session-productization-implementation-plan.md)
   - Status: completed execution plan kept as productization history
@@ -48,8 +48,8 @@ This directory holds executable implementation plans that translate strategy and
    - [20260418 Governance Runtime Strategy Alignment Plan](../change-evidence/20260418-governance-runtime-strategy-alignment-plan.md)
 3. Use the roadmap and backlog to understand current posture:
    - the local runtime baseline through `Maintenance Baseline / GAP-034` is complete on the current branch baseline
-   - use [Direct-To-Hybrid Final-State Implementation Plan](./direct-to-hybrid-final-state-implementation-plan.md) as the active future-facing execution mainline
-   - use [Governance Optimization Lane Implementation Plan](./governance-optimization-lane-implementation-plan.md) as the planned follow-on governance lane after `GAP-060`
+   - use [Direct-To-Hybrid Final-State Implementation Plan](./direct-to-hybrid-final-state-implementation-plan.md) as the completed closure execution record
+   - use [Governance Optimization Lane Implementation Plan](./governance-optimization-lane-implementation-plan.md) as the completed governance-lane execution history after `GAP-060`
    - use [Interactive Session Productization Implementation Plan](./interactive-session-productization-implementation-plan.md) as the completed productization execution history
    - use [Governance Runtime Strategy Alignment Plan](./governance-runtime-strategy-alignment-plan.md) as the completed alignment record for `GAP-040` through `GAP-044`
    - use [Direct-To-Hybrid Final-State Roadmap](../roadmap/direct-to-hybrid-final-state-roadmap.md) for phase order and claim discipline
@@ -62,4 +62,4 @@ This directory holds executable implementation plans that translate strategy and
 - Plans here should be execution-oriented, not a duplicate of the PRD or architecture docs.
 - Roadmap timing stays in `docs/roadmap/`.
 - Gap ordering and dependencies stay in `docs/backlog/`.
-- Historical plans remain useful evidence. The active future-facing runtime entrypoint remains the direct-to-final-state implementation plan, while the governance-optimization lane is the planned follow-on queue and completed productization or strategy-alignment plans remain rationale and execution history rather than competing active queues.
+- Historical plans remain useful evidence. The direct-to-final-state and governance-optimization plans are both complete on the current branch baseline, and completed productization or strategy-alignment plans remain rationale and execution history rather than competing active queues.

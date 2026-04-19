@@ -22,7 +22,7 @@ The answer is:
 - Those entrypoints are not the final deployment boundary for the attach-first product.
 - Final-state work must change boundary placement and interface shape before it changes core task, evidence, verification, and rollback semantics.
 - The active future-facing closure queue is now the direct-to-hybrid mainline (`GAP-045` through `GAP-060`), not the already-landed `GAP-035` through `GAP-044` slice.
-- The governance-optimization lane (`GAP-061` through `GAP-068`) is planned follow-on work after `GAP-060`, not part of the closure proof for the hybrid final-state claim itself.
+- The governance-optimization lane (`GAP-061` through `GAP-068`) was follow-on work after `GAP-060` and is complete on the current branch baseline (verified on 2026-04-20); it is still not part of the closure proof for the hybrid final-state claim itself.
 
 ## Interpretation Rules
 - Treat the completed local runtime as a `single-machine baseline`, not as the final attach-first product.
@@ -70,7 +70,7 @@ The answer is:
   - `GAP-044`: local and CI same-contract verification hardening
 - Active direct-to-hybrid closure queue:
   - `GAP-045` through `GAP-060`
-- Planned governance-only follow-on lane after closure:
+- Completed governance-only follow-on lane after closure:
   - `GAP-061` through `GAP-068`
 
 ## Source References

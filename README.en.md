@@ -33,7 +33,7 @@ Not available yet:
 - The package bundle is a local distribution directory, not an installer or published channel.
 - The richer operator UI is a local HTML surface, not a long-running web service.
 - The current Codex path is still best described as honest smoke-trial, posture, and evidence wiring, not a production-grade runtime-owned real-write backend for external repos.
-- `GAP-045..060` is the current direct path to full hybrid final-state closure; `GAP-061..068` is the governance-only follow-on lane after `GAP-060`.
+- `GAP-045..060` is the direct path to full hybrid final-state closure and is complete; `GAP-061..068` is the governance-only follow-on lane after `GAP-060` and is also complete (2026-04-20), without being back-written into the final-state closure proof itself.
 
 ## Can I Use This With Another Repo?
 Yes, with the current boundary.

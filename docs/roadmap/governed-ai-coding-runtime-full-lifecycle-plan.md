@@ -47,7 +47,7 @@ The current future-facing closure and follow-on planning package is:
 - `Stage 7` and `Stage 8` being complete means the first landed hybrid product boundary and its strategy hardening are present on the current branch baseline.
 - `Stage 7` and `Stage 8` complete do **not** mean complete hybrid final-state closure.
 - The active future-facing queue for complete closure is `docs/roadmap/direct-to-hybrid-final-state-roadmap.md` plus `docs/plans/direct-to-hybrid-final-state-implementation-plan.md`.
-- The planned follow-on governance lane after closure is `docs/roadmap/governance-optimization-lane-roadmap.md` plus `docs/plans/governance-optimization-lane-implementation-plan.md`.
+- The governance follow-on lane after closure is `docs/roadmap/governance-optimization-lane-roadmap.md` plus `docs/plans/governance-optimization-lane-implementation-plan.md`, and this lane is complete on the current branch baseline (verified on 2026-04-20).
 
 ## Product Shape
 
@@ -256,7 +256,7 @@ Interpretation note: satisfying `Stage 8` hardens the landed hybrid boundary and
 - `Strategy Alignment Gates / GAP-040` through `GAP-044` are complete on the current branch baseline and remain encoded as satisfied dependencies around `GAP-035` through `GAP-039`; `issue-seeds.yaml` still carries those constraints so future seeding stays honest.
 - `Stage 7` plus `Stage 8` complete should be read as "landed hybrid boundary + hardening dependencies complete", not as "complete hybrid final-state closure".
 - The active closure queue after that landed boundary is `GAP-045` onward in the direct-to-hybrid-final-state roadmap and implementation plan.
-- `GAP-061` through `GAP-068` are the planned governance-only follow-on lane after `GAP-060`; they do not replace or retroactively redefine the closure queue.
+- `GAP-061` through `GAP-068` were the governance-only follow-on lane after `GAP-060` and are now complete; they still do not replace or retroactively redefine the closure queue.
 - `docs/plans/foundation-runtime-substrate-implementation-plan.md`, `docs/plans/full-runtime-implementation-plan.md`, `docs/plans/public-usable-release-implementation-plan.md`, and `docs/plans/maintenance-implementation-plan.md` are execution history for completed local-baseline stages.
 
 ## Lifecycle Completion Criteria

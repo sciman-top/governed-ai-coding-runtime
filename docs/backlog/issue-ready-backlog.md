@@ -11,7 +11,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - internal runtime boundaries remain service-shaped even though the default delivery shape is attach-first rather than service-first
 - Codex compatibility remains the first direct adapter priority, but final product completeness cannot be Codex-only
 - non-goals remain non-goals: no enterprise org model, no marketplace, no default multi-agent orchestration, no memory-first product identity
-- governance-optimization lane `GAP-061` through `GAP-068` remains planned follow-on work after `GAP-060`, while older lifecycle `GAP` entries remain completion history
+- governance-optimization lane `GAP-061` through `GAP-068` was the follow-on queue after `GAP-060` and is now complete on the current branch baseline (verified on 2026-04-20), while older lifecycle `GAP` entries remain completion history
 
 ## Current Baseline
 - PRD, architecture, ADRs, specs, runtime contract primitives, repo verifier entrypoints, sample repo profiles, and a runtime-consumable control pack already exist.
@@ -24,12 +24,12 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Strategy Alignment Gates / GAP-040` through `GAP-044` are now complete on the current branch baseline.
 - `Interactive Session Productization / GAP-035` through `GAP-039` are complete on the current branch baseline.
 - `Direct-To-Hybrid-Final-State Mainline / GAP-045` is complete on the current branch baseline as the planning rebaseline closeout.
-- `Direct-To-Hybrid-Final-State Mainline / GAP-046` through `GAP-060` remains the active execution queue on the current branch baseline.
-- `Governance Optimization Lane / GAP-061` through `GAP-068` remains planned follow-on work after `GAP-060`.
+- `Direct-To-Hybrid-Final-State Mainline / GAP-046` through `GAP-060` are complete on the current branch baseline (verified on 2026-04-20).
+- `Governance Optimization Lane / GAP-061` through `GAP-068` are complete on the current branch baseline (verified on 2026-04-20).
 
 ## Direct-To-Hybrid-Final-State Mainline
 
-The entries below are the active queue for complete hybrid final-state closure. The historical lifecycle backlog remains below as completion history and dependency context.
+The entries below record the executed queue for complete hybrid final-state and governance-optimization closure. The historical lifecycle backlog remains below as completion history and dependency context.
 
 ### Phase 0: Canonical Re-Baseline
 
@@ -273,115 +273,115 @@ The entries below are the active queue for complete hybrid final-state closure. 
 - Type: AFK
 - Blocked by: GAP-060
 - User stories: 21, 23, 29, 31, 40
-- Status: planned in governance-optimization lane after `GAP-060`
+- Status: complete on current branch baseline (verified on 2026-04-20)
 - What to build:
   - canonical roadmap and implementation plan for the governance-optimization lane
   - backlog, issue-seed, and template alignment for `GAP-061` through `GAP-068`
   - dedicated epic-rendering support for the governance lane after `Phase 5`
   - planning evidence that explains the lane boundary and rollback
 - Acceptance criteria:
-  - [ ] the lane has canonical roadmap, implementation plan, backlog, seeds, template, and evidence assets
-  - [ ] `GAP-045` through `GAP-060` remain the active executable mainline
-  - [ ] GitHub issue rendering can emit a governance-lane epic without redefining the direct-to-hybrid closure queue
-  - [ ] future governance optimization work can reference one authoritative planning package
+  - [x] the lane has canonical roadmap, implementation plan, backlog, seeds, template, and evidence assets
+  - [x] `GAP-045` through `GAP-060` remain the active executable mainline
+  - [x] GitHub issue rendering can emit a governance-lane epic without redefining the direct-to-hybrid closure queue
+  - [x] future governance optimization work can reference one authoritative planning package
 
 ### GAP-062 Trace Grading And Improvement Baseline
 - Type: AFK
 - Blocked by: GAP-061
 - User stories: 13, 15, 22, 39, 44
-- Status: planned in governance-optimization lane after `GAP-061`
+- Status: complete on current branch baseline (verified on 2026-04-20)
 - What to build:
   - stronger trace grading requirements for replay-readiness, policy visibility, and outcome quality
   - explicit postmortem input model for failed runs, reviewer feedback, and repeated failure signatures
   - governance-loop update that places trace grading and improvement proposal generation after evidence persistence
 - Acceptance criteria:
-  - [ ] traces can distinguish missing evidence, poor outcome, policy misses, and replay-readiness gaps
-  - [ ] failed runs and review feedback can feed structured postmortem inputs
-  - [ ] the optimization lane has a trace-driven improvement baseline rather than an anecdotal one
+  - [x] traces can distinguish missing evidence, poor outcome, policy misses, and replay-readiness gaps
+  - [x] failed runs and review feedback can feed structured postmortem inputs
+  - [x] the optimization lane has a trace-driven improvement baseline rather than an anecdotal one
 
 ### GAP-063 Repo Admission And Compatibility Signal Hardening
 - Type: AFK
 - Blocked by: GAP-062
 - User stories: 11, 12, 38, 44, 46
-- Status: planned in governance-optimization lane after `GAP-062`
+- Status: complete on current branch baseline (verified on 2026-04-20)
 - What to build:
   - stronger repo-admission minimums for compatibility, knowledge readiness, eval readiness, and attachment hygiene
   - clearer compatibility signal boundaries for warning versus blocking conditions
   - explicit preservation of repo-specific stricter overrides without weakening kernel rules
 - Acceptance criteria:
-  - [ ] repo admission can accept, warn, or block attached repos using machine-readable criteria
-  - [ ] knowledge and eval readiness are explicit signals rather than hidden assumptions
-  - [ ] repo overrides remain stricter-only and do not weaken kernel guarantees
+  - [x] repo admission can accept, warn, or block attached repos using machine-readable criteria
+  - [x] knowledge and eval readiness are explicit signals rather than hidden assumptions
+  - [x] repo overrides remain stricter-only and do not weaken kernel guarantees
 
 ### GAP-064 Control Rollout Matrix And Waiver Recovery
 - Type: AFK
 - Blocked by: GAP-063
 - User stories: 7, 21, 23, 27, 40
-- Status: planned in governance-optimization lane after `GAP-063`
+- Status: complete on current branch baseline (verified on 2026-04-20)
 - What to build:
   - rollout-state semantics for `observe`, `canary`, `enforce`, and rollback
   - stronger control-lifecycle metadata for review cadence and health
   - waiver recovery rules tied to expiry, recovery plan, and promotion gates
 - Acceptance criteria:
-  - [ ] progressive controls can move from observe to enforce with explicit evidence and rollback posture
-  - [ ] waivers remain temporary and cannot silently become permanent defaults
-  - [ ] maintenance and retirement policy stays aligned with rollout and recovery semantics
+  - [x] progressive controls can move from observe to enforce with explicit evidence and rollback posture
+  - [x] waivers remain temporary and cannot silently become permanent defaults
+  - [x] maintenance and retirement policy stays aligned with rollout and recovery semantics
 
 ### GAP-065 Knowledge Registry And Repo-Map Context Shaping
 - Type: AFK
 - Blocked by: GAP-064
 - User stories: 2, 20, 31, 37, 44
-- Status: planned in governance-optimization lane after `GAP-064`
+- Status: complete on current branch baseline (verified on 2026-04-20)
 - What to build:
   - knowledge-source trust, freshness, precedence, and drift rules
   - repo-map context shaping as a governed knowledge input instead of an implicit agent behavior
   - guardrails that keep memory-like sources non-authoritative
 - Acceptance criteria:
-  - [ ] knowledge sources are typed, versioned, and reviewable
-  - [ ] repo-map context shaping is reusable across repos without leaking into kernel truth semantics
-  - [ ] memory-like sources remain explicitly non-authoritative
+  - [x] knowledge sources are typed, versioned, and reviewable
+  - [x] repo-map context shaping is reusable across repos without leaking into kernel truth semantics
+  - [x] memory-like sources remain explicitly non-authoritative
 
 ### GAP-066 Provenance And Attestation For Governance Assets
 - Type: AFK
 - Blocked by: GAP-065
 - User stories: 21, 31, 37, 38, 44
-- Status: planned in governance-optimization lane after `GAP-065`
+- Status: complete on current branch baseline (verified on 2026-04-20)
 - What to build:
   - provenance minimums for control packs, schema bundles, and release-adjacent governance artifacts
   - stronger linkage between provenance, verification state, and rollback visibility
   - clear statement that provenance augments rather than replaces evidence and approval records
 - Acceptance criteria:
-  - [ ] governance assets can carry provenance records with stable references
-  - [ ] provenance status can be used in promotion or review decisions when present
-  - [ ] provenance does not displace evidence, approval, or rollback records
+  - [x] governance assets can carry provenance records with stable references
+  - [x] provenance status can be used in promotion or review decisions when present
+  - [x] provenance does not displace evidence, approval, or rollback records
 
 ### GAP-067 Controlled Improvement Proposal Pipeline
 - Type: HITL
 - Blocked by: GAP-066
 - User stories: 13, 14, 15, 39, 45
-- Status: planned in governance-optimization lane after `GAP-066`
+- Status: complete on current branch baseline (verified on 2026-04-20)
 - What to build:
   - structured proposal pipeline fed by traces, postmortems, reviewer feedback, and repeated failures
   - proposal buckets for skills, hooks, policy, controls, knowledge, and repo follow-ups
   - human-review boundary that prevents autonomous kernel mutation
 - Acceptance criteria:
-  - [ ] the runtime can emit structured improvement proposals from evidence-backed inputs
-  - [ ] proposal outputs are clearly separated from automatic policy or kernel mutations
-  - [ ] proposal categories preserve the boundary between unified governance and repo-specific follow-up work
+  - [x] the runtime can emit structured improvement proposals from evidence-backed inputs
+  - [x] proposal outputs are clearly separated from automatic policy or kernel mutations
+  - [x] proposal categories preserve the boundary between unified governance and repo-specific follow-up work
 
 ### GAP-068 Governance Optimization Lane Closeout And Claim Discipline
 - Type: HITL
 - Blocked by: GAP-067
 - User stories: 18, 21, 29, 37, 44
-- Status: planned in governance-optimization lane after `GAP-067`
+- Status: complete on current branch baseline (verified on 2026-04-20)
 - What to build:
   - final lane closeout criteria, residual risk summary, and deferred-item ledger
   - optimization claim discipline that distinguishes controlled improvement from autonomous self-mutation
   - evidence-backed rollback notes for the lane outputs
 - Acceptance criteria:
-  - [ ] allowed and prohibited optimization claims are explicit
-  - [ ] deferred non-goals remain visible instead of leaking into closeout language
-  - [ ] lane closeout references real verification evidence and rollback notes
+  - [x] allowed and prohibited optimization claims are explicit
+  - [x] deferred non-goals remain visible instead of leaking into closeout language
+  - [x] lane closeout references real verification evidence and rollback notes
 
 ## Vision
 

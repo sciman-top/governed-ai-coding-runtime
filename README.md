@@ -35,7 +35,7 @@
 - 外部目标仓中的真实高风险写入仍未接成完整 runtime-owned Codex 执行链
 - direct Codex adapter 目前是 honest smoke-trial / posture / evidence wiring，不是完整生产级写入控制面
 - attach-first 已有 contract 与本地 entrypoint，但还不是“替代上游宿主 UI”的最终交互体验
-- `GAP-045..060` 是当前直达完整混合终态的主线；`GAP-061..068` 是 `GAP-060` 之后的治理优化 follow-on lane，不应回写成当前终态闭环的一部分
+- `GAP-045..060` 是直达完整混合终态的主线且已完成；`GAP-061..068` 是 `GAP-060` 之后的治理优化 follow-on lane，现也已完成（2026-04-20），且不回写成终态闭环证明的一部分
 
 现在能否用于其他项目？
 - 可以，**但边界是“治理 sidecar / attach-first metadata + posture + gate planning + trial surfaces”**。
@@ -147,7 +147,7 @@ Available now:
 Still in progress as the true end-state:
 - production-grade real-write Codex ownership for external repos
 - fuller attach-first user experience beyond the current local bridge and trial surfaces
-- `GAP-045..060` is the current direct path to full hybrid final-state closure; `GAP-061..068` is the governance-only follow-on lane after `GAP-060`
+- `GAP-045..060` is the direct path to full hybrid final-state closure and is complete; `GAP-061..068` is the governance-only follow-on lane after `GAP-060` and is also complete (2026-04-20), without being back-written into the final-state closure proof itself
 
 Primary docs:
 - [Single-Machine Runtime Quickstart](docs/quickstart/single-machine-runtime-quickstart.md)

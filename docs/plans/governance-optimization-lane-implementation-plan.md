@@ -14,7 +14,7 @@
 
 - This is the canonical implementation plan for the governance-optimization lane.
 - It does not replace `docs/plans/direct-to-hybrid-final-state-implementation-plan.md`.
-- `GAP-061` through `GAP-068` are planned follow-on work after `GAP-060`.
+- `GAP-061` through `GAP-068` are complete on the current branch baseline (verified on 2026-04-20).
 - The lane is intentionally planning-first and governance-first; it should not be used to sneak in unrelated runtime implementation work.
 
 ## Source Inputs
@@ -87,15 +87,15 @@ GAP-060 hybrid final-state closeout
 - Create: `docs/change-evidence/<date>-governance-optimization-lane-planning.md`
 
 **Acceptance criteria:**
-- [ ] The lane has a roadmap, implementation plan, template, backlog entries, issue seeds, and evidence.
-- [ ] Existing `GAP-045` through `GAP-060` remain the active hybrid-final-state queue.
-- [ ] `GAP-061` through `GAP-068` are visible as the next governance-optimization lane rather than an implicit backlog tail.
-- [ ] GitHub issue rendering can emit a dedicated governance-lane epic after the direct-to-hybrid `Phase 5` chain.
+- [x] The lane has a roadmap, implementation plan, template, backlog entries, issue seeds, and evidence.
+- [x] Existing `GAP-045` through `GAP-060` remain the active hybrid-final-state queue.
+- [x] `GAP-061` through `GAP-068` are visible as the next governance-optimization lane rather than an implicit backlog tail.
+- [x] GitHub issue rendering can emit a dedicated governance-lane epic after the direct-to-hybrid `Phase 5` chain.
 
 **Verification:**
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/github/create-roadmap-issues.ps1 -ValidateOnly -RenderAll`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Scripts`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/github/create-roadmap-issues.ps1 -ValidateOnly -RenderAll`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Scripts`.
 
 **Dependencies:** `GAP-060`.
 
@@ -113,13 +113,13 @@ GAP-060 hybrid final-state closeout
 - Create: `docs/change-evidence/<date>-trace-grading-improvement-baseline.md`
 
 **Acceptance criteria:**
-- [ ] Trace grading distinguishes evidence completeness, workflow correctness, replay readiness, and proposal input quality.
-- [ ] The governance loop explicitly includes trace grading and improvement proposal generation after evidence persistence.
-- [ ] The lane backlog links trace grading to later rollout and proposal tasks.
+- [x] Trace grading distinguishes evidence completeness, workflow correctness, replay readiness, and proposal input quality.
+- [x] The governance loop explicitly includes trace grading and improvement proposal generation after evidence persistence.
+- [x] The lane backlog links trace grading to later rollout and proposal tasks.
 
 **Verification:**
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
 
 **Dependencies:** Task 0.
 
@@ -137,13 +137,13 @@ GAP-060 hybrid final-state closeout
 - Create: `docs/change-evidence/<date>-repo-admission-compatibility-hardening.md`
 
 **Acceptance criteria:**
-- [ ] Repo admission can describe stronger compatibility and readiness signals without weakening kernel rules.
-- [ ] Knowledge and eval readiness are treated as admission or warning signals, not implicit assumptions.
-- [ ] Cross-repo reuse boundaries remain explicit.
+- [x] Repo admission can describe stronger compatibility and readiness signals without weakening kernel rules.
+- [x] Knowledge and eval readiness are treated as admission or warning signals, not implicit assumptions.
+- [x] Cross-repo reuse boundaries remain explicit.
 
 **Verification:**
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
 
 **Dependencies:** Task 1.
 
@@ -162,13 +162,13 @@ GAP-060 hybrid final-state closeout
 - Create: `docs/change-evidence/<date>-control-rollout-waiver-recovery.md`
 
 **Acceptance criteria:**
-- [ ] Progressive controls can express rollout state, review cadence, and rollback posture.
-- [ ] Waivers remain temporary and tied to recovery plans rather than becoming silent permanent exceptions.
-- [ ] Maintenance and retirement policy reference the same rollout and recovery discipline.
+- [x] Progressive controls can express rollout state, review cadence, and rollback posture.
+- [x] Waivers remain temporary and tied to recovery plans rather than becoming silent permanent exceptions.
+- [x] Maintenance and retirement policy reference the same rollout and recovery discipline.
 
 **Verification:**
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
 
 **Dependencies:** Task 2.
 
@@ -186,13 +186,13 @@ GAP-060 hybrid final-state closeout
 - Create: `docs/change-evidence/<date>-knowledge-registry-and-repo-map.md`
 
 **Acceptance criteria:**
-- [ ] Knowledge sources can express trust, freshness, precedence, and drift expectations.
-- [ ] Repo-map context shaping is treated as a governed input, not a hidden agent-side behavior.
-- [ ] Memory-like sources remain non-authoritative.
+- [x] Knowledge sources can express trust, freshness, precedence, and drift expectations.
+- [x] Repo-map context shaping is treated as a governed input, not a hidden agent-side behavior.
+- [x] Memory-like sources remain non-authoritative.
 
 **Verification:**
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
 
 **Dependencies:** Task 3.
 
@@ -209,13 +209,13 @@ GAP-060 hybrid final-state closeout
 - Create: `docs/change-evidence/<date>-governance-asset-provenance.md`
 
 **Acceptance criteria:**
-- [ ] Governance assets can express provenance minimums and verification state.
-- [ ] Provenance remains additive to evidence and rollback.
-- [ ] The backlog makes clear which governance assets should carry provenance first.
+- [x] Governance assets can express provenance minimums and verification state.
+- [x] Provenance remains additive to evidence and rollback.
+- [x] The backlog makes clear which governance assets should carry provenance first.
 
 **Verification:**
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
 
 **Dependencies:** Task 4.
 
@@ -232,12 +232,12 @@ GAP-060 hybrid final-state closeout
 - Create: `docs/change-evidence/<date>-controlled-improvement-proposals.md`
 
 **Acceptance criteria:**
-- [ ] Improvement proposals are fed by traces, postmortems, and repeated failures.
-- [ ] Proposal outputs are clearly separated from automatic policy or kernel mutations.
-- [ ] Boundaries for unified governance, repo inheritance, override, and exclusion remain explicit.
+- [x] Improvement proposals are fed by traces, postmortems, and repeated failures.
+- [x] Proposal outputs are clearly separated from automatic policy or kernel mutations.
+- [x] Boundaries for unified governance, repo inheritance, override, and exclusion remain explicit.
 
 **Verification:**
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
 
 **Dependencies:** Task 5.
 

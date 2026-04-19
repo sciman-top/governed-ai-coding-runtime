@@ -1,13 +1,13 @@
 # Governance Optimization Lane Roadmap
 
 ## Status
-- This roadmap defines the next governance-optimization lane that follows the current direct-to-hybrid-final-state mainline.
+- This roadmap records the governance-optimization lane that follows the direct-to-hybrid-final-state mainline.
 - It does not replace:
   - `docs/roadmap/direct-to-hybrid-final-state-roadmap.md`
   - `docs/plans/direct-to-hybrid-final-state-implementation-plan.md`
   - `docs/backlog/issue-ready-backlog.md`
-- `GAP-061` through `GAP-068` are planned follow-on work after `GAP-060`.
-- The lane remains planning-canonicalized but not execution-closed on the current branch baseline.
+- `GAP-061` through `GAP-068` were the follow-on governance lane after `GAP-060` and are complete on the current branch baseline (verified on 2026-04-20).
+- The lane remains follow-on (not a replacement for direct-to-hybrid closure) and is now execution-closed with evidence-backed claims.
 
 ## Goal
 Define the governed follow-on work that should start after hybrid final-state closure so the runtime can improve through auditable traces, structured postmortems, controlled rollout, and rollback-safe optimization loops.
@@ -56,8 +56,8 @@ This lane exists to close those gaps without changing the product identity from 
 ## Phase 6: Governance Optimization Lane
 
 ### Status
-- planned governance-optimization lane after `GAP-060`
-- rendered as a distinct follow-on epic chain under the existing lifecycle initiative
+- complete governance-optimization lane after `GAP-060` (verified on 2026-04-20)
+- rendered as a distinct follow-on epic chain under the existing lifecycle initiative and closed with evidence
 
 ### Goal
 - package the governance-only follow-on work into one explicit phase after hybrid final-state closure
@@ -69,9 +69,9 @@ This lane exists to close those gaps without changing the product identity from 
 - dedicated GitHub issue rendering support for this governance follow-on phase
 
 ### Exit Criteria
-- the governance lane can be rendered as a dedicated epic after `Phase 5`
-- `GAP-061` through `GAP-068` must be verified complete before lane closeout claims
-- the lane remains visibly follow-on rather than a replacement for direct-to-hybrid closure
+- [x] the governance lane can be rendered as a dedicated epic after `Phase 5`
+- [x] `GAP-061` through `GAP-068` are verified complete before lane closeout claims
+- [x] the lane remains visibly follow-on rather than a replacement for direct-to-hybrid closure
 
 ### GAP-061 Governance Optimization Lane Canonicalization
 #### Goal
@@ -213,6 +213,7 @@ This roadmap is paired with:
 4. `scripts/github/create-roadmap-issues.ps1`
 5. `docs/templates/governance-gap-acceptance-and-rollback-template.md`
 6. `docs/change-evidence/20260419-governance-optimization-lane-planning.md`
+7. `docs/change-evidence/20260419-gap-061-governance-optimization-lane-canonicalization-closeout.md`
 
 ## Source References
 - `docs/architecture/minimum-viable-governance-loop.md`
