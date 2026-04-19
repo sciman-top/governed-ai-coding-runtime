@@ -4,10 +4,32 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260419 Governance Optimization Lane Epic Rendering](./20260419-governance-optimization-lane-epic-rendering.md)
+  - evidence companion for promoting the governance lane from task-only seeding into a dedicated follow-on epic rendering path
+- [20260419 Hybrid Final-State Planning Chain Transition Hardening](./20260419-hybrid-final-state-planning-chain-transition-hardening.md)
+  - evidence companion for the planning-chain audit that removed active/history drift, refreshed root entrypoints, and clarified the governance follow-on lane
+- [20260419 Governance Optimization Lane Planning](./20260419-governance-optimization-lane-planning.md)
+  - evidence companion for canonicalizing the `GAP-061` through `GAP-068` governance-optimization lane after `GAP-060`
+- [20260419 Hybrid Final-State Executable Gap Audit](./20260419-hybrid-final-state-executable-gap-audit.md)
+  - evidence companion for the blocking and hardening audit that defines the direct-to-hybrid closure problem set
+- [20260419 Hybrid Final-State Master Outline](./20260419-hybrid-final-state-master-outline.md)
+  - evidence companion for the current hybrid final-state decomposition and claim-discipline rewrite
+- [20260419 Direct-To-Hybrid Phase-0 Rebaseline Closeout](./20260419-direct-to-hybrid-phase-0-rebaseline-closeout.md)
+  - evidence companion for making the direct-to-hybrid package the active mainline and demoting lifecycle history to non-active status
+- [20260419 Phase 0 Planning Sync](./20260419-phase-0-planning-sync.md)
+  - evidence companion for aligning backlog, issue seeds, and issue rendering with the direct-to-hybrid mainline
+- [20260419 Direct-To-Hybrid Final-State Doc Consistency Hardening](./20260419-direct-to-hybrid-final-state-doc-consistency-hardening.md)
+  - evidence companion for keeping roadmap, implementation plan, backlog, and closeout claim language aligned
+- [20260419 Direct-To-Hybrid Final-State Implementation Plan](./20260419-direct-to-hybrid-final-state-implementation-plan.md)
+  - evidence companion for the executable direct-to-hybrid implementation plan
+- [20260419 Direct-To-Hybrid Final-State Roadmap](./20260419-direct-to-hybrid-final-state-roadmap.md)
+  - evidence companion for the canonical direct-to-hybrid roadmap
 - [20260419 Backlog Active Queue Status Sync](./20260419-backlog-active-queue-status-sync.md)
   - evidence companion for resolving backlog posture drift so completed `GAP-035` through `GAP-044` are no longer described as an active queue
 - [20260419 Relative Paths And Multi-Target Presets](./20260419-relative-paths-and-multi-target-presets.md)
   - evidence companion for relative-path normalization and preset flows for classroomtoolkit, self-runtime, and skills-manager targets
+- [20260419 Session Bridge Execution Bus Expansion](./20260419-session-bridge-execution-bus-expansion.md)
+  - evidence companion for extending the bridge from posture-only toward a runtime-owned execution surface
 - [20260418 Attached Write Execution Loop](./20260418-attached-write-execution-loop.md)
   - evidence companion for closing the first attached-repo write loop with persisted approvals, decision command, and controlled write execution
 - [20260418 ClassroomToolkit Preset Flow](./20260418-classroomtoolkit-preset-flow.md)

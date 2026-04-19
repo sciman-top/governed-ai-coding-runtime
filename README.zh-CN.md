@@ -34,6 +34,7 @@
 - 当前 operator UI 是本地 HTML surface，不是长期运行的 Web 服务。
 - 当前还不能宣称“外部目标仓里的真实高风险写入已经由本项目完整接管”。
 - 当前 direct Codex adapter 仍应理解为 honest smoke-trial / posture / evidence wiring，不是完整生产级写入控制面。
+- `GAP-045..060` 是当前直达完整混合终态的主线；`GAP-061..068` 是 `GAP-060` 之后的治理优化 follow-on lane。
 
 ## 现在能否用于其他项目
 可以，但要按当前边界理解。
@@ -218,6 +219,13 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -T
 ```text
 packages/contracts/src/governed_ai_coding_runtime_contracts/
 ```
+
+规划入口：
+- [Hybrid Final-State Master Outline](docs/architecture/hybrid-final-state-master-outline.md)
+- [Direct-To-Hybrid Final-State Roadmap](docs/roadmap/direct-to-hybrid-final-state-roadmap.md)
+- [Direct-To-Hybrid Final-State Implementation Plan](docs/plans/direct-to-hybrid-final-state-implementation-plan.md)
+- [Governance Optimization Lane Roadmap](docs/roadmap/governance-optimization-lane-roadmap.md)
+- [Governance Optimization Lane Implementation Plan](docs/plans/governance-optimization-lane-implementation-plan.md)
 
 主要模块：
 

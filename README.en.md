@@ -33,6 +33,7 @@ Not available yet:
 - The package bundle is a local distribution directory, not an installer or published channel.
 - The richer operator UI is a local HTML surface, not a long-running web service.
 - The current Codex path is still best described as honest smoke-trial, posture, and evidence wiring, not a production-grade runtime-owned real-write backend for external repos.
+- `GAP-045..060` is the current direct path to full hybrid final-state closure; `GAP-061..068` is the governance-only follow-on lane after `GAP-060`.
 
 ## Can I Use This With Another Repo?
 Yes, with the current boundary.
@@ -219,6 +220,13 @@ Core code lives in:
 ```text
 packages/contracts/src/governed_ai_coding_runtime_contracts/
 ```
+
+Planning entrypoints:
+- [Hybrid Final-State Master Outline](docs/architecture/hybrid-final-state-master-outline.md)
+- [Direct-To-Hybrid Final-State Roadmap](docs/roadmap/direct-to-hybrid-final-state-roadmap.md)
+- [Direct-To-Hybrid Final-State Implementation Plan](docs/plans/direct-to-hybrid-final-state-implementation-plan.md)
+- [Governance Optimization Lane Roadmap](docs/roadmap/governance-optimization-lane-roadmap.md)
+- [Governance Optimization Lane Implementation Plan](docs/plans/governance-optimization-lane-implementation-plan.md)
 
 Important modules:
 

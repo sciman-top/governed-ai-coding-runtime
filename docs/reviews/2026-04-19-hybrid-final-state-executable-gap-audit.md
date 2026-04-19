@@ -5,6 +5,9 @@
 - 审查目标不是重新否定 `GAP-035` 到 `GAP-044` 的已落地成果，而是明确“还差什么才可以声称达到完整混合终态”。
 - 终态基线主要来自：
   - `README.md`
+  - `docs/architecture/hybrid-final-state-master-outline.md`
+  - `docs/roadmap/direct-to-hybrid-final-state-roadmap.md`
+  - `docs/plans/direct-to-hybrid-final-state-implementation-plan.md`
   - `docs/roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md`
   - `docs/architecture/local-baseline-to-hybrid-final-state-migration-matrix.md`
   - `docs/reviews/2026-04-18-hybrid-final-state-and-plan-reconciliation.md`

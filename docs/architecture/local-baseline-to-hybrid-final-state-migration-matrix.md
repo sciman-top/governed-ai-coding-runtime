@@ -1,7 +1,10 @@
 # Local Baseline To Hybrid Final-State Migration Matrix
 
 ## Purpose
-This document explains how the completed local baseline (`GAP-020` through `GAP-034`) relates to the active hybrid final-state queue (`GAP-035` through `GAP-044`).
+This document explains how the completed local baseline (`GAP-020` through `GAP-034`) relates to:
+
+- the landed hybrid product boundary and hardening dependencies (`GAP-035` through `GAP-044`)
+- the active direct-to-hybrid closure queue (`GAP-045` through `GAP-060`)
 
 It answers one operational question directly:
 
@@ -18,6 +21,8 @@ The answer is:
 - Repo-root runtime entrypoints such as `.runtime/`, CLI-first status, and local operator helpers remain valid for local bootstrap, smoke verification, recovery, and packaging.
 - Those entrypoints are not the final deployment boundary for the attach-first product.
 - Final-state work must change boundary placement and interface shape before it changes core task, evidence, verification, and rollback semantics.
+- The active future-facing closure queue is now the direct-to-hybrid mainline (`GAP-045` through `GAP-060`), not the already-landed `GAP-035` through `GAP-044` slice.
+- The governance-optimization lane (`GAP-061` through `GAP-068`) is planned follow-on work after `GAP-060`, not part of the closure proof for the hybrid final-state claim itself.
 
 ## Interpretation Rules
 - Treat the completed local runtime as a `single-machine baseline`, not as the final attach-first product.
@@ -53,18 +58,26 @@ The answer is:
 - manual-handoff Codex compatibility as equivalent to direct attach
 - direct write-policy-to-approval wiring as the final host-facing decision interface
 
-## Active Replacement Or Hardening Queue
-- `GAP-035`: target-repo attachment binding and light-pack surface
-- `GAP-036`: attach-first session bridge with launch-second fallback
-- `GAP-037`: direct Codex adapter and runtime evidence mapping
-- `GAP-038`: capability-tiered generic adapter framework
-- `GAP-039`: multi-repo trial loop and onboarding evidence
-- `GAP-042`: repo-native contract bundle architecture
-- `GAP-043`: `PolicyDecision` contract
-- `GAP-044`: local and CI same-contract verification hardening
+## Landed Boundary And Follow-On Closure Queue
+- Already landed hybrid boundary and hardening dependencies:
+  - `GAP-035`: target-repo attachment binding and light-pack surface
+  - `GAP-036`: attach-first session bridge with launch-second fallback
+  - `GAP-037`: direct Codex adapter and runtime evidence mapping
+  - `GAP-038`: capability-tiered generic adapter framework
+  - `GAP-039`: multi-repo trial loop and onboarding evidence
+  - `GAP-042`: repo-native contract bundle architecture
+  - `GAP-043`: `PolicyDecision` contract
+  - `GAP-044`: local and CI same-contract verification hardening
+- Active direct-to-hybrid closure queue:
+  - `GAP-045` through `GAP-060`
+- Planned governance-only follow-on lane after closure:
+  - `GAP-061` through `GAP-068`
 
 ## Source References
 - [Full Lifecycle Plan](../roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
+- [Direct-To-Hybrid Final-State Roadmap](../roadmap/direct-to-hybrid-final-state-roadmap.md)
+- [Direct-To-Hybrid Final-State Implementation Plan](../plans/direct-to-hybrid-final-state-implementation-plan.md)
+- [Governance Optimization Lane Roadmap](../roadmap/governance-optimization-lane-roadmap.md)
 - [Governed AI Coding Runtime Target Architecture](./governed-ai-coding-runtime-target-architecture.md)
 - [Governance Runtime Strategy Alignment Plan](../plans/governance-runtime-strategy-alignment-plan.md)
 - [Interactive Session Productization Implementation Plan](../plans/interactive-session-productization-implementation-plan.md)

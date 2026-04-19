@@ -23,7 +23,8 @@ This directory holds the human and machine planning artifacts that bridge strate
 - Current behavior:
   - task titles and seed metadata are now injected from `issue-seeds.yaml`
   - task issue bodies are now rendered from `issue-ready-backlog.md` plus seed metadata
-  - initiative and epic issue bodies are now rendered from `governed-ai-coding-runtime-full-lifecycle-plan.md`
+  - initiative and epic issue bodies for the current direct-to-hybrid mainline are rendered from `governed-ai-coding-runtime-full-lifecycle-plan.md`
+  - the governance-optimization lane now renders as a dedicated follow-on epic after the direct-to-hybrid `Phase 5` chain
   - `-ValidateOnly` can be used to verify the script sees the current seed set without calling GitHub
   - `-ValidateOnly -RenderAll` renders every task, epic, and initiative body and verifies the actual task creation definitions without calling GitHub
 - Current limitation:
@@ -40,11 +41,14 @@ This directory holds the human and machine planning artifacts that bridge strate
 - `Strategy Alignment Gates / GAP-040` through `GAP-044` are complete on the current branch baseline.
 - `Interactive Session Productization / GAP-035` through `GAP-039` are complete on the current branch baseline.
 - `Direct-To-Hybrid-Final-State Mainline / GAP-045` through `GAP-060` is the active future-facing queue.
+- `Governance Optimization Lane / GAP-061` through `GAP-068` is the planned follow-on queue and defaults to activation after `GAP-060`.
 - Historical `GAP-018` through `GAP-044` remain completion history and dependency context.
 - The active lifecycle is now anchored by:
   - [Hybrid Final-State Master Outline](../architecture/hybrid-final-state-master-outline.md)
   - [Direct-To-Hybrid Final-State Roadmap](../roadmap/direct-to-hybrid-final-state-roadmap.md)
   - [Direct-To-Hybrid Final-State Implementation Plan](../plans/direct-to-hybrid-final-state-implementation-plan.md)
+  - [Governance Optimization Lane Roadmap](../roadmap/governance-optimization-lane-roadmap.md)
+  - [Governance Optimization Lane Implementation Plan](../plans/governance-optimization-lane-implementation-plan.md)
   - [Full Lifecycle Plan](../roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
   - [Full Lifecycle Backlog Seeds](./full-lifecycle-backlog-seeds.md)
   - [Issue-Ready Backlog](./issue-ready-backlog.md)

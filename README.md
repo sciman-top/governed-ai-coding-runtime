@@ -35,6 +35,7 @@
 - 外部目标仓中的真实高风险写入仍未接成完整 runtime-owned Codex 执行链
 - direct Codex adapter 目前是 honest smoke-trial / posture / evidence wiring，不是完整生产级写入控制面
 - attach-first 已有 contract 与本地 entrypoint，但还不是“替代上游宿主 UI”的最终交互体验
+- `GAP-045..060` 是当前直达完整混合终态的主线；`GAP-061..068` 是 `GAP-060` 之后的治理优化 follow-on lane，不应回写成当前终态闭环的一部分
 
 现在能否用于其他项目？
 - 可以，**但边界是“治理 sidecar / attach-first metadata + posture + gate planning + trial surfaces”**。
@@ -115,6 +116,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -T
 - [Hybrid Final-State Master Outline](docs/architecture/hybrid-final-state-master-outline.md)
 - [Direct-To-Hybrid Final-State Roadmap](docs/roadmap/direct-to-hybrid-final-state-roadmap.md)
 - [Direct-To-Hybrid Final-State Implementation Plan](docs/plans/direct-to-hybrid-final-state-implementation-plan.md)
+- [Governance Optimization Lane Roadmap](docs/roadmap/governance-optimization-lane-roadmap.md)
+- [Governance Optimization Lane Implementation Plan](docs/plans/governance-optimization-lane-implementation-plan.md)
 - [Local Baseline To Hybrid Final-State Migration Matrix](docs/architecture/local-baseline-to-hybrid-final-state-migration-matrix.md)
 - [Interactive Session Productization Implementation Plan](docs/plans/interactive-session-productization-implementation-plan.md)
 - [Interactive Session Productization Plan](docs/plans/interactive-session-productization-plan.md)
@@ -144,6 +147,7 @@ Available now:
 Still in progress as the true end-state:
 - production-grade real-write Codex ownership for external repos
 - fuller attach-first user experience beyond the current local bridge and trial surfaces
+- `GAP-045..060` is the current direct path to full hybrid final-state closure; `GAP-061..068` is the governance-only follow-on lane after `GAP-060`
 
 Primary docs:
 - [Single-Machine Runtime Quickstart](docs/quickstart/single-machine-runtime-quickstart.md)
@@ -155,6 +159,8 @@ Primary docs:
 - [Hybrid Final-State Master Outline](docs/architecture/hybrid-final-state-master-outline.md)
 - [Direct-To-Hybrid Final-State Roadmap](docs/roadmap/direct-to-hybrid-final-state-roadmap.md)
 - [Direct-To-Hybrid Final-State Implementation Plan](docs/plans/direct-to-hybrid-final-state-implementation-plan.md)
+- [Governance Optimization Lane Roadmap](docs/roadmap/governance-optimization-lane-roadmap.md)
+- [Governance Optimization Lane Implementation Plan](docs/plans/governance-optimization-lane-implementation-plan.md)
 - [Local Baseline To Hybrid Final-State Migration Matrix](docs/architecture/local-baseline-to-hybrid-final-state-migration-matrix.md)
 - [Interactive Session Productization Implementation Plan](docs/plans/interactive-session-productization-implementation-plan.md)
 - [Interactive Session Productization Plan](docs/plans/interactive-session-productization-plan.md)

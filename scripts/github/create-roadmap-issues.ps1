@@ -406,6 +406,79 @@ function Get-DirectRoadmapPhaseData {
   return $phases
 }
 
+function Get-GovernanceRoadmapPhaseData {
+  $path = Join-Path (Get-Location) "docs/roadmap/governance-optimization-lane-roadmap.md"
+  if (-not (Test-Path $path)) {
+    throw "Governance roadmap not found: $path"
+  }
+
+  $content = Get-Content -Path $path
+  $phases = @{}
+  $currentPhase = $null
+  $currentSection = $null
+
+  foreach ($line in $content) {
+    if ($line -match '^## Phase (\d+): (.+)$') {
+      $phaseName = "Phase $($Matches[1]): $($Matches[2])"
+      $currentPhase = [ordered]@{
+        name = $phaseName
+        status = [System.Collections.Generic.List[string]]::new()
+        goal = [System.Collections.Generic.List[string]]::new()
+        scope = [System.Collections.Generic.List[string]]::new()
+        exit_criteria = [System.Collections.Generic.List[string]]::new()
+      }
+      $phases[$phaseName] = [pscustomobject]$currentPhase
+      $currentSection = $null
+      continue
+    }
+
+    if ($null -eq $currentPhase) {
+      continue
+    }
+
+    if ($line -match '^### Status$') {
+      $currentSection = "status"
+      continue
+    }
+
+    if ($line -match '^### Goal$') {
+      $currentSection = "goal"
+      continue
+    }
+
+    if ($line -match '^### Scope$') {
+      $currentSection = "scope"
+      continue
+    }
+
+    if ($line -match '^### Exit Criteria$') {
+      $currentSection = "exit_criteria"
+      continue
+    }
+
+    if ($line -match '^## ' -or $line -match '^### ') {
+      $currentSection = $null
+      continue
+    }
+
+    if ([string]::IsNullOrWhiteSpace($line) -or $null -eq $currentSection) {
+      continue
+    }
+
+    if ($line -match '^- (.+?)\s*$') {
+      $currentPhase[$currentSection].Add($Matches[1])
+      continue
+    }
+
+    $trimmed = $line.Trim()
+    if (-not [string]::IsNullOrWhiteSpace($trimmed)) {
+      $currentPhase[$currentSection].Add($trimmed)
+    }
+  }
+
+  return $phases
+}
+
 function Get-EpicDefinitions {
   return @(
     @{
@@ -498,6 +571,13 @@ function Get-EpicDefinitions {
       RoadmapPhaseName = "Phase 5: Hardening And Operational Completion"
       Source = "roadmap"
       Labels = @("epic", "phase:hardening-closeout", "platform", "backend", "docs", "product")
+    }
+    @{
+      Id = "Phase 6"
+      Title = "[Epic] Phase 6 Governance Optimization Lane"
+      RoadmapPhaseName = "Phase 6: Governance Optimization Lane"
+      Source = "governance_roadmap"
+      Labels = @("epic", "phase:governance-optimization", "platform", "docs", "product")
     }
   )
 }
@@ -680,11 +760,16 @@ function Get-EpicBody {
   param(
     [object]$EpicDefinition,
     [object]$LifecyclePlan,
-    [hashtable]$DirectRoadmapPhases
+    [hashtable]$DirectRoadmapPhases,
+    [hashtable]$GovernanceRoadmapPhases
   )
 
   if ($EpicDefinition.Source -eq "roadmap") {
     return Render-RoadmapEpicIssueBody -EpicId $EpicDefinition.Id -Phase $DirectRoadmapPhases[$EpicDefinition.RoadmapPhaseName]
+  }
+
+  if ($EpicDefinition.Source -eq "governance_roadmap") {
+    return Render-RoadmapEpicIssueBody -EpicId $EpicDefinition.Id -Phase $GovernanceRoadmapPhases[$EpicDefinition.RoadmapPhaseName]
   }
 
   return Render-EpicIssueBody -EpicId $EpicDefinition.Id -Stage $LifecyclePlan.stages[$EpicDefinition.StageName]
@@ -735,6 +820,7 @@ function Get-TaskLabels {
     '^GAP-0(53|54)$' { return @("task", "phase:multi-repo-sidecar", "platform", "backend", "product", "docs") }
     '^GAP-0(55|56)$' { return @("task", "phase:service-extraction", "platform", "backend", "devops") }
     '^GAP-0(57|58|59|60)$' { return @("task", "phase:hardening-closeout", "platform", "backend", "docs", "product") }
+    '^GAP-0(61|62|63|64|65|66|67|68)$' { return @("task", "phase:governance-optimization", "platform", "docs", "product") }
     default { throw "No task label mapping defined for $IssueId" }
   }
 }
@@ -837,6 +923,7 @@ $seedMap = Get-IssueSeedMap -SeedData $seedData
 $backlogTaskMap = Get-BacklogTaskMap
 $lifecyclePlan = Get-LifecyclePlanData
 $directRoadmapPhases = Get-DirectRoadmapPhaseData
+$governanceRoadmapPhases = Get-GovernanceRoadmapPhaseData
 $epicDefinitions = @(Get-EpicDefinitions)
 $epicDefinitionMap = Get-EpicDefinitionMap -EpicDefinitions $epicDefinitions
 
@@ -861,7 +948,7 @@ if ($ValidateOnly) {
 
     $renderedEpics = 0
     foreach ($epicDefinition in $epicDefinitions) {
-      [void](Get-EpicBody -EpicDefinition $epicDefinition -LifecyclePlan $lifecyclePlan -DirectRoadmapPhases $directRoadmapPhases)
+      [void](Get-EpicBody -EpicDefinition $epicDefinition -LifecyclePlan $lifecyclePlan -DirectRoadmapPhases $directRoadmapPhases -GovernanceRoadmapPhases $governanceRoadmapPhases)
       $renderedEpics += 1
     }
 
@@ -891,7 +978,7 @@ if ($ValidateOnly) {
     }
 
     $epicDefinition = $epicDefinitionMap[$EpicId]
-    $body = Get-EpicBody -EpicDefinition $epicDefinition -LifecyclePlan $lifecyclePlan -DirectRoadmapPhases $directRoadmapPhases
+    $body = Get-EpicBody -EpicDefinition $epicDefinition -LifecyclePlan $lifecyclePlan -DirectRoadmapPhases $directRoadmapPhases -GovernanceRoadmapPhases $governanceRoadmapPhases
     [pscustomobject]@{
       epic_id = $epicDefinition.Id
       title = $epicDefinition.Title
@@ -946,6 +1033,7 @@ $labels = @(
   @{ Name = "phase:multi-repo-sidecar"; Color = "1D76DB"; Description = "Real multi-repo and machine-local sidecar phase" }
   @{ Name = "phase:service-extraction"; Color = "D93F0B"; Description = "Service-shaped runtime extraction phase" }
   @{ Name = "phase:hardening-closeout"; Color = "5319E7"; Description = "Hardening and closeout phase" }
+  @{ Name = "phase:governance-optimization"; Color = "C2E0C6"; Description = "Governance optimization follow-on lane" }
   @{ Name = "backend"; Color = "0052CC"; Description = "Backend work" }
   @{ Name = "platform"; Color = "6F42C1"; Description = "Platform work" }
   @{ Name = "security"; Color = "B60205"; Description = "Security and policy" }
@@ -968,7 +1056,7 @@ $initiativeBody = Render-InitiativeBody -LifecyclePlan $lifecyclePlan
 New-RoadmapIssue -Title "[Initiative] Governed AI Coding Runtime Full Functional Lifecycle" -Labels @("initiative", "platform") -Body $initiativeBody
 
 foreach ($epicDefinition in $epicDefinitions) {
-  $body = Get-EpicBody -EpicDefinition $epicDefinition -LifecyclePlan $lifecyclePlan -DirectRoadmapPhases $directRoadmapPhases
+  $body = Get-EpicBody -EpicDefinition $epicDefinition -LifecyclePlan $lifecyclePlan -DirectRoadmapPhases $directRoadmapPhases -GovernanceRoadmapPhases $governanceRoadmapPhases
   New-RoadmapIssue -Title $epicDefinition.Title -Labels $epicDefinition.Labels -Body $body
 }
 

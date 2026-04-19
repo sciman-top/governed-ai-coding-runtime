@@ -1,4 +1,4 @@
-issue_seed_version: "3.4"
+issue_seed_version: "3.5"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment
@@ -215,3 +215,43 @@ issues:
     type: HITL
     blocked_by: [GAP-059]
     user_stories: [18, 29, 37, 44, 46]
+  - id: GAP-061
+    title: Governance Optimization Lane Canonicalization
+    type: AFK
+    blocked_by: [GAP-060]
+    user_stories: [21, 23, 29, 31, 40]
+  - id: GAP-062
+    title: Trace Grading And Improvement Baseline
+    type: AFK
+    blocked_by: [GAP-061]
+    user_stories: [13, 15, 22, 39, 44]
+  - id: GAP-063
+    title: Repo Admission And Compatibility Signal Hardening
+    type: AFK
+    blocked_by: [GAP-062]
+    user_stories: [11, 12, 38, 44, 46]
+  - id: GAP-064
+    title: Control Rollout Matrix And Waiver Recovery
+    type: AFK
+    blocked_by: [GAP-063]
+    user_stories: [7, 21, 23, 27, 40]
+  - id: GAP-065
+    title: Knowledge Registry And Repo-Map Context Shaping
+    type: AFK
+    blocked_by: [GAP-064]
+    user_stories: [2, 20, 31, 37, 44]
+  - id: GAP-066
+    title: Provenance And Attestation For Governance Assets
+    type: AFK
+    blocked_by: [GAP-065]
+    user_stories: [21, 31, 37, 38, 44]
+  - id: GAP-067
+    title: Controlled Improvement Proposal Pipeline
+    type: HITL
+    blocked_by: [GAP-066]
+    user_stories: [13, 14, 15, 39, 45]
+  - id: GAP-068
+    title: Governance Optimization Lane Closeout And Claim Discipline
+    type: HITL
+    blocked_by: [GAP-067]
+    user_stories: [18, 21, 29, 37, 44]

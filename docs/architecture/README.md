@@ -23,7 +23,7 @@ This directory holds the architectural views that explain product boundaries, ta
 - [Repo-Native Contract Bundle](./repo-native-contract-bundle.md)
   - source-of-truth to runtime-bundle mapping for repo-local declarations versus machine-local state
 - [Local Baseline To Hybrid Final-State Migration Matrix](./local-baseline-to-hybrid-final-state-migration-matrix.md)
-  - decision bridge between completed local baseline slices and the active hybrid final-state queue
+  - decision bridge between completed local baseline slices, the landed hybrid boundary, and the active direct-to-hybrid closure queue
 - [MVP Stack Vs Target Stack](./mvp-stack-vs-target-stack.md)
   - tracer-bullet implementation posture versus long-term platform direction
 - [Compatibility Matrix](./compatibility-matrix.md)

@@ -10,6 +10,8 @@ BACKLOG_PATH = ROOT / "docs" / "backlog" / "issue-ready-backlog.md"
 
 
 class IssueSeedingScriptTests(unittest.TestCase):
+    EXPECTED_RENDERED_EPICS = 14
+
     @staticmethod
     def _seed_version() -> str:
         content = ISSUE_SEEDS_PATH.read_text(encoding="utf-8")
@@ -140,6 +142,37 @@ class IssueSeedingScriptTests(unittest.TestCase):
         self.assertIn("fuse the governance-runtime positioning work", rendered["body"])
         self.assertIn("borrowing matrix", rendered["body"])
 
+    def test_validate_only_can_render_governance_optimization_epic(self) -> None:
+        script = ROOT / "scripts" / "github" / "create-roadmap-issues.ps1"
+
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(script),
+                "-ValidateOnly",
+                "-EpicId",
+                "Phase 6",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            cwd=ROOT,
+        )
+
+        rendered = json.loads(completed.stdout)
+        self.assertEqual(rendered["epic_id"], "Phase 6")
+        self.assertEqual(rendered["title"], "[Epic] Phase 6 Governance Optimization Lane")
+        self.assertIn("## Goal", rendered["body"])
+        self.assertIn("governance-only follow-on work", rendered["body"])
+        self.assertIn("## Scope", rendered["body"])
+        self.assertIn("dedicated GitHub issue rendering support", rendered["body"])
+        self.assertIn("## Acceptance Criteria", rendered["body"])
+        self.assertIn("dedicated epic after `Phase 5`", rendered["body"])
+
     def test_strategy_alignment_gates_are_rendered_as_productization_dependencies(self) -> None:
         script = ROOT / "scripts" / "github" / "create-roadmap-issues.ps1"
 
@@ -247,7 +280,7 @@ class IssueSeedingScriptTests(unittest.TestCase):
         summary = json.loads(completed.stdout)
         self.assertEqual(summary["issue_seed_version"], self._seed_version())
         self.assertEqual(summary["rendered_tasks"], self._seed_count())
-        self.assertEqual(summary["rendered_epics"], 13)
+        self.assertEqual(summary["rendered_epics"], self.EXPECTED_RENDERED_EPICS)
         self.assertTrue(summary["rendered_initiative"])
         self.assertEqual(
             summary["rendered_issue_creation_tasks"],
