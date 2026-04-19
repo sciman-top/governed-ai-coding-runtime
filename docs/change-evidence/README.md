@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260419 Mainline And Governance Lane Status Reconciliation](./20260419-mainline-governance-lane-status-reconciliation.md)
+  - evidence companion for removing cross-doc completion drift and re-anchoring `GAP-046` through `GAP-060` as active with `GAP-061` through `GAP-068` as planned follow-on
 - [20260419 GAP-068 Governance Optimization Lane Closeout And Claim Discipline](./20260419-gap-068-governance-optimization-lane-closeout.md)
   - closeout evidence for allowed/prohibited claims, deferred non-goals, and rollback-linked verification references across `GAP-061` through `GAP-067`
 - [20260419 GAP-067 Controlled Improvement Proposal Pipeline](./20260419-gap-067-controlled-improvement-proposal-pipeline.md)

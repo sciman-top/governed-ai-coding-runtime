@@ -6,8 +6,8 @@
   - `docs/roadmap/direct-to-hybrid-final-state-roadmap.md`
   - `docs/plans/direct-to-hybrid-final-state-implementation-plan.md`
   - `docs/backlog/issue-ready-backlog.md`
-- `GAP-060` closeout evidence activated the lane, and `GAP-061` through `GAP-068` are complete on the current branch baseline.
-- The lane is now closed with explicit claim discipline and rollback-linked evidence.
+- `GAP-061` through `GAP-068` are planned follow-on work after `GAP-060`.
+- The lane remains planning-canonicalized but not execution-closed on the current branch baseline.
 
 ## Goal
 Define the governed follow-on work that should start after hybrid final-state closure so the runtime can improve through auditable traces, structured postmortems, controlled rollout, and rollback-safe optimization loops.
@@ -56,7 +56,7 @@ This lane exists to close those gaps without changing the product identity from 
 ## Phase 6: Governance Optimization Lane
 
 ### Status
-- closed governance-optimization lane after completed `GAP-068`
+- planned governance-optimization lane after `GAP-060`
 - rendered as a distinct follow-on epic chain under the existing lifecycle initiative
 
 ### Goal
@@ -70,7 +70,7 @@ This lane exists to close those gaps without changing the product identity from 
 
 ### Exit Criteria
 - the governance lane can be rendered as a dedicated epic after `Phase 5`
-- `GAP-061` through `GAP-068` are complete on the current branch baseline
+- `GAP-061` through `GAP-068` must be verified complete before lane closeout claims
 - the lane remains visibly follow-on rather than a replacement for direct-to-hybrid closure
 
 ### GAP-061 Governance Optimization Lane Canonicalization
@@ -187,7 +187,7 @@ The repository should not claim:
 - default multi-agent governance orchestration
 - full self-healing runtime behavior
 
-The repository may claim narrower truths as the lane exits:
+The repository may claim narrower truths only when the corresponding GAP exit criteria are verified:
 1. after `GAP-061`: the optimization lane is canonicalized
 2. after `GAP-062`: traces can drive repeatable postmortem and grading
 3. after `GAP-063`: repo reuse admission is stronger and more explicit

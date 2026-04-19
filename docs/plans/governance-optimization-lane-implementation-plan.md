@@ -14,7 +14,7 @@
 
 - This is the canonical implementation plan for the governance-optimization lane.
 - It does not replace `docs/plans/direct-to-hybrid-final-state-implementation-plan.md`.
-- `GAP-061` through `GAP-068` are complete on the current branch baseline.
+- `GAP-061` through `GAP-068` are planned follow-on work after `GAP-060`.
 - The lane is intentionally planning-first and governance-first; it should not be used to sneak in unrelated runtime implementation work.
 
 ## Source Inputs
