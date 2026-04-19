@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260420 Direct-To-Hybrid Plan Checkbox Reconciliation](./20260420-direct-to-hybrid-plan-checkbox-reconciliation.md)
+  - evidence companion for reconciling remaining unchecked direct-to-hybrid implementation-plan checklists with completed backlog and closure posture
 - [20260420 Direct-To-Hybrid Final-State Closeout](./20260420-direct-to-hybrid-final-state-closeout.md)
   - closeout evidence for `GAP-046` through `GAP-060`, including operator query closure, strict reader parity, fail-closed attachment doctor remediation, backlog/roadmap/seed sync, and full gate outputs
 - [20260419 GAP-046 Phase1 Governed Execution Surface](./20260419-gap-046-phase1-governed-execution-surface.md)

@@ -169,16 +169,16 @@ Phase 5
 - Modify: `docs/product/session-bridge-commands.md`
 
 **Acceptance criteria:**
-- [ ] Existing session bridge commands stay aligned while `run_quick_gate` and `run_full_gate` move from plan-only output to runtime-managed execution lifecycle.
-- [ ] Execution-like commands return stable execution ids and continuation ids across gate, write, approval, evidence, and handoff paths.
-- [ ] Unsupported capabilities still degrade explicitly instead of pretending execution happened.
-- [ ] Schema, product doc, Python contract, and CLI stay aligned.
+- [x] Existing session bridge commands stay aligned while `run_quick_gate` and `run_full_gate` move from plan-only output to runtime-managed execution lifecycle.
+- [x] Execution-like commands return stable execution ids and continuation ids across gate, write, approval, evidence, and handoff paths.
+- [x] Unsupported capabilities still degrade explicitly instead of pretending execution happened.
+- [x] Schema, product doc, Python contract, and CLI stay aligned.
 
 **Verification:**
-- [ ] Run `python -m unittest tests.runtime.test_session_bridge -v`.
-- [ ] Run `python scripts/session-bridge.py --help`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [x] Run `python -m unittest tests.runtime.test_session_bridge -v`.
+- [x] Run `python scripts/session-bridge.py --help`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
 
 **Dependencies:** Task 0.
 
@@ -199,15 +199,15 @@ Phase 5
 - Modify: `docs/product/write-side-tool-governance.md`
 
 **Acceptance criteria:**
-- [ ] The existing write request, approval, resume, and execute flow remains driven through the bridge.
-- [ ] Every attached write execution binds task id, adapter or session identity, approval ref, artifact refs, handoff ref, and replay ref.
-- [ ] Existing CLI paths become wrappers around the same runtime-owned write flow instead of parallel logic.
-- [ ] High-risk writes fail closed when approval state is absent or stale.
+- [x] The existing write request, approval, resume, and execute flow remains driven through the bridge.
+- [x] Every attached write execution binds task id, adapter or session identity, approval ref, artifact refs, handoff ref, and replay ref.
+- [x] Existing CLI paths become wrappers around the same runtime-owned write flow instead of parallel logic.
+- [x] High-risk writes fail closed when approval state is absent or stale.
 
 **Verification:**
-- [ ] Run `python -m unittest tests.runtime.test_attached_write_governance tests.runtime.test_attached_write_execution tests.runtime.test_session_bridge -v`.
-- [ ] Run `python scripts/session-bridge.py request-gate --help`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [x] Run `python -m unittest tests.runtime.test_attached_write_governance tests.runtime.test_attached_write_execution tests.runtime.test_session_bridge -v`.
+- [x] Run `python scripts/session-bridge.py request-gate --help`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
 
 **Dependencies:** Task 1.
 
@@ -228,15 +228,15 @@ Phase 5
 - Modify: `docs/roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md`
 
 **Acceptance criteria:**
-- [ ] `shell`, `git`, and at least one package-manager dry-run path have explicit risk-tier mapping.
-- [ ] Allow, escalate, and deny paths all emit consistent evidence and rollback metadata.
-- [ ] `git status`, `git diff`, and one dependency dry-run path are covered by tests.
-- [ ] The execution surface remains explicitly bounded and does not silently broaden to arbitrary commands.
+- [x] `shell`, `git`, and at least one package-manager dry-run path have explicit risk-tier mapping.
+- [x] Allow, escalate, and deny paths all emit consistent evidence and rollback metadata.
+- [x] `git status`, `git diff`, and one dependency dry-run path are covered by tests.
+- [x] The execution surface remains explicitly bounded and does not silently broaden to arbitrary commands.
 
 **Verification:**
-- [ ] Run `python -m unittest tests.runtime.test_write_tool_runner tests.runtime.test_tool_runner_governance -v`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
+- [x] Run `python -m unittest tests.runtime.test_write_tool_runner tests.runtime.test_tool_runner_governance -v`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
 
 **Dependencies:** Task 2.
 
@@ -257,15 +257,15 @@ Phase 5
 - Create: `docs/change-evidence/<date>-attached-repo-e2e-execution.md`
 
 **Acceptance criteria:**
-- [ ] One attached repo can execute `attach -> request medium write -> approve -> execute -> verify -> handoff -> replay`.
-- [ ] E2E output uses the same task model as local runtime flows.
-- [ ] Documentation explicitly states what is real versus what is still smoke or fallback.
-- [ ] Evidence captures the actual command sequence and resulting refs.
+- [x] One attached repo can execute `attach -> request medium write -> approve -> execute -> verify -> handoff -> replay`.
+- [x] E2E output uses the same task model as local runtime flows.
+- [x] Documentation explicitly states what is real versus what is still smoke or fallback.
+- [x] Evidence captures the actual command sequence and resulting refs.
 
 **Verification:**
-- [ ] Run `python -m unittest tests.runtime.test_attached_repo_e2e tests.runtime.test_run_governed_task_cli -v`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-check.ps1`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [x] Run `python -m unittest tests.runtime.test_attached_repo_e2e tests.runtime.test_run_governed_task_cli -v`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-check.ps1`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
 
 **Dependencies:** Task 3.
 
@@ -284,15 +284,15 @@ Phase 5
 - Modify: `docs/product/codex-direct-adapter.md`
 
 **Acceptance criteria:**
-- [ ] The adapter can probe or handshake with a real Codex surface instead of relying only on manually declared flags.
-- [ ] Session id, resume id, and continuation identity are preserved in the runtime task model.
-- [ ] Adapter posture honestly records when live attach is unavailable.
-- [ ] The runtime can distinguish live attach, process bridge, and manual handoff for Codex.
+- [x] The adapter can probe or handshake with a real Codex surface instead of relying only on manually declared flags.
+- [x] Session id, resume id, and continuation identity are preserved in the runtime task model.
+- [x] Adapter posture honestly records when live attach is unavailable.
+- [x] The runtime can distinguish live attach, process bridge, and manual handoff for Codex.
 
 **Verification:**
-- [ ] Run `python -m unittest tests.runtime.test_codex_adapter tests.runtime.test_adapter_registry -v`.
-- [ ] Run `python scripts/run-codex-adapter-trial.py --help`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [x] Run `python -m unittest tests.runtime.test_codex_adapter tests.runtime.test_adapter_registry -v`.
+- [x] Run `python scripts/run-codex-adapter-trial.py --help`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
 
 **Dependencies:** Task 4.
 
@@ -313,15 +313,15 @@ Phase 5
 - Modify: `docs/change-evidence/20260418-codex-session-evidence-mapping.md`
 
 **Acceptance criteria:**
-- [ ] Tool calls, diff events, gate runs, approval interruptions, and handoff entries can be linked back to one runtime-owned task.
-- [ ] Live adapter events and manual-handoff evidence remain distinguishable.
-- [ ] Unsupported or partially supported events are recorded explicitly rather than dropped silently.
-- [ ] Delivery handoff and replay readers can consume the richer evidence shape.
+- [x] Tool calls, diff events, gate runs, approval interruptions, and handoff entries can be linked back to one runtime-owned task.
+- [x] Live adapter events and manual-handoff evidence remain distinguishable.
+- [x] Unsupported or partially supported events are recorded explicitly rather than dropped silently.
+- [x] Delivery handoff and replay readers can consume the richer evidence shape.
 
 **Verification:**
-- [ ] Run `python -m unittest tests.runtime.test_codex_adapter tests.runtime.test_evidence_timeline tests.runtime.test_delivery_handoff -v`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
+- [x] Run `python -m unittest tests.runtime.test_codex_adapter tests.runtime.test_evidence_timeline tests.runtime.test_delivery_handoff -v`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
 
 **Dependencies:** Task 5.
 
@@ -341,15 +341,15 @@ Phase 5
 - Modify: `docs/product/adapter-degrade-policy.md`
 
 **Acceptance criteria:**
-- [ ] Registry supports registration, discovery, probing, selection, and delegation for `native_attach`, `process_bridge`, and `manual_handoff`.
-- [ ] Runtime selection is based on attached repo plus detected host capability, not only on static profile projection.
-- [ ] Codex and at least one non-Codex fixture share the same registry interface.
-- [ ] Degrade behavior is part of the runtime interface rather than only documentation.
+- [x] Registry supports registration, discovery, probing, selection, and delegation for `native_attach`, `process_bridge`, and `manual_handoff`.
+- [x] Runtime selection is based on attached repo plus detected host capability, not only on static profile projection.
+- [x] Codex and at least one non-Codex fixture share the same registry interface.
+- [x] Degrade behavior is part of the runtime interface rather than only documentation.
 
 **Verification:**
-- [ ] Run `python -m unittest tests.runtime.test_adapter_registry tests.runtime.test_codex_adapter -v`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [x] Run `python -m unittest tests.runtime.test_adapter_registry tests.runtime.test_codex_adapter -v`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
 
 **Dependencies:** Task 6.
 
@@ -368,15 +368,15 @@ Phase 5
 - Modify: `docs/quickstart/multi-repo-trial-quickstart.zh-CN.md`
 
 **Acceptance criteria:**
-- [ ] Trial runner can accept attached repo roots or bindings instead of only repo profile paths.
-- [ ] Each repo executes `attach -> doctor or status -> request gate -> verify attachment -> optional write probe -> evidence aggregation`.
-- [ ] Trial outputs capture real gate failures, approval friction, replay quality, and follow-up actions.
-- [ ] At least two attached external repos can be run without kernel rewrites.
+- [x] Trial runner can accept attached repo roots or bindings instead of only repo profile paths.
+- [x] Each repo executes `attach -> doctor or status -> request gate -> verify attachment -> optional write probe -> evidence aggregation`.
+- [x] Trial outputs capture real gate failures, approval friction, replay quality, and follow-up actions.
+- [x] At least two attached external repos can be run without kernel rewrites.
 
 **Verification:**
-- [ ] Run `python -m unittest tests.runtime.test_multi_repo_trial -v`.
-- [ ] Run `python scripts/run-multi-repo-trial.py --help`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [x] Run `python -m unittest tests.runtime.test_multi_repo_trial -v`.
+- [x] Run `python scripts/run-multi-repo-trial.py --help`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
 
 **Dependencies:** Task 7.
 
@@ -399,15 +399,15 @@ Phase 5
 - Modify: `docs/quickstart/single-machine-runtime-quickstart.zh-CN.md`
 
 **Acceptance criteria:**
-- [ ] `tasks`, `artifacts`, `replay`, and `workspaces` share one runtime-root configuration model.
-- [ ] Repo-root `.runtime/` defaults become compatibility mode, not the primary end-state posture.
-- [ ] Migration and rollback behavior are documented and testable.
-- [ ] Self-runtime and attached-runtime flows consume the same root-placement model.
+- [x] `tasks`, `artifacts`, `replay`, and `workspaces` share one runtime-root configuration model.
+- [x] Repo-root `.runtime/` defaults become compatibility mode, not the primary end-state posture.
+- [x] Migration and rollback behavior are documented and testable.
+- [x] Self-runtime and attached-runtime flows consume the same root-placement model.
 
 **Verification:**
-- [ ] Run `python -m unittest tests.runtime.test_runtime_roots tests.runtime.test_run_governed_task_cli tests.runtime.test_repo_attachment -v`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [x] Run `python -m unittest tests.runtime.test_runtime_roots tests.runtime.test_run_governed_task_cli tests.runtime.test_repo_attachment -v`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
 
 **Dependencies:** Task 8.
 
@@ -429,15 +429,15 @@ Phase 5
 - Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/session_bridge.py`
 
 **Acceptance criteria:**
-- [ ] Session operations and operator reads are exposed through a service API boundary.
-- [ ] Existing CLI entrypoints become wrappers or clients, not the only control surface.
-- [ ] OpenTelemetry hooks exist at the new boundary even if full backend shipping is deferred.
-- [ ] Contract parity is preserved between CLI and API paths.
+- [x] Session operations and operator reads are exposed through a service API boundary.
+- [x] Existing CLI entrypoints become wrappers or clients, not the only control surface.
+- [x] OpenTelemetry hooks exist at the new boundary even if full backend shipping is deferred.
+- [x] Contract parity is preserved between CLI and API paths.
 
 **Verification:**
-- [ ] Run `python -m unittest tests.service.test_session_api tests.service.test_operator_api -v`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [x] Run `python -m unittest tests.service.test_session_api tests.service.test_operator_api -v`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
 
 **Dependencies:** Task 9.
 
@@ -460,16 +460,16 @@ Phase 5
 - Modify: `tests/service/test_session_api.py`
 
 **Acceptance criteria:**
-- [ ] Local service deployment can run a control plane plus worker boundary with durable metadata storage.
-- [ ] Filesystem artifact handling stays supported through an abstraction layer instead of being hardwired.
-- [ ] Current contract bundle and evidence model remain consumable after the persistence split.
-- [ ] Transition-stack dependencies are introduced only where the service boundary requires them.
+- [x] Local service deployment can run a control plane plus worker boundary with durable metadata storage.
+- [x] Filesystem artifact handling stays supported through an abstraction layer instead of being hardwired.
+- [x] Current contract bundle and evidence model remain consumable after the persistence split.
+- [x] Transition-stack dependencies are introduced only where the service boundary requires them.
 
 **Verification:**
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
 
 **Dependencies:** Task 10.
 
@@ -489,15 +489,15 @@ Phase 5
 - Modify: `docs/product/minimal-approval-evidence-console.md`
 
 **Acceptance criteria:**
-- [ ] Attachment-scoped queries can list approvals, evidence refs, handoff refs, replay refs, and posture summary for one task or binding.
-- [ ] `inspect_evidence` no longer degrades by default for the primary attached path.
-- [ ] Query results are stable enough to be reused by later service APIs and console surfaces.
-- [ ] Operator read surfaces remain read-only unless explicitly escalated elsewhere.
+- [x] Attachment-scoped queries can list approvals, evidence refs, handoff refs, replay refs, and posture summary for one task or binding.
+- [x] `inspect_evidence` no longer degrades by default for the primary attached path.
+- [x] Query results are stable enough to be reused by later service APIs and console surfaces.
+- [x] Operator read surfaces remain read-only unless explicitly escalated elsewhere.
 
 **Verification:**
-- [ ] Run `python -m unittest tests.runtime.test_operator_queries tests.runtime.test_session_bridge -v`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
+- [x] Run `python -m unittest tests.runtime.test_operator_queries tests.runtime.test_session_bridge -v`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
 
 **Dependencies:** Task 11.
 
@@ -519,15 +519,15 @@ Phase 5
 - Modify: `docs/change-evidence/20260418-local-ci-same-contract-verification.md`
 
 **Acceptance criteria:**
-- [ ] Runtime readers fail loudly on missing or incompatible contract fields instead of silently defaulting.
-- [ ] CI coverage includes session bridge, adapter, and attachment reader paths.
-- [ ] Contract changes can be traced to every consuming runtime reader.
-- [ ] The repository can show parity beyond verifier-only scope.
+- [x] Runtime readers fail loudly on missing or incompatible contract fields instead of silently defaulting.
+- [x] CI coverage includes session bridge, adapter, and attachment reader paths.
+- [x] Contract changes can be traced to every consuming runtime reader.
+- [x] The repository can show parity beyond verifier-only scope.
 
 **Verification:**
-- [ ] Run `python -m unittest tests.runtime.test_verification_runner tests.runtime.test_session_bridge tests.runtime.test_runtime_status tests.runtime.test_contract_reader_parity -v`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [x] Run `python -m unittest tests.runtime.test_verification_runner tests.runtime.test_session_bridge tests.runtime.test_runtime_status tests.runtime.test_contract_reader_parity -v`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
 
 **Dependencies:** Task 12.
 
@@ -547,15 +547,15 @@ Phase 5
 - Modify: `docs/change-evidence/20260418-attachment-posture-status-doctor.md`
 
 **Acceptance criteria:**
-- [ ] Missing, invalid, and stale bindings each have an explicit remediation path.
-- [ ] Guided remediation can point to the exact command or document needed to recover.
-- [ ] Fail-closed posture is used when execution should not continue.
-- [ ] Remediation actions are evidence-backed and rollback-aware.
+- [x] Missing, invalid, and stale bindings each have an explicit remediation path.
+- [x] Guided remediation can point to the exact command or document needed to recover.
+- [x] Fail-closed posture is used when execution should not continue.
+- [x] Remediation actions are evidence-backed and rollback-aware.
 
 **Verification:**
-- [ ] Run `python -m unittest tests.runtime.test_runtime_doctor tests.runtime.test_repo_attachment -v`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [x] Run `python -m unittest tests.runtime.test_runtime_doctor tests.runtime.test_repo_attachment -v`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
 
 **Dependencies:** Task 13.
 
@@ -574,17 +574,17 @@ Phase 5
 - Create: `docs/change-evidence/<date>-direct-to-hybrid-final-state-closeout.md`
 
 **Acceptance criteria:**
-- [ ] Backlog and issue seeds reflect only verified completed work.
-- [ ] Roadmap and master outline update claim wording only when exit criteria are actually met.
-- [ ] Final evidence records commands, outputs, risks, open residuals, and rollback paths.
-- [ ] The repository can defend a complete hybrid final-state claim with executable evidence rather than narrative alone.
+- [x] Backlog and issue seeds reflect only verified completed work.
+- [x] Roadmap and master outline update claim wording only when exit criteria are actually met.
+- [x] Final evidence records commands, outputs, risks, open residuals, and rollback paths.
+- [x] The repository can defend a complete hybrid final-state claim with executable evidence rather than narrative alone.
 
 **Verification:**
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`.
 
 **Dependencies:** Tasks 0 through 14.
 
