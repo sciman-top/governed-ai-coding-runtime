@@ -121,6 +121,8 @@ def execute_governed_command(*, command: str, cwd: str | None = None) -> ToolExe
 def _is_allowed_path(target_path: str, path_policies: dict) -> bool:
     normalized = target_path.replace("\\", "/").lstrip("/")
     path = PurePosixPath(normalized)
+    if ".." in path.parts:
+        return False
     path_text = path.as_posix()
 
     for blocked in path_policies.get("blocked", []):

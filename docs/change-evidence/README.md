@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260420 Readonly Path Traversal Guard](./20260420-readonly-path-traversal-guard.md)
+  - evidence companion for fail-closing readonly path traversal (`..`) that could bypass allow-scope prefix checks
 - [20260420 Direct-To-Hybrid Plan Checkbox Reconciliation](./20260420-direct-to-hybrid-plan-checkbox-reconciliation.md)
   - evidence companion for reconciling remaining unchecked direct-to-hybrid implementation-plan checklists with completed backlog and closure posture
 - [20260420 Direct-To-Hybrid Final-State Closeout](./20260420-direct-to-hybrid-final-state-closeout.md)

@@ -77,6 +77,21 @@ class ReadOnlyToolRunnerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             tool_runner.validate_readonly_request(request, profile)
 
+    def test_path_traversal_fails_closed_even_when_prefix_matches_allow_scope(self) -> None:
+        tool_runner = importlib.import_module("governed_ai_coding_runtime_contracts.tool_runner")
+        repo_profile = importlib.import_module("governed_ai_coding_runtime_contracts.repo_profile")
+        profile = repo_profile.load_repo_profile(
+            ROOT / "schemas" / "examples" / "repo-profile" / "governed-ai-coding-runtime.example.json"
+        )
+        request = tool_runner.ToolRequest(
+            tool_name="shell",
+            side_effect_class="filesystem_read",
+            target_path="docs/../../secrets/prod.env",
+        )
+
+        with self.assertRaises(ValueError):
+            tool_runner.validate_readonly_request(request, profile)
+
     def test_bounded_readonly_session_returns_accepted_summary(self) -> None:
         tool_runner = importlib.import_module("governed_ai_coding_runtime_contracts.tool_runner")
         repo_profile = importlib.import_module("governed_ai_coding_runtime_contracts.repo_profile")
