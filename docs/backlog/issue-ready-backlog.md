@@ -11,7 +11,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - internal runtime boundaries remain service-shaped even though the default delivery shape is attach-first rather than service-first
 - Codex compatibility remains the first direct adapter priority, but final product completeness cannot be Codex-only
 - non-goals remain non-goals: no enterprise org model, no marketplace, no default multi-agent orchestration, no memory-first product identity
-- the active future-facing queue is the governance-optimization lane anchored by completed `GAP-061`, while older lifecycle `GAP` entries remain completion history
+- governance-optimization lane work through `GAP-068` is complete on the current branch baseline, while older lifecycle `GAP` entries remain completion history
 
 ## Current Baseline
 - PRD, architecture, ADRs, specs, runtime contract primitives, repo verifier entrypoints, sample repo profiles, and a runtime-consumable control pack already exist.
@@ -25,8 +25,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Interactive Session Productization / GAP-035` through `GAP-039` are complete on the current branch baseline.
 - `Direct-To-Hybrid-Final-State Mainline / GAP-045` is complete on the current branch baseline as the planning rebaseline closeout.
 - `Direct-To-Hybrid-Final-State Mainline / GAP-046` through `GAP-060` is complete on the current branch baseline.
-- `Governance Optimization Lane / GAP-061` is complete on the current branch baseline as the lane canonicalization closeout.
-- `Governance Optimization Lane / GAP-062` through `GAP-068` is the active future-facing queue.
+- `Governance Optimization Lane / GAP-061` through `GAP-068` is complete on the current branch baseline.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -374,15 +373,15 @@ The entries below are the active queue for complete hybrid final-state closure. 
 - Type: HITL
 - Blocked by: GAP-067
 - User stories: 18, 21, 29, 37, 44
-- Status: active in governance-optimization lane
+- Status: completed on current branch baseline
 - What to build:
   - final lane closeout criteria, residual risk summary, and deferred-item ledger
   - optimization claim discipline that distinguishes controlled improvement from autonomous self-mutation
   - evidence-backed rollback notes for the lane outputs
 - Acceptance criteria:
-  - [ ] allowed and prohibited optimization claims are explicit
-  - [ ] deferred non-goals remain visible instead of leaking into closeout language
-  - [ ] lane closeout references real verification evidence and rollback notes
+  - [x] allowed and prohibited optimization claims are explicit
+  - [x] deferred non-goals remain visible instead of leaking into closeout language
+  - [x] lane closeout references real verification evidence and rollback notes
 
 ## Vision
 

@@ -32,7 +32,7 @@
 ## Current Planning Chain
 - Strategy and boundary inputs: [AI Coding PRD](./prd/governed-ai-coding-runtime-prd.md), [Interaction Model](./product/interaction-model.md), [Positioning And Competitive Layering](./strategy/positioning-and-competitive-layering.md), [Runtime Governance Borrowing Matrix](./research/runtime-governance-borrowing-matrix.md), [ADR-0007 Source-Of-Truth And Runtime Contract Bundle](./adrs/0007-source-of-truth-and-runtime-contract-bundle.md), [Generic Target-Repo Attachment Blueprint](./architecture/generic-target-repo-attachment-blueprint.md), [Repo-Native Contract Bundle](./architecture/repo-native-contract-bundle.md), [Local Baseline To Hybrid Final-State Migration Matrix](./architecture/local-baseline-to-hybrid-final-state-migration-matrix.md), [Target Architecture](./architecture/governed-ai-coding-runtime-target-architecture.md), [Minimum Viable Governance Loop](./architecture/minimum-viable-governance-loop.md), and [Governance Runtime Strategy Alignment Plan](./plans/governance-runtime-strategy-alignment-plan.md)
 - Execution ordering: [Hybrid Final-State Master Outline](./architecture/hybrid-final-state-master-outline.md), [Direct-To-Hybrid Final-State Roadmap](./roadmap/direct-to-hybrid-final-state-roadmap.md), [Direct-To-Hybrid Final-State Implementation Plan](./plans/direct-to-hybrid-final-state-implementation-plan.md), [Backlog Index](./backlog/README.md), [Issue-Ready Backlog](./backlog/issue-ready-backlog.md), [Issue Seeds YAML](./backlog/issue-seeds.yaml), and [Plans Index](./plans/README.md)
-- Follow-on optimization ordering: [Governance Optimization Lane Roadmap](./roadmap/governance-optimization-lane-roadmap.md), [Governance Optimization Lane Implementation Plan](./plans/governance-optimization-lane-implementation-plan.md), [Backlog Index](./backlog/README.md), [Issue-Ready Backlog](./backlog/issue-ready-backlog.md), and [Issue Seeds YAML](./backlog/issue-seeds.yaml); this lane is now active after completed `GAP-060` closeout and canonicalized through `GAP-061`
+- Follow-on optimization ordering: [Governance Optimization Lane Roadmap](./roadmap/governance-optimization-lane-roadmap.md), [Governance Optimization Lane Implementation Plan](./plans/governance-optimization-lane-implementation-plan.md), [Backlog Index](./backlog/README.md), [Issue-Ready Backlog](./backlog/issue-ready-backlog.md), and [Issue Seeds YAML](./backlog/issue-seeds.yaml); this lane is closed on the current branch baseline through `GAP-068`
 - Current implementation history: [Foundation Runtime Substrate Implementation Plan](./plans/foundation-runtime-substrate-implementation-plan.md), [Full Runtime Implementation Plan](./plans/full-runtime-implementation-plan.md), [Public Usable Release Implementation Plan](./plans/public-usable-release-implementation-plan.md), and [Maintenance Implementation Plan](./plans/maintenance-implementation-plan.md); use the migration matrix when comparing those completed slices with the active hybrid final-state queue.
 
 ## Planning Completeness
@@ -56,12 +56,7 @@
 - `Strategy Alignment Gates / GAP-040` through `GAP-044` are complete on the current branch baseline.
 - `Interactive Session Productization / GAP-035` through `GAP-039` are complete on the current branch baseline.
 - `Direct-To-Hybrid-Final-State Mainline / GAP-045` through `GAP-060` is complete on the current branch baseline.
-- `Governance Optimization Lane / GAP-061` is complete on the current branch baseline as lane canonicalization.
-- `Governance Optimization Lane / GAP-062` through `GAP-063` are complete on the current branch baseline.
-- `Governance Optimization Lane / GAP-062` through `GAP-064` are complete on the current branch baseline.
-- `Governance Optimization Lane / GAP-062` through `GAP-065` are complete on the current branch baseline.
-- `Governance Optimization Lane / GAP-062` through `GAP-067` are complete on the current branch baseline.
-- `Governance Optimization Lane / GAP-068` is the active governance-only queue.
+- `Governance Optimization Lane / GAP-061` through `GAP-068` are complete on the current branch baseline.
 - Active verification for this repo remains `build -> test -> contract/invariant -> doctor`, with docs and script checks still included in `verify-repo -Check All`.
 - `docs/change-evidence/` remains historical evidence and planning trace, not the primary user-facing product surface.
 

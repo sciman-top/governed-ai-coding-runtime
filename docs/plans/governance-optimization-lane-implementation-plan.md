@@ -14,7 +14,7 @@
 
 - This is the canonical implementation plan for the governance-optimization lane.
 - It does not replace `docs/plans/direct-to-hybrid-final-state-implementation-plan.md`.
-- Default execution start point is after `GAP-060`.
+- `GAP-061` through `GAP-068` are complete on the current branch baseline.
 - The lane is intentionally planning-first and governance-first; it should not be used to sneak in unrelated runtime implementation work.
 
 ## Source Inputs
@@ -254,13 +254,13 @@ GAP-060 hybrid final-state closeout
 - Create: `docs/change-evidence/<date>-governance-optimization-lane-closeout.md`
 
 **Acceptance criteria:**
-- [ ] The lane records allowed claims, prohibited claims, and residual risks.
-- [ ] Deferred non-goals remain explicit.
-- [ ] Closeout references real verification evidence rather than plan-only assertions.
+- [x] The lane records allowed claims, prohibited claims, and residual risks.
+- [x] Deferred non-goals remain explicit.
+- [x] Closeout references real verification evidence rather than plan-only assertions.
 
 **Verification:**
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Scripts`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Scripts`.
 
 **Dependencies:** Task 6.
 

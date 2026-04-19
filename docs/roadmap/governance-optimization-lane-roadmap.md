@@ -6,8 +6,8 @@
   - `docs/roadmap/direct-to-hybrid-final-state-roadmap.md`
   - `docs/plans/direct-to-hybrid-final-state-implementation-plan.md`
   - `docs/backlog/issue-ready-backlog.md`
-- Default activation point: after `GAP-060` closeout.
-- Pulling any lane item forward before `GAP-060` requires explicit re-baseline evidence and updated blocker notes.
+- `GAP-060` closeout evidence activated the lane, and `GAP-061` through `GAP-068` are complete on the current branch baseline.
+- The lane is now closed with explicit claim discipline and rollback-linked evidence.
 
 ## Goal
 Define the governed follow-on work that should start after hybrid final-state closure so the runtime can improve through auditable traces, structured postmortems, controlled rollout, and rollback-safe optimization loops.
@@ -56,7 +56,7 @@ This lane exists to close those gaps without changing the product identity from 
 ## Phase 6: Governance Optimization Lane
 
 ### Status
-- planned follow-on lane after `GAP-060`
+- closed governance-optimization lane after completed `GAP-068`
 - rendered as a distinct follow-on epic chain under the existing lifecycle initiative
 
 ### Goal
@@ -70,7 +70,7 @@ This lane exists to close those gaps without changing the product identity from 
 
 ### Exit Criteria
 - the governance lane can be rendered as a dedicated epic after `Phase 5`
-- `GAP-061` through `GAP-067` are complete and `GAP-068` is now the active lane after `GAP-060` closeout evidence
+- `GAP-061` through `GAP-068` are complete on the current branch baseline
 - the lane remains visibly follow-on rather than a replacement for direct-to-hybrid closure
 
 ### GAP-061 Governance Optimization Lane Canonicalization
@@ -178,6 +178,7 @@ Close the lane with explicit optimization claims, acceptance criteria, and rollb
 #### Exit Criteria
 - governance-optimization claims are backed by evidence, not aspiration
 - deferred non-goals remain explicit
+- closeout references verification and rollback-linked evidence for every lane slice from `GAP-061` through `GAP-067`
 
 ## Claim Discipline
 The repository should not claim:

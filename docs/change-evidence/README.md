@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260419 GAP-068 Governance Optimization Lane Closeout And Claim Discipline](./20260419-gap-068-governance-optimization-lane-closeout.md)
+  - closeout evidence for allowed/prohibited claims, deferred non-goals, and rollback-linked verification references across `GAP-061` through `GAP-067`
 - [20260419 GAP-067 Controlled Improvement Proposal Pipeline](./20260419-gap-067-controlled-improvement-proposal-pipeline.md)
   - evidence companion for adding a structured, non-mutating, human-reviewed proposal contract and promoting `GAP-068` as the active closeout item
 - [20260419 GAP-066 Provenance And Attestation For Governance Assets](./20260419-gap-066-governance-asset-provenance.md)
