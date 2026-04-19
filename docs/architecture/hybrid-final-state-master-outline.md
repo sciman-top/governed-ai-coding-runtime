@@ -195,14 +195,11 @@ Final-state candidate stack:
 - Tailwind
 
 ## Current Blocking Gap To Complete Hybrid Final State
-The current repository does not yet satisfy the complete hybrid final state because the following blocking gaps remain:
-- external target-repo high-risk writes are not yet a live-host-backed runtime-owned execution chain
-- session bridge already covers write and read commands, but quick/full gate paths are still plan-only and live-host continuation identity is not yet closed
-- Codex direct adapter is still posture plus smoke-trial plus evidence mapping, not live attach plus real event ingestion
-- multi-repo trial is still profile-based and not yet a real attached external-repo feedback loop
-- adapter registry is still mostly a capability and degrade classification surface
-- governed execution coverage is still too narrow relative to the final boundary
-- machine-local sidecar placement is not yet the end-to-end default for all runtime state and workspaces
+The direct-to-final-state blocking and hardening gaps (`HFG-001` through `HFG-H3`) are implemented on the current branch baseline through `GAP-060`.
+
+The remaining risk is claim drift, not missing implementation slices:
+- complete-closure claims must stay tied to fresh executable evidence
+- if verification or evidence drifts, claim wording must downgrade immediately until re-validated
 
 Reference audit:
 - `docs/reviews/2026-04-19-hybrid-final-state-executable-gap-audit.md`
@@ -375,6 +372,9 @@ The repository should only claim complete hybrid final-state closure when all of
 - at least one non-Codex path exists with honest runtime guarantees
 - multi-repo trial evidence comes from real attached repositories, not only sample profiles
 - the service-shaped deployment boundary is no longer hypothetical
+
+Claim reference:
+- `docs/change-evidence/20260420-direct-to-hybrid-final-state-closeout.md`
 
 ## Canonical Planning Package
 The canonical planning package now consists of three direct companions:

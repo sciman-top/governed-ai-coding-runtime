@@ -116,6 +116,16 @@ Attachment posture values:
 - `stale_binding`
 - `healthy`
 
+Remediation behavior:
+- `missing_light_pack`: re-run `scripts/attach-target-repo.py attach ...` for the target repo and runtime-state root.
+- `invalid_light_pack`: regenerate `.governed-ai/light-pack.json` via the attach flow.
+- `stale_binding`: re-run attach flow to refresh `binding_id`.
+- `healthy`: no remediation required.
+
+Fail-closed behavior:
+- doctor reports unhealthy posture as `FAIL attachment-posture-<state>` and exits non-zero when attachment arguments are provided.
+- attachment execution paths should not continue while posture is fail-closed.
+
 ## Self-Attachment
 The runtime repo itself can also be attached as a target repo.
 

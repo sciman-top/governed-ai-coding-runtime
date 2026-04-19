@@ -206,6 +206,29 @@ class RepoAttachmentBindingTests(unittest.TestCase):
             self.assertNotIn("runtime_code", light_pack)
             self.assertNotIn("task_store", light_pack)
 
+    def test_attach_target_repo_can_resolve_runtime_state_root_from_runtime_roots_model(self) -> None:
+        module = self._module()
+        with tempfile.TemporaryDirectory() as workspace:
+            repo_root = Path(workspace) / "default-runtime-target"
+            repo_root.mkdir()
+
+            result = module.attach_target_repo(
+                target_repo_root=str(repo_root),
+                repo_id="default-runtime-target",
+                display_name="Default Runtime Target",
+                primary_language="python",
+                build_command="python -m compileall src",
+                test_command="python -m unittest discover",
+                contract_command="python -m unittest discover -s tests/contracts",
+                adapter_preference="manual_handoff",
+                gate_profile="default",
+            )
+
+            runtime_state_root = Path(result.binding.runtime_state_root)
+            self.assertTrue(runtime_state_root.exists())
+            self.assertFalse(self._is_under(runtime_state_root, repo_root))
+            self.assertIn("/attachments/default-runtime-target", runtime_state_root.as_posix())
+
     def test_existing_light_pack_is_validated_without_overwrite(self) -> None:
         module = self._module()
         with tempfile.TemporaryDirectory() as workspace:
@@ -290,6 +313,79 @@ class RepoAttachmentBindingTests(unittest.TestCase):
                     light_pack_path=".governed-ai/light-pack.json",
                     runtime_state_root=str(runtime_root),
                 )
+
+    def test_attachment_posture_reports_remediation_and_fail_closed_states(self) -> None:
+        module = self._module()
+        with tempfile.TemporaryDirectory() as workspace:
+            root = Path(workspace)
+
+            missing_root = root / "missing"
+            missing_root.mkdir()
+            missing_posture = module.inspect_attachment_posture(
+                target_repo_root=str(missing_root),
+                runtime_state_root=str(root / "state" / "missing"),
+            )
+            self.assertEqual(missing_posture.binding_state, "missing_light_pack")
+            self.assertTrue(missing_posture.fail_closed)
+            self.assertIn("attach-target-repo.py", missing_posture.remediation)
+
+            invalid_root = root / "invalid"
+            (invalid_root / ".governed-ai").mkdir(parents=True)
+            (invalid_root / ".governed-ai" / "light-pack.json").write_text(
+                json.dumps({"pack_kind": "repo_attachment_light_pack", "repo_profile_ref": "../outside.json"}),
+                encoding="utf-8",
+            )
+            invalid_posture = module.inspect_attachment_posture(
+                target_repo_root=str(invalid_root),
+                runtime_state_root=str(root / "state" / "invalid"),
+            )
+            self.assertEqual(invalid_posture.binding_state, "invalid_light_pack")
+            self.assertTrue(invalid_posture.fail_closed)
+            self.assertIn("attach-target-repo.py", invalid_posture.remediation)
+
+            stale_root = root / "stale"
+            stale_root.mkdir()
+            module.attach_target_repo(
+                target_repo_root=str(stale_root),
+                runtime_state_root=str(root / "state" / "stale"),
+                repo_id="stale",
+                display_name="Stale",
+                primary_language="python",
+                build_command="python -m compileall src",
+                test_command="python -m unittest discover",
+                contract_command="python -m unittest discover -s tests/contracts",
+            )
+            light_pack_path = stale_root / ".governed-ai" / "light-pack.json"
+            light_pack = json.loads(light_pack_path.read_text(encoding="utf-8"))
+            light_pack["binding_id"] = "binding-old-target"
+            light_pack_path.write_text(json.dumps(light_pack), encoding="utf-8")
+            stale_posture = module.inspect_attachment_posture(
+                target_repo_root=str(stale_root),
+                runtime_state_root=str(root / "state" / "stale"),
+            )
+            self.assertEqual(stale_posture.binding_state, "stale_binding")
+            self.assertTrue(stale_posture.fail_closed)
+            self.assertIn("attach-target-repo.py", stale_posture.remediation)
+
+            healthy_root = root / "healthy"
+            healthy_root.mkdir()
+            module.attach_target_repo(
+                target_repo_root=str(healthy_root),
+                runtime_state_root=str(root / "state" / "healthy"),
+                repo_id="healthy",
+                display_name="Healthy",
+                primary_language="python",
+                build_command="python -m compileall src",
+                test_command="python -m unittest discover",
+                contract_command="python -m unittest discover -s tests/contracts",
+            )
+            healthy_posture = module.inspect_attachment_posture(
+                target_repo_root=str(healthy_root),
+                runtime_state_root=str(root / "state" / "healthy"),
+            )
+            self.assertEqual(healthy_posture.binding_state, "healthy")
+            self.assertFalse(healthy_posture.fail_closed)
+            self.assertIsNone(healthy_posture.remediation)
 
     def test_attach_target_repo_cli_help(self) -> None:
         completed = subprocess.run(

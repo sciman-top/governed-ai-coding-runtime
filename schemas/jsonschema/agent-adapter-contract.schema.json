@@ -215,6 +215,45 @@
               "degrade_to_manual_handoff"
             ]
           },
+          "runtime_selection": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "selection_inputs": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "fallback_chain": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "native_attach",
+                    "process_bridge",
+                    "manual_handoff"
+                  ]
+                }
+              },
+              "delegation_mode": {
+                "type": "string",
+                "enum": [
+                  "runtime_registry",
+                  "manual_only"
+                ]
+              },
+              "degrade_policy_ref": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "fallback_chain",
+              "delegation_mode"
+            ]
+          },
           "command_template": {
             "type": "string"
           },

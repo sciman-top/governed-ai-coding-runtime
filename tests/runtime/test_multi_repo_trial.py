@@ -93,11 +93,94 @@ class MultiRepoTrialTests(unittest.TestCase):
         self.assertTrue(all(record.evidence_refs for record in summary.records))
         self.assertTrue(all(record.attachment_posture == "profile_validated" for record in summary.records))
 
+    def test_run_multi_repo_trial_supports_two_attached_repos(self) -> None:
+        module = self._module()
+        repo_attachment = importlib.import_module("governed_ai_coding_runtime_contracts.repo_attachment")
+
+        with self._temp_dir() as workspace:
+            target_a = workspace / "target-a"
+            target_b = workspace / "target-b"
+            target_a.mkdir()
+            target_b.mkdir()
+            runtime_a = workspace / "runtime-state" / "target-a"
+            runtime_b = workspace / "runtime-state" / "target-b"
+            repo_attachment.attach_target_repo(
+                target_repo_root=str(target_a),
+                runtime_state_root=str(runtime_a),
+                repo_id="target-a",
+                display_name="Target A",
+                primary_language="python",
+                build_command="cmd /c exit 0",
+                test_command="cmd /c exit 0",
+                contract_command="cmd /c exit 0",
+                adapter_preference="process_bridge",
+            )
+            repo_attachment.attach_target_repo(
+                target_repo_root=str(target_b),
+                runtime_state_root=str(runtime_b),
+                repo_id="target-b",
+                display_name="Target B",
+                primary_language="python",
+                build_command="cmd /c exit 0",
+                test_command="cmd /c exit 0",
+                contract_command="cmd /c exit 0",
+                adapter_preference="process_bridge",
+            )
+
+            summary = module.run_multi_repo_trial(
+                trial_id="trial-attached",
+                adapter_id="codex-cli",
+                adapter_tier="process_bridge",
+                unsupported_capabilities=["native_attach"],
+                attachment_roots=[str(target_a), str(target_b)],
+                attachment_runtime_state_roots=[str(runtime_a), str(runtime_b)],
+            )
+
+            self.assertEqual(summary.total_repos, 2)
+            self.assertTrue(all(record.attachment_posture == "healthy" for record in summary.records))
+            self.assertTrue(all(record.verification_refs for record in summary.records))
+            self.assertTrue(all(record.evidence_refs for record in summary.records))
+            self.assertTrue(all(record.handoff_refs for record in summary.records))
+
+    def test_run_multi_repo_trial_reports_attachment_doctor_failures(self) -> None:
+        module = self._module()
+
+        with self._temp_dir() as workspace:
+            missing_pack_repo = workspace / "target-missing"
+            missing_pack_repo.mkdir()
+            runtime_root = workspace / "runtime-state" / "target-missing"
+
+            summary = module.run_multi_repo_trial(
+                trial_id="trial-missing-pack",
+                adapter_id="codex-cli",
+                adapter_tier="process_bridge",
+                unsupported_capabilities=["native_attach"],
+                attachment_roots=[str(missing_pack_repo)],
+                attachment_runtime_state_roots=[str(runtime_root)],
+            )
+
+            self.assertEqual(summary.total_repos, 1)
+            record = summary.records[0]
+            self.assertEqual(record.attachment_posture, "missing_light_pack")
+            self.assertEqual(record.replay_quality, "insufficient")
+            self.assertIn("attachment_doctor", record.gate_failures)
+
     def _module(self):
         try:
             return importlib.import_module("governed_ai_coding_runtime_contracts.multi_repo_trial")
         except ModuleNotFoundError as exc:
             self.fail(f"multi_repo_trial module is not implemented: {exc}")
+
+    def _temp_dir(self):
+        from contextlib import contextmanager
+        import tempfile
+
+        @contextmanager
+        def _wrapper():
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                yield Path(tmp_dir)
+
+        return _wrapper()
 
 
 if __name__ == "__main__":

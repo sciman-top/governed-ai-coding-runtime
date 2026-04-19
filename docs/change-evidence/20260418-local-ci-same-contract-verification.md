@@ -96,6 +96,23 @@ git diff --check
 - This task aligns local and CI contract semantics at the verifier boundary; it does not yet prove every future adapter or session bridge consumes the new shape.
 - The schema and spec now distinguish execution contexts, but there is still no separate runtime reader for these fields.
 
+## 2026-04-20 Runtime Reader Parity Extension (Task 13)
+### Added
+- strict contract readers:
+  - `session_bridge.session_bridge_result_from_dict`
+  - `adapter_registry.adapter_selection_from_dict`
+  - `runtime_status.runtime_snapshot_from_dict`
+  - `verification_runner.verification_artifact_from_dict`
+- strict repo-profile gate parsing:
+  - declared gate groups now fail loudly on incompatible shapes or missing required canonical gates
+  - session bridge now returns explicit `contract_reader_error` degradation instead of silently falling back
+
+### Verification
+- `cmd`: `python -m unittest tests.runtime.test_verification_runner tests.runtime.test_session_bridge tests.runtime.test_runtime_status tests.runtime.test_contract_reader_parity tests.runtime.test_adapter_registry -v`
+- `exit_code`: `0`
+- `key_output`: `Ran 57 tests`; `OK`
+- `timestamp`: `2026-04-20`
+
 ## Rollback
 - Revert the verification spec and schema updates.
 - Revert the `git -c core.quotepath=false ls-files` change in `scripts/verify-repo.ps1`.

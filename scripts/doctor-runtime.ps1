@@ -117,6 +117,7 @@ if (-not [string]::IsNullOrWhiteSpace($AttachmentRoot)) {
   $attachmentCheck = @'
 from pathlib import Path
 import sys
+import json
 
 root = Path.cwd()
 contracts_src = root / "packages" / "contracts" / "src"
@@ -128,13 +129,32 @@ posture = inspect_attachment_posture(
     target_repo_root=sys.argv[1],
     runtime_state_root=sys.argv[2],
 )
-print(posture.binding_state)
+print(
+    json.dumps(
+        {
+            "binding_state": posture.binding_state,
+            "fail_closed": posture.fail_closed,
+            "remediation": posture.remediation,
+        },
+        sort_keys=True,
+    )
+)
 '@
 
   $attachmentPosture = $attachmentCheck | & $python.Source - $AttachmentRoot $RuntimeStateRoot
   if ($LASTEXITCODE -ne 0) {
     throw "Attachment posture check failed"
   }
-  $normalizedAttachmentPosture = (($attachmentPosture | Select-Object -First 1).Trim()).Replace("_", "-")
+  $attachmentJson = (($attachmentPosture | Select-Object -First 1).Trim()) | ConvertFrom-Json
+  $normalizedAttachmentPosture = ($attachmentJson.binding_state.Trim()).Replace("_", "-")
+  $failClosed = [bool]$attachmentJson.fail_closed
+  $remediation = [string]$attachmentJson.remediation
+  if ($failClosed) {
+    Write-Host "FAIL attachment-posture-$normalizedAttachmentPosture"
+    if (-not [string]::IsNullOrWhiteSpace($remediation)) {
+      Write-Host "REMEDIATE $remediation"
+    }
+    throw "Attachment posture requires remediation before execution can continue"
+  }
   Write-CheckOk "attachment-posture-$normalizedAttachmentPosture"
 }

@@ -105,6 +105,16 @@ attachment posture：
 - `stale_binding`
 - `healthy`
 
+remediation 行为：
+- `missing_light_pack`：重新执行 `scripts/attach-target-repo.py attach ...`，补齐 light pack。
+- `invalid_light_pack`：通过 attach 流程重建 `.governed-ai/light-pack.json`。
+- `stale_binding`：重新 attach，刷新 `binding_id`。
+- `healthy`：无需 remediation。
+
+fail-closed 行为：
+- 当提供 attachment 参数时，doctor 遇到非 healthy posture 会输出 `FAIL attachment-posture-<state>` 并返回非零退出码。
+- posture 处于 fail-closed 时，不应继续执行 attachment 写入链路。
+
 ## 特别说明：本仓也可以作为 target repo
 可以，但必须把 `runtime_state_root` 放在仓外。
 

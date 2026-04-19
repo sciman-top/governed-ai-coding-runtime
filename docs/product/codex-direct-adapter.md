@@ -16,6 +16,8 @@ This contract records what the runtime knows about a Codex CLI/App integration p
 - resume behavior
 - evidence export capability
 - adapter tier
+- probe source
+- posture reason
 - unsupported capabilities
 - unsupported capability behavior
 
@@ -37,6 +39,20 @@ Use when neither native attach nor process bridge capability is available.
 - Missing structured evidence export must be recorded as manual summary evidence capability.
 - Process bridge and manual handoff are compatibility paths, not native attach.
 
+## Live Probe And Handshake
+The runtime now supports a real Codex surface probe and handshake path:
+- `codex --version` confirms whether Codex CLI is reachable.
+- `codex --help` is used to infer resume and event/export hints.
+- `codex status` is treated as the live attach handshake signal.
+
+When `codex status` cannot complete (for example non-interactive `stdin is not a terminal`), posture degrades to `process_bridge` while keeping the failure reason explicit.
+
+Codex session identity is carried in the runtime task model as:
+- `session_id`
+- `resume_id`
+- `continuation_id`
+- `flow_kind` (`live_attach` / `process_bridge` / `manual_handoff`)
+
 ## Runtime Boundary
 The Codex adapter may classify Codex capability posture and evidence expectations. It may not:
 - own upstream Codex authentication
@@ -53,7 +69,7 @@ Codex session evidence maps into the runtime evidence timeline by governed task 
 - approval events -> `adapter_approval_event`
 - handoff references -> `adapter_handoff`
 
-The posture event records whether the flow was `direct_adapter`, `process_bridge`, or `manual_handoff`. Manual handoff evidence remains distinguishable from direct adapter evidence.
+The posture event records whether the flow was `live_attach`, `process_bridge`, or `manual_handoff`. Manual handoff evidence remains distinguishable from live attach evidence.
 
 ## Smoke Trial
 Use `scripts/run-codex-adapter-trial.py` to run the current Codex adapter smoke trial.
@@ -62,6 +78,7 @@ The trial is safe-mode by default:
 - it does not require real high-risk writes
 - it does not claim native attach unless `--native-attach` is passed
 - it emits deterministic trial refs so task, binding, evidence, and verification wiring can be reviewed without private maintainer context
+- it can optionally derive posture from a live probe with `--probe-live`
 
 Example:
 
@@ -69,7 +86,8 @@ Example:
 python scripts/run-codex-adapter-trial.py `
   --repo-id "python-service" `
   --task-id "task-codex-trial" `
-  --binding-id "binding-python-service"
+  --binding-id "binding-python-service" `
+  --probe-live
 ```
 
 Expected JSON fields:
@@ -81,6 +99,11 @@ Expected JSON fields:
 - `adapter_tier`
 - `unsupported_capabilities`
 - `unsupported_capability_behavior`
+- `flow_kind`
+- `session_id`
+- `resume_id`
+- `continuation_id`
+- `probe_source`
 - `evidence_refs`
 - `verification_refs`
 - `handoff_ref`

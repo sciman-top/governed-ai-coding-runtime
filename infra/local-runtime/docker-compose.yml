@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: governed
+      POSTGRES_PASSWORD: governed
+      POSTGRES_DB: governed_runtime
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  control-plane:
+    image: python:3.13-slim
+    working_dir: /workspace
+    command: ["python", "apps/control-plane/main.py", "--route", "/health"]
+    volumes:
+      - ../../:/workspace
+    depends_on:
+      - postgres
+
+  workflow-worker:
+    image: python:3.13-slim
+    working_dir: /workspace
+    command: ["python", "apps/workflow-worker/main.py"]
+    volumes:
+      - ../../:/workspace
+    depends_on:
+      - postgres
+
+  agent-worker:
+    image: python:3.13-slim
+    working_dir: /workspace
+    command: ["python", "apps/agent-worker/main.py"]
+    volumes:
+      - ../../:/workspace
+    depends_on:
+      - postgres
+
+  tool-runner:
+    image: python:3.13-slim
+    working_dir: /workspace
+    command: ["python", "apps/tool-runner/main.py", "--command", "git status"]
+    volumes:
+      - ../../:/workspace

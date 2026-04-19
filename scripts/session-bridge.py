@@ -40,9 +40,15 @@ def main() -> int:
     status_parser.add_argument("--attachment-runtime-state-root")
     status_parser.set_defaults(command_type="inspect_status")
 
-    gate_parser = _add_common(subparsers.add_parser("request-gate", help="Request a quick or full verification gate plan."))
+    gate_parser = _add_common(
+        subparsers.add_parser(
+            "request-gate",
+            help="Run a quick or full verification gate flow.",
+        )
+    )
     gate_parser.add_argument("--mode", choices=["quick", "full"], required=True)
     gate_parser.add_argument("--run-id", default="session-bridge-request")
+    gate_parser.add_argument("--plan-only", action="store_true")
     gate_parser.add_argument("--policy-status", choices=["allow", "escalate", "deny"], default="allow")
     gate_parser.add_argument("--approval-ref")
     gate_parser.add_argument("--remediation-hint")
@@ -127,7 +133,7 @@ def main() -> int:
     policy_decision = None
     if command_type == "run_gate":
         command_type = "run_quick_gate" if args.mode == "quick" else "run_full_gate"
-        payload = {"run_id": args.run_id}
+        payload = {"run_id": args.run_id, "plan_only": bool(args.plan_only)}
         policy_decision = build_policy_decision(
             task_id=args.task_id,
             action_id=f"session:{command_type}",

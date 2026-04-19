@@ -71,7 +71,7 @@ python scripts/session-bridge.py repo-posture `
   --attachment-runtime-state-root "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit"
 ```
 
-请求 gate plan：
+执行 runtime 托管的 gate 流程（若仅需计划可加 `--plan-only`）：
 
 ```powershell
 python scripts/session-bridge.py request-gate `
@@ -151,7 +151,10 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-check.ps1 `
   -AttachmentRuntimeStateRoot "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit" `
   -Mode "quick" `
   -WriteTargetPath "src/ClassroomToolkit.App/MainWindow.ZOrder.cs" `
-  -WriteTier "medium"
+  -WriteTier "medium" `
+  -WriteToolName "write_file" `
+  -WriteContent "governed runtime write probe" `
+  -ExecuteWriteFlow
 ```
 
 这一个命令会串行执行：
@@ -159,11 +162,13 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-check.ps1 `
 - `doctor`（带 attachment 参数）
 - `session-bridge request-gate`
 - `verify-attachment`（可用 `-SkipVerifyAttachment` 跳过）
-- 当提供 `-WriteTargetPath` 时，额外执行 `govern-attachment-write`
+- 当提供 `-WriteTargetPath` 时，执行 `govern-attachment-write`
+- 当再提供 `-ExecuteWriteFlow` 时，额外执行 `decide-attachment-write` 与 `execute-attachment-write`
 
 退出码规则：
 - 全链路通过且 gate 结果全是 `pass` 时，返回 `0`
 - 任一步骤失败或任一 gate 为 `fail` 时，返回 `1`
+- 开启 `-ExecuteWriteFlow` 后，输出会包含真实 `handoff_ref` 与 `replay_ref`
 
 ### 5. 双模式一键流
 

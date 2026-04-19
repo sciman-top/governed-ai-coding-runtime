@@ -40,6 +40,14 @@ Governance guarantees:
 - unsupported capability behavior must be explicit and machine-readable
 - weaker tiers must never be described as stronger ones
 
+## Runtime Registry Interface
+Adapter tier selection is now exposed as a runtime interface, not only static documentation:
+- register adapter contracts
+- discover adapters by family or tier
+- probe host capability
+- select tier using attachment preference plus probe result
+- delegate execution with structured degrade metadata (`requested_tier`, `degraded`, `degrade_reason`)
+
 ## Codex Projection
 Codex remains the first direct adapter target, but its posture is projected through the same tier contract:
 - `native_attach` when live attachment is available

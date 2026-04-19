@@ -301,14 +301,108 @@ class SessionBridgeCommandTests(unittest.TestCase):
             repo_binding_id="binding-python-service",
             adapter_id="codex-cli",
             risk_tier="low",
-            payload={"run_id": "run-123"},
+            payload={"run_id": "run-123", "plan_only": True},
             policy_decision=decision,
         )
         result = module.handle_session_bridge_command(command, task_root=ROOT / ".runtime" / "tasks", repo_root=ROOT)
 
         self.assertEqual(result.status, "verification_requested")
+        self.assertTrue(result.payload["plan_only"])
+        self.assertEqual(result.payload["execution_id"], "task-123:run-123")
+        self.assertEqual(result.payload["continuation_id"], "task-123:run-123")
         self.assertEqual(result.payload["mode"], "quick")
         self.assertEqual(result.payload["gate_order"], ["test", "contract"])
+
+    def test_codex_session_identity_includes_flow_kind_and_preserves_explicit_ids(self) -> None:
+        module = self._module()
+        decision = self._policy_decision(status="allow", risk_tier="low")
+
+        command = module.build_session_bridge_command(
+            command_id="cmd-quick-gate-codex-identity",
+            command_type="run_quick_gate",
+            task_id="task-123",
+            repo_binding_id="binding-python-service",
+            adapter_id="codex-cli",
+            risk_tier="low",
+            payload={
+                "run_id": "run-codex-identity",
+                "plan_only": True,
+                "session_id": "session-explicit-001",
+                "resume_id": "resume-explicit-001",
+            },
+            policy_decision=decision,
+        )
+        result = module.handle_session_bridge_command(command, task_root=ROOT / ".runtime" / "tasks", repo_root=ROOT)
+
+        identity = result.payload["session_identity"]
+        self.assertEqual(result.status, "verification_requested")
+        self.assertEqual(identity["session_id"], "session-explicit-001")
+        self.assertEqual(identity["resume_id"], "resume-explicit-001")
+        self.assertEqual(identity["continuation_id"], "task-123:run-codex-identity")
+        self.assertIn(identity["flow_kind"], {"live_attach", "process_bridge", "manual_handoff"})
+        self.assertIn("adapter_tier", identity)
+
+    def test_local_session_bridge_executes_quick_gate_with_runtime_lifecycle(self) -> None:
+        module = self._module()
+        repo_attachment = importlib.import_module("governed_ai_coding_runtime_contracts.repo_attachment")
+        policy_decision = importlib.import_module("governed_ai_coding_runtime_contracts.policy_decision")
+        decision = policy_decision.build_policy_decision(
+            task_id="task-execute-gate",
+            action_id="action-execute-allow",
+            risk_tier="low",
+            subject="session_command:run_gate",
+            status="allow",
+            decision_basis=["execute attached repo gate plan"],
+            evidence_ref="artifacts/task-execute-gate/policy/allow.json",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            self._seed_task(workspace, task_id="task-execute-gate")
+            target_repo = workspace / "target"
+            target_repo.mkdir()
+            runtime_state_root = workspace / "runtime-state" / "target"
+            python = sys.executable.replace("\\", "/")
+            repo_attachment.attach_target_repo(
+                target_repo_root=str(target_repo),
+                runtime_state_root=str(runtime_state_root),
+                repo_id="target",
+                display_name="Target",
+                primary_language="python",
+                build_command=f"{python} -c \"print('build-pass')\"",
+                test_command=f"{python} -c \"print('test-pass')\"",
+                contract_command=f"{python} -c \"print('contract-pass')\"",
+                adapter_preference="process_bridge",
+            )
+
+            command = module.build_session_bridge_command(
+                command_id="cmd-exec-quick-gate",
+                command_type="run_quick_gate",
+                task_id="task-execute-gate",
+                repo_binding_id="binding-target",
+                adapter_id="codex-cli",
+                risk_tier="low",
+                payload={"run_id": "run-exec-1"},
+                policy_decision=decision,
+            )
+            result = module.handle_session_bridge_command(
+                command,
+                task_root=workspace / ".runtime" / "tasks",
+                repo_root=workspace,
+                attachment_root=target_repo,
+                attachment_runtime_state_root=runtime_state_root,
+            )
+
+            self.assertEqual(result.status, "verification_completed")
+            self.assertFalse(result.payload["plan_only"])
+            self.assertEqual(result.payload["execution_id"], "task-execute-gate:run-exec-1")
+            self.assertEqual(result.payload["continuation_id"], "task-execute-gate:run-exec-1")
+            self.assertEqual(result.payload["outcome"], "pass")
+            self.assertEqual(result.payload["results"], {"test": "pass", "contract": "pass"})
+            self.assertIn("test", result.payload["result_artifact_refs"])
+            self.assertIn("contract", result.payload["result_artifact_refs"])
+            self.assertTrue(result.payload["adapter_event_ref"])
+            self.assertGreaterEqual(result.payload["adapter_event_summary"]["gate_run_count"], 2)
 
     def test_attached_repo_quick_gate_prefers_target_repo_declared_commands(self) -> None:
         module = self._module()
@@ -349,7 +443,7 @@ class SessionBridgeCommandTests(unittest.TestCase):
                 repo_binding_id="binding-target",
                 adapter_id="codex-cli",
                 risk_tier="low",
-                payload={"run_id": "run-attached-1"},
+                payload={"run_id": "run-attached-1", "plan_only": True},
                 policy_decision=decision,
             )
             result = module.handle_session_bridge_command(
@@ -361,6 +455,7 @@ class SessionBridgeCommandTests(unittest.TestCase):
             )
 
             self.assertEqual(result.status, "verification_requested")
+            self.assertTrue(result.payload["plan_only"])
             self.assertEqual(result.payload["gate_order"], ["test", "contract"])
             self.assertEqual(
                 result.payload["commands"],
@@ -369,6 +464,65 @@ class SessionBridgeCommandTests(unittest.TestCase):
                     "dotnet test tests/Target.Tests.csproj -c Debug --filter \"FullyQualifiedName~ArchitectureDependencyTests\"",
                 ],
             )
+
+    def test_tool_execution_path_uses_same_governance_surface(self) -> None:
+        module = self._module()
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            self._seed_task(workspace, task_id="task-tool-flow")
+
+            request_command = module.build_session_bridge_command(
+                command_id="cmd-tool-request",
+                command_type="write_request",
+                task_id="task-tool-flow",
+                repo_binding_id="binding-local",
+                adapter_id="codex-cli",
+                risk_tier="low",
+                payload={
+                    "tool_name": "package",
+                    "command": f"{sys.executable} -m pip list --disable-pip-version-check",
+                    "rollback_reference": "pip uninstall <pkg>",
+                },
+            )
+            request_result = module.handle_session_bridge_command(
+                request_command,
+                task_root=workspace / ".runtime" / "tasks",
+                repo_root=workspace,
+            )
+
+            self.assertEqual(request_result.status, "write_requested")
+            self.assertEqual(request_result.payload["policy_status"], "allow")
+            self.assertTrue(request_result.payload["policy_decision_ref"])
+
+            execute_command = module.build_session_bridge_command(
+                command_id="cmd-tool-execute",
+                command_type="write_execute",
+                task_id="task-tool-flow",
+                repo_binding_id="binding-local",
+                adapter_id="codex-cli",
+                risk_tier="low",
+                payload={
+                    "tool_name": "package",
+                    "command": f"{sys.executable} -m pip list --disable-pip-version-check",
+                    "rollback_reference": "pip uninstall <pkg>",
+                    "execution_id": request_result.payload["execution_id"],
+                    "continuation_id": request_result.payload["continuation_id"],
+                },
+                policy_decision_ref=request_result.payload["policy_decision_ref"],
+            )
+            execute_result = module.handle_session_bridge_command(
+                execute_command,
+                task_root=workspace / ".runtime" / "tasks",
+                repo_root=workspace,
+            )
+
+            self.assertEqual(execute_result.status, "write_executed")
+            self.assertEqual(execute_result.payload["execution_status"], "executed")
+            self.assertTrue(execute_result.payload["artifact_ref"])
+            self.assertTrue(execute_result.payload["handoff_ref"])
+            self.assertTrue(execute_result.payload["replay_ref"])
+            self.assertTrue(execute_result.payload["adapter_event_ref"])
+            self.assertGreaterEqual(execute_result.payload["adapter_event_summary"]["tool_call_count"], 1)
 
     def test_write_governance_results_normalize_to_policy_decision(self) -> None:
         write_tool_runner = importlib.import_module("governed_ai_coding_runtime_contracts.write_tool_runner")
@@ -458,9 +612,54 @@ class SessionBridgeCommandTests(unittest.TestCase):
 
             self.assertEqual(result.status, "ok")
             self.assertEqual(result.payload["run_id"], "run-evidence")
+            self.assertTrue(result.payload["execution_id"])
+            self.assertTrue(result.payload["continuation_id"])
             self.assertIn("artifacts/task-evidence/run-evidence/evidence/bundle.json", result.payload["evidence_refs"])
             self.assertIn("approval-123", result.payload["approval_ids"])
             self.assertIn("docs/change-evidence/task-evidence-start.md", result.payload["transition_evidence_refs"])
+
+    def test_inspect_evidence_keeps_attachment_primary_path_read_only_when_task_missing(self) -> None:
+        module = self._module()
+        repo_attachment = importlib.import_module("governed_ai_coding_runtime_contracts.repo_attachment")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "target"
+            target_repo.mkdir()
+            runtime_state_root = workspace / "runtime-state" / "target"
+            repo_attachment.attach_target_repo(
+                target_repo_root=str(target_repo),
+                runtime_state_root=str(runtime_state_root),
+                repo_id="target",
+                display_name="Target",
+                primary_language="python",
+                build_command="python -m compileall src",
+                test_command="python -m unittest discover",
+                contract_command="python -m unittest discover -s tests/contracts",
+            )
+
+            command = module.build_session_bridge_command(
+                command_id="cmd-inspect-evidence-missing",
+                command_type="inspect_evidence",
+                task_id="task-missing",
+                repo_binding_id="binding-target",
+                adapter_id="codex-cli",
+                risk_tier="low",
+            )
+
+            result = module.handle_session_bridge_command(
+                command,
+                task_root=workspace / ".runtime" / "tasks",
+                repo_root=workspace,
+                attachment_root=target_repo,
+                attachment_runtime_state_root=runtime_state_root,
+            )
+
+            self.assertEqual(result.status, "ok")
+            self.assertFalse(result.payload["task_found"])
+            self.assertEqual(result.payload["evidence_refs"], [])
+            self.assertTrue(result.payload["read_only"])
+            self.assertEqual(result.payload["posture_summary"]["binding_state"], "healthy")
 
     def test_write_request_and_execution_flow_return_runtime_owned_refs(self) -> None:
         module = self._module()
@@ -509,7 +708,11 @@ class SessionBridgeCommandTests(unittest.TestCase):
             approval_id = request_result.payload["approval_id"]
             self.assertTrue(approval_id)
             self.assertEqual(request_result.payload["policy_status"], "escalate")
-            self.assertEqual(request_result.payload["execution_id"], "task-write-flow:cmd-write-request")
+            flow_execution_id = request_result.payload["execution_id"]
+            self.assertEqual(flow_execution_id, f"task-write-flow:approval:{approval_id}")
+            self.assertEqual(request_result.payload["continuation_id"], flow_execution_id)
+            self.assertEqual(request_result.payload["adapter_id"], "codex-cli")
+            self.assertIn("approval_ref", request_result.payload)
 
             approve_command = module.build_session_bridge_command(
                 command_id="cmd-write-approve",
@@ -533,6 +736,8 @@ class SessionBridgeCommandTests(unittest.TestCase):
 
             self.assertEqual(approve_result.status, "approval_recorded")
             self.assertEqual(approve_result.payload["approval_status"], "approved")
+            self.assertEqual(approve_result.payload["execution_id"], flow_execution_id)
+            self.assertEqual(approve_result.payload["continuation_id"], flow_execution_id)
 
             execute_command = module.build_session_bridge_command(
                 command_id="cmd-write-execute",
@@ -562,6 +767,15 @@ class SessionBridgeCommandTests(unittest.TestCase):
             self.assertEqual(execute_result.status, "write_executed")
             self.assertEqual(execute_result.payload["execution_status"], "executed")
             self.assertTrue(execute_result.payload["artifact_ref"])
+            self.assertEqual(execute_result.payload["execution_id"], flow_execution_id)
+            self.assertEqual(execute_result.payload["continuation_id"], flow_execution_id)
+            self.assertEqual(execute_result.payload["adapter_id"], "codex-cli")
+            self.assertTrue(execute_result.payload["handoff_ref"])
+            self.assertTrue(execute_result.payload["replay_ref"])
+            self.assertIn(execute_result.payload["handoff_ref"], execute_result.payload["artifact_refs"])
+            self.assertIn(execute_result.payload["replay_ref"], execute_result.payload["artifact_refs"])
+            self.assertTrue(execute_result.payload["adapter_event_ref"])
+            self.assertGreaterEqual(execute_result.payload["adapter_event_summary"]["file_change_count"], 1)
             self.assertEqual((target_repo / "docs" / "plan.md").read_text(encoding="utf-8"), "patched via session bridge")
 
             status_command = module.build_session_bridge_command(
@@ -582,6 +796,9 @@ class SessionBridgeCommandTests(unittest.TestCase):
 
             self.assertEqual(status_result.status, "ok")
             self.assertEqual(status_result.payload["approval_status"], "approved")
+            self.assertEqual(status_result.payload["execution_id"], flow_execution_id)
+            self.assertEqual(status_result.payload["continuation_id"], flow_execution_id)
+            self.assertEqual(status_result.payload["adapter_id"], "codex-cli")
 
     def test_inspect_handoff_returns_payload_and_known_refs(self) -> None:
         module = self._module()
@@ -620,8 +837,84 @@ class SessionBridgeCommandTests(unittest.TestCase):
             result = module.handle_session_bridge_command(command, task_root=store.root_path, repo_root=workspace)
 
             self.assertEqual(result.status, "ok")
+            self.assertTrue(result.payload["execution_id"])
+            self.assertTrue(result.payload["continuation_id"])
             self.assertIn("artifacts/task-handoff/manual/handoff.json", result.payload["handoff_refs"])
             self.assertIn("artifacts/task-handoff/run-handoff/handoff/package.json", result.payload["handoff_refs"])
+
+    def test_session_bridge_result_reader_fails_on_missing_contract_fields(self) -> None:
+        module = self._module()
+        parsed = module.session_bridge_result_from_dict(
+            {
+                "command_id": "cmd",
+                "command_type": "inspect_status",
+                "status": "ok",
+                "payload": {"total_tasks": 0},
+            }
+        )
+        self.assertEqual(parsed.status, "ok")
+        with self.assertRaises(ValueError):
+            module.session_bridge_result_from_dict(
+                {
+                    "command_id": "cmd",
+                    "command_type": "inspect_status",
+                    "status": "ok",
+                }
+            )
+
+    def test_quick_gate_reports_contract_reader_error_on_incompatible_repo_profile(self) -> None:
+        module = self._module()
+        repo_attachment = importlib.import_module("governed_ai_coding_runtime_contracts.repo_attachment")
+        policy_decision = importlib.import_module("governed_ai_coding_runtime_contracts.policy_decision")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            self._seed_task(workspace, task_id="task-bad-contract")
+            target_repo = workspace / "target"
+            target_repo.mkdir()
+            runtime_state_root = workspace / "runtime-state" / "target"
+            attachment = repo_attachment.attach_target_repo(
+                target_repo_root=str(target_repo),
+                runtime_state_root=str(runtime_state_root),
+                repo_id="target",
+                display_name="Target",
+                primary_language="python",
+                build_command="python -m compileall src",
+                test_command="python -m unittest discover",
+                contract_command="python -m unittest discover -s tests/contracts",
+            )
+            profile_path = Path(attachment.repo_profile_path)
+            profile = json.loads(profile_path.read_text(encoding="utf-8"))
+            profile["contract_commands"] = "invalid-contract-shape"
+            profile_path.write_text(json.dumps(profile, indent=2, sort_keys=True), encoding="utf-8")
+
+            command = module.build_session_bridge_command(
+                command_id="cmd-bad-contract",
+                command_type="run_quick_gate",
+                task_id="task-bad-contract",
+                repo_binding_id="binding-target",
+                adapter_id="codex-cli",
+                risk_tier="low",
+                payload={"run_id": "run-bad-contract"},
+                policy_decision=policy_decision.build_policy_decision(
+                    task_id="task-bad-contract",
+                    action_id="quick-gate",
+                    risk_tier="low",
+                    subject="run_quick_gate",
+                    status="allow",
+                    decision_basis=["test"],
+                    evidence_ref="artifacts/task-bad-contract/policy/allow.json",
+                ),
+            )
+            result = module.handle_session_bridge_command(
+                command,
+                task_root=workspace / ".runtime" / "tasks",
+                repo_root=workspace,
+                attachment_root=target_repo,
+                attachment_runtime_state_root=runtime_state_root,
+            )
+            self.assertEqual(result.status, "degraded")
+            self.assertIn("contract_reader_error", result.reason)
 
     def test_session_bridge_cli_help(self) -> None:
         completed = subprocess.run(

@@ -22,6 +22,45 @@
           "command_type": {
             "enum": [
               "run_quick_gate",
+              "run_full_gate"
+            ]
+          }
+        },
+        "required": [
+          "command_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "properties": {
+              "run_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "plan_only": {
+                "type": "boolean"
+              },
+              "execution_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "continuation_id": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command_type": {
+            "enum": [
+              "run_quick_gate",
               "run_full_gate",
               "write_execute"
             ]

@@ -177,6 +177,8 @@ class RuntimeStatusTests(unittest.TestCase):
             self.assertEqual(attachment.binding_state, "healthy")
             self.assertEqual(attachment.adapter_preference, "manual_handoff")
             self.assertEqual(Path(attachment.light_pack_path), (target_repo / ".governed-ai" / "light-pack.json").resolve())
+            self.assertFalse(attachment.fail_closed)
+            self.assertIsNone(attachment.remediation)
 
     def test_runtime_status_text_reports_attachment_without_tasks(self) -> None:
         repo_attachment = importlib.import_module("governed_ai_coding_runtime_contracts.repo_attachment")
@@ -216,6 +218,35 @@ class RuntimeStatusTests(unittest.TestCase):
             )
 
             self.assertIn("Attachment attached-target: healthy", completed.stdout)
+
+    def test_runtime_snapshot_reader_requires_contract_shape(self) -> None:
+        runtime_status = importlib.import_module("governed_ai_coding_runtime_contracts.runtime_status")
+        snapshot = runtime_status.runtime_snapshot_from_dict(
+            {
+                "total_tasks": 0,
+                "maintenance": {
+                    "stage": "completed",
+                    "compatibility_policy_ref": "docs/product/runtime-compatibility-and-upgrade-policy.md",
+                    "upgrade_policy_ref": "docs/product/runtime-compatibility-and-upgrade-policy.md",
+                    "triage_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+                    "deprecation_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+                    "retirement_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+                },
+                "tasks": [],
+                "attachments": [],
+                "runtime_root": ".runtime",
+                "persistence_backend": "filesystem",
+            }
+        )
+        self.assertEqual(snapshot.total_tasks, 0)
+        with self.assertRaises(ValueError):
+            runtime_status.runtime_snapshot_from_dict(
+                {
+                    "total_tasks": 0,
+                    "tasks": [],
+                    "attachments": [],
+                }
+            )
 
 
 if __name__ == "__main__":

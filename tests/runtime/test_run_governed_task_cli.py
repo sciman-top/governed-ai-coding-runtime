@@ -111,6 +111,29 @@ class RunGovernedTaskCliTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         self.assertIn("Execute an approved attached write request", completed.stdout)
 
+    def test_status_json_reports_runtime_roots_and_runtime_root_override(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            runtime_root = Path(tmp_dir) / "machine-runtime"
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/run-governed-task.py",
+                    "--runtime-root",
+                    str(runtime_root),
+                    "status",
+                    "--json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["runtime_roots"]["runtime_root"], runtime_root.resolve().as_posix())
+            self.assertEqual(payload["runtime_roots"]["compatibility_mode"], False)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -928,6 +928,8 @@ $epicDefinitions = @(Get-EpicDefinitions)
 $epicDefinitionMap = Get-EpicDefinitionMap -EpicDefinitions $epicDefinitions
 
 if ($ValidateOnly) {
+  $completedTaskCount = @($seedData.issues | Where-Object { Test-BacklogTaskComplete -BacklogTask $backlogTaskMap[$_.id] }).Count
+  $activeTaskCount = $seedData.issues.Count - $completedTaskCount
   if ($RenderAll) {
     $renderedTasks = 0
     foreach ($issue in $seedData.issues) {
@@ -960,6 +962,8 @@ if ($ValidateOnly) {
       rendered_issue_creation_tasks = $renderedIssueCreationTasks
       rendered_epics = $renderedEpics
       rendered_initiative = $true
+      completed_task_count = $completedTaskCount
+      active_task_count = $activeTaskCount
     } | ConvertTo-Json -Compress
     exit 0
   }
@@ -1008,6 +1012,8 @@ if ($ValidateOnly) {
   [pscustomobject]@{
     issue_seed_version = $seedData.version
     issue_count = $seedData.issues.Count
+    completed_task_count = $completedTaskCount
+    active_task_count = $activeTaskCount
     first_issue_id = $seedData.issues[0].id
     gap_027_title = $gap027.title
   } | ConvertTo-Json -Compress

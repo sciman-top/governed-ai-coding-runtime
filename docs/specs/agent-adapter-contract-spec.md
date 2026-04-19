@@ -29,6 +29,7 @@ The contract describes capabilities, not vendor identity. Codex CLI/App, Claude 
 
 ## Optional Fields
 - command_template
+- runtime_selection
 - posture_resolution_order
 - mcp_server_ref
 - app_server_ref
@@ -124,6 +125,10 @@ The contract describes capabilities, not vendor identity. Codex CLI/App, Claude 
 - degrade_to_advisory
 - degrade_to_manual_handoff
 
+### runtime_selection.delegation_mode
+- runtime_registry
+- manual_only
+
 ### compatibility_signals.status
 - full_support
 - partial_support
@@ -137,6 +142,7 @@ The contract describes capabilities, not vendor identity. Codex CLI/App, Claude 
 - User-owned upstream authentication, such as Codex CLI/App login, must remain outside platform credential ownership unless a separate explicit integration decision is accepted.
 - If event visibility is weak, the runtime must compensate with stricter post-run diff, gate, and evidence checks or degrade the adapter mode.
 - Unsupported capabilities must degrade explicitly rather than silently pretending full enforcement exists.
+- runtime selection and fallback chain must be machine-readable when delegation is runtime-managed.
 - governance guarantees must explain what the runtime can still honestly promise at the declared adapter tier
 - rollout posture must make the current and target enforcement level machine-readable
 - compatibility signals must describe the degrade behavior that preserves honest execution semantics when full support is absent

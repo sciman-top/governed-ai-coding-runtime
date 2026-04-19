@@ -103,11 +103,13 @@ class DeliveryHandoffTests(unittest.TestCase):
             adapter_id="codex-cli",
             adapter_flow_kind="manual_handoff",
             adapter_evidence_refs=["artifacts/task-codex/run-1/codex/session.json"],
+            adapter_event_summary={"unsupported_event_count": 1, "live_event_count": 0, "manual_event_count": 2},
         )
 
         self.assertEqual(package.adapter_id, "codex-cli")
         self.assertEqual(package.adapter_flow_kind, "manual_handoff")
         self.assertEqual(package.adapter_evidence_refs, ["artifacts/task-codex/run-1/codex/session.json"])
+        self.assertEqual(package.adapter_event_summary["unsupported_event_count"], 1)
 
 
 if __name__ == "__main__":

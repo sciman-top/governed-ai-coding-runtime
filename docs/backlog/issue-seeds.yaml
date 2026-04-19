@@ -1,4 +1,4 @@
-issue_seed_version: "3.5"
+issue_seed_version: "3.6"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment

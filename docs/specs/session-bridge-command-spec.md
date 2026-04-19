@@ -23,6 +23,16 @@ The session bridge is the boundary between a host adapter and the machine-local 
 - policy_decision_ref
 - escalation_context
 
+For `run_quick_gate` and `run_full_gate`, `payload` may carry:
+- `run_id` (string): stable run identity for verification artifacts
+- `plan_only` (boolean): return the executable gate plan without running commands
+- `execution_id` (string, optional override): stable execution identity
+- `continuation_id` (string, optional override): stable continuation identity
+
+For `write_request` and `write_execute`:
+- file-write path: `tool_name`, `target_path`, `tier`, `rollback_reference`, and `content` (execute only)
+- governed tool path: `tool_name` in `shell | git | package`, bounded `command`, `rollback_reference`, and optional `approval_id`
+
 ## Enumerations
 
 ### command_type
@@ -102,11 +112,12 @@ Context needed to pause for human approval rather than execute.
 - `write_approve` records the human decision for a pending write approval request.
 - `write_execute` attempts the actual governed write after policy and approval checks.
 - `write_status` reports the current write-flow posture using execution id, approval id, and related refs when available.
+- for governed tool execution, `write_request`/`write_execute` keeps the same approval and identity model while enforcing bounded command coverage.
+- `run_quick_gate` and `run_full_gate` execute the verification flow through runtime-managed lifecycle by default, and return stable execution/continuation ids plus artifact refs. Set `payload.plan_only = true` to request plan-only output.
 - `inspect_evidence` returns task-level evidence, verification, approval, artifact, and rollback refs.
 - `inspect_handoff` returns known handoff refs and related rollback refs for a task or run.
 
 ## Non-Goals
 - implementing the session bridge CLI
-- running verification gates directly
 - launching or attaching a host AI tool
 - replacing PolicyDecision, approval, verification, evidence, or adapter contracts

@@ -54,9 +54,12 @@ The current branch baseline already includes:
 - profile-based multi-repo trial model
 - the planning closeout needed for `Phase 0`: master outline, direct roadmap, direct implementation plan, aligned plans index, aligned backlog, aligned issue seeds, and validated issue seeding script rendering
 
-The current branch baseline still does not close the hybrid final state because the executable gap audit identified:
-- `HFG-001` through `HFG-007` as blocking gaps
-- `HFG-H1` through `HFG-H3` as hardening gaps
+The executable gaps from the 2026-04-19 audit are now implemented through `GAP-060` on the current branch baseline.
+
+Claim discipline remains explicit:
+- complete hybrid final-state closure should only be claimed with fresh executable evidence
+- the closeout evidence source is `docs/change-evidence/20260420-direct-to-hybrid-final-state-closeout.md`
+- if that evidence no longer reflects runtime reality, the claim must be downgraded until re-verified
 
 ## Roadmap Principles
 1. Runtime-owned execution before platform width.
@@ -268,7 +271,7 @@ Close the final gap between a functioning hybrid runtime and a stable, auditable
 - hybrid final-state claims are backed by real attached execution, live adapter behavior, machine-local runtime placement, and service-shaped runtime boundaries
 
 ### Claim Allowed After Phase 5
-The repository can claim complete hybrid final-state closure.
+The repository can claim complete hybrid final-state closure only while the closeout evidence remains current and reproducible.
 
 ## Claim Discipline
 The repository should not claim complete hybrid final-state closure before `Phase 5` exits.

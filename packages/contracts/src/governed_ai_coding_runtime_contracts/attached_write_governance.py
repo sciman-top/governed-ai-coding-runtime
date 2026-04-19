@@ -1,6 +1,7 @@
 """Attached target-repo write governance bridge."""
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 import json
 from pathlib import Path
 
@@ -135,6 +136,8 @@ def _persist_approval_request(
         "reason": reason,
         "status": "pending",
         "decided_by": None,
+        "requested_at": datetime.now(UTC).isoformat(),
+        "decided_at": None,
     }
     record_path.write_text(
         json.dumps(record, indent=2, sort_keys=True),

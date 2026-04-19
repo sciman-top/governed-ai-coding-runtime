@@ -70,6 +70,78 @@ class CodexAdapterTests(unittest.TestCase):
         self.assertEqual(module.classify_codex_adapter(process).tier, "process_bridge")
         self.assertEqual(module.classify_codex_adapter(manual).tier, "manual_handoff")
 
+    def test_codex_live_probe_marks_manual_handoff_when_codex_cli_is_missing(self) -> None:
+        module = self._module()
+
+        def missing_runner(argv, _cwd):
+            if argv == ["codex", "--version"]:
+                return 127, "", "codex: command not found"
+            return 127, "", "unsupported"
+
+        probe = module.probe_codex_surface(command_runner=missing_runner)
+        profile = module.build_codex_adapter_profile_from_probe(probe)
+
+        self.assertFalse(probe.codex_cli_available)
+        self.assertFalse(probe.process_bridge_available)
+        self.assertEqual(module.classify_codex_adapter(profile).tier, "manual_handoff")
+        self.assertIn("command not found", probe.reason)
+
+    def test_codex_live_probe_degrades_to_process_bridge_when_status_is_non_interactive(self) -> None:
+        module = self._module()
+
+        def non_interactive_runner(argv, _cwd):
+            if argv == ["codex", "--version"]:
+                return 0, "codex 1.2.3\n", ""
+            if argv == ["codex", "--help"]:
+                return 0, "commands: run resume status --json\n", ""
+            if argv == ["codex", "status"]:
+                return 1, "", "stdin is not a terminal"
+            return 1, "", "unsupported"
+
+        probe = module.probe_codex_surface(command_runner=non_interactive_runner)
+        profile = module.build_codex_adapter_profile_from_probe(probe)
+        capability = module.classify_codex_adapter(profile)
+
+        self.assertTrue(probe.codex_cli_available)
+        self.assertFalse(probe.native_attach_available)
+        self.assertTrue(probe.process_bridge_available)
+        self.assertTrue(probe.resume_available)
+        self.assertEqual(capability.tier, "process_bridge")
+        self.assertIn("live attach unavailable", probe.reason)
+
+    def test_codex_live_handshake_preserves_session_resume_and_continuation_identity(self) -> None:
+        module = self._module()
+
+        probe = module.CodexSurfaceProbe(
+            codex_cli_available=True,
+            version="codex 1.2.3",
+            native_attach_available=True,
+            process_bridge_available=True,
+            structured_events_available=False,
+            evidence_export_available=False,
+            resume_available=True,
+            live_session_id="session-live-001",
+            live_resume_id="resume-live-001",
+            reason="codex status handshake succeeded",
+            probe_commands=[],
+        )
+        handshake = module.handshake_codex_session(
+            task_id="task-codex",
+            command_id="cmd-codex",
+            payload={
+                "session_id": "session-explicit-001",
+                "resume_id": "resume-explicit-001",
+                "continuation_id": "cont-explicit-001",
+            },
+            probe=probe,
+        )
+
+        self.assertEqual(handshake.adapter_tier, "native_attach")
+        self.assertEqual(handshake.flow_kind, "live_attach")
+        self.assertEqual(handshake.session_id, "session-explicit-001")
+        self.assertEqual(handshake.resume_id, "resume-explicit-001")
+        self.assertEqual(handshake.continuation_id, "cont-explicit-001")
+
     def test_codex_adapter_lists_unsupported_capabilities_explicitly(self) -> None:
         module = self._module()
 
@@ -177,6 +249,39 @@ class CodexAdapterTests(unittest.TestCase):
         self.assertEqual(timeline.for_task("task-manual")[0].payload["flow_kind"], "manual_handoff")
         self.assertIn("native_attach", timeline.for_task("task-manual")[0].payload["unsupported_capabilities"])
 
+    def test_codex_session_evidence_records_unsupported_events_instead_of_dropping_them(self) -> None:
+        module = self._module()
+        evidence = importlib.import_module("governed_ai_coding_runtime_contracts.evidence")
+        timeline = evidence.EvidenceTimeline()
+
+        session = module.CodexSessionEvidence(
+            task_id="task-unsupported",
+            adapter_id="codex-cli",
+            adapter_tier="process_bridge",
+            flow_kind="process_bridge",
+            file_changes=[],
+            tool_calls=[],
+            gate_runs=[],
+            approvals=[],
+            handoff_refs=[],
+            unsupported_capabilities=["structured_events"],
+            execution_id="task-unsupported:run-1",
+            continuation_id="task-unsupported:run-1",
+            event_source="process_bridge",
+            unsupported_events=[
+                {
+                    "event_type": "tool_diff_chunk",
+                    "reason": "adapter did not provide diff chunk payload",
+                }
+            ],
+        )
+        module.record_codex_session_evidence(timeline, session)
+        unsupported = [event for event in timeline.for_task("task-unsupported") if event.event_type == "adapter_unsupported_event"]
+
+        self.assertGreaterEqual(len(unsupported), 2)
+        self.assertTrue(any(event.payload.get("capability") == "structured_events" for event in unsupported))
+        self.assertTrue(any(event.payload.get("event_type") == "tool_diff_chunk" for event in unsupported))
+
     def test_codex_adapter_trial_defaults_to_safe_mode_with_stable_refs(self) -> None:
         module = self._module()
 
@@ -203,6 +308,8 @@ class CodexAdapterTests(unittest.TestCase):
             "artifacts/task-codex-trial/codex-trial-safe/verification-output/runtime.txt",
             result.verification_refs,
         )
+        self.assertIn(result.flow_kind, {"live_attach", "process_bridge", "manual_handoff"})
+        self.assertTrue(result.continuation_id.startswith("task-codex-trial:"))
 
     def test_codex_adapter_trial_script_emits_json_summary(self) -> None:
         script = ROOT / "scripts" / "run-codex-adapter-trial.py"

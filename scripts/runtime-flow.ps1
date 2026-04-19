@@ -26,6 +26,8 @@ param(
   [string]$WriteTier = "medium",
   [string]$WriteToolName = "apply_patch",
   [string]$RollbackReference = "",
+  [string]$WriteContent = "governed runtime write probe",
+  [switch]$ExecuteWriteFlow,
 
   [switch]$SkipVerifyAttachment,
 
@@ -174,9 +176,13 @@ if (-not [string]::IsNullOrWhiteSpace($RepoBindingId)) {
 }
 if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
   $checkArgs += @("-WriteTargetPath", $WriteTargetPath, "-WriteTier", $WriteTier, "-WriteToolName", $WriteToolName)
+  $checkArgs += @("-WriteContent", $WriteContent)
 }
 if (-not [string]::IsNullOrWhiteSpace($RollbackReference)) {
   $checkArgs += @("-RollbackReference", $RollbackReference)
+}
+if ($ExecuteWriteFlow) {
+  $checkArgs += "-ExecuteWriteFlow"
 }
 if ($SkipVerifyAttachment) {
   $checkArgs += "-SkipVerifyAttachment"

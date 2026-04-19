@@ -46,9 +46,16 @@ class RuntimeWorker(Protocol):
 
 
 class ExecutionRuntime:
-    def __init__(self, store: FileTaskStore, *, actor_id: str = "execution-runtime") -> None:
+    def __init__(
+        self,
+        store: FileTaskStore,
+        *,
+        actor_id: str = "execution-runtime",
+        runtime_workspaces_root: str | None = None,
+    ) -> None:
         self._store = store
         self._actor_id = actor_id
+        self._runtime_workspaces_root = runtime_workspaces_root
 
     def prepare_run(self, task_id: str, repo_profile: object, *, worker_id: str = "local-worker") -> RunPreparation:
         record = self._store.load(task_id)
@@ -59,7 +66,13 @@ class ExecutionRuntime:
         run_id = f"run-{uuid4().hex[:12]}"
         attempt_number = len(record.run_history) + 1
         attempt_id = f"{task_id}-attempt-{attempt_number}"
-        workspace = allocate_workspace(task_id, repo_profile, run_id=run_id, attempt_id=attempt_id)
+        workspace = allocate_workspace(
+            task_id,
+            repo_profile,
+            run_id=run_id,
+            attempt_id=attempt_id,
+            runtime_workspaces_root=self._runtime_workspaces_root,
+        )
         executing = transition_task(
             record,
             "executing",

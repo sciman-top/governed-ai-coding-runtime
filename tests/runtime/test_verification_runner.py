@@ -108,6 +108,51 @@ class VerificationRunnerTests(unittest.TestCase):
             ],
         )
 
+    def test_repo_profile_declared_gate_contract_fails_loudly_when_required_gates_missing(self) -> None:
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+
+        with self.assertRaises(ValueError):
+            verification_runner.build_repo_profile_verification_plan(
+                "quick",
+                task_id="task-profile",
+                run_id="run-profile",
+                profile_raw={
+                    "quick_gate_commands": [
+                        {"id": "test", "command": "python -m unittest discover"},
+                    ]
+                },
+            )
+
+    def test_verification_artifact_reader_requires_contract_shape(self) -> None:
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+        artifact = verification_runner.verification_artifact_from_dict(
+            {
+                "mode": "quick",
+                "task_id": "task-verify",
+                "run_id": "run-verify",
+                "gate_order": ["test", "contract"],
+                "evidence_link": "artifacts/task-verify/run-verify/verification-output/contract.txt",
+                "results": {"test": "pass", "contract": "pass"},
+                "result_artifact_refs": {
+                    "test": "artifacts/task-verify/run-verify/verification-output/test.txt",
+                    "contract": "artifacts/task-verify/run-verify/verification-output/contract.txt",
+                },
+                "escalation_conditions": ["contract_failure_blocks_delivery"],
+                "risky_artifact_refs": [],
+            }
+        )
+        self.assertEqual(artifact.mode, "quick")
+        with self.assertRaises(ValueError):
+            verification_runner.verification_artifact_from_dict(
+                {
+                    "mode": "quick",
+                    "task_id": "task-verify",
+                    "run_id": "run-verify",
+                    "gate_order": ["test", "contract"],
+                    "results": {"test": "pass", "contract": "pass"},
+                }
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

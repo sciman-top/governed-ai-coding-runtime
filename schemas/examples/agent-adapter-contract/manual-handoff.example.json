@@ -33,6 +33,17 @@
         "same-contract verification required"
       ],
       "unsupported_capability_behavior": "degrade_to_manual_handoff",
+      "runtime_selection": {
+        "selection_inputs": [
+          "attachment.adapter_preference",
+          "host.probe"
+        ],
+        "fallback_chain": [
+          "manual_handoff"
+        ],
+        "delegation_mode": "manual_only",
+        "degrade_policy_ref": "docs/product/adapter-degrade-policy.md"
+      },
       "known_limitations": [
         "no native attach",
         "no process bridge"

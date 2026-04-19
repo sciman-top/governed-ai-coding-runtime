@@ -12,7 +12,9 @@ if str(CONTRACTS_SRC) not in sys.path:
 
 from governed_ai_coding_runtime_contracts.codex_adapter import (
     build_codex_adapter_trial_result,
+    codex_probe_to_dict,
     codex_adapter_trial_to_dict,
+    probe_codex_surface,
 )
 
 
@@ -28,21 +30,36 @@ def main() -> int:
     parser.add_argument("--structured-events", action="store_true")
     parser.add_argument("--evidence-export", action="store_true")
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument(
+        "--probe-live",
+        action="store_true",
+        help="Probe the local Codex surface (codex --version/--help/status) and derive adapter posture from live results.",
+    )
     args = parser.parse_args()
+
+    live_probe = probe_codex_surface() if args.probe_live else None
+    native_attach_available = live_probe.native_attach_available if live_probe else args.native_attach
+    process_bridge_available = live_probe.process_bridge_available if live_probe else not args.no_process_bridge
+    structured_events_available = live_probe.structured_events_available if live_probe else args.structured_events
+    evidence_export_available = live_probe.evidence_export_available if live_probe else args.evidence_export
+    resume_available = live_probe.resume_available if live_probe else args.resume
 
     result = build_codex_adapter_trial_result(
         repo_id=args.repo_id,
         task_id=args.task_id,
         binding_id=args.binding_id,
-        native_attach_available=args.native_attach,
-        process_bridge_available=not args.no_process_bridge,
-        structured_events_available=args.structured_events,
-        evidence_export_available=args.evidence_export,
-        resume_available=args.resume,
+        native_attach_available=native_attach_available,
+        process_bridge_available=process_bridge_available,
+        structured_events_available=structured_events_available,
+        evidence_export_available=evidence_export_available,
+        resume_available=resume_available,
         mode=args.mode,
         run_id=args.run_id,
     )
-    print(json.dumps(codex_adapter_trial_to_dict(result), sort_keys=True))
+    payload = codex_adapter_trial_to_dict(result)
+    if live_probe is not None:
+        payload["live_probe"] = codex_probe_to_dict(live_probe)
+    print(json.dumps(payload, sort_keys=True))
     return 0
 
 

@@ -24,6 +24,8 @@ param(
   [string]$WriteTier = "medium",
   [string]$WriteToolName = "apply_patch",
   [string]$RollbackReference = "",
+  [string]$WriteContent = "governed runtime write probe",
+  [switch]$ExecuteWriteFlow,
 
   [switch]$Json
 )
@@ -167,6 +169,8 @@ if (-not $SkipVerifyAttachment) {
 }
 
 $writeGovernancePayload = $null
+$writeApprovalPayload = $null
+$writeExecutePayload = $null
 if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
   if ([string]::IsNullOrWhiteSpace($RollbackReference)) {
     $RollbackReference = "git diff -- $WriteTargetPath"
@@ -181,6 +185,55 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
   $writeGovernancePayload = Try-ParseJson -Raw $writeStep.output
   if (-not $writeGovernancePayload) {
     $hasFailure = $true
+  }
+
+  if ($ExecuteWriteFlow -and $writeGovernancePayload) {
+    $resolvedApprovalId = ""
+    if ($writeGovernancePayload.approval_id) {
+      $resolvedApprovalId = [string]$writeGovernancePayload.approval_id
+      $approveStep = Invoke-CommandCapture -Label "decide-attachment-write" -Command {
+        & $python "scripts/run-governed-task.py" "decide-attachment-write" "--attachment-runtime-state-root" $resolvedAttachmentRuntimeStateRoot "--approval-id" $resolvedApprovalId "--decision" "approve" "--decided-by" "runtime-check" "--json"
+      }
+      $steps.Add($approveStep) | Out-Null
+      if ($approveStep.exit_code -ne 0) {
+        $hasFailure = $true
+      }
+      $writeApprovalPayload = Try-ParseJson -Raw $approveStep.output
+      if (-not $writeApprovalPayload) {
+        $hasFailure = $true
+      }
+    }
+
+    $executeArgs = @(
+      "scripts/run-governed-task.py",
+      "execute-attachment-write",
+      "--attachment-root", $resolvedAttachmentRoot,
+      "--attachment-runtime-state-root", $resolvedAttachmentRuntimeStateRoot,
+      "--task-id", $TaskId,
+      "--tool-name", $WriteToolName,
+      "--target-path", $WriteTargetPath,
+      "--tier", $WriteTier,
+      "--rollback-reference", $RollbackReference,
+      "--content", $WriteContent,
+      "--json"
+    )
+    if (-not [string]::IsNullOrWhiteSpace($resolvedApprovalId)) {
+      $executeArgs += @("--approval-id", $resolvedApprovalId)
+    }
+    $executeStep = Invoke-CommandCapture -Label "execute-attachment-write" -Command {
+      & $python @executeArgs
+    }
+    $steps.Add($executeStep) | Out-Null
+    if ($executeStep.exit_code -ne 0) {
+      $hasFailure = $true
+    }
+    $writeExecutePayload = Try-ParseJson -Raw $executeStep.output
+    if (-not $writeExecutePayload) {
+      $hasFailure = $true
+    }
+    elseif ($writeExecutePayload.execution_status -ne "executed") {
+      $hasFailure = $true
+    }
   }
 }
 
@@ -202,6 +255,8 @@ $result = @{
   request_gate = $requestGatePayload
   verify_attachment = $verifyPayload
   write_governance = $writeGovernancePayload
+  write_approval = $writeApprovalPayload
+  write_execute = $writeExecutePayload
   steps = $steps
 }
 
@@ -226,9 +281,23 @@ else {
     }
   }
   if ($writeGovernancePayload -and $writeGovernancePayload.policy_decision) {
-    Write-Host ("Write Governance: " + [string]$writeGovernancePayload.policy_decision.status)
+    if ($writeGovernancePayload.policy_decision.status) {
+      Write-Host ("Write Governance: " + [string]$writeGovernancePayload.policy_decision.status)
+    }
+    elseif ($writeGovernancePayload.policy_status) {
+      Write-Host ("Write Governance: " + [string]$writeGovernancePayload.policy_status)
+    }
     if ($writeGovernancePayload.reason) {
       Write-Host ("Write Reason: " + [string]$writeGovernancePayload.reason)
+    }
+  }
+  if ($writeExecutePayload) {
+    Write-Host ("Write Execute: " + [string]$writeExecutePayload.execution_status)
+    if ($writeExecutePayload.handoff_ref) {
+      Write-Host ("Handoff Ref: " + [string]$writeExecutePayload.handoff_ref)
+    }
+    if ($writeExecutePayload.replay_ref) {
+      Write-Host ("Replay Ref: " + [string]$writeExecutePayload.replay_ref)
     }
   }
 }

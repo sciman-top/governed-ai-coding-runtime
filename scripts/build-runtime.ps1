@@ -16,6 +16,9 @@ if (-not $python) {
 
 $sourceRoots = @(
   "packages/contracts/src",
+  "packages/agent-runtime",
+  "packages/observability",
+  "apps",
   "scripts"
 )
 

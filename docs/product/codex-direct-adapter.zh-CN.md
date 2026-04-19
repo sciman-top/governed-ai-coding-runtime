@@ -16,6 +16,8 @@
 - resume behavior
 - evidence export capability
 - adapter tier
+- probe source
+- posture reason
 - unsupported capabilities
 - unsupported capability behavior
 
@@ -37,6 +39,20 @@
 - 缺失 structured evidence export 时，必须记录为 manual summary evidence capability
 - process bridge 和 manual handoff 是兼容路径，不是 native attach
 
+## Live Probe 与 Handshake
+runtime 现在支持对 Codex surface 的真实探测与握手：
+- `codex --version`：确认本机是否可达 Codex CLI。
+- `codex --help`：推断 resume 与 event/export 能力提示。
+- `codex status`：作为 live attach 握手信号。
+
+当 `codex status` 无法完成（例如非交互环境出现 `stdin is not a terminal`）时，姿态会显式降级到 `process_bridge`，并保留降级原因。
+
+Codex session identity 会进入 runtime task model：
+- `session_id`
+- `resume_id`
+- `continuation_id`
+- `flow_kind`（`live_attach` / `process_bridge` / `manual_handoff`）
+
 ## Runtime Boundary
 Codex adapter 可以分类 Codex capability posture 和 evidence expectations，但它不能：
 - 持有上游 Codex authentication
@@ -53,7 +69,7 @@ Codex session evidence 会按 governed task id 映射到 runtime evidence timeli
 - approval events -> `adapter_approval_event`
 - handoff references -> `adapter_handoff`
 
-姿态事件会记录 flow 属于 `direct_adapter`、`process_bridge` 还是 `manual_handoff`。
+姿态事件会记录 flow 属于 `live_attach`、`process_bridge` 还是 `manual_handoff`。
 
 ## Smoke Trial
 使用 `scripts/run-codex-adapter-trial.py` 运行当前 Codex adapter smoke trial。
@@ -62,6 +78,7 @@ trial 默认是 safe-mode：
 - 不需要真实高风险写入
 - 除非显式传 `--native-attach`，否则不会宣称 native attach
 - 会输出稳定 trial refs，便于在不依赖私有维护者上下文的情况下审查 task、binding、evidence、verification wiring
+- 可以通过 `--probe-live` 使用真实 probe 结果推断 posture
 
 示例：
 
@@ -69,7 +86,8 @@ trial 默认是 safe-mode：
 python scripts/run-codex-adapter-trial.py `
   --repo-id "python-service" `
   --task-id "task-codex-trial" `
-  --binding-id "binding-python-service"
+  --binding-id "binding-python-service" `
+  --probe-live
 ```
 
 预期 JSON 字段：
@@ -81,6 +99,11 @@ python scripts/run-codex-adapter-trial.py `
 - `adapter_tier`
 - `unsupported_capabilities`
 - `unsupported_capability_behavior`
+- `flow_kind`
+- `session_id`
+- `resume_id`
+- `continuation_id`
+- `probe_source`
 - `evidence_refs`
 - `verification_refs`
 - `handoff_ref`

@@ -4,6 +4,10 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260420 Direct-To-Hybrid Final-State Closeout](./20260420-direct-to-hybrid-final-state-closeout.md)
+  - closeout evidence for `GAP-046` through `GAP-060`, including operator query closure, strict reader parity, fail-closed attachment doctor remediation, backlog/roadmap/seed sync, and full gate outputs
+- [20260419 GAP-046 Phase1 Governed Execution Surface](./20260419-gap-046-phase1-governed-execution-surface.md)
+  - evidence companion for Task1-Task4 closure under `GAP-046`, including gate execution lifecycle, write identity binding, bounded tool execution, and attached-repo E2E refs
 - [20260419 Mainline And Governance Lane Status Reconciliation](./20260419-mainline-governance-lane-status-reconciliation.md)
   - evidence companion for removing cross-doc completion drift and re-anchoring `GAP-046` through `GAP-060` as active with `GAP-061` through `GAP-068` as planned follow-on
 - [20260419 GAP-068 Governance Optimization Lane Closeout And Claim Discipline](./20260419-gap-068-governance-optimization-lane-closeout.md)

@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Literal
 
 from governed_ai_coding_runtime_contracts.repo_profile import RepoProfile
+from governed_ai_coding_runtime_contracts.runtime_roots import resolve_runtime_roots
 
 
 AdapterPreference = Literal["native_attach", "process_bridge", "manual_handoff"]
@@ -53,6 +54,8 @@ class RepoAttachmentPosture:
     adapter_preference: str | None
     gate_profile: str | None
     reason: str | None = None
+    remediation: str | None = None
+    fail_closed: bool = False
 
 
 def build_repo_attachment_binding(
@@ -107,7 +110,7 @@ def is_machine_local_state_path(path: str | Path, binding: RepoAttachmentBinding
 def attach_target_repo(
     *,
     target_repo_root: str,
-    runtime_state_root: str,
+    runtime_state_root: str | None = None,
     repo_id: str,
     display_name: str,
     primary_language: str,
@@ -119,7 +122,10 @@ def attach_target_repo(
     overwrite: bool = False,
 ) -> RepoAttachmentResult:
     target_root = _existing_directory(target_repo_root, "target_repo_root")
-    runtime_root = _required_path(runtime_state_root, "runtime_state_root")
+    runtime_root = resolve_attachment_runtime_state_root(
+        target_repo_root=target_root,
+        runtime_state_root=runtime_state_root,
+    )
     runtime_root.mkdir(parents=True, exist_ok=True)
 
     governed_dir = target_root / LIGHT_PACK_DIR
@@ -175,10 +181,13 @@ def validate_light_pack(
     *,
     target_repo_root: str,
     light_pack_path: str,
-    runtime_state_root: str,
+    runtime_state_root: str | None = None,
 ) -> RepoAttachmentResult:
     target_root = _existing_directory(target_repo_root, "target_repo_root")
-    runtime_root = _required_path(runtime_state_root, "runtime_state_root")
+    runtime_root = resolve_attachment_runtime_state_root(
+        target_repo_root=target_root,
+        runtime_state_root=runtime_state_root,
+    )
     runtime_root.mkdir(parents=True, exist_ok=True)
 
     resolved_light_pack_path = _repo_local_path(target_root, light_pack_path, "light_pack_path")
@@ -284,11 +293,14 @@ def build_light_pack_payload(
 def inspect_attachment_posture(
     *,
     target_repo_root: str,
-    runtime_state_root: str,
+    runtime_state_root: str | None = None,
     light_pack_path: str = f"{LIGHT_PACK_DIR}/{LIGHT_PACK_FILENAME}",
 ) -> RepoAttachmentPosture:
     target_root = _existing_directory(target_repo_root, "target_repo_root")
-    runtime_root = _required_path(runtime_state_root, "runtime_state_root")
+    runtime_root = resolve_attachment_runtime_state_root(
+        target_repo_root=target_root,
+        runtime_state_root=runtime_state_root,
+    )
     resolved_light_pack_path = _repo_local_path(target_root, light_pack_path, "light_pack_path")
 
     if not resolved_light_pack_path.exists():
@@ -300,6 +312,12 @@ def inspect_attachment_posture(
             adapter_preference=None,
             gate_profile=None,
             reason="light pack is missing",
+            remediation=_remediation_for_posture(
+                binding_state="missing_light_pack",
+                target_root=target_root,
+                runtime_root=runtime_root,
+            ),
+            fail_closed=True,
         )
 
     light_pack: dict = {}
@@ -327,6 +345,12 @@ def inspect_attachment_posture(
             adapter_preference=_string_or_none(light_pack.get("adapter_preference")),
             gate_profile=_string_or_none(light_pack.get("gate_profile")),
             reason=str(exc),
+            remediation=_remediation_for_posture(
+                binding_state="invalid_light_pack",
+                target_root=target_root,
+                runtime_root=runtime_root,
+            ),
+            fail_closed=True,
         )
 
     expected_binding_id = f"binding-{profile.repo_id}"
@@ -339,6 +363,12 @@ def inspect_attachment_posture(
             adapter_preference=binding.adapter_preference,
             gate_profile=binding.gate_profile,
             reason=f"binding_id should be {expected_binding_id}",
+            remediation=_remediation_for_posture(
+                binding_state="stale_binding",
+                target_root=target_root,
+                runtime_root=runtime_root,
+            ),
+            fail_closed=True,
         )
 
     return RepoAttachmentPosture(
@@ -348,6 +378,8 @@ def inspect_attachment_posture(
         light_pack_path=binding.light_pack_path,
         adapter_preference=binding.adapter_preference,
         gate_profile=binding.gate_profile,
+        remediation=None,
+        fail_closed=False,
     )
 
 
@@ -383,6 +415,21 @@ def _resolve_mutable_state_roots(
             raise ValueError(msg)
         resolved[key] = str(state_root)
     return resolved
+
+
+def resolve_attachment_runtime_state_root(
+    *,
+    target_repo_root: str | Path,
+    runtime_state_root: str | Path | None,
+    host_repo_root: str | Path | None = None,
+    compatibility_mode: bool | None = None,
+) -> Path:
+    target_root = _existing_directory(str(target_repo_root), "target_repo_root")
+    if runtime_state_root is not None:
+        return _required_path(str(runtime_state_root), "runtime_state_root")
+    host_root = Path(host_repo_root).resolve(strict=False) if host_repo_root is not None else target_root.parent
+    roots = resolve_runtime_roots(repo_root=host_root, compatibility_mode=compatibility_mode)
+    return Path(roots.runtime_root).resolve(strict=False) / "attachments" / target_root.name
 
 
 def _repo_local_path(target_repo_root: Path, value: str, field_name: str) -> Path:
@@ -501,4 +548,20 @@ def _required_string(value: str, field_name: str) -> str:
 def _string_or_none(value: object) -> str | None:
     if isinstance(value, str) and value.strip():
         return value.strip()
+    return None
+
+
+def _remediation_for_posture(*, binding_state: str, target_root: Path, runtime_root: Path) -> str | None:
+    docs_ref = "docs/product/target-repo-attachment-flow.md"
+    attach_command = (
+        "python scripts/attach-target-repo.py "
+        f"attach --target-repo-root \"{target_root.as_posix()}\" "
+        f"--runtime-state-root \"{runtime_root.as_posix()}\""
+    )
+    if binding_state == "missing_light_pack":
+        return f"{attach_command} (see {docs_ref})"
+    if binding_state == "invalid_light_pack":
+        return f"Regenerate light pack via attach flow: {attach_command} (see {docs_ref})"
+    if binding_state == "stale_binding":
+        return f"Refresh binding by re-running attach flow: {attach_command} (see {docs_ref})"
     return None

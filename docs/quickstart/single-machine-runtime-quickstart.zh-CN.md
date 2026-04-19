@@ -44,10 +44,20 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap-runtime.ps1
 ```
 
 预期结果：
-- `.runtime/tasks`
-- `.runtime/artifacts`
-- `.runtime/replay`
+- `.runtime/` 下的兼容模式 runtime roots（bootstrap 保留 legacy 本地模式）
 - JSON status 输出包含 `total_tasks`
+
+## Runtime Root 模式
+`run-governed-task.py` 现在通过统一模型解析 runtime roots：
+- 默认：机器本地 runtime root（在 repo 外）
+- 兼容模式：通过 `--compat-runtime-root` 使用 repo-root `.runtime/`
+- 显式覆盖：`--runtime-root <path>`
+
+查看当前解析结果：
+
+```powershell
+python scripts/run-governed-task.py status --json
+```
 
 ## 创建并运行一个 runtime smoke task
 
@@ -60,10 +70,16 @@ python scripts/run-governed-task.py run --json
 ```
 
 预期输出：
-- `.runtime/tasks` 下的 task record
-- `.runtime/artifacts/<task>/<run>/verification-output/` 下的 gate artifacts
-- `.runtime/artifacts/<task>/<run>/evidence/` 下的 evidence bundle
-- `.runtime/artifacts/<task>/<run>/handoff/` 下的 handoff package
+- `runtime_roots.tasks_root` 下的 task record
+- `runtime_roots.artifacts_root/<task>/<run>/verification-output/` 下的 gate artifacts
+- `runtime_roots.artifacts_root/<task>/<run>/evidence/` 下的 evidence bundle
+- `runtime_roots.artifacts_root/<task>/<run>/handoff/` 下的 handoff package
+
+如需继续使用 repo-local `.runtime/`：
+
+```powershell
+python scripts/run-governed-task.py --compat-runtime-root run --json
+```
 
 ## 检查运行状态
 
@@ -82,7 +98,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All
 ```
 
 ## 清理
-只重置本地 runtime state：
+如果使用兼容模式并需要重置 repo-local runtime state：
 
 ```powershell
 Remove-Item -Recurse -Force .runtime

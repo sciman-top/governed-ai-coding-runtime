@@ -50,10 +50,20 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap-runtime.ps1
 ```
 
 Expected result:
-- `.runtime/tasks`
-- `.runtime/artifacts`
-- `.runtime/replay`
+- compatibility runtime roots under `.runtime/` (bootstrap keeps legacy local mode available)
 - JSON status output showing `total_tasks`
+
+## Runtime Root Modes
+`run-governed-task.py` now resolves runtime roots through one model:
+- default: machine-local runtime root (outside repo root)
+- compatibility mode: repo-root `.runtime/` via `--compat-runtime-root`
+- explicit override: `--runtime-root <path>`
+
+Inspect resolved roots:
+
+```powershell
+python scripts/run-governed-task.py status --json
+```
 
 ## Create And Run A Runtime Smoke Task
 
@@ -66,11 +76,17 @@ python scripts/run-governed-task.py run --json
 ```
 
 Expected runtime outputs:
-- persisted task record under `.runtime/tasks`
-- gate artifacts under `.runtime/artifacts/<task>/<run>/verification-output/`
-- evidence bundle under `.runtime/artifacts/<task>/<run>/evidence/`
-- handoff package under `.runtime/artifacts/<task>/<run>/handoff/`
+- persisted task record under `runtime_roots.tasks_root`
+- gate artifacts under `runtime_roots.artifacts_root/<task>/<run>/verification-output/`
+- evidence bundle under `runtime_roots.artifacts_root/<task>/<run>/evidence/`
+- handoff package under `runtime_roots.artifacts_root/<task>/<run>/handoff/`
 - a local runtime smoke result rather than a direct Codex-managed coding run
+
+Run in compatibility mode if you need repo-local `.runtime/`:
+
+```powershell
+python scripts/run-governed-task.py --compat-runtime-root run --json
+```
 
 ## Inspect Runtime Status
 
@@ -89,7 +105,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All
 ```
 
 ## Cleanup
-If you need to reset only local runtime state:
+If you run in compatibility mode and need to reset repo-local runtime state:
 
 ```powershell
 Remove-Item -Recurse -Force .runtime

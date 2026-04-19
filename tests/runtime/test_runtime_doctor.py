@@ -155,7 +155,9 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             missing_root = workspace / "missing"
             missing_root.mkdir()
             missing_completed = self._run_doctor_attachment(script, missing_root, workspace / "state" / "missing")
-            self.assertIn("OK attachment-posture-missing-light-pack", missing_completed.stdout)
+            self.assertNotEqual(missing_completed.returncode, 0)
+            self.assertIn("FAIL attachment-posture-missing-light-pack", missing_completed.stdout)
+            self.assertIn("REMEDIATE", missing_completed.stdout)
 
             healthy_root = workspace / "healthy"
             healthy_root.mkdir()
@@ -172,6 +174,7 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
                 gate_profile="default",
             )
             healthy_completed = self._run_doctor_attachment(script, healthy_root, workspace / "state" / "healthy")
+            self.assertEqual(healthy_completed.returncode, 0)
             self.assertIn("OK attachment-posture-healthy", healthy_completed.stdout)
 
             invalid_root = workspace / "invalid"
@@ -181,7 +184,9 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
                 encoding="utf-8",
             )
             invalid_completed = self._run_doctor_attachment(script, invalid_root, workspace / "state" / "invalid")
-            self.assertIn("OK attachment-posture-invalid-light-pack", invalid_completed.stdout)
+            self.assertNotEqual(invalid_completed.returncode, 0)
+            self.assertIn("FAIL attachment-posture-invalid-light-pack", invalid_completed.stdout)
+            self.assertIn("REMEDIATE", invalid_completed.stdout)
 
             stale_root = workspace / "stale"
             stale_root.mkdir()
@@ -202,7 +207,9 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             light_pack["binding_id"] = "binding-old-target"
             light_pack_path.write_text(json.dumps(light_pack), encoding="utf-8")
             stale_completed = self._run_doctor_attachment(script, stale_root, workspace / "state" / "stale")
-            self.assertIn("OK attachment-posture-stale-binding", stale_completed.stdout)
+            self.assertNotEqual(stale_completed.returncode, 0)
+            self.assertIn("FAIL attachment-posture-stale-binding", stale_completed.stdout)
+            self.assertIn("REMEDIATE", stale_completed.stdout)
 
     def _run_doctor_attachment(self, script: Path, attachment_root: Path, runtime_state_root: Path) -> subprocess.CompletedProcess:
         return subprocess.run(
@@ -218,9 +225,11 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
                 "-RuntimeStateRoot",
                 str(runtime_state_root),
             ],
-            check=True,
+            check=False,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             cwd=ROOT,
         )
 

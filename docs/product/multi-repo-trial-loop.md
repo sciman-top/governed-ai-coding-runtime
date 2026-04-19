@@ -42,9 +42,24 @@ Use explicit replay-quality values:
 - `insufficient`
 
 ## Current Boundary
-- this model records trial evidence
-- it does not yet run multi-repo trials by itself
-- the runner and onboarding kit belong to the next task
+- trial runner now supports attached-repo execution loops
+- each attachment can run `doctor/posture -> verification -> handoff aggregation`
+- optional write probe can be enabled to measure approval friction and write-path readiness
+- profile-only summaries remain supported as a compatibility path
+
+## Attached-Repo Loop
+For each attached repo, the trial runner executes:
+- inspect attachment posture
+- validate light pack and repo profile
+- run quick verification gates from attached repo commands
+- aggregate evidence, verification refs, and handoff refs
+- optional write-governance probe (`--execute-write-probe`)
+
+Unhealthy attachment posture is recorded explicitly with:
+- `attachment_posture`
+- `doctor_status`
+- `gate_failures` including `attachment_doctor`
+- `replay_quality: insufficient`
 
 ## Related
 - [Evidence Bundle Spec](../specs/evidence-bundle-spec.md)

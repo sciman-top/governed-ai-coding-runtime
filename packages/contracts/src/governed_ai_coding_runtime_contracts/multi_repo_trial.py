@@ -1,10 +1,20 @@
 """Structured evidence model for multi-repo onboarding trials."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from pathlib import Path
+import subprocess
 from typing import Literal
 
+from governed_ai_coding_runtime_contracts.artifact_store import LocalArtifactStore
+from governed_ai_coding_runtime_contracts.attached_write_governance import govern_attached_write_request
+from governed_ai_coding_runtime_contracts.repo_attachment import inspect_attachment_posture, validate_light_pack
 from governed_ai_coding_runtime_contracts.repo_profile import load_repo_profile
+from governed_ai_coding_runtime_contracts.verification_runner import (
+    build_repo_profile_verification_plan,
+    run_verification_plan,
+)
 
 
 FollowUpCategory = Literal["repo_specific", "onboarding_generic", "adapter_generic", "contract_generic"]
@@ -37,6 +47,8 @@ class MultiRepoTrialRecord:
     verification_refs: list[str]
     handoff_refs: list[str]
     follow_ups: list[MultiRepoTrialFollowUp]
+    doctor_status: str = "not_run"
+    write_probe_status: str = "skipped"
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,6 +74,8 @@ def build_multi_repo_trial_record(
     verification_refs: list[str],
     handoff_refs: list[str],
     follow_ups: list[dict] | list[MultiRepoTrialFollowUp],
+    doctor_status: str = "not_run",
+    write_probe_status: str = "skipped",
 ) -> MultiRepoTrialRecord:
     normalized_follow_ups = [_normalize_follow_up(item) for item in follow_ups]
     return MultiRepoTrialRecord(
@@ -79,16 +93,48 @@ def build_multi_repo_trial_record(
         verification_refs=_required_string_list(verification_refs, "verification_refs"),
         handoff_refs=_required_string_list(handoff_refs, "handoff_refs"),
         follow_ups=normalized_follow_ups,
+        doctor_status=_required_string(doctor_status, "doctor_status"),
+        write_probe_status=_required_string(write_probe_status, "write_probe_status"),
     )
 
 
 def run_multi_repo_trial(
     *,
-    repo_profile_paths: list[str],
     adapter_id: str,
     adapter_tier: str,
     unsupported_capabilities: list[str],
     trial_id: str = "multi-repo-trial",
+    repo_profile_paths: list[str] | None = None,
+    attachment_roots: list[str] | None = None,
+    attachment_runtime_state_roots: list[str] | None = None,
+    execute_write_probe: bool = False,
+) -> MultiRepoTrialRun:
+    if attachment_roots:
+        return _run_attached_repo_trial(
+            trial_id=trial_id,
+            adapter_id=adapter_id,
+            adapter_tier=adapter_tier,
+            unsupported_capabilities=unsupported_capabilities,
+            attachment_roots=attachment_roots,
+            attachment_runtime_state_roots=attachment_runtime_state_roots or [],
+            execute_write_probe=execute_write_probe,
+        )
+    return _run_profile_trial(
+        trial_id=trial_id,
+        adapter_id=adapter_id,
+        adapter_tier=adapter_tier,
+        unsupported_capabilities=unsupported_capabilities,
+        repo_profile_paths=repo_profile_paths or [],
+    )
+
+
+def _run_profile_trial(
+    *,
+    trial_id: str,
+    adapter_id: str,
+    adapter_tier: str,
+    unsupported_capabilities: list[str],
+    repo_profile_paths: list[str],
 ) -> MultiRepoTrialRun:
     records: list[MultiRepoTrialRecord] = []
     normalized_trial_id = _required_string(trial_id, "trial_id")
@@ -116,6 +162,8 @@ def run_multi_repo_trial(
                 ],
                 handoff_refs=[f"{base_ref}/handoff/package.json"],
                 follow_ups=follow_ups,
+                doctor_status="profile_validated",
+                write_probe_status="skipped",
             )
         )
     return MultiRepoTrialRun(
@@ -123,6 +171,182 @@ def run_multi_repo_trial(
         total_repos=len(records),
         records=records,
     )
+
+
+def _run_attached_repo_trial(
+    *,
+    trial_id: str,
+    adapter_id: str,
+    adapter_tier: str,
+    unsupported_capabilities: list[str],
+    attachment_roots: list[str],
+    attachment_runtime_state_roots: list[str],
+    execute_write_probe: bool,
+) -> MultiRepoTrialRun:
+    normalized_trial_id = _required_string(trial_id, "trial_id")
+    runtime_root_map = _runtime_root_map(attachment_roots, attachment_runtime_state_roots)
+    records: list[MultiRepoTrialRecord] = []
+
+    for attachment_root in attachment_roots:
+        root_path = Path(_required_string(attachment_root, "attachment_root"))
+        runtime_root = runtime_root_map.get(attachment_root) or (root_path.parent / "runtime-state" / root_path.name)
+        posture = inspect_attachment_posture(
+            target_repo_root=str(root_path),
+            runtime_state_root=str(runtime_root),
+        )
+        repo_id = posture.repo_id or root_path.name
+        repo_trial_id = f"{normalized_trial_id}-{repo_id}"
+        base_ref = f"artifacts/{repo_trial_id}"
+        doctor_status = posture.binding_state
+
+        if posture.binding_state != "healthy":
+            records.append(
+                build_multi_repo_trial_record(
+                    trial_id=repo_trial_id,
+                    repo_id=repo_id,
+                    repo_binding_id=posture.binding_id or f"binding-{repo_id}",
+                    attachment_posture=posture.binding_state,
+                    adapter_id=adapter_id,
+                    adapter_tier=adapter_tier,
+                    unsupported_capabilities=unsupported_capabilities,
+                    approval_friction="observe_only",
+                    gate_failures=["attachment_doctor"],
+                    replay_quality="insufficient",
+                    evidence_refs=[f"{base_ref}/evidence/attachment-posture.json"],
+                    verification_refs=[f"{base_ref}/verification-output/not-run.txt"],
+                    handoff_refs=[f"{base_ref}/handoff/not-run.json"],
+                    follow_ups=[
+                        {
+                            "category": "onboarding_generic",
+                            "summary": posture.reason or "repair attachment posture before trial",
+                        }
+                    ],
+                    doctor_status=doctor_status,
+                    write_probe_status="skipped",
+                )
+            )
+            continue
+
+        attachment = validate_light_pack(
+            target_repo_root=str(root_path),
+            light_pack_path=str(root_path / ".governed-ai" / "light-pack.json"),
+            runtime_state_root=str(runtime_root),
+        )
+        profile = load_repo_profile(attachment.repo_profile_path)
+        run_id = f"{repo_id}-trial"
+        plan = build_repo_profile_verification_plan(
+            "quick",
+            profile_raw=profile.raw,
+            task_id=repo_trial_id,
+            run_id=run_id,
+        )
+        artifact_store = LocalArtifactStore(runtime_root)
+        verification = run_verification_plan(
+            plan,
+            artifact_store=artifact_store,
+            execute_gate=lambda gate: _execute_gate(gate.command, cwd=root_path),
+        )
+        gate_failures = [gate for gate, result in verification.results.items() if result != "pass"]
+        handoff = artifact_store.write_json(
+            task_id=repo_trial_id,
+            run_id=run_id,
+            kind="handoff",
+            label="trial-loop",
+            payload={
+                "repo_id": profile.repo_id,
+                "binding_id": attachment.binding.binding_id,
+                "gate_failures": gate_failures,
+            },
+        )
+        evidence_refs = [verification.evidence_link]
+        write_probe_status = "skipped"
+        follow_ups = _follow_ups_for_profile(profile.compatibility_signals)
+
+        if execute_write_probe:
+            try:
+                governance = govern_attached_write_request(
+                    attachment_root=str(root_path),
+                    attachment_runtime_state_root=str(runtime_root),
+                    task_id=repo_trial_id,
+                    tool_name="write_file",
+                    target_path="docs/.trial-write-probe.txt",
+                    tier="medium",
+                    rollback_reference="git checkout -- docs/.trial-write-probe.txt",
+                )
+                write_probe_status = governance.governance_status
+                evidence_refs.append(governance.policy_decision.evidence_ref)
+                if governance.governance_status in {"paused", "denied"}:
+                    follow_ups.append(
+                        {
+                            "category": "adapter_generic",
+                            "summary": f"write probe status is {governance.governance_status}",
+                        }
+                    )
+            except ValueError as exc:
+                write_probe_status = "failed"
+                follow_ups.append({"category": "repo_specific", "summary": str(exc)})
+
+        if gate_failures:
+            follow_ups.append(
+                {
+                    "category": "repo_specific",
+                    "summary": "fix failing verification gates before expanding trial coverage",
+                }
+            )
+        replay_quality: ReplayQuality = "replay_ready" if not gate_failures else "needs_follow_up"
+        selected_tier = posture.adapter_preference or adapter_tier
+        records.append(
+            build_multi_repo_trial_record(
+                trial_id=repo_trial_id,
+                repo_id=profile.repo_id,
+                repo_binding_id=attachment.binding.binding_id,
+                attachment_posture=posture.binding_state,
+                adapter_id=adapter_id,
+                adapter_tier=selected_tier,
+                unsupported_capabilities=unsupported_capabilities,
+                approval_friction=_approval_friction_for_profile(profile.rollout_posture),
+                gate_failures=gate_failures,
+                replay_quality=replay_quality,
+                evidence_refs=evidence_refs,
+                verification_refs=list(verification.result_artifact_refs.values()),
+                handoff_refs=[handoff.relative_path],
+                follow_ups=follow_ups,
+                doctor_status=doctor_status,
+                write_probe_status=write_probe_status,
+            )
+        )
+
+    return MultiRepoTrialRun(
+        trial_id=normalized_trial_id,
+        total_repos=len(records),
+        records=records,
+    )
+
+
+def _runtime_root_map(attachment_roots: list[str], runtime_roots: list[str]) -> dict[str, Path]:
+    if not runtime_roots:
+        return {}
+    mapping: dict[str, Path] = {}
+    for index, attachment_root in enumerate(attachment_roots):
+        if index >= len(runtime_roots):
+            break
+        mapping[attachment_root] = Path(_required_string(runtime_roots[index], "attachment_runtime_state_root"))
+    return mapping
+
+
+def _execute_gate(command: str, *, cwd: Path) -> tuple[int, str]:
+    completed = subprocess.run(
+        command,
+        shell=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        cwd=cwd,
+        check=False,
+    )
+    output = "\n".join(part for part in [completed.stdout, completed.stderr] if part).strip()
+    return completed.returncode, output
 
 
 def _normalize_follow_up(item: dict | MultiRepoTrialFollowUp) -> MultiRepoTrialFollowUp:

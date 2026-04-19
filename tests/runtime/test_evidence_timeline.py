@@ -110,11 +110,28 @@ class EvidenceTimelineTests(unittest.TestCase):
     def test_adapter_evidence_summary_counts_codex_events(self) -> None:
         module = importlib.import_module("governed_ai_coding_runtime_contracts.evidence")
         timeline = module.EvidenceTimeline()
-        timeline.append("task-1", "adapter_file_change", {"path": "src/service.py"})
-        timeline.append("task-1", "adapter_tool_call", {"tool": "apply_patch"})
-        timeline.append("task-1", "adapter_gate_run", {"artifact_ref": "artifacts/task-1/test.txt"})
-        timeline.append("task-1", "adapter_approval_event", {"approval_id": "approval-123"})
-        timeline.append("task-1", "adapter_handoff", {"handoff_ref": "artifacts/task-1/handoff.json"})
+        timeline.append("task-1", "adapter_file_change", {"path": "src/service.py", "event_source": "live_adapter"})
+        timeline.append("task-1", "adapter_tool_call", {"tool": "apply_patch", "event_source": "live_adapter"})
+        timeline.append(
+            "task-1",
+            "adapter_gate_run",
+            {"artifact_ref": "artifacts/task-1/test.txt", "event_source": "live_adapter"},
+        )
+        timeline.append(
+            "task-1",
+            "adapter_approval_event",
+            {"approval_id": "approval-123", "event_source": "manual_handoff"},
+        )
+        timeline.append(
+            "task-1",
+            "adapter_handoff",
+            {"handoff_ref": "artifacts/task-1/handoff.json", "event_source": "manual_handoff"},
+        )
+        timeline.append(
+            "task-1",
+            "adapter_unsupported_event",
+            {"event_type": "tool_diff_chunk", "reason": "missing payload", "event_source": "process_bridge"},
+        )
 
         summary = module.summarize_adapter_evidence("task-1", timeline)
 
@@ -123,6 +140,9 @@ class EvidenceTimelineTests(unittest.TestCase):
         self.assertEqual(summary.gate_run_count, 1)
         self.assertEqual(summary.approval_event_count, 1)
         self.assertEqual(summary.handoff_ref_count, 1)
+        self.assertEqual(summary.unsupported_event_count, 1)
+        self.assertEqual(summary.live_event_count, 3)
+        self.assertEqual(summary.manual_event_count, 2)
 
     def test_evidence_bundle_can_embed_multi_repo_trial_feedback(self) -> None:
         module = importlib.import_module("governed_ai_coding_runtime_contracts.evidence")

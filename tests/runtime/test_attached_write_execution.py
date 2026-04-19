@@ -3,6 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 import importlib
+import json
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACTS_SRC = ROOT / "packages" / "contracts" / "src"
@@ -103,6 +104,75 @@ class AttachedWriteExecutionTests(unittest.TestCase):
         )
         self.assertEqual(executed.execution_status, "executed")
         self.assertEqual(target_file.read_text(encoding="utf-8"), "print('approved')\n")
+
+    def test_high_tier_fails_closed_when_approval_missing(self) -> None:
+        execution_module = importlib.import_module("governed_ai_coding_runtime_contracts.attached_write_execution")
+        target_repo, runtime_state_root = self._attached_target()
+        target_file = target_repo / "src" / "main.py"
+        target_file.parent.mkdir(parents=True, exist_ok=True)
+
+        denied = execution_module.execute_attached_write_request(
+            attachment_root=target_repo,
+            attachment_runtime_state_root=runtime_state_root,
+            task_id="task-write-exec-high-missing",
+            tool_name="write_file",
+            target_path="src/main.py",
+            tier="high",
+            rollback_reference="git diff -- src/main.py",
+            content="print('should-not-write')\n",
+        )
+
+        self.assertEqual(denied.execution_status, "denied")
+        self.assertEqual(denied.policy_decision.status, "deny")
+        self.assertEqual(denied.reason, "approval_required")
+        self.assertFalse(target_file.exists())
+
+    def test_high_tier_fails_closed_when_approval_is_stale(self) -> None:
+        governance_module = importlib.import_module("governed_ai_coding_runtime_contracts.attached_write_governance")
+        execution_module = importlib.import_module("governed_ai_coding_runtime_contracts.attached_write_execution")
+        target_repo, runtime_state_root = self._attached_target()
+        target_file = target_repo / "src" / "main.py"
+        target_file.parent.mkdir(parents=True, exist_ok=True)
+
+        governance = governance_module.govern_attached_write_request(
+            attachment_root=target_repo,
+            attachment_runtime_state_root=runtime_state_root,
+            task_id="task-write-exec-high-stale",
+            tool_name="write_file",
+            target_path="src/main.py",
+            tier="high",
+            rollback_reference="git diff -- src/main.py",
+        )
+        self.assertIsNotNone(governance.approval_id)
+        approval = execution_module.decide_attached_write_request(
+            attachment_runtime_state_root=runtime_state_root,
+            approval_id=governance.approval_id,
+            decision="approve",
+            decided_by="operator",
+        )
+        self.assertEqual(approval.status, "approved")
+
+        approval_path = runtime_state_root / "approvals" / f"{governance.approval_id}.json"
+        raw = json.loads(approval_path.read_text(encoding="utf-8"))
+        raw["decided_at"] = "2000-01-01T00:00:00+00:00"
+        approval_path.write_text(json.dumps(raw, indent=2, sort_keys=True), encoding="utf-8")
+
+        denied = execution_module.execute_attached_write_request(
+            attachment_root=target_repo,
+            attachment_runtime_state_root=runtime_state_root,
+            task_id="task-write-exec-high-stale",
+            tool_name="write_file",
+            target_path="src/main.py",
+            tier="high",
+            rollback_reference="git diff -- src/main.py",
+            content="print('stale')\n",
+            approval_id=governance.approval_id,
+        )
+
+        self.assertEqual(denied.execution_status, "denied")
+        self.assertEqual(denied.policy_decision.status, "deny")
+        self.assertEqual(denied.reason, "approval_stale_or_missing")
+        self.assertFalse(target_file.exists())
 
     def _attached_target(self) -> tuple[Path, Path]:
         repo_attachment = importlib.import_module("governed_ai_coding_runtime_contracts.repo_attachment")

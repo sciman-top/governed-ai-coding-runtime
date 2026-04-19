@@ -15,6 +15,7 @@ Make adapter compatibility posture explicit, especially when upstream capability
 - `unsupported` without an explicit `degrade_to` is treated as fail-closed.
 - `unsupported` with `degrade_to: fail_closed` is blocked.
 - `unsupported` with an explicit weaker posture is allowed only when the runtime can still explain the exact loss of enforcement.
+- Runtime selection output must include `requested_tier`, `degraded`, and `degrade_reason` when attachment preference cannot be satisfied by detected host capability.
 
 ## Operator Visibility
 - docs must explain the degrade behavior
@@ -37,3 +38,11 @@ Make adapter compatibility posture explicit, especially when upstream capability
 - `process_bridge` guarantees a captured process boundary plus same-contract verification.
 - `manual_handoff` guarantees explicit handoff posture plus same-contract verification.
 - Tier guarantees must be documented and machine-readable on the adapter contract surface.
+
+## Runtime-Selection Payload
+When adapter contracts declare `runtime_selection`, runtime-managed delegation exposes:
+- `fallback_chain`
+- `delegation_mode`
+- `degrade_policy_ref`
+
+This keeps degrade behavior executable and auditable from the runtime interface.

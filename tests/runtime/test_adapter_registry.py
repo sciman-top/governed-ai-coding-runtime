@@ -99,6 +99,139 @@ class AdapterRegistryTests(unittest.TestCase):
         self.assertEqual(manual_payload["adapters"][0]["adapter_tier"], "manual_handoff")
         self.assertEqual(process_payload["adapters"][0]["adapter_tier"], "process_bridge")
 
+    def test_executable_registry_can_register_probe_select_and_delegate(self) -> None:
+        adapter_registry = importlib.import_module("governed_ai_coding_runtime_contracts.adapter_registry")
+
+        registry = adapter_registry.ExecutableAdapterRegistry()
+        codex_contract = adapter_registry.build_adapter_contract(
+            adapter_id="codex-cli",
+            display_name="Codex CLI",
+            product_family="codex",
+            adapter_tier="process_bridge",
+            auth_ownership="user_owned_upstream_auth",
+            workspace_control="external_workspace",
+            event_visibility="logs_only",
+            mutation_model="direct_workspace_write",
+            continuation_model="manual",
+            evidence_model="manual_summary",
+            unsupported_capability_behavior="degrade_to_manual_handoff",
+        )
+
+        def codex_probe(_context: dict) -> object:
+            return adapter_registry.AdapterProbeResult(
+                adapter_id="codex-cli",
+                native_attach_available=False,
+                process_bridge_available=True,
+                reason="live attach unavailable in non-interactive session",
+                probe_source="live_probe",
+            )
+
+        def codex_delegate(request: dict) -> dict:
+            return {
+                "status": "delegated",
+                "request_id": request.get("request_id"),
+            }
+
+        registry.register(contract=codex_contract, probe=codex_probe, delegate=codex_delegate)
+        selection = registry.select("codex-cli", context={"attachment_root": "D:/repos/target"})
+        delegated = registry.delegate(
+            adapter_id="codex-cli",
+            context={"attachment_root": "D:/repos/target"},
+            request={"request_id": "req-001"},
+        )
+
+        self.assertEqual(selection.tier, "process_bridge")
+        self.assertEqual(selection.flow_kind, "process_bridge")
+        self.assertEqual(selection.probe_source, "live_probe")
+        self.assertEqual(delegated["status"], "delegated")
+        self.assertEqual(delegated["request_id"], "req-001")
+        self.assertEqual(delegated["adapter_id"], "codex-cli")
+
+    def test_executable_registry_supports_non_codex_fixture_through_same_interface(self) -> None:
+        adapter_registry = importlib.import_module("governed_ai_coding_runtime_contracts.adapter_registry")
+
+        registry = adapter_registry.ExecutableAdapterRegistry()
+        generic_contract = adapter_registry.build_adapter_contract(
+            adapter_id="generic.process.cli",
+            display_name="Generic Process CLI",
+            product_family="generic_process",
+            adapter_tier="manual_handoff",
+            auth_ownership="unsupported",
+            workspace_control="external_workspace",
+            event_visibility="logs_only",
+            mutation_model="git_diff",
+            continuation_model="stateless",
+            evidence_model="command_log",
+            unsupported_capability_behavior="degrade_to_advisory",
+        )
+        registry.register(contract=generic_contract)
+
+        discovered = registry.discover(product_family="generic_process")
+        selection = registry.select("generic.process.cli")
+        delegated = registry.delegate(adapter_id="generic.process.cli", request={"request_id": "req-002"})
+
+        self.assertEqual(len(discovered), 1)
+        self.assertEqual(discovered[0].adapter_id, "generic.process.cli")
+        self.assertEqual(selection.tier, "manual_handoff")
+        self.assertEqual(selection.flow_kind, "manual_handoff")
+        self.assertEqual(delegated["status"], "manual_handoff")
+
+    def test_attachment_scoped_selection_uses_requested_tier_and_detected_probe(self) -> None:
+        adapter_registry = importlib.import_module("governed_ai_coding_runtime_contracts.adapter_registry")
+
+        registry = adapter_registry.ExecutableAdapterRegistry()
+        codex_contract = adapter_registry.build_adapter_contract(
+            adapter_id="codex-cli",
+            display_name="Codex CLI",
+            product_family="codex",
+            adapter_tier="native_attach",
+            auth_ownership="user_owned_upstream_auth",
+            workspace_control="external_workspace",
+            event_visibility="logs_only",
+            mutation_model="direct_workspace_write",
+            continuation_model="manual",
+            evidence_model="manual_summary",
+            unsupported_capability_behavior="degrade_to_process_bridge",
+        )
+        generic_contract = adapter_registry.build_adapter_contract(
+            adapter_id="generic.process.cli",
+            display_name="Generic Process CLI",
+            product_family="generic_process",
+            adapter_tier="manual_handoff",
+            auth_ownership="unsupported",
+            workspace_control="external_workspace",
+            event_visibility="logs_only",
+            mutation_model="git_diff",
+            continuation_model="stateless",
+            evidence_model="command_log",
+            unsupported_capability_behavior="degrade_to_advisory",
+        )
+
+        def codex_probe(_context: dict) -> object:
+            return adapter_registry.AdapterProbeResult(
+                adapter_id="codex-cli",
+                native_attach_available=False,
+                process_bridge_available=True,
+                reason="host cannot attach natively",
+                probe_source="live_probe",
+            )
+
+        registry.register(contract=codex_contract, probe=codex_probe)
+        registry.register(contract=generic_contract)
+
+        selection = registry.select_for_attachment(
+            attachment={
+                "adapter_preference": "native_attach",
+                "allowed_adapters": ["codex-cli", "generic.process.cli"],
+            }
+        )
+
+        self.assertEqual(selection.adapter_id, "codex-cli")
+        self.assertEqual(selection.tier, "process_bridge")
+        self.assertTrue(selection.degraded)
+        self.assertEqual(selection.requested_tier, "native_attach")
+        self.assertIn("degraded", selection.degrade_reason)
+
 
 if __name__ == "__main__":
     unittest.main()

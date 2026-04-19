@@ -1,6 +1,7 @@
 """Attached target-repo write approval and execution bridge."""
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 import json
 from pathlib import Path
 
@@ -17,6 +18,7 @@ from governed_ai_coding_runtime_contracts.write_tool_runner import policy_decisi
 _APPROVALS_DIR = "approvals"
 _SUPPORTED_WRITE_TOOLS = {"write_file", "append_file"}
 _SUPPORTED_TIERS = {"low", "medium", "high"}
+_HIGH_RISK_APPROVAL_MAX_AGE_SECONDS = 60 * 60
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,6 +73,7 @@ def decide_attached_write_request(
     new_status = "approved" if normalized_decision == "approve" else "rejected"
     record["status"] = new_status
     record["decided_by"] = normalized_decided_by
+    record["decided_at"] = datetime.now(UTC).isoformat()
     approval_path.write_text(json.dumps(record, indent=2, sort_keys=True), encoding="utf-8")
 
     return AttachedApprovalDecisionResult(
@@ -186,7 +189,8 @@ def execute_attached_write_request(
                 approval_id=approval_id,
                 reason=str(exc),
             )
-        if approval_check["status"] == "rejected":
+        approval_status = approval_check["status"]
+        if approval_status == "rejected":
             denied = policy_decision_from_write_denial(
                 task_id=normalized_task_id,
                 tool_name=normalized_tool_name,
@@ -206,7 +210,28 @@ def execute_attached_write_request(
                 approval_status="rejected",
                 reason="approval_rejected",
             )
-        if approval_check["status"] != "approved":
+        if approval_status in {"missing", "pending", "stale"} and normalized_tier == "high":
+            denied = policy_decision_from_write_denial(
+                task_id=normalized_task_id,
+                tool_name=normalized_tool_name,
+                target_path=normalized_target_path,
+                tier=normalized_tier,
+                reason="high risk write requires fresh approved request",
+            )
+            reason = "approval_stale_or_missing" if approval_status == "stale" else "approval_required"
+            return AttachedWriteExecutionResult(
+                repo_id=profile.repo_id,
+                binding_id=attachment.binding.binding_id,
+                task_id=normalized_task_id,
+                target_path=normalized_target_path,
+                write_tier=normalized_tier,
+                execution_status="denied",
+                policy_decision=denied,
+                approval_id=approval_id,
+                approval_status=approval_status,
+                reason=reason,
+            )
+        if approval_status != "approved":
             governance = govern_attached_write_request(
                 attachment_root=attachment_root_path,
                 attachment_runtime_state_root=runtime_state_root_path,
@@ -225,7 +250,7 @@ def execute_attached_write_request(
                 execution_status="blocked",
                 policy_decision=governance.policy_decision,
                 approval_id=governance.approval_id,
-                approval_status="pending",
+                approval_status=approval_status,
                 reason="approval_required",
             )
 
@@ -286,10 +311,10 @@ def _require_approved_request(
     tier: str,
 ) -> dict:
     if not approval_id:
-        return {"status": "pending"}
+        return {"status": "missing"}
     approval_path = _approval_record_path(runtime_state_root, approval_id)
     if not approval_path.exists():
-        return {"status": "pending"}
+        return {"status": "missing"}
     record = json.loads(approval_path.read_text(encoding="utf-8"))
     expected = {
         "task_id": task_id,
@@ -301,7 +326,15 @@ def _require_approved_request(
         if _required_string(record.get(field_name), field_name) != expected_value:
             msg = f"approval request mismatch on {field_name}"
             raise ValueError(msg)
-    return {"status": _required_string(record.get("status"), "status")}
+    status = _required_string(record.get("status"), "status")
+    if status == "approved":
+        decided_at = _parse_timestamp(record.get("decided_at"))
+        if decided_at is None:
+            return {"status": "stale"}
+        age_seconds = (datetime.now(UTC) - decided_at).total_seconds()
+        if age_seconds > _HIGH_RISK_APPROVAL_MAX_AGE_SECONDS:
+            return {"status": "stale"}
+    return {"status": status}
 
 
 def _approval_record_path(runtime_state_root: Path, approval_id: str) -> Path:
@@ -314,3 +347,18 @@ def _required_string(value: str | None, field_name: str) -> str:
         msg = f"{field_name} is required"
         raise ValueError(msg)
     return value.strip()
+
+
+def _parse_timestamp(value: object) -> datetime | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    normalized = value.strip()
+    if normalized.endswith("Z"):
+        normalized = normalized[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=UTC)
+    return parsed

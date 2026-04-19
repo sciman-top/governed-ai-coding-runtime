@@ -1,5 +1,6 @@
 """Stable session bridge command contract for interactive governed actions."""
 
+from dataclasses import asdict
 import hashlib
 import json
 import subprocess
@@ -7,20 +8,30 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
+from governed_ai_coding_runtime_contracts.artifact_store import LocalArtifactStore
 from governed_ai_coding_runtime_contracts.attached_write_execution import (
     decide_attached_write_request,
     execute_attached_write_request,
 )
 from governed_ai_coding_runtime_contracts.attached_write_governance import govern_attached_write_request
+from governed_ai_coding_runtime_contracts.codex_adapter import (
+    CodexSessionEvidence,
+    handshake_codex_session,
+    record_codex_session_evidence,
+)
+from governed_ai_coding_runtime_contracts.evidence import EvidenceTimeline, summarize_adapter_evidence
+from governed_ai_coding_runtime_contracts.operator_queries import query_operator_attachment_surface
 from governed_ai_coding_runtime_contracts.policy_decision import PolicyDecision
 from governed_ai_coding_runtime_contracts.repo_attachment import inspect_attachment_posture, validate_light_pack
 from governed_ai_coding_runtime_contracts.repo_profile import load_repo_profile
 from governed_ai_coding_runtime_contracts.runtime_status import RuntimeStatusStore
 from governed_ai_coding_runtime_contracts.task_store import FileTaskStore
+from governed_ai_coding_runtime_contracts.tool_runner import execute_governed_command, govern_execution_request
 from governed_ai_coding_runtime_contracts.verification_runner import (
     VerificationPlan,
     build_repo_profile_verification_plan,
     build_verification_plan,
+    run_verification_plan,
 )
 
 
@@ -45,6 +56,7 @@ SessionBridgeResultStatus = Literal[
     "bound",
     "approval_required",
     "verification_requested",
+    "verification_completed",
     "launch_completed",
     "manual_handoff",
     "degraded",
@@ -72,6 +84,7 @@ COMMAND_TYPES = {
 EXECUTION_COMMAND_TYPES = {"run_quick_gate", "run_full_gate", "write_execute"}
 RISK_TIERS = {"low", "medium", "high"}
 EXECUTION_MODES = {"read_only", "execute", "requires_approval"}
+GOVERNED_TOOL_TYPES = {"shell", "git", "package"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -98,6 +111,32 @@ class SessionBridgeResult:
     policy_decision_ref: str | None = None
     unsupported_capability_behavior: str | None = None
     reason: str | None = None
+
+
+def session_bridge_result_to_dict(result: SessionBridgeResult) -> dict:
+    return asdict(result)
+
+
+def session_bridge_result_from_dict(raw: dict) -> SessionBridgeResult:
+    if not isinstance(raw, dict):
+        msg = "session bridge result payload must be an object"
+        raise ValueError(msg)
+    payload = raw.get("payload")
+    if not isinstance(payload, dict):
+        msg = "payload must be an object"
+        raise ValueError(msg)
+    return SessionBridgeResult(
+        command_id=_required_string(raw.get("command_id"), "command_id"),
+        command_type=_required_enum(raw.get("command_type"), "command_type", COMMAND_TYPES),
+        status=_required_enum(raw.get("status"), "status", set(SessionBridgeResultStatus.__args__)),
+        payload=dict(payload),
+        policy_decision_ref=_optional_string(raw.get("policy_decision_ref"), "policy_decision_ref"),
+        unsupported_capability_behavior=_optional_string(
+            raw.get("unsupported_capability_behavior"),
+            "unsupported_capability_behavior",
+        ),
+        reason=_optional_string(raw.get("reason"), "reason"),
+    )
 
 
 def build_session_bridge_command(
@@ -242,8 +281,14 @@ def handle_session_bridge_command(
                 "attachments": [
                     {
                         "repo_id": attachment.repo_id,
+                        "binding_id": attachment.binding_id,
                         "binding_state": attachment.binding_state,
+                        "light_pack_path": attachment.light_pack_path,
                         "adapter_preference": attachment.adapter_preference,
+                        "gate_profile": attachment.gate_profile,
+                        "reason": attachment.reason,
+                        "remediation": attachment.remediation,
+                        "fail_closed": attachment.fail_closed,
                     }
                     for attachment in snapshot.attachments
                 ],
@@ -251,12 +296,89 @@ def handle_session_bridge_command(
         )
 
     if command.command_type == "inspect_evidence":
-        return _inspect_evidence(command, task_root=Path(task_root))
+        return _inspect_evidence(
+            command,
+            task_root=Path(task_root),
+            attachment_root=attachment_root,
+            attachment_runtime_state_root=attachment_runtime_state_root,
+        )
 
     if command.command_type == "inspect_handoff":
-        return _inspect_handoff(command, task_root=Path(task_root))
+        return _inspect_handoff(
+            command,
+            task_root=Path(task_root),
+            attachment_root=attachment_root,
+            attachment_runtime_state_root=attachment_runtime_state_root,
+        )
 
     if command.command_type == "write_request":
+        tool_name = _payload_required_string(command.payload, "tool_name")
+        if tool_name in GOVERNED_TOOL_TYPES:
+            command_text = _payload_required_string(command.payload, "command")
+            rollback_reference = _payload_required_string(command.payload, "rollback_reference")
+            governance = govern_execution_request(
+                tool_name=tool_name,
+                command=command_text,
+                tier=command.risk_tier,
+                rollback_reference=rollback_reference,
+            )
+            execution_id = _execution_id(command)
+            continuation_id = _continuation_id(command, execution_id=execution_id)
+            approval_id = None
+            approval_ref = None
+            if governance.requires_approval:
+                if attachment_runtime_state_root is None:
+                    return _degraded(
+                        command,
+                        reason="attachment_runtime_state_root is required for approval-tracked tool execution",
+                    )
+                approval_id = _tool_approval_id(command)
+                approval_ref = _persist_tool_approval_request(
+                    runtime_state_root=Path(attachment_runtime_state_root),
+                    approval_id=approval_id,
+                    task_id=command.task_id,
+                    tool_name=tool_name,
+                    command_text=command_text,
+                    tier=command.risk_tier,
+                    rollback_reference=rollback_reference,
+                )
+                execution_id = _execution_id(command, approval_id=approval_id)
+                continuation_id = _continuation_id(command, approval_id=approval_id, execution_id=execution_id)
+            policy_ref = f"artifacts/{command.task_id}/policy/tool-{governance.status}.json"
+            status: SessionBridgeResultStatus
+            if governance.status == "deny":
+                status = "denied"
+            elif governance.status == "escalate":
+                status = "approval_required"
+            else:
+                status = "write_requested"
+            return SessionBridgeResult(
+                command_id=command.command_id,
+                command_type=command.command_type,
+                status=status,
+                payload={
+                    "execution_id": execution_id,
+                    "continuation_id": continuation_id,
+                    "adapter_id": command.adapter_id,
+                    "session_identity": _session_identity(command, continuation_id=continuation_id),
+                    "task_id": command.task_id,
+                    "tool_name": tool_name,
+                    "command": command_text,
+                    "write_tier": command.risk_tier,
+                    "governance_status": governance.status,
+                    "approval_id": approval_id,
+                    "approval_ref": approval_ref,
+                    "task_state": "approval_pending" if governance.requires_approval else "ready",
+                    "policy_status": governance.status,
+                    "policy_decision_ref": policy_ref,
+                    "artifact_refs": [],
+                    "handoff_ref": None,
+                    "replay_ref": None,
+                    "reason": governance.reason,
+                    "rollback_reference": rollback_reference,
+                },
+                policy_decision_ref=policy_ref,
+            )
         if attachment_root is None or attachment_runtime_state_root is None:
             return _degraded(command, reason="attachment_root and attachment_runtime_state_root are required")
         try:
@@ -264,7 +386,7 @@ def handle_session_bridge_command(
                 attachment_root=attachment_root,
                 attachment_runtime_state_root=attachment_runtime_state_root,
                 task_id=command.task_id,
-                tool_name=_payload_required_string(command.payload, "tool_name"),
+                tool_name=tool_name,
                 target_path=_payload_required_string(command.payload, "target_path"),
                 tier=_payload_required_string(command.payload, "tier"),
                 rollback_reference=_payload_required_string(command.payload, "rollback_reference"),
@@ -279,13 +401,22 @@ def handle_session_bridge_command(
             result_status = "approval_required"
         else:
             result_status = "write_requested"
+        execution_id = _execution_id(command, approval_id=governance.approval_id)
+        continuation_id = _continuation_id(command, approval_id=governance.approval_id, execution_id=execution_id)
+        approval_ref = _approval_record_ref(
+            attachment_runtime_state_root=attachment_runtime_state_root,
+            approval_id=governance.approval_id,
+        )
 
         return SessionBridgeResult(
             command_id=command.command_id,
             command_type=command.command_type,
             status=result_status,
             payload={
-                "execution_id": _execution_id(command),
+                "execution_id": execution_id,
+                "continuation_id": continuation_id,
+                "adapter_id": command.adapter_id,
+                "session_identity": _session_identity(command, continuation_id=continuation_id),
                 "repo_id": governance.repo_id,
                 "binding_id": governance.binding_id,
                 "task_id": governance.task_id,
@@ -293,9 +424,13 @@ def handle_session_bridge_command(
                 "write_tier": governance.write_tier,
                 "governance_status": governance.governance_status,
                 "approval_id": governance.approval_id,
+                "approval_ref": approval_ref,
                 "task_state": governance.task_state,
                 "policy_status": governance.policy_decision.status,
                 "policy_decision_ref": governance.policy_decision.evidence_ref,
+                "artifact_refs": [],
+                "handoff_ref": None,
+                "replay_ref": None,
                 "reason": governance.reason,
             },
             policy_decision_ref=governance.policy_decision.evidence_ref,
@@ -319,7 +454,10 @@ def handle_session_bridge_command(
             command_type=command.command_type,
             status="approval_recorded",
             payload={
-                "execution_id": _execution_id(command),
+                "execution_id": _execution_id(command, approval_id=approval.approval_id),
+                "continuation_id": _continuation_id(command, approval_id=approval.approval_id),
+                "adapter_id": command.adapter_id,
+                "session_identity": _session_identity(command),
                 "approval_id": approval.approval_id,
                 "approval_status": approval.status,
                 "decided_by": approval.decided_by,
@@ -338,12 +476,219 @@ def handle_session_bridge_command(
                 command_id=command.command_id,
                 command_type=command.command_type,
                 status="approval_required",
-                payload={"escalation_context": command.escalation_context or {}},
+                payload={
+                    "execution_id": _execution_id(command),
+                    "continuation_id": _continuation_id(command),
+                    "escalation_context": command.escalation_context or {},
+                },
                 policy_decision_ref=command.policy_decision_ref,
             )
         if not is_execution_command(command):
             return _degraded(command, reason="execution command is not executable")
         if command.command_type == "write_execute":
+            tool_name = _payload_required_string(command.payload, "tool_name")
+            if tool_name in GOVERNED_TOOL_TYPES:
+                command_text = _payload_required_string(command.payload, "command")
+                rollback_reference = _payload_required_string(command.payload, "rollback_reference")
+                approval_id = _payload_optional_string(command.payload, "approval_id")
+                approval_status = _tool_approval_status(
+                    attachment_runtime_state_root=attachment_runtime_state_root,
+                    approval_id=approval_id,
+                )
+                if approval_status == "rejected":
+                    return SessionBridgeResult(
+                        command_id=command.command_id,
+                        command_type=command.command_type,
+                        status="denied",
+                        payload={
+                            "execution_id": _execution_id(command, approval_id=approval_id),
+                            "continuation_id": _continuation_id(command, approval_id=approval_id),
+                            "adapter_id": command.adapter_id,
+                            "session_identity": _session_identity(command),
+                            "task_id": command.task_id,
+                            "tool_name": tool_name,
+                            "command": command_text,
+                            "execution_status": "denied",
+                            "approval_id": approval_id,
+                            "approval_status": approval_status,
+                            "artifact_ref": None,
+                            "artifact_refs": [],
+                            "approval_ref": _approval_record_ref(
+                                attachment_runtime_state_root=attachment_runtime_state_root,
+                                approval_id=approval_id,
+                            ),
+                            "handoff_ref": None,
+                            "replay_ref": None,
+                            "rollback_reference": rollback_reference,
+                            "reason": "approval_rejected",
+                        },
+                        policy_decision_ref=command.policy_decision_ref,
+                    )
+                if command.risk_tier == "high" and approval_status in {"missing", "pending", "stale"}:
+                    return SessionBridgeResult(
+                        command_id=command.command_id,
+                        command_type=command.command_type,
+                        status="denied",
+                        payload={
+                            "execution_id": _execution_id(command, approval_id=approval_id),
+                            "continuation_id": _continuation_id(command, approval_id=approval_id),
+                            "adapter_id": command.adapter_id,
+                            "session_identity": _session_identity(command),
+                            "task_id": command.task_id,
+                            "tool_name": tool_name,
+                            "command": command_text,
+                            "execution_status": "denied",
+                            "approval_id": approval_id,
+                            "approval_status": approval_status,
+                            "artifact_ref": None,
+                            "artifact_refs": [],
+                            "approval_ref": _approval_record_ref(
+                                attachment_runtime_state_root=attachment_runtime_state_root,
+                                approval_id=approval_id,
+                            ),
+                            "handoff_ref": None,
+                            "replay_ref": None,
+                            "rollback_reference": rollback_reference,
+                            "reason": "high risk tool execution requires fresh approval",
+                        },
+                        policy_decision_ref=command.policy_decision_ref,
+                    )
+                if command.risk_tier in {"medium", "high"} and approval_status in {"missing", "pending"}:
+                    return SessionBridgeResult(
+                        command_id=command.command_id,
+                        command_type=command.command_type,
+                        status="approval_required",
+                        payload={
+                            "execution_id": _execution_id(command, approval_id=approval_id),
+                            "continuation_id": _continuation_id(command, approval_id=approval_id),
+                            "adapter_id": command.adapter_id,
+                            "session_identity": _session_identity(command),
+                            "task_id": command.task_id,
+                            "tool_name": tool_name,
+                            "command": command_text,
+                            "execution_status": "blocked",
+                            "approval_id": approval_id,
+                            "approval_status": approval_status,
+                            "artifact_ref": None,
+                            "artifact_refs": [],
+                            "approval_ref": _approval_record_ref(
+                                attachment_runtime_state_root=attachment_runtime_state_root,
+                                approval_id=approval_id,
+                            ),
+                            "handoff_ref": None,
+                            "replay_ref": None,
+                            "rollback_reference": rollback_reference,
+                            "reason": "approval_required",
+                        },
+                        policy_decision_ref=command.policy_decision_ref,
+                    )
+
+                execution = execute_governed_command(
+                    command=command_text,
+                    cwd=str(_verification_cwd(repo_root=Path(repo_root), attachment_root=attachment_root)),
+                )
+                execution_status = "executed" if execution.exit_code == 0 else "denied"
+                artifact_store = LocalArtifactStore(
+                    _verification_artifact_root(
+                        task_root=Path(task_root),
+                        attachment_runtime_state_root=attachment_runtime_state_root,
+                    )
+                )
+                tool_artifact = artifact_store.write_json(
+                    task_id=command.task_id,
+                    run_id=_execution_id(command, approval_id=approval_id),
+                    kind="execution-tool",
+                    label=tool_name,
+                    payload={
+                        "command": command_text,
+                        "exit_code": execution.exit_code,
+                        "output": execution.output,
+                        "tier": command.risk_tier,
+                        "rollback_reference": rollback_reference,
+                    },
+                )
+                execution_id = _execution_id(command, approval_id=approval_id)
+                continuation_id = _continuation_id(command, approval_id=approval_id, execution_id=execution_id)
+                handoff_ref, replay_ref = _write_write_flow_refs(
+                    task_id=command.task_id,
+                    execution_id=execution_id,
+                    runtime_state_root=_verification_artifact_root(
+                        task_root=Path(task_root),
+                        attachment_runtime_state_root=attachment_runtime_state_root,
+                    ),
+                    payload={
+                        "adapter_id": command.adapter_id,
+                        "task_id": command.task_id,
+                        "tool_name": tool_name,
+                        "command": command_text,
+                        "execution_status": execution_status,
+                        "approval_id": approval_id,
+                        "artifact_ref": tool_artifact.relative_path,
+                        "policy_decision_ref": command.policy_decision_ref,
+                    },
+                )
+                adapter_event_ref, adapter_event_summary = _record_adapter_events(
+                    command=command,
+                    artifact_store=artifact_store,
+                    task_id=command.task_id,
+                    run_id=execution_id,
+                    execution_id=execution_id,
+                    continuation_id=continuation_id,
+                    file_changes=[],
+                    tool_calls=[
+                        {
+                            "tool": tool_name,
+                            "command": command_text,
+                            "exit_code": execution.exit_code,
+                        }
+                    ],
+                    gate_runs=[],
+                    approvals=[approval_id] if approval_id else [],
+                    handoff_refs=[handoff_ref] if handoff_ref else [],
+                    unsupported_events=(
+                        [{"event_type": "tool_command_failure", "reason": execution.output}]
+                        if execution.exit_code != 0
+                        else []
+                    ),
+                )
+                artifact_refs = _dedupe_preserve_order(
+                    [
+                        ref
+                        for ref in [tool_artifact.relative_path, handoff_ref, replay_ref, adapter_event_ref]
+                        if ref
+                    ]
+                )
+                return SessionBridgeResult(
+                    command_id=command.command_id,
+                    command_type=command.command_type,
+                    status="write_executed" if execution_status == "executed" else "denied",
+                    payload={
+                        "execution_id": execution_id,
+                        "continuation_id": continuation_id,
+                        "adapter_id": command.adapter_id,
+                        "session_identity": _session_identity(command, continuation_id=continuation_id),
+                        "task_id": command.task_id,
+                        "tool_name": tool_name,
+                        "command": command_text,
+                        "execution_status": execution_status,
+                        "artifact_ref": tool_artifact.relative_path,
+                        "artifact_refs": artifact_refs,
+                        "adapter_event_ref": adapter_event_ref,
+                        "adapter_event_summary": adapter_event_summary,
+                        "approval_id": approval_id,
+                        "approval_ref": _approval_record_ref(
+                            attachment_runtime_state_root=attachment_runtime_state_root,
+                            approval_id=approval_id,
+                        ),
+                        "approval_status": "approved" if approval_id else None,
+                        "handoff_ref": handoff_ref,
+                        "replay_ref": replay_ref,
+                        "bytes_written": None,
+                        "reason": execution.output if execution.exit_code != 0 else None,
+                        "rollback_reference": rollback_reference,
+                    },
+                    policy_decision_ref=command.policy_decision_ref,
+                )
             if attachment_root is None or attachment_runtime_state_root is None:
                 return _degraded(command, reason="attachment_root and attachment_runtime_state_root are required")
             try:
@@ -366,12 +711,66 @@ def handle_session_bridge_command(
                 status = "approval_required"
             elif execution.execution_status == "denied":
                 status = "denied"
+            execution_id = _execution_id(command, approval_id=execution.approval_id)
+            continuation_id = _continuation_id(command, approval_id=execution.approval_id, execution_id=execution_id)
+            approval_ref = _approval_record_ref(
+                attachment_runtime_state_root=attachment_runtime_state_root,
+                approval_id=execution.approval_id,
+            )
+            handoff_ref, replay_ref = _write_write_flow_refs(
+                task_id=execution.task_id,
+                execution_id=execution_id,
+                runtime_state_root=Path(attachment_runtime_state_root),
+                payload={
+                    "adapter_id": command.adapter_id,
+                    "task_id": execution.task_id,
+                    "execution_status": execution.execution_status,
+                    "target_path": execution.target_path,
+                    "approval_id": execution.approval_id,
+                    "artifact_ref": execution.artifact_ref,
+                    "policy_decision_ref": execution.policy_decision.evidence_ref,
+                },
+            )
+            adapter_event_ref, adapter_event_summary = _record_adapter_events(
+                command=command,
+                artifact_store=LocalArtifactStore(Path(attachment_runtime_state_root)),
+                task_id=execution.task_id,
+                run_id=execution_id,
+                execution_id=execution_id,
+                continuation_id=continuation_id,
+                file_changes=[execution.target_path] if execution.execution_status == "executed" else [],
+                tool_calls=[
+                    {
+                        "tool": _payload_required_string(command.payload, "tool_name"),
+                        "target_path": execution.target_path,
+                        "status": execution.execution_status,
+                    }
+                ],
+                gate_runs=[],
+                approvals=[execution.approval_id] if execution.approval_id else [],
+                handoff_refs=[handoff_ref] if handoff_ref else [],
+                unsupported_events=(
+                    [{"event_type": "write_execution_denied", "reason": execution.reason}]
+                    if execution.execution_status == "denied"
+                    else []
+                ),
+            )
+            artifact_refs = _dedupe_preserve_order(
+                [
+                    ref
+                    for ref in [execution.artifact_ref, handoff_ref, replay_ref, adapter_event_ref]
+                    if ref
+                ]
+            )
             return SessionBridgeResult(
                 command_id=command.command_id,
                 command_type=command.command_type,
                 status=status,
                 payload={
-                    "execution_id": _execution_id(command),
+                    "execution_id": execution_id,
+                    "continuation_id": continuation_id,
+                    "adapter_id": command.adapter_id,
+                    "session_identity": _session_identity(command, continuation_id=continuation_id),
                     "repo_id": execution.repo_id,
                     "binding_id": execution.binding_id,
                     "task_id": execution.task_id,
@@ -379,28 +778,114 @@ def handle_session_bridge_command(
                     "write_tier": execution.write_tier,
                     "execution_status": execution.execution_status,
                     "artifact_ref": execution.artifact_ref,
+                    "artifact_refs": artifact_refs,
+                    "adapter_event_ref": adapter_event_ref,
+                    "adapter_event_summary": adapter_event_summary,
                     "approval_id": execution.approval_id,
+                    "approval_ref": approval_ref,
                     "approval_status": execution.approval_status,
+                    "handoff_ref": handoff_ref,
+                    "replay_ref": replay_ref,
                     "bytes_written": execution.bytes_written,
                     "reason": execution.reason,
                 },
                 policy_decision_ref=execution.policy_decision.evidence_ref,
             )
         mode = "quick" if command.command_type == "run_quick_gate" else "full"
-        plan = _verification_plan_for_command(
-            command,
-            mode=mode,
-            attachment_root=attachment_root,
-            attachment_runtime_state_root=attachment_runtime_state_root,
+        try:
+            plan = _verification_plan_for_command(
+                command,
+                mode=mode,
+                attachment_root=attachment_root,
+                attachment_runtime_state_root=attachment_runtime_state_root,
+            )
+        except ValueError as exc:
+            return _degraded(command, reason=f"contract_reader_error: {exc}")
+        run_id = _run_id_from_payload(command.payload)
+        execution_id = _execution_id(command, run_id=run_id)
+        continuation_id = _continuation_id(command, run_id=run_id, execution_id=execution_id)
+        try:
+            plan_only = _payload_optional_bool(command.payload, "plan_only")
+        except ValueError as exc:
+            return _degraded(command, reason=str(exc))
+        if plan_only:
+            return SessionBridgeResult(
+                command_id=command.command_id,
+                command_type=command.command_type,
+                status="verification_requested",
+                payload={
+                    "execution_id": execution_id,
+                    "continuation_id": continuation_id,
+                    "adapter_id": command.adapter_id,
+                    "session_identity": _session_identity(command, continuation_id=continuation_id),
+                    "run_id": run_id,
+                    "mode": plan.mode,
+                    "plan_only": True,
+                    "gate_order": [gate.gate_id for gate in plan.gates],
+                    "commands": [gate.command for gate in plan.gates],
+                },
+                policy_decision_ref=command.policy_decision_ref,
+            )
+        artifact_store = LocalArtifactStore(
+            _verification_artifact_root(
+                task_root=Path(task_root),
+                attachment_runtime_state_root=attachment_runtime_state_root,
+            )
+        )
+        verification_artifact = run_verification_plan(
+            plan,
+            artifact_store=artifact_store,
+            execute_gate=lambda gate: _execute_gate_at_root(
+                gate.command,
+                cwd=_verification_cwd(repo_root=Path(repo_root), attachment_root=attachment_root),
+            ),
+        )
+        adapter_event_ref, adapter_event_summary = _record_adapter_events(
+            command=command,
+            artifact_store=artifact_store,
+            task_id=command.task_id,
+            run_id=execution_id,
+            execution_id=execution_id,
+            continuation_id=continuation_id,
+            file_changes=[],
+            tool_calls=[],
+            gate_runs=list(verification_artifact.result_artifact_refs.values()),
+            approvals=[],
+            handoff_refs=[],
+            unsupported_events=(
+                [
+                    {
+                        "event_type": "gate_failed",
+                        "reason": gate_id,
+                    }
+                    for gate_id, result in verification_artifact.results.items()
+                    if result != "pass"
+                ]
+            ),
         )
         return SessionBridgeResult(
             command_id=command.command_id,
             command_type=command.command_type,
-            status="verification_requested",
+            status="verification_completed",
             payload={
+                "execution_id": execution_id,
+                "continuation_id": continuation_id,
+                "adapter_id": command.adapter_id,
+                "session_identity": _session_identity(command, continuation_id=continuation_id),
+                "run_id": run_id,
                 "mode": plan.mode,
+                "plan_only": False,
                 "gate_order": [gate.gate_id for gate in plan.gates],
                 "commands": [gate.command for gate in plan.gates],
+                "results": verification_artifact.results,
+                "result_artifact_refs": verification_artifact.result_artifact_refs,
+                "risky_artifact_refs": verification_artifact.risky_artifact_refs,
+                "evidence_link": verification_artifact.evidence_link,
+                "adapter_event_ref": adapter_event_ref,
+                "adapter_event_summary": adapter_event_summary,
+                "outcome": "pass"
+                if all(result == "pass" for result in verification_artifact.results.values())
+                else "fail",
             },
             policy_decision_ref=command.policy_decision_ref,
         )
@@ -410,7 +895,13 @@ def handle_session_bridge_command(
             command_id=command.command_id,
             command_type=command.command_type,
             status="approval_required",
-            payload={"escalation_context": command.escalation_context or {}},
+            payload={
+                "execution_id": _execution_id(command),
+                "continuation_id": _continuation_id(command),
+                "adapter_id": command.adapter_id,
+                "session_identity": _session_identity(command),
+                "escalation_context": command.escalation_context or {},
+            },
             policy_decision_ref=command.policy_decision_ref,
         )
 
@@ -513,71 +1004,131 @@ def _degraded(command: SessionBridgeCommand, *, reason: str) -> SessionBridgeRes
     )
 
 
-def _inspect_evidence(command: SessionBridgeCommand, *, task_root: Path) -> SessionBridgeResult:
-    try:
-        record = FileTaskStore(task_root).load(command.task_id)
-    except FileNotFoundError:
-        return _degraded(command, reason=f"task record not found: {command.task_id}")
-
+def _inspect_evidence(
+    command: SessionBridgeCommand,
+    *,
+    task_root: Path,
+    attachment_root: str | Path | None,
+    attachment_runtime_state_root: str | Path | None,
+) -> SessionBridgeResult:
     run_id = _payload_optional_string(command.payload, "run_id")
-    selected_runs = [run for run in record.run_history if run_id is None or run.run_id == run_id]
-    transition_evidence_refs = [
-        transition.evidence_ref
-        for transition in record.transition_history
-        if transition.evidence_ref
-    ]
+    query = query_operator_attachment_surface(
+        task_root=task_root,
+        task_id=command.task_id,
+        repo_binding_id=command.repo_binding_id,
+        run_id=run_id,
+        attachment_root=attachment_root,
+        attachment_runtime_state_root=attachment_runtime_state_root,
+    )
+
+    transition_evidence_refs: list[str] = []
+    rollback_refs: list[str] = []
+    if query.task_found:
+        record = FileTaskStore(task_root).load(command.task_id)
+        selected_runs = [run for run in record.run_history if run_id is None or run.run_id == run_id]
+        transition_evidence_refs = [
+            transition.evidence_ref
+            for transition in record.transition_history
+            if transition.evidence_ref
+        ]
+        rollback_refs = _dedupe_preserve_order(
+            [
+                rollback_ref
+                for rollback_ref in [record.rollback_ref] + [run.rollback_ref for run in selected_runs]
+                if rollback_ref
+            ]
+        )
+
     return SessionBridgeResult(
         command_id=command.command_id,
         command_type=command.command_type,
         status="ok",
         payload={
-            "task_id": record.task_id,
-            "current_state": record.current_state,
-            "active_run_id": record.active_run_id,
-            "run_id": run_id,
-            "evidence_refs": _dedupe_preserve_order(
-                [ref for run in selected_runs for ref in run.evidence_refs] + transition_evidence_refs
-            ),
-            "artifact_refs": _dedupe_preserve_order([ref for run in selected_runs for ref in run.artifact_refs]),
-            "verification_refs": _dedupe_preserve_order([ref for run in selected_runs for ref in run.verification_refs]),
-            "approval_ids": _dedupe_preserve_order([approval_id for run in selected_runs for approval_id in run.approval_ids]),
-            "rollback_refs": _dedupe_preserve_order(
-                [rollback_ref for rollback_ref in [record.rollback_ref] + [run.rollback_ref for run in selected_runs] if rollback_ref]
-            ),
+            "execution_id": _execution_id(command),
+            "continuation_id": _continuation_id(command),
+            "adapter_id": command.adapter_id,
+            "session_identity": _session_identity(command),
+            "task_id": query.task_id,
+            "task_found": query.task_found,
+            "current_state": query.current_state,
+            "active_run_id": query.active_run_id,
+            "run_id": query.run_id,
+            "evidence_refs": _dedupe_preserve_order(query.evidence_refs + transition_evidence_refs),
+            "artifact_refs": query.artifact_refs,
+            "verification_refs": query.verification_refs,
+            "approval_ids": query.approval_ids,
+            "approval_refs": query.approval_refs,
+            "handoff_refs": query.handoff_refs,
+            "replay_refs": query.replay_refs,
+            "rollback_refs": rollback_refs,
             "transition_evidence_refs": transition_evidence_refs,
+            "posture_summary": asdict(query.posture_summary) if query.posture_summary else None,
+            "read_only": query.read_only,
         },
         policy_decision_ref=command.policy_decision_ref,
     )
 
 
-def _inspect_handoff(command: SessionBridgeCommand, *, task_root: Path) -> SessionBridgeResult:
-    try:
-        record = FileTaskStore(task_root).load(command.task_id)
-    except FileNotFoundError:
-        return _degraded(command, reason=f"task record not found: {command.task_id}")
-
+def _inspect_handoff(
+    command: SessionBridgeCommand,
+    *,
+    task_root: Path,
+    attachment_root: str | Path | None,
+    attachment_runtime_state_root: str | Path | None,
+) -> SessionBridgeResult:
     run_id = _payload_optional_string(command.payload, "run_id")
-    selected_runs = [run for run in record.run_history if run_id is None or run.run_id == run_id]
+    query = query_operator_attachment_surface(
+        task_root=task_root,
+        task_id=command.task_id,
+        repo_binding_id=command.repo_binding_id,
+        run_id=run_id,
+        attachment_root=attachment_root,
+        attachment_runtime_state_root=attachment_runtime_state_root,
+    )
+
+    rollback_refs: list[str] = []
+    discovered_refs = list(query.handoff_refs)
+    if query.task_found:
+        record = FileTaskStore(task_root).load(command.task_id)
+        selected_runs = [run for run in record.run_history if run_id is None or run.run_id == run_id]
+        rollback_refs = _dedupe_preserve_order(
+            [
+                rollback_ref
+                for rollback_ref in [record.rollback_ref] + [run.rollback_ref for run in selected_runs]
+                if rollback_ref
+            ]
+        )
+        discovered_refs = _dedupe_preserve_order(
+            discovered_refs
+            + [
+                ref
+                for ref in [ref for run in selected_runs for ref in run.artifact_refs + run.evidence_refs]
+                if "handoff" in ref
+            ]
+        )
+
     payload_refs = _payload_string_list(command.payload, "handoff_refs")
     single_ref = _payload_optional_string(command.payload, "handoff_ref")
     if single_ref is not None:
         payload_refs.append(single_ref)
-    discovered_refs = [
-        ref
-        for ref in [ref for run in selected_runs for ref in run.artifact_refs + run.evidence_refs]
-        if "handoff" in ref
-    ]
+
     return SessionBridgeResult(
         command_id=command.command_id,
         command_type=command.command_type,
         status="ok",
         payload={
-            "task_id": record.task_id,
-            "run_id": run_id,
+            "execution_id": _execution_id(command),
+            "continuation_id": _continuation_id(command),
+            "adapter_id": command.adapter_id,
+            "session_identity": _session_identity(command),
+            "task_id": query.task_id,
+            "task_found": query.task_found,
+            "run_id": query.run_id,
             "handoff_refs": _dedupe_preserve_order(payload_refs + discovered_refs),
-            "rollback_refs": _dedupe_preserve_order(
-                [rollback_ref for rollback_ref in [record.rollback_ref] + [run.rollback_ref for run in selected_runs] if rollback_ref]
-            ),
+            "replay_refs": query.replay_refs,
+            "rollback_refs": rollback_refs,
+            "posture_summary": asdict(query.posture_summary) if query.posture_summary else None,
+            "read_only": query.read_only,
         },
         policy_decision_ref=command.policy_decision_ref,
     )
@@ -605,10 +1156,14 @@ def _write_status(
         command_type=command.command_type,
         status="ok",
         payload={
-            "execution_id": _execution_id(command),
+            "execution_id": _execution_id(command, approval_id=approval_id),
+            "continuation_id": _continuation_id(command, approval_id=approval_id),
+            "adapter_id": command.adapter_id,
+            "session_identity": _session_identity(command),
             "task_id": command.task_id,
             "target_path": _payload_optional_string(command.payload, "target_path"),
             "approval_id": approval_id,
+            "approval_ref": approval_record_ref,
             "approval_status": approval_status,
             "approval_record_ref": approval_record_ref,
             "policy_decision_ref": command.policy_decision_ref,
@@ -617,11 +1172,229 @@ def _write_status(
     )
 
 
+def _record_adapter_events(
+    *,
+    command: SessionBridgeCommand,
+    artifact_store: LocalArtifactStore,
+    task_id: str,
+    run_id: str,
+    execution_id: str,
+    continuation_id: str,
+    file_changes: list[str],
+    tool_calls: list[dict],
+    gate_runs: list[str],
+    approvals: list[str],
+    handoff_refs: list[str],
+    unsupported_events: list[dict],
+) -> tuple[str | None, dict | None]:
+    if command.adapter_id != "codex-cli":
+        return None, None
+    identity = _session_identity(command, continuation_id=continuation_id)
+    flow_kind = (
+        identity.get("flow_kind")
+        if isinstance(identity.get("flow_kind"), str)
+        else "manual_handoff"
+    )
+    event_source = "live_adapter" if flow_kind == "live_attach" else flow_kind
+    unsupported_capabilities = identity.get("unsupported_capabilities")
+    if not isinstance(unsupported_capabilities, list):
+        unsupported_capabilities = []
+    timeline = EvidenceTimeline()
+    session = CodexSessionEvidence(
+        task_id=task_id,
+        adapter_id=command.adapter_id,
+        adapter_tier=str(identity.get("adapter_tier", "manual_handoff")),
+        flow_kind=flow_kind,
+        file_changes=file_changes,
+        tool_calls=tool_calls,
+        gate_runs=gate_runs,
+        approvals=[approval for approval in approvals if approval],
+        handoff_refs=handoff_refs,
+        unsupported_capabilities=[str(item) for item in unsupported_capabilities if isinstance(item, str)],
+        execution_id=execution_id,
+        continuation_id=continuation_id,
+        event_source=event_source,
+        unsupported_events=unsupported_events,
+    )
+    record_codex_session_evidence(timeline, session)
+    summary = summarize_adapter_evidence(task_id, timeline)
+    events = [
+        {
+            "task_id": event.task_id,
+            "event_type": event.event_type,
+            "payload": event.payload,
+            "created_at": event.created_at,
+        }
+        for event in timeline.for_task(task_id)
+    ]
+    artifact = artifact_store.write_json(
+        task_id=task_id,
+        run_id=run_id,
+        kind="evidence",
+        label="adapter-events",
+        payload={
+            "task_id": task_id,
+            "run_id": run_id,
+            "execution_id": execution_id,
+            "continuation_id": continuation_id,
+            "flow_kind": flow_kind,
+            "event_source": event_source,
+            "events": events,
+            "summary": asdict(summary),
+        },
+    )
+    return artifact.relative_path, asdict(summary)
+
+
 def _run_id_from_payload(payload: dict) -> str:
     value = payload.get("run_id")
     if isinstance(value, str) and value.strip():
         return value.strip()
     return "session-bridge-request"
+
+
+def _verification_cwd(*, repo_root: Path, attachment_root: str | Path | None) -> Path:
+    if attachment_root is None:
+        return repo_root
+    return Path(attachment_root)
+
+
+def _verification_artifact_root(
+    *,
+    task_root: Path,
+    attachment_runtime_state_root: str | Path | None,
+) -> Path:
+    if attachment_runtime_state_root is not None:
+        return Path(attachment_runtime_state_root)
+    return task_root.parent / "artifacts"
+
+
+def _approval_record_ref(
+    *,
+    attachment_runtime_state_root: str | Path | None,
+    approval_id: str | None,
+) -> str | None:
+    if attachment_runtime_state_root is None or approval_id is None:
+        return None
+    approval_path = Path(attachment_runtime_state_root) / "approvals" / f"{approval_id}.json"
+    return approval_path.as_posix()
+
+
+def _tool_approval_id(command: SessionBridgeCommand) -> str:
+    explicit = _payload_optional_string(command.payload, "approval_id")
+    if explicit is not None:
+        return explicit
+    digest = hashlib.sha1(
+        f"{command.task_id}:{_payload_required_string(command.payload, 'tool_name')}:{_payload_required_string(command.payload, 'command')}".encode(
+            "utf-8"
+        )
+    ).hexdigest()[:12]
+    return f"approval-tool-{digest}"
+
+
+def _persist_tool_approval_request(
+    *,
+    runtime_state_root: Path,
+    approval_id: str,
+    task_id: str,
+    tool_name: str,
+    command_text: str,
+    tier: str,
+    rollback_reference: str,
+) -> str:
+    approvals_root = runtime_state_root / "approvals"
+    approvals_root.mkdir(parents=True, exist_ok=True)
+    record_path = approvals_root / f"{approval_id}.json"
+    payload = {
+        "approval_id": approval_id,
+        "task_id": task_id,
+        "tool_name": tool_name,
+        "target_path": command_text,
+        "tier": tier,
+        "reason": f"{tier} governed tool execution requires approval",
+        "status": "pending",
+        "decided_by": None,
+        "requested_at": "now",
+        "rollback_reference": rollback_reference,
+    }
+    record_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    return record_path.as_posix()
+
+
+def _tool_approval_status(
+    *,
+    attachment_runtime_state_root: str | Path | None,
+    approval_id: str | None,
+) -> str:
+    if approval_id is None or attachment_runtime_state_root is None:
+        return "missing"
+    approval_path = Path(attachment_runtime_state_root) / "approvals" / f"{approval_id}.json"
+    if not approval_path.exists():
+        return "missing"
+    status = json.loads(approval_path.read_text(encoding="utf-8")).get("status")
+    if not isinstance(status, str) or not status.strip():
+        return "missing"
+    normalized = status.strip().lower()
+    if normalized == "approved":
+        return "approved"
+    if normalized == "rejected":
+        return "rejected"
+    return "pending"
+
+
+def _session_identity(command: SessionBridgeCommand, *, continuation_id: str | None = None) -> dict:
+    identity: dict[str, object] = {"adapter_id": command.adapter_id}
+    session_id = _payload_optional_string(command.payload, "session_id")
+    resume_id = _payload_optional_string(command.payload, "resume_id")
+
+    if command.adapter_id == "codex-cli":
+        handshake = handshake_codex_session(
+            task_id=command.task_id,
+            command_id=command.command_id,
+            payload=command.payload,
+            continuation_id=continuation_id,
+        )
+        session_id = session_id or handshake.session_id
+        resume_id = resume_id or handshake.resume_id
+        identity["adapter_tier"] = handshake.adapter_tier
+        identity["flow_kind"] = handshake.flow_kind
+        identity["live_attach_available"] = handshake.live_attach_available
+        identity["unsupported_capabilities"] = handshake.unsupported_capabilities
+        identity["posture_reason"] = handshake.posture_reason
+        identity["continuation_id"] = handshake.continuation_id
+
+    if session_id is not None:
+        identity["session_id"] = session_id
+    if resume_id is not None:
+        identity["resume_id"] = resume_id
+    if continuation_id is not None:
+        identity["continuation_id"] = continuation_id
+    return identity
+
+
+def _write_write_flow_refs(
+    *,
+    task_id: str,
+    execution_id: str,
+    runtime_state_root: Path,
+    payload: dict,
+) -> tuple[str, str]:
+    artifact_store = LocalArtifactStore(runtime_state_root)
+    handoff_artifact = artifact_store.write_json(
+        task_id=task_id,
+        run_id=execution_id,
+        kind="handoff",
+        label="write-flow",
+        payload=payload,
+    )
+    replay_artifact = artifact_store.write_json(
+        task_id=task_id,
+        run_id=execution_id,
+        kind="replay",
+        label="write-flow",
+        payload=payload,
+    )
+    return handoff_artifact.relative_path, replay_artifact.relative_path
 
 
 def _verification_plan_for_command(
@@ -651,7 +1424,7 @@ def _verification_plan_for_command(
             task_id=command.task_id,
             run_id=_run_id_from_payload(command.payload),
         )
-    except (OSError, ValueError):
+    except OSError:
         pass
 
     return build_verification_plan(
@@ -673,11 +1446,78 @@ def _file_snapshot(root: Path) -> dict[str, str]:
     return snapshot
 
 
-def _execution_id(command: SessionBridgeCommand) -> str:
+def _execution_id(
+    command: SessionBridgeCommand,
+    *,
+    run_id: str | None = None,
+    approval_id: str | None = None,
+) -> str:
     explicit = _payload_optional_string(command.payload, "execution_id")
     if explicit is not None:
         return explicit
+    if run_id is not None:
+        return f"{command.task_id}:{run_id}"
+    if approval_id is not None:
+        return f"{command.task_id}:approval:{approval_id}"
+
+    payload_run_id = _payload_optional_string(command.payload, "run_id")
+    if payload_run_id is not None:
+        return f"{command.task_id}:{payload_run_id}"
+    payload_approval_id = _payload_optional_string(command.payload, "approval_id")
+    if payload_approval_id is not None:
+        return f"{command.task_id}:approval:{payload_approval_id}"
+
+    tool_name = _payload_optional_string(command.payload, "tool_name")
+    target_path = _payload_optional_string(command.payload, "target_path")
+    if tool_name is not None and target_path is not None:
+        digest = hashlib.sha1(f"{tool_name}:{target_path}".encode("utf-8")).hexdigest()[:12]
+        return f"{command.task_id}:write:{digest}"
+
     return f"{command.task_id}:{command.command_id}"
+
+
+def _continuation_id(
+    command: SessionBridgeCommand,
+    *,
+    run_id: str | None = None,
+    approval_id: str | None = None,
+    execution_id: str | None = None,
+) -> str:
+    explicit = _payload_optional_string(command.payload, "continuation_id")
+    if explicit is not None:
+        return explicit
+    if run_id is not None:
+        return f"{command.task_id}:{run_id}"
+    if approval_id is not None:
+        return f"{command.task_id}:approval:{approval_id}"
+    if execution_id is not None:
+        return execution_id
+    return _execution_id(command)
+
+
+def _payload_optional_bool(payload: dict, field_name: str) -> bool:
+    value = payload.get(field_name)
+    if value is None:
+        return False
+    if isinstance(value, bool):
+        return value
+    msg = f"{field_name} must be a boolean"
+    raise ValueError(msg)
+
+
+def _execute_gate_at_root(command: str, *, cwd: Path) -> tuple[int, str]:
+    completed = subprocess.run(
+        command,
+        shell=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        cwd=cwd,
+        check=False,
+    )
+    output = "\n".join(part for part in [completed.stdout, completed.stderr] if part).strip()
+    return completed.returncode, output
 
 
 def _required_enum(value: str, field_name: str, valid_values: set[str]) -> str:

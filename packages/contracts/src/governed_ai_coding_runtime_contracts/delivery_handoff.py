@@ -20,6 +20,7 @@ class HandoffPackage:
     adapter_id: str | None = None
     adapter_flow_kind: str | None = None
     adapter_evidence_refs: list[str] | None = None
+    adapter_event_summary: dict | None = None
 
 
 def build_handoff_package(
@@ -31,6 +32,7 @@ def build_handoff_package(
     adapter_id: str | None = None,
     adapter_flow_kind: str | None = None,
     adapter_evidence_refs: list[str] | None = None,
+    adapter_event_summary: dict | None = None,
 ) -> HandoffPackage:
     _required_string(task_id, "task_id")
     if not changed_files:
@@ -50,6 +52,7 @@ def build_handoff_package(
         adapter_id=adapter_id,
         adapter_flow_kind=adapter_flow_kind,
         adapter_evidence_refs=adapter_evidence_refs or [],
+        adapter_event_summary=dict(adapter_event_summary or {}),
     )
 
 

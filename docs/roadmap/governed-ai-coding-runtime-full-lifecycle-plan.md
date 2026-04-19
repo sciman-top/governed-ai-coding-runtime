@@ -111,6 +111,7 @@ The final product is considered functionally complete only when all of the follo
 
 ### 4. Governed Execution And Approval
 - governed shell, file, git, package-manager, and helper-tool execution
+- bounded and dry-run-first command surface for shell/git/package paths; no silent broadening to arbitrary mutation commands
 - deterministic policy before execution through `PolicyDecision`
 - user-facing `safe / approval-required / blocked` buckets normalize to `allow / escalate / deny`
 - legacy local-baseline `allowed` / `paused` / fail-closed outcomes must not leak past the session-bridge or adapter boundary

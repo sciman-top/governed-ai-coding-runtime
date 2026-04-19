@@ -34,6 +34,19 @@
         "same-contract verification required"
       ],
       "unsupported_capability_behavior": "degrade_to_advisory",
+      "runtime_selection": {
+        "selection_inputs": [
+          "attachment.adapter_preference",
+          "host.probe"
+        ],
+        "fallback_chain": [
+          "native_attach",
+          "process_bridge",
+          "manual_handoff"
+        ],
+        "delegation_mode": "runtime_registry",
+        "degrade_policy_ref": "docs/product/adapter-degrade-policy.md"
+      },
       "known_limitations": [
         "no native attach"
       ],

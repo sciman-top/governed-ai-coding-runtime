@@ -71,7 +71,7 @@ python scripts/session-bridge.py repo-posture `
   --attachment-runtime-state-root "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit"
 ```
 
-Request a gate plan:
+Run a runtime-managed gate flow (use `--plan-only` if you only need the plan):
 
 ```powershell
 python scripts/session-bridge.py request-gate `
@@ -151,7 +151,10 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-check.ps1 `
   -AttachmentRuntimeStateRoot "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit" `
   -Mode "quick" `
   -WriteTargetPath "src/ClassroomToolkit.App/MainWindow.ZOrder.cs" `
-  -WriteTier "medium"
+  -WriteTier "medium" `
+  -WriteToolName "write_file" `
+  -WriteContent "governed runtime write probe" `
+  -ExecuteWriteFlow
 ```
 
 What this single command runs:
@@ -159,11 +162,13 @@ What this single command runs:
 - `doctor` (with attachment args)
 - `session-bridge request-gate`
 - `verify-attachment` (unless `-SkipVerifyAttachment`)
-- optional `govern-attachment-write` when `-WriteTargetPath` is provided
+- `govern-attachment-write` when `-WriteTargetPath` is provided
+- optional `decide-attachment-write` + `execute-attachment-write` when `-ExecuteWriteFlow` is provided
 
 Exit behavior:
 - returns exit code `0` only when the chain passes and gate results are all `pass`
 - returns exit code `1` when any step fails or any verification gate result is `fail`
+- when `-ExecuteWriteFlow` is enabled, output also includes real `handoff_ref` and `replay_ref` for the executed write flow
 
 ### 5. Two-Mode One-Command Flow
 

@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import fnmatch
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 import re
 from typing import Any
 
@@ -28,6 +28,7 @@ def allocate_workspace(
     *,
     run_id: str | None = None,
     attempt_id: str | None = None,
+    runtime_workspaces_root: str | None = None,
 ) -> WorkspaceAllocation:
     normalized_task_id = _safe_segment(_required_string(task_id, "task_id"))
     repo_id = _required_string(getattr(repo_profile, "repo_id", ""), "repo_id")
@@ -38,8 +39,18 @@ def allocate_workspace(
     normalized_run_id = _safe_segment(run_id or f"{normalized_task_id}-run")
     normalized_attempt_id = _safe_segment(attempt_id or f"{normalized_task_id}-attempt-1")
 
-    root = workspace_root or f"{_WORKSPACE_PREFIX}/{repo_id}/{normalized_task_id}/{normalized_run_id}"
-    normalized_root = _normalize_workspace_root(root)
+    root = workspace_root
+    if root is None:
+        if runtime_workspaces_root:
+            root = str(
+                _normalize_runtime_workspaces_root(runtime_workspaces_root)
+                / repo_id
+                / normalized_task_id
+                / normalized_run_id
+            )
+        else:
+            root = f"{_WORKSPACE_PREFIX}/{repo_id}/{normalized_task_id}/{normalized_run_id}"
+    normalized_root = _normalize_workspace_root(root, runtime_workspaces_root=runtime_workspaces_root)
     return WorkspaceAllocation(
         task_id=task_id,
         repo_id=repo_id,
@@ -63,11 +74,18 @@ def validate_write_path(allocation: WorkspaceAllocation, target_path: str) -> bo
     raise ValueError(msg)
 
 
-def _normalize_workspace_root(workspace_root: str) -> str:
+def _normalize_workspace_root(workspace_root: str, *, runtime_workspaces_root: str | None) -> str:
     root = workspace_root.replace("\\", "/").strip()
     if not root:
         msg = "workspace_root is required"
         raise ValueError(msg)
+    if runtime_workspaces_root:
+        base = _normalize_runtime_workspaces_root(runtime_workspaces_root)
+        candidate = Path(root).resolve(strict=False)
+        if not _is_under(candidate, base):
+            msg = "workspace_root must stay under runtime_workspaces_root"
+            raise ValueError(msg)
+        return candidate.as_posix()
     if ":" in root or root.startswith("/") or ".." in PurePosixPath(root).parts:
         msg = "workspace_root must be an isolated relative workspace path"
         raise ValueError(msg)
@@ -100,3 +118,19 @@ def _required_string(value: str, field_name: str) -> str:
 
 def _safe_segment(value: str) -> str:
     return _SAFE_SEGMENT.sub("-", value).strip("-") or "task"
+
+
+def _normalize_runtime_workspaces_root(value: str) -> Path:
+    root = Path(_required_string(value, "runtime_workspaces_root")).resolve(strict=False)
+    if not root.is_absolute():
+        msg = "runtime_workspaces_root must be an absolute path"
+        raise ValueError(msg)
+    return root
+
+
+def _is_under(path: Path, parent: Path) -> bool:
+    try:
+        path.resolve(strict=False).relative_to(parent.resolve(strict=False))
+    except ValueError:
+        return False
+    return True

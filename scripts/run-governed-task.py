@@ -14,11 +14,6 @@ if str(CONTRACTS_SRC) not in sys.path:
     sys.path.insert(0, str(CONTRACTS_SRC))
 
 from governed_ai_coding_runtime_contracts.artifact_store import LocalArtifactStore
-from governed_ai_coding_runtime_contracts.attached_write_governance import govern_attached_write_request
-from governed_ai_coding_runtime_contracts.attached_write_execution import (
-    decide_attached_write_request,
-    execute_attached_write_request,
-)
 from governed_ai_coding_runtime_contracts.delivery_handoff import build_handoff_package
 from governed_ai_coding_runtime_contracts.evidence import build_evidence_bundle
 from governed_ai_coding_runtime_contracts.execution_runtime import ExecutionRuntime, WorkerExecutionResult
@@ -26,6 +21,11 @@ from governed_ai_coding_runtime_contracts.repo_attachment import validate_light_
 from governed_ai_coding_runtime_contracts.repo_profile import load_repo_profile
 from governed_ai_coding_runtime_contracts.replay import build_replay_reference
 from governed_ai_coding_runtime_contracts.runtime_status import RuntimeStatusStore
+from governed_ai_coding_runtime_contracts.runtime_roots import ensure_runtime_roots, resolve_runtime_roots
+from governed_ai_coding_runtime_contracts.session_bridge import (
+    build_session_bridge_command,
+    handle_session_bridge_command,
+)
 from governed_ai_coding_runtime_contracts.task_intake import TaskIntake
 from governed_ai_coding_runtime_contracts.task_store import FileTaskStore, TaskRecord, TaskRunRecord
 from governed_ai_coding_runtime_contracts.verification_runner import (
@@ -37,14 +37,18 @@ from governed_ai_coding_runtime_contracts.worker import SynchronousLocalWorker
 from governed_ai_coding_runtime_contracts.workflow import fail_task, transition_task
 
 
-RUNTIME_ROOT = ROOT / ".runtime"
-TASK_ROOT = RUNTIME_ROOT / "tasks"
-ARTIFACT_ROOT = RUNTIME_ROOT / "artifacts"
-REPLAY_ROOT = RUNTIME_ROOT / "replay"
+_RUNTIME_ROOTS = ensure_runtime_roots(resolve_runtime_roots(repo_root=ROOT))
+RUNTIME_ROOT = Path(_RUNTIME_ROOTS.runtime_root)
+TASK_ROOT = Path(_RUNTIME_ROOTS.tasks_root)
+ARTIFACT_ROOT = Path(_RUNTIME_ROOTS.artifacts_root)
+REPLAY_ROOT = Path(_RUNTIME_ROOTS.replay_root)
+WORKSPACES_ROOT = Path(_RUNTIME_ROOTS.workspaces_root)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="CLI-first governed runtime operator surface")
+    parser.add_argument("--runtime-root")
+    parser.add_argument("--compat-runtime-root", action="store_true")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     create_parser = subparsers.add_parser("create", help="Create a planned governed task")
@@ -83,6 +87,7 @@ def main() -> int:
     govern_attachment_write_parser.add_argument("--attachment-runtime-state-root", required=True)
     govern_attachment_write_parser.add_argument("--task-id", required=True)
     govern_attachment_write_parser.add_argument("--tool-name", default="apply_patch")
+    govern_attachment_write_parser.add_argument("--tool-command")
     govern_attachment_write_parser.add_argument("--target-path", required=True)
     govern_attachment_write_parser.add_argument("--tier", choices=["low", "medium", "high"], default="medium")
     govern_attachment_write_parser.add_argument("--rollback-reference", default="")
@@ -107,7 +112,12 @@ def main() -> int:
     execute_attachment_write_parser.add_argument("--attachment-root", required=True)
     execute_attachment_write_parser.add_argument("--attachment-runtime-state-root", required=True)
     execute_attachment_write_parser.add_argument("--task-id", required=True)
-    execute_attachment_write_parser.add_argument("--tool-name", choices=["write_file", "append_file"], default="write_file")
+    execute_attachment_write_parser.add_argument(
+        "--tool-name",
+        choices=["write_file", "append_file", "shell", "git", "package"],
+        default="write_file",
+    )
+    execute_attachment_write_parser.add_argument("--tool-command")
     execute_attachment_write_parser.add_argument("--target-path", required=True)
     execute_attachment_write_parser.add_argument("--tier", choices=["low", "medium", "high"], default="medium")
     execute_attachment_write_parser.add_argument("--rollback-reference", required=True)
@@ -121,6 +131,7 @@ def main() -> int:
     status_parser.add_argument("--attachment-runtime-state-root")
 
     args = parser.parse_args()
+    _configure_runtime_roots(runtime_root=args.runtime_root, compat_runtime_root=bool(args.compat_runtime_root))
 
     if args.command == "create":
         payload = create_task(task_id=args.task_id, goal=args.goal, scope=args.scope, repo=args.repo)
@@ -140,6 +151,7 @@ def main() -> int:
             attachment_runtime_state_root=args.attachment_runtime_state_root,
             task_id=args.task_id,
             tool_name=args.tool_name,
+            command_text=args.tool_command,
             target_path=args.target_path,
             tier=args.tier,
             rollback_reference=args.rollback_reference,
@@ -157,6 +169,7 @@ def main() -> int:
             attachment_runtime_state_root=args.attachment_runtime_state_root,
             task_id=args.task_id,
             tool_name=args.tool_name,
+            command_text=args.tool_command,
             target_path=args.target_path,
             tier=args.tier,
             rollback_reference=args.rollback_reference,
@@ -198,7 +211,7 @@ def run_task(*, task_id: str | None, goal: str, scope: str, repo: str, profile_p
     store = FileTaskStore(TASK_ROOT)
     identifier = task_id or create_task(task_id=None, goal=goal, scope=scope, repo=repo)["task_id"]
     profile = load_repo_profile(profile_path)
-    runtime = ExecutionRuntime(store=store)
+    runtime = ExecutionRuntime(store=store, runtime_workspaces_root=WORKSPACES_ROOT.as_posix())
     artifact_store = LocalArtifactStore(ARTIFACT_ROOT)
 
     def handler(context) -> WorkerExecutionResult:
@@ -323,6 +336,14 @@ def snapshot_payload(
         attachment_runtime_state_root=runtime_state_root,
     ).snapshot()
     payload = {
+        "runtime_roots": {
+            "runtime_root": RUNTIME_ROOT.as_posix(),
+            "tasks_root": TASK_ROOT.as_posix(),
+            "artifacts_root": ARTIFACT_ROOT.as_posix(),
+            "replay_root": REPLAY_ROOT.as_posix(),
+            "workspaces_root": WORKSPACES_ROOT.as_posix(),
+            "compatibility_mode": _RUNTIME_ROOTS.compatibility_mode,
+        },
         "total_tasks": snapshot.total_tasks,
         "maintenance": {
             "stage": snapshot.maintenance.stage,
@@ -357,6 +378,8 @@ def snapshot_payload(
                 "adapter_preference": attachment.adapter_preference,
                 "gate_profile": attachment.gate_profile,
                 "reason": attachment.reason,
+                "remediation": attachment.remediation,
+                "fail_closed": attachment.fail_closed,
             }
             for attachment in snapshot.attachments
         ],
@@ -410,31 +433,34 @@ def govern_attachment_write(
     attachment_runtime_state_root: str,
     task_id: str,
     tool_name: str,
+    command_text: str | None,
     target_path: str,
     tier: str,
     rollback_reference: str,
 ) -> dict:
-    result = govern_attached_write_request(
+    command = build_session_bridge_command(
+        command_id=f"cli-govern-{task_id}",
+        command_type="write_request",
+        task_id=task_id,
+        repo_binding_id="attachment-binding",
+        adapter_id="cli-process-bridge",
+        risk_tier=tier,
+        payload={
+            "tool_name": tool_name,
+            "command": command_text or "",
+            "target_path": target_path,
+            "tier": tier,
+            "rollback_reference": rollback_reference,
+        },
+    )
+    result = handle_session_bridge_command(
+        command,
+        task_root=TASK_ROOT,
+        repo_root=ROOT,
         attachment_root=attachment_root,
         attachment_runtime_state_root=attachment_runtime_state_root,
-        task_id=task_id,
-        tool_name=tool_name,
-        target_path=target_path,
-        tier=tier,
-        rollback_reference=rollback_reference,
     )
-    return {
-        "repo_id": result.repo_id,
-        "binding_id": result.binding_id,
-        "task_id": result.task_id,
-        "target_path": result.target_path,
-        "write_tier": result.write_tier,
-        "governance_status": result.governance_status,
-        "approval_id": result.approval_id,
-        "task_state": result.task_state,
-        "reason": result.reason,
-        "policy_decision": asdict(result.policy_decision),
-    }
+    return result.payload
 
 
 def decide_attachment_write(
@@ -444,19 +470,26 @@ def decide_attachment_write(
     decision: str,
     decided_by: str,
 ) -> dict:
-    result = decide_attached_write_request(
-        attachment_runtime_state_root=attachment_runtime_state_root,
-        approval_id=approval_id,
-        decision=decision,
-        decided_by=decided_by,
+    command = build_session_bridge_command(
+        command_id=f"cli-approve-{approval_id}",
+        command_type="write_approve",
+        task_id="attachment-write",
+        repo_binding_id="attachment-binding",
+        adapter_id="cli-process-bridge",
+        risk_tier="medium",
+        payload={
+            "approval_id": approval_id,
+            "decision": decision,
+            "decided_by": decided_by,
+        },
     )
-    return {
-        "approval_id": result.approval_id,
-        "status": result.status,
-        "decided_by": result.decided_by,
-        "reason": result.reason,
-        "approval_record_ref": result.approval_record_ref,
-    }
+    result = handle_session_bridge_command(
+        command,
+        task_root=TASK_ROOT,
+        repo_root=ROOT,
+        attachment_runtime_state_root=attachment_runtime_state_root,
+    )
+    return result.payload
 
 
 def execute_attachment_write(
@@ -465,37 +498,65 @@ def execute_attachment_write(
     attachment_runtime_state_root: str,
     task_id: str,
     tool_name: str,
+    command_text: str | None,
     target_path: str,
     tier: str,
     rollback_reference: str,
     content: str,
     approval_id: str | None,
 ) -> dict:
-    result = execute_attached_write_request(
+    request_command = build_session_bridge_command(
+        command_id=f"cli-exec-request-{task_id}",
+        command_type="write_request",
+        task_id=task_id,
+        repo_binding_id="attachment-binding",
+        adapter_id="cli-process-bridge",
+        risk_tier=tier,
+        payload={
+            "tool_name": tool_name,
+            "command": command_text or "",
+            "target_path": target_path,
+            "tier": tier,
+            "rollback_reference": rollback_reference,
+            "approval_id": approval_id,
+        },
+    )
+    request_result = handle_session_bridge_command(
+        request_command,
+        task_root=TASK_ROOT,
+        repo_root=ROOT,
         attachment_root=attachment_root,
         attachment_runtime_state_root=attachment_runtime_state_root,
-        task_id=task_id,
-        tool_name=tool_name,
-        target_path=target_path,
-        tier=tier,
-        rollback_reference=rollback_reference,
-        content=content,
-        approval_id=approval_id,
     )
-    return {
-        "repo_id": result.repo_id,
-        "binding_id": result.binding_id,
-        "task_id": result.task_id,
-        "target_path": result.target_path,
-        "write_tier": result.write_tier,
-        "execution_status": result.execution_status,
-        "artifact_ref": result.artifact_ref,
-        "approval_id": result.approval_id,
-        "approval_status": result.approval_status,
-        "bytes_written": result.bytes_written,
-        "reason": result.reason,
-        "policy_decision": asdict(result.policy_decision),
-    }
+
+    execute_command = build_session_bridge_command(
+        command_id=f"cli-exec-{task_id}",
+        command_type="write_execute",
+        task_id=task_id,
+        repo_binding_id="attachment-binding",
+        adapter_id="cli-process-bridge",
+        risk_tier=tier,
+        payload={
+            "tool_name": tool_name,
+            "command": command_text or "",
+            "target_path": target_path,
+            "tier": tier,
+            "rollback_reference": rollback_reference,
+            "content": content,
+            "approval_id": approval_id or request_result.payload.get("approval_id"),
+            "execution_id": request_result.payload.get("execution_id"),
+            "continuation_id": request_result.payload.get("continuation_id"),
+        },
+        policy_decision_ref=request_result.payload.get("policy_decision_ref"),
+    )
+    execute_result = handle_session_bridge_command(
+        execute_command,
+        task_root=TASK_ROOT,
+        repo_root=ROOT,
+        attachment_root=attachment_root,
+        attachment_runtime_state_root=attachment_runtime_state_root,
+    )
+    return execute_result.payload
 
 
 def render_payload(payload: dict) -> str:
@@ -603,6 +664,29 @@ def _write_replay_case(reference) -> str:
         encoding="utf-8",
     )
     return path.relative_to(ROOT).as_posix()
+
+
+def _configure_runtime_roots(*, runtime_root: str | None, compat_runtime_root: bool) -> None:
+    global _RUNTIME_ROOTS
+    global RUNTIME_ROOT
+    global TASK_ROOT
+    global ARTIFACT_ROOT
+    global REPLAY_ROOT
+    global WORKSPACES_ROOT
+
+    compatibility_mode = True if compat_runtime_root else None
+    _RUNTIME_ROOTS = ensure_runtime_roots(
+        resolve_runtime_roots(
+            repo_root=ROOT,
+            runtime_root=runtime_root,
+            compatibility_mode=compatibility_mode,
+        )
+    )
+    RUNTIME_ROOT = Path(_RUNTIME_ROOTS.runtime_root)
+    TASK_ROOT = Path(_RUNTIME_ROOTS.tasks_root)
+    ARTIFACT_ROOT = Path(_RUNTIME_ROOTS.artifacts_root)
+    REPLAY_ROOT = Path(_RUNTIME_ROOTS.replay_root)
+    WORKSPACES_ROOT = Path(_RUNTIME_ROOTS.workspaces_root)
 
 
 if __name__ == "__main__":

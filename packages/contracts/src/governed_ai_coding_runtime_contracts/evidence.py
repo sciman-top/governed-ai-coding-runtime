@@ -51,6 +51,9 @@ class AdapterEvidenceSummary:
     gate_run_count: int
     approval_event_count: int
     handoff_ref_count: int
+    unsupported_event_count: int
+    live_event_count: int
+    manual_event_count: int
 
 
 @dataclass(slots=True)
@@ -116,6 +119,9 @@ def summarize_adapter_evidence(task_id: str, timeline: EvidenceTimeline) -> Adap
         gate_run_count=_count_events(events, "adapter_gate_run"),
         approval_event_count=_count_events(events, "adapter_approval_event"),
         handoff_ref_count=_count_events(events, "adapter_handoff"),
+        unsupported_event_count=_count_events(events, "adapter_unsupported_event"),
+        live_event_count=_count_events_with_source(events, "live_adapter"),
+        manual_event_count=_count_events_with_source(events, "manual_handoff"),
     )
 
 
@@ -187,3 +193,7 @@ def _verification_status(result: str) -> str:
 
 def _count_events(events: list[EvidenceEvent], event_type: str) -> int:
     return sum(1 for event in events if event.event_type == event_type)
+
+
+def _count_events_with_source(events: list[EvidenceEvent], event_source: str) -> int:
+    return sum(1 for event in events if event.payload.get("event_source") == event_source)

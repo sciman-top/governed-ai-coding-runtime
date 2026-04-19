@@ -25,6 +25,20 @@ Implement `GAP-035 Task 3` so runtime status and doctor can report target-repo a
   - healthy binding
 - Kept default `status --json` and default `doctor-runtime.ps1` behavior working without attachment arguments.
 
+## 2026-04-20 Remediation And Fail-Closed Update (Task 14)
+- `RepoAttachmentPosture` now carries:
+  - `remediation`
+  - `fail_closed`
+- `inspect_attachment_posture` now returns explicit remediation guidance for:
+  - `missing_light_pack`
+  - `invalid_light_pack`
+  - `stale_binding`
+- `scripts/doctor-runtime.ps1` now enforces fail-closed behavior when attachment posture is unhealthy:
+  - prints `FAIL attachment-posture-<state>`
+  - prints `REMEDIATE <command>`
+  - exits non-zero
+- `RuntimeStatusStore` and session/operator query surfaces now expose attachment `remediation` and `fail_closed`.
+
 ## TDD Evidence
 
 ### Red
@@ -50,10 +64,15 @@ Implement `GAP-035 Task 3` so runtime status and doctor can report target-repo a
 - `key_output`: `OK runtime-status-surface`; `OK maintenance-policy-visible`; `OK adapter-posture-visible`
 - `timestamp`: `2026-04-18`
 
+- `cmd`: `python -m unittest tests.runtime.test_runtime_doctor tests.runtime.test_repo_attachment tests.runtime.test_runtime_status tests.runtime.test_operator_queries tests.runtime.test_session_bridge -v`
+- `exit_code`: `0`
+- `key_output`: `Ran 60 tests`; `OK`
+- `timestamp`: `2026-04-20`
+
 ## Risks
 - Stale binding detection currently checks light-pack binding id against the repo profile repo id. Later attachment metadata may add a stronger binding version or content hash.
-- Attachment inspection is opt-in for status and doctor. Automatic discovery across many repositories remains later multi-repo work.
-- Doctor reports posture but does not yet enforce remediation policy. Enforcement remains later session bridge and adapter work.
+- Attachment inspection remains opt-in for status and doctor. Automatic discovery across many repositories remains later multi-repo work.
+- Fail-closed enforcement is posture-level and attachment-scoped; richer per-control remediation workflows are still future work.
 
 ## Rollback
 - Revert:

@@ -62,10 +62,13 @@ Supported local subcommands:
 The local entrypoint returns structured JSON. Unsupported commands or adapter capabilities return an explicit degraded result with `unsupported_capability_behavior = manual_handoff`.
 
 ## Gate Requests
-`request-gate` creates a verification request through the existing verification runner plan path:
+`request-gate` now runs a runtime-managed verification flow by default:
 - `quick` maps to `test -> contract`
 - `full` maps to `build -> test -> contract -> doctor`
 - when `attachment_root` and `attachment_runtime_state_root` are supplied, the gate commands come from the attached target repo light pack / repo profile instead of the local runtime repo defaults
+- output includes stable `execution_id`, `continuation_id`, per-gate `results`, and verification artifact refs
+
+Use `--plan-only` when you need the executable plan without running gate commands.
 
 The local bridge does not silently execute a denied PolicyDecision. Denied execution-like commands fail closed before a gate request is exposed.
 
@@ -75,8 +78,10 @@ The local session bridge now exposes the first governed write command surface:
 - `write-approve` records the approval decision for a pending write request
 - `write-execute` attempts the actual write after policy and approval checks
 - `write-status` reports the current approval or execution posture for a write flow
+- the same surface now governs bounded `shell`, `git`, and `package` execution requests (dry-run/list/check scoped)
 
 Write-flow results include a stable `execution_id` so later approval, execution, and inspection calls can stay on one runtime-owned thread.
+Write-flow results also carry `continuation_id` so gate/write/approval/evidence/handoff queries can stay on one continuation identity.
 
 ## Evidence And Handoff Inspection
 - `inspect-evidence` returns task-level evidence refs, verification refs, artifact refs, approval ids, transition evidence refs, and rollback refs
