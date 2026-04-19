@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.1",
+  "waiver_id": "waive.verification-hotspot.canary",
+  "subject_type": "control",
+  "subject_ref": "verification-hotspot",
+  "reason": "A target repo is still onboarding the doctor health surface, so the control must remain canary-bounded while recovery work lands.",
+  "owner": "platform-owner",
+  "approver": "governance-reviewer",
+  "created_at": "2026-04-19T10:00:00Z",
+  "expires_at": "2026-05-10T23:59:59Z",
+  "recovery_plan": "Land the missing doctor health signal, verify rollback drill output, and remove the waiver before full enforce promotion.",
+  "recovery_gate": "canary_ready",
+  "evidence_link": "docs/change-evidence/20260419-gap-064-control-rollout-waiver-recovery.md",
+  "rollback_ref": "docs/change-evidence/20260419-gap-064-control-rollout-waiver-recovery.md",
+  "status": "active",
+  "repo_id": "python-service-sample",
+  "control_id": "verification-hotspot",
+  "task_id": "gap-064-control-rollout-waiver-recovery",
+  "notes": "Illustrates a temporary waiver that preserves canary rollout but blocks silent promotion to enforce."
+}

@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.1",
+  "generated_at": "2026-04-19T15:00:00Z",
+  "controls": [
+    {
+      "control_id": "verification-hotspot",
+      "plane": "verification",
+      "owner": "runtime-governance",
+      "class": "progressive",
+      "mode": "canary",
+      "status": "active",
+      "lifecycle_status": "trial",
+      "last_reviewed_at": "2026-04-19T12:00:00Z",
+      "next_review_at": "2026-04-26T12:00:00Z",
+      "source_of_truth": "docs/specs/control-registry-spec.md",
+      "artifacts": [
+        "docs/product/maintenance-deprecation-and-retirement-policy.md",
+        "scripts/doctor-runtime.ps1"
+      ],
+      "rollback_ref": "docs/change-evidence/20260419-gap-064-control-rollout-waiver-recovery.md",
+      "observability_signals": [
+        "doctor-runtime",
+        "runtime-status-surface"
+      ],
+      "health_signals": [
+        "canary-pass-rate>=0.95",
+        "rollback-drill-complete"
+      ],
+      "applies_to": {
+        "global": true,
+        "task_classes": [
+          "verification"
+        ]
+      },
+      "rollout_state": {
+        "current_mode": "canary",
+        "target_mode": "enforce",
+        "minimum_observe_days": 7,
+        "promotion_criteria": [
+          "two successful review cycles",
+          "no unresolved rollback gaps"
+        ],
+        "rollback_criteria": [
+          "health signal breach",
+          "missing observability"
+        ],
+        "rollback_owner": "runtime-governance"
+      }
+    }
+  ]
+}

@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260419 GAP-064 Control Rollout Matrix And Waiver Recovery](./20260419-gap-064-control-rollout-waiver-recovery.md)
+  - evidence companion for adding canary and rollback semantics to progressive controls and keeping waivers expiry-bound, recovery-linked, and rollback-aware
 - [20260419 GAP-063 Repo Admission And Compatibility Signal Hardening](./20260419-gap-063-repo-admission-compatibility-hardening.md)
   - evidence companion for turning repo admission into machine-readable accept/warn/block compatibility signals with stricter-only override rules
 - [20260419 GAP-062 Trace Grading And Improvement Baseline](./20260419-gap-062-trace-grading-improvement-baseline.md)

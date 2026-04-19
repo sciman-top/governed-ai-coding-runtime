@@ -15,7 +15,9 @@
     "created_at",
     "expires_at",
     "recovery_plan",
+    "recovery_gate",
     "evidence_link",
+    "rollback_ref",
     "status"
   ],
   "properties": {
@@ -59,7 +61,18 @@
     "recovery_plan": {
       "type": "string"
     },
+    "recovery_gate": {
+      "enum": [
+        "observe_only",
+        "canary_ready",
+        "enforce_ready"
+      ],
+      "type": "string"
+    },
     "evidence_link": {
+      "type": "string"
+    },
+    "rollback_ref": {
       "type": "string"
     },
     "status": {

@@ -36,7 +36,27 @@
             },
             "then": {
               "required": [
-                "observe_to_enforce"
+                "rollout_state"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "mode": {
+                  "enum": [
+                    "canary",
+                    "enforce"
+                  ]
+                }
+              },
+              "required": [
+                "mode"
+              ]
+            },
+            "then": {
+              "required": [
+                "health_signals"
               ]
             }
           },
@@ -93,6 +113,7 @@
           "mode": {
             "enum": [
               "observe",
+              "canary",
               "enforce",
               "advisory"
             ],
@@ -147,6 +168,12 @@
             },
             "type": "array"
           },
+          "health_signals": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "applies_to": {
             "type": "object",
             "additionalProperties": false,
@@ -168,10 +195,36 @@
               }
             }
           },
-          "observe_to_enforce": {
+          "rollout_state": {
             "type": "object",
             "additionalProperties": false,
+            "required": [
+              "current_mode",
+              "target_mode",
+              "promotion_criteria",
+              "rollback_criteria"
+            ],
             "properties": {
+              "current_mode": {
+                "enum": [
+                  "observe",
+                  "canary",
+                  "enforce",
+                  "advisory",
+                  "rollback"
+                ],
+                "type": "string"
+              },
+              "target_mode": {
+                "enum": [
+                  "observe",
+                  "canary",
+                  "enforce",
+                  "advisory",
+                  "rollback"
+                ],
+                "type": "string"
+              },
               "minimum_observe_days": {
                 "minimum": 1,
                 "type": "integer"
@@ -181,6 +234,15 @@
                   "type": "string"
                 },
                 "type": "array"
+              },
+              "rollback_criteria": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "rollback_owner": {
+                "type": "string"
               }
             }
           }
@@ -204,4 +266,3 @@
     }
   }
 }
-

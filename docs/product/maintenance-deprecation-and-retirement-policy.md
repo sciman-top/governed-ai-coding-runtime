@@ -9,6 +9,7 @@
 - maintain the canonical gate order `build -> test -> contract/invariant -> hotspot`
 - maintain schema/spec/example/catalog alignment for runtime-facing contracts
 - maintain explicit adapter posture and fail-closed behavior for unsupported capability surfaces
+- maintain explicit control rollout posture, waiver expiry, and rollback visibility for promoted governance controls
 
 ## Triage Rules
 - defects that break bootstrap, governed task execution, verification routing, status visibility, or evidence persistence are `high`
@@ -24,6 +25,7 @@
   - the earliest retirement point
   - the evidence or migration note that explains the change
 - deprecation without replacement is allowed only when the capability is unsafe and explicitly fails closed
+- controls leaving `enforce` mode must retain rollout evidence explaining whether they moved back to `canary`, `observe`, or `rollback`
 
 ## Retirement Rules
 - retired capabilities may be removed only after a deprecation or evidence trail exists
@@ -32,10 +34,13 @@
   - why it was removed
   - how operators recover old artifacts or historical behavior if needed
 - silent disappearance of operator-visible surfaces, policy docs, or persisted identifiers is not allowed
+- waiver-driven retirement is invalid unless the recovery path and rollback posture are already recorded elsewhere
 
 ## Review Cadence
 - review maintenance policy whenever a change affects adapters, repo profiles, persisted runtime state, or operator-visible schemas
 - update the evidence log whenever maintenance policy itself changes
+- review progressive controls and active waivers before their next promotion or expiry boundary
+- failed promotion or rollback drills must be visible before a control returns to `enforce`
 
 ## Exit Signal
 - the project stays in steady-state maintenance once compatibility, upgrade, deprecation, and retirement remain explicit in docs, runtime status, and doctor checks

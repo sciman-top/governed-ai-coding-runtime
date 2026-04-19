@@ -318,15 +318,15 @@ The entries below are the active queue for complete hybrid final-state closure. 
 - Type: AFK
 - Blocked by: GAP-063
 - User stories: 7, 21, 23, 27, 40
-- Status: planned in governance-optimization lane
+- Status: completed on current branch baseline
 - What to build:
   - rollout-state semantics for `observe`, `canary`, `enforce`, and rollback
   - stronger control-lifecycle metadata for review cadence and health
   - waiver recovery rules tied to expiry, recovery plan, and promotion gates
 - Acceptance criteria:
-  - [ ] progressive controls can move from observe to enforce with explicit evidence and rollback posture
-  - [ ] waivers remain temporary and cannot silently become permanent defaults
-  - [ ] maintenance and retirement policy stays aligned with rollout and recovery semantics
+  - [x] progressive controls can move from observe to enforce with explicit evidence and rollback posture
+  - [x] waivers remain temporary and cannot silently become permanent defaults
+  - [x] maintenance and retirement policy stays aligned with rollout and recovery semantics
 
 ### GAP-065 Knowledge Registry And Repo-Map Context Shaping
 - Type: AFK
