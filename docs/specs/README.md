@@ -17,6 +17,7 @@ This directory holds the normative contract descriptions that the schema drafts 
 - [Session Bridge Command Spec](./session-bridge-command-spec.md)
 - [Waiver And Exception Spec](./waiver-and-exception-spec.md)
 - [Provenance And Attestation Spec](./provenance-and-attestation-spec.md)
+- [Controlled Improvement Proposal Spec](./controlled-improvement-proposal-spec.md)
 
 ### Repo and execution inputs
 - [Repo Admission Minimums Spec](./repo-admission-minimums-spec.md)

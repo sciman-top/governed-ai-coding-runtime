@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/controlled-improvement-proposal.schema.json",
+  "title": "Controlled Improvement Proposal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "proposal_id",
+    "source_refs",
+    "proposal_category",
+    "proposal_scope",
+    "summary",
+    "rationale",
+    "expected_impact",
+    "risk_posture",
+    "human_review",
+    "mutation_guard",
+    "rollback_ref",
+    "status"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "proposal_id": {
+      "pattern": "^[a-z0-9_.-]+$",
+      "type": "string"
+    },
+    "source_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "proposal_category": {
+      "enum": [
+        "skill",
+        "hook",
+        "policy",
+        "control",
+        "knowledge",
+        "repo_followup"
+      ],
+      "type": "string"
+    },
+    "proposal_scope": {
+      "enum": [
+        "unified_governance",
+        "repo_specific"
+      ],
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "rationale": {
+      "type": "string"
+    },
+    "expected_impact": {
+      "type": "string"
+    },
+    "risk_posture": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "type": "string"
+    },
+    "human_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required",
+        "reviewer_role",
+        "approval_ref"
+      ],
+      "properties": {
+        "required": {
+          "const": true
+        },
+        "reviewer_role": {
+          "type": "string"
+        },
+        "approval_ref": {
+          "type": "string"
+        }
+      }
+    },
+    "mutation_guard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allows_direct_mutation",
+        "enforcement_note"
+      ],
+      "properties": {
+        "allows_direct_mutation": {
+          "const": false
+        },
+        "enforcement_note": {
+          "type": "string"
+        }
+      }
+    },
+    "rollback_ref": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "proposed",
+        "under_review",
+        "approved_for_implementation",
+        "rejected",
+        "deferred",
+        "archived"
+      ],
+      "type": "string"
+    },
+    "repo_id": {
+      "type": "string"
+    },
+    "control_id": {
+      "type": "string"
+    },
+    "related_task_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "proposed_changes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "proposal_scope": {
+            "const": "repo_specific"
+          }
+        },
+        "required": [
+          "proposal_scope"
+        ]
+      },
+      "then": {
+        "required": [
+          "repo_id"
+        ]
+      }
+    }
+  ]
+}

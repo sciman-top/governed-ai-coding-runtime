@@ -34,6 +34,7 @@
 | Knowledge readiness signal | Unified governance | missing knowledge posture must be visible before reuse | repos may provide stricter readiness requirements |
 | Eval readiness signal | Unified governance | partial or missing eval posture must not stay implicit | repos may require more eval coverage |
 | Attachment hygiene classification | Unified governance | attachability must distinguish healthy, degraded, and blocked states consistently | repos may tighten entry rules, not downgrade blocked posture |
+| Controlled improvement proposal contract | Unified governance | proposal records must stay structured and non-mutating across repos | repos may submit scoped proposals, not redefine proposal safety guards |
 | Replay / rollback model | Unified governance | failure recovery must be deterministic | repos may provide extra compensation hooks |
 | Control pack metadata schema | Unified governance | reusable control bundles need stable package semantics | repos may select approved packs, not redefine pack semantics |
 | Repository profile schema | Unified governance | profiles need one contract across repos | repos fill values only in allowed fields |
@@ -47,6 +48,7 @@
 | Blocked paths | Repository override | some repos need stronger local protection | can only add blocked paths |
 | Approval escalation thresholds | Repository override | some repos may require stronger review | can only escalate, not weaken platform minimums |
 | Repo admission warning thresholds | Repository override | repos may prefer stricter warning posture before execution begins | can only add warnings or blocks, not weaken kernel blocks |
+| Repo follow-up proposal details | Repository override | repos may propose local follow-ups for their topology and constraints | can only stay repo-scoped and non-mutating |
 | Context shaping hints / repo map hints | Repository override | repo topology differs and may benefit from hints | allowed if bounded to profile schema |
 | Handoff template hints | Repository override | different repos need different review summaries | allowed as additive metadata |
 | Preferred compatible agent adapter | Repository override | repo/operator workflows may prefer Codex CLI/App, MCP, IDE, or manual handoff | allowed if the selected adapter satisfies kernel controls |
@@ -67,6 +69,7 @@
 - tool safety semantics
 - agent adapter capability semantics
 - admission signal semantics
+- controlled proposal safety semantics
 - control pack metadata semantics
 - evidence language
 - validation completion rules
@@ -78,6 +81,7 @@
 - their additional repo-specific checks
 - their stricter admission warnings or blocks
 - their preferred compatible adapter within platform-approved capability bounds
+- their repo-specific follow-up proposal content under human review
 
 ### What repos must not own
 - redefining task lifecycle semantics
@@ -85,6 +89,7 @@
 - weakening evidence requirements
 - weakening core validation semantics
 - downgrading kernel admission blocks into warnings or accepts
+- bypassing proposal human-review boundaries to mutate kernel behavior
 
 ## Related Documents
 - `docs/prd/governed-ai-coding-runtime-prd.md`

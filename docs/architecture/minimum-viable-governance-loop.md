@@ -61,6 +61,11 @@ Define the smallest governance loop that makes AI coding execution controllable,
 - keep proposal generation human-reviewed and non-mutating
 - hand later governance tasks structured inputs instead of anecdotal summaries
 
+12. Register controlled improvement proposals
+- classify proposals into skills, hooks, policy, controls, knowledge, or repo follow-ups
+- preserve boundary between unified governance and repo-specific follow-up scopes
+- keep proposal records advisory until explicit human-reviewed implementation approval exists
+
 ## Required Building Blocks
 - task object
 - repo profile
@@ -74,6 +79,7 @@ Define the smallest governance loop that makes AI coding execution controllable,
 ## Out of Scope For This Loop
 - multi-repo distribution
 - autonomous policy mutation
+- autonomous kernel mutation from proposal records
 - cross-organization federation
 - durable memory product features
 

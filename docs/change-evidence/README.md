@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260419 GAP-067 Controlled Improvement Proposal Pipeline](./20260419-gap-067-controlled-improvement-proposal-pipeline.md)
+  - evidence companion for adding a structured, non-mutating, human-reviewed proposal contract and promoting `GAP-068` as the active closeout item
 - [20260419 GAP-066 Provenance And Attestation For Governance Assets](./20260419-gap-066-governance-asset-provenance.md)
   - evidence companion for requiring rollback-linked provenance records and review-decision references for governance assets
 - [20260419 GAP-065 Knowledge Registry And Repo-Map Context Shaping](./20260419-gap-065-knowledge-registry-and-repo-map.md)

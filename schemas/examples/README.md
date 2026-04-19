@@ -9,6 +9,7 @@ Provide minimal but realistic JSON instances that exercise the repository's curr
 - `knowledge-source/`: knowledge source examples
 - `waiver-and-exception/`: waiver record examples
 - `provenance-and-attestation/`: provenance and attestation examples
+- `controlled-improvement-proposal/`: controlled proposal pipeline examples
 - `repo-map-context-shaping/`: repo-map strategy examples
 - `repo-profile/`: sample target-repository profiles
 - `control-pack/`: sample control-pack metadata
@@ -22,6 +23,7 @@ Provide minimal but realistic JSON instances that exercise the repository's curr
 - `knowledge-source/docs-index-authoritative.example.json`
 - `waiver-and-exception/temporary-gate-waiver.example.json`
 - `provenance-and-attestation/schema-bundle-release.example.json`
+- `controlled-improvement-proposal/policy-rollout-review-proposal.example.json`
 - `repo-map-context-shaping/hybrid-default.example.json`
 - `repo-profile/python-service.example.json`
 - `repo-profile/typescript-webapp.example.json`

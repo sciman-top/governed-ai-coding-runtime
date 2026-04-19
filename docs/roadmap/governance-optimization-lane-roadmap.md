@@ -70,7 +70,7 @@ This lane exists to close those gaps without changing the product identity from 
 
 ### Exit Criteria
 - the governance lane can be rendered as a dedicated epic after `Phase 5`
-- `GAP-061` through `GAP-066` are complete and `GAP-067` through `GAP-068` are now the active lane after `GAP-060` closeout evidence
+- `GAP-061` through `GAP-067` are complete and `GAP-068` is now the active lane after `GAP-060` closeout evidence
 - the lane remains visibly follow-on rather than a replacement for direct-to-hybrid closure
 
 ### GAP-061 Governance Optimization Lane Canonicalization

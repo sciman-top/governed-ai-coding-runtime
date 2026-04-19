@@ -360,21 +360,21 @@ The entries below are the active queue for complete hybrid final-state closure. 
 - Type: HITL
 - Blocked by: GAP-066
 - User stories: 13, 14, 15, 39, 45
-- Status: planned in governance-optimization lane
+- Status: completed on current branch baseline
 - What to build:
   - structured proposal pipeline fed by traces, postmortems, reviewer feedback, and repeated failures
   - proposal buckets for skills, hooks, policy, controls, knowledge, and repo follow-ups
   - human-review boundary that prevents autonomous kernel mutation
 - Acceptance criteria:
-  - [ ] the runtime can emit structured improvement proposals from evidence-backed inputs
-  - [ ] proposal outputs are clearly separated from automatic policy or kernel mutations
-  - [ ] proposal categories preserve the boundary between unified governance and repo-specific follow-up work
+  - [x] the runtime can emit structured improvement proposals from evidence-backed inputs
+  - [x] proposal outputs are clearly separated from automatic policy or kernel mutations
+  - [x] proposal categories preserve the boundary between unified governance and repo-specific follow-up work
 
 ### GAP-068 Governance Optimization Lane Closeout And Claim Discipline
 - Type: HITL
 - Blocked by: GAP-067
 - User stories: 18, 21, 29, 37, 44
-- Status: planned in governance-optimization lane
+- Status: active in governance-optimization lane
 - What to build:
   - final lane closeout criteria, residual risk summary, and deferred-item ledger
   - optimization claim discipline that distinguishes controlled improvement from autonomous self-mutation

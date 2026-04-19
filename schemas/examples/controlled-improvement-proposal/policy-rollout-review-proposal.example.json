@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "proposal_id": "proposal.policy.rollout-observe-to-canary",
+  "source_refs": [
+    "docs/change-evidence/20260419-gap-064-control-rollout-waiver-recovery.md",
+    "docs/change-evidence/20260419-gap-066-governance-asset-provenance.md"
+  ],
+  "proposal_category": "policy",
+  "proposal_scope": "unified_governance",
+  "summary": "Promote verification-hotspot control from observe to canary for selected repos after health-signal baseline stabilizes.",
+  "rationale": "Trace and waiver history show stable rollback posture but incomplete promotion evidence for broad enforce mode.",
+  "expected_impact": "Improves rollout confidence while keeping fail-closed behavior and human review checkpoints.",
+  "risk_posture": "medium",
+  "human_review": {
+    "required": true,
+    "reviewer_role": "governance-reviewer",
+    "approval_ref": "approval.control-rollout.canary-20260419"
+  },
+  "mutation_guard": {
+    "allows_direct_mutation": false,
+    "enforcement_note": "Proposal records are advisory until an explicit implementation task is approved."
+  },
+  "rollback_ref": "docs/change-evidence/20260419-gap-064-control-rollout-waiver-recovery.md",
+  "status": "under_review",
+  "related_task_ids": [
+    "gap-064-control-rollout-waiver-recovery",
+    "gap-067-controlled-improvement-proposal-pipeline"
+  ],
+  "proposed_changes": [
+    "add canary promotion threshold checks to control rollout review",
+    "require explicit rollback drill evidence before enforce transitions"
+  ],
+  "notes": "Illustrates a controlled proposal that cannot mutate policy directly."
+}

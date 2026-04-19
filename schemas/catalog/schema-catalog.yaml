@@ -66,3 +66,6 @@ items:
   - name: session-bridge-command
     path: schemas/jsonschema/session-bridge-command.schema.json
     source_spec: docs/specs/session-bridge-command-spec.md
+  - name: controlled-improvement-proposal
+    path: schemas/jsonschema/controlled-improvement-proposal.schema.json
+    source_spec: docs/specs/controlled-improvement-proposal-spec.md
