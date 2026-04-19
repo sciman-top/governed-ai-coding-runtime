@@ -59,7 +59,9 @@
 - `Governance Optimization Lane / GAP-061` is complete on the current branch baseline as lane canonicalization.
 - `Governance Optimization Lane / GAP-062` through `GAP-063` are complete on the current branch baseline.
 - `Governance Optimization Lane / GAP-062` through `GAP-064` are complete on the current branch baseline.
-- `Governance Optimization Lane / GAP-065` through `GAP-068` is the active governance-only queue.
+- `Governance Optimization Lane / GAP-062` through `GAP-065` are complete on the current branch baseline.
+- `Governance Optimization Lane / GAP-062` through `GAP-066` are complete on the current branch baseline.
+- `Governance Optimization Lane / GAP-067` through `GAP-068` is the active governance-only queue.
 - Active verification for this repo remains `build -> test -> contract/invariant -> doctor`, with docs and script checks still included in `verify-repo -Check All`.
 - `docs/change-evidence/` remains historical evidence and planning trace, not the primary user-facing product surface.
 

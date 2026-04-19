@@ -4,7 +4,7 @@
 Draft
 
 ## Purpose
-Define bounded repository mapping and context-shaping rules used to assemble repo-aware session context.
+Define bounded repository mapping and context-shaping rules used to assemble repo-aware session context as a governed knowledge input.
 
 ## Required Fields
 - strategy_id
@@ -14,6 +14,8 @@ Define bounded repository mapping and context-shaping rules used to assemble rep
 - include_rules
 - exclude_rules
 - serialization_format
+- knowledge_source_refs
+- review_status
 
 ## Optional Fields
 - symbol_kinds
@@ -43,12 +45,21 @@ Define bounded repository mapping and context-shaping rules used to assemble rep
 - markdown_map
 - json_map
 
+### review_status
+- draft
+- reviewed
+- approved
+- stale
+
 ## Invariants
 - context shaping must stay within an explicit token budget
 - exclusion rules must win over inclusion rules when both match the same target
 - repo maps may prioritize context but may not bypass repo admission or policy enforcement
 - `mode=none` must not emit ranked repository output
+- repo-map strategies must point to reviewable `knowledge_source_refs` rather than acting as an implicit hidden agent behavior
+- memory-like sources may inform ranking only when they remain non-authoritative and reviewable through linked knowledge-source records
 
 ## Non-Goals
 - IDE-specific navigation behavior
 - model-provider-specific prompt templates
+- turning repo maps into an implicit memory product

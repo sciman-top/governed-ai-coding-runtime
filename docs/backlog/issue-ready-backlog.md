@@ -332,29 +332,29 @@ The entries below are the active queue for complete hybrid final-state closure. 
 - Type: AFK
 - Blocked by: GAP-064
 - User stories: 2, 20, 31, 37, 44
-- Status: planned in governance-optimization lane
+- Status: completed on current branch baseline
 - What to build:
   - knowledge-source trust, freshness, precedence, and drift rules
   - repo-map context shaping as a governed knowledge input instead of an implicit agent behavior
   - guardrails that keep memory-like sources non-authoritative
 - Acceptance criteria:
-  - [ ] knowledge sources are typed, versioned, and reviewable
-  - [ ] repo-map context shaping is reusable across repos without leaking into kernel truth semantics
-  - [ ] memory-like sources remain explicitly non-authoritative
+  - [x] knowledge sources are typed, versioned, and reviewable
+  - [x] repo-map context shaping is reusable across repos without leaking into kernel truth semantics
+  - [x] memory-like sources remain explicitly non-authoritative
 
 ### GAP-066 Provenance And Attestation For Governance Assets
 - Type: AFK
 - Blocked by: GAP-065
 - User stories: 21, 31, 37, 38, 44
-- Status: planned in governance-optimization lane
+- Status: completed on current branch baseline
 - What to build:
   - provenance minimums for control packs, schema bundles, and release-adjacent governance artifacts
   - stronger linkage between provenance, verification state, and rollback visibility
   - clear statement that provenance augments rather than replaces evidence and approval records
 - Acceptance criteria:
-  - [ ] governance assets can carry provenance records with stable references
-  - [ ] provenance status can be used in promotion or review decisions when present
-  - [ ] provenance does not displace evidence, approval, or rollback records
+  - [x] governance assets can carry provenance records with stable references
+  - [x] provenance status can be used in promotion or review decisions when present
+  - [x] provenance does not displace evidence, approval, or rollback records
 
 ### GAP-067 Controlled Improvement Proposal Pipeline
 - Type: HITL

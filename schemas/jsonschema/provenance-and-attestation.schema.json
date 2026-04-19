@@ -14,7 +14,8 @@
     "producer",
     "generated_at",
     "materials",
-    "verification_status"
+    "verification_status",
+    "rollback_ref"
   ],
   "allOf": [
     {
@@ -58,7 +59,8 @@
         "control_pack",
         "schema_bundle",
         "release",
-        "evidence_bundle"
+        "evidence_bundle",
+        "governance_asset"
       ],
       "type": "string"
     },
@@ -107,6 +109,9 @@
       ],
       "type": "string"
     },
+    "rollback_ref": {
+      "type": "string"
+    },
     "build_ref": {
       "type": "string"
     },
@@ -120,6 +125,12 @@
       "type": "string"
     },
     "signature_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "review_decision_refs": {
       "type": "array",
       "items": {
         "type": "string"

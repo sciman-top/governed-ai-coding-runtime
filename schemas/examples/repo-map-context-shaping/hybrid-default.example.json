@@ -19,6 +19,11 @@
     ".next/**"
   ],
   "serialization_format": "markdown_map",
+  "knowledge_source_refs": [
+    "docs-index-authoritative",
+    "repo-map-governance-default"
+  ],
+  "review_status": "approved",
   "symbol_kinds": [
     "module",
     "class",

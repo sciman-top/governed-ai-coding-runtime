@@ -4,6 +4,10 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260419 GAP-066 Provenance And Attestation For Governance Assets](./20260419-gap-066-governance-asset-provenance.md)
+  - evidence companion for requiring rollback-linked provenance records and review-decision references for governance assets
+- [20260419 GAP-065 Knowledge Registry And Repo-Map Context Shaping](./20260419-gap-065-knowledge-registry-and-repo-map.md)
+  - evidence companion for turning knowledge inputs and repo-map shaping into reviewable governance assets with explicit drift and precedence posture
 - [20260419 GAP-064 Control Rollout Matrix And Waiver Recovery](./20260419-gap-064-control-rollout-waiver-recovery.md)
   - evidence companion for adding canary and rollback semantics to progressive controls and keeping waivers expiry-bound, recovery-linked, and rollback-aware
 - [20260419 GAP-063 Repo Admission And Compatibility Signal Hardening](./20260419-gap-063-repo-admission-compatibility-hardening.md)

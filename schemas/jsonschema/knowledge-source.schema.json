@@ -40,7 +40,10 @@
     "freshness_policy",
     "owner",
     "access_policy",
-    "serialization_format"
+    "serialization_format",
+    "review_status",
+    "precedence",
+    "drift_policy"
   ],
   "properties": {
     "schema_version": {
@@ -114,6 +117,15 @@
     "serialization_format": {
       "type": "string"
     },
+    "review_status": {
+      "enum": [
+        "draft",
+        "reviewed",
+        "approved",
+        "stale"
+      ],
+      "type": "string"
+    },
     "repo_scope": {
       "type": "array",
       "items": {
@@ -133,6 +145,28 @@
     "precedence": {
       "minimum": 0,
       "type": "integer"
+    },
+    "drift_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "fixed",
+            "review_on_change",
+            "ttl_refresh",
+            "manual_refresh"
+          ],
+          "type": "string"
+        },
+        "max_staleness_days": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      }
     },
     "notes": {
       "type": "string"

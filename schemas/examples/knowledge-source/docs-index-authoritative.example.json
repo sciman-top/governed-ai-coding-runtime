@@ -11,6 +11,7 @@
   "owner": "kernel-docs",
   "access_policy": "read_only",
   "serialization_format": "markdown",
+  "review_status": "approved",
   "repo_scope": [
     "governed-ai-coding-runtime"
   ],
@@ -20,5 +21,9 @@
   ],
   "cache_ttl_s": 3600,
   "precedence": 10,
+  "drift_policy": {
+    "mode": "review_on_change",
+    "max_staleness_days": 14
+  },
   "notes": "Canonical index for repository-level design and execution documents."
 }

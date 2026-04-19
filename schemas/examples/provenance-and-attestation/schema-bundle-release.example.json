@@ -18,7 +18,11 @@
     }
   ],
   "verification_status": "verified",
+  "rollback_ref": "docs/change-evidence/20260419-gap-066-governance-asset-provenance.md",
   "repo_id": "governed-ai-coding-runtime",
   "statement_ref": "attestations/schema-bundle-2026-04-17.intoto.jsonl",
+  "review_decision_refs": [
+    "docs/change-evidence/20260419-gap-066-governance-asset-provenance.md"
+  ],
   "notes": "Illustrates a verified attestation that points to a statement artifact."
 }
