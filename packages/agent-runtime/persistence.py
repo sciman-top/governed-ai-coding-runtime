@@ -133,7 +133,11 @@ class PostgresMetadataStore:
         key_value = _required_string(key, "key")
         with self._connection() as conn:
             row = conn.execute(
-                "SELECT namespace, key, payload, updated_at FROM runtime_metadata WHERE namespace = %s AND key = %s",
+                """
+                SELECT namespace, key, payload::text, updated_at::text
+                FROM runtime_metadata
+                WHERE namespace = %s AND key = %s
+                """,
                 (namespace_value, key_value),
             ).fetchone()
         if row is None:
@@ -142,18 +146,23 @@ class PostgresMetadataStore:
             namespace=row[0],
             key=row[1],
             payload=_load_payload(row[2]),
-            updated_at=row[3],
+            updated_at=_load_text(row[3]),
         )
 
     def list_namespace(self, *, namespace: str) -> list[MetadataRecord]:
         namespace_value = _required_string(namespace, "namespace")
         with self._connection() as conn:
             rows = conn.execute(
-                "SELECT namespace, key, payload, updated_at FROM runtime_metadata WHERE namespace = %s ORDER BY key",
+                """
+                SELECT namespace, key, payload::text, updated_at::text
+                FROM runtime_metadata
+                WHERE namespace = %s
+                ORDER BY key
+                """,
                 (namespace_value,),
             ).fetchall()
         return [
-            MetadataRecord(namespace=row[0], key=row[1], payload=_load_payload(row[2]), updated_at=row[3])
+            MetadataRecord(namespace=row[0], key=row[1], payload=_load_payload(row[2]), updated_at=_load_text(row[3]))
             for row in rows
         ]
 
@@ -191,4 +200,8 @@ def _required_string(value: str, field_name: str) -> str:
 def _load_payload(payload: object) -> dict:
     if isinstance(payload, str):
         return json.loads(payload)
-    return payload
+    return dict(payload)
+
+
+def _load_text(value: object) -> str:
+    return value if isinstance(value, str) else str(value)

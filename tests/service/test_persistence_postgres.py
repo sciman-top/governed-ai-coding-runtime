@@ -100,15 +100,21 @@ class PostgresPersistenceTests(unittest.TestCase):
         self.assertEqual(first.namespace, "verification_runs")
         self.assertEqual(second.key, "a")
         self.assertEqual(record.payload, {"status": "pass"})
+        self.assertIsInstance(record.updated_at, str)
         self.assertEqual([item.key for item in records], ["a", "b"])
+        self.assertTrue(all(isinstance(item.updated_at, str) for item in records))
         self.assertEqual(connection.commit_calls, 5)
         self.assertEqual(connection.close_calls, 5)
+        self.assertIn("payload::text", connection.executed[3][0])
+        self.assertIn("updated_at::text", connection.executed[3][0])
+        self.assertIn("payload::text", connection.executed[4][0])
+        self.assertIn("updated_at::text", connection.executed[4][0])
         self.assertIn("%s", connection.executed[1][0])
         self.assertEqual(connection.last_dsn, "postgresql://example/db")
 
     def test_postgres_metadata_store_requires_dsn_and_psycopg(self) -> None:
-        sys.modules.pop("psycopg", None)
         persistence_module = _load_module("packages/agent-runtime/persistence.py", "test_service_persistence_postgres")
+        persistence_module.psycopg = None
 
         with self.assertRaises(ValueError):
             persistence_module.PostgresMetadataStore("")
