@@ -23,6 +23,12 @@ def handle_operator_route(facade: Any, payload: dict) -> dict:
             run_id=_string_or_none(payload.get("run_id")),
             handoff_ref=_string_or_none(payload.get("handoff_ref")),
         )
+    if action == "inspect_adapter_events":
+        return facade.operator_inspect_adapter_events(
+            task_id=_required_string(payload.get("task_id"), "task_id"),
+            execution_id=_string_or_none(payload.get("execution_id")),
+            continuation_id=_string_or_none(payload.get("continuation_id")),
+        )
     msg = f"unsupported operator action: {action}"
     raise ValueError(msg)
 

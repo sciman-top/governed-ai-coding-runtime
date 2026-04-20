@@ -23,6 +23,21 @@ def _load_module(relative_path: str, module_name: str):
 
 
 class SessionApiTests(unittest.TestCase):
+    def test_health_reports_active_metadata_backend(self) -> None:
+        service_facade_module = _load_module("packages/agent-runtime/service_facade.py", "service_facade_health")
+
+        class _Store:
+            pass
+
+        facade = service_facade_module.RuntimeServiceFacade(
+            repo_root=ROOT,
+            task_root=ROOT / ".runtime" / "tasks",
+            metadata_store=_Store(),
+        )
+
+        health = facade.health()
+        self.assertEqual(health["metadata_backend"], "_Store")
+
     def test_service_session_api_matches_session_bridge_contract_for_quick_gate_plan(self) -> None:
         service_facade_module = _load_module("packages/agent-runtime/service_facade.py", "service_facade")
         tracing_module = _load_module("packages/observability/runtime_tracing.py", "runtime_tracing")
