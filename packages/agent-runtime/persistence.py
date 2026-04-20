@@ -114,17 +114,16 @@ class PostgresMetadataStore:
         namespace_value = _required_string(namespace, "namespace")
         key_value = _required_string(key, "key")
         updated_at = datetime.now(UTC).isoformat()
-        payload_json = json.dumps(payload, sort_keys=True)
         with self._connection() as conn:
             conn.execute(
                 """
                 INSERT INTO runtime_metadata(namespace, key, payload, updated_at)
-                VALUES (%s, %s, %s, %s)
+                VALUES (%s, %s, %s::jsonb, %s::timestamptz)
                 ON CONFLICT (namespace, key) DO UPDATE SET
                     payload = EXCLUDED.payload,
                     updated_at = EXCLUDED.updated_at
                 """,
-                (namespace_value, key_value, payload_json, updated_at),
+                (namespace_value, key_value, json.dumps(payload, sort_keys=True), updated_at),
             )
         return MetadataRecord(namespace=namespace_value, key=key_value, payload=dict(payload), updated_at=updated_at)
 
@@ -173,10 +172,16 @@ class PostgresMetadataStore:
                 CREATE TABLE IF NOT EXISTS runtime_metadata (
                     namespace TEXT NOT NULL,
                     key TEXT NOT NULL,
-                    payload TEXT NOT NULL,
-                    updated_at TEXT NOT NULL,
+                    payload JSONB NOT NULL,
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                     PRIMARY KEY(namespace, key)
                 )
+                """
+            )
+            conn.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_runtime_metadata_namespace
+                ON runtime_metadata(namespace)
                 """
             )
 
