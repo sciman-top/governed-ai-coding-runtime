@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "governed-ai-coding-runtime"
+version = "0.0.0"
+dependencies = []
+
+[project.optional-dependencies]
+service = [
+  "fastapi>=0.115",
+  "uvicorn>=0.30",
+  "psycopg[binary]>=3.2",
+]
