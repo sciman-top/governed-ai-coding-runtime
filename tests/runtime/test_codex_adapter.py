@@ -282,6 +282,31 @@ class CodexAdapterTests(unittest.TestCase):
         self.assertTrue(any(event.payload.get("capability") == "structured_events" for event in unsupported))
         self.assertTrue(any(event.payload.get("event_type") == "tool_diff_chunk" for event in unsupported))
 
+    def test_codex_session_evidence_can_be_normalized_for_durable_sink(self) -> None:
+        module = self._module()
+
+        session = module.CodexSessionEvidence(
+            task_id="task-durable",
+            adapter_id="codex-cli",
+            adapter_tier="process_bridge",
+            flow_kind="process_bridge",
+            file_changes=["src/service.py"],
+            tool_calls=[{"tool": "apply_patch"}],
+            gate_runs=["artifacts/task-durable/run-1/verification-output/test.txt"],
+            approvals=["approval-1"],
+            handoff_refs=["artifacts/task-durable/run-1/handoff/package.json"],
+            unsupported_capabilities=[],
+            execution_id="task-durable:run-1",
+            continuation_id="task-durable:run-1",
+            event_source="live_adapter",
+        )
+
+        payloads = module.codex_session_events_to_records(session)
+
+        self.assertGreaterEqual(len(payloads), 5)
+        self.assertTrue(all(item["task_id"] == "task-durable" for item in payloads))
+        self.assertTrue(all(item["execution_id"] == "task-durable:run-1" for item in payloads))
+
     def test_codex_adapter_trial_defaults_to_safe_mode_with_stable_refs(self) -> None:
         module = self._module()
 

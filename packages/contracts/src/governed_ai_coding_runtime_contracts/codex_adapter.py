@@ -331,6 +331,55 @@ def record_codex_session_evidence(
     return events
 
 
+def codex_session_events_to_records(session: CodexSessionEvidence) -> list[dict]:
+    records: list[dict] = []
+    created_at = datetime.now(UTC).isoformat()
+
+    def _record(event_type: str, payload: dict) -> None:
+        record = {
+            "task_id": session.task_id,
+            "adapter_id": session.adapter_id,
+            "adapter_tier": session.adapter_tier,
+            "flow_kind": session.flow_kind,
+            "event_type": event_type,
+            "payload": dict(payload),
+            "execution_id": session.execution_id,
+            "continuation_id": session.continuation_id,
+            "event_source": session.event_source,
+            "created_at": created_at,
+        }
+        records.append(record)
+
+    _record(
+        "codex_adapter_posture",
+        {"unsupported_capabilities": list(session.unsupported_capabilities)},
+    )
+    for path in session.file_changes:
+        _record("adapter_file_change", {"path": path})
+    for tool_call in session.tool_calls:
+        _record("adapter_tool_call", dict(tool_call))
+    for gate_run in session.gate_runs:
+        _record("adapter_gate_run", {"artifact_ref": gate_run})
+    for approval in session.approvals:
+        _record("adapter_approval_event", {"approval_id": approval})
+    for handoff in session.handoff_refs:
+        _record("adapter_handoff", {"handoff_ref": handoff})
+    for capability in session.unsupported_capabilities:
+        _record(
+            "adapter_unsupported_event",
+            {
+                "capability": capability,
+                "reason": "unsupported capability recorded by adapter posture",
+            },
+        )
+    for item in session.unsupported_events or []:
+        if not isinstance(item, dict):
+            continue
+        _record("adapter_unsupported_event", dict(item))
+
+    return records
+
+
 def build_codex_adapter_trial_result(
     *,
     repo_id: str,
