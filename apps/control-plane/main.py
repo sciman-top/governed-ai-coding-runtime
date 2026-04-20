@@ -19,7 +19,10 @@ def _load_module(path: Path, module_name: str):
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Control-plane facade entrypoint.")
+    parser = argparse.ArgumentParser(description="Control-plane entrypoint.")
+    parser.add_argument("--serve", action="store_true")
+    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--route", choices=["/session", "/operator", "/health"], default="/health")
     parser.add_argument("--payload-json", default="{}")
     parser.add_argument("--repo-root", default=str(Path(__file__).resolve().parents[2]))
@@ -27,6 +30,19 @@ def main() -> int:
     args = parser.parse_args()
 
     repo_root = Path(args.repo_root).resolve(strict=False)
+    if args.serve:
+        try:
+            import uvicorn
+        except ModuleNotFoundError as exc:  # pragma: no cover - service extras missing path
+            raise RuntimeError("uvicorn is required for --serve mode. Install optional dependency group: service") from exc
+        http_module = _load_module(
+            repo_root / "apps" / "control-plane" / "http_app.py",
+            "control_plane_http_app",
+        )
+        app = http_module.create_app(repo_root=repo_root, task_root=args.task_root)
+        uvicorn.run(app, host=args.host, port=args.port)
+        return 0
+
     facade_module = _load_module(
         repo_root / "packages" / "agent-runtime" / "service_facade.py",
         "agent_runtime_service_facade",
