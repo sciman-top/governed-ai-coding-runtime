@@ -36,6 +36,9 @@ The current future-facing closure and follow-on planning package is:
 - governance follow-on lane after `GAP-060`:
   - `docs/roadmap/governance-optimization-lane-roadmap.md`
   - `docs/plans/governance-optimization-lane-implementation-plan.md`
+- post-closeout optimization queue after `GAP-068`:
+  - `docs/backlog/issue-ready-backlog.md` (`GAP-069` through `GAP-074`)
+  - `docs/backlog/issue-seeds.yaml`
 
 ## Goal
 - Define the final product shape for this personal free open-source project.
@@ -257,6 +260,7 @@ Interpretation note: satisfying `Stage 8` hardens the landed hybrid boundary and
 - `Stage 7` plus `Stage 8` complete should be read as "landed hybrid boundary + hardening dependencies complete", not as "complete hybrid final-state closure".
 - The active closure queue after that landed boundary is `GAP-045` onward in the direct-to-hybrid-final-state roadmap and implementation plan.
 - `GAP-061` through `GAP-068` were the governance-only follow-on lane after `GAP-060` and are now complete; they still do not replace or retroactively redefine the closure queue.
+- `GAP-069` through `GAP-074` are complete as the post-closeout optimization queue for host-neutral boundary hardening, low-friction onboarding, evidence-SLO durability, claim-drift prevention, and queue-sync automation.
 - `docs/plans/foundation-runtime-substrate-implementation-plan.md`, `docs/plans/full-runtime-implementation-plan.md`, `docs/plans/public-usable-release-implementation-plan.md`, and `docs/plans/maintenance-implementation-plan.md` are execution history for completed local-baseline stages.
 
 ## Lifecycle Completion Criteria

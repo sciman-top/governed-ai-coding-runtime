@@ -9,11 +9,6 @@ import json
 from pathlib import Path
 import sqlite3
 
-try:
-    import psycopg
-except ImportError:  # pragma: no cover - exercised through runtime fallback tests
-    psycopg = None
-
 
 @dataclass(frozen=True, slots=True)
 class MetadataRecord:
@@ -102,111 +97,8 @@ class SqliteMetadataStore:
             conn.close()
 
 
-class PostgresMetadataStore:
-    def __init__(self, dsn: str) -> None:
-        dsn_value = _required_string(dsn, "dsn")
-        if psycopg is None:
-            raise RuntimeError("psycopg is required for PostgresMetadataStore")
-        self._dsn = dsn_value
-        self._init_schema()
-
-    def upsert(self, *, namespace: str, key: str, payload: dict) -> MetadataRecord:
-        namespace_value = _required_string(namespace, "namespace")
-        key_value = _required_string(key, "key")
-        updated_at = datetime.now(UTC).isoformat()
-        with self._connection() as conn:
-            conn.execute(
-                """
-                INSERT INTO runtime_metadata(namespace, key, payload, updated_at)
-                VALUES (%s, %s, %s::jsonb, %s::timestamptz)
-                ON CONFLICT (namespace, key) DO UPDATE SET
-                    payload = EXCLUDED.payload,
-                    updated_at = EXCLUDED.updated_at
-                """,
-                (namespace_value, key_value, json.dumps(payload, sort_keys=True), updated_at),
-            )
-        return MetadataRecord(namespace=namespace_value, key=key_value, payload=dict(payload), updated_at=updated_at)
-
-    def get(self, *, namespace: str, key: str) -> MetadataRecord | None:
-        namespace_value = _required_string(namespace, "namespace")
-        key_value = _required_string(key, "key")
-        with self._connection() as conn:
-            row = conn.execute(
-                """
-                SELECT namespace, key, payload::text, updated_at::text
-                FROM runtime_metadata
-                WHERE namespace = %s AND key = %s
-                """,
-                (namespace_value, key_value),
-            ).fetchone()
-        if row is None:
-            return None
-        return MetadataRecord(
-            namespace=row[0],
-            key=row[1],
-            payload=_load_payload(row[2]),
-            updated_at=_load_text(row[3]),
-        )
-
-    def list_namespace(self, *, namespace: str) -> list[MetadataRecord]:
-        namespace_value = _required_string(namespace, "namespace")
-        with self._connection() as conn:
-            rows = conn.execute(
-                """
-                SELECT namespace, key, payload::text, updated_at::text
-                FROM runtime_metadata
-                WHERE namespace = %s
-                ORDER BY key
-                """,
-                (namespace_value,),
-            ).fetchall()
-        return [
-            MetadataRecord(namespace=row[0], key=row[1], payload=_load_payload(row[2]), updated_at=_load_text(row[3]))
-            for row in rows
-        ]
-
-    def _init_schema(self) -> None:
-        with self._connection() as conn:
-            conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS runtime_metadata (
-                    namespace TEXT NOT NULL,
-                    key TEXT NOT NULL,
-                    payload JSONB NOT NULL,
-                    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                    PRIMARY KEY(namespace, key)
-                )
-                """
-            )
-            conn.execute(
-                """
-                CREATE INDEX IF NOT EXISTS idx_runtime_metadata_namespace
-                ON runtime_metadata(namespace)
-                """
-            )
-
-    @contextmanager
-    def _connection(self):
-        conn = psycopg.connect(self._dsn)
-        try:
-            yield conn
-            conn.commit()
-        finally:
-            conn.close()
-
-
 def _required_string(value: str, field_name: str) -> str:
     if not isinstance(value, str) or not value.strip():
         msg = f"{field_name} is required"
         raise ValueError(msg)
     return value.strip()
-
-
-def _load_payload(payload: object) -> dict:
-    if isinstance(payload, str):
-        return json.loads(payload)
-    return dict(payload)
-
-
-def _load_text(value: object) -> str:
-    return value if isinstance(value, str) else str(value)

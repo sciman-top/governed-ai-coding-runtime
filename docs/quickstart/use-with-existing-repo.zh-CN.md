@@ -10,7 +10,14 @@
 - 通过本地 `session-bridge` 请求 posture 和 gate plan
 - 在目标仓 cwd 执行声明的 verification gates
 
-但这还不是“runtime 已经完整接管 Codex 在目标仓中的真实高风险写入”。
+但这仍不等于“在所有宿主/环境/仓库/高风险流程中已经实现 runtime 全量接管”。
+
+## 对 AI 编码的具体辅助作用（在已接入目标仓）
+- 执行前能力可见：`status`/`doctor` 先给出 adapter 姿态，减少运行中降级惊讶
+- 统一 gate 执行面：通过 bridge 跑标准验证链，避免“只跑了部分检查”
+- 风险写入治理：medium/high 写入触发审批或 fail-closed，降低越权写入
+- 证据化交付：执行后产出 approval/evidence/handoff/replay refs，方便交接与回滚
+- 多仓可复用：同一 attach 协议与 daily flow 可在多个仓稳定复用
 
 ## 推荐流程
 
@@ -27,8 +34,12 @@ python scripts/attach-target-repo.py `
   --build-command "dotnet build ClassroomToolkit.sln -c Debug" `
   --test-command "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug" `
   --contract-command "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug --filter \"FullyQualifiedName~ArchitectureDependencyTests|FullyQualifiedName~InteropHookLifecycleContractTests|FullyQualifiedName~InteropHookEventDispatchContractTests|FullyQualifiedName~GlobalHookServiceLifecycleContractTests|FullyQualifiedName~CrossPageDisplayLifecycleContractTests\"" `
-  --adapter-preference "process_bridge"
+  --adapter-preference "native_attach"
 ```
+
+推荐姿态：
+- 接入时将 `native_attach` 作为首选 adapter tier
+- 保留 runtime 回退能力，live probe 若判定不可用则自动降级到 `process_bridge` / `manual_handoff`
 
 PowerShell 注意：
 - `--contract-command` 一旦包含 `|`，PowerShell 可能把它当作管道解析。建议把整个参数值改为单引号包裹，或先用无过滤版本命令接入，后续再收敛过滤条件。
@@ -182,11 +193,12 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow.ps1 `
   -RepoId "classroomtoolkit" `
   -DisplayName "ClassroomToolkit" `
   -PrimaryLanguage "csharp" `
-  -BuildCommand "dotnet build ClassroomToolkit.sln -c Debug" `
-  -TestCommand "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug" `
-  -ContractCommand "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug" `
   -Mode "quick"
 ```
+
+说明：
+- `onboard` 现在默认会根据 `-PrimaryLanguage` 推断缺失的 build/test/contract 命令。
+- 如果你要强制显式命令模式，请加 `-RequireExplicitGateCommands`，并同时传入三条命令。
 
 日常检查（跳过 attach，直接执行检查链）：
 
@@ -255,8 +267,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
 
 ## 当前边界
 - 适合做 attachment、posture inspection、attached gate planning、declared gate execution
-- 适合为外部仓建立 governed repo profile
-- 还不等于让 Codex CLI 在目标仓里进入完整 runtime-owned 的 approval / execution / evidence / rollback 闭环
+- 适合为外部仓建立 governed repo profile，并运行 runtime-managed 写治理流
+- 仍不应宣称“所有宿主/环境/仓库都已达到完整 runtime-owned 全接管闭环”
 
 ## 相关文档
 - [Target Repo Attachment Flow](../product/target-repo-attachment-flow.zh-CN.md)

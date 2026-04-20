@@ -22,7 +22,8 @@ param(
   [string]$WriteTargetPath = "",
   [ValidateSet("low", "medium", "high")]
   [string]$WriteTier = "medium",
-  [string]$WriteToolName = "apply_patch",
+  [string]$WriteToolName = "write_file",
+  [string]$WriteToolCommand = "",
   [string]$RollbackReference = "",
   [string]$WriteContent = "governed runtime write probe",
   [switch]$ExecuteWriteFlow,
@@ -87,6 +88,38 @@ function Resolve-AbsolutePath {
     return [System.IO.Path]::GetFullPath($PathValue)
   }
   return [System.IO.Path]::GetFullPath((Join-Path (Get-Location).Path $PathValue))
+}
+
+function Build-WriteToolCommand {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$ToolName,
+    [Parameter(Mandatory = $true)]
+    [string]$TargetPath,
+    [Parameter(Mandatory = $true)]
+    [string]$Content,
+    [string]$ExplicitCommand = ""
+  )
+
+  if (-not [string]::IsNullOrWhiteSpace($ExplicitCommand)) {
+    return $ExplicitCommand
+  }
+
+  $normalizedTool = $ToolName.Trim().ToLowerInvariant()
+  if ($normalizedTool -eq "shell") {
+    if ([string]::IsNullOrWhiteSpace($TargetPath)) {
+      throw "WriteTargetPath is required when WriteToolName is shell."
+    }
+    $escapedTarget = $TargetPath.Replace("'", "''")
+    $escapedContent = $Content.Replace("'", "''")
+    return "Set-Content -LiteralPath '$escapedTarget' -Value '$escapedContent' -Encoding utf8"
+  }
+
+  if ($normalizedTool -eq "git" -or $normalizedTool -eq "package") {
+    throw "WriteToolCommand is required when WriteToolName is git or package."
+  }
+
+  return ""
 }
 
 $python = Get-PythonCommand
@@ -172,11 +205,28 @@ $writeGovernancePayload = $null
 $writeApprovalPayload = $null
 $writeExecutePayload = $null
 if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
+  $resolvedWriteToolCommand = Build-WriteToolCommand -ToolName $WriteToolName -TargetPath $WriteTargetPath -Content $WriteContent -ExplicitCommand $WriteToolCommand
   if ([string]::IsNullOrWhiteSpace($RollbackReference)) {
     $RollbackReference = "git diff -- $WriteTargetPath"
   }
   $writeStep = Invoke-CommandCapture -Label "govern-attachment-write" -Command {
-    & $python "scripts/run-governed-task.py" "govern-attachment-write" "--attachment-root" $resolvedAttachmentRoot "--attachment-runtime-state-root" $resolvedAttachmentRuntimeStateRoot "--task-id" $TaskId "--tool-name" $WriteToolName "--target-path" $WriteTargetPath "--tier" $WriteTier "--rollback-reference" $RollbackReference "--json"
+    $governArgs = @(
+      "scripts/run-governed-task.py",
+      "govern-attachment-write",
+      "--attachment-root", $resolvedAttachmentRoot,
+      "--attachment-runtime-state-root", $resolvedAttachmentRuntimeStateRoot,
+      "--task-id", $TaskId,
+      "--adapter-id", $AdapterId,
+      "--tool-name", $WriteToolName,
+      "--target-path", $WriteTargetPath,
+      "--tier", $WriteTier,
+      "--rollback-reference", $RollbackReference,
+      "--json"
+    )
+    if (-not [string]::IsNullOrWhiteSpace($resolvedWriteToolCommand)) {
+      $governArgs += @("--tool-command", $resolvedWriteToolCommand)
+    }
+    & $python @governArgs
   }
   $steps.Add($writeStep) | Out-Null
   if ($writeStep.exit_code -ne 0) {
@@ -192,7 +242,7 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
     if ($writeGovernancePayload.approval_id) {
       $resolvedApprovalId = [string]$writeGovernancePayload.approval_id
       $approveStep = Invoke-CommandCapture -Label "decide-attachment-write" -Command {
-        & $python "scripts/run-governed-task.py" "decide-attachment-write" "--attachment-runtime-state-root" $resolvedAttachmentRuntimeStateRoot "--approval-id" $resolvedApprovalId "--decision" "approve" "--decided-by" "runtime-check" "--json"
+        & $python "scripts/run-governed-task.py" "decide-attachment-write" "--attachment-runtime-state-root" $resolvedAttachmentRuntimeStateRoot "--approval-id" $resolvedApprovalId "--decision" "approve" "--decided-by" "runtime-check" "--adapter-id" $AdapterId "--json"
       }
       $steps.Add($approveStep) | Out-Null
       if ($approveStep.exit_code -ne 0) {
@@ -210,6 +260,7 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
       "--attachment-root", $resolvedAttachmentRoot,
       "--attachment-runtime-state-root", $resolvedAttachmentRuntimeStateRoot,
       "--task-id", $TaskId,
+      "--adapter-id", $AdapterId,
       "--tool-name", $WriteToolName,
       "--target-path", $WriteTargetPath,
       "--tier", $WriteTier,
@@ -217,6 +268,9 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
       "--content", $WriteContent,
       "--json"
     )
+    if (-not [string]::IsNullOrWhiteSpace($resolvedWriteToolCommand)) {
+      $executeArgs += @("--tool-command", $resolvedWriteToolCommand)
+    }
     if (-not [string]::IsNullOrWhiteSpace($resolvedApprovalId)) {
       $executeArgs += @("--approval-id", $resolvedApprovalId)
     }

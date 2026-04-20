@@ -20,7 +20,10 @@ Available now:
 
 - Repository verification over docs, schemas, catalog, scripts, and runtime contract tests.
 - Foundation-grade build and doctor gates.
-- A first scripted read-only trial.
+- A first scripted read-only trial baseline.
+- Codex capability readiness surfaced from runtime status/doctor (adapter tier, flow kind, degrade reasons, remediation hints).
+- Runtime-managed gate execution through session bridge (`run_quick_gate` / `run_full_gate`, with optional `plan_only`).
+- Runtime-managed attached write governance flow through session bridge (`write_request` / `write_approve` / `write_execute` / `write_status`) with approval/evidence/handoff/replay refs.
 - A safe-mode Codex adapter smoke trial that reports task, binding, evidence, and verification wiring.
 - A profile-based multi-repo trial runner that reports per-repo posture, adapter tier, verification refs, evidence refs, and follow-ups.
 - Attachment of an external target repo such as `D:\OneDrive\CODE\ClassroomToolkit`, including `.governed-ai` light-pack generation or validation plus status/doctor/session-bridge posture checks.
@@ -32,7 +35,9 @@ Not available yet:
 - No database or multi-machine workflow worker.
 - The package bundle is a local distribution directory, not an installer or published channel.
 - The richer operator UI is a local HTML surface, not a long-running web service.
-- The current Codex path is still best described as honest smoke-trial, posture, and evidence wiring, not a production-grade runtime-owned real-write backend for external repos.
+- Full runtime-owned replacement of upstream Codex host UX is not implemented.
+- `native_attach` is environment-dependent; degraded posture (`process_bridge` / `manual_handoff`) remains valid when host capability is weaker.
+- Universal full-takeover claims across all external repos and high-risk workflows are still out of scope.
 - `GAP-045..060` is the direct path to full hybrid final-state closure and is complete; `GAP-061..068` is the governance-only follow-on lane after `GAP-060` and is also complete (2026-04-20), without being back-written into the final-state closure proof itself.
 
 ## Can I Use This With Another Repo?
@@ -43,13 +48,27 @@ For a repo such as `D:\OneDrive\CODE\ClassroomToolkit`, you can already:
 - generate or validate `.governed-ai/repo-profile.json` and `.governed-ai/light-pack.json`
 - bind repo-local declarations to machine-local runtime state
 - inspect attachment posture through `status` and `doctor`
-- request posture or gate plans through `session-bridge`
+- execute runtime-managed gate flows through `session-bridge`
+- execute governed write flows with explicit approval/evidence/handoff/replay linkage
 - run Codex smoke-trial and multi-repo trial surfaces against that attached posture
 
 What you should **not** claim yet:
 
-- that Codex CLI has been fully taken over by this runtime for external repositories
-- that real high-risk writes already have a full runtime-owned approval/execution/rollback loop in those repos
+- not that this runtime fully replaces Codex host execution in every environment
+- that all external repos and all high-risk workflows are universally runtime-owned end-to-end
+
+## Quick Usage Paths (Recommended)
+- Path A (governance sidecar, least friction): keep coding in Codex/Claude Code and run `bootstrap + doctor + verify-repo -Check All + status`.
+- Path B (attach-first for external repos): run `attach-target-repo`, then use `runtime-flow.ps1 -FlowMode daily` as your daily governance chain.
+- Path C (risky writes): run `govern-attachment-write -> decide-attachment-write -> execute-attachment-write` for medium/high-risk mutations.
+
+## Concrete AI-Coding Assistance
+- Capability visibility before execution: see `adapter_tier`, `flow_kind`, and degrade reasons early.
+- Canonical acceptance chain: runtime-managed `build -> test -> contract/invariant -> hotspot`.
+- Risky write safeguards: policy + approval + fail-closed behavior for medium/high tiers.
+- Traceable delivery: approval/evidence/handoff/replay refs are linked to task/run identity.
+- Multi-repo reuse: apply the same governance contract via `.governed-ai` light packs and preset flows.
+- Host-decoupled governance: preserves user-owned upstream auth and avoids host lock-in.
 
 ## How To Use
 
@@ -85,6 +104,8 @@ This checks:
 Quickstart:
 - [Single-Machine Runtime Quickstart](docs/quickstart/single-machine-runtime-quickstart.md)
 - [Single-Machine Runtime Quickstart (Chinese)](docs/quickstart/single-machine-runtime-quickstart.zh-CN.md)
+- [AI Coding Usage Guide](docs/quickstart/ai-coding-usage-guide.md)
+- [AI 编码使用指南](docs/quickstart/ai-coding-usage-guide.zh-CN.md)
 - [Codex CLI/App Integration Guide](docs/product/codex-cli-app-integration-guide.md)
 - [Codex CLI/App 集成指南](docs/product/codex-cli-app-integration-guide.zh-CN.md)
 
@@ -268,17 +289,18 @@ For tool usage:
 
 1. [This guide](README.en.md)
 2. [Docs Index](docs/README.md)
-3. [First Read-Only Trial](docs/product/first-readonly-trial.md)
-4. [Use With An Existing Repo](docs/quickstart/use-with-existing-repo.md)
-5. [Use With An Existing Repo (Chinese)](docs/quickstart/use-with-existing-repo.zh-CN.md)
-5. [Codex Direct Adapter](docs/product/codex-direct-adapter.md)
-6. [Multi-Repo Trial Loop](docs/product/multi-repo-trial-loop.md)
-7. [Write Policy Defaults](docs/product/write-policy-defaults.md)
-8. [Approval Flow](docs/product/approval-flow.md)
-9. [Write-Side Tool Governance](docs/product/write-side-tool-governance.md)
-10. [Verification Runner](docs/product/verification-runner.md)
-11. [Delivery Handoff](docs/product/delivery-handoff.md)
-12. [Runbooks](docs/runbooks/README.md)
+3. [AI Coding Usage Guide](docs/quickstart/ai-coding-usage-guide.md)
+4. [First Read-Only Trial](docs/product/first-readonly-trial.md)
+5. [Use With An Existing Repo](docs/quickstart/use-with-existing-repo.md)
+6. [Use With An Existing Repo (Chinese)](docs/quickstart/use-with-existing-repo.zh-CN.md)
+7. [Codex Direct Adapter](docs/product/codex-direct-adapter.md)
+8. [Multi-Repo Trial Loop](docs/product/multi-repo-trial-loop.md)
+9. [Write Policy Defaults](docs/product/write-policy-defaults.md)
+10. [Approval Flow](docs/product/approval-flow.md)
+11. [Write-Side Tool Governance](docs/product/write-side-tool-governance.md)
+12. [Verification Runner](docs/product/verification-runner.md)
+13. [Delivery Handoff](docs/product/delivery-handoff.md)
+14. [Runbooks](docs/runbooks/README.md)
 
 For product planning:
 

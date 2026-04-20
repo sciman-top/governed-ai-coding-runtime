@@ -1,34 +1,34 @@
 # Codex CLI/App Integration Guide
 
 ## Purpose
-Explain how to use this repository alongside Codex CLI/App today without overstating the current integration level.
+Explain how to use this repository with Codex CLI/App using the current executable capability boundary.
 
 ## Current State
-- This project is **Codex CLI/App compatible first**, but it is **not yet a direct Codex execution adapter**.
-- The current runtime can bootstrap local state, load repo profiles, track tasks, run governed verification gates, persist evidence and replay artifacts, and expose runtime status.
-- The current runtime does **not** directly invoke Codex to perform real coding work through a managed adapter worker.
-- A Codex adapter contract now exists to classify capability posture. It does not by itself prove live native attach or managed Codex execution.
-
-## Engineering State (2026-04-21)
-- Transition service path now exists: a real FastAPI control-plane entrypoint plus optional Postgres metadata (`verification_runs`, `adapter_events`).
-- Codex adapter events can now be normalized into durable sink records and inspected through operator reads.
-- Codex remains first-class for direct-adapter productization depth.
-- Claude Code remains supported by the generic adapter contract boundary, but is not yet a first-class direct adapter in this slice.
+- This project remains **Codex-compatible first** and keeps Codex auth ownership upstream (`user_owned_upstream_auth`).
+- The runtime now exposes a direct Codex adapter surface for capability probing, session-identity handshake, and adapter-tier projection.
+- Governed session operations can run through the local session bridge with Codex identity attached (`run_quick_gate`, `run_full_gate`, `write_request`, `write_approve`, `write_execute`, `write_status`).
+- Capability posture is environment-dependent and may degrade (`native_attach -> process_bridge -> manual_handoff`) with explicit reasons.
 
 ## What Works Today
 
-### 1. Manual-Handoff Governance Around Codex
-Use this repository as the governance layer around a Codex-driven coding session:
-- define or inspect repo expectations through repo profiles
-- run local readiness checks with `bootstrap`, `doctor`, and `verify-repo`
-- record or inspect governed runtime status
-- preserve local evidence, verification, and replay artifacts for runtime-managed tasks
+### 1. Capability Readiness And Degrade Visibility
+The runtime can probe Codex capability and expose readiness posture from runtime status and doctor surfaces:
+- adapter tier (`native_attach`, `process_bridge`, `manual_handoff`)
+- flow kind (`live_attach`, `process_bridge`, `manual_handoff`)
+- unsupported capabilities with explicit degrade behavior
+- remediation hints and probe stability metadata
 
-### 2. Codex-Compatible Read-Only Trial
-The first Codex-related path is intentionally conservative:
-- it models Codex as an adapter declaration
-- it preserves upstream Codex authentication ownership
-- it stays in manual handoff and read-only mode
+### 2. Runtime-Managed Session Bridge Surface
+The local session bridge can execute governed gate and write flows with Codex identity metadata attached:
+- `run_quick_gate` / `run_full_gate` execute verification by default (`plan_only` remains available)
+- `write_request` / `write_approve` / `write_execute` / `write_status` enforce policy and approval requirements
+- execution outputs include continuation identity plus evidence, handoff, and replay references
+- adapter evidence mapping is emitted for governed execution events
+
+### 3. Codex Adapter Smoke Trial
+`scripts/run-codex-adapter-trial.py` remains available as a deterministic adapter-surface check.
+- default mode is still safe-mode
+- `--probe-live` can derive posture from live Codex capability probing
 
 See:
 - [First Read-Only Trial](./first-readonly-trial.md)
@@ -47,33 +47,34 @@ It should be understood as a **runtime smoke task**, not as a direct Codex codin
 
 ## Recommended Workflow Today
 
-### Option A: Use Codex Normally, Use This Repo As Governance Sidecar
-Recommended when you want the least friction.
+### Option A: Attach-First Governed Flow (Recommended)
+Use this when you want the runtime to manage attachment posture, gate execution, and write governance in one flow.
 
 1. Run:
    - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap-runtime.ps1`
    - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`
-2. Work in Codex CLI/App as usual.
-3. Use this repository's docs and repo profile conventions as the governance baseline.
-4. Run:
+2. Attach or validate the target repository light pack.
+3. Run one-command daily flow:
+   - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow.ps1 -FlowMode "daily" ...`
+4. Verify full gates when needed:
    - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`
-5. If you want runtime artifacts for the local governed path, run:
+5. Inspect runtime evidence/status surfaces:
    - `python scripts/run-governed-task.py status --json`
    - `python scripts/serve-operator-ui.py`
 
-### Option B: Use Manual Handoff Before Or After A Codex Session
-Recommended when you want an explicit governed wrapper around a bounded task.
+### Option B: Codex-Native Session + Governance Sidecar
+Use this when you want minimal workflow change.
 
-1. Use the read-only trial to validate the repo profile and adapter posture.
-2. Run Codex CLI/App manually for the real coding work.
-3. Use this repository's verification, evidence, and operator surface to inspect local governed outputs.
+1. Run Codex CLI/App as your primary host workflow.
+2. Use this runtime for readiness checks, governed verification, and evidence/handoff/replay inspection.
+3. Use session-bridge commands only for bounded governed operations when needed.
 
 ## What Is Not Implemented Yet
-- no direct `codex` command invocation from `scripts/run-governed-task.py`
-- no managed adapter worker that captures Codex prompts, edits, tool calls, or diffs as first-class runtime events
-- no long-running Codex session orchestration inside this runtime
-- no claim that the current smoke task represents real Codex-produced code changes
-- no claim that the Codex adapter contract means native attach is available in every host environment
+- no runtime-owned replacement of the upstream Codex host UX
+- no service-owned Codex authentication model (by design)
+- no long-running managed Codex orchestration worker that ingests full upstream prompt/edit/tool-call streams as first-class runtime events
+- no guarantee that `native_attach` is available in every host environment or Codex build
+- no claim of universal full takeover for every external repo and every high-risk workflow
 
 ## Future Boundary For A Direct Codex Adapter
 If a future direct Codex adapter is added, it should satisfy all of the following:
@@ -88,7 +89,7 @@ This section is a boundary definition, not a delivery promise or timeline commit
 ## Bottom Line
 Today, this repository is best used as:
 - a local governed runtime substrate
-- a governance sidecar around Codex workflows
-- a documented compatibility boundary for future deeper Codex integration
+- a Codex-compatible governed execution layer with explicit capability tiers and degrade rules
+- a governance sidecar around Codex workflows where full host replacement is not required
 
-It should not be described as "Codex is already directly integrated and executing coding work through the runtime."
+It should not be described as "the runtime fully replaces Codex host execution in every environment."

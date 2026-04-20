@@ -1,5 +1,5 @@
 {
-  "adapter_preference": "process_bridge",
+  "adapter_preference": "native_attach",
   "binding_id": "binding-governed-ai-coding-runtime",
   "gate_profile": "default",
   "pack_kind": "repo_attachment_light_pack",

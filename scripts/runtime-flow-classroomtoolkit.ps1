@@ -17,8 +17,11 @@ param(
   [string]$WriteTargetPath = "",
   [ValidateSet("low", "medium", "high")]
   [string]$WriteTier = "medium",
-  [string]$WriteToolName = "apply_patch",
+  [string]$WriteToolName = "write_file",
+  [string]$WriteToolCommand = "",
   [string]$RollbackReference = "",
+  [string]$WriteContent = "governed runtime write probe",
+  [switch]$ExecuteWriteFlow,
   [switch]$SkipVerifyAttachment,
 
   [switch]$Overwrite,
@@ -50,10 +53,16 @@ if (-not [string]::IsNullOrWhiteSpace($RepoBindingId)) {
   $argsList += @("-RepoBindingId", $RepoBindingId)
 }
 if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
-  $argsList += @("-WriteTargetPath", $WriteTargetPath, "-WriteTier", $WriteTier, "-WriteToolName", $WriteToolName)
+  $argsList += @("-WriteTargetPath", $WriteTargetPath, "-WriteTier", $WriteTier, "-WriteToolName", $WriteToolName, "-WriteContent", $WriteContent)
+  if (-not [string]::IsNullOrWhiteSpace($WriteToolCommand)) {
+    $argsList += @("-WriteToolCommand", $WriteToolCommand)
+  }
 }
 if (-not [string]::IsNullOrWhiteSpace($RollbackReference)) {
   $argsList += @("-RollbackReference", $RollbackReference)
+}
+if ($ExecuteWriteFlow) {
+  $argsList += "-ExecuteWriteFlow"
 }
 if ($SkipVerifyAttachment) {
   $argsList += "-SkipVerifyAttachment"

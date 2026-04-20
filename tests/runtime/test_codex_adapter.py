@@ -85,6 +85,9 @@ class CodexAdapterTests(unittest.TestCase):
         self.assertFalse(probe.process_bridge_available)
         self.assertEqual(module.classify_codex_adapter(profile).tier, "manual_handoff")
         self.assertIn("command not found", probe.reason)
+        self.assertEqual(probe.failure_stage, "codex_command_unavailable")
+        self.assertIsNotNone(probe.remediation_hint)
+        self.assertIn("--version", probe.remediation_hint)
 
     def test_codex_live_probe_degrades_to_process_bridge_when_status_is_non_interactive(self) -> None:
         module = self._module()
@@ -93,7 +96,9 @@ class CodexAdapterTests(unittest.TestCase):
             if argv == ["codex", "--version"]:
                 return 0, "codex 1.2.3\n", ""
             if argv == ["codex", "--help"]:
-                return 0, "commands: run resume status --json\n", ""
+                return 0, "Commands:\n  exec  Run Codex non-interactively\n  resume  Resume a previous session\n  status  Show runtime status\n", ""
+            if argv == ["codex", "exec", "--help"]:
+                return 0, "Options:\n  --json  Print events to stdout as JSONL\n  -o, --output-last-message <FILE>\n", ""
             if argv == ["codex", "status"]:
                 return 1, "", "stdin is not a terminal"
             return 1, "", "unsupported"
@@ -105,9 +110,196 @@ class CodexAdapterTests(unittest.TestCase):
         self.assertTrue(probe.codex_cli_available)
         self.assertFalse(probe.native_attach_available)
         self.assertTrue(probe.process_bridge_available)
+        self.assertTrue(probe.structured_events_available)
+        self.assertTrue(probe.evidence_export_available)
         self.assertTrue(probe.resume_available)
         self.assertEqual(capability.tier, "process_bridge")
         self.assertIn("live attach unavailable", probe.reason)
+        self.assertEqual(probe.failure_stage, "live_attach_unavailable_non_interactive")
+        self.assertIsNotNone(probe.remediation_hint)
+        self.assertIn("interactive terminal", probe.remediation_hint)
+
+    def test_codex_live_probe_supports_custom_executable_override(self) -> None:
+        module = self._module()
+        executable = "D:/tools/codex.exe"
+
+        def custom_runner(argv, _cwd):
+            if argv == [executable, "--version"]:
+                return 0, "codex 9.9.9\n", ""
+            if argv == [executable, "--help"]:
+                return 0, "Commands:\n  exec  Run Codex non-interactively\n  resume  Resume session\n  status  Show status\n", ""
+            if argv == [executable, "exec", "--help"]:
+                return 0, "Options:\n  --json  Print events to stdout as JSONL\n  -o, --output-last-message <FILE>\n", ""
+            if argv == [executable, "status"]:
+                return 0, "session_id=s-001 resume_id=r-001\n", ""
+            return 1, "", "unsupported"
+
+        probe = module.probe_codex_surface(
+            command_runner=custom_runner,
+            codex_executable=executable,
+        )
+
+        self.assertTrue(probe.codex_cli_available)
+        self.assertTrue(probe.native_attach_available)
+        self.assertIsNone(probe.failure_stage)
+        self.assertIsNone(probe.remediation_hint)
+        self.assertEqual(probe.probe_commands[0].cmd, f"{executable} --version")
+        self.assertEqual(probe.probe_commands[1].cmd, f"{executable} --help")
+        self.assertEqual(probe.probe_commands[2].cmd, f"{executable} exec --help")
+        self.assertEqual(probe.probe_commands[3].cmd, f"{executable} status")
+
+    def test_codex_live_probe_falls_back_to_codex_cmd_when_default_name_is_missing(self) -> None:
+        module = self._module()
+
+        def fallback_runner(argv, _cwd):
+            if argv == ["codex", "--version"]:
+                return 127, "", "[WinError 2] The system cannot find the file specified."
+            if argv == ["codex.cmd", "--version"]:
+                return 0, "codex-cli 0.121.0\n", ""
+            if argv == ["codex.cmd", "--help"]:
+                return 0, "Commands:\n  exec  Run Codex non-interactively\n  resume  Resume session\n  status  Show status\n", ""
+            if argv == ["codex.cmd", "exec", "--help"]:
+                return 0, "Options:\n  --json  Print events to stdout as JSONL\n", ""
+            if argv == ["codex.cmd", "status"]:
+                return 1, "", "stdin is not a terminal"
+            return 1, "", "unsupported"
+
+        probe = module.probe_codex_surface(command_runner=fallback_runner)
+        profile = module.build_codex_adapter_profile_from_probe(probe)
+        capability = module.classify_codex_adapter(profile)
+
+        self.assertTrue(probe.codex_cli_available)
+        self.assertEqual(capability.tier, "process_bridge")
+        self.assertEqual(probe.failure_stage, "live_attach_unavailable_non_interactive")
+        self.assertEqual(probe.probe_commands[0].cmd, "codex --version")
+        self.assertEqual(probe.probe_commands[1].cmd, "codex.cmd --version")
+        self.assertEqual(probe.probe_commands[2].cmd, "codex.cmd --help")
+        self.assertEqual(probe.probe_commands[3].cmd, "codex.cmd exec --help")
+        self.assertEqual(probe.probe_commands[4].cmd, "codex.cmd status")
+
+    def test_codex_live_probe_retries_and_stabilizes_transient_failure(self) -> None:
+        module = self._module()
+        calls = {"count": 0}
+
+        def transient_runner(argv, _cwd):
+            if argv == ["codex", "--version"]:
+                calls["count"] += 1
+                if calls["count"] == 1:
+                    return 127, "", "codex: command not found"
+                return 0, "codex-cli 0.121.0\n", ""
+            if argv == ["codex", "--help"]:
+                return 0, "Commands:\n  exec\n  resume\n", ""
+            if argv == ["codex", "exec", "--help"]:
+                return 0, "Options:\n  --json\n  --output-last-message\n", ""
+            return 1, "", "unsupported"
+
+        probe = module.probe_codex_surface(
+            command_runner=transient_runner,
+            max_probe_attempts=2,
+        )
+        profile = module.build_codex_adapter_profile_from_probe(probe)
+
+        self.assertTrue(probe.codex_cli_available)
+        self.assertEqual(probe.probe_attempts, 2)
+        self.assertEqual(probe.stability_state, "stabilized")
+        self.assertIn("recovered after probe retry", probe.reason)
+        self.assertEqual(profile.adapter_tier, "native_attach")
+        self.assertEqual(profile.unsupported_capabilities, [])
+        self.assertGreaterEqual(len(probe.probe_commands), 4)
+
+    def test_codex_live_probe_uses_exec_surface_when_status_command_is_missing(self) -> None:
+        module = self._module()
+
+        def no_status_runner(argv, _cwd):
+            if argv == ["codex", "--version"]:
+                return 0, "codex-cli 0.122.0\n", ""
+            if argv == ["codex", "--help"]:
+                return 0, "Commands:\n  exec  Run Codex non-interactively\n  resume  Resume a previous session\n", ""
+            if argv == ["codex", "exec", "--help"]:
+                return 0, "Options:\n  --json  Print events to stdout as JSONL\n  -o, --output-last-message <FILE>\n", ""
+            return 1, "", "unsupported"
+
+        probe = module.probe_codex_surface(command_runner=no_status_runner)
+        profile = module.build_codex_adapter_profile_from_probe(probe)
+        capability = module.classify_codex_adapter(profile)
+
+        self.assertTrue(probe.codex_cli_available)
+        self.assertTrue(probe.native_attach_available)
+        self.assertTrue(probe.process_bridge_available)
+        self.assertTrue(probe.structured_events_available)
+        self.assertTrue(probe.evidence_export_available)
+        self.assertTrue(probe.resume_available)
+        self.assertEqual(capability.tier, "native_attach")
+        self.assertIsNone(probe.failure_stage)
+        self.assertIn("inferred from resume command surface", probe.reason)
+        self.assertIsNotNone(probe.remediation_hint)
+
+    def test_codex_live_probe_keeps_process_bridge_when_status_and_resume_are_missing(self) -> None:
+        module = self._module()
+
+        def no_status_no_resume_runner(argv, _cwd):
+            if argv == ["codex", "--version"]:
+                return 0, "codex-cli 0.122.0\n", ""
+            if argv == ["codex", "--help"]:
+                return 0, "Commands:\n  exec  Run Codex non-interactively\n", ""
+            if argv == ["codex", "exec", "--help"]:
+                return 0, "Options:\n  --json  Print events to stdout as JSONL\n", ""
+            return 1, "", "unsupported"
+
+        probe = module.probe_codex_surface(command_runner=no_status_no_resume_runner)
+        profile = module.build_codex_adapter_profile_from_probe(probe)
+        capability = module.classify_codex_adapter(profile)
+
+        self.assertTrue(probe.codex_cli_available)
+        self.assertFalse(probe.native_attach_available)
+        self.assertTrue(probe.process_bridge_available)
+        self.assertFalse(probe.resume_available)
+        self.assertEqual(capability.tier, "process_bridge")
+        self.assertEqual(probe.failure_stage, "live_attach_probe_unsupported_status_command_missing")
+        self.assertEqual(probe.stability_state, "degraded_after_retry")
+        self.assertEqual(probe.probe_attempts, 2)
+
+    def test_codex_capability_readiness_marks_ready_and_blocked_states(self) -> None:
+        module = self._module()
+        ready_probe = module.CodexSurfaceProbe(
+            codex_cli_available=True,
+            version="codex-cli 0.121.0",
+            native_attach_available=True,
+            process_bridge_available=True,
+            structured_events_available=True,
+            evidence_export_available=True,
+            resume_available=True,
+            live_session_id=None,
+            live_resume_id=None,
+            reason="ready",
+            probe_commands=[],
+        )
+        blocked_probe = module.CodexSurfaceProbe(
+            codex_cli_available=False,
+            version=None,
+            native_attach_available=False,
+            process_bridge_available=False,
+            structured_events_available=False,
+            evidence_export_available=False,
+            resume_available=False,
+            live_session_id=None,
+            live_resume_id=None,
+            reason="missing codex",
+            probe_commands=[],
+            failure_stage="codex_command_unavailable",
+            remediation_hint="install codex",
+        )
+
+        ready = module.summarize_codex_capability_readiness(ready_probe)
+        blocked = module.summarize_codex_capability_readiness(blocked_probe)
+
+        self.assertEqual(ready.status, "ready")
+        self.assertEqual(ready.adapter_tier, "native_attach")
+        self.assertEqual(ready.flow_kind, "live_attach")
+        self.assertEqual(ready.unsupported_capabilities, [])
+        self.assertEqual(blocked.status, "blocked")
+        self.assertEqual(blocked.adapter_tier, "manual_handoff")
+        self.assertIn("native_attach", blocked.unsupported_capabilities)
 
     def test_codex_live_handshake_preserves_session_resume_and_continuation_identity(self) -> None:
         module = self._module()
@@ -281,31 +473,6 @@ class CodexAdapterTests(unittest.TestCase):
         self.assertGreaterEqual(len(unsupported), 2)
         self.assertTrue(any(event.payload.get("capability") == "structured_events" for event in unsupported))
         self.assertTrue(any(event.payload.get("event_type") == "tool_diff_chunk" for event in unsupported))
-
-    def test_codex_session_evidence_can_be_normalized_for_durable_sink(self) -> None:
-        module = self._module()
-
-        session = module.CodexSessionEvidence(
-            task_id="task-durable",
-            adapter_id="codex-cli",
-            adapter_tier="process_bridge",
-            flow_kind="process_bridge",
-            file_changes=["src/service.py"],
-            tool_calls=[{"tool": "apply_patch"}],
-            gate_runs=["artifacts/task-durable/run-1/verification-output/test.txt"],
-            approvals=["approval-1"],
-            handoff_refs=["artifacts/task-durable/run-1/handoff/package.json"],
-            unsupported_capabilities=[],
-            execution_id="task-durable:run-1",
-            continuation_id="task-durable:run-1",
-            event_source="live_adapter",
-        )
-
-        payloads = module.codex_session_events_to_records(session)
-
-        self.assertGreaterEqual(len(payloads), 5)
-        self.assertTrue(all(item["task_id"] == "task-durable" for item in payloads))
-        self.assertTrue(all(item["execution_id"] == "task-durable:run-1" for item in payloads))
 
     def test_codex_adapter_trial_defaults_to_safe_mode_with_stable_refs(self) -> None:
         module = self._module()

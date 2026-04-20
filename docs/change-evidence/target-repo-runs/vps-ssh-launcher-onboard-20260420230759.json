@@ -1,0 +1,203 @@
+{
+  "onboard_attach": {
+    "exit_code": 0,
+    "payload": {
+      "binding": {
+        "adapter_preference": "native_attach",
+        "binding_id": "binding-vps-ssh-launcher",
+        "doctor_posture": "healthy",
+        "gate_profile": "default",
+        "light_pack_path": "D:\\OneDrive\\CODE\\vps-ssh-launcher\\.governed-ai\\light-pack.json",
+        "mutable_state_roots": {
+          "approvals": "D:\\OneDrive\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\vps-ssh-launcher\\approvals",
+          "artifacts": "D:\\OneDrive\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\vps-ssh-launcher\\artifacts",
+          "replay": "D:\\OneDrive\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\vps-ssh-launcher\\replay",
+          "runs": "D:\\OneDrive\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\vps-ssh-launcher\\runs",
+          "tasks": "D:\\OneDrive\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\vps-ssh-launcher\\tasks"
+        },
+        "repo_profile_ref": "D:\\OneDrive\\CODE\\vps-ssh-launcher\\.governed-ai\\repo-profile.json",
+        "runtime_state_root": "D:\\OneDrive\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\vps-ssh-launcher",
+        "schema_version": "1.0",
+        "target_repo_root": "D:\\OneDrive\\CODE\\vps-ssh-launcher"
+      },
+      "gate_command_source": "explicit",
+      "inferred_gate_defaults_used": false,
+      "light_pack_path": "D:\\OneDrive\\CODE\\vps-ssh-launcher\\.governed-ai\\light-pack.json",
+      "operation": "created",
+      "repo_profile_path": "D:\\OneDrive\\CODE\\vps-ssh-launcher\\.governed-ai\\repo-profile.json",
+      "written_files": [
+        "D:\\OneDrive\\CODE\\vps-ssh-launcher\\.governed-ai\\repo-profile.json",
+        "D:\\OneDrive\\CODE\\vps-ssh-launcher\\.governed-ai\\light-pack.json"
+      ]
+    }
+  },
+  "next_actions": [],
+  "runtime_check": {
+    "exit_code": 0,
+    "payload": {
+      "verify_attachment": {
+        "binding_id": "binding-vps-ssh-launcher",
+        "evidence_link": "artifacts/task-vps-ssh-launcher-onboard-20260420230759/run-vps-ssh-launcher-onboard-20260420230759/verification-output/contract.txt",
+        "gate_order": [
+          "test",
+          "contract"
+        ],
+        "mode": "quick",
+        "repo_id": "vps-ssh-launcher",
+        "result_artifact_refs": {
+          "contract": "artifacts/task-vps-ssh-launcher-onboard-20260420230759/run-vps-ssh-launcher-onboard-20260420230759/verification-output/contract.txt",
+          "test": "artifacts/task-vps-ssh-launcher-onboard-20260420230759/run-vps-ssh-launcher-onboard-20260420230759/verification-output/test.txt"
+        },
+        "results": {
+          "contract": "pass",
+          "test": "pass"
+        },
+        "run_id": "run-vps-ssh-launcher-onboard-20260420230759",
+        "task_id": "task-vps-ssh-launcher-onboard-20260420230759"
+      },
+      "status": {
+        "attachments": [
+          {
+            "adapter_preference": "native_attach",
+            "binding_id": "binding-vps-ssh-launcher",
+            "binding_state": "healthy",
+            "fail_closed": false,
+            "gate_profile": "default",
+            "light_pack_path": "D:\\OneDrive\\CODE\\vps-ssh-launcher\\.governed-ai\\light-pack.json",
+            "reason": null,
+            "remediation": null,
+            "repo_id": "vps-ssh-launcher"
+          }
+        ],
+        "codex_capability": {
+          "adapter_tier": "native_attach",
+          "evidence_export_available": true,
+          "failure_stage": null,
+          "flow_kind": "live_attach",
+          "live_attach_available": true,
+          "probe_attempts": 1,
+          "remediation_hint": "Validate native attach via `codex.cmd exec resume --help` and a controlled `exec resume --last --json` probe when needed.",
+          "resume_available": true,
+          "stability_state": "single_pass",
+          "status": "ready",
+          "structured_events_available": true,
+          "unsupported_capabilities": []
+        },
+        "maintenance": {
+          "compatibility_policy_ref": "docs/product/runtime-compatibility-and-upgrade-policy.md",
+          "deprecation_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+          "retirement_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+          "stage": "completed",
+          "triage_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+          "upgrade_policy_ref": "docs/product/runtime-compatibility-and-upgrade-policy.md"
+        },
+        "runtime_roots": {
+          "artifacts_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/artifacts",
+          "compatibility_mode": false,
+          "replay_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/replay",
+          "runtime_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime",
+          "tasks_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/tasks",
+          "workspaces_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/workspaces"
+        },
+        "tasks": [],
+        "total_tasks": 0
+      },
+      "write_governance": null,
+      "steps": [
+        {
+          "exit_code": 0,
+          "output": "{\n  \"attachments\": [\n    {\n      \"adapter_preference\": \"native_attach\",\n      \"binding_id\": \"binding-vps-ssh-launcher\",\n      \"binding_state\": \"healthy\",\n      \"fail_closed\": false,\n      \"gate_profile\": \"default\",\n      \"light_pack_path\": \"D:\\\\OneDrive\\\\CODE\\\\vps-ssh-launcher\\\\.governed-ai\\\\light-pack.json\",\n      \"reason\": null,\n      \"remediation\": null,\n      \"repo_id\": \"vps-ssh-launcher\"\n    }\n  ],\n  \"codex_capability\": {\n    \"adapter_tier\": \"native_attach\",\n    \"evidence_export_available\": true,\n    \"failure_stage\": null,\n    \"flow_kind\": \"live_attach\",\n    \"live_attach_available\": true,\n    \"probe_attempts\": 1,\n    \"remediation_hint\": \"Validate native attach via `codex.cmd exec resume --help` and a controlled `exec resume --last --json` probe when needed.\",\n    \"resume_available\": true,\n    \"stability_state\": \"single_pass\",\n    \"status\": \"ready\",\n    \"structured_events_available\": true,\n    \"unsupported_capabilities\": []\n  },\n  \"maintenance\": {\n    \"compatibility_policy_ref\": \"docs/product/runtime-compatibility-and-upgrade-policy.md\",\n    \"deprecation_policy_ref\": \"docs/product/maintenance-deprecation-and-retirement-policy.md\",\n    \"retirement_policy_ref\": \"docs/product/maintenance-deprecation-and-retirement-policy.md\",\n    \"stage\": \"completed\",\n    \"triage_policy_ref\": \"docs/product/maintenance-deprecation-and-retirement-policy.md\",\n    \"upgrade_policy_ref\": \"docs/product/runtime-compatibility-and-upgrade-policy.md\"\n  },\n  \"runtime_roots\": {\n    \"artifacts_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/artifacts\",\n    \"compatibility_mode\": false,\n    \"replay_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/replay\",\n    \"runtime_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime\",\n    \"tasks_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/tasks\",\n    \"workspaces_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/workspaces\"\n  },\n  \"tasks\": [],\n  \"total_tasks\": 0\n}",
+          "label": "status"
+        },
+        {
+          "exit_code": 0,
+          "output": "OK python-command\nOK runtime-path-contracts\nOK runtime-path-schema-catalog\nOK runtime-path-specs\nOK runtime-path-tests\nOK runtime-policy-compatibility\nOK runtime-policy-maintenance\nOK schema-catalog-visible\nOK gate-command-build\nOK gate-command-test\nOK gate-command-contract\nOK gate-command-doctor\nOK gate-command-operator\nOK runtime-status-surface\nOK maintenance-policy-visible\nOK codex-capability-ready\nOK adapter-posture-visible\nOK attachment-posture-healthy",
+          "label": "doctor"
+        },
+        {
+          "exit_code": 0,
+          "output": "{\n  \"command_id\": \"cmd-vps-ssh-launcher-onboard-20260420230759\",\n  \"command_type\": \"run_quick_gate\",\n  \"payload\": {\n    \"adapter_event_ref\": \"artifacts/task-vps-ssh-launcher-onboard-20260420230759/task-vps-ssh-launcher-onboard-20260420230759-session-bridge-request/evidence/adapter-events.json\",\n    \"adapter_event_summary\": {\n      \"approval_event_count\": 0,\n      \"file_change_count\": 0,\n      \"gate_run_count\": 2,\n      \"handoff_ref_count\": 0,\n      \"live_event_count\": 3,\n      \"manual_event_count\": 0,\n      \"task_id\": \"task-vps-ssh-launcher-onboard-20260420230759\",\n      \"tool_call_count\": 0,\n      \"unsupported_event_count\": 0\n    },\n    \"adapter_id\": \"codex-cli\",\n    \"commands\": [\n      \"python --version\",\n      \"python --version\"\n    ],\n    \"continuation_id\": \"task-vps-ssh-launcher-onboard-20260420230759:session-bridge-request\",\n    \"evidence_link\": \"artifacts/task-vps-ssh-launcher-onboard-20260420230759/session-bridge-request/verification-output/contract.txt\",\n    \"execution_id\": \"task-vps-ssh-launcher-onboard-20260420230759:session-bridge-request\",\n    \"gate_order\": [\n      \"test\",\n      \"contract\"\n    ],\n    \"mode\": \"quick\",\n    \"outcome\": \"pass\",\n    \"plan_only\": false,\n    \"result_artifact_refs\": {\n      \"contract\": \"artifacts/task-vps-ssh-launcher-onboard-20260420230759/session-bridge-request/verification-output/contract.txt\",\n      \"test\": \"artifacts/task-vps-ssh-launcher-onboard-20260420230759/session-bridge-request/verification-output/test.txt\"\n    },\n    \"results\": {\n      \"contract\": \"pass\",\n      \"test\": \"pass\"\n    },\n    \"risky_artifact_refs\": [],\n    \"run_id\": \"session-bridge-request\",\n    \"session_identity\": {\n      \"adapter_id\": \"codex-cli\",\n      \"adapter_tier\": \"native_attach\",\n      \"continuation_id\": \"task-vps-ssh-launcher-onboard-20260420230759:session-bridge-request\",\n      \"flow_kind\": \"live_attach\",\n      \"live_attach_available\": true,\n      \"posture_reason\": \"codex status command is unavailable; native attach is inferred from resume command surface\",\n      \"resume_id\": \"codex-resume-d7435b6dcaee\",\n      \"session_id\": \"codex-session-d7435b6dcaee\",\n      \"unsupported_capabilities\": []\n    }\n  },\n  \"policy_decision_ref\": \"artifacts/task-vps-ssh-launcher-onboard-20260420230759/policy/session-bridge-allow.json\",\n  \"reason\": null,\n  \"status\": \"verification_completed\",\n  \"unsupported_capability_behavior\": null\n}",
+          "label": "session-bridge-request-gate"
+        },
+        {
+          "exit_code": 0,
+          "output": "{\n  \"binding_id\": \"binding-vps-ssh-launcher\",\n  \"evidence_link\": \"artifacts/task-vps-ssh-launcher-onboard-20260420230759/run-vps-ssh-launcher-onboard-20260420230759/verification-output/contract.txt\",\n  \"gate_order\": [\n    \"test\",\n    \"contract\"\n  ],\n  \"mode\": \"quick\",\n  \"repo_id\": \"vps-ssh-launcher\",\n  \"result_artifact_refs\": {\n    \"contract\": \"artifacts/task-vps-ssh-launcher-onboard-20260420230759/run-vps-ssh-launcher-onboard-20260420230759/verification-output/contract.txt\",\n    \"test\": \"artifacts/task-vps-ssh-launcher-onboard-20260420230759/run-vps-ssh-launcher-onboard-20260420230759/verification-output/test.txt\"\n  },\n  \"results\": {\n    \"contract\": \"pass\",\n    \"test\": \"pass\"\n  },\n  \"run_id\": \"run-vps-ssh-launcher-onboard-20260420230759\",\n  \"task_id\": \"task-vps-ssh-launcher-onboard-20260420230759\"\n}",
+          "label": "verify-attachment"
+        }
+      ],
+      "summary": {
+        "run_id": "run-vps-ssh-launcher-onboard-20260420230759",
+        "command_id": "cmd-vps-ssh-launcher-onboard-20260420230759",
+        "attachment_health": "healthy",
+        "repo_binding_id": "binding-vps-ssh-launcher",
+        "attachment_root": "D:\\OneDrive\\CODE\\vps-ssh-launcher",
+        "overall_status": "pass",
+        "task_id": "task-vps-ssh-launcher-onboard-20260420230759",
+        "mode": "quick",
+        "attachment_runtime_state_root": "D:\\OneDrive\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\vps-ssh-launcher"
+      },
+      "write_approval": null,
+      "write_execute": null,
+      "request_gate": {
+        "command_id": "cmd-vps-ssh-launcher-onboard-20260420230759",
+        "command_type": "run_quick_gate",
+        "payload": {
+          "adapter_event_ref": "artifacts/task-vps-ssh-launcher-onboard-20260420230759/task-vps-ssh-launcher-onboard-20260420230759-session-bridge-request/evidence/adapter-events.json",
+          "adapter_event_summary": {
+            "approval_event_count": 0,
+            "file_change_count": 0,
+            "gate_run_count": 2,
+            "handoff_ref_count": 0,
+            "live_event_count": 3,
+            "manual_event_count": 0,
+            "task_id": "task-vps-ssh-launcher-onboard-20260420230759",
+            "tool_call_count": 0,
+            "unsupported_event_count": 0
+          },
+          "adapter_id": "codex-cli",
+          "commands": [
+            "python --version",
+            "python --version"
+          ],
+          "continuation_id": "task-vps-ssh-launcher-onboard-20260420230759:session-bridge-request",
+          "evidence_link": "artifacts/task-vps-ssh-launcher-onboard-20260420230759/session-bridge-request/verification-output/contract.txt",
+          "execution_id": "task-vps-ssh-launcher-onboard-20260420230759:session-bridge-request",
+          "gate_order": [
+            "test",
+            "contract"
+          ],
+          "mode": "quick",
+          "outcome": "pass",
+          "plan_only": false,
+          "result_artifact_refs": {
+            "contract": "artifacts/task-vps-ssh-launcher-onboard-20260420230759/session-bridge-request/verification-output/contract.txt",
+            "test": "artifacts/task-vps-ssh-launcher-onboard-20260420230759/session-bridge-request/verification-output/test.txt"
+          },
+          "results": {
+            "contract": "pass",
+            "test": "pass"
+          },
+          "risky_artifact_refs": [],
+          "run_id": "session-bridge-request",
+          "session_identity": {
+            "adapter_id": "codex-cli",
+            "adapter_tier": "native_attach",
+            "continuation_id": "task-vps-ssh-launcher-onboard-20260420230759:session-bridge-request",
+            "flow_kind": "live_attach",
+            "live_attach_available": true,
+            "posture_reason": "codex status command is unavailable; native attach is inferred from resume command surface",
+            "resume_id": "codex-resume-d7435b6dcaee",
+            "session_id": "codex-session-d7435b6dcaee",
+            "unsupported_capabilities": []
+          }
+        },
+        "policy_decision_ref": "artifacts/task-vps-ssh-launcher-onboard-20260420230759/policy/session-bridge-allow.json",
+        "reason": null,
+        "status": "verification_completed",
+        "unsupported_capability_behavior": null
+      }
+    }
+  },
+  "overall_status": "pass",
+  "flow_mode": "onboard"
+}

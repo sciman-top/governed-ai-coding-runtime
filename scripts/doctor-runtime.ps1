@@ -78,6 +78,26 @@ if ($null -eq $status.maintenance -or [string]::IsNullOrWhiteSpace($status.maint
 Write-CheckOk "runtime-status-surface"
 Write-CheckOk "maintenance-policy-visible"
 
+$codexCapability = $status.codex_capability
+if ($null -ne $codexCapability) {
+  $codexStatus = [string]$codexCapability.status
+  if ($codexStatus -eq "ready") {
+    Write-CheckOk "codex-capability-ready"
+  }
+  elseif ($codexStatus -eq "degraded") {
+    Write-Host "WARN codex-capability-degraded"
+    if ($codexCapability.remediation_hint) {
+      Write-Host ("HINT " + [string]$codexCapability.remediation_hint)
+    }
+  }
+  elseif ($codexStatus -eq "blocked") {
+    Write-Host "WARN codex-capability-blocked"
+    if ($codexCapability.remediation_hint) {
+      Write-Host ("HINT " + [string]$codexCapability.remediation_hint)
+    }
+  }
+}
+
 $adapterCheck = @'
 from pathlib import Path
 import sys

@@ -26,14 +26,10 @@ class RuntimeServiceFacade:
         repo_root: str | Path,
         task_root: str | Path | None = None,
         tracer: Any | None = None,
-        metadata_store: Any | None = None,
-        adapter_event_sink: Any | None = None,
     ) -> None:
         self._repo_root = Path(repo_root)
         self._task_root = Path(task_root) if task_root else self._repo_root / ".runtime" / "tasks"
         self._tracer = tracer
-        self._metadata_store = metadata_store
-        self._adapter_event_sink = adapter_event_sink
 
     def session_command(
         self,
@@ -148,36 +144,6 @@ class RuntimeServiceFacade:
             command_id=f"api-operator-handoff-{task_id}",
         )
 
-    def operator_inspect_adapter_events(
-        self,
-        *,
-        task_id: str,
-        execution_id: str | None = None,
-        continuation_id: str | None = None,
-    ) -> dict:
-        events: list[dict] = []
-        if self._adapter_event_sink is not None:
-            try:
-                events = self._adapter_event_sink.list_events(
-                    task_id=task_id,
-                    execution_id=execution_id,
-                    continuation_id=continuation_id,
-                )
-            except TypeError:
-                events = self._adapter_event_sink.list_events(task_id=task_id)
-        return {
-            "command_id": f"api-operator-adapter-events-{task_id}",
-            "command_type": "inspect_adapter_events",
-            "status": "ok",
-            "payload": {
-                "task_id": task_id,
-                "execution_id": execution_id,
-                "continuation_id": continuation_id,
-                "adapter_events": events,
-            },
-            "service_boundary": "control-plane",
-        }
-
     def _execute_session_command(
         self,
         *,
@@ -208,21 +174,15 @@ class RuntimeServiceFacade:
             repo_root=self._repo_root,
             attachment_root=attachment_root,
             attachment_runtime_state_root=attachment_runtime_state_root,
-            metadata_store=self._metadata_store,
-            adapter_event_sink=self._adapter_event_sink,
         )
         payload_dict = session_bridge_result_to_dict(result)
         payload_dict["service_boundary"] = "control-plane"
         return payload_dict
 
     def health(self) -> dict:
-        metadata_backend = "none"
-        if self._metadata_store is not None:
-            metadata_backend = type(self._metadata_store).__name__
         return {
             "service": "control-plane",
             "repo_root": self._repo_root.as_posix(),
             "task_root": self._task_root.as_posix(),
             "status": "ok",
-            "metadata_backend": metadata_backend,
         }

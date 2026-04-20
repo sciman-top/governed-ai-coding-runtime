@@ -23,34 +23,6 @@ def _load_module(relative_path: str, module_name: str):
 
 
 class OperatorApiTests(unittest.TestCase):
-    def test_operator_route_exposes_adapter_event_reads(self) -> None:
-        service_facade_module = _load_module("packages/agent-runtime/service_facade.py", "service_facade_operator_events")
-        app_module = _load_module("apps/control-plane/app.py", "control_plane_app_events")
-
-        class _Sink:
-            def list_events(self, *, task_id: str):
-                return [
-                    {
-                        "task_id": task_id,
-                        "event_type": "adapter_tool_call",
-                        "payload": {"tool": "apply_patch"},
-                    }
-                ]
-
-        facade = service_facade_module.RuntimeServiceFacade(
-            repo_root=ROOT,
-            task_root=ROOT / ".runtime" / "tasks",
-            adapter_event_sink=_Sink(),
-        )
-        app = app_module.ControlPlaneApplication(facade=facade)
-        result = app.dispatch(
-            route="/operator",
-            payload={"action": "inspect_adapter_events", "task_id": "task-operator-api"},
-        )
-
-        self.assertEqual(result["status"], "ok")
-        self.assertEqual(result["payload"]["adapter_events"][0]["event_type"], "adapter_tool_call")
-
     def test_operator_routes_expose_status_and_evidence_queries(self) -> None:
         service_facade_module = _load_module("packages/agent-runtime/service_facade.py", "service_facade")
         app_module = _load_module("apps/control-plane/app.py", "control_plane_app")

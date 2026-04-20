@@ -133,6 +133,8 @@ class RunGovernedTaskCliTests(unittest.TestCase):
             payload = json.loads(completed.stdout)
             self.assertEqual(payload["runtime_roots"]["runtime_root"], runtime_root.resolve().as_posix())
             self.assertEqual(payload["runtime_roots"]["compatibility_mode"], False)
+            self.assertIn("codex_capability", payload)
+            self.assertIn("status", payload["codex_capability"])
 
 
 if __name__ == "__main__":

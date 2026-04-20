@@ -16,6 +16,10 @@ if str(CONTRACTS_SRC) not in sys.path:
 from governed_ai_coding_runtime_contracts.artifact_store import LocalArtifactStore
 from governed_ai_coding_runtime_contracts.delivery_handoff import build_handoff_package
 from governed_ai_coding_runtime_contracts.evidence import build_evidence_bundle
+from governed_ai_coding_runtime_contracts.codex_adapter import (
+    codex_capability_readiness_to_dict,
+    summarize_codex_capability_readiness,
+)
 from governed_ai_coding_runtime_contracts.execution_runtime import ExecutionRuntime, WorkerExecutionResult
 from governed_ai_coding_runtime_contracts.repo_attachment import validate_light_pack
 from governed_ai_coding_runtime_contracts.repo_profile import load_repo_profile
@@ -91,6 +95,7 @@ def main() -> int:
     govern_attachment_write_parser.add_argument("--target-path", required=True)
     govern_attachment_write_parser.add_argument("--tier", choices=["low", "medium", "high"], default="medium")
     govern_attachment_write_parser.add_argument("--rollback-reference", default="")
+    govern_attachment_write_parser.add_argument("--adapter-id", default="codex-cli")
     govern_attachment_write_parser.add_argument("--json", action="store_true")
 
     decide_attachment_write_parser = subparsers.add_parser(
@@ -102,6 +107,7 @@ def main() -> int:
     decide_attachment_write_parser.add_argument("--approval-id", required=True)
     decide_attachment_write_parser.add_argument("--decision", choices=["approve", "reject"], required=True)
     decide_attachment_write_parser.add_argument("--decided-by", default="operator")
+    decide_attachment_write_parser.add_argument("--adapter-id", default="codex-cli")
     decide_attachment_write_parser.add_argument("--json", action="store_true")
 
     execute_attachment_write_parser = subparsers.add_parser(
@@ -123,6 +129,7 @@ def main() -> int:
     execute_attachment_write_parser.add_argument("--rollback-reference", required=True)
     execute_attachment_write_parser.add_argument("--content", required=True)
     execute_attachment_write_parser.add_argument("--approval-id")
+    execute_attachment_write_parser.add_argument("--adapter-id", default="codex-cli")
     execute_attachment_write_parser.add_argument("--json", action="store_true")
 
     status_parser = subparsers.add_parser("status", help="Print runtime status snapshot")
@@ -155,6 +162,7 @@ def main() -> int:
             target_path=args.target_path,
             tier=args.tier,
             rollback_reference=args.rollback_reference,
+            adapter_id=args.adapter_id,
         )
     elif args.command == "decide-attachment-write":
         payload = decide_attachment_write(
@@ -162,6 +170,7 @@ def main() -> int:
             approval_id=args.approval_id,
             decision=args.decision,
             decided_by=args.decided_by,
+            adapter_id=args.adapter_id,
         )
     elif args.command == "execute-attachment-write":
         payload = execute_attachment_write(
@@ -175,6 +184,7 @@ def main() -> int:
             rollback_reference=args.rollback_reference,
             content=args.content,
             approval_id=args.approval_id,
+            adapter_id=args.adapter_id,
         )
     else:
         payload = snapshot_payload(
@@ -384,6 +394,15 @@ def snapshot_payload(
             for attachment in snapshot.attachments
         ],
     }
+    try:
+        payload["codex_capability"] = codex_capability_readiness_to_dict(
+            summarize_codex_capability_readiness()
+        )
+    except Exception as exc:  # pragma: no cover - defensive fallback for operator status surface
+        payload["codex_capability"] = {
+            "status": "unknown",
+            "reason": str(exc),
+        }
     return payload
 
 
@@ -437,13 +456,14 @@ def govern_attachment_write(
     target_path: str,
     tier: str,
     rollback_reference: str,
+    adapter_id: str,
 ) -> dict:
     command = build_session_bridge_command(
         command_id=f"cli-govern-{task_id}",
         command_type="write_request",
         task_id=task_id,
         repo_binding_id="attachment-binding",
-        adapter_id="cli-process-bridge",
+        adapter_id=adapter_id,
         risk_tier=tier,
         payload={
             "tool_name": tool_name,
@@ -469,13 +489,14 @@ def decide_attachment_write(
     approval_id: str,
     decision: str,
     decided_by: str,
+    adapter_id: str,
 ) -> dict:
     command = build_session_bridge_command(
         command_id=f"cli-approve-{approval_id}",
         command_type="write_approve",
         task_id="attachment-write",
         repo_binding_id="attachment-binding",
-        adapter_id="cli-process-bridge",
+        adapter_id=adapter_id,
         risk_tier="medium",
         payload={
             "approval_id": approval_id,
@@ -504,13 +525,14 @@ def execute_attachment_write(
     rollback_reference: str,
     content: str,
     approval_id: str | None,
+    adapter_id: str,
 ) -> dict:
     request_command = build_session_bridge_command(
         command_id=f"cli-exec-request-{task_id}",
         command_type="write_request",
         task_id=task_id,
         repo_binding_id="attachment-binding",
-        adapter_id="cli-process-bridge",
+        adapter_id=adapter_id,
         risk_tier=tier,
         payload={
             "tool_name": tool_name,
@@ -534,7 +556,7 @@ def execute_attachment_write(
         command_type="write_execute",
         task_id=task_id,
         repo_binding_id="attachment-binding",
-        adapter_id="cli-process-bridge",
+        adapter_id=adapter_id,
         risk_tier=tier,
         payload={
             "tool_name": tool_name,
@@ -560,6 +582,12 @@ def execute_attachment_write(
 
 
 def render_payload(payload: dict) -> str:
+    codex_capability = payload.get("codex_capability") if isinstance(payload, dict) else None
+    codex_line = None
+    if isinstance(codex_capability, dict):
+        codex_status = codex_capability.get("status", "unknown")
+        codex_tier = codex_capability.get("adapter_tier", "unknown")
+        codex_line = f"Codex capability: {codex_status} ({codex_tier})"
     attachment_lines = [
         f"Attachment {attachment['repo_id']}: {attachment['binding_state']} "
         f"({attachment['adapter_preference'] or 'adapter-unknown'})"
@@ -570,6 +598,8 @@ def render_payload(payload: dict) -> str:
             f"Total tasks: {payload['total_tasks']}",
             f"Maintenance stage: {payload['maintenance']['stage']}",
         ]
+        if codex_line is not None:
+            lines.append(codex_line)
         lines.extend(attachment_lines)
         lines.append("No governed tasks recorded.")
         return "\n".join(lines)
@@ -578,6 +608,8 @@ def render_payload(payload: dict) -> str:
         f"Maintenance stage: {payload['maintenance']['stage']}",
         f"Maintenance policy: {payload['maintenance']['compatibility_policy_ref']}",
     ]
+    if codex_line is not None:
+        lines.append(codex_line)
     lines.extend(attachment_lines)
     for task in payload["tasks"]:
         lines.append(f"- {task['task_id']}: {task['state']} ({task['goal']})")

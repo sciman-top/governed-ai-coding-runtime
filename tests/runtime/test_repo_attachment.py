@@ -399,6 +399,69 @@ class RepoAttachmentBindingTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         self.assertIn("Attach or validate a target repository light pack", completed.stdout)
 
+    def test_attach_target_repo_cli_infers_python_gate_defaults(self) -> None:
+        with tempfile.TemporaryDirectory() as workspace:
+            repo_root = Path(workspace) / "inferred-python-target"
+            repo_root.mkdir()
+            runtime_root = Path(workspace) / "runtime-state" / "inferred-python-target"
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/attach-target-repo.py",
+                    "--target-repo",
+                    str(repo_root),
+                    "--runtime-state-root",
+                    str(runtime_root),
+                    "--primary-language",
+                    "python",
+                    "--infer-gate-defaults",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["gate_command_source"], "inferred_defaults")
+            self.assertTrue(payload["inferred_gate_defaults_used"])
+
+            profile = json.loads((repo_root / ".governed-ai" / "repo-profile.json").read_text(encoding="utf-8"))
+            self.assertEqual(profile["build_commands"][0]["command"], "python -m compileall src")
+            self.assertEqual(profile["test_commands"][0]["command"], "python -m unittest discover")
+            self.assertEqual(
+                profile["contract_commands"][0]["command"],
+                "python -m unittest discover -s tests/contracts",
+            )
+
+    def test_attach_target_repo_cli_requires_gate_commands_without_infer_flag(self) -> None:
+        with tempfile.TemporaryDirectory() as workspace:
+            repo_root = Path(workspace) / "missing-gates-target"
+            repo_root.mkdir()
+            runtime_root = Path(workspace) / "runtime-state" / "missing-gates-target"
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/attach-target-repo.py",
+                    "--target-repo",
+                    str(repo_root),
+                    "--runtime-state-root",
+                    str(runtime_root),
+                    "--primary-language",
+                    "python",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertNotEqual(completed.returncode, 0)
+            self.assertIn("missing required gate commands", completed.stderr)
+
     def _module(self):
         try:
             return importlib.import_module("governed_ai_coding_runtime_contracts.repo_attachment")

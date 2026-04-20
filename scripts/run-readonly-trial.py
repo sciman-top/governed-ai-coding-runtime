@@ -22,6 +22,7 @@ def main() -> int:
     parser.add_argument("--target-path", required=True)
     parser.add_argument("--max-steps", type=int, required=True)
     parser.add_argument("--max-minutes", type=int, required=True)
+    parser.add_argument("--probe-live", action="store_true")
     args = parser.parse_args()
 
     result = run_scripted_readonly_trial(
@@ -31,6 +32,7 @@ def main() -> int:
         repo_profile_path=args.repo_profile,
         target_path=args.target_path,
         budgets={"max_steps": args.max_steps, "max_minutes": args.max_minutes},
+        probe_live=args.probe_live,
     )
     print(
         json.dumps(
@@ -39,6 +41,10 @@ def main() -> int:
                 "accepted_count": result.session.accepted_count,
                 "summary": result.output.latest_summary,
                 "auth_ownership": result.adapter["auth_ownership"],
+                "adapter_tier": result.adapter["adapter_tier"],
+                "invocation_mode": result.adapter["invocation_mode"],
+                "probe_source": result.adapter["probe_source"],
+                "unsupported_capabilities": result.adapter["unsupported_capabilities"],
                 "unsupported_capability_behavior": result.adapter["unsupported_capability_behavior"],
             },
             sort_keys=True,

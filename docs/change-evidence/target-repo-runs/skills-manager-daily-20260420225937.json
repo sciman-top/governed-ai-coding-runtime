@@ -1,0 +1,258 @@
+{
+  "next_actions": [],
+  "onboard_attach": null,
+  "flow_mode": "daily",
+  "overall_status": "fail",
+  "runtime_check": {
+    "payload": {
+      "write_governance": {
+        "adapter_id": "codex-cli",
+        "approval_id": null,
+        "approval_ref": null,
+        "artifact_refs": [],
+        "binding_id": "binding-skills-manager",
+        "continuation_id": "task-skills-manager-daily-20260420225937:write:8e11c9c40013",
+        "execution_id": "task-skills-manager-daily-20260420225937:write:8e11c9c40013",
+        "governance_status": "denied",
+        "handoff_ref": null,
+        "policy_decision_ref": "artifacts/task-skills-manager-daily-20260420225937/policy/write-deny.json",
+        "policy_status": "deny",
+        "reason": "write path is outside allowed scopes: .governed-ai/runtime-probe-20260420225937.txt",
+        "replay_ref": null,
+        "repo_id": "skills-manager",
+        "session_identity": {
+          "adapter_id": "codex-cli",
+          "adapter_tier": "native_attach",
+          "continuation_id": "task-skills-manager-daily-20260420225937:write:8e11c9c40013",
+          "flow_kind": "live_attach",
+          "live_attach_available": true,
+          "posture_reason": "codex status command is unavailable; native attach is inferred from resume command surface",
+          "resume_id": "codex-resume-f275ca9c6ba7",
+          "session_id": "codex-session-f275ca9c6ba7",
+          "unsupported_capabilities": []
+        },
+        "target_path": ".governed-ai/runtime-probe-20260420225937.txt",
+        "task_id": "task-skills-manager-daily-20260420225937",
+        "task_state": null,
+        "write_tier": "low"
+      },
+      "write_execute": {
+        "adapter_event_ref": "artifacts/task-skills-manager-daily-20260420225937/task-skills-manager-daily-20260420225937-write-8e11c9c40013/evidence/adapter-events.json",
+        "adapter_event_summary": {
+          "approval_event_count": 0,
+          "file_change_count": 0,
+          "gate_run_count": 0,
+          "handoff_ref_count": 1,
+          "live_event_count": 4,
+          "manual_event_count": 0,
+          "task_id": "task-skills-manager-daily-20260420225937",
+          "tool_call_count": 1,
+          "unsupported_event_count": 1
+        },
+        "adapter_id": "codex-cli",
+        "approval_id": null,
+        "approval_ref": null,
+        "approval_status": null,
+        "artifact_ref": null,
+        "artifact_refs": [
+          "artifacts/task-skills-manager-daily-20260420225937/task-skills-manager-daily-20260420225937-write-8e11c9c40013/handoff/write-flow.json",
+          "artifacts/task-skills-manager-daily-20260420225937/task-skills-manager-daily-20260420225937-write-8e11c9c40013/replay/write-flow.json",
+          "artifacts/task-skills-manager-daily-20260420225937/task-skills-manager-daily-20260420225937-write-8e11c9c40013/evidence/adapter-events.json"
+        ],
+        "binding_id": "binding-skills-manager",
+        "bytes_written": null,
+        "continuation_id": "task-skills-manager-daily-20260420225937:write:8e11c9c40013",
+        "execution_id": "task-skills-manager-daily-20260420225937:write:8e11c9c40013",
+        "execution_status": "denied",
+        "handoff_ref": "artifacts/task-skills-manager-daily-20260420225937/task-skills-manager-daily-20260420225937-write-8e11c9c40013/handoff/write-flow.json",
+        "reason": "write path is outside allowed scopes: .governed-ai/runtime-probe-20260420225937.txt",
+        "replay_ref": "artifacts/task-skills-manager-daily-20260420225937/task-skills-manager-daily-20260420225937-write-8e11c9c40013/replay/write-flow.json",
+        "repo_id": "skills-manager",
+        "session_identity": {
+          "adapter_id": "codex-cli",
+          "adapter_tier": "native_attach",
+          "continuation_id": "task-skills-manager-daily-20260420225937:write:8e11c9c40013",
+          "flow_kind": "live_attach",
+          "live_attach_available": true,
+          "posture_reason": "codex status command is unavailable; native attach is inferred from resume command surface",
+          "resume_id": "codex-resume-a100720ce917",
+          "session_id": "codex-session-a100720ce917",
+          "unsupported_capabilities": []
+        },
+        "target_path": ".governed-ai/runtime-probe-20260420225937.txt",
+        "task_id": "task-skills-manager-daily-20260420225937",
+        "write_tier": "low"
+      },
+      "write_approval": null,
+      "verify_attachment": {
+        "binding_id": "binding-skills-manager",
+        "evidence_link": "artifacts/task-skills-manager-daily-20260420225937/run-skills-manager-daily-20260420225937/verification-output/contract.txt",
+        "gate_order": [
+          "test",
+          "contract"
+        ],
+        "mode": "quick",
+        "repo_id": "skills-manager",
+        "result_artifact_refs": {
+          "contract": "artifacts/task-skills-manager-daily-20260420225937/run-skills-manager-daily-20260420225937/verification-output/contract.txt",
+          "test": "artifacts/task-skills-manager-daily-20260420225937/run-skills-manager-daily-20260420225937/verification-output/test.txt"
+        },
+        "results": {
+          "contract": "pass",
+          "test": "pass"
+        },
+        "run_id": "run-skills-manager-daily-20260420225937",
+        "task_id": "task-skills-manager-daily-20260420225937"
+      },
+      "request_gate": {
+        "command_id": "cmd-skills-manager-daily-20260420225937",
+        "command_type": "run_quick_gate",
+        "payload": {
+          "adapter_event_ref": "artifacts/task-skills-manager-daily-20260420225937/task-skills-manager-daily-20260420225937-session-bridge-request/evidence/adapter-events.json",
+          "adapter_event_summary": {
+            "approval_event_count": 0,
+            "file_change_count": 0,
+            "gate_run_count": 2,
+            "handoff_ref_count": 0,
+            "live_event_count": 3,
+            "manual_event_count": 0,
+            "task_id": "task-skills-manager-daily-20260420225937",
+            "tool_call_count": 0,
+            "unsupported_event_count": 0
+          },
+          "adapter_id": "codex-cli",
+          "commands": [
+            "python --version",
+            "python --version"
+          ],
+          "continuation_id": "task-skills-manager-daily-20260420225937:session-bridge-request",
+          "evidence_link": "artifacts/task-skills-manager-daily-20260420225937/session-bridge-request/verification-output/contract.txt",
+          "execution_id": "task-skills-manager-daily-20260420225937:session-bridge-request",
+          "gate_order": [
+            "test",
+            "contract"
+          ],
+          "mode": "quick",
+          "outcome": "pass",
+          "plan_only": false,
+          "result_artifact_refs": {
+            "contract": "artifacts/task-skills-manager-daily-20260420225937/session-bridge-request/verification-output/contract.txt",
+            "test": "artifacts/task-skills-manager-daily-20260420225937/session-bridge-request/verification-output/test.txt"
+          },
+          "results": {
+            "contract": "pass",
+            "test": "pass"
+          },
+          "risky_artifact_refs": [],
+          "run_id": "session-bridge-request",
+          "session_identity": {
+            "adapter_id": "codex-cli",
+            "adapter_tier": "native_attach",
+            "continuation_id": "task-skills-manager-daily-20260420225937:session-bridge-request",
+            "flow_kind": "live_attach",
+            "live_attach_available": true,
+            "posture_reason": "codex status command is unavailable; native attach is inferred from resume command surface",
+            "resume_id": "codex-resume-14cde5a2cf06",
+            "session_id": "codex-session-14cde5a2cf06",
+            "unsupported_capabilities": []
+          }
+        },
+        "policy_decision_ref": "artifacts/task-skills-manager-daily-20260420225937/policy/session-bridge-allow.json",
+        "reason": null,
+        "status": "verification_completed",
+        "unsupported_capability_behavior": null
+      },
+      "status": {
+        "attachments": [
+          {
+            "adapter_preference": "native_attach",
+            "binding_id": "binding-skills-manager",
+            "binding_state": "healthy",
+            "fail_closed": false,
+            "gate_profile": "default",
+            "light_pack_path": "D:\\OneDrive\\CODE\\skills-manager\\.governed-ai\\light-pack.json",
+            "reason": null,
+            "remediation": null,
+            "repo_id": "skills-manager"
+          }
+        ],
+        "codex_capability": {
+          "adapter_tier": "native_attach",
+          "evidence_export_available": true,
+          "failure_stage": null,
+          "flow_kind": "live_attach",
+          "live_attach_available": true,
+          "probe_attempts": 1,
+          "remediation_hint": "Validate native attach via `codex.cmd exec resume --help` and a controlled `exec resume --last --json` probe when needed.",
+          "resume_available": true,
+          "stability_state": "single_pass",
+          "status": "ready",
+          "structured_events_available": true,
+          "unsupported_capabilities": []
+        },
+        "maintenance": {
+          "compatibility_policy_ref": "docs/product/runtime-compatibility-and-upgrade-policy.md",
+          "deprecation_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+          "retirement_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+          "stage": "completed",
+          "triage_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+          "upgrade_policy_ref": "docs/product/runtime-compatibility-and-upgrade-policy.md"
+        },
+        "runtime_roots": {
+          "artifacts_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/artifacts",
+          "compatibility_mode": false,
+          "replay_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/replay",
+          "runtime_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime",
+          "tasks_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/tasks",
+          "workspaces_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/workspaces"
+        },
+        "tasks": [],
+        "total_tasks": 0
+      },
+      "summary": {
+        "run_id": "run-skills-manager-daily-20260420225937",
+        "command_id": "cmd-skills-manager-daily-20260420225937",
+        "task_id": "task-skills-manager-daily-20260420225937",
+        "attachment_runtime_state_root": "D:\\OneDrive\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\skills-manager",
+        "attachment_health": "healthy",
+        "repo_binding_id": "binding-skills-manager",
+        "overall_status": "fail",
+        "attachment_root": "D:\\OneDrive\\CODE\\skills-manager",
+        "mode": "quick"
+      },
+      "steps": [
+        {
+          "exit_code": 0,
+          "label": "status",
+          "output": "{\n  \"attachments\": [\n    {\n      \"adapter_preference\": \"native_attach\",\n      \"binding_id\": \"binding-skills-manager\",\n      \"binding_state\": \"healthy\",\n      \"fail_closed\": false,\n      \"gate_profile\": \"default\",\n      \"light_pack_path\": \"D:\\\\OneDrive\\\\CODE\\\\skills-manager\\\\.governed-ai\\\\light-pack.json\",\n      \"reason\": null,\n      \"remediation\": null,\n      \"repo_id\": \"skills-manager\"\n    }\n  ],\n  \"codex_capability\": {\n    \"adapter_tier\": \"native_attach\",\n    \"evidence_export_available\": true,\n    \"failure_stage\": null,\n    \"flow_kind\": \"live_attach\",\n    \"live_attach_available\": true,\n    \"probe_attempts\": 1,\n    \"remediation_hint\": \"Validate native attach via `codex.cmd exec resume --help` and a controlled `exec resume --last --json` probe when needed.\",\n    \"resume_available\": true,\n    \"stability_state\": \"single_pass\",\n    \"status\": \"ready\",\n    \"structured_events_available\": true,\n    \"unsupported_capabilities\": []\n  },\n  \"maintenance\": {\n    \"compatibility_policy_ref\": \"docs/product/runtime-compatibility-and-upgrade-policy.md\",\n    \"deprecation_policy_ref\": \"docs/product/maintenance-deprecation-and-retirement-policy.md\",\n    \"retirement_policy_ref\": \"docs/product/maintenance-deprecation-and-retirement-policy.md\",\n    \"stage\": \"completed\",\n    \"triage_policy_ref\": \"docs/product/maintenance-deprecation-and-retirement-policy.md\",\n    \"upgrade_policy_ref\": \"docs/product/runtime-compatibility-and-upgrade-policy.md\"\n  },\n  \"runtime_roots\": {\n    \"artifacts_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/artifacts\",\n    \"compatibility_mode\": false,\n    \"replay_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/replay\",\n    \"runtime_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime\",\n    \"tasks_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/tasks\",\n    \"workspaces_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/workspaces\"\n  },\n  \"tasks\": [],\n  \"total_tasks\": 0\n}"
+        },
+        {
+          "exit_code": 0,
+          "label": "doctor",
+          "output": "OK python-command\nOK runtime-path-contracts\nOK runtime-path-schema-catalog\nOK runtime-path-specs\nOK runtime-path-tests\nOK runtime-policy-compatibility\nOK runtime-policy-maintenance\nOK schema-catalog-visible\nOK gate-command-build\nOK gate-command-test\nOK gate-command-contract\nOK gate-command-doctor\nOK gate-command-operator\nOK runtime-status-surface\nOK maintenance-policy-visible\nOK codex-capability-ready\nOK adapter-posture-visible\nOK attachment-posture-healthy"
+        },
+        {
+          "exit_code": 0,
+          "label": "session-bridge-request-gate",
+          "output": "{\n  \"command_id\": \"cmd-skills-manager-daily-20260420225937\",\n  \"command_type\": \"run_quick_gate\",\n  \"payload\": {\n    \"adapter_event_ref\": \"artifacts/task-skills-manager-daily-20260420225937/task-skills-manager-daily-20260420225937-session-bridge-request/evidence/adapter-events.json\",\n    \"adapter_event_summary\": {\n      \"approval_event_count\": 0,\n      \"file_change_count\": 0,\n      \"gate_run_count\": 2,\n      \"handoff_ref_count\": 0,\n      \"live_event_count\": 3,\n      \"manual_event_count\": 0,\n      \"task_id\": \"task-skills-manager-daily-20260420225937\",\n      \"tool_call_count\": 0,\n      \"unsupported_event_count\": 0\n    },\n    \"adapter_id\": \"codex-cli\",\n    \"commands\": [\n      \"python --version\",\n      \"python --version\"\n    ],\n    \"continuation_id\": \"task-skills-manager-daily-20260420225937:session-bridge-request\",\n    \"evidence_link\": \"artifacts/task-skills-manager-daily-20260420225937/session-bridge-request/verification-output/contract.txt\",\n    \"execution_id\": \"task-skills-manager-daily-20260420225937:session-bridge-request\",\n    \"gate_order\": [\n      \"test\",\n      \"contract\"\n    ],\n    \"mode\": \"quick\",\n    \"outcome\": \"pass\",\n    \"plan_only\": false,\n    \"result_artifact_refs\": {\n      \"contract\": \"artifacts/task-skills-manager-daily-20260420225937/session-bridge-request/verification-output/contract.txt\",\n      \"test\": \"artifacts/task-skills-manager-daily-20260420225937/session-bridge-request/verification-output/test.txt\"\n    },\n    \"results\": {\n      \"contract\": \"pass\",\n      \"test\": \"pass\"\n    },\n    \"risky_artifact_refs\": [],\n    \"run_id\": \"session-bridge-request\",\n    \"session_identity\": {\n      \"adapter_id\": \"codex-cli\",\n      \"adapter_tier\": \"native_attach\",\n      \"continuation_id\": \"task-skills-manager-daily-20260420225937:session-bridge-request\",\n      \"flow_kind\": \"live_attach\",\n      \"live_attach_available\": true,\n      \"posture_reason\": \"codex status command is unavailable; native attach is inferred from resume command surface\",\n      \"resume_id\": \"codex-resume-14cde5a2cf06\",\n      \"session_id\": \"codex-session-14cde5a2cf06\",\n      \"unsupported_capabilities\": []\n    }\n  },\n  \"policy_decision_ref\": \"artifacts/task-skills-manager-daily-20260420225937/policy/session-bridge-allow.json\",\n  \"reason\": null,\n  \"status\": \"verification_completed\",\n  \"unsupported_capability_behavior\": null\n}"
+        },
+        {
+          "exit_code": 0,
+          "label": "verify-attachment",
+          "output": "{\n  \"binding_id\": \"binding-skills-manager\",\n  \"evidence_link\": \"artifacts/task-skills-manager-daily-20260420225937/run-skills-manager-daily-20260420225937/verification-output/contract.txt\",\n  \"gate_order\": [\n    \"test\",\n    \"contract\"\n  ],\n  \"mode\": \"quick\",\n  \"repo_id\": \"skills-manager\",\n  \"result_artifact_refs\": {\n    \"contract\": \"artifacts/task-skills-manager-daily-20260420225937/run-skills-manager-daily-20260420225937/verification-output/contract.txt\",\n    \"test\": \"artifacts/task-skills-manager-daily-20260420225937/run-skills-manager-daily-20260420225937/verification-output/test.txt\"\n  },\n  \"results\": {\n    \"contract\": \"pass\",\n    \"test\": \"pass\"\n  },\n  \"run_id\": \"run-skills-manager-daily-20260420225937\",\n  \"task_id\": \"task-skills-manager-daily-20260420225937\"\n}"
+        },
+        {
+          "exit_code": 0,
+          "label": "govern-attachment-write",
+          "output": "{\n  \"adapter_id\": \"codex-cli\",\n  \"approval_id\": null,\n  \"approval_ref\": null,\n  \"artifact_refs\": [],\n  \"binding_id\": \"binding-skills-manager\",\n  \"continuation_id\": \"task-skills-manager-daily-20260420225937:write:8e11c9c40013\",\n  \"execution_id\": \"task-skills-manager-daily-20260420225937:write:8e11c9c40013\",\n  \"governance_status\": \"denied\",\n  \"handoff_ref\": null,\n  \"policy_decision_ref\": \"artifacts/task-skills-manager-daily-20260420225937/policy/write-deny.json\",\n  \"policy_status\": \"deny\",\n  \"reason\": \"write path is outside allowed scopes: .governed-ai/runtime-probe-20260420225937.txt\",\n  \"replay_ref\": null,\n  \"repo_id\": \"skills-manager\",\n  \"session_identity\": {\n    \"adapter_id\": \"codex-cli\",\n    \"adapter_tier\": \"native_attach\",\n    \"continuation_id\": \"task-skills-manager-daily-20260420225937:write:8e11c9c40013\",\n    \"flow_kind\": \"live_attach\",\n    \"live_attach_available\": true,\n    \"posture_reason\": \"codex status command is unavailable; native attach is inferred from resume command surface\",\n    \"resume_id\": \"codex-resume-f275ca9c6ba7\",\n    \"session_id\": \"codex-session-f275ca9c6ba7\",\n    \"unsupported_capabilities\": []\n  },\n  \"target_path\": \".governed-ai/runtime-probe-20260420225937.txt\",\n  \"task_id\": \"task-skills-manager-daily-20260420225937\",\n  \"task_state\": null,\n  \"write_tier\": \"low\"\n}"
+        },
+        {
+          "exit_code": 0,
+          "label": "execute-attachment-write",
+          "output": "{\n  \"adapter_event_ref\": \"artifacts/task-skills-manager-daily-20260420225937/task-skills-manager-daily-20260420225937-write-8e11c9c40013/evidence/adapter-events.json\",\n  \"adapter_event_summary\": {\n    \"approval_event_count\": 0,\n    \"file_change_count\": 0,\n    \"gate_run_count\": 0,\n    \"handoff_ref_count\": 1,\n    \"live_event_count\": 4,\n    \"manual_event_count\": 0,\n    \"task_id\": \"task-skills-manager-daily-20260420225937\",\n    \"tool_call_count\": 1,\n    \"unsupported_event_count\": 1\n  },\n  \"adapter_id\": \"codex-cli\",\n  \"approval_id\": null,\n  \"approval_ref\": null,\n  \"approval_status\": null,\n  \"artifact_ref\": null,\n  \"artifact_refs\": [\n    \"artifacts/task-skills-manager-daily-20260420225937/task-skills-manager-daily-20260420225937-write-8e11c9c40013/handoff/write-flow.json\",\n    \"artifacts/task-skills-manager-daily-20260420225937/task-skills-manager-daily-20260420225937-write-8e11c9c40013/replay/write-flow.json\",\n    \"artifacts/task-skills-manager-daily-20260420225937/task-skills-manager-daily-20260420225937-write-8e11c9c40013/evidence/adapter-events.json\"\n  ],\n  \"binding_id\": \"binding-skills-manager\",\n  \"bytes_written\": null,\n  \"continuation_id\": \"task-skills-manager-daily-20260420225937:write:8e11c9c40013\",\n  \"execution_id\": \"task-skills-manager-daily-20260420225937:write:8e11c9c40013\",\n  \"execution_status\": \"denied\",\n  \"handoff_ref\": \"artifacts/task-skills-manager-daily-20260420225937/task-skills-manager-daily-20260420225937-write-8e11c9c40013/handoff/write-flow.json\",\n  \"reason\": \"write path is outside allowed scopes: .governed-ai/runtime-probe-20260420225937.txt\",\n  \"replay_ref\": \"artifacts/task-skills-manager-daily-20260420225937/task-skills-manager-daily-20260420225937-write-8e11c9c40013/replay/write-flow.json\",\n  \"repo_id\": \"skills-manager\",\n  \"session_identity\": {\n    \"adapter_id\": \"codex-cli\",\n    \"adapter_tier\": \"native_attach\",\n    \"continuation_id\": \"task-skills-manager-daily-20260420225937:write:8e11c9c40013\",\n    \"flow_kind\": \"live_attach\",\n    \"live_attach_available\": true,\n    \"posture_reason\": \"codex status command is unavailable; native attach is inferred from resume command surface\",\n    \"resume_id\": \"codex-resume-a100720ce917\",\n    \"session_id\": \"codex-session-a100720ce917\",\n    \"unsupported_capabilities\": []\n  },\n  \"target_path\": \".governed-ai/runtime-probe-20260420225937.txt\",\n  \"task_id\": \"task-skills-manager-daily-20260420225937\",\n  \"write_tier\": \"low\"\n}"
+        }
+      ]
+    },
+    "exit_code": 1
+  }
+}

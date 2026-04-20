@@ -1,0 +1,69 @@
+{
+  "claim_catalog_version": "1.0",
+  "claims": [
+    {
+      "claim_id": "CLM-001",
+      "claim_text": "The runtime is a governance/runtime layer and not a universal host replacement.",
+      "proof_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs",
+      "evidence_link": "docs/change-evidence/20260420-gap-069-host-neutral-governance-boundary-hardening-closeout.md",
+      "source_refs": [
+        {
+          "path": "README.en.md",
+          "contains": "not that this runtime fully replaces Codex host execution in every environment"
+        },
+        {
+          "path": "README.zh-CN.md",
+          "contains": "不应声称本项目已经在所有环境下完全替代 Codex 宿主执行"
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-002",
+      "claim_text": "Onboarding can infer missing gate commands by default from the declared primary language.",
+      "proof_command": "python -m unittest tests.runtime.test_repo_attachment",
+      "evidence_link": "docs/change-evidence/20260420-gap-070-default-on-onboarding-and-auto-apply-guardrails-closeout.md",
+      "source_refs": [
+        {
+          "path": "docs/quickstart/use-with-existing-repo.md",
+          "contains": "`onboard` now infers missing build/test/contract commands from `-PrimaryLanguage` by default."
+        },
+        {
+          "path": "docs/quickstart/use-with-existing-repo.zh-CN.md",
+          "contains": "`onboard` 现在默认会根据 `-PrimaryLanguage` 推断缺失的 build/test/contract 命令。"
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-003",
+      "claim_text": "Medium/high-risk writes remain approval-bound in governed write flows.",
+      "proof_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime",
+      "evidence_link": "docs/change-evidence/20260420-gap-070-default-on-onboarding-and-auto-apply-guardrails-closeout.md",
+      "source_refs": [
+        {
+          "path": "README.en.md",
+          "contains": "Path C (risky writes): run `govern-attachment-write -> decide-attachment-write -> execute-attachment-write` for medium/high-risk mutations."
+        },
+        {
+          "path": "README.zh-CN.md",
+          "contains": "路径 C（中高风险写入）：用 `govern-attachment-write -> decide-attachment-write -> execute-attachment-write` 走审批与回滚引用闭环。"
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-004",
+      "claim_text": "The canonical acceptance chain remains build -> test -> contract/invariant -> hotspot.",
+      "proof_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All",
+      "evidence_link": "docs/change-evidence/20260420-readme-and-usage-guides-refresh.md",
+      "source_refs": [
+        {
+          "path": "README.en.md",
+          "contains": "Canonical acceptance chain: runtime-managed `build -> test -> contract/invariant -> hotspot`."
+        },
+        {
+          "path": "README.zh-CN.md",
+          "contains": "验收链统一执行：`build -> test -> contract/invariant -> hotspot` 由 runtime-managed gate 流统一执行，降低漏检。"
+        }
+      ]
+    }
+  ]
+}

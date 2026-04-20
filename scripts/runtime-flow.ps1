@@ -24,7 +24,8 @@ param(
   [string]$WriteTargetPath = "",
   [ValidateSet("low", "medium", "high")]
   [string]$WriteTier = "medium",
-  [string]$WriteToolName = "apply_patch",
+  [string]$WriteToolName = "write_file",
+  [string]$WriteToolCommand = "",
   [string]$RollbackReference = "",
   [string]$WriteContent = "governed runtime write probe",
   [switch]$ExecuteWriteFlow,
@@ -37,8 +38,9 @@ param(
   [string]$BuildCommand = "",
   [string]$TestCommand = "",
   [string]$ContractCommand = "",
+  [switch]$RequireExplicitGateCommands,
   [ValidateSet("native_attach", "process_bridge", "manual_handoff")]
-  [string]$AdapterPreference = "process_bridge",
+  [string]$AdapterPreference = "native_attach",
   [string]$GateProfile = "default",
   [switch]$Overwrite,
 
@@ -107,7 +109,11 @@ $resolvedAttachmentRoot = Resolve-AbsolutePath -PathValue $AttachmentRoot
 $resolvedAttachmentRuntimeStateRoot = Resolve-AbsolutePath -PathValue $AttachmentRuntimeStateRoot
 
 if ($FlowMode -eq "onboard") {
-  if ([string]::IsNullOrWhiteSpace($BuildCommand) -or [string]::IsNullOrWhiteSpace($TestCommand) -or [string]::IsNullOrWhiteSpace($ContractCommand)) {
+  if ($RequireExplicitGateCommands -and (
+      [string]::IsNullOrWhiteSpace($BuildCommand) -or
+      [string]::IsNullOrWhiteSpace($TestCommand) -or
+      [string]::IsNullOrWhiteSpace($ContractCommand)
+    )) {
     throw "On onboard mode, -BuildCommand -TestCommand -ContractCommand are required."
   }
 
@@ -116,12 +122,21 @@ if ($FlowMode -eq "onboard") {
     "--target-repo", $resolvedAttachmentRoot,
     "--runtime-state-root", $resolvedAttachmentRuntimeStateRoot,
     "--primary-language", $PrimaryLanguage,
-    "--build-command", $BuildCommand,
-    "--test-command", $TestCommand,
-    "--contract-command", $ContractCommand,
     "--adapter-preference", $AdapterPreference,
     "--gate-profile", $GateProfile
   )
+  if (-not [string]::IsNullOrWhiteSpace($BuildCommand)) {
+    $attachArgs += @("--build-command", $BuildCommand)
+  }
+  if (-not [string]::IsNullOrWhiteSpace($TestCommand)) {
+    $attachArgs += @("--test-command", $TestCommand)
+  }
+  if (-not [string]::IsNullOrWhiteSpace($ContractCommand)) {
+    $attachArgs += @("--contract-command", $ContractCommand)
+  }
+  if ($RequireExplicitGateCommands -eq $false) {
+    $attachArgs += "--infer-gate-defaults"
+  }
   if (-not [string]::IsNullOrWhiteSpace($RepoId)) {
     $attachArgs += @("--repo-id", $RepoId)
   }
@@ -176,6 +191,9 @@ if (-not [string]::IsNullOrWhiteSpace($RepoBindingId)) {
 }
 if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
   $checkArgs += @("-WriteTargetPath", $WriteTargetPath, "-WriteTier", $WriteTier, "-WriteToolName", $WriteToolName)
+  if (-not [string]::IsNullOrWhiteSpace($WriteToolCommand)) {
+    $checkArgs += @("-WriteToolCommand", $WriteToolCommand)
+  }
   $checkArgs += @("-WriteContent", $WriteContent)
 }
 if (-not [string]::IsNullOrWhiteSpace($RollbackReference)) {
@@ -192,6 +210,23 @@ $checkArgs += "-Json"
 $checkResult = Invoke-Captured -Command { & pwsh @checkArgs }
 $checkPayload = Try-ParseJson -Raw $checkResult.output
 $overallFail = ($checkResult.exit_code -ne 0)
+$nextActions = New-Object System.Collections.Generic.List[string]
+
+if ($checkPayload -and $checkPayload.status -and $checkPayload.status.attachments) {
+  foreach ($attachment in $checkPayload.status.attachments) {
+    $bindingState = ""
+    $remediation = ""
+    if ($attachment.PSObject.Properties.Name -contains "binding_state") {
+      $bindingState = [string]$attachment.binding_state
+    }
+    if ($attachment.PSObject.Properties.Name -contains "remediation") {
+      $remediation = [string]$attachment.remediation
+    }
+    if ($bindingState -and $bindingState -ne "healthy" -and -not [string]::IsNullOrWhiteSpace($remediation)) {
+      $nextActions.Add("attachment remediation ($bindingState): $remediation") | Out-Null
+    }
+  }
+}
 
 if ($Json) {
   @{
@@ -207,11 +242,15 @@ if ($Json) {
       exit_code = $checkResult.exit_code
       payload = $checkPayload
     }
+    next_actions = @($nextActions)
   } | ConvertTo-Json -Depth 80
 }
 else {
   if ($FlowMode -eq "onboard") {
     Write-Host "[OK] onboard-attach (exit=0)"
+    if ($attachPayload -and $attachPayload.gate_command_source) {
+      Write-Host ("Onboard gate command source: " + [string]$attachPayload.gate_command_source)
+    }
   }
   if ($checkPayload -and $checkPayload.summary) {
     Write-Host ("Overall: " + [string]$checkPayload.summary.overall_status)
@@ -222,6 +261,11 @@ else {
   }
   if ($checkResult.output) {
     Write-Host $checkResult.output
+  }
+  if ($nextActions.Count -gt 0) {
+    foreach ($action in $nextActions) {
+      Write-Host ("Next Action: " + $action)
+    }
   }
 }
 

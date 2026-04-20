@@ -10,7 +10,14 @@ Today you can use this runtime against an existing repository such as `D:\OneDri
 - call the local session bridge for posture and gate-plan requests
 - run Codex smoke-trial and multi-repo trial flows against the attached posture
 
-What you do **not** have yet is a fully runtime-owned direct Codex coding path for real high-risk writes inside that target repository.
+What you do **not** have yet is a universal full-takeover claim across all hosts/environments/repos/high-risk workflows.
+
+## Concrete Assistance For AI Coding In Attached Repos
+- pre-execution capability visibility: `status`/`doctor` show adapter posture before risky operations
+- runtime-managed gate execution: run canonical verification chain with one bridge surface
+- policy and approval for risky writes: medium/high tiers require escalation/approval or fail-closed
+- evidence-linked delivery: executed flows emit approval/evidence/handoff/replay refs
+- repeatable multi-repo governance: one attach contract, one daily flow, consistent operator behavior
 
 ## Recommended Flow
 
@@ -27,8 +34,12 @@ python scripts/attach-target-repo.py `
   --build-command "dotnet build ClassroomToolkit.sln -c Debug" `
   --test-command "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug" `
   --contract-command "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug --filter \"FullyQualifiedName~ArchitectureDependencyTests|FullyQualifiedName~InteropHookLifecycleContractTests|FullyQualifiedName~InteropHookEventDispatchContractTests|FullyQualifiedName~GlobalHookServiceLifecycleContractTests|FullyQualifiedName~CrossPageDisplayLifecycleContractTests\"" `
-  --adapter-preference "process_bridge"
+  --adapter-preference "native_attach"
 ```
+
+Recommended posture:
+- declare `native_attach` as the preferred adapter tier
+- keep runtime fallback enabled for `process_bridge` / `manual_handoff` when live probe says native attach is unavailable
 
 PowerShell note:
 - if your `--contract-command` contains `|`, wrap the whole value in single quotes, or use a no-filter contract command first and narrow it later.
@@ -182,11 +193,12 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow.ps1 `
   -RepoId "classroomtoolkit" `
   -DisplayName "ClassroomToolkit" `
   -PrimaryLanguage "csharp" `
-  -BuildCommand "dotnet build ClassroomToolkit.sln -c Debug" `
-  -TestCommand "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug" `
-  -ContractCommand "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug" `
   -Mode "quick"
 ```
+
+Notes:
+- `onboard` now infers missing build/test/contract commands from `-PrimaryLanguage` by default.
+- If you want strict explicit-gate mode, add `-RequireExplicitGateCommands` and pass all three commands.
 
 Daily mode (skip attach, run check chain directly):
 
@@ -269,8 +281,8 @@ python scripts/run-multi-repo-trial.py `
 
 ## Current Boundary
 - good for attachment, posture inspection, attached gate planning, and executing declared verification gates inside the target repo
-- good for establishing a governed repo profile for an external repository
-- not yet the same thing as letting Codex CLI run inside `ClassroomToolkit` with full runtime-owned approval, execution, evidence, and rollback for real writes
+- good for establishing a governed repo profile for an external repository and running runtime-managed write governance flows
+- still not a claim that every host/environment/repo has full runtime-owned takeover semantics
 
 ## Related
 - [Target Repo Attachment Flow](../product/target-repo-attachment-flow.md)

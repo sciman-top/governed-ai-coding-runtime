@@ -31,13 +31,28 @@ def main() -> int:
     parser.add_argument("--evidence-export", action="store_true")
     parser.add_argument("--resume", action="store_true")
     parser.add_argument(
+        "--codex-bin",
+        help="Optional Codex executable path or command name used by --probe-live.",
+    )
+    parser.add_argument(
+        "--probe-cwd",
+        help="Optional working directory for live probe commands.",
+    )
+    parser.add_argument(
         "--probe-live",
         action="store_true",
         help="Probe the local Codex surface (codex --version/--help/status) and derive adapter posture from live results.",
     )
     args = parser.parse_args()
 
-    live_probe = probe_codex_surface() if args.probe_live else None
+    live_probe = (
+        probe_codex_surface(
+            cwd=args.probe_cwd,
+            codex_executable=args.codex_bin,
+        )
+        if args.probe_live
+        else None
+    )
     native_attach_available = live_probe.native_attach_available if live_probe else args.native_attach
     process_bridge_available = live_probe.process_bridge_available if live_probe else not args.no_process_bridge
     structured_events_available = live_probe.structured_events_available if live_probe else args.structured_events

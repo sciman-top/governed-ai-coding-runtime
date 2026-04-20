@@ -197,6 +197,264 @@ function Invoke-OldProjectNameScan {
   Write-CheckOk "old-project-name-historical-only"
 }
 
+function Invoke-HostReplacementClaimBoundaryScan {
+  $targetFiles = @(
+    "README.md",
+    "README.en.md",
+    "README.zh-CN.md",
+    "docs/quickstart/ai-coding-usage-guide.md",
+    "docs/quickstart/ai-coding-usage-guide.zh-CN.md",
+    "docs/product/codex-cli-app-integration-guide.md",
+    "docs/product/codex-cli-app-integration-guide.zh-CN.md"
+  ) | ForEach-Object { Join-Path (Get-Location) $_ } | Where-Object { Test-Path $_ }
+
+  $riskPatterns = @(
+    '(?i)\bfully\s+replaces?\b.*\bhost\b',
+    '(?i)\breplaces?\b.*\bupstream\b.*\bcoding\b.*\bproducts?\b',
+    '(?i)\bhost\s+replacement\s+shell\b',
+    '完全替代.{0,20}宿主',
+    '替代上游.{0,30}宿主'
+  )
+
+  $negationPatterns = @(
+    '(?i)\b(not|does not|should not|is not|isn''t|not implemented|not yet|without)\b',
+    '不应|不是|并非|未实现|尚未|还没有|不替代|不取代'
+  )
+
+  $violations = [System.Collections.Generic.List[string]]::new()
+  foreach ($file in $targetFiles) {
+    $lineNo = 0
+    foreach ($line in (Get-Content $file)) {
+      $lineNo += 1
+      $hasRisk = $false
+      foreach ($pattern in $riskPatterns) {
+        if ($line -match $pattern) {
+          $hasRisk = $true
+          break
+        }
+      }
+
+      if (-not $hasRisk) {
+        continue
+      }
+
+      $hasNegation = $false
+      foreach ($pattern in $negationPatterns) {
+        if ($line -match $pattern) {
+          $hasNegation = $true
+          break
+        }
+      }
+
+      if (-not $hasNegation) {
+        $violations.Add(("{0}:{1}:{2}" -f $file, $lineNo, $line))
+      }
+    }
+  }
+
+  if ($violations.Count -gt 0) {
+    $violations | ForEach-Object { Write-Error $_ }
+    throw "Host-replacement over-claim lines found in operator-facing docs"
+  }
+
+  Write-CheckOk "host-replacement-claim-boundary"
+}
+
+function Invoke-GapEvidenceSloCheck {
+  $backlogPath = Join-Path (Get-Location) "docs/backlog/issue-ready-backlog.md"
+  $seedPath = Join-Path (Get-Location) "docs/backlog/issue-seeds.yaml"
+  $evidenceRoot = Join-Path (Get-Location) "docs/change-evidence"
+  if (-not (Test-Path $backlogPath)) {
+    throw "Issue-ready backlog not found: $backlogPath"
+  }
+  if (-not (Test-Path $seedPath)) {
+    throw "Issue seeds file not found: $seedPath"
+  }
+  if (-not (Test-Path $evidenceRoot)) {
+    throw "Change evidence directory not found: $evidenceRoot"
+  }
+
+  $seedIds = @(
+    Select-String -Path $seedPath -Pattern '^\s+- id: (GAP-\d+)' |
+      ForEach-Object { $_.Matches[0].Groups[1].Value } |
+      Where-Object { $_ -match '^GAP-0(6[9]|7\d)$' }
+  )
+  if ($seedIds.Count -lt 1) {
+    throw "No post-closeout GAP ids found in issue seeds"
+  }
+
+  $targetGaps = New-Object System.Collections.Generic.HashSet[string]
+  $inPostCloseout = $false
+  foreach ($line in (Get-Content $backlogPath)) {
+    if ($line -match '^## Post-Closeout Optimization Queue') {
+      $inPostCloseout = $true
+      continue
+    }
+    if ($inPostCloseout -and $line -match '^## ') {
+      break
+    }
+    if ($inPostCloseout -and $line -match '^### (GAP-\d+) ') {
+      $gapId = $Matches[1]
+      if ($seedIds -contains $gapId) {
+        [void]$targetGaps.Add($gapId)
+      }
+    }
+  }
+  if ($targetGaps.Count -lt 1) {
+    throw "No post-closeout GAP sections found in backlog"
+  }
+
+  $completedGaps = New-Object System.Collections.Generic.HashSet[string]
+  $currentGap = $null
+  foreach ($line in (Get-Content $backlogPath)) {
+    if ($line -match '^### (GAP-\d+) ') {
+      $currentGap = $Matches[1]
+      continue
+    }
+    if ($line -match '^### ') {
+      $currentGap = $null
+      continue
+    }
+    if ($null -ne $currentGap -and $line -match '^- Status:\s*(.+?)\s*$') {
+      if ($Matches[1] -match '^complete\b') {
+        [void]$completedGaps.Add($currentGap)
+      }
+    }
+  }
+
+  foreach ($gapId in @($targetGaps)) {
+    if (-not $completedGaps.Contains($gapId)) {
+      continue
+    }
+
+    $gapSlug = $gapId.ToLower()
+    $matches = @(
+      Get-ChildItem -Path $evidenceRoot -File | Where-Object {
+      $_.Name.ToLower().Contains($gapSlug) -and $_.Name.ToLower().Contains("closeout")
+      }
+    )
+    if (-not $matches -or $matches.Count -lt 1) {
+      throw "Missing closeout evidence file for completed $gapId"
+    }
+
+    $content = Get-Content -Raw $matches[0].FullName
+    foreach ($requiredHeader in @("## Verification", "## Rollback")) {
+      if ($content -notmatch [regex]::Escape($requiredHeader)) {
+        throw "$($matches[0].Name) missing required section: $requiredHeader"
+      }
+    }
+
+    foreach ($requiredToken in @(
+      "scripts/build-runtime.ps1",
+      "verify-repo.ps1 -Check Runtime",
+      "verify-repo.ps1 -Check Contract",
+      "scripts/doctor-runtime.ps1"
+    )) {
+      if ($content -notmatch [regex]::Escape($requiredToken)) {
+        throw "$($matches[0].Name) missing required verification token: $requiredToken"
+      }
+    }
+  }
+
+  Write-CheckOk "gap-evidence-slo"
+}
+
+function Invoke-PostCloseoutQueueSyncCheck {
+  $seedPath = Join-Path (Get-Location) "docs/backlog/issue-seeds.yaml"
+  if (-not (Test-Path $seedPath)) {
+    throw "Issue seeds file not found: $seedPath"
+  }
+
+  $postCloseoutIds = @(
+    Select-String -Path $seedPath -Pattern '^\s+- id: (GAP-\d+)' |
+      ForEach-Object { $_.Matches[0].Groups[1].Value } |
+      Where-Object { $_ -match '^GAP-0(6[9]|7\d)$' }
+  )
+  if ($postCloseoutIds.Count -lt 1) {
+    throw "No post-closeout GAP ids found in issue seeds"
+  }
+
+  $sorted = @($postCloseoutIds | Sort-Object)
+  $minGap = $sorted[0]
+  $maxGap = $sorted[$sorted.Count - 1]
+
+  $syncTargets = @(
+    "docs/backlog/README.md",
+    "docs/backlog/full-lifecycle-backlog-seeds.md",
+    "docs/roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md"
+  ) | ForEach-Object { Join-Path (Get-Location) $_ }
+
+  foreach ($target in $syncTargets) {
+    if (-not (Test-Path $target)) {
+      throw "Post-closeout sync target missing: $target"
+    }
+    $matches = @(
+      Select-String -Path $target -Pattern ([regex]::Escape($minGap) + '.*' + [regex]::Escape($maxGap) + '.*complete') -CaseSensitive:$false
+    )
+    if ($matches.Count -lt 1) {
+      throw "Post-closeout queue posture drift in $target; expected '$minGap through $maxGap' complete line"
+    }
+  }
+
+  Write-CheckOk "post-closeout-queue-sync"
+}
+
+function Invoke-ClaimDriftSentinelCheck {
+  $catalogPath = Join-Path (Get-Location) "docs/product/claim-catalog.json"
+  if (-not (Test-Path $catalogPath)) {
+    throw "Claim catalog not found: $catalogPath"
+  }
+
+  $catalog = Get-Content -Raw $catalogPath | ConvertFrom-Json
+  if ($null -eq $catalog.claims -or @($catalog.claims).Count -lt 1) {
+    throw "Claim catalog must contain at least one claim entry"
+  }
+
+  foreach ($claim in @($catalog.claims)) {
+    foreach ($requiredField in @("claim_id", "claim_text", "proof_command", "evidence_link")) {
+      if (-not $claim.PSObject.Properties.Name.Contains($requiredField)) {
+        throw "Claim catalog entry missing required field: $requiredField"
+      }
+      $value = [string]$claim.$requiredField
+      if ([string]::IsNullOrWhiteSpace($value)) {
+        throw "Claim catalog field '$requiredField' must be non-empty"
+      }
+    }
+
+    $evidencePath = Join-Path (Get-Location) ([string]$claim.evidence_link)
+    if (-not (Test-Path $evidencePath)) {
+      throw "Claim $($claim.claim_id) references missing evidence file: $($claim.evidence_link)"
+    }
+
+    if (-not $claim.PSObject.Properties.Name.Contains("source_refs") -or $null -eq $claim.source_refs -or @($claim.source_refs).Count -lt 1) {
+      throw "Claim $($claim.claim_id) must include source_refs"
+    }
+
+    foreach ($sourceRef in @($claim.source_refs)) {
+      if (-not $sourceRef.PSObject.Properties.Name.Contains("path") -or -not $sourceRef.PSObject.Properties.Name.Contains("contains")) {
+        throw "Claim $($claim.claim_id) source_ref must include path and contains"
+      }
+
+      $sourcePath = Join-Path (Get-Location) ([string]$sourceRef.path)
+      if (-not (Test-Path $sourcePath)) {
+        throw "Claim $($claim.claim_id) source file missing: $($sourceRef.path)"
+      }
+
+      $needle = [string]$sourceRef.contains
+      if ([string]::IsNullOrWhiteSpace($needle)) {
+        throw "Claim $($claim.claim_id) source_ref contains must be non-empty"
+      }
+
+      $sourceContent = Get-Content -Raw $sourcePath
+      if ($sourceContent -notmatch [regex]::Escape($needle)) {
+        throw "Claim $($claim.claim_id) drift detected: source text not found in $($sourceRef.path)"
+      }
+    }
+  }
+
+  Write-CheckOk "claim-drift-sentinel"
+}
+
 function Invoke-ContractChecks {
   Invoke-SchemaJsonParse
   Invoke-SchemaExampleValidation
@@ -216,6 +474,10 @@ function Invoke-DocsChecks {
   Invoke-ActiveMarkdownLinkCheck
   Invoke-BacklogYamlIdCheck
   Invoke-OldProjectNameScan
+  Invoke-HostReplacementClaimBoundaryScan
+  Invoke-GapEvidenceSloCheck
+  Invoke-ClaimDriftSentinelCheck
+  Invoke-PostCloseoutQueueSyncCheck
 }
 
 function Invoke-ScriptChecks {

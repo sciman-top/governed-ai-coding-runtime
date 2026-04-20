@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import re
 import subprocess
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime
 from functools import lru_cache
 from pathlib import Path
@@ -13,6 +14,10 @@ from typing import Callable
 
 from governed_ai_coding_runtime_contracts.adapter_registry import AdapterCapability, resolve_launch_fallback
 from governed_ai_coding_runtime_contracts.evidence import EvidenceEvent, EvidenceTimeline
+
+_DEFAULT_CODEX_EXECUTABLE = "codex"
+_CODEX_EXECUTABLE_ENV_KEYS = ("GOVERNED_RUNTIME_CODEX_BIN", "CODEX_BIN")
+_FALLBACK_CODEX_EXECUTABLES = ("codex.cmd", "codex.exe")
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,6 +59,26 @@ class CodexSurfaceProbe:
     live_resume_id: str | None
     reason: str
     probe_commands: list[CodexProbeCommand]
+    failure_stage: str | None = None
+    remediation_hint: str | None = None
+    probe_attempts: int = 1
+    stability_state: str = "single_pass"
+
+
+@dataclass(frozen=True, slots=True)
+class CodexCapabilityReadiness:
+    status: str
+    adapter_tier: str
+    flow_kind: str
+    live_attach_available: bool
+    structured_events_available: bool
+    evidence_export_available: bool
+    resume_available: bool
+    unsupported_capabilities: list[str]
+    failure_stage: str | None
+    remediation_hint: str | None
+    probe_attempts: int
+    stability_state: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -171,23 +196,71 @@ def probe_codex_surface(
     *,
     cwd: str | Path | None = None,
     refresh: bool = False,
+    retry_on_degraded: bool = True,
+    max_probe_attempts: int = 2,
     command_runner: Callable[[list[str], Path | None], tuple[int, str, str]] | None = None,
+    codex_executable: str | None = None,
 ) -> CodexSurfaceProbe:
+    if max_probe_attempts < 1:
+        msg = "max_probe_attempts must be >= 1"
+        raise ValueError(msg)
     normalized_cwd: Path | None = None
     if cwd is not None:
         normalized_cwd = Path(cwd).resolve(strict=False)
+    resolved_executable = _resolve_codex_executable(codex_executable)
     if command_runner is not None:
-        return _probe_codex_surface(cwd=normalized_cwd, command_runner=command_runner)
+        return _probe_codex_surface_with_retries(
+            cwd=normalized_cwd,
+            command_runner=command_runner,
+            codex_executable=resolved_executable,
+            retry_on_degraded=retry_on_degraded,
+            max_probe_attempts=max_probe_attempts,
+        )
     if refresh:
         _probe_codex_surface_cached.cache_clear()
-    cache_key = normalized_cwd.as_posix() if normalized_cwd is not None else ""
-    return _probe_codex_surface_cached(cache_key)
+    cache_key = f"{normalized_cwd.as_posix() if normalized_cwd is not None else ''}||{resolved_executable}||{max_probe_attempts}"
+    probe = _probe_codex_surface_cached(cache_key, retry_on_degraded)
+    # Avoid sticky degraded posture when environment recovers later.
+    if retry_on_degraded and _is_probe_retry_candidate(probe):
+        _probe_codex_surface_cached.cache_clear()
+    return probe
 
 
 def codex_probe_to_dict(probe: CodexSurfaceProbe) -> dict:
     payload = asdict(probe)
     payload["probe_commands"] = [asdict(item) for item in probe.probe_commands]
     return payload
+
+
+def summarize_codex_capability_readiness(probe: CodexSurfaceProbe | None = None) -> CodexCapabilityReadiness:
+    active_probe = probe or probe_codex_surface()
+    profile = build_codex_adapter_profile_from_probe(active_probe)
+    tier = profile.adapter_tier
+    flow_kind = _flow_kind_from_tier(tier)
+    if not active_probe.codex_cli_available or tier == "manual_handoff":
+        status = "blocked"
+    elif profile.unsupported_capabilities:
+        status = "degraded"
+    else:
+        status = "ready"
+    return CodexCapabilityReadiness(
+        status=status,
+        adapter_tier=tier,
+        flow_kind=flow_kind,
+        live_attach_available=active_probe.native_attach_available,
+        structured_events_available=active_probe.structured_events_available,
+        evidence_export_available=active_probe.evidence_export_available,
+        resume_available=active_probe.resume_available,
+        unsupported_capabilities=list(profile.unsupported_capabilities),
+        failure_stage=active_probe.failure_stage,
+        remediation_hint=active_probe.remediation_hint,
+        probe_attempts=active_probe.probe_attempts,
+        stability_state=active_probe.stability_state,
+    )
+
+
+def codex_capability_readiness_to_dict(readiness: CodexCapabilityReadiness) -> dict:
+    return asdict(readiness)
 
 
 def handshake_codex_session(
@@ -331,55 +404,6 @@ def record_codex_session_evidence(
     return events
 
 
-def codex_session_events_to_records(session: CodexSessionEvidence) -> list[dict]:
-    records: list[dict] = []
-    created_at = datetime.now(UTC).isoformat()
-
-    def _record(event_type: str, payload: dict) -> None:
-        record = {
-            "task_id": session.task_id,
-            "adapter_id": session.adapter_id,
-            "adapter_tier": session.adapter_tier,
-            "flow_kind": session.flow_kind,
-            "event_type": event_type,
-            "payload": dict(payload),
-            "execution_id": session.execution_id,
-            "continuation_id": session.continuation_id,
-            "event_source": session.event_source,
-            "created_at": created_at,
-        }
-        records.append(record)
-
-    _record(
-        "codex_adapter_posture",
-        {"unsupported_capabilities": list(session.unsupported_capabilities)},
-    )
-    for path in session.file_changes:
-        _record("adapter_file_change", {"path": path})
-    for tool_call in session.tool_calls:
-        _record("adapter_tool_call", dict(tool_call))
-    for gate_run in session.gate_runs:
-        _record("adapter_gate_run", {"artifact_ref": gate_run})
-    for approval in session.approvals:
-        _record("adapter_approval_event", {"approval_id": approval})
-    for handoff in session.handoff_refs:
-        _record("adapter_handoff", {"handoff_ref": handoff})
-    for capability in session.unsupported_capabilities:
-        _record(
-            "adapter_unsupported_event",
-            {
-                "capability": capability,
-                "reason": "unsupported capability recorded by adapter posture",
-            },
-        )
-    for item in session.unsupported_events or []:
-        if not isinstance(item, dict):
-            continue
-        _record("adapter_unsupported_event", dict(item))
-
-    return records
-
-
 def build_codex_adapter_trial_result(
     *,
     repo_id: str,
@@ -454,26 +478,122 @@ def codex_adapter_trial_to_dict(result: CodexAdapterTrialResult) -> dict:
     return asdict(result)
 
 
-@lru_cache(maxsize=4)
-def _probe_codex_surface_cached(cwd_key: str) -> CodexSurfaceProbe:
-    cwd = Path(cwd_key) if cwd_key else None
-    return _probe_codex_surface(cwd=cwd, command_runner=_default_probe_runner)
+@lru_cache(maxsize=8)
+def _probe_codex_surface_cached(cwd_key: str, retry_on_degraded: bool) -> CodexSurfaceProbe:
+    resolved_cwd_key, _, tail = cwd_key.partition("||")
+    executable, _, attempts_text = tail.partition("||")
+    cwd = Path(resolved_cwd_key) if resolved_cwd_key else None
+    codex_executable = executable or _DEFAULT_CODEX_EXECUTABLE
+    max_probe_attempts = 1
+    if attempts_text:
+        try:
+            max_probe_attempts = max(1, int(attempts_text))
+        except ValueError:
+            max_probe_attempts = 1
+    return _probe_codex_surface_with_retries(
+        cwd=cwd,
+        command_runner=_default_probe_runner,
+        codex_executable=codex_executable,
+        retry_on_degraded=retry_on_degraded,
+        max_probe_attempts=max_probe_attempts,
+    )
+
+
+def _probe_codex_surface_with_retries(
+    *,
+    cwd: Path | None,
+    command_runner: Callable[[list[str], Path | None], tuple[int, str, str]],
+    codex_executable: str,
+    retry_on_degraded: bool,
+    max_probe_attempts: int,
+) -> CodexSurfaceProbe:
+    probe = _probe_codex_surface(
+        cwd=cwd,
+        command_runner=command_runner,
+        codex_executable=codex_executable,
+    )
+    if not retry_on_degraded or max_probe_attempts == 1 or not _is_probe_retry_candidate(probe):
+        return probe
+
+    best = probe
+    best_score = _probe_capability_score(best)
+    merged_commands = list(probe.probe_commands)
+    for attempt in range(2, max_probe_attempts + 1):
+        candidate = _probe_codex_surface(
+            cwd=cwd,
+            command_runner=command_runner,
+            codex_executable=codex_executable,
+        )
+        merged_commands.extend(candidate.probe_commands)
+        candidate_score = _probe_capability_score(candidate)
+        if candidate_score >= best_score:
+            best = candidate
+            best_score = candidate_score
+        if not _is_probe_retry_candidate(best):
+            reason = best.reason
+            if "recovered after probe retry" not in reason:
+                reason = f"{reason}; recovered after probe retry"
+            return replace(
+                best,
+                reason=reason,
+                probe_commands=merged_commands,
+                probe_attempts=attempt,
+                stability_state="stabilized",
+            )
+
+    return replace(
+        best,
+        probe_commands=merged_commands,
+        probe_attempts=max_probe_attempts,
+        stability_state="degraded_after_retry",
+    )
 
 
 def _probe_codex_surface(
     *,
     cwd: Path | None,
     command_runner: Callable[[list[str], Path | None], tuple[int, str, str]],
+    codex_executable: str,
 ) -> CodexSurfaceProbe:
     commands: list[CodexProbeCommand] = []
+    effective_executable = codex_executable
     version_exit, version_output = _run_probe_command(
         command_runner=command_runner,
         cwd=cwd,
-        argv=["codex", "--version"],
+        argv=[effective_executable, "--version"],
         commands=commands,
     )
+    if (
+        version_exit != 0
+        and _looks_like_missing_command(_safe_ascii(version_output))
+        and _can_try_default_fallback(primary_executable=effective_executable)
+    ):
+        fallback = _try_fallback_codex_executable(
+            primary_executable=effective_executable,
+            cwd=cwd,
+            command_runner=command_runner,
+            commands=commands,
+        )
+        if fallback is not None:
+            effective_executable = fallback[0]
+            version_exit = fallback[1]
+            version_output = fallback[2]
     if version_exit != 0:
-        reason = _safe_ascii(version_output) or "codex command is unavailable"
+        normalized_output = _safe_ascii(version_output)
+        if _looks_like_missing_command(normalized_output):
+            reason = f"codex CLI is unavailable: {_truncate_output(normalized_output) or 'command not found'}"
+            failure_stage = "codex_command_unavailable"
+            remediation_hint = (
+                f"Make `{effective_executable}` runnable in this shell, then verify "
+                f"`{effective_executable} --version`, `{effective_executable} --help`, `{effective_executable} status`."
+            )
+        else:
+            reason = normalized_output or "codex version probe failed"
+            failure_stage = "codex_version_probe_failed"
+            remediation_hint = (
+                f"Run `{effective_executable} --version` manually and fix the failing runtime environment before "
+                "enabling live attach."
+            )
         return CodexSurfaceProbe(
             codex_cli_available=False,
             version=None,
@@ -486,37 +606,98 @@ def _probe_codex_surface(
             live_resume_id=None,
             reason=reason,
             probe_commands=commands,
+            failure_stage=failure_stage,
+            remediation_hint=remediation_hint,
         )
 
     _, help_output = _run_probe_command(
         command_runner=command_runner,
         cwd=cwd,
-        argv=["codex", "--help"],
+        argv=[effective_executable, "--help"],
         commands=commands,
     )
-    status_exit, status_output = _run_probe_command(
-        command_runner=command_runner,
-        cwd=cwd,
-        argv=["codex", "status"],
-        commands=commands,
-    )
-
     help_lower = help_output.lower()
-    status_lower = status_output.lower()
-    native_attach_available = status_exit == 0
+    help_commands = _extract_help_commands(help_output)
+
+    exec_help_output = ""
+    exec_help_lower = ""
+    if "exec" in help_commands:
+        _, exec_help_output = _run_probe_command(
+            command_runner=command_runner,
+            cwd=cwd,
+            argv=[effective_executable, "exec", "--help"],
+            commands=commands,
+        )
+        exec_help_lower = exec_help_output.lower()
+
+    status_command_available = "status" in help_commands
+    status_exit = 1
+    status_output = ""
+    status_lower = ""
+    if status_command_available:
+        status_exit, status_output = _run_probe_command(
+            command_runner=command_runner,
+            cwd=cwd,
+            argv=[effective_executable, "status"],
+            commands=commands,
+        )
+        status_lower = status_output.lower()
+
+    resume_surface_available = "resume" in help_commands or "resume" in exec_help_lower
+    native_attach_available = status_command_available and status_exit == 0
+    if not status_command_available and resume_surface_available:
+        native_attach_available = True
     process_bridge_available = True
-    structured_events_available = ("structured" in help_lower and "event" in help_lower) or "--json" in help_lower
-    evidence_export_available = "trace" in help_lower or "evidence" in help_lower
-    resume_available = "resume" in help_lower or "resume" in status_lower
+    structured_events_available = _detect_structured_events(
+        help_lower=help_lower,
+        exec_help_lower=exec_help_lower,
+    )
+    evidence_export_available = _detect_evidence_export(
+        help_lower=help_lower,
+        exec_help_lower=exec_help_lower,
+        structured_events_available=structured_events_available,
+    )
+    resume_available = _detect_resume_available(
+        help_commands=help_commands,
+        help_lower=help_lower,
+        exec_help_lower=exec_help_lower,
+        status_lower=status_lower,
+    )
 
     live_session_id = _extract_identity_token(status_output, "session")
     live_resume_id = _extract_identity_token(status_output, "resume")
-    if not native_attach_available and "stdin is not a terminal" in status_lower:
+    failure_stage: str | None = None
+    remediation_hint: str | None = None
+    if not status_command_available:
+        if native_attach_available:
+            reason = "codex status command is unavailable; native attach is inferred from resume command surface"
+            remediation_hint = (
+                f"Validate native attach via `{effective_executable} exec resume --help` "
+                "and a controlled `exec resume --last --json` probe when needed."
+            )
+        else:
+            reason = "codex CLI does not expose a status command; native live attach probe is unavailable in this build"
+            failure_stage = "live_attach_probe_unsupported_status_command_missing"
+            remediation_hint = (
+                f"Use `{effective_executable} exec --json` for process-bridge runs with structured events/evidence. "
+                "Native attach requires a Codex build that exposes a status handshake command."
+            )
+    elif not native_attach_available and "stdin is not a terminal" in status_lower:
         reason = "codex status requires interactive terminal; live attach unavailable in non-interactive mode"
+        failure_stage = "live_attach_unavailable_non_interactive"
+        remediation_hint = (
+            f"Run `{effective_executable} status` in an interactive terminal to validate live attach. "
+            "For non-interactive automation, keep process_bridge/manual_handoff."
+        )
     elif native_attach_available:
         reason = "codex status handshake succeeded"
     else:
         reason = _safe_ascii(status_output) or "codex status handshake failed; process bridge fallback remains available"
+        failure_stage = "codex_status_probe_failed"
+        remediation_hint = (
+            f"Inspect `{effective_executable} status` output and ensure active auth/session. "
+            "If unresolved, keep process_bridge/manual_handoff and capture probe evidence."
+        )
     version = _safe_ascii(version_output).splitlines()[0].strip() if version_output.strip() else None
     return CodexSurfaceProbe(
         codex_cli_available=True,
@@ -530,6 +711,8 @@ def _probe_codex_surface(
         live_resume_id=live_resume_id,
         reason=reason,
         probe_commands=commands,
+        failure_stage=failure_stage,
+        remediation_hint=remediation_hint,
     )
 
 
@@ -569,6 +752,104 @@ def _run_probe_command(
     return exit_code, output
 
 
+def _resolve_codex_executable(explicit: str | None) -> str:
+    candidate = _optional_non_empty_string(explicit)
+    if candidate is not None:
+        return candidate
+    for env_key in _CODEX_EXECUTABLE_ENV_KEYS:
+        env_value = _optional_non_empty_string(os.environ.get(env_key))
+        if env_value is not None:
+            return env_value
+    return _DEFAULT_CODEX_EXECUTABLE
+
+
+def _can_try_default_fallback(*, primary_executable: str) -> bool:
+    normalized_primary = primary_executable.strip().lower()
+    return normalized_primary == _DEFAULT_CODEX_EXECUTABLE
+
+
+def _try_fallback_codex_executable(
+    *,
+    primary_executable: str,
+    cwd: Path | None,
+    command_runner: Callable[[list[str], Path | None], tuple[int, str, str]],
+    commands: list[CodexProbeCommand],
+) -> tuple[str, int, str] | None:
+    primary_normalized = primary_executable.strip().lower()
+    for candidate in _FALLBACK_CODEX_EXECUTABLES:
+        if candidate.lower() == primary_normalized:
+            continue
+        exit_code, output = _run_probe_command(
+            command_runner=command_runner,
+            cwd=cwd,
+            argv=[candidate, "--version"],
+            commands=commands,
+        )
+        if exit_code == 0:
+            return candidate, exit_code, output
+    return None
+
+
+def _looks_like_missing_command(output: str) -> bool:
+    normalized = output.lower()
+    patterns = (
+        "command not found",
+        "is not recognized",
+        "no such file or directory",
+        "cannot find the file",
+        "[winerror 2]",
+    )
+    return any(pattern in normalized for pattern in patterns)
+
+
+def _extract_help_commands(output: str) -> set[str]:
+    commands: set[str] = set()
+    in_commands = False
+    for raw_line in output.splitlines():
+        line = raw_line.rstrip()
+        stripped = line.strip()
+        lowered = stripped.lower()
+        if not in_commands:
+            if lowered.startswith("commands:"):
+                in_commands = True
+            continue
+        if not stripped:
+            continue
+        if lowered.startswith("arguments:") or lowered.startswith("options:"):
+            break
+        match = re.match(r"^([a-z0-9][a-z0-9_-]*)\b", lowered)
+        if match:
+            commands.add(match.group(1))
+    return commands
+
+
+def _detect_structured_events(*, help_lower: str, exec_help_lower: str) -> bool:
+    return ("structured" in help_lower and "event" in help_lower) or "--json" in help_lower or "--json" in exec_help_lower
+
+
+def _detect_evidence_export(*, help_lower: str, exec_help_lower: str, structured_events_available: bool) -> bool:
+    if "trace" in help_lower or "evidence" in help_lower:
+        return True
+    if "--output-last-message" in help_lower or "--output-last-message" in exec_help_lower:
+        return True
+    return structured_events_available and ("jsonl" in exec_help_lower or "--json" in exec_help_lower)
+
+
+def _detect_resume_available(
+    *,
+    help_commands: set[str],
+    help_lower: str,
+    exec_help_lower: str,
+    status_lower: str,
+) -> bool:
+    return (
+        "resume" in help_commands
+        or "resume" in help_lower
+        or "resume" in exec_help_lower
+        or "resume" in status_lower
+    )
+
+
 def _extract_identity_token(output: str, token_name: str) -> str | None:
     token = _required_string(token_name, "token_name")
     match = re.search(rf"{token}[_\s-]*id\s*[:=]\s*([^\s,;]+)", output, re.IGNORECASE)
@@ -601,6 +882,36 @@ def _safe_ascii(value: str) -> str:
     if not isinstance(value, str):
         return ""
     return value.encode("ascii", "replace").decode("ascii")
+
+
+def _is_probe_retry_candidate(probe: CodexSurfaceProbe) -> bool:
+    return (
+        not probe.codex_cli_available
+        or not probe.native_attach_available
+        or not probe.structured_events_available
+        or not probe.evidence_export_available
+        or not probe.resume_available
+        or probe.failure_stage is not None
+    )
+
+
+def _probe_capability_score(probe: CodexSurfaceProbe) -> int:
+    score = 0
+    if probe.codex_cli_available:
+        score += 100
+    if probe.native_attach_available:
+        score += 50
+    if probe.process_bridge_available:
+        score += 25
+    if probe.structured_events_available:
+        score += 10
+    if probe.evidence_export_available:
+        score += 8
+    if probe.resume_available:
+        score += 6
+    if probe.failure_stage is None:
+        score += 4
+    return score
 
 
 def _unsupported_capabilities(

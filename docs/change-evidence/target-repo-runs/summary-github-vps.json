@@ -1,0 +1,38 @@
+[
+  {
+    "target": "github-toolkit",
+    "stamp": "20260420230743",
+    "onboard_status": "pass",
+    "attachment_health": "healthy",
+    "deny_daily_status": "fail",
+    "deny_write_status": "denied",
+    "deny_reason": "write path is outside allowed scopes: .governed-ai/runtime-probe-20260420230743.txt",
+    "allow_daily_status": "pass",
+    "allow_verify": "{\"contract\":\"pass\",\"test\":\"pass\"}",
+    "allow_write_status": "executed",
+    "allow_probe_path": "docs/runtime-probe-20260420230743.txt",
+    "allow_handoff": "artifacts/task-github-toolkit-daily-allow-20260420230743/task-github-toolkit-daily-allow-20260420230743-write-f9c83fd7d8dc/handoff/write-flow.json",
+    "allow_replay": "artifacts/task-github-toolkit-daily-allow-20260420230743/task-github-toolkit-daily-allow-20260420230743-write-f9c83fd7d8dc/replay/write-flow.json",
+    "onboard_file": "github-toolkit-onboard-20260420230743.json",
+    "deny_file": "github-toolkit-daily-deny-20260420230743.json",
+    "allow_file": "github-toolkit-daily-allow-20260420230743.json"
+  },
+  {
+    "target": "vps-ssh-launcher",
+    "stamp": "20260420230759",
+    "onboard_status": "pass",
+    "attachment_health": "healthy",
+    "deny_daily_status": "fail",
+    "deny_write_status": "denied",
+    "deny_reason": "write path is outside allowed scopes: .governed-ai/runtime-probe-20260420230759.txt",
+    "allow_daily_status": "pass",
+    "allow_verify": "{\"contract\":\"pass\",\"test\":\"pass\"}",
+    "allow_write_status": "executed",
+    "allow_probe_path": "docs/runtime-probe-20260420230759.txt",
+    "allow_handoff": "artifacts/task-vps-ssh-launcher-daily-allow-20260420230759/task-vps-ssh-launcher-daily-allow-20260420230759-write-14637518ed0f/handoff/write-flow.json",
+    "allow_replay": "artifacts/task-vps-ssh-launcher-daily-allow-20260420230759/task-vps-ssh-launcher-daily-allow-20260420230759-write-14637518ed0f/replay/write-flow.json",
+    "onboard_file": "vps-ssh-launcher-onboard-20260420230759.json",
+    "deny_file": "vps-ssh-launcher-daily-deny-20260420230759.json",
+    "allow_file": "vps-ssh-launcher-daily-allow-20260420230759.json"
+  }
+]

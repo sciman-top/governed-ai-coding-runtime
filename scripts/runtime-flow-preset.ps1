@@ -20,7 +20,8 @@ param(
   [string]$WriteTargetPath = "",
   [ValidateSet("low", "medium", "high")]
   [string]$WriteTier = "medium",
-  [string]$WriteToolName = "apply_patch",
+  [string]$WriteToolName = "write_file",
+  [string]$WriteToolCommand = "",
   [string]$RollbackReference = "",
   [string]$WriteContent = "governed runtime write probe",
   [switch]$ExecuteWriteFlow,
@@ -108,6 +109,9 @@ if (-not [string]::IsNullOrWhiteSpace($RepoBindingId)) {
 }
 if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
   $flowArgs += @("-WriteTargetPath", $WriteTargetPath, "-WriteTier", $WriteTier, "-WriteToolName", $WriteToolName, "-WriteContent", $WriteContent)
+  if (-not [string]::IsNullOrWhiteSpace($WriteToolCommand)) {
+    $flowArgs += @("-WriteToolCommand", $WriteToolCommand)
+  }
 }
 if (-not [string]::IsNullOrWhiteSpace($RollbackReference)) {
   $flowArgs += @("-RollbackReference", $RollbackReference)
@@ -126,7 +130,7 @@ if ($FlowMode -eq "onboard") {
     "-BuildCommand", $targetConfig.BuildCommand,
     "-TestCommand", $targetConfig.TestCommand,
     "-ContractCommand", $targetConfig.ContractCommand,
-    "-AdapterPreference", "process_bridge"
+    "-AdapterPreference", "native_attach"
   )
   if ($Overwrite) {
     $flowArgs += "-Overwrite"

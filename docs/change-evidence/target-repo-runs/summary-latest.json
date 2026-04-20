@@ -1,0 +1,47 @@
+[
+  {
+    "target": "classroomtoolkit",
+    "stamp": "20260420225453",
+    "probe_path": ".governed-ai/runtime-probe-20260420225453.txt",
+    "onboard_overall_status": "pass",
+    "onboard_attachment_health": "healthy",
+    "onboard_gate_source": "explicit",
+    "daily_overall_status": "fail",
+    "daily_attachment_health": "healthy",
+    "verify_attachment": "{\"contract\":\"pass\",\"test\":\"pass\"}",
+    "write_execution_status": "denied",
+    "evidence_link": "artifacts/task-classroomtoolkit-daily-20260420225453/run-classroomtoolkit-daily-20260420225453/verification-output/contract.txt",
+    "onboard_file": "classroomtoolkit-onboard-20260420225453.json",
+    "daily_file": "classroomtoolkit-daily-20260420225453.json"
+  },
+  {
+    "target": "self-runtime",
+    "stamp": "20260420225616",
+    "probe_path": ".governed-ai/runtime-probe-20260420225616.txt",
+    "onboard_overall_status": "pass",
+    "onboard_attachment_health": "healthy",
+    "onboard_gate_source": "explicit",
+    "daily_overall_status": "fail",
+    "daily_attachment_health": "healthy",
+    "verify_attachment": "{\"contract\":\"pass\",\"test\":\"pass\"}",
+    "write_execution_status": "denied",
+    "evidence_link": "artifacts/task-self-runtime-daily-20260420225616/run-self-runtime-daily-20260420225616/verification-output/contract.txt",
+    "onboard_file": "self-runtime-onboard-20260420225616.json",
+    "daily_file": "self-runtime-daily-20260420225616.json"
+  },
+  {
+    "target": "skills-manager",
+    "stamp": "20260420225937",
+    "probe_path": ".governed-ai/runtime-probe-20260420225937.txt",
+    "onboard_overall_status": "pass",
+    "onboard_attachment_health": "healthy",
+    "onboard_gate_source": "explicit",
+    "daily_overall_status": "fail",
+    "daily_attachment_health": "healthy",
+    "verify_attachment": "{\"contract\":\"pass\",\"test\":\"pass\"}",
+    "write_execution_status": "denied",
+    "evidence_link": "artifacts/task-skills-manager-daily-20260420225937/run-skills-manager-daily-20260420225937/verification-output/contract.txt",
+    "onboard_file": "skills-manager-onboard-20260420225937.json",
+    "daily_file": "skills-manager-daily-20260420225937.json"
+  }
+]

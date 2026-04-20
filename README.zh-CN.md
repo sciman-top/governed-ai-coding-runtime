@@ -20,7 +20,10 @@
 - 可以用作“治理运行时契约层”。
 - 可以运行仓库验证和 runtime contract tests。
 - 可以运行本地 build 与 doctor 门禁。
-- 可以运行第一个只读 trial 脚本。
+- 可以运行第一个只读 trial 脚本（read-only 基线）。
+- 可以在 runtime status/doctor 中看到 Codex capability readiness（adapter tier、flow kind、degrade 原因、remediation hint）。
+- 可以通过 session-bridge 执行 runtime-managed gate 流（`run_quick_gate` / `run_full_gate`，支持 `plan_only`）。
+- 可以通过 session-bridge 执行 attached write 治理闭环（`write_request` / `write_approve` / `write_execute` / `write_status`），并保留 approval/evidence/handoff/replay refs。
 - 可以运行一个 safe-mode 的 Codex adapter smoke trial，并检查 task / binding / evidence / verification 线路是否连通。
 - 可以运行一个基于 repo-profile 的 multi-repo trial runner，并输出每个 repo 的 posture、adapter tier、verification/evidence refs 和 follow-ups。
 - 可以把外部仓库（例如 `D:\OneDrive\CODE\ClassroomToolkit`）attach 到本运行时，生成 `.governed-ai` 轻量接入包，并通过 status / doctor / session-bridge 使用这些能力。
@@ -32,8 +35,9 @@
 - 没有数据库或多机 durable workflow worker。
 - 当前 package bundle 是本地分发目录，不是外部发布渠道。
 - 当前 operator UI 是本地 HTML surface，不是长期运行的 Web 服务。
-- 当前还不能宣称“外部目标仓里的真实高风险写入已经由本项目完整接管”。
-- 当前 direct Codex adapter 仍应理解为 honest smoke-trial / posture / evidence wiring，不是完整生产级写入控制面。
+- 当前尚未实现“替代上游 Codex 宿主 UI”的全托管运行形态。
+- `native_attach` 受宿主环境影响，运行时可能降级到 `process_bridge` / `manual_handoff`。
+- 仍不能宣称“所有外部仓、所有高风险流程都已被 runtime 全量接管”。
 - `GAP-045..060` 是直达完整混合终态的主线且已完成；`GAP-061..068` 是 `GAP-060` 之后的治理优化 follow-on lane，现也已完成（2026-04-20），但不回写成终态闭环证明的一部分。
 
 ## 现在能否用于其他项目
@@ -44,13 +48,27 @@
 - 生成或校验 `.governed-ai/repo-profile.json` 和 `.governed-ai/light-pack.json`
 - 把 repo-local 声明绑定到 machine-local runtime state
 - 用 `status` / `doctor` 看 attachment posture
-- 用 `session-bridge` 请求 posture 和 quick/full gate plan
+- 用 `session-bridge` 执行 runtime-managed gate 流
+- 用 `session-bridge` 执行受治理写流并保留 approval/evidence/handoff/replay 链路
 - 用 Codex smoke-trial 与 multi-repo trial 验证 adapter / evidence / verification wiring
 
 你现在还不能把它表述成：
 
-- Codex CLI 已经被本项目完整接管
-- 外部仓的真实高风险写入已经具备完整 runtime-owned approval / execution / rollback 闭环
+- 不应声称本项目已经在所有环境下完全替代 Codex 宿主执行
+- 所有外部仓和所有高风险流程都已统一实现 runtime-owned 全闭环
+
+## 快速使用路径（推荐）
+- 路径 A（治理侧车，阻力最低）：继续用 Codex/Claude Code 编码，同时运行 `bootstrap + doctor + verify-repo -Check All + status` 做 readiness 与门禁检查。
+- 路径 B（外部仓 attach-first，推荐）：先 `attach-target-repo`，再跑 `runtime-flow.ps1 -FlowMode daily` 作为日常治理链。
+- 路径 C（中高风险写入）：用 `govern-attachment-write -> decide-attachment-write -> execute-attachment-write` 走审批与回滚引用闭环。
+
+## 对 AI 编码的具体辅助作用
+- 会话前能力可见：在执行前就能看到 `adapter_tier`、`flow_kind`、`degrade_reason`，避免运行中才发现能力降级。
+- 验收链统一执行：`build -> test -> contract/invariant -> hotspot` 由 runtime-managed gate 流统一执行，降低漏检。
+- 高风险写入防护：medium/high 写入会触发审批或 fail-closed，避免无审批直写。
+- 交付可追溯：approval/evidence/handoff/replay refs 与 task/run 绑定，方便审计、交接和回滚。
+- 多仓复用：通过 `.governed-ai` light-pack 与 preset flow，把同一治理协议复用到多个目标仓。
+- 与宿主解耦：保持 user-owned 上游认证，不把治理能力绑定到单一宿主实现。
 
 ## 你可以怎样使用
 
@@ -86,6 +104,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1
 对应 quickstart：
 - [Single-Machine Runtime Quickstart](docs/quickstart/single-machine-runtime-quickstart.md)
 - [单机 Runtime 快速开始](docs/quickstart/single-machine-runtime-quickstart.zh-CN.md)
+- [AI Coding Usage Guide](docs/quickstart/ai-coding-usage-guide.md)
+- [AI 编码使用指南](docs/quickstart/ai-coding-usage-guide.zh-CN.md)
 
 只运行 runtime contract tests：
 
@@ -267,17 +287,18 @@ PY
 
 1. [本文档](README.zh-CN.md)
 2. [文档索引](docs/README.md)
-3. [第一个只读 Trial](docs/product/first-readonly-trial.md)
-4. [Use With An Existing Repo](docs/quickstart/use-with-existing-repo.md)
-5. [在现有仓库中使用](docs/quickstart/use-with-existing-repo.zh-CN.md)
-5. [Codex Direct Adapter](docs/product/codex-direct-adapter.md)
-6. [Multi-Repo Trial Loop](docs/product/multi-repo-trial-loop.md)
-7. [写入策略默认值](docs/product/write-policy-defaults.md)
-8. [审批流程](docs/product/approval-flow.md)
-9. [写侧工具治理](docs/product/write-side-tool-governance.md)
-10. [Verification Runner](docs/product/verification-runner.md)
-11. [交付 Handoff](docs/product/delivery-handoff.md)
-12. [Runbooks](docs/runbooks/README.md)
+3. [AI 编码使用指南](docs/quickstart/ai-coding-usage-guide.zh-CN.md)
+4. [第一个只读 Trial](docs/product/first-readonly-trial.md)
+5. [Use With An Existing Repo](docs/quickstart/use-with-existing-repo.md)
+6. [在现有仓库中使用](docs/quickstart/use-with-existing-repo.zh-CN.md)
+7. [Codex Direct Adapter](docs/product/codex-direct-adapter.md)
+8. [Multi-Repo Trial Loop](docs/product/multi-repo-trial-loop.md)
+9. [写入策略默认值](docs/product/write-policy-defaults.md)
+10. [审批流程](docs/product/approval-flow.md)
+11. [写侧工具治理](docs/product/write-side-tool-governance.md)
+12. [Verification Runner](docs/product/verification-runner.md)
+13. [交付 Handoff](docs/product/delivery-handoff.md)
+14. [Runbooks](docs/runbooks/README.md)
 
 如果你要理解产品规划：
 

@@ -117,7 +117,7 @@ def attach_target_repo(
     build_command: str,
     test_command: str,
     contract_command: str,
-    adapter_preference: AdapterPreference = "manual_handoff",
+    adapter_preference: AdapterPreference = "native_attach",
     gate_profile: str = "default",
     overwrite: bool = False,
 ) -> RepoAttachmentResult:

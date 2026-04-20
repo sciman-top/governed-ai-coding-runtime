@@ -1,0 +1,35 @@
+[
+  {
+    "target": "classroomtoolkit",
+    "stamp": "20260420230050",
+    "probe_path": "docs/runtime-probe-20260420230050.txt",
+    "daily_overall_status": "pass",
+    "daily_attachment_health": "healthy",
+    "verify_attachment": "{\"contract\":\"pass\",\"test\":\"pass\"}",
+    "write_execution_status": "executed",
+    "write_reason": "",
+    "daily_file": "classroomtoolkit-daily-allowedscope-20260420230050.json"
+  },
+  {
+    "target": "self-runtime",
+    "stamp": "20260420230134",
+    "probe_path": "docs/runtime-probe-20260420230134.txt",
+    "daily_overall_status": "pass",
+    "daily_attachment_health": "healthy",
+    "verify_attachment": "{\"contract\":\"pass\",\"test\":\"pass\"}",
+    "write_execution_status": "executed",
+    "write_reason": "",
+    "daily_file": "self-runtime-daily-allowedscope-20260420230134.json"
+  },
+  {
+    "target": "skills-manager",
+    "stamp": "20260420230317",
+    "probe_path": "docs/runtime-probe-20260420230317.txt",
+    "daily_overall_status": "pass",
+    "daily_attachment_health": "healthy",
+    "verify_attachment": "{\"contract\":\"pass\",\"test\":\"pass\"}",
+    "write_execution_status": "executed",
+    "write_reason": "",
+    "daily_file": "skills-manager-daily-allowedscope-20260420230317.json"
+  }
+]

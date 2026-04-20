@@ -34,10 +34,12 @@ python scripts/attach-target-repo.py `
   --build-command "dotnet build ClassroomToolkit.sln -c Debug" `
   --test-command "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug" `
   --contract-command "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug --filter \"FullyQualifiedName~ArchitectureDependencyTests|FullyQualifiedName~InteropHookLifecycleContractTests|FullyQualifiedName~InteropHookEventDispatchContractTests|FullyQualifiedName~GlobalHookServiceLifecycleContractTests|FullyQualifiedName~CrossPageDisplayLifecycleContractTests\"" `
-  --adapter-preference "process_bridge"
+  --adapter-preference "native_attach"
 ```
 
-This is the current recommended posture for an external Codex-driven repo: attach-first metadata plus explicit `process_bridge` preference.
+Current recommendation for an external Codex-driven repo:
+- attach-first metadata plus explicit `native_attach` preference
+- let runtime fallback to `process_bridge` or `manual_handoff` when live probe marks native attach unavailable
 
 ## Repo-Local Files
 The generated target-repo light pack lives under:

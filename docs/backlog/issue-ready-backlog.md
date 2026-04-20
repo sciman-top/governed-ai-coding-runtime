@@ -12,6 +12,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - Codex compatibility remains the first direct adapter priority, but final product completeness cannot be Codex-only
 - non-goals remain non-goals: no enterprise org model, no marketplace, no default multi-agent orchestration, no memory-first product identity
 - governance-optimization lane `GAP-061` through `GAP-068` was the follow-on queue after `GAP-060` and is now complete on the current branch baseline (verified on 2026-04-20), while older lifecycle `GAP` entries remain completion history
+- post-closeout optimization queue `GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20) and does not reopen hybrid final-state closure
 
 ## Current Baseline
 - PRD, architecture, ADRs, specs, runtime contract primitives, repo verifier entrypoints, sample repo profiles, and a runtime-consumable control pack already exist.
@@ -26,10 +27,11 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Direct-To-Hybrid-Final-State Mainline / GAP-045` is complete on the current branch baseline as the planning rebaseline closeout.
 - `Direct-To-Hybrid-Final-State Mainline / GAP-046` through `GAP-060` are complete on the current branch baseline (verified on 2026-04-20).
 - `Governance Optimization Lane / GAP-061` through `GAP-068` are complete on the current branch baseline (verified on 2026-04-20).
+- `Post-Closeout Optimization Queue / GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20).
 
 ## Direct-To-Hybrid-Final-State Mainline
 
-The entries below record the executed queue for complete hybrid final-state and governance-optimization closure. The historical lifecycle backlog remains below as completion history and dependency context.
+The entries below record the executed queue for complete hybrid final-state and governance-optimization closure, plus the post-closeout optimization queue. The historical lifecycle backlog remains below as completion history and dependency context.
 
 ### Phase 0: Canonical Re-Baseline
 
@@ -382,6 +384,92 @@ The entries below record the executed queue for complete hybrid final-state and 
   - [x] allowed and prohibited optimization claims are explicit
   - [x] deferred non-goals remain visible instead of leaking into closeout language
   - [x] lane closeout references real verification evidence and rollback notes
+
+## Post-Closeout Optimization Queue
+
+### GAP-069 Host-Neutral Governance Boundary Hardening
+- Type: AFK
+- Blocked by: GAP-068
+- User stories: 20, 31, 37, 44, 46
+- Status: complete on current branch baseline (verified on 2026-04-20)
+- What to build:
+  - codify host-neutral governance guarantees so the runtime stays a governance layer rather than a host replacement shell
+  - tighten adapter capability boundaries and degrade semantics around `native_attach`, `process_bridge`, and `manual_handoff`
+  - add claim-boundary checks so docs and runtime outputs cannot imply universal host takeover
+- Acceptance criteria:
+  - [x] governance-layer-only positioning is explicit in product docs, contracts, and operator-facing surfaces
+  - [x] adapter capability boundaries remain explicit and fail closed when host-level capabilities are missing
+  - [x] over-claim statements about replacing upstream AI coding products are blocked by verification hooks
+
+### GAP-070 Default-On Onboarding And Auto-Apply Guardrails
+- Type: AFK
+- Blocked by: GAP-069
+- User stories: 14, 38, 42, 45, 46
+- Status: complete on current branch baseline (verified on 2026-04-20)
+- What to build:
+  - one-command attach-first onboarding with inferred defaults for common repo profiles
+  - first-run doctor and trial flows that auto-produce prioritized remediation hints
+  - safe default behavior that keeps low-risk actions automatic and high-risk writes escalation-bound
+- Acceptance criteria:
+  - [x] a new target repo can reach first governed trial without manual policy stitching
+  - [x] onboarding outputs include explicit next actions for unresolved readiness gaps
+  - [x] high-risk writes remain approval-bound even when onboarding is mostly automatic
+
+### GAP-071 Evidence Replay SLO And Recoverability Hardening
+- Type: AFK
+- Blocked by: GAP-070
+- User stories: 13, 14, 15, 39, 45
+- Status: complete on current branch baseline (verified on 2026-04-20)
+- What to build:
+  - measurable SLO thresholds for evidence completeness, replay fidelity, and handoff readability
+  - regression checks that fail when evidence bundles lose required references or replay-critical fields
+  - operator-facing recovery playbooks for replay and rollback paths that fail the threshold
+- Acceptance criteria:
+  - [x] evidence bundles can be graded against explicit SLO thresholds
+  - [x] replay can reconstruct representative governed runs from persisted artifacts only
+  - [x] verification fails when recoverability signals regress below declared thresholds
+
+### GAP-072 Claim-Drift Sentinel And Continuous Doc-Runtime Sync
+- Type: HITL
+- Blocked by: GAP-071
+- User stories: 18, 21, 29, 37, 44
+- Status: complete on current branch baseline (verified on 2026-04-20)
+- What to build:
+  - claim catalog mapping each externally visible product claim to executable proof commands and evidence links
+  - drift sentinel checks that compare docs claims with runtime probe and verification outputs
+  - periodic human-reviewed closeout snapshots for residual risk and deferred-claim visibility
+- Acceptance criteria:
+  - [x] docs and README claim lines are linked to concrete command outputs and evidence files
+  - [x] drift sentinel checks fail on stale or over-claimed statements before merge
+  - [x] periodic review evidence records remaining risk, deferred claims, and rollback notes
+
+### GAP-073 Dynamic Post-Closeout Evidence Scope And Queue Discovery
+- Type: AFK
+- Blocked by: GAP-072
+- User stories: 13, 15, 21, 39, 44
+- Status: complete on current branch baseline (verified on 2026-04-20)
+- What to build:
+  - remove hard-coded post-closeout gap id lists from docs checks and derive the queue scope from backlog and issue seeds
+  - keep evidence SLO checks fail-closed for all completed post-closeout tasks, including newly added IDs
+  - preserve the same required verification and rollback anchors in closeout evidence
+- Acceptance criteria:
+  - [x] docs checks discover post-closeout GAP scope dynamically instead of relying on fixed id ranges
+  - [x] completed post-closeout tasks are all subject to the same closeout evidence requirements
+  - [x] adding a new post-closeout ID no longer requires immediate verifier code edits just to include it in scope
+
+### GAP-074 Post-Closeout Queue Sync Sentinel And Seed Drift Guard
+- Type: AFK
+- Blocked by: GAP-073
+- User stories: 21, 23, 29, 31, 44
+- Status: complete on current branch baseline (verified on 2026-04-20)
+- What to build:
+  - add a docs sentinel check that detects posture drift between issue seeds and key backlog or roadmap summaries for post-closeout queue completion state
+  - keep the sentinel fail-closed when summary docs stop reflecting the current seed-backed queue range
+  - sync script label mapping and backlog seed metadata so queue expansion remains renderable
+- Acceptance criteria:
+  - [x] docs checks fail when post-closeout queue summary lines drift away from the current seed-backed id range
+  - [x] post-closeout queue expansion remains renderable by issue seeding script without label-mapping gaps
+  - [x] backlog and roadmap summaries consistently reflect the same post-closeout queue completion range
 
 ## Vision
 

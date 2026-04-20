@@ -32,8 +32,12 @@ python scripts/attach-target-repo.py `
   --build-command "dotnet build ClassroomToolkit.sln -c Debug" `
   --test-command "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug" `
   --contract-command "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug --filter \"FullyQualifiedName~ArchitectureDependencyTests|FullyQualifiedName~InteropHookLifecycleContractTests|FullyQualifiedName~InteropHookEventDispatchContractTests|FullyQualifiedName~GlobalHookServiceLifecycleContractTests|FullyQualifiedName~CrossPageDisplayLifecycleContractTests\"" `
-  --adapter-preference "process_bridge"
+  --adapter-preference "native_attach"
 ```
+
+当前推荐姿态：
+- 接入时显式声明 `native_attach` 偏好
+- 若 live probe 判定 native attach 不可用，由 runtime 自动回退到 `process_bridge` 或 `manual_handoff`
 
 ## Repo-Local 文件
 

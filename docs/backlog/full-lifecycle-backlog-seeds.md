@@ -9,8 +9,10 @@ Seed the function-first full lifecycle of the project so it can evolve from a co
 - The repository now contains the local single-machine runtime baseline through `Maintenance Baseline / GAP-034`.
 - `Interactive Session Productization / GAP-035` through `GAP-039` are complete on the current branch baseline.
 - `Strategy Alignment Gates / GAP-040` through `GAP-044` are complete on the current branch baseline and remain encoded as satisfied dependencies around the completed productization queue.
-- `Direct-To-Hybrid-Final-State Mainline / GAP-045` through `GAP-060` is the active future-facing queue.
-- `GAP-018` through `GAP-044` remain completion history and dependency context for the active queue.
+- `Direct-To-Hybrid-Final-State Mainline / GAP-045` through `GAP-060` are complete on the current branch baseline.
+- `Governance Optimization Lane / GAP-061` through `GAP-068` are complete on the current branch baseline.
+- `Post-Closeout Optimization Queue / GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20).
+- `GAP-018` through `GAP-068` remain completion history and dependency context for the active queue.
 
 ## Vision
 1. Freeze the initial product shape and capability boundary.
@@ -67,9 +69,10 @@ Seed the function-first full lifecycle of the project so it can evolve from a co
 
 ## Next Queue Policy
 1. Do not reopen `GAP-018` through `GAP-044` unless a verified regression requires it.
-2. Treat `GAP-045` through `GAP-060` as the active queue until explicit closeout evidence marks them complete.
-3. Introduce the next queue only as new IDs beyond `GAP-060`.
-4. Add new IDs only after acceptance criteria and dependency wiring are explicit in both markdown and seed YAML.
+2. Keep `GAP-045` through `GAP-068` as completed closure and optimization history unless verified regressions require reopening.
+3. Keep `GAP-069` through `GAP-074` as completed post-closeout optimization history unless verified regressions require reopening.
+4. Introduce any further queue only as new IDs beyond `GAP-074`.
+5. Add new IDs only after acceptance criteria and dependency wiring are explicit in both markdown and seed YAML.
 
 ## Explicit Non-Goals
 - commercial packaging

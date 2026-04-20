@@ -8,6 +8,7 @@
   - `docs/backlog/issue-ready-backlog.md`
 - `GAP-061` through `GAP-068` were the follow-on governance lane after `GAP-060` and are complete on the current branch baseline (verified on 2026-04-20).
 - The lane remains follow-on (not a replacement for direct-to-hybrid closure) and is now execution-closed with evidence-backed claims.
+- Post-closeout optimization work is now tracked as `GAP-069` through `GAP-074` in the backlog/seed pair and does not reopen this lane closeout.
 
 ## Goal
 Define the governed follow-on work that should start after hybrid final-state closure so the runtime can improve through auditable traces, structured postmortems, controlled rollout, and rollback-safe optimization loops.

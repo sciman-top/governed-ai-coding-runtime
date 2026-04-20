@@ -1,4 +1,4 @@
-issue_seed_version: "3.6"
+issue_seed_version: "3.8"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment
@@ -255,3 +255,33 @@ issues:
     type: HITL
     blocked_by: [GAP-067]
     user_stories: [18, 21, 29, 37, 44]
+  - id: GAP-069
+    title: Host-Neutral Governance Boundary Hardening
+    type: AFK
+    blocked_by: [GAP-068]
+    user_stories: [20, 31, 37, 44, 46]
+  - id: GAP-070
+    title: Default-On Onboarding And Auto-Apply Guardrails
+    type: AFK
+    blocked_by: [GAP-069]
+    user_stories: [14, 38, 42, 45, 46]
+  - id: GAP-071
+    title: Evidence Replay SLO And Recoverability Hardening
+    type: AFK
+    blocked_by: [GAP-070]
+    user_stories: [13, 14, 15, 39, 45]
+  - id: GAP-072
+    title: Claim-Drift Sentinel And Continuous Doc-Runtime Sync
+    type: HITL
+    blocked_by: [GAP-071]
+    user_stories: [18, 21, 29, 37, 44]
+  - id: GAP-073
+    title: Dynamic Post-Closeout Evidence Scope And Queue Discovery
+    type: AFK
+    blocked_by: [GAP-072]
+    user_stories: [13, 15, 21, 39, 44]
+  - id: GAP-074
+    title: Post-Closeout Queue Sync Sentinel And Seed Drift Guard
+    type: AFK
+    blocked_by: [GAP-073]
+    user_stories: [21, 23, 29, 31, 44]

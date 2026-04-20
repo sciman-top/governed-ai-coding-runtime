@@ -16,7 +16,6 @@ from governed_ai_coding_runtime_contracts.attached_write_execution import (
 from governed_ai_coding_runtime_contracts.attached_write_governance import govern_attached_write_request
 from governed_ai_coding_runtime_contracts.codex_adapter import (
     CodexSessionEvidence,
-    codex_session_events_to_records,
     handshake_codex_session,
     record_codex_session_evidence,
 )
@@ -223,8 +222,6 @@ def handle_session_bridge_command(
     repo_root: str | Path,
     attachment_root: str | Path | None = None,
     attachment_runtime_state_root: str | Path | None = None,
-    metadata_store=None,
-    adapter_event_sink=None,
 ) -> SessionBridgeResult:
     if command.adapter_id == "unsupported-adapter":
         return _degraded(command, reason="adapter capability is unsupported")
@@ -653,7 +650,6 @@ def handle_session_bridge_command(
                         if execution.exit_code != 0
                         else []
                     ),
-                    adapter_event_sink=adapter_event_sink,
                 )
                 artifact_refs = _dedupe_preserve_order(
                     [
@@ -758,7 +754,6 @@ def handle_session_bridge_command(
                     if execution.execution_status == "denied"
                     else []
                 ),
-                adapter_event_sink=adapter_event_sink,
             )
             artifact_refs = _dedupe_preserve_order(
                 [
@@ -844,7 +839,6 @@ def handle_session_bridge_command(
                 gate.command,
                 cwd=_verification_cwd(repo_root=Path(repo_root), attachment_root=attachment_root),
             ),
-            metadata_store=metadata_store,
         )
         adapter_event_ref, adapter_event_summary = _record_adapter_events(
             command=command,
@@ -868,7 +862,6 @@ def handle_session_bridge_command(
                     if result != "pass"
                 ]
             ),
-            adapter_event_sink=adapter_event_sink,
         )
         return SessionBridgeResult(
             command_id=command.command_id,
@@ -1193,7 +1186,6 @@ def _record_adapter_events(
     approvals: list[str],
     handoff_refs: list[str],
     unsupported_events: list[dict],
-    adapter_event_sink=None,
 ) -> tuple[str | None, dict | None]:
     if command.adapter_id != "codex-cli":
         return None, None
@@ -1224,20 +1216,6 @@ def _record_adapter_events(
         event_source=event_source,
         unsupported_events=unsupported_events,
     )
-    if adapter_event_sink is not None:
-        for record in codex_session_events_to_records(session):
-            adapter_event_sink.write_event(
-                task_id=record["task_id"],
-                event_type=record["event_type"],
-                payload=record["payload"],
-                adapter_id=record["adapter_id"],
-                adapter_tier=record["adapter_tier"],
-                flow_kind=record["flow_kind"],
-                execution_id=record["execution_id"],
-                continuation_id=record["continuation_id"],
-                event_source=record["event_source"],
-                created_at=record["created_at"],
-            )
     record_codex_session_evidence(timeline, session)
     summary = summarize_adapter_evidence(task_id, timeline)
     events = [
