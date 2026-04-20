@@ -61,6 +61,11 @@ Codex adapter 可以分类 Codex capability posture 和 evidence expectations，
 - 改 canonical gate order
 - 把弱能力伪装成 full native attach
 
+## 工程态
+- Codex 仍是 first-class direct adapter 优先对象。
+- 过渡服务路径已支持 durable adapter-event 持久化。
+- Claude Code 仍在通用 adapter contract 兼容边界内，但暂未成为 first-class direct adapter。
+
 ## Evidence Mapping
 Codex session evidence 会按 governed task id 映射到 runtime evidence timeline：
 - file changes -> `adapter_file_change`

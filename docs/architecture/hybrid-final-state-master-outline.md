@@ -139,6 +139,23 @@ Representative stack:
 
 This tier is real, tested, and useful. It is not the final delivery model.
 
+## Engineering-State Layers (2026-04-21)
+
+### Current Landed Runtime
+- local governed runtime kernel
+- local facade control surface
+- SQLite/filesystem compatibility path
+
+### Transition Runtime Target
+- real FastAPI control plane (`apps/control-plane/http_app.py`)
+- optional Postgres metadata backend for `verification_runs` and `adapter_events`
+- durable adapter event sink reused by operator reads
+
+### North-Star Best-Practice Runtime
+- broader service decomposition and workflow orchestration
+- richer multi-host adapter productization beyond Codex-first depth
+- deeper runtime operations and policy plane hardening
+
 ### 2. Committed Transition Architecture
 This is the architecture that should be treated as the direct path from the current branch to the hybrid final state.
 

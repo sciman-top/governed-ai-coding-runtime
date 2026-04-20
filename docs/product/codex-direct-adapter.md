@@ -61,6 +61,11 @@ The Codex adapter may classify Codex capability posture and evidence expectation
 - change canonical gate order
 - make a weak capability look like full native attach
 
+## Engineering State
+- Codex is the first-class direct adapter priority.
+- Durable adapter-event persistence now exists through the transition service path.
+- Claude Code remains supported by the generic adapter contract boundary, but is not yet a first-class direct adapter.
+
 ## Evidence Mapping
 Codex session evidence maps into the runtime evidence timeline by governed task id:
 - file changes -> `adapter_file_change`

@@ -208,6 +208,8 @@ class RuntimeServiceFacade:
             repo_root=self._repo_root,
             attachment_root=attachment_root,
             attachment_runtime_state_root=attachment_runtime_state_root,
+            metadata_store=self._metadata_store,
+            adapter_event_sink=self._adapter_event_sink,
         )
         payload_dict = session_bridge_result_to_dict(result)
         payload_dict["service_boundary"] = "control-plane"

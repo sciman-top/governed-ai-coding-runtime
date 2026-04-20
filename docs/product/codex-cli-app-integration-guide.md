@@ -9,6 +9,12 @@ Explain how to use this repository alongside Codex CLI/App today without oversta
 - The current runtime does **not** directly invoke Codex to perform real coding work through a managed adapter worker.
 - A Codex adapter contract now exists to classify capability posture. It does not by itself prove live native attach or managed Codex execution.
 
+## Engineering State (2026-04-21)
+- Transition service path now exists: a real FastAPI control-plane entrypoint plus optional Postgres metadata (`verification_runs`, `adapter_events`).
+- Codex adapter events can now be normalized into durable sink records and inspected through operator reads.
+- Codex remains first-class for direct-adapter productization depth.
+- Claude Code remains supported by the generic adapter contract boundary, but is not yet a first-class direct adapter in this slice.
+
 ## What Works Today
 
 ### 1. Manual-Handoff Governance Around Codex

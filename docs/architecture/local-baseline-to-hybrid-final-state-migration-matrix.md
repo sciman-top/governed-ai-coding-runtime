@@ -24,6 +24,11 @@ The answer is:
 - The active future-facing closure queue is now the direct-to-hybrid mainline (`GAP-045` through `GAP-060`), not the already-landed `GAP-035` through `GAP-044` slice.
 - The governance-optimization lane (`GAP-061` through `GAP-068`) was follow-on work after `GAP-060` and is complete on the current branch baseline (verified on 2026-04-20); it is still not part of the closure proof for the hybrid final-state claim itself.
 
+## Engineering-State Layers (2026-04-21)
+- `Current Landed Runtime`: local kernel + local facade + SQLite/filesystem compatibility path.
+- `Transition Runtime Target`: FastAPI control-plane boundary, optional Postgres metadata for `verification_runs` and `adapter_events`, and durable adapter-event sink.
+- `North-Star Best-Practice Runtime`: broader service decomposition, stronger workflow orchestration, and wider host productization depth.
+
 ## Interpretation Rules
 - Treat the completed local runtime as a `single-machine baseline`, not as the final attach-first product.
 - Keep historical plans in `docs/plans/` as closed execution records; do not rewrite them to pretend they were designed for the new final shape.

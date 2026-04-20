@@ -9,6 +9,12 @@
 - 当前运行时**还不能**通过受管 adapter worker 直接调用 Codex 去完成真实编码工作。
 - 当前已经有 Codex adapter contract 用来分类能力姿态，但它本身不等于 live native attach 或 managed Codex execution 已经可用。
 
+## 工程态（2026-04-21）
+- 过渡服务路径已落地：真实 FastAPI control-plane 入口 + 可选 Postgres metadata（`verification_runs`、`adapter_events`）。
+- Codex adapter event 现可规范化并写入 durable sink，operator 读侧可查询。
+- Codex 仍是 direct-adapter 产品化深度的第一优先。
+- Claude Code 当前仍处于通用 adapter contract 兼容边界内，但本切片尚未把它做成 first-class direct adapter。
+
 ## 今天已经可用的方式
 
 ### 1. 作为 Codex 外围的治理层

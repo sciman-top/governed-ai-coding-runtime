@@ -223,6 +223,7 @@ def handle_session_bridge_command(
     repo_root: str | Path,
     attachment_root: str | Path | None = None,
     attachment_runtime_state_root: str | Path | None = None,
+    metadata_store=None,
     adapter_event_sink=None,
 ) -> SessionBridgeResult:
     if command.adapter_id == "unsupported-adapter":
@@ -843,6 +844,7 @@ def handle_session_bridge_command(
                 gate.command,
                 cwd=_verification_cwd(repo_root=Path(repo_root), attachment_root=attachment_root),
             ),
+            metadata_store=metadata_store,
         )
         adapter_event_ref, adapter_event_summary = _record_adapter_events(
             command=command,

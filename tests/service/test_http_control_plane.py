@@ -43,6 +43,28 @@ class HttpControlPlaneTests(unittest.TestCase):
         self.assertIn("payload", response.json())
         self.assertIn("adapter_events", response.json()["payload"])
 
+    def test_operator_adapter_events_flow_through_http_with_injected_sink(self) -> None:
+        module = _load_module("apps/control-plane/http_app.py", "http_control_plane_e2e")
+
+        class _Sink:
+            def __init__(self):
+                self.rows = [
+                    {
+                        "task_id": "task-http",
+                        "event_type": "adapter_tool_call",
+                        "payload": {"tool": "apply_patch"},
+                    }
+                ]
+
+            def list_events(self, *, task_id: str):
+                return [row for row in self.rows if row["task_id"] == task_id]
+
+        client = TestClient(module.create_app(repo_root=ROOT, adapter_event_sink=_Sink()))
+        response = client.post("/operator", json={"action": "inspect_adapter_events", "task_id": "task-http"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["payload"]["adapter_events"][0]["payload"]["tool"], "apply_patch")
+
 
 if __name__ == "__main__":
     unittest.main()
