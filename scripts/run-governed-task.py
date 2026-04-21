@@ -22,6 +22,7 @@ from governed_ai_coding_runtime_contracts.codex_adapter import (
     summarize_codex_capability_readiness,
 )
 from governed_ai_coding_runtime_contracts.execution_runtime import ExecutionRuntime, WorkerExecutionResult
+from governed_ai_coding_runtime_contracts.learning_efficiency_metrics import build_learning_efficiency_metrics
 from governed_ai_coding_runtime_contracts.repo_attachment import validate_light_pack
 from governed_ai_coding_runtime_contracts.repo_profile import load_repo_profile
 from governed_ai_coding_runtime_contracts.replay import build_replay_reference
@@ -329,6 +330,19 @@ def run_task(*, task_id: str | None, goal: str, scope: str, repo: str, profile_p
         label="bundle",
         payload=evidence_bundle,
     )
+    learning_metrics = build_learning_efficiency_metrics(
+        task_id=record.task_id,
+        run_id=run.run_id,
+        metrics_source_ref=evidence_artifact.relative_path,
+        evidence_bundle=evidence_bundle,
+    )
+    learning_metrics_artifact = artifact_store.write_json(
+        task_id=record.task_id,
+        run_id=run.run_id,
+        kind="metrics",
+        label="learning-efficiency",
+        payload=learning_metrics.to_dict(),
+    )
     handoff = build_handoff_package(
         task_id=record.task_id,
         changed_files=["scripts/run-governed-task.py"],
@@ -355,7 +369,7 @@ def run_task(*, task_id: str | None, goal: str, scope: str, repo: str, profile_p
             item,
             evidence_ref=evidence_artifact.relative_path,
             verification_refs=list(verification_artifact.result_artifact_refs.values()),
-            extra_artifact_refs=run.artifact_refs + [handoff_artifact.relative_path],
+            extra_artifact_refs=run.artifact_refs + [handoff_artifact.relative_path, learning_metrics_artifact.relative_path],
         )
         if item.run_id == run.run_id
         else item

@@ -34,6 +34,7 @@ Define the bounded metric set used to assess whether governed interaction behavi
 - repeated misunderstanding and rework metrics must resolve to reviewable task, evidence, or postmortem references
 - efficiency metrics may inform controlled improvement proposals, but they may not autonomously mutate response policy or runtime behavior
 - low token spend is not sufficient evidence of success unless alignment and outcome metrics remain reviewable
+- runtime-generated metrics should be persisted as task/run artifacts that point back to their source evidence bundle
 
 ## Minimal Baseline Metrics
 - alignment_confirm_rate
@@ -48,4 +49,3 @@ Define the bounded metric set used to assess whether governed interaction behavi
 ## Notes
 - This contract is intentionally small. It exists to make trade-offs visible, not to maximize metric breadth.
 - Later telemetry expansion must preserve the same evidence-backed, non-authoritative posture.
-

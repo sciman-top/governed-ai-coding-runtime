@@ -109,6 +109,13 @@ from governed_ai_coding_runtime_contracts.interaction_governance import (
     derive_response_policy,
 )
 from governed_ai_coding_runtime_contracts.task_intake import apply_interaction_profile_defaults
+from governed_ai_coding_runtime_contracts.learning_efficiency_metrics import (
+    LearningEfficiencyMetricsRecord,
+    LearningEfficiencyMetricsSnapshot,
+    build_learning_efficiency_metrics,
+    persist_learning_efficiency_metrics,
+    summarize_learning_efficiency_metrics,
+)
 
 __all__ = [
     "PolicyDecision",
@@ -133,6 +140,8 @@ __all__ = [
     "AdapterConformanceResult",
     "TargetRepoSpeedKpiRecord",
     "TargetRepoSpeedKpiSnapshot",
+    "LearningEfficiencyMetricsRecord",
+    "LearningEfficiencyMetricsSnapshot",
     "InteractionSignal",
     "ResponsePolicy",
     "TeachingBudget",
@@ -188,8 +197,11 @@ __all__ = [
     "evaluate_codex_trial_conformance",
     "evaluate_runtime_check_conformance",
     "build_parity_matrix",
+    "build_learning_efficiency_metrics",
     "derive_response_policy",
     "export_target_repo_speed_kpi",
+    "persist_learning_efficiency_metrics",
+    "summarize_learning_efficiency_metrics",
     "govern_attached_write_request",
     "decide_attached_write_request",
     "execute_attached_write_request",

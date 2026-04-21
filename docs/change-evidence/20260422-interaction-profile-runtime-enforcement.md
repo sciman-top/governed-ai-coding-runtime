@@ -36,7 +36,12 @@
 2. `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`
 3. `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`
 4. `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`
-- result: pending final gate run
+- result: all pass
+- key output:
+  - build: `OK python-bytecode`, `OK python-import`
+  - runtime: `OK runtime-unittest`, `OK runtime-service-parity`, `OK runtime-service-wrapper-drift-guard`
+  - contract: `OK schema-json-parse`, `OK schema-example-validation`, `OK schema-catalog-pairing`
+  - hotspot/doctor: `OK runtime-policy-compatibility`, `OK runtime-policy-maintenance`, `OK codex-capability-ready`, `OK adapter-posture-visible`
 
 ### Supporting checks
 1. `python -m unittest tests.runtime.test_run_governed_task_service_wrapper tests.runtime.test_repo_profile tests.runtime.test_task_intake -v`
@@ -50,6 +55,12 @@
   - `OK schema-json-parse`
   - `OK schema-example-validation`
   - `OK schema-catalog-pairing`
+3. `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`
+- result: pass
+- key output:
+  - `OK active-markdown-links`
+  - `OK claim-drift-sentinel`
+  - `OK claim-evidence-freshness`
 
 ## Risks
 - Runtime enforcement currently covers the CLI governed task path. Other future runtime entrypoints must reuse `apply_interaction_profile_defaults(...)` or an equivalent service-layer helper to avoid drift.

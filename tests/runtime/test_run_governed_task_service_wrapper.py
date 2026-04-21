@@ -84,6 +84,12 @@ class RunGovernedTaskServiceWrapperTests(unittest.TestCase):
             evidence = json.loads(evidence_files[0].read_text(encoding="utf-8"))
             self.assertEqual(evidence["interaction_trace"]["applied_policies"][0]["mode"], "guided")
             self.assertEqual(evidence["interaction_trace"]["applied_policies"][0]["posture"], "aligned")
+            metrics_files = sorted((workspace / "artifacts").glob("*/**/metrics/learning-efficiency.json"))
+            self.assertEqual(len(metrics_files), 1)
+            metrics = json.loads(metrics_files[0].read_text(encoding="utf-8"))
+            self.assertEqual(metrics["task_id"], record.task_id)
+            self.assertEqual(metrics["metrics_source_ref"], evidence_files[0].relative_to(workspace / "artifacts").as_posix())
+            self.assertEqual(metrics["issue_resolution_without_repeated_question"], 1)
 
     def test_snapshot_payload_uses_service_dispatch(self) -> None:
         module = _load_run_governed_task_module()

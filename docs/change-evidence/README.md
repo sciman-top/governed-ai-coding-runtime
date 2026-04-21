@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260422 Learning Efficiency Metrics Persistence](./20260422-learning-efficiency-metrics-persistence.md)
+  - evidence companion for deriving learning-efficiency metrics from interaction evidence, persisting metrics artifacts, and exposing baseline summary rates
 - [20260422 Interaction Profile Runtime Enforcement](./20260422-interaction-profile-runtime-enforcement.md)
   - evidence companion for applying repo-profile `interaction_profile` defaults into task intake and runtime evidence generation
 - [20260422 Interaction Governance Lane Closeout](./20260422-interaction-governance-lane-closeout.md)
