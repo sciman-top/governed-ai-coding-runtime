@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260421 GAP-082 Service Wrapper Drift Guard](./20260421-gap-082-service-wrapper-drift-guard.md)
+  - evidence companion for runtime-gate drift sentinel enforcement that blocks direct session-bridge tokens from reappearing in wrapper CLI paths
 - [20260421 GAP-082 Status Service-Read Convergence](./20260421-gap-082-status-service-read-convergence.md)
   - evidence companion for routing CLI status reads through control-plane service dispatch while preserving operator-facing status output fields
 - [20260421 GAP-082 CLI Service-Boundary Wrapper Convergence](./20260421-gap-082-cli-service-boundary-wrapper-convergence.md)

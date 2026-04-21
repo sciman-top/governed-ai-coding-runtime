@@ -507,6 +507,19 @@ function Invoke-RuntimeChecks {
   }
 
   Write-CheckOk "runtime-service-parity"
+
+  $wrapperPath = "scripts/run-governed-task.py"
+  $forbiddenTokens = @(
+    "build_session_bridge_command(",
+    "handle_session_bridge_command("
+  )
+  foreach ($token in $forbiddenTokens) {
+    if (Select-String -Path $wrapperPath -SimpleMatch $token) {
+      throw "Service wrapper drift detected in ${wrapperPath}: found forbidden token '$token'"
+    }
+  }
+
+  Write-CheckOk "runtime-service-wrapper-drift-guard"
 }
 
 function Invoke-DoctorChecks {
