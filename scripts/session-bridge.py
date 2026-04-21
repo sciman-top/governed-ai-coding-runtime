@@ -11,6 +11,8 @@ CONTRACTS_SRC = ROOT / "packages" / "contracts" / "src"
 if str(CONTRACTS_SRC) not in sys.path:
     sys.path.insert(0, str(CONTRACTS_SRC))
 
+VERIFICATION_MODE_CHOICES = ["quick", "full", "l1", "l2", "l3"]
+
 from governed_ai_coding_runtime_contracts.policy_decision import build_policy_decision
 from governed_ai_coding_runtime_contracts.adapter_registry import resolve_launch_fallback
 from governed_ai_coding_runtime_contracts.session_bridge import (
@@ -43,10 +45,10 @@ def main() -> int:
     gate_parser = _add_common(
         subparsers.add_parser(
             "request-gate",
-            help="Run a quick or full verification gate flow.",
+            help="Run a layered verification gate flow.",
         )
     )
-    gate_parser.add_argument("--mode", choices=["quick", "full"], required=True)
+    gate_parser.add_argument("--mode", choices=VERIFICATION_MODE_CHOICES, required=True)
     gate_parser.add_argument("--run-id", default="session-bridge-request")
     gate_parser.add_argument("--plan-only", action="store_true")
     gate_parser.add_argument("--policy-status", choices=["allow", "escalate", "deny"], default="allow")
@@ -136,8 +138,8 @@ def main() -> int:
     payload = {}
     policy_decision = None
     if command_type == "run_gate":
-        command_type = "run_quick_gate" if args.mode == "quick" else "run_full_gate"
-        payload = {"run_id": args.run_id, "plan_only": bool(args.plan_only)}
+        command_type = _gate_command_type_for_mode(args.mode)
+        payload = {"run_id": args.run_id, "plan_only": bool(args.plan_only), "gate_level": args.mode}
         policy_decision = build_policy_decision(
             task_id=args.task_id,
             action_id=f"session:{command_type}",
@@ -260,6 +262,12 @@ def _add_common(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     parser.add_argument("--resume-id")
     parser.add_argument("--continuation-id")
     return parser
+
+
+def _gate_command_type_for_mode(mode: str) -> str:
+    if mode in {"quick", "l1"}:
+        return "run_quick_gate"
+    return "run_full_gate"
 
 
 if __name__ == "__main__":

@@ -44,6 +44,7 @@ class DeliveryHandoffTests(unittest.TestCase):
         verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
         quick_plan = verification_runner.build_verification_plan("quick")
         full_plan = verification_runner.build_verification_plan("full")
+        layered_full_plan = verification_runner.build_verification_plan("l3")
 
         full_package = delivery_handoff.build_handoff_package(
             "task-full",
@@ -67,8 +68,20 @@ class DeliveryHandoffTests(unittest.TestCase):
             ["build gate not applicable"],
             ["pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime"],
         )
+        layered_full_package = delivery_handoff.build_handoff_package(
+            "task-l3",
+            ["README.md"],
+            verification_runner.build_verification_artifact(
+                layered_full_plan,
+                "docs/change-evidence/l3.md",
+                {"build": "pass", "test": "pass", "contract": "pass", "doctor": "pass"},
+            ),
+            [],
+            ["pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All"],
+        )
 
         self.assertEqual(full_package.validation_status, "fully_validated")
+        self.assertEqual(layered_full_package.validation_status, "fully_validated")
         self.assertEqual(partial_package.validation_status, "partially_validated")
 
     def test_failed_or_interrupted_handoff_requires_replay_reference(self) -> None:

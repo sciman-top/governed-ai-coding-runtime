@@ -193,6 +193,44 @@ class RunGovernedTaskServiceWrapperTests(unittest.TestCase):
         self.assertEqual(payload["results"], {"test": "pass", "contract": "pass"})
         self.assertEqual(fake_app.calls[0]["payload"]["command_type"], "run_quick_gate")
 
+    def test_run_attachment_verification_l2_uses_full_command_with_gate_level_payload(self) -> None:
+        module = _load_run_governed_task_module()
+        fake_app = _FakeApp(
+            [
+                {
+                    "payload": {
+                        "mode": "l2",
+                        "run_id": "run-2",
+                        "gate_order": ["build", "test", "contract"],
+                        "results": {"build": "pass", "test": "pass", "contract": "pass"},
+                        "result_artifact_refs": {"build": "a.json", "test": "b.json", "contract": "c.json"},
+                        "evidence_link": "artifacts/task/run-2/verification-output/contract.json",
+                    }
+                }
+            ]
+        )
+        fake_attachment = SimpleNamespace(
+            binding=SimpleNamespace(binding_id="binding-2"),
+            repo_profile_path="schemas/examples/repo-profile/python-service.example.json",
+        )
+        fake_profile = SimpleNamespace(repo_id="target-repo")
+
+        with patch.object(module, "_build_control_plane_app", return_value=fake_app), patch.object(
+            module, "validate_light_pack", return_value=fake_attachment
+        ), patch.object(module, "load_repo_profile", return_value=fake_profile):
+            payload = module.run_attachment_verification(
+                attachment_root=str(ROOT),
+                attachment_runtime_state_root=str(ROOT / ".runtime"),
+                mode="l2",
+                task_id="task-verify-l2",
+                run_id="run-2",
+            )
+
+        self.assertEqual(payload["mode"], "l2")
+        self.assertEqual(payload["gate_order"], ["build", "test", "contract"])
+        self.assertEqual(fake_app.calls[0]["payload"]["command_type"], "run_full_gate")
+        self.assertEqual(fake_app.calls[0]["payload"]["payload"]["gate_level"], "l2")
+
 
 if __name__ == "__main__":
     unittest.main()

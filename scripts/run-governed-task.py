@@ -42,6 +42,7 @@ TASK_ROOT = Path(_RUNTIME_ROOTS.tasks_root)
 ARTIFACT_ROOT = Path(_RUNTIME_ROOTS.artifacts_root)
 REPLAY_ROOT = Path(_RUNTIME_ROOTS.replay_root)
 WORKSPACES_ROOT = Path(_RUNTIME_ROOTS.workspaces_root)
+VERIFICATION_MODE_CHOICES = ["quick", "full", "l1", "l2", "l3"]
 
 
 def main() -> int:
@@ -62,7 +63,7 @@ def main() -> int:
     run_parser.add_argument("--scope", default="runtime smoke")
     run_parser.add_argument("--repo", default="governed-ai-coding-runtime")
     run_parser.add_argument("--profile", default=str(ROOT / "schemas" / "examples" / "repo-profile" / "python-service.example.json"))
-    run_parser.add_argument("--mode", choices=["quick", "full"], default="full")
+    run_parser.add_argument("--mode", choices=VERIFICATION_MODE_CHOICES, default="full")
     run_parser.add_argument("--json", action="store_true")
 
     verify_attachment_parser = subparsers.add_parser(
@@ -72,7 +73,7 @@ def main() -> int:
     )
     verify_attachment_parser.add_argument("--attachment-root", required=True)
     verify_attachment_parser.add_argument("--attachment-runtime-state-root", required=True)
-    verify_attachment_parser.add_argument("--mode", choices=["quick", "full"], default="quick")
+    verify_attachment_parser.add_argument("--mode", choices=VERIFICATION_MODE_CHOICES, default="quick")
     verify_attachment_parser.add_argument("--task-id", required=True)
     verify_attachment_parser.add_argument("--run-id", required=True)
     verify_attachment_parser.add_argument("--json", action="store_true")
@@ -425,14 +426,14 @@ def run_attachment_verification(
         runtime_state_root=str(attachment_runtime_root),
     )
     profile = load_repo_profile(attachment.repo_profile_path)
-    command_type = "run_quick_gate" if mode == "quick" else "run_full_gate"
+    command_type = _gate_command_type_for_mode(mode)
     response = _dispatch_session_command(
         command_type=command_type,
         task_id=task_id,
         repo_binding_id=attachment.binding.binding_id,
         adapter_id="codex-cli",
         risk_tier="low",
-        payload={"run_id": run_id, "plan_only": False},
+        payload={"run_id": run_id, "plan_only": False, "gate_level": mode},
         command_id=f"cli-verify-{task_id}-{run_id}",
         attachment_root=attachment_root,
         attachment_runtime_state_root=attachment_runtime_state_root,
@@ -651,6 +652,12 @@ def render_payload(payload: dict) -> str:
 
 def _execute_gate(gate) -> tuple[int, str]:
     return _execute_gate_at_root(gate.command, cwd=ROOT)
+
+
+def _gate_command_type_for_mode(mode: str) -> str:
+    if mode in {"quick", "l1"}:
+        return "run_quick_gate"
+    return "run_full_gate"
 
 
 def _execute_gate_at_root(command: str, *, cwd: Path) -> tuple[int, str]:

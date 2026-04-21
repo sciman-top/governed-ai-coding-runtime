@@ -75,6 +75,56 @@ class RunGovernedTaskCliTests(unittest.TestCase):
             for artifact_ref in payload["result_artifact_refs"].values():
                 self.assertTrue((runtime_state_root / artifact_ref).exists(), artifact_ref)
 
+    def test_verify_attachment_supports_l2_layered_mode(self) -> None:
+        from governed_ai_coding_runtime_contracts.repo_attachment import attach_target_repo
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "target"
+            target_repo.mkdir()
+            runtime_state_root = workspace / "runtime-state" / "target"
+            attach_target_repo(
+                target_repo_root=str(target_repo),
+                runtime_state_root=str(runtime_state_root),
+                repo_id="target",
+                display_name="Target",
+                primary_language="python",
+                build_command="cmd /c exit 0",
+                test_command="cmd /c exit 0",
+                contract_command="cmd /c exit 0",
+                adapter_preference="process_bridge",
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/run-governed-task.py",
+                    "verify-attachment",
+                    "--attachment-root",
+                    str(target_repo),
+                    "--attachment-runtime-state-root",
+                    str(runtime_state_root),
+                    "--mode",
+                    "l2",
+                    "--task-id",
+                    "task-verify-attachment-l2",
+                    "--run-id",
+                    "run-verify-attachment-l2",
+                    "--json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["repo_id"], "target")
+            self.assertEqual(payload["mode"], "l2")
+            self.assertEqual(payload["gate_order"], ["build", "test", "contract"])
+            self.assertEqual(payload["results"], {"build": "pass", "test": "pass", "contract": "pass"})
+
     def test_govern_attachment_write_help(self) -> None:
         completed = subprocess.run(
             [sys.executable, "scripts/run-governed-task.py", "govern-attachment-write", "--help"],

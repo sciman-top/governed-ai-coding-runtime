@@ -4,20 +4,28 @@
 Draft
 
 ## Purpose
-Define the quick and full verification model for governed AI coding.
+Define the layered verification model (`l1/l2/l3`) for governed AI coding while preserving `quick/full` compatibility aliases.
 
 ## Gate Levels
-### quick
+### l1
 - intended for inner-loop feedback
 - may skip expensive checks
 - must not weaken high-risk pre-delivery requirements
 - uses the live `test` and `contract` gate ids
 
-### full
+### l2
+- intended for target-repo daily flow where delivery confidence must include build + runtime + contract checks
+- uses the live gate ids `build`, `test`, and `contract`
+
+### l3
 - required before delivery of medium/high-risk changes
 - required after explicit approval paths
 - must run the canonical order
 - uses the live gate ids `build`, `test`, `contract`, and `doctor`
+
+### Compatibility Aliases
+- `quick` is an alias of `l1`
+- `full` is an alias of `l3`
 
 ## Canonical Order
 1. build
@@ -32,11 +40,11 @@ Define the quick and full verification model for governed AI coding.
 - `doctor` -> `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`
 
 ## Escalation Rules
-Full gate must run when:
+L3/full gate must run when:
 - a high-risk file scope is touched
 - a high-risk tool is used
 - delivery is requested
-- quick gate reports escalation reasons
+- l1/quick gate reports escalation reasons
 
 ## Required Output
 - task_id
@@ -53,7 +61,7 @@ Full gate must run when:
 - risky_artifact_refs
 
 ## Runtime Binding
-- quick and full verification may bind to a persisted `task_id` and `run_id`
+- `quick/full/l1/l2/l3` verification may bind to a persisted `task_id` and `run_id`
 - gate outputs should persist as artifact-backed records under the runtime artifact store
 - the canonical gate order remains `build -> test -> contract/invariant -> hotspot`
 

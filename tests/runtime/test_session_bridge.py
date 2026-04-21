@@ -313,6 +313,27 @@ class SessionBridgeCommandTests(unittest.TestCase):
         self.assertEqual(result.payload["mode"], "quick")
         self.assertEqual(result.payload["gate_order"], ["test", "contract"])
 
+    def test_local_session_bridge_requests_l2_plan_via_full_gate_command(self) -> None:
+        module = self._module()
+        decision = self._policy_decision(status="allow", risk_tier="low")
+
+        command = module.build_session_bridge_command(
+            command_id="cmd-l2-gate-request",
+            command_type="run_full_gate",
+            task_id="task-123",
+            repo_binding_id="binding-python-service",
+            adapter_id="codex-cli",
+            risk_tier="low",
+            payload={"run_id": "run-456", "plan_only": True, "gate_level": "l2"},
+            policy_decision=decision,
+        )
+        result = module.handle_session_bridge_command(command, task_root=ROOT / ".runtime" / "tasks", repo_root=ROOT)
+
+        self.assertEqual(result.status, "verification_requested")
+        self.assertTrue(result.payload["plan_only"])
+        self.assertEqual(result.payload["mode"], "l2")
+        self.assertEqual(result.payload["gate_order"], ["build", "test", "contract"])
+
     def test_codex_session_identity_includes_flow_kind_and_preserves_explicit_ids(self) -> None:
         module = self._module()
         decision = self._policy_decision(status="allow", risk_tier="low")

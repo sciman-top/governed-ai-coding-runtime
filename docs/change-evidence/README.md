@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260421 Layered Verification Gates L1 L2 L3](./20260421-layered-verification-gates-l1-l2-l3.md)
+  - evidence companion for promoting verification to layered `l1/l2/l3` execution while preserving `quick/full` compatibility across runtime, session bridge, and target-repo wrappers
 - [20260421 GAP-084 Claim Drift Guard Closeout](./20260421-gap-084-claim-drift-guard-closeout.md)
   - closeout evidence for GAP-084 covering claim drift enforcement, evidence freshness gating, and time-bounded claim exception path checks
 - [20260421 GAP-083 Operator Remediation Depth Closeout](./20260421-gap-083-operator-remediation-depth-closeout.md)

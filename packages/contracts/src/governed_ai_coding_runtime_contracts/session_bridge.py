@@ -872,8 +872,8 @@ def handle_session_bridge_command(
                 },
                 policy_decision_ref=execution.policy_decision.evidence_ref,
             )
-        mode = "quick" if command.command_type == "run_quick_gate" else "full"
         try:
+            mode = _verification_mode_for_command(command)
             plan = _verification_plan_for_command(
                 command,
                 mode=mode,
@@ -1404,6 +1404,23 @@ def _run_id_from_payload(payload: dict) -> str:
     if isinstance(value, str) and value.strip():
         return value.strip()
     return "session-bridge-request"
+
+
+def _verification_mode_for_command(command: SessionBridgeCommand) -> str:
+    requested_level = _payload_optional_string(command.payload, "gate_level")
+    if command.command_type == "run_quick_gate":
+        if requested_level is None:
+            return "quick"
+        if requested_level in {"quick", "l1"}:
+            return requested_level
+        msg = "run_quick_gate supports only quick or l1 gate_level"
+        raise ValueError(msg)
+    if requested_level is None:
+        return "full"
+    if requested_level in {"full", "l2", "l3"}:
+        return requested_level
+    msg = "run_full_gate supports only full, l2, or l3 gate_level"
+    raise ValueError(msg)
 
 
 def _verification_cwd(*, repo_root: Path, attachment_root: str | Path | None) -> Path:

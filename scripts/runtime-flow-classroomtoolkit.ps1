@@ -2,7 +2,7 @@ param(
   [ValidateSet("onboard", "daily")]
   [string]$FlowMode = "daily",
 
-  [ValidateSet("quick", "full")]
+  [ValidateSet("quick", "full", "l1", "l2", "l3")]
   [string]$Mode = "quick",
 
   [ValidateSet("allow", "escalate", "deny")]

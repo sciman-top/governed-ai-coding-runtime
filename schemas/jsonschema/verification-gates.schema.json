@@ -59,6 +59,9 @@
       "minItems": 2,
       "items": {
         "enum": [
+          "l1",
+          "l2",
+          "l3",
           "quick",
           "full"
         ],

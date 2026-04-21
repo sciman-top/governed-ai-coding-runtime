@@ -9,7 +9,7 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$AttachmentRuntimeStateRoot,
 
-  [ValidateSet("quick", "full")]
+  [ValidateSet("quick", "full", "l1", "l2", "l3")]
   [string]$Mode = "quick",
 
   [ValidateSet("allow", "escalate", "deny")]

@@ -58,7 +58,7 @@ def build_handoff_package(
 
 def _validation_status(artifact: VerificationArtifact) -> ValidationStatus:
     expected_gates = artifact.gate_order
-    if artifact.mode == "full" and all(artifact.results.get(gate) == "pass" for gate in expected_gates):
+    if artifact.mode in {"full", "l3"} and all(artifact.results.get(gate) == "pass" for gate in expected_gates):
         return "fully_validated"
     return "partially_validated"
 

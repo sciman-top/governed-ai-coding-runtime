@@ -34,6 +34,33 @@ class VerificationRunnerTests(unittest.TestCase):
 
         self.assertEqual([gate.gate_id for gate in plan.gates], ["test", "contract"])
 
+    def test_l2_plan_runs_build_test_contract(self) -> None:
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+
+        plan = verification_runner.build_verification_plan("l2")
+
+        self.assertEqual(plan.mode, "l2")
+        self.assertEqual([gate.gate_id for gate in plan.gates], ["build", "test", "contract"])
+
+    def test_l3_plan_runs_build_test_contract_doctor(self) -> None:
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+
+        plan = verification_runner.build_verification_plan("l3")
+
+        self.assertEqual(plan.mode, "l3")
+        self.assertEqual([gate.gate_id for gate in plan.gates], ["build", "test", "contract", "doctor"])
+
+    def test_quick_full_aliases_match_layered_gate_shapes(self) -> None:
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+
+        quick_plan = verification_runner.build_verification_plan("quick")
+        l1_plan = verification_runner.build_verification_plan("l1")
+        full_plan = verification_runner.build_verification_plan("full")
+        l3_plan = verification_runner.build_verification_plan("l3")
+
+        self.assertEqual([gate.gate_id for gate in quick_plan.gates], [gate.gate_id for gate in l1_plan.gates])
+        self.assertEqual([gate.gate_id for gate in full_plan.gates], [gate.gate_id for gate in l3_plan.gates])
+
     def test_escalation_conditions_are_explicit(self) -> None:
         verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
 
@@ -108,6 +135,25 @@ class VerificationRunnerTests(unittest.TestCase):
             ],
         )
 
+    def test_repo_profile_l2_ignores_doctor_even_when_declared_in_full_group(self) -> None:
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+
+        plan = verification_runner.build_repo_profile_verification_plan(
+            "l2",
+            task_id="task-profile",
+            run_id="run-profile",
+            profile_raw={
+                "full_gate_commands": [
+                    {"id": "build", "command": "dotnet build Repo.sln -c Debug"},
+                    {"id": "test", "command": "dotnet test tests/Repo.Tests.csproj -c Debug"},
+                    {"id": "contract", "command": "dotnet test tests/Repo.Tests.csproj -c Debug --filter Contract"},
+                    {"id": "doctor", "command": "dotnet tool run doctor"},
+                ]
+            },
+        )
+
+        self.assertEqual([gate.gate_id for gate in plan.gates], ["build", "test", "contract"])
+
     def test_repo_profile_declared_gate_contract_fails_loudly_when_required_gates_missing(self) -> None:
         verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
 
@@ -142,6 +188,25 @@ class VerificationRunnerTests(unittest.TestCase):
             }
         )
         self.assertEqual(artifact.mode, "quick")
+        layered_artifact = verification_runner.verification_artifact_from_dict(
+            {
+                "mode": "l3",
+                "task_id": "task-verify",
+                "run_id": "run-verify",
+                "gate_order": ["build", "test", "contract", "doctor"],
+                "evidence_link": "artifacts/task-verify/run-verify/verification-output/doctor.txt",
+                "results": {"build": "pass", "test": "pass", "contract": "pass", "doctor": "pass"},
+                "result_artifact_refs": {
+                    "build": "artifacts/task-verify/run-verify/verification-output/build.txt",
+                    "test": "artifacts/task-verify/run-verify/verification-output/test.txt",
+                    "contract": "artifacts/task-verify/run-verify/verification-output/contract.txt",
+                    "doctor": "artifacts/task-verify/run-verify/verification-output/doctor.txt",
+                },
+                "escalation_conditions": ["contract_failure_blocks_delivery"],
+                "risky_artifact_refs": [],
+            }
+        )
+        self.assertEqual(layered_artifact.mode, "l3")
         with self.assertRaises(ValueError):
             verification_runner.verification_artifact_from_dict(
                 {

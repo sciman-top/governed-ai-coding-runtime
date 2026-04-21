@@ -3,11 +3,13 @@
 from dataclasses import asdict, dataclass
 from typing import Callable
 from typing import Literal
+from typing import cast
 
 from governed_ai_coding_runtime_contracts.artifact_store import LocalArtifactStore
 
 
-VerificationMode = Literal["quick", "full"]
+VerificationMode = Literal["quick", "full", "l1", "l2", "l3"]
+VerificationLevel = Literal["l1", "l2", "l3"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -76,7 +78,8 @@ def build_verification_plan(
     task_id: str | None = None,
     run_id: str | None = None,
 ) -> VerificationPlan:
-    if mode == "quick":
+    level = _normalized_level(mode)
+    if level == "l1":
         gates = [
             VerificationGate(
                 gate_id="test",
@@ -91,7 +94,28 @@ def build_verification_plan(
                 required=True,
             ),
         ]
-    elif mode == "full":
+    elif level == "l2":
+        gates = [
+            VerificationGate(
+                gate_id="build",
+                canonical_name="build",
+                command='pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1',
+                required=True,
+            ),
+            VerificationGate(
+                gate_id="test",
+                canonical_name="test",
+                command='pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime',
+                required=True,
+            ),
+            VerificationGate(
+                gate_id="contract",
+                canonical_name="contract_or_invariant",
+                command='pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract',
+                required=True,
+            ),
+        ]
+    elif level == "l3":
         gates = [
             VerificationGate(
                 gate_id="build",
@@ -235,11 +259,13 @@ def _gates_from_repo_profile(raw: dict, *, mode: str) -> list[VerificationGate]:
     if not isinstance(raw, dict):
         msg = "profile_raw must be an object"
         raise ValueError(msg)
-    if mode == "quick":
+    level = _normalized_level(mode)
+    if level == "l1":
         command_groups = ["quick_gate_commands", "test_commands", "contract_commands", "invariant_commands"]
     else:
         command_groups = ["full_gate_commands", "build_commands", "test_commands", "contract_commands", "invariant_commands"]
 
+    required_gate_ids = _required_gate_ids_for_level(level)
     gates: list[VerificationGate] = []
     seen_gate_ids: set[str] = set()
     declared_groups_present = False
@@ -256,6 +282,8 @@ def _gates_from_repo_profile(raw: dict, *, mode: str) -> list[VerificationGate]:
                 msg = f"{group} entries must be objects"
                 raise ValueError(msg)
             gate_id = _gate_id_for_group(group, command)
+            if level == "l2" and gate_id == "doctor":
+                continue
             if gate_id in seen_gate_ids:
                 continue
             gate_command = command.get("command")
@@ -272,16 +300,12 @@ def _gates_from_repo_profile(raw: dict, *, mode: str) -> list[VerificationGate]:
             )
             seen_gate_ids.add(gate_id)
 
-        if mode == "quick" and seen_gate_ids.issuperset({"test", "contract"}):
-            break
-        if mode == "full" and seen_gate_ids.issuperset({"build", "test", "contract"}):
+        if seen_gate_ids.issuperset(required_gate_ids):
             break
     if declared_groups_present:
-        if mode == "quick" and not seen_gate_ids.issuperset({"test", "contract"}):
-            msg = "declared quick gate contract must provide test and contract gates"
-            raise ValueError(msg)
-        if mode == "full" and not seen_gate_ids.issuperset({"build", "test", "contract"}):
-            msg = "declared full gate contract must provide build, test, and contract gates"
+        if not seen_gate_ids.issuperset(required_gate_ids):
+            requirement = _required_gate_ids_text(required_gate_ids)
+            msg = f"declared {level} gate contract must provide {requirement} gates"
             raise ValueError(msg)
     return gates
 
@@ -305,10 +329,36 @@ def _gate_id_for_group(group: str, command: dict) -> str:
 
 
 def _required_mode(value: object) -> VerificationMode:
-    if value in {"quick", "full"}:
-        return value
+    if isinstance(value, str):
+        normalized = value.strip()
+        if normalized in {"quick", "full", "l1", "l2", "l3"}:
+            return cast(VerificationMode, normalized)
     msg = f"unsupported verification mode: {value}"
     raise ValueError(msg)
+
+
+def _normalized_level(mode: str) -> VerificationLevel:
+    normalized_mode = _required_mode(mode)
+    if normalized_mode in {"quick", "l1"}:
+        return "l1"
+    if normalized_mode == "l2":
+        return "l2"
+    return "l3"
+
+
+def _required_gate_ids_for_level(level: VerificationLevel) -> set[str]:
+    if level == "l1":
+        return {"test", "contract"}
+    return {"build", "test", "contract"}
+
+
+def _required_gate_ids_text(required_gate_ids: set[str]) -> str:
+    ordered = [gate_id for gate_id in ["build", "test", "contract"] if gate_id in required_gate_ids]
+    if len(ordered) == 2:
+        return f"{ordered[0]} and {ordered[1]}"
+    if len(ordered) == 3:
+        return f"{ordered[0]}, {ordered[1]}, and {ordered[2]}"
+    return ", ".join(ordered)
 
 
 def _required_optional_string(value: object, field_name: str) -> str | None:
