@@ -25,7 +25,6 @@ from governed_ai_coding_runtime_contracts.execution_runtime import ExecutionRunt
 from governed_ai_coding_runtime_contracts.repo_attachment import validate_light_pack
 from governed_ai_coding_runtime_contracts.repo_profile import load_repo_profile
 from governed_ai_coding_runtime_contracts.replay import build_replay_reference
-from governed_ai_coding_runtime_contracts.runtime_status import RuntimeStatusStore
 from governed_ai_coding_runtime_contracts.runtime_roots import ensure_runtime_roots, resolve_runtime_roots
 from governed_ai_coding_runtime_contracts.task_intake import TaskIntake
 from governed_ai_coding_runtime_contracts.task_store import FileTaskStore, TaskRecord, TaskRunRecord
@@ -353,14 +352,34 @@ def snapshot_payload(
     attachment_root: str | None = None,
     attachment_runtime_state_root: str | None = None,
 ) -> dict:
-    attachment_roots = [Path(attachment_root)] if attachment_root else None
-    runtime_state_root = Path(attachment_runtime_state_root) if attachment_runtime_state_root else None
-    snapshot = RuntimeStatusStore(
-        TASK_ROOT,
-        ROOT,
-        attachment_roots=attachment_roots,
-        attachment_runtime_state_root=runtime_state_root,
-    ).snapshot()
+    response = _dispatch_session_command(
+        command_type="inspect_status",
+        task_id="operator-status",
+        repo_binding_id="operator-status",
+        adapter_id="codex-cli",
+        risk_tier="low",
+        payload={},
+        command_id="cli-status",
+        attachment_root=attachment_root,
+        attachment_runtime_state_root=attachment_runtime_state_root,
+    )
+    status_payload = _response_payload(response)
+    tasks = status_payload.get("tasks")
+    if not isinstance(tasks, list):
+        tasks = []
+    maintenance = status_payload.get("maintenance")
+    if not isinstance(maintenance, dict):
+        maintenance = {
+            "stage": status_payload.get("maintenance_stage", "unknown"),
+            "compatibility_policy_ref": None,
+            "upgrade_policy_ref": None,
+            "triage_policy_ref": None,
+            "deprecation_policy_ref": None,
+            "retirement_policy_ref": None,
+        }
+    attachments = status_payload.get("attachments")
+    if not isinstance(attachments, list):
+        attachments = []
     payload = {
         "runtime_roots": {
             "runtime_root": RUNTIME_ROOT.as_posix(),
@@ -370,45 +389,14 @@ def snapshot_payload(
             "workspaces_root": WORKSPACES_ROOT.as_posix(),
             "compatibility_mode": _RUNTIME_ROOTS.compatibility_mode,
         },
-        "total_tasks": snapshot.total_tasks,
-        "maintenance": {
-            "stage": snapshot.maintenance.stage,
-            "compatibility_policy_ref": snapshot.maintenance.compatibility_policy_ref,
-            "upgrade_policy_ref": snapshot.maintenance.upgrade_policy_ref,
-            "triage_policy_ref": snapshot.maintenance.triage_policy_ref,
-            "deprecation_policy_ref": snapshot.maintenance.deprecation_policy_ref,
-            "retirement_policy_ref": snapshot.maintenance.retirement_policy_ref,
-        },
+        "total_tasks": int(status_payload.get("total_tasks", 0)),
+        "maintenance": maintenance,
         "tasks": [
-            {
-                "task_id": task.task_id,
-                "state": task.current_state,
-                "goal": task.goal,
-                "active_run_id": task.active_run_id,
-                "workspace_root": task.workspace_root,
-                "rollback_ref": task.rollback_ref,
-                "approval_ids": task.approval_ids,
-                "artifact_refs": task.artifact_refs,
-                "evidence_refs": task.evidence_refs,
-                "verification_refs": task.verification_refs,
-            }
-            for task in snapshot.tasks
-            if task_id is None or task.task_id == task_id
+            item
+            for item in tasks
+            if isinstance(item, dict) and (task_id is None or item.get("task_id") == task_id)
         ],
-        "attachments": [
-            {
-                "repo_id": attachment.repo_id,
-                "binding_id": attachment.binding_id,
-                "binding_state": attachment.binding_state,
-                "light_pack_path": attachment.light_pack_path,
-                "adapter_preference": attachment.adapter_preference,
-                "gate_profile": attachment.gate_profile,
-                "reason": attachment.reason,
-                "remediation": attachment.remediation,
-                "fail_closed": attachment.fail_closed,
-            }
-            for attachment in snapshot.attachments
-        ],
+        "attachments": [item for item in attachments if isinstance(item, dict)],
     }
     try:
         payload["codex_capability"] = codex_capability_readiness_to_dict(

@@ -507,7 +507,7 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: AFK
 - Blocked by: GAP-081
 - User stories: 1, 11, 13, 17, 39
-- Status: in progress on current branch baseline (runtime service/CLI parity gate now covers quick/full plan parity, write-execution approval-path parity, and operator read parity; attached execution CLI paths are now service-boundary wrappers as of 2026-04-21)
+- Status: in progress on current branch baseline (runtime service/CLI parity gate now covers quick/full plan parity, write-execution approval-path parity, and operator read parity; attached execution plus status CLI paths are service-boundary wrappers as of 2026-04-21)
 - What to build:
   - enforce API-first runtime boundaries and keep CLI as a wrapper-only compatibility surface
   - add API/CLI parity guards for execution-like commands and operator reads

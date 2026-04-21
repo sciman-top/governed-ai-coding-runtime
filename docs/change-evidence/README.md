@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260421 GAP-082 Status Service-Read Convergence](./20260421-gap-082-status-service-read-convergence.md)
+  - evidence companion for routing CLI status reads through control-plane service dispatch while preserving operator-facing status output fields
 - [20260421 GAP-082 CLI Service-Boundary Wrapper Convergence](./20260421-gap-082-cli-service-boundary-wrapper-convergence.md)
   - evidence companion for routing attached execution CLI flows through control-plane service boundaries while preserving existing payload contracts
 - [20260421 GAP-082 Service Parity Expansion](./20260421-gap-082-service-parity-expansion.md)

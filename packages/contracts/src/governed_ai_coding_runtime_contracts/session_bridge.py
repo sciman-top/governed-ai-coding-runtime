@@ -278,6 +278,29 @@ def handle_session_bridge_command(
             payload={
                 "total_tasks": snapshot.total_tasks,
                 "maintenance_stage": snapshot.maintenance.stage,
+                "maintenance": {
+                    "stage": snapshot.maintenance.stage,
+                    "compatibility_policy_ref": snapshot.maintenance.compatibility_policy_ref,
+                    "upgrade_policy_ref": snapshot.maintenance.upgrade_policy_ref,
+                    "triage_policy_ref": snapshot.maintenance.triage_policy_ref,
+                    "deprecation_policy_ref": snapshot.maintenance.deprecation_policy_ref,
+                    "retirement_policy_ref": snapshot.maintenance.retirement_policy_ref,
+                },
+                "tasks": [
+                    {
+                        "task_id": task.task_id,
+                        "state": task.current_state,
+                        "goal": task.goal,
+                        "active_run_id": task.active_run_id,
+                        "workspace_root": task.workspace_root,
+                        "rollback_ref": task.rollback_ref,
+                        "approval_ids": task.approval_ids,
+                        "artifact_refs": task.artifact_refs,
+                        "evidence_refs": task.evidence_refs,
+                        "verification_refs": task.verification_refs,
+                    }
+                    for task in snapshot.tasks
+                ],
                 "attachments": [
                     {
                         "repo_id": attachment.repo_id,
