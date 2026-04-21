@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -167,6 +168,81 @@ class AttachedRepoE2ETests(unittest.TestCase):
             self.assertIn(payload["live_loop"]["flow_kind"], {"live_attach", "process_bridge", "manual_handoff"})
             self.assertIn(payload["live_loop"]["closure_state"], {"live_closure_ready", "fallback_explicit"})
             self.assertEqual((target_repo / target_path).read_text(encoding="utf-8"), "attached default tool write")
+
+    def test_runtime_check_marks_fallback_explicit_when_codex_probe_is_blocked(self) -> None:
+        from governed_ai_coding_runtime_contracts.repo_attachment import attach_target_repo
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "target"
+            target_repo.mkdir()
+            runtime_state_root = workspace / "runtime-state" / "target"
+            attach_target_repo(
+                target_repo_root=str(target_repo),
+                runtime_state_root=str(runtime_state_root),
+                repo_id="target",
+                display_name="Target",
+                primary_language="python",
+                build_command="cmd /c exit 0",
+                test_command="cmd /c exit 0",
+                contract_command="cmd /c exit 0",
+                adapter_preference="process_bridge",
+            )
+
+            target_path = "docs/e2e-fallback-probe.txt"
+            env = os.environ.copy()
+            env["GOVERNED_RUNTIME_CODEX_BIN"] = "__missing_codex_binary_for_fallback_test__"
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    "scripts/runtime-check.ps1",
+                    "-AttachmentRoot",
+                    str(target_repo),
+                    "-AttachmentRuntimeStateRoot",
+                    str(runtime_state_root),
+                    "-Mode",
+                    "quick",
+                    "-TaskId",
+                    "task-attached-fallback",
+                    "-RunId",
+                    "run-attached-fallback",
+                    "-CommandId",
+                    "cmd-attached-fallback",
+                    "-WriteTargetPath",
+                    target_path,
+                    "-WriteTier",
+                    "low",
+                    "-RollbackReference",
+                    f"git checkout -- {target_path}",
+                    "-WriteContent",
+                    "attached fallback write",
+                    "-ExecuteWriteFlow",
+                    "-Json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+                env=env,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["summary"]["overall_status"], "pass")
+            self.assertEqual(payload["write_execute"]["execution_status"], "executed")
+            self.assertTrue(payload["live_loop"]["fallback_explicit"])
+            self.assertEqual(payload["live_loop"]["closure_state"], "fallback_explicit")
+            self.assertIn(payload["live_loop"]["flow_kind"], {"process_bridge", "manual_handoff"})
+            self.assertTrue(payload["live_loop"]["fallback_reason"])
+            self.assertTrue(payload["live_loop"]["session_identity_continuity"])
+            self.assertTrue(payload["live_loop"]["continuation_continuity"])
+            self.assertTrue(payload["live_loop"]["evidence_linkage_complete"])
+            self.assertEqual(payload["summary"]["flow_kind"], payload["live_loop"]["flow_kind"])
+            self.assertEqual((target_repo / target_path).read_text(encoding="utf-8"), "attached fallback write")
 
 
 if __name__ == "__main__":

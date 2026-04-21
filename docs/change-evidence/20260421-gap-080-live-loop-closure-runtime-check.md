@@ -32,6 +32,10 @@ Implement the second executable slice of `GAP-080` so one runtime-check write lo
    - emits `live_loop` diagnostics with `flow_kind`, continuity booleans, closure state, fallback explicitness, and linked runtime refs
 6. `session-bridge.py` inspect commands now accept attachment-root arguments so runtime-check can query attachment-scoped evidence/handoff directly.
 7. E2E + contract tests were extended to assert closure-summary and adapter-event identity linkage.
+8. Added an explicit fallback E2E path by forcing Codex probe failure (`GOVERNED_RUNTIME_CODEX_BIN` invalid) and asserting:
+   - `live_loop.fallback_explicit == true`
+   - `live_loop.closure_state == fallback_explicit`
+   - fallback reason is present and cannot be mistaken for live attach closure.
 
 ## Verification
 ### Targeted tests
