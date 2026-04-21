@@ -158,6 +158,8 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             self.assertNotEqual(missing_completed.returncode, 0)
             self.assertIn("FAIL attachment-posture-missing-light-pack", missing_completed.stdout)
             self.assertIn("REMEDIATE", missing_completed.stdout)
+            self.assertIn("REMEDIATE-ACTION", missing_completed.stdout)
+            self.assertIn("scripts/attach-target-repo.py", missing_completed.stdout)
 
             healthy_root = workspace / "healthy"
             healthy_root.mkdir()
@@ -187,6 +189,8 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             self.assertNotEqual(invalid_completed.returncode, 0)
             self.assertIn("FAIL attachment-posture-invalid-light-pack", invalid_completed.stdout)
             self.assertIn("REMEDIATE", invalid_completed.stdout)
+            self.assertIn("REMEDIATE-ACTION", invalid_completed.stdout)
+            self.assertIn("scripts/attach-target-repo.py", invalid_completed.stdout)
 
             stale_root = workspace / "stale"
             stale_root.mkdir()
@@ -210,6 +214,8 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             self.assertNotEqual(stale_completed.returncode, 0)
             self.assertIn("FAIL attachment-posture-stale-binding", stale_completed.stdout)
             self.assertIn("REMEDIATE", stale_completed.stdout)
+            self.assertIn("REMEDIATE-ACTION", stale_completed.stdout)
+            self.assertIn("scripts/attach-target-repo.py", stale_completed.stdout)
 
     def _run_doctor_attachment(self, script: Path, attachment_root: Path, runtime_state_root: Path) -> subprocess.CompletedProcess:
         return subprocess.run(

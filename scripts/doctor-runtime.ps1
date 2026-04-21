@@ -11,6 +11,42 @@ function Write-CheckOk {
   Write-Host "OK $Name"
 }
 
+function Resolve-AttachmentRemediationActions {
+  param(
+    [string]$BindingState,
+    [string]$AttachmentRoot,
+    [string]$RuntimeStateRoot
+  )
+
+  $quotedAttachmentRoot = '"' + $AttachmentRoot + '"'
+  $quotedRuntimeStateRoot = '"' + $RuntimeStateRoot + '"'
+  switch ($BindingState) {
+    "missing-light-pack" {
+      return @(
+        "python scripts/attach-target-repo.py --target-repo-root $quotedAttachmentRoot --runtime-state-root $quotedRuntimeStateRoot --repo-id <repo-id> --display-name <display-name> --primary-language <language> --build-command <build> --test-command <test> --contract-command <contract>",
+        "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1 -AttachmentRoot $quotedAttachmentRoot -RuntimeStateRoot $quotedRuntimeStateRoot"
+      )
+    }
+    "invalid-light-pack" {
+      return @(
+        "python scripts/attach-target-repo.py --target-repo-root $quotedAttachmentRoot --runtime-state-root $quotedRuntimeStateRoot --repo-id <repo-id> --display-name <display-name> --primary-language <language> --build-command <build> --test-command <test> --contract-command <contract>",
+        "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1 -AttachmentRoot $quotedAttachmentRoot -RuntimeStateRoot $quotedRuntimeStateRoot"
+      )
+    }
+    "stale-binding" {
+      return @(
+        "python scripts/attach-target-repo.py --target-repo-root $quotedAttachmentRoot --runtime-state-root $quotedRuntimeStateRoot --repo-id <repo-id> --display-name <display-name> --primary-language <language> --build-command <build> --test-command <test> --contract-command <contract>",
+        "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1 -AttachmentRoot $quotedAttachmentRoot -RuntimeStateRoot $quotedRuntimeStateRoot"
+      )
+    }
+    default {
+      return @(
+        "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1 -AttachmentRoot $quotedAttachmentRoot -RuntimeStateRoot $quotedRuntimeStateRoot"
+      )
+    }
+  }
+}
+
 function Assert-PathExists {
   param(
     [string]$Path,
@@ -173,6 +209,10 @@ print(
     Write-Host "FAIL attachment-posture-$normalizedAttachmentPosture"
     if (-not [string]::IsNullOrWhiteSpace($remediation)) {
       Write-Host "REMEDIATE $remediation"
+    }
+    $actions = Resolve-AttachmentRemediationActions -BindingState $normalizedAttachmentPosture -AttachmentRoot $AttachmentRoot -RuntimeStateRoot $RuntimeStateRoot
+    foreach ($action in $actions) {
+      Write-Host "REMEDIATE-ACTION $action"
     }
     throw "Attachment posture requires remediation before execution can continue"
   }

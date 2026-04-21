@@ -521,14 +521,14 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: AFK
 - Blocked by: GAP-082
 - User stories: 11, 12, 14, 27, 40
-- Status: in progress on current branch baseline (operator write-status query surface added with service/session parity coverage on 2026-04-21)
+- Status: in progress on current branch baseline (operator write-status query surface and doctor deterministic remediation actions for missing/invalid/stale attachment posture added on 2026-04-21)
 - What to build:
   - expand attachment-scoped query coverage for approvals, evidence, replay, and posture diagnostics
   - deepen doctor remediation flows with deterministic recovery actions and retry guidance
   - capture remediation outcomes as evidence-backed artifacts for follow-up decisions
 - Acceptance criteria:
   - [ ] operator queries can diagnose and track posture or recovery state without raw-log reconstruction
-  - [ ] doctor outputs include deterministic remediation actions for missing, stale, and invalid posture states
+  - [x] doctor outputs include deterministic remediation actions for missing, stale, and invalid posture states
   - [ ] remediation retries produce auditable evidence suitable for handoff and replay
 
 ### GAP-084 NTP-05 Claim Drift Guard
