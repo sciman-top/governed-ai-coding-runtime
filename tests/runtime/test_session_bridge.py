@@ -910,6 +910,58 @@ class SessionBridgeCommandTests(unittest.TestCase):
             self.assertEqual(status_identity["resume_id"], request_identity["resume_id"])
             self.assertEqual(status_identity["continuation_id"], flow_execution_id)
 
+    def test_write_request_preflight_deny_returns_retry_command(self) -> None:
+        module = self._module()
+        repo_attachment = importlib.import_module("governed_ai_coding_runtime_contracts.repo_attachment")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            self._seed_task(workspace, task_id="task-write-preflight")
+            target_repo = workspace / "target"
+            target_repo.mkdir()
+            runtime_state_root = workspace / "runtime-state" / "target"
+            repo_attachment.attach_target_repo(
+                target_repo_root=str(target_repo),
+                runtime_state_root=str(runtime_state_root),
+                repo_id="target",
+                display_name="Target",
+                primary_language="python",
+                build_command="python -m compileall src",
+                test_command="python -m unittest discover",
+                contract_command="python -m unittest discover -s tests/contracts",
+            )
+
+            write_request = module.build_session_bridge_command(
+                command_id="cmd-write-preflight-deny",
+                command_type="write_request",
+                task_id="task-write-preflight",
+                repo_binding_id="binding-target",
+                adapter_id="codex-cli",
+                risk_tier="low",
+                payload={
+                    "tool_name": "write_file",
+                    "target_path": "secrets/prod.env",
+                    "tier": "low",
+                    "rollback_reference": "git diff -- secrets/prod.env",
+                    "session_id": "session-preflight",
+                    "resume_id": "resume-preflight",
+                },
+            )
+            result = module.handle_session_bridge_command(
+                write_request,
+                task_root=workspace / ".runtime" / "tasks",
+                repo_root=workspace,
+                attachment_root=target_repo,
+                attachment_runtime_state_root=runtime_state_root,
+            )
+
+            self.assertEqual(result.status, "denied")
+            self.assertTrue(result.payload["preflight_blocked"])
+            self.assertTrue(result.payload["suggested_target_path"])
+            self.assertTrue(result.payload["retry_command"])
+            self.assertIn("task-write-preflight", result.payload["retry_command"])
+            self.assertIn(result.payload["suggested_target_path"], result.payload["retry_command"])
+
     def test_inspect_handoff_returns_payload_and_known_refs(self) -> None:
         module = self._module()
         task_store, _task_intake = self._task_modules()

@@ -1,0 +1,69 @@
+{
+  "generated_at": "2026-04-21T16:06:51.931937+00:00",
+  "record_count": 5,
+  "records": [
+    {
+      "deny_to_success_retries": 0,
+      "fallback_rate": 0.0,
+      "first_pass_latency_seconds": 357,
+      "latest_evidence_ref": "artifacts/task-classroomtoolkit-daily-allowedscope-20260420230050/run-classroomtoolkit-daily-allowedscope-20260420230050/verification-output/contract.txt",
+      "medium_risk_loop_success_ratio": null,
+      "onboarding_latency_seconds": 357,
+      "target": "classroomtoolkit",
+      "total_daily_runs": 1,
+      "window_end_utc": "2026-04-20T23:00:50+00:00",
+      "window_start_utc": "2026-04-20T23:00:50+00:00"
+    },
+    {
+      "deny_to_success_retries": 0,
+      "fallback_rate": 0.0,
+      "first_pass_latency_seconds": 0,
+      "latest_evidence_ref": "artifacts/task-github-toolkit-daily-deny-20260420230743/run-github-toolkit-daily-deny-20260420230743/verification-output/contract.txt",
+      "medium_risk_loop_success_ratio": null,
+      "onboarding_latency_seconds": 0,
+      "target": "github-toolkit",
+      "total_daily_runs": 1,
+      "window_end_utc": "2026-04-20T23:07:43+00:00",
+      "window_start_utc": "2026-04-20T23:07:43+00:00"
+    },
+    {
+      "deny_to_success_retries": 0,
+      "fallback_rate": 0.0,
+      "first_pass_latency_seconds": 318,
+      "latest_evidence_ref": "artifacts/task-self-runtime-daily-allowedscope-20260420230134/run-self-runtime-daily-allowedscope-20260420230134/verification-output/contract.txt",
+      "medium_risk_loop_success_ratio": null,
+      "onboarding_latency_seconds": 318,
+      "target": "self-runtime",
+      "total_daily_runs": 1,
+      "window_end_utc": "2026-04-20T23:01:34+00:00",
+      "window_start_utc": "2026-04-20T23:01:34+00:00"
+    },
+    {
+      "deny_to_success_retries": 0,
+      "fallback_rate": 0.0,
+      "first_pass_latency_seconds": 220,
+      "latest_evidence_ref": "artifacts/task-skills-manager-daily-allowedscope-20260420230317/run-skills-manager-daily-allowedscope-20260420230317/verification-output/contract.txt",
+      "medium_risk_loop_success_ratio": null,
+      "onboarding_latency_seconds": 220,
+      "target": "skills-manager",
+      "total_daily_runs": 1,
+      "window_end_utc": "2026-04-20T23:03:17+00:00",
+      "window_start_utc": "2026-04-20T23:03:17+00:00"
+    },
+    {
+      "deny_to_success_retries": 0,
+      "fallback_rate": 0.0,
+      "first_pass_latency_seconds": 0,
+      "latest_evidence_ref": "artifacts/task-vps-ssh-launcher-daily-deny-20260420230759/run-vps-ssh-launcher-daily-deny-20260420230759/verification-output/contract.txt",
+      "medium_risk_loop_success_ratio": null,
+      "onboarding_latency_seconds": 0,
+      "target": "vps-ssh-launcher",
+      "total_daily_runs": 1,
+      "window_end_utc": "2026-04-20T23:07:59+00:00",
+      "window_start_utc": "2026-04-20T23:07:59+00:00"
+    }
+  ],
+  "schema_version": "1.0",
+  "window_kind": "latest",
+  "window_size": 10
+}

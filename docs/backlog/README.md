@@ -44,7 +44,8 @@ This directory holds the human and machine planning artifacts that bridge strate
 - `Direct-To-Hybrid-Final-State Mainline / GAP-046` through `GAP-060` are complete on the current branch baseline (verified on 2026-04-20).
 - `Governance Optimization Lane / GAP-061` through `GAP-068` are complete on the current branch baseline (verified on 2026-04-20).
 - `Post-Closeout Optimization Queue / GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20).
-- `Near-Term Gap Horizon Queue / GAP-080` through `GAP-084` are complete on the current branch baseline (verified on 2026-04-21), and no remaining execution-horizon queue item exists in the current near-term range.
+- `Near-Term Gap Horizon Queue / GAP-080` through `GAP-089` are complete on the current branch baseline (`GAP-080` through `GAP-084` verified on 2026-04-21; `GAP-085` through `GAP-089` verified on 2026-04-22).
+- No additional near-term execution-horizon queue is opened yet; new queue items must use ids beyond `GAP-089`.
 - Historical `GAP-018` through `GAP-044` remain completion history and dependency context.
 - The active lifecycle is now anchored by:
   - [Hybrid Final-State Master Outline](../architecture/hybrid-final-state-master-outline.md)

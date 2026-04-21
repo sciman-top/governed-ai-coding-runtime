@@ -21,9 +21,16 @@ class AdapterConformanceResult:
 
 
 def evaluate_codex_trial_conformance(payload: dict) -> AdapterConformanceResult:
+    return _evaluate_live_trial_conformance(payload, host_family="codex")
+
+
+def evaluate_claude_trial_conformance(payload: dict) -> AdapterConformanceResult:
+    return _evaluate_live_trial_conformance(payload, host_family="claude_code")
+
+
+def _evaluate_live_trial_conformance(payload: dict, *, host_family: str) -> AdapterConformanceResult:
     _require_object(payload, "codex trial payload")
     adapter_id = _required_string(payload.get("adapter_id"), "adapter_id")
-    host_family = "codex"
 
     checks: list[str] = []
     if not _non_empty_string(payload.get("session_id")):

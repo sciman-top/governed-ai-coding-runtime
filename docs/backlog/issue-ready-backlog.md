@@ -13,7 +13,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - non-goals remain non-goals: no enterprise org model, no marketplace, no default multi-agent orchestration, no memory-first product identity
 - governance-optimization lane `GAP-061` through `GAP-068` was the follow-on queue after `GAP-060` and is now complete on the current branch baseline (verified on 2026-04-20), while older lifecycle `GAP` entries remain completion history
 - post-closeout optimization queue `GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20) and does not reopen hybrid final-state closure
-- optimized best-state near-term gap horizon queue is complete on the current branch baseline, with `GAP-080` through `GAP-084` verified complete on 2026-04-21 and no remaining execution-horizon backlog from `NT-01..05` / `NTP-01..05`
+- optimized best-state near-term gap horizon queue `NTP-01..10` is complete on the current branch baseline (`GAP-080` through `GAP-084`, verified on 2026-04-21; `GAP-085` through `GAP-089`, verified on 2026-04-22)
 
 ## Current Baseline
 - PRD, architecture, ADRs, specs, runtime contract primitives, repo verifier entrypoints, sample repo profiles, and a runtime-consumable control pack already exist.
@@ -29,11 +29,11 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Direct-To-Hybrid-Final-State Mainline / GAP-046` through `GAP-060` are complete on the current branch baseline (verified on 2026-04-20).
 - `Governance Optimization Lane / GAP-061` through `GAP-068` are complete on the current branch baseline (verified on 2026-04-20).
 - `Post-Closeout Optimization Queue / GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20).
-- `Near-Term Gap Horizon Queue / GAP-080` through `GAP-084` are complete on the current branch baseline (verified on 2026-04-21); new near-term queue IDs start after `GAP-084` unless regressions reopen this range.
+- `Near-Term Gap Horizon Queue / GAP-080` through `GAP-089` are complete on the current branch baseline (`GAP-080` through `GAP-084` verified on 2026-04-21; `GAP-085` through `GAP-089` verified on 2026-04-22).
 
 ## Direct-To-Hybrid-Final-State Mainline
 
-The entries below record the executed queue for complete hybrid final-state and governance-optimization closure, plus the post-closeout optimization queue and the active near-term gap horizon queue. The historical lifecycle backlog remains below as completion history and dependency context.
+The entries below record the executed queue for complete hybrid final-state and governance-optimization closure, plus the post-closeout optimization queue and completed near-term gap horizon queue. The historical lifecycle backlog remains below as completion history and dependency context.
 
 ### Phase 0: Canonical Re-Baseline
 
@@ -544,6 +544,76 @@ The entries below record the executed queue for complete hybrid final-state and 
   - [x] CI fails when completion or capability claims outrun executable evidence
   - [x] stale closeout evidence is detected and flagged before release-facing claim updates
   - [x] claim exception paths remain time-bounded, reviewable, and rollback-linked
+
+### GAP-085 NTP-06 Deny-Loop Compression
+- Type: AFK
+- Blocked by: GAP-084
+- User stories: 11, 14, 27, 39, 45
+- Status: complete on current branch baseline (deny-certain preflight interception, deterministic remediation hints, and one-command retry linkage closed on 2026-04-22)
+- What to build:
+  - add preflight path-scope checks that detect deny-certain write requests before full flow execution
+  - emit deterministic remediation actions that point to minimal command or path adjustments
+  - add one-command retry path that reuses task identity and links denial-to-retry evidence
+- Acceptance criteria:
+  - [x] denied write attempts with deterministic path violations are intercepted preflight
+  - [x] remediation output includes exact next command and expected writable scope
+  - [x] denial and retry records stay linked in one runtime-owned evidence chain
+
+### GAP-086 NTP-07 Incremental Gate And Cache Pipeline
+- Type: AFK
+- Blocked by: GAP-085
+- User stories: 11, 12, 22, 36, 44
+- Status: complete on current branch baseline (incremental cache-hit gate reuse with fail-closed uncertainty behavior closed on 2026-04-22)
+- What to build:
+  - add changed-scope-aware gate planning so quick checks run first and full checks are conditional
+  - cache gate artifacts by repo state and gate mode to avoid repeating unchanged expensive checks
+  - keep cache invalidation explicit and fail-closed on uncertain state
+- Acceptance criteria:
+  - [x] `quick/l1` and `full/l3` gate routes are deterministic and evidence-backed
+  - [x] unchanged inputs can reuse cache entries without skipping required checks
+  - [x] cache uncertainty forces recompute rather than silent pass
+
+### GAP-087 NTP-08 Claude-Code First-Class Adapter Path
+- Type: HITL
+- Blocked by: GAP-086
+- User stories: 2, 20, 31, 37, 44
+- Status: complete on current branch baseline (Claude Code adapter parity and conformance-family linkage closed on 2026-04-22)
+- What to build:
+  - add a first-class non-Codex adapter path for Claude Code under the existing adapter registry and tier model
+  - preserve session identity and continuation linkage under the same conformance family used by Codex
+  - keep explicit degrade posture when live attach is unavailable
+- Acceptance criteria:
+  - [x] Claude-Code adapter path passes the same conformance gate family as Codex and generic fallback adapters
+  - [x] runtime evidence includes identity, gate, and handoff linkage parity fields
+  - [x] unsupported capabilities remain explicit and machine-readable
+
+### GAP-088 NTP-09 Repo-Map Context Precompile
+- Type: AFK
+- Blocked by: GAP-087
+- User stories: 13, 20, 31, 39, 44
+- Status: complete on current branch baseline (attachment-time context pack precompile plus status/query visibility closed on 2026-04-22)
+- What to build:
+  - compile attachment-time repo context packs (repo-map, hot files, dominant commands, failure signatures)
+  - expose context packs through runtime status and operator queries for session startup reuse
+  - keep context-pack provenance and refresh age visible in evidence
+- Acceptance criteria:
+  - [x] attached repos can emit a context pack without changing target-repo source-of-truth contracts
+  - [x] operator and status surfaces can read context-pack summary fields
+  - [x] stale context-pack data is detectable and refreshable
+
+### GAP-089 NTP-10 Runtime Speed KPI Baseline
+- Type: AFK
+- Blocked by: GAP-088
+- User stories: 13, 14, 15, 21, 44
+- Status: complete on current branch baseline (speed KPI schema + export snapshots + measured-window claim linkage closed on 2026-04-22)
+- What to build:
+  - define and persist speed KPI records for onboarding latency, first-pass latency, deny-to-success retries, fallback rate, and medium-risk loop success ratio
+  - add lightweight summary export for `target-repo-runs` to track trend windows
+  - enforce claim wording to reference measured windows instead of anecdotal speed claims
+- Acceptance criteria:
+  - [x] KPI payload schema and sample records are versioned and documented
+  - [x] summary export can produce latest and rolling-window KPI snapshots
+  - [x] speed-related claims are tied to measurable evidence snapshots
 
 ## Vision
 

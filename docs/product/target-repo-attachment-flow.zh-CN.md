@@ -72,6 +72,11 @@ attachment binding 指向 machine-local `runtime_state_root`，mutable state 放
 
 `RepoAttachmentBinding` 会拒绝放在目标仓内部的 runtime state。
 
+接入时还会在 machine-local runtime state 生成 context pack：
+- `context/context-pack.json`
+- 包含 repo-map hot files、dominant gate commands、recent failure signatures
+- 提供 `generated_at`、`age_seconds`、`is_stale`、`refresh_command` 供启动复用
+
 ## 验证失败条件
 - `repo_profile_ref` 逃出目标仓
 - `light_pack_path` 逃出目标仓
@@ -110,10 +115,14 @@ attachment posture：
 - `healthy`
 
 remediation 行为：
-- `missing_light_pack`：重新执行 `scripts/attach-target-repo.py attach ...`，补齐 light pack。
+- `missing_light_pack`：重新执行 `scripts/attach-target-repo.py ...`，补齐 light pack。
 - `invalid_light_pack`：通过 attach 流程重建 `.governed-ai/light-pack.json`。
 - `stale_binding`：重新 attach，刷新 `binding_id`。
 - `healthy`：无需 remediation。
+
+context-pack 新鲜度：
+- 当 `age_seconds > stale_after_seconds` 时标记 stale
+- 用 `python scripts/attach-target-repo.py --target-repo <target-repo-root> --runtime-state-root <machine-local-runtime-state-root> --overwrite` 刷新
 
 fail-closed 行为：
 - 当提供 attachment 参数时，doctor 遇到非 healthy posture 会输出 `FAIL attachment-posture-<state>` 并返回非零退出码。

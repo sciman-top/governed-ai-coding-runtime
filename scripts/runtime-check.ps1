@@ -266,6 +266,8 @@ $writeExecutePayload = $null
 $writeStatusPayload = $null
 $inspectEvidencePayload = $null
 $inspectHandoffPayload = $null
+$writePreflight = $null
+$nextActions = New-Object System.Collections.Generic.List[string]
 if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
   $resolvedWriteToolCommand = Build-WriteToolCommand -ToolName $WriteToolName -TargetPath $WriteTargetPath -Content $WriteContent -ExplicitCommand $WriteToolCommand
   if ([string]::IsNullOrWhiteSpace($RollbackReference)) {
@@ -301,8 +303,27 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
   if (-not $writeGovernancePayload) {
     $hasFailure = $true
   }
+  else {
+    $preflightBlocked = $false
+    if ($writeGovernancePayload.PSObject.Properties.Name -contains "preflight_blocked") {
+      $preflightBlocked = ($writeGovernancePayload.preflight_blocked -eq $true)
+    }
+    if ($preflightBlocked) {
+      $writePreflight = @{
+        blocked = $true
+        reason = $(if ($writeGovernancePayload.reason) { [string]$writeGovernancePayload.reason } else { "" })
+        remediation_hint = $(if ($writeGovernancePayload.remediation_hint) { [string]$writeGovernancePayload.remediation_hint } else { "" })
+        suggested_target_path = $(if ($writeGovernancePayload.suggested_target_path) { [string]$writeGovernancePayload.suggested_target_path } else { "" })
+        retry_command = $(if ($writeGovernancePayload.retry_command) { [string]$writeGovernancePayload.retry_command } else { "" })
+      }
+      if (-not [string]::IsNullOrWhiteSpace([string]$writePreflight.retry_command)) {
+        $nextActions.Add("retry within allowed scope: $([string]$writePreflight.retry_command)") | Out-Null
+      }
+    }
+  }
 
-  if ($ExecuteWriteFlow -and $writeGovernancePayload) {
+  $skipExecuteOnPreflight = ($null -ne $writePreflight -and $writePreflight.blocked -eq $true)
+  if ($ExecuteWriteFlow -and $writeGovernancePayload -and -not $skipExecuteOnPreflight) {
     $resolvedApprovalId = ""
     if ($writeGovernancePayload.approval_id) {
       $resolvedApprovalId = [string]$writeGovernancePayload.approval_id
@@ -443,6 +464,9 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
     elseif ($inspectHandoffPayload.payload) {
       $inspectHandoffPayload = $inspectHandoffPayload.payload
     }
+  }
+  elseif ($ExecuteWriteFlow -and $skipExecuteOnPreflight) {
+    $hasFailure = $true
   }
 }
 
@@ -600,11 +624,13 @@ $result = @{
   request_gate = $requestGatePayload
   verify_attachment = $verifyPayload
   write_governance = $writeGovernancePayload
+  write_preflight = $writePreflight
   write_approval = $writeApprovalPayload
   write_execute = $writeExecutePayload
   write_status = $writeStatusPayload
   inspect_evidence = $inspectEvidencePayload
   inspect_handoff = $inspectHandoffPayload
+  next_actions = @($nextActions)
   live_loop = $liveLoopSummary
   steps = $steps
 }
@@ -647,6 +673,18 @@ else {
     }
     if ($writeExecutePayload.replay_ref) {
       Write-Host ("Replay Ref: " + [string]$writeExecutePayload.replay_ref)
+    }
+  }
+  if ($writePreflight -and $writePreflight.blocked) {
+    Write-Host "Write Preflight: blocked"
+    if ($writePreflight.reason) {
+      Write-Host ("Write Reason: " + [string]$writePreflight.reason)
+    }
+    if ($writePreflight.remediation_hint) {
+      Write-Host ("Write Remediation: " + [string]$writePreflight.remediation_hint)
+    }
+    if ($writePreflight.retry_command) {
+      Write-Host ("Write Retry Command: " + [string]$writePreflight.retry_command)
     }
   }
   if ($liveLoopSummary) {

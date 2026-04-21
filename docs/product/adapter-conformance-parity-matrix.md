@@ -13,6 +13,7 @@ Both hosts are checked against the same minimum linkage gates:
 | host | adapter_id | conformance_status | parity_status | notes |
 |---|---|---|---|---|
 | Codex live probe | `codex-cli` | `pass` | `supported` | `flow_kind=live_attach`, `unsupported_capability_behavior=none`, runtime-owned evidence/handoff refs persisted |
+| Claude Code baseline | `claude-code` | `pass` | `degraded` | first-class adapter contract exists; shared conformance gate family validates identity+linkage under non-live baseline |
 | Generic process fallback | `generic.process.cli` | `pass` | `degraded` | runtime-check fallback explicit (`flow_kind=manual_handoff`, `closure_state=fallback_explicit`), identity+verification+adapter-event linkage preserved |
 | Broken fixture (test-only) | `broken.adapter` | `fail` | `blocked` | missing required identity/linkage fields fails gate family |
 

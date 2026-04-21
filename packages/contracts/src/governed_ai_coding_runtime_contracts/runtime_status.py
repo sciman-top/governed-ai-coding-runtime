@@ -36,6 +36,7 @@ class RuntimeAttachmentStatus:
     reason: str | None
     remediation: str | None
     fail_closed: bool
+    context_pack_summary: dict | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -181,6 +182,7 @@ class RuntimeStatusStore:
                     reason=posture.reason,
                     remediation=posture.remediation,
                     fail_closed=posture.fail_closed,
+                    context_pack_summary=posture.context_pack_summary,
                 )
             )
         return statuses
@@ -222,6 +224,7 @@ def _runtime_attachment_status_from_dict(raw: dict) -> RuntimeAttachmentStatus:
         reason=_optional_string(raw.get("reason"), "reason"),
         remediation=_optional_string(raw.get("remediation"), "remediation"),
         fail_closed=fail_closed,
+        context_pack_summary=_optional_object(raw.get("context_pack_summary"), "context_pack_summary"),
     )
 
 
@@ -243,3 +246,12 @@ def _required_string_list(value: object, field_name: str) -> list[str]:
         msg = f"{field_name} must be a list"
         raise ValueError(msg)
     return [_required_string(item, field_name) for item in value]
+
+
+def _optional_object(value: object, field_name: str) -> dict | None:
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        msg = f"{field_name} must be an object"
+        raise ValueError(msg)
+    return dict(value)

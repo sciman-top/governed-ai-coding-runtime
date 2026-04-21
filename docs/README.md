@@ -59,7 +59,8 @@
 - `Direct-To-Hybrid-Final-State Mainline / GAP-046` through `GAP-060` are complete on the current branch baseline (verified on 2026-04-20).
 - `Governance Optimization Lane / GAP-061` through `GAP-068` are complete on the current branch baseline (verified on 2026-04-20).
 - `Post-Closeout Optimization Queue / GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20).
-- `Near-Term Gap Horizon Queue / GAP-080` and `GAP-081` are complete on the current branch baseline (verified on 2026-04-21), and `GAP-082` through `GAP-084` remain the active execution-horizon queue from the optimized best-state package.
+- `Near-Term Gap Horizon Queue / GAP-080` through `GAP-089` are complete on the current branch baseline (`GAP-080` through `GAP-084` verified on 2026-04-21; `GAP-085` through `GAP-089` verified on 2026-04-22).
+- New execution-horizon queue items must use ids beyond `GAP-089`.
 - Active verification for this repo remains `build -> test -> contract/invariant -> doctor`, with docs and script checks still included in `verify-repo -Check All`.
 - `docs/change-evidence/` remains historical evidence and planning trace, not the primary user-facing product surface.
 

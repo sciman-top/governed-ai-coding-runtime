@@ -93,6 +93,11 @@ from governed_ai_coding_runtime_contracts.adapter_conformance import (
     evaluate_codex_trial_conformance,
     evaluate_runtime_check_conformance,
 )
+from governed_ai_coding_runtime_contracts.target_repo_speed_kpi import (
+    TargetRepoSpeedKpiRecord,
+    TargetRepoSpeedKpiSnapshot,
+    export_target_repo_speed_kpi,
+)
 
 __all__ = [
     "PolicyDecision",
@@ -115,6 +120,8 @@ __all__ = [
     "AttachedApprovalDecisionResult",
     "AttachedWriteExecutionResult",
     "AdapterConformanceResult",
+    "TargetRepoSpeedKpiRecord",
+    "TargetRepoSpeedKpiSnapshot",
     "RepoAttachmentBinding",
     "RepoAttachmentPosture",
     "RepoAttachmentResult",
@@ -162,6 +169,7 @@ __all__ = [
     "evaluate_codex_trial_conformance",
     "evaluate_runtime_check_conformance",
     "build_parity_matrix",
+    "export_target_repo_speed_kpi",
     "govern_attached_write_request",
     "decide_attached_write_request",
     "execute_attached_write_request",

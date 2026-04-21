@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/target-repo-speed-kpi.schema.json",
+  "title": "Target Repo Speed KPI",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "generated_at",
+    "window_kind",
+    "window_size",
+    "record_count",
+    "records"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "window_kind": {
+      "type": "string",
+      "enum": [
+        "latest",
+        "rolling"
+      ]
+    },
+    "window_size": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "record_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "target",
+          "total_daily_runs",
+          "onboarding_latency_seconds",
+          "first_pass_latency_seconds",
+          "deny_to_success_retries",
+          "fallback_rate",
+          "medium_risk_loop_success_ratio",
+          "window_start_utc",
+          "window_end_utc",
+          "latest_evidence_ref"
+        ],
+        "properties": {
+          "target": {
+            "type": "string"
+          },
+          "total_daily_runs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "onboarding_latency_seconds": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "first_pass_latency_seconds": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "deny_to_success_retries": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "fallback_rate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "medium_risk_loop_success_ratio": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 1
+          },
+          "window_start_utc": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "window_end_utc": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "latest_evidence_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

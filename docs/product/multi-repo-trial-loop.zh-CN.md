@@ -42,13 +42,17 @@ trial records 应回链到：
 - `insufficient`
 
 ## 当前边界
-- 这个模型记录的是 trial evidence
-- 它本身还不会执行 multi-repo trial
-- runner 和 onboarding kit 属于后续任务
+- trial runner 已支持 attached-repo execution loop
+- 每个 attachment 可执行 `doctor/posture -> verification -> handoff` 聚合
+- 可选 write probe 可用于测量 approval friction 和 write-path readiness
+- profile-only summary 仍保留为兼容路径
+- 可通过 `python scripts/export-target-repo-speed-kpi.py` 从 `docs/change-evidence/target-repo-runs` 导出 speed KPI 快照
+- speed 相关对外表述必须引用 `kpi-latest.json` 或 `kpi-rolling.json` 的 measured window，不能使用 anecdotal 体感描述
 
 ## Related
 - [Evidence Bundle Spec](../specs/evidence-bundle-spec.md)
 - [Eval And Trace Grading Spec](../specs/eval-and-trace-grading-spec.md)
+- [Target Repo Speed KPI Spec](../specs/target-repo-speed-kpi-spec.md)
 - [Target Repo 接入流程](./target-repo-attachment-flow.zh-CN.md)
 - [Adapter Capability Tiers](./adapter-capability-tiers.md)
 - [English Version](./multi-repo-trial-loop.md)

@@ -16,6 +16,8 @@ param(
   [string]$CommandId = ("cmd-" + (Get-Date -Format "yyyyMMddHHmmss")),
   [string]$RepoBindingId = "",
   [string]$AdapterId = "codex-cli",
+  [ValidateSet("native_attach", "process_bridge", "manual_handoff")]
+  [string]$AdapterPreference = "native_attach",
 
   [string]$WriteTargetPath = "",
   [ValidateSet("low", "medium", "high")]
@@ -130,7 +132,7 @@ if ($FlowMode -eq "onboard") {
     "-BuildCommand", $targetConfig.BuildCommand,
     "-TestCommand", $targetConfig.TestCommand,
     "-ContractCommand", $targetConfig.ContractCommand,
-    "-AdapterPreference", "native_attach"
+    "-AdapterPreference", $AdapterPreference
   )
   if ($Overwrite) {
     $flowArgs += "-Overwrite"

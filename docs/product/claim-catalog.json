@@ -64,6 +64,22 @@
           "contains": "验收链统一执行：`build -> test -> contract/invariant -> hotspot` 由 runtime-managed gate 流统一执行，降低漏检。"
         }
       ]
+    },
+    {
+      "claim_id": "CLM-005",
+      "claim_text": "Speed posture claims are evidence-window based and cite KPI snapshots (`latest` or `rolling`) instead of anecdotal impressions.",
+      "proof_command": "python scripts/export-target-repo-speed-kpi.py --runs-root docs/change-evidence/target-repo-runs --window-kind rolling --window-size 5",
+      "evidence_link": "docs/change-evidence/20260421-gap-088-089-context-pack-and-speed-kpi-baseline.md",
+      "source_refs": [
+        {
+          "path": "docs/product/multi-repo-trial-loop.md",
+          "contains": "speed claims must cite measured windows from `kpi-latest.json` or `kpi-rolling.json`, not anecdotal runtime impressions"
+        },
+        {
+          "path": "docs/product/multi-repo-trial-loop.zh-CN.md",
+          "contains": "speed 相关对外表述必须引用 `kpi-latest.json` 或 `kpi-rolling.json` 的 measured window，不能使用 anecdotal 体感描述"
+        }
+      ]
     }
   ]
 }

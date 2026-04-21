@@ -1,4 +1,4 @@
-schema_catalog_version: "1.7"
+schema_catalog_version: "1.8"
 items:
   - name: control-registry
     path: schemas/jsonschema/control-registry.schema.json
@@ -69,3 +69,6 @@ items:
   - name: controlled-improvement-proposal
     path: schemas/jsonschema/controlled-improvement-proposal.schema.json
     source_spec: docs/specs/controlled-improvement-proposal-spec.md
+  - name: target-repo-speed-kpi
+    path: schemas/jsonschema/target-repo-speed-kpi.schema.json
+    source_spec: docs/specs/target-repo-speed-kpi-spec.md

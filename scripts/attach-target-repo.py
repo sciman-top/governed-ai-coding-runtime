@@ -128,6 +128,7 @@ def main() -> int:
                 "repo_profile_path": result.repo_profile_path,
                 "light_pack_path": result.light_pack_path,
                 "written_files": result.written_files,
+                "context_pack_summary": result.context_pack_summary,
                 "gate_command_source": gate_command_source,
                 "inferred_gate_defaults_used": gate_command_source == "inferred_defaults",
             },

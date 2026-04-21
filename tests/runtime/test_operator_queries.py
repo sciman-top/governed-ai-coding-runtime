@@ -110,6 +110,8 @@ class OperatorQueryTests(unittest.TestCase):
             self.assertIn("artifacts/task-operator/run-1/handoff/package.json", result.handoff_refs)
             self.assertIn("artifacts/task-operator/run-1/replay/write-flow.json", result.replay_refs)
             self.assertEqual(result.posture_summary.binding_state, "healthy")
+            self.assertIsNotNone(result.posture_summary.context_pack_summary)
+            self.assertTrue(result.posture_summary.context_pack_summary["exists"])
             self.assertTrue(result.read_only)
 
     def test_attachment_scoped_query_keeps_read_surface_when_task_missing(self) -> None:

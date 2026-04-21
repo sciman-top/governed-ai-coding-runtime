@@ -1,6 +1,7 @@
 """Verification runner plans and evidence artifacts."""
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
+import hashlib
 from typing import Callable
 from typing import Literal
 from typing import cast
@@ -40,6 +41,7 @@ class VerificationArtifact:
     result_artifact_refs: dict[str, str]
     escalation_conditions: list[str]
     risky_artifact_refs: list[str]
+    cache_hits: dict[str, bool] = field(default_factory=dict)
 
 
 def verification_artifact_to_dict(artifact: VerificationArtifact) -> dict:
@@ -57,6 +59,14 @@ def verification_artifact_from_dict(raw: dict) -> VerificationArtifact:
     evidence_link = _required_string(raw.get("evidence_link"), "evidence_link")
     results = _required_string_map(raw.get("results"), "results")
     result_artifact_refs = _required_string_map(raw.get("result_artifact_refs"), "result_artifact_refs")
+    cache_hits_raw = raw.get("cache_hits")
+    cache_hits: dict[str, bool] = {}
+    if cache_hits_raw is not None:
+        if not isinstance(cache_hits_raw, dict):
+            msg = "cache_hits must be an object when provided"
+            raise ValueError(msg)
+        for key, value in cache_hits_raw.items():
+            cache_hits[_required_string(key, "cache_hits")] = bool(value)
     escalation_conditions = _required_string_list(raw.get("escalation_conditions"), "escalation_conditions")
     risky_artifact_refs = _required_string_list(raw.get("risky_artifact_refs"), "risky_artifact_refs")
     return VerificationArtifact(
@@ -67,6 +77,7 @@ def verification_artifact_from_dict(raw: dict) -> VerificationArtifact:
         evidence_link=evidence_link,
         results=results,
         result_artifact_refs=result_artifact_refs,
+        cache_hits=cache_hits,
         escalation_conditions=escalation_conditions,
         risky_artifact_refs=risky_artifact_refs,
     )
@@ -186,6 +197,7 @@ def build_verification_artifact(
     evidence_link: str,
     results: dict[str, str],
     result_artifact_refs: dict[str, str] | None = None,
+    cache_hits: dict[str, bool] | None = None,
     risky_artifact_refs: list[str] | None = None,
 ) -> VerificationArtifact:
     if not evidence_link.strip():
@@ -199,6 +211,7 @@ def build_verification_artifact(
         evidence_link=evidence_link,
         results=results,
         result_artifact_refs=result_artifact_refs or {},
+        cache_hits=cache_hits or {},
         escalation_conditions=plan.escalation_conditions,
         risky_artifact_refs=risky_artifact_refs or [],
     )
@@ -210,6 +223,8 @@ def run_verification_plan(
     artifact_store: LocalArtifactStore,
     execute_gate: Callable[[VerificationGate], tuple[int, str]],
     metadata_store: object | None = None,
+    cache_store: object | None = None,
+    cache_scope_key: str | None = None,
 ) -> VerificationArtifact:
     if not plan.task_id or not plan.run_id:
         msg = "task_id and run_id are required to run verification"
@@ -217,16 +232,37 @@ def run_verification_plan(
 
     results: dict[str, str] = {}
     result_artifact_refs: dict[str, str] = {}
+    cache_hits: dict[str, bool] = {}
     risky_artifact_refs: list[str] = []
 
     for gate in plan.gates:
-        exit_code, output = execute_gate(gate)
+        cache_key = _verification_cache_key(
+            mode=plan.mode,
+            gate_id=gate.gate_id,
+            command=gate.command,
+            scope_key=cache_scope_key,
+        )
+        cached = _cache_get(cache_store, cache_key)
+        cache_hit = False
+        if isinstance(cached, dict):
+            cached_exit = cached.get("exit_code")
+            cached_output = cached.get("output")
+            if isinstance(cached_exit, int) and isinstance(cached_output, str):
+                exit_code, output = cached_exit, cached_output
+                cache_hit = True
+            else:
+                exit_code, output = execute_gate(gate)
+        else:
+            exit_code, output = execute_gate(gate)
+        _cache_put(cache_store, cache_key, {"exit_code": int(exit_code), "output": str(output)})
+        cache_hits[gate.gate_id] = cache_hit
+        content = output if not cache_hit else f"[cache-hit]\n{output}"
         artifact = artifact_store.write_text(
             task_id=plan.task_id,
             run_id=plan.run_id,
             kind="verification-output",
             label=gate.gate_id,
-            content=output,
+            content=content,
         )
         result_artifact_refs[gate.gate_id] = artifact.relative_path
         if artifact.risky:
@@ -243,6 +279,7 @@ def run_verification_plan(
                 "mode": plan.mode,
                 "results": results,
                 "result_artifact_refs": result_artifact_refs,
+                "cache_hits": cache_hits,
             },
         )
 
@@ -251,8 +288,36 @@ def run_verification_plan(
         evidence_link=result_artifact_refs[plan.gates[-1].gate_id],
         results=results,
         result_artifact_refs=result_artifact_refs,
+        cache_hits=cache_hits,
         risky_artifact_refs=risky_artifact_refs,
     )
+
+
+def _verification_cache_key(*, mode: str, gate_id: str, command: str, scope_key: str | None) -> str:
+    seed = f"{mode}|{gate_id}|{command.strip()}|{scope_key or 'default'}"
+    return hashlib.sha256(seed.encode("utf-8")).hexdigest()
+
+
+def _cache_get(cache_store: object | None, key: str) -> dict | None:
+    if cache_store is None or not hasattr(cache_store, "get"):
+        return None
+    try:
+        value = cache_store.get(namespace="verification_cache", key=key)
+    except TypeError:
+        value = cache_store.get(key)
+    if isinstance(value, dict):
+        return value
+    return None
+
+
+def _cache_put(cache_store: object | None, key: str, payload: dict) -> None:
+    if cache_store is None:
+        return
+    if hasattr(cache_store, "upsert"):
+        cache_store.upsert(namespace="verification_cache", key=key, payload=payload)
+        return
+    if hasattr(cache_store, "set"):
+        cache_store.set(key, payload)
 
 
 def _gates_from_repo_profile(raw: dict, *, mode: str) -> list[VerificationGate]:

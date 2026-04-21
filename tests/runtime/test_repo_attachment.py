@@ -195,10 +195,15 @@ class RepoAttachmentBindingTests(unittest.TestCase):
             self.assertEqual(result.operation, "created")
             self.assertTrue(profile_path.exists())
             self.assertTrue(light_pack_path.exists())
+            context_pack_path = runtime_root / "context" / "context-pack.json"
+            self.assertTrue(context_pack_path.exists())
             self.assertFalse((repo_root / ".runtime").exists())
             self.assertEqual(Path(result.binding.light_pack_path), light_pack_path.resolve())
             self.assertEqual(Path(result.binding.runtime_state_root), runtime_root.resolve())
             self.assertFalse(self._is_under(Path(result.binding.runtime_state_root), repo_root))
+            self.assertIsNotNone(result.context_pack_summary)
+            self.assertEqual(Path(result.context_pack_summary["context_pack_path"]), context_pack_path.resolve())
+            self.assertFalse(result.context_pack_summary["is_stale"])
 
             light_pack = json.loads(light_pack_path.read_text(encoding="utf-8"))
             self.assertEqual(light_pack["pack_kind"], "repo_attachment_light_pack")
@@ -262,6 +267,8 @@ class RepoAttachmentBindingTests(unittest.TestCase):
             self.assertEqual(result.operation, "validated")
             self.assertEqual((governed_dir / "light-pack.json").read_text(encoding="utf-8"), original_light_pack)
             self.assertEqual(result.binding.binding_id, "binding-existing-target")
+            self.assertIsNotNone(result.context_pack_summary)
+            self.assertTrue(result.context_pack_summary["exists"])
 
     def test_validate_light_pack_rejects_repo_profile_ref_outside_target_repo(self) -> None:
         module = self._module()
@@ -328,6 +335,11 @@ class RepoAttachmentBindingTests(unittest.TestCase):
             self.assertEqual(missing_posture.binding_state, "missing_light_pack")
             self.assertTrue(missing_posture.fail_closed)
             self.assertIn("attach-target-repo.py", missing_posture.remediation)
+            self.assertIsNotNone(missing_posture.context_pack_summary)
+            self.assertTrue(missing_posture.context_pack_summary["is_stale"])
+            self.assertIn("--target-repo ", missing_posture.remediation)
+            self.assertNotIn("--target-repo-root", missing_posture.remediation)
+            self.assertNotIn(" attach --target-repo ", missing_posture.remediation)
 
             invalid_root = root / "invalid"
             (invalid_root / ".governed-ai").mkdir(parents=True)
@@ -342,6 +354,9 @@ class RepoAttachmentBindingTests(unittest.TestCase):
             self.assertEqual(invalid_posture.binding_state, "invalid_light_pack")
             self.assertTrue(invalid_posture.fail_closed)
             self.assertIn("attach-target-repo.py", invalid_posture.remediation)
+            self.assertIn("--target-repo ", invalid_posture.remediation)
+            self.assertNotIn("--target-repo-root", invalid_posture.remediation)
+            self.assertNotIn(" attach --target-repo ", invalid_posture.remediation)
 
             stale_root = root / "stale"
             stale_root.mkdir()
@@ -366,6 +381,9 @@ class RepoAttachmentBindingTests(unittest.TestCase):
             self.assertEqual(stale_posture.binding_state, "stale_binding")
             self.assertTrue(stale_posture.fail_closed)
             self.assertIn("attach-target-repo.py", stale_posture.remediation)
+            self.assertIn("--target-repo ", stale_posture.remediation)
+            self.assertNotIn("--target-repo-root", stale_posture.remediation)
+            self.assertNotIn(" attach --target-repo ", stale_posture.remediation)
 
             healthy_root = root / "healthy"
             healthy_root.mkdir()
@@ -386,6 +404,39 @@ class RepoAttachmentBindingTests(unittest.TestCase):
             self.assertEqual(healthy_posture.binding_state, "healthy")
             self.assertFalse(healthy_posture.fail_closed)
             self.assertIsNone(healthy_posture.remediation)
+            self.assertIsNotNone(healthy_posture.context_pack_summary)
+            self.assertTrue(healthy_posture.context_pack_summary["exists"])
+            self.assertFalse(healthy_posture.context_pack_summary["is_stale"])
+
+    def test_attachment_context_pack_staleness_is_detectable(self) -> None:
+        module = self._module()
+        with tempfile.TemporaryDirectory() as workspace:
+            root = Path(workspace)
+            target_root = root / "stale-context"
+            runtime_root = root / "runtime-state" / "stale-context"
+            target_root.mkdir()
+            module.attach_target_repo(
+                target_repo_root=str(target_root),
+                runtime_state_root=str(runtime_root),
+                repo_id="stale-context",
+                display_name="Stale Context",
+                primary_language="python",
+                build_command="python -m compileall src",
+                test_command="python -m unittest discover",
+                contract_command="python -m unittest discover -s tests/contracts",
+            )
+
+            context_pack_path = runtime_root / "context" / "context-pack.json"
+            context_pack = json.loads(context_pack_path.read_text(encoding="utf-8"))
+            context_pack["generated_at"] = "2001-01-01T00:00:00+00:00"
+            context_pack_path.write_text(json.dumps(context_pack, indent=2, sort_keys=True), encoding="utf-8")
+
+            posture = module.inspect_attachment_posture(
+                target_repo_root=str(target_root),
+                runtime_state_root=str(runtime_root),
+            )
+            self.assertTrue(posture.context_pack_summary["is_stale"])
+            self.assertIn("attach-target-repo.py", posture.context_pack_summary["refresh_command"])
 
     def test_attach_target_repo_cli_help(self) -> None:
         completed = subprocess.run(
@@ -427,6 +478,8 @@ class RepoAttachmentBindingTests(unittest.TestCase):
             payload = json.loads(completed.stdout)
             self.assertEqual(payload["gate_command_source"], "inferred_defaults")
             self.assertTrue(payload["inferred_gate_defaults_used"])
+            self.assertIsInstance(payload["context_pack_summary"], dict)
+            self.assertTrue(payload["context_pack_summary"]["exists"])
 
             profile = json.loads((repo_root / ".governed-ai" / "repo-profile.json").read_text(encoding="utf-8"))
             self.assertEqual(profile["build_commands"][0]["command"], "python -m compileall src")

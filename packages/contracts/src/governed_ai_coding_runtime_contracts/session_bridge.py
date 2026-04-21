@@ -475,6 +475,21 @@ def handle_session_bridge_command(
                 "handoff_ref": None,
                 "replay_ref": None,
                 "reason": governance.reason,
+                "preflight_blocked": governance.preflight_blocked,
+                "remediation_hint": governance.remediation_hint,
+                "suggested_target_path": governance.suggested_target_path,
+                "allowed_write_scopes": list(governance.allowed_write_scopes),
+                "retry_command": _build_write_retry_command(
+                    command=command,
+                    attachment_root=attachment_root,
+                    attachment_runtime_state_root=attachment_runtime_state_root,
+                    tool_name=tool_name,
+                    target_path=governance.suggested_target_path,
+                    tier=governance.write_tier,
+                    rollback_reference=_payload_required_string(command.payload, "rollback_reference"),
+                )
+                if governance.preflight_blocked
+                else None,
             },
             policy_decision_ref=governance.policy_decision.evidence_ref,
         )
@@ -1496,6 +1511,46 @@ def _persist_tool_approval_request(
                 payload[field_name] = value.strip()
     record_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
     return record_path.as_posix()
+
+
+def _build_write_retry_command(
+    *,
+    command: SessionBridgeCommand,
+    attachment_root: str | Path | None,
+    attachment_runtime_state_root: str | Path | None,
+    tool_name: str,
+    target_path: str | None,
+    tier: str,
+    rollback_reference: str,
+) -> str | None:
+    if attachment_root is None or attachment_runtime_state_root is None:
+        return None
+    if not isinstance(target_path, str) or not target_path.strip():
+        return None
+    session_id = _payload_optional_string(command.payload, "session_id")
+    resume_id = _payload_optional_string(command.payload, "resume_id")
+    continuation_id = _payload_optional_string(command.payload, "continuation_id")
+    parts = [
+        "python scripts/session-bridge.py write-request",
+        f"--command-id {command.command_id}-retry",
+        f"--task-id {command.task_id}",
+        f"--repo-binding-id {command.repo_binding_id}",
+        f"--adapter-id {command.adapter_id}",
+        f"--risk-tier {tier}",
+        f"--attachment-root \"{str(attachment_root)}\"",
+        f"--attachment-runtime-state-root \"{str(attachment_runtime_state_root)}\"",
+        f"--tool-name {tool_name}",
+        f"--target-path \"{target_path}\"",
+        f"--tier {tier}",
+        f"--rollback-reference \"{rollback_reference}\"",
+    ]
+    if session_id:
+        parts.append(f"--session-id {session_id}")
+    if resume_id:
+        parts.append(f"--resume-id {resume_id}")
+    if continuation_id:
+        parts.append(f"--continuation-id {continuation_id}")
+    return " ".join(parts)
 
 
 def _tool_approval_status(

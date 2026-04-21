@@ -356,6 +356,28 @@ def project_codex_profile_to_adapter_contract(profile: object) -> AdapterContrac
     )
 
 
+def build_claude_code_contract(*, adapter_tier: AdapterTier = "process_bridge") -> AdapterContract:
+    tier = _required_tier(adapter_tier)
+    unsupported_behavior = "degrade_to_process_bridge"
+    if tier == "process_bridge":
+        unsupported_behavior = "degrade_to_process_bridge"
+    elif tier == "manual_handoff":
+        unsupported_behavior = "degrade_to_manual_handoff"
+    return build_adapter_contract(
+        adapter_id="claude-code",
+        display_name="Claude Code",
+        product_family="claude_code",
+        adapter_tier=tier,
+        auth_ownership="user_owned_upstream_auth",
+        workspace_control="external_workspace",
+        event_visibility="logs_only",
+        mutation_model="direct_workspace_write",
+        continuation_model="manual",
+        evidence_model="command_log",
+        unsupported_capability_behavior=unsupported_behavior,
+    )
+
+
 def _default_supported_governance_modes(tier: AdapterTier) -> list[str]:
     if tier == "native_attach":
         return ["advisory", "enforced", "strict"]

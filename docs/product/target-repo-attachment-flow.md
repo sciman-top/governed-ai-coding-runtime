@@ -75,6 +75,11 @@ The attachment binding points at a machine-local `runtime_state_root`. The runti
 
 The `RepoAttachmentBinding` contract rejects runtime state roots inside the target repository.
 
+Attachment-time context pack is also written to machine-local runtime state:
+- `context/context-pack.json`
+- includes repo-map hot files, dominant gate commands, and recent failure signatures
+- exposes `generated_at`, `age_seconds`, `is_stale`, and `refresh_command` for startup reuse
+
 ## Validation Rules
 Attachment validation fails when:
 - `repo_profile_ref` resolves outside the target repository
@@ -119,10 +124,14 @@ Attachment posture values:
 - `healthy`
 
 Remediation behavior:
-- `missing_light_pack`: re-run `scripts/attach-target-repo.py attach ...` for the target repo and runtime-state root.
+- `missing_light_pack`: re-run `scripts/attach-target-repo.py ...` for the target repo and runtime-state root.
 - `invalid_light_pack`: regenerate `.governed-ai/light-pack.json` via the attach flow.
 - `stale_binding`: re-run attach flow to refresh `binding_id`.
 - `healthy`: no remediation required.
+
+Context-pack freshness:
+- stale context-pack data is reported when `age_seconds > stale_after_seconds`
+- refresh via `python scripts/attach-target-repo.py --target-repo <target-repo-root> --runtime-state-root <machine-local-runtime-state-root> --overwrite`
 
 Fail-closed behavior:
 - doctor reports unhealthy posture as `FAIL attachment-posture-<state>` and exits non-zero when attachment arguments are provided.

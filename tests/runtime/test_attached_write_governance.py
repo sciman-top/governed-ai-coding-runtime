@@ -70,6 +70,10 @@ class AttachedWriteGovernanceTests(unittest.TestCase):
         self.assertEqual(result.governance_status, "denied")
         self.assertEqual(result.policy_decision.status, "deny")
         self.assertIn("outside allowed scopes", result.reason or "")
+        self.assertTrue(result.preflight_blocked)
+        self.assertTrue(result.remediation_hint)
+        self.assertEqual(result.allowed_write_scopes, ("src/**", "tests/**", "docs/**"))
+        self.assertTrue(result.suggested_target_path)
 
     def _attached_target(self) -> tuple[Path, Path]:
         repo_attachment = importlib.import_module("governed_ai_coding_runtime_contracts.repo_attachment")

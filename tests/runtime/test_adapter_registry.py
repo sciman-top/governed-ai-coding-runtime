@@ -86,6 +86,16 @@ class AdapterRegistryTests(unittest.TestCase):
         self.assertEqual(contract.auth_ownership, "user_owned_upstream_auth")
         self.assertEqual(contract.unsupported_capability_behavior, "degrade_to_process_bridge")
 
+    def test_claude_code_contract_is_available_as_first_class_adapter(self) -> None:
+        adapter_registry = importlib.import_module("governed_ai_coding_runtime_contracts.adapter_registry")
+
+        contract = adapter_registry.build_claude_code_contract(adapter_tier="process_bridge")
+
+        self.assertEqual(contract.adapter_id, "claude-code")
+        self.assertEqual(contract.product_family, "claude_code")
+        self.assertEqual(contract.adapter_tier, "process_bridge")
+        self.assertIn("session_bridge", contract.minimum_required_runtime_controls)
+
     def test_agent_adapter_examples_cover_process_bridge_and_manual_handoff(self) -> None:
         manual_path = ROOT / "schemas" / "examples" / "agent-adapter-contract" / "manual-handoff.example.json"
         process_path = ROOT / "schemas" / "examples" / "agent-adapter-contract" / "process-bridge.example.json"

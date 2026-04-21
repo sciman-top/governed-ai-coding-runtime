@@ -160,6 +160,9 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             self.assertIn("REMEDIATE", missing_completed.stdout)
             self.assertIn("REMEDIATE-ACTION", missing_completed.stdout)
             self.assertIn("scripts/attach-target-repo.py", missing_completed.stdout)
+            self.assertIn("--target-repo", missing_completed.stdout)
+            self.assertNotIn("--target-repo-root", missing_completed.stdout)
+            self.assertNotIn("attach --target-repo", missing_completed.stdout)
             self.assertIn("REMEDIATE-EVIDENCE", missing_completed.stdout)
             self.assertTrue((workspace / "state" / "missing" / "doctor" / "latest-remediation.json").exists())
 
@@ -195,6 +198,9 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             self.assertIn("REMEDIATE", invalid_completed.stdout)
             self.assertIn("REMEDIATE-ACTION", invalid_completed.stdout)
             self.assertIn("scripts/attach-target-repo.py", invalid_completed.stdout)
+            self.assertIn("--target-repo", invalid_completed.stdout)
+            self.assertNotIn("--target-repo-root", invalid_completed.stdout)
+            self.assertNotIn("attach --target-repo", invalid_completed.stdout)
             self.assertIn("REMEDIATE-EVIDENCE", invalid_completed.stdout)
             self.assertTrue((workspace / "state" / "invalid" / "doctor" / "latest-remediation.json").exists())
 
@@ -222,6 +228,9 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             self.assertIn("REMEDIATE", stale_completed.stdout)
             self.assertIn("REMEDIATE-ACTION", stale_completed.stdout)
             self.assertIn("scripts/attach-target-repo.py", stale_completed.stdout)
+            self.assertIn("--target-repo", stale_completed.stdout)
+            self.assertNotIn("--target-repo-root", stale_completed.stdout)
+            self.assertNotIn("attach --target-repo", stale_completed.stdout)
             self.assertIn("REMEDIATE-EVIDENCE", stale_completed.stdout)
             self.assertTrue((workspace / "state" / "stale" / "doctor" / "latest-remediation.json").exists())
 

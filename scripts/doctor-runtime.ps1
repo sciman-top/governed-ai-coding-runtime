@@ -23,19 +23,19 @@ function Resolve-AttachmentRemediationActions {
   switch ($BindingState) {
     "missing-light-pack" {
       return @(
-        "python scripts/attach-target-repo.py --target-repo-root $quotedAttachmentRoot --runtime-state-root $quotedRuntimeStateRoot --repo-id <repo-id> --display-name <display-name> --primary-language <language> --build-command <build> --test-command <test> --contract-command <contract>",
+        "python scripts/attach-target-repo.py --target-repo $quotedAttachmentRoot --runtime-state-root $quotedRuntimeStateRoot --repo-id <repo-id> --display-name <display-name> --primary-language <language> --build-command <build> --test-command <test> --contract-command <contract>",
         "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1 -AttachmentRoot $quotedAttachmentRoot -RuntimeStateRoot $quotedRuntimeStateRoot"
       )
     }
     "invalid-light-pack" {
       return @(
-        "python scripts/attach-target-repo.py --target-repo-root $quotedAttachmentRoot --runtime-state-root $quotedRuntimeStateRoot --repo-id <repo-id> --display-name <display-name> --primary-language <language> --build-command <build> --test-command <test> --contract-command <contract>",
+        "python scripts/attach-target-repo.py --target-repo $quotedAttachmentRoot --runtime-state-root $quotedRuntimeStateRoot --repo-id <repo-id> --display-name <display-name> --primary-language <language> --build-command <build> --test-command <test> --contract-command <contract>",
         "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1 -AttachmentRoot $quotedAttachmentRoot -RuntimeStateRoot $quotedRuntimeStateRoot"
       )
     }
     "stale-binding" {
       return @(
-        "python scripts/attach-target-repo.py --target-repo-root $quotedAttachmentRoot --runtime-state-root $quotedRuntimeStateRoot --repo-id <repo-id> --display-name <display-name> --primary-language <language> --build-command <build> --test-command <test> --contract-command <contract>",
+        "python scripts/attach-target-repo.py --target-repo $quotedAttachmentRoot --runtime-state-root $quotedRuntimeStateRoot --repo-id <repo-id> --display-name <display-name> --primary-language <language> --build-command <build> --test-command <test> --contract-command <contract>",
         "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1 -AttachmentRoot $quotedAttachmentRoot -RuntimeStateRoot $quotedRuntimeStateRoot"
       )
     }

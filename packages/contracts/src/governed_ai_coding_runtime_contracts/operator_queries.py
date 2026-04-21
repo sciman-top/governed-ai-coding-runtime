@@ -20,6 +20,7 @@ class OperatorPostureSummary:
     reason: str | None
     remediation: str | None
     fail_closed: bool
+    context_pack_summary: dict | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -137,6 +138,7 @@ def _posture_summary(
         reason=posture.reason,
         remediation=posture.remediation,
         fail_closed=posture.fail_closed,
+        context_pack_summary=posture.context_pack_summary,
     )
 
 

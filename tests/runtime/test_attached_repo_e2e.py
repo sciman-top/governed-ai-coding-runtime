@@ -244,6 +244,74 @@ class AttachedRepoE2ETests(unittest.TestCase):
             self.assertEqual(payload["summary"]["flow_kind"], payload["live_loop"]["flow_kind"])
             self.assertEqual((target_repo / target_path).read_text(encoding="utf-8"), "attached fallback write")
 
+    def test_runtime_check_preflight_blocks_denied_write_and_emits_retry_action(self) -> None:
+        from governed_ai_coding_runtime_contracts.repo_attachment import attach_target_repo
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "target"
+            target_repo.mkdir()
+            runtime_state_root = workspace / "runtime-state" / "target"
+            attach_target_repo(
+                target_repo_root=str(target_repo),
+                runtime_state_root=str(runtime_state_root),
+                repo_id="target",
+                display_name="Target",
+                primary_language="python",
+                build_command="cmd /c exit 0",
+                test_command="cmd /c exit 0",
+                contract_command="cmd /c exit 0",
+                adapter_preference="process_bridge",
+            )
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    "scripts/runtime-check.ps1",
+                    "-AttachmentRoot",
+                    str(target_repo),
+                    "-AttachmentRuntimeStateRoot",
+                    str(runtime_state_root),
+                    "-Mode",
+                    "quick",
+                    "-TaskId",
+                    "task-attached-preflight",
+                    "-RunId",
+                    "run-attached-preflight",
+                    "-CommandId",
+                    "cmd-attached-preflight",
+                    "-WriteTargetPath",
+                    "secrets/prod.env",
+                    "-WriteTier",
+                    "medium",
+                    "-WriteToolName",
+                    "write_file",
+                    "-RollbackReference",
+                    "git diff -- secrets/prod.env",
+                    "-WriteContent",
+                    "should not write",
+                    "-ExecuteWriteFlow",
+                    "-Json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertNotEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["summary"]["overall_status"], "fail")
+            self.assertEqual(payload["write_governance"]["policy_status"], "deny")
+            self.assertTrue(payload["write_preflight"]["blocked"])
+            self.assertTrue(payload["write_preflight"]["retry_command"])
+            self.assertIsNone(payload["write_execute"])
+            self.assertTrue(payload["next_actions"])
+
 
 if __name__ == "__main__":
     unittest.main()

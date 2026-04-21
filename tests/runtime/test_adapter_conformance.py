@@ -93,6 +93,28 @@ class AdapterConformanceTests(unittest.TestCase):
         self.assertEqual(matrix[2]["parity_status"], "blocked")
         self.assertEqual(matrix[2]["failed_checks"], ["missing_session_id"])
 
+    def test_claude_trial_conformance_uses_same_gate_family(self) -> None:
+        conformance = importlib.import_module("governed_ai_coding_runtime_contracts.adapter_conformance")
+
+        payload = {
+            "adapter_id": "claude-code",
+            "flow_kind": "process_bridge",
+            "session_id": "session-claude",
+            "resume_id": "resume-claude",
+            "continuation_id": "task-claude:run-claude",
+            "unsupported_capability_behavior": "degrade_to_process_bridge",
+            "evidence_refs": ["artifacts/task-claude/evidence/claude-session.json"],
+            "verification_refs": ["artifacts/task-claude/verification/runtime.txt"],
+            "handoff_ref": "artifacts/task-claude/handoff/package.json",
+        }
+
+        result = conformance.evaluate_claude_trial_conformance(payload)
+
+        self.assertEqual(result.status, "pass")
+        self.assertEqual(result.host_family, "claude_code")
+        self.assertEqual(result.parity_status, "degraded")
+        self.assertGreaterEqual(len(result.linkage_refs), 3)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -108,6 +108,53 @@ class VerificationRunnerTests(unittest.TestCase):
             self.assertEqual(artifact.run_id, "run-verify")
             self.assertIn("test", artifact.result_artifact_refs)
             self.assertEqual(artifact.results["contract"], "pass")
+            self.assertEqual(artifact.cache_hits, {"test": False, "contract": False})
+
+    def test_verification_runner_reuses_cache_hits_when_scope_key_matches(self) -> None:
+        artifact_store = importlib.import_module("governed_ai_coding_runtime_contracts.artifact_store")
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+
+        class _CacheStore:
+            def __init__(self) -> None:
+                self._store: dict[tuple[str, str], dict] = {}
+
+            def get(self, *, namespace: str, key: str) -> dict | None:
+                return self._store.get((namespace, key))
+
+            def upsert(self, *, namespace: str, key: str, payload: dict) -> None:
+                self._store[(namespace, key)] = dict(payload)
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            store = artifact_store.LocalArtifactStore(Path(tmp_dir))
+            cache_store = _CacheStore()
+            plan = verification_runner.build_verification_plan("quick", task_id="task-cache", run_id="run-cache-1")
+            calls: list[str] = []
+
+            def _execute(gate) -> tuple[int, str]:
+                calls.append(gate.gate_id)
+                return 0, f"{gate.gate_id} pass"
+
+            first = verification_runner.run_verification_plan(
+                plan,
+                artifact_store=store,
+                execute_gate=_execute,
+                cache_store=cache_store,
+                cache_scope_key="repo@commit-1",
+            )
+            self.assertEqual(calls, ["test", "contract"])
+            self.assertEqual(first.cache_hits, {"test": False, "contract": False})
+
+            calls.clear()
+            second_plan = verification_runner.build_verification_plan("quick", task_id="task-cache", run_id="run-cache-2")
+            second = verification_runner.run_verification_plan(
+                second_plan,
+                artifact_store=store,
+                execute_gate=_execute,
+                cache_store=cache_store,
+                cache_scope_key="repo@commit-1",
+            )
+            self.assertEqual(calls, [])
+            self.assertEqual(second.cache_hits, {"test": True, "contract": True})
 
     def test_repo_profile_verification_plan_prefers_declared_commands(self) -> None:
         verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")

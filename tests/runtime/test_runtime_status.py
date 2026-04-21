@@ -179,6 +179,8 @@ class RuntimeStatusTests(unittest.TestCase):
             self.assertEqual(Path(attachment.light_pack_path), (target_repo / ".governed-ai" / "light-pack.json").resolve())
             self.assertFalse(attachment.fail_closed)
             self.assertIsNone(attachment.remediation)
+            self.assertIsNotNone(attachment.context_pack_summary)
+            self.assertTrue(attachment.context_pack_summary["exists"])
 
     def test_runtime_status_text_reports_attachment_without_tasks(self) -> None:
         repo_attachment = importlib.import_module("governed_ai_coding_runtime_contracts.repo_attachment")

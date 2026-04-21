@@ -46,6 +46,8 @@ Use explicit replay-quality values:
 - each attachment can run `doctor/posture -> verification -> handoff aggregation`
 - optional write probe can be enabled to measure approval friction and write-path readiness
 - profile-only summaries remain supported as a compatibility path
+- speed KPI snapshots can be exported from `docs/change-evidence/target-repo-runs` via `python scripts/export-target-repo-speed-kpi.py`
+- speed claims must cite measured windows from `kpi-latest.json` or `kpi-rolling.json`, not anecdotal runtime impressions
 
 ## Attached-Repo Loop
 For each attached repo, the trial runner executes:
@@ -64,5 +66,6 @@ Unhealthy attachment posture is recorded explicitly with:
 ## Related
 - [Evidence Bundle Spec](../specs/evidence-bundle-spec.md)
 - [Eval And Trace Grading Spec](../specs/eval-and-trace-grading-spec.md)
+- [Target Repo Speed KPI Spec](../specs/target-repo-speed-kpi-spec.md)
 - [Target Repo Attachment Flow](./target-repo-attachment-flow.md)
 - [Adapter Capability Tiers](./adapter-capability-tiers.md)

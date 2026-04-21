@@ -1,4 +1,4 @@
-issue_seed_version: "3.9"
+issue_seed_version: "4.0"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment
@@ -310,3 +310,28 @@ issues:
     type: HITL
     blocked_by: [GAP-083]
     user_stories: [18, 21, 29, 31, 44]
+  - id: GAP-085
+    title: NTP-06 Deny-Loop Compression
+    type: AFK
+    blocked_by: [GAP-084]
+    user_stories: [11, 14, 27, 39, 45]
+  - id: GAP-086
+    title: NTP-07 Incremental Gate And Cache Pipeline
+    type: AFK
+    blocked_by: [GAP-085]
+    user_stories: [11, 12, 22, 36, 44]
+  - id: GAP-087
+    title: NTP-08 Claude-Code First-Class Adapter Path
+    type: HITL
+    blocked_by: [GAP-086]
+    user_stories: [2, 20, 31, 37, 44]
+  - id: GAP-088
+    title: NTP-09 Repo-Map Context Precompile
+    type: AFK
+    blocked_by: [GAP-087]
+    user_stories: [13, 20, 31, 39, 44]
+  - id: GAP-089
+    title: NTP-10 Runtime Speed KPI Baseline
+    type: AFK
+    blocked_by: [GAP-088]
+    user_stories: [13, 14, 15, 21, 44]

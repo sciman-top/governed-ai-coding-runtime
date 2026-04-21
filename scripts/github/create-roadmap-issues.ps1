@@ -821,7 +821,7 @@ function Get-TaskLabels {
     '^GAP-0(55|56)$' { return @("task", "phase:service-extraction", "platform", "backend", "devops") }
     '^GAP-0(57|58|59|60)$' { return @("task", "phase:hardening-closeout", "platform", "backend", "docs", "product") }
     '^GAP-0(61|62|63|64|65|66|67|68|69|70|71|72|73|74)$' { return @("task", "phase:governance-optimization", "platform", "docs", "product") }
-    '^GAP-08[0-4]$' { return @("task", "phase:near-term-gap-horizon", "platform", "backend", "product") }
+    '^GAP-08[0-9]$' { return @("task", "phase:near-term-gap-horizon", "platform", "backend", "product") }
     default { throw "No task label mapping defined for $IssueId" }
   }
 }

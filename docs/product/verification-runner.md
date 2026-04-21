@@ -32,3 +32,14 @@ Verification output must attach to a change evidence file with:
 - per-gate result
 - evidence link
 - escalation conditions
+- cache hit map (`cache_hits`) when incremental cache is enabled for the run
+
+## Incremental Cache (Baseline)
+- `run_verification_plan` supports an optional cache store to reuse deterministic gate outputs.
+- cache key dimensions:
+  - verification mode (`quick/l1`, `l2`, `full/l3`)
+  - gate id
+  - gate command string
+  - optional caller-provided scope key (for example `repo@commit`)
+- on cache hit, the gate still emits a fresh artifact for the current run and marks that gate as cached in `cache_hits`.
+- uncertain or missing cache records fall back to live execution (fail-closed semantics).

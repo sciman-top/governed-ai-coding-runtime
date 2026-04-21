@@ -1,0 +1,33 @@
+{
+  "generated_at": "2026-04-21T12:30:00+00:00",
+  "record_count": 2,
+  "records": [
+    {
+      "deny_to_success_retries": 1,
+      "fallback_rate": 0.25,
+      "first_pass_latency_seconds": 1800,
+      "latest_evidence_ref": "artifacts/task-classroomtoolkit-daily-20260420230050/run-classroomtoolkit-daily-20260420230050/verification-output/contract.txt",
+      "medium_risk_loop_success_ratio": 0.5,
+      "onboarding_latency_seconds": 1800,
+      "target": "classroomtoolkit",
+      "total_daily_runs": 4,
+      "window_end_utc": "2026-04-20T23:00:50+00:00",
+      "window_start_utc": "2026-04-20T22:54:53+00:00"
+    },
+    {
+      "deny_to_success_retries": 0,
+      "fallback_rate": 0,
+      "first_pass_latency_seconds": 740,
+      "latest_evidence_ref": "artifacts/task-self-runtime-daily-20260420230134/run-self-runtime-daily-20260420230134/verification-output/contract.txt",
+      "medium_risk_loop_success_ratio": 1,
+      "onboarding_latency_seconds": 740,
+      "target": "self-runtime",
+      "total_daily_runs": 2,
+      "window_end_utc": "2026-04-20T23:01:34+00:00",
+      "window_start_utc": "2026-04-20T22:56:16+00:00"
+    }
+  ],
+  "schema_version": "1.0",
+  "window_kind": "latest",
+  "window_size": 10
+}

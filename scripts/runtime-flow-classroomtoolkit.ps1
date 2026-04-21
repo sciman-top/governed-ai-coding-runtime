@@ -13,6 +13,8 @@ param(
   [string]$CommandId = ("cmd-" + (Get-Date -Format "yyyyMMddHHmmss")),
   [string]$RepoBindingId = "",
   [string]$AdapterId = "codex-cli",
+  [ValidateSet("native_attach", "process_bridge", "manual_handoff")]
+  [string]$AdapterPreference = "native_attach",
 
   [string]$WriteTargetPath = "",
   [ValidateSet("low", "medium", "high")]
@@ -47,7 +49,8 @@ $argsList = @(
   "-TaskId", $TaskId,
   "-RunId", $RunId,
   "-CommandId", $CommandId,
-  "-AdapterId", $AdapterId
+  "-AdapterId", $AdapterId,
+  "-AdapterPreference", $AdapterPreference
 )
 if (-not [string]::IsNullOrWhiteSpace($RepoBindingId)) {
   $argsList += @("-RepoBindingId", $RepoBindingId)

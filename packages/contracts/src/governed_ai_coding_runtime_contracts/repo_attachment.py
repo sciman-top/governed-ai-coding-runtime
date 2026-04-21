@@ -2,7 +2,9 @@
 
 import json
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
+import re
 from typing import Literal
 
 from governed_ai_coding_runtime_contracts.repo_profile import RepoProfile
@@ -17,9 +19,22 @@ DEFAULT_SCHEMA_VERSION = "1.0"
 LIGHT_PACK_DIR = ".governed-ai"
 REPO_PROFILE_FILENAME = "repo-profile.json"
 LIGHT_PACK_FILENAME = "light-pack.json"
+CONTEXT_PACK_FILENAME = "context-pack.json"
 ADAPTER_PREFERENCES = {"native_attach", "process_bridge", "manual_handoff"}
 DOCTOR_POSTURES = {"missing_light_pack", "invalid_light_pack", "stale_binding", "healthy"}
 MUTABLE_STATE_ROOT_KEYS = {"tasks", "runs", "approvals", "artifacts", "replay"}
+CONTEXT_PACK_STALE_AFTER_SECONDS = 24 * 60 * 60
+_FAILURE_SIGNATURE_PATTERN = re.compile(r"(failed|error|traceback|exception|denied|fail)", re.IGNORECASE)
+_CONTEXT_PACK_EXCLUDED_DIRS = {
+    ".git",
+    ".runtime",
+    ".venv",
+    "venv",
+    "node_modules",
+    "__pycache__",
+    "bin",
+    "obj",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,6 +58,7 @@ class RepoAttachmentResult:
     repo_profile_path: str
     light_pack_path: str
     written_files: list[str]
+    context_pack_summary: dict | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,6 +72,7 @@ class RepoAttachmentPosture:
     reason: str | None = None
     remediation: str | None = None
     fail_closed: bool = False
+    context_pack_summary: dict | None = None
 
 
 def build_repo_attachment_binding(
@@ -133,10 +150,24 @@ def attach_target_repo(
     light_pack_path = governed_dir / LIGHT_PACK_FILENAME
 
     if light_pack_path.exists() and not overwrite:
-        return validate_light_pack(
+        validated = validate_light_pack(
             target_repo_root=str(target_root),
             light_pack_path=str(light_pack_path),
             runtime_state_root=str(runtime_root),
+        )
+        context_pack_summary = compile_attachment_context_pack(
+            target_repo_root=target_root,
+            runtime_state_root=runtime_root,
+            repo_profile_path=Path(validated.repo_profile_path),
+            light_pack_path=Path(validated.light_pack_path),
+        )
+        return RepoAttachmentResult(
+            operation=validated.operation,
+            binding=validated.binding,
+            repo_profile_path=validated.repo_profile_path,
+            light_pack_path=validated.light_pack_path,
+            written_files=validated.written_files,
+            context_pack_summary=context_pack_summary,
         )
 
     governed_dir.mkdir(parents=True, exist_ok=True)
@@ -168,12 +199,19 @@ def attach_target_repo(
         light_pack_path=str(light_pack_path),
         runtime_state_root=str(runtime_root),
     )
+    context_pack_summary = compile_attachment_context_pack(
+        target_repo_root=target_root,
+        runtime_state_root=runtime_root,
+        repo_profile_path=Path(result.repo_profile_path),
+        light_pack_path=Path(result.light_pack_path),
+    )
     return RepoAttachmentResult(
         operation="created",
         binding=result.binding,
         repo_profile_path=result.repo_profile_path,
         light_pack_path=result.light_pack_path,
         written_files=written_files,
+        context_pack_summary=context_pack_summary,
     )
 
 
@@ -318,6 +356,12 @@ def inspect_attachment_posture(
                 runtime_root=runtime_root,
             ),
             fail_closed=True,
+            context_pack_summary=inspect_attachment_context_pack(
+                target_repo_root=target_root,
+                runtime_state_root=runtime_root,
+                repo_profile_path=None,
+                light_pack_path=resolved_light_pack_path,
+            ),
         )
 
     light_pack: dict = {}
@@ -351,6 +395,12 @@ def inspect_attachment_posture(
                 runtime_root=runtime_root,
             ),
             fail_closed=True,
+            context_pack_summary=inspect_attachment_context_pack(
+                target_repo_root=target_root,
+                runtime_state_root=runtime_root,
+                repo_profile_path=None,
+                light_pack_path=resolved_light_pack_path,
+            ),
         )
 
     expected_binding_id = f"binding-{profile.repo_id}"
@@ -369,6 +419,12 @@ def inspect_attachment_posture(
                 runtime_root=runtime_root,
             ),
             fail_closed=True,
+            context_pack_summary=inspect_attachment_context_pack(
+                target_repo_root=target_root,
+                runtime_state_root=runtime_root,
+                repo_profile_path=Path(binding.repo_profile_ref),
+                light_pack_path=Path(binding.light_pack_path),
+            ),
         )
 
     return RepoAttachmentPosture(
@@ -380,7 +436,136 @@ def inspect_attachment_posture(
         gate_profile=binding.gate_profile,
         remediation=None,
         fail_closed=False,
+        context_pack_summary=inspect_attachment_context_pack(
+            target_repo_root=target_root,
+            runtime_state_root=runtime_root,
+            repo_profile_path=Path(binding.repo_profile_ref),
+            light_pack_path=Path(binding.light_pack_path),
+        ),
     )
+
+
+def compile_attachment_context_pack(
+    *,
+    target_repo_root: str | Path,
+    runtime_state_root: str | Path,
+    repo_profile_path: str | Path,
+    light_pack_path: str | Path,
+) -> dict:
+    target_root = _existing_directory(str(target_repo_root), "target_repo_root")
+    runtime_root = _required_path(str(runtime_state_root), "runtime_state_root")
+    profile_path = Path(repo_profile_path).resolve(strict=False)
+    resolved_light_pack_path = Path(light_pack_path).resolve(strict=False)
+    profile = _load_json_object(profile_path, "repo_profile_path")
+    now = datetime.now(timezone.utc)
+    generated_at = now.isoformat()
+
+    repo_files = _collect_repo_files(target_root, limit=220)
+    hot_files = repo_files[:10]
+    dominant_commands = _dominant_commands_from_profile(profile)
+    failure_signatures = _collect_failure_signatures(runtime_root, limit=8)
+    payload = {
+        "schema_version": DEFAULT_SCHEMA_VERSION,
+        "pack_kind": "attachment_repo_context_pack",
+        "repo_id": profile.get("repo_id", target_root.name),
+        "binding_id": f"binding-{profile.get('repo_id', target_root.name)}",
+        "generated_at": generated_at,
+        "source": {
+            "target_repo_root": str(target_root),
+            "runtime_state_root": str(runtime_root),
+            "repo_profile_path": str(profile_path),
+            "light_pack_path": str(resolved_light_pack_path),
+        },
+        "repo_map": {
+            "mode": "hybrid",
+            "total_candidates": len(repo_files),
+            "hot_files": hot_files,
+        },
+        "dominant_commands": dominant_commands,
+        "failure_signatures": failure_signatures,
+    }
+    context_root = runtime_root / "context"
+    context_root.mkdir(parents=True, exist_ok=True)
+    context_pack_path = context_root / CONTEXT_PACK_FILENAME
+    _write_json(context_pack_path, payload)
+    return inspect_attachment_context_pack(
+        target_repo_root=target_root,
+        runtime_state_root=runtime_root,
+        repo_profile_path=profile_path,
+        light_pack_path=resolved_light_pack_path,
+    )
+
+
+def inspect_attachment_context_pack(
+    *,
+    target_repo_root: str | Path,
+    runtime_state_root: str | Path,
+    repo_profile_path: str | Path | None,
+    light_pack_path: str | Path,
+) -> dict:
+    target_root = _existing_directory(str(target_repo_root), "target_repo_root")
+    runtime_root = _required_path(str(runtime_state_root), "runtime_state_root")
+    context_pack_path = runtime_root / "context" / CONTEXT_PACK_FILENAME
+    refresh_command = (
+        "python scripts/attach-target-repo.py "
+        f"--target-repo \"{target_root.as_posix()}\" "
+        f"--runtime-state-root \"{runtime_root.as_posix()}\" --overwrite"
+    )
+
+    if not context_pack_path.exists():
+        return {
+            "context_pack_path": str(context_pack_path),
+            "generated_at": None,
+            "age_seconds": None,
+            "stale_after_seconds": CONTEXT_PACK_STALE_AFTER_SECONDS,
+            "is_stale": True,
+            "exists": False,
+            "repo_map_file_count": 0,
+            "hot_files": [],
+            "dominant_commands": [],
+            "failure_signatures": [],
+            "source_light_pack_path": str(Path(light_pack_path).resolve(strict=False)),
+            "source_repo_profile_path": str(Path(repo_profile_path).resolve(strict=False)) if repo_profile_path else None,
+            "refresh_command": refresh_command,
+        }
+
+    payload = _load_json_object(context_pack_path, "context_pack_path")
+    generated_at_raw = payload.get("generated_at")
+    generated_at = generated_at_raw if isinstance(generated_at_raw, str) else None
+    age_seconds = _age_seconds(generated_at)
+    repo_map = payload.get("repo_map")
+    hot_files = []
+    if isinstance(repo_map, dict) and isinstance(repo_map.get("hot_files"), list):
+        hot_files = [str(item) for item in repo_map["hot_files"][:10] if isinstance(item, str)]
+    dominant_commands = [str(item) for item in payload.get("dominant_commands", []) if isinstance(item, str)][:8]
+    failure_signatures = [str(item) for item in payload.get("failure_signatures", []) if isinstance(item, str)][:8]
+    is_stale = True if age_seconds is None else age_seconds > CONTEXT_PACK_STALE_AFTER_SECONDS
+    source = payload.get("source")
+    source_profile = None
+    source_light_pack = str(Path(light_pack_path).resolve(strict=False))
+    if isinstance(source, dict):
+        if isinstance(source.get("repo_profile_path"), str):
+            source_profile = source.get("repo_profile_path")
+        if isinstance(source.get("light_pack_path"), str):
+            source_light_pack = source.get("light_pack_path")
+    if source_profile is None and repo_profile_path is not None:
+        source_profile = str(Path(repo_profile_path).resolve(strict=False))
+
+    return {
+        "context_pack_path": str(context_pack_path),
+        "generated_at": generated_at,
+        "age_seconds": age_seconds,
+        "stale_after_seconds": CONTEXT_PACK_STALE_AFTER_SECONDS,
+        "is_stale": is_stale,
+        "exists": True,
+        "repo_map_file_count": len(hot_files),
+        "hot_files": hot_files,
+        "dominant_commands": dominant_commands,
+        "failure_signatures": failure_signatures,
+        "source_light_pack_path": source_light_pack,
+        "source_repo_profile_path": source_profile,
+        "refresh_command": refresh_command,
+    }
 
 
 def _resolve_mutable_state_roots(
@@ -555,7 +740,7 @@ def _remediation_for_posture(*, binding_state: str, target_root: Path, runtime_r
     docs_ref = "docs/product/target-repo-attachment-flow.md"
     attach_command = (
         "python scripts/attach-target-repo.py "
-        f"attach --target-repo-root \"{target_root.as_posix()}\" "
+        f"--target-repo \"{target_root.as_posix()}\" "
         f"--runtime-state-root \"{runtime_root.as_posix()}\""
     )
     if binding_state == "missing_light_pack":
@@ -565,3 +750,107 @@ def _remediation_for_posture(*, binding_state: str, target_root: Path, runtime_r
     if binding_state == "stale_binding":
         return f"Refresh binding by re-running attach flow: {attach_command} (see {docs_ref})"
     return None
+
+
+def _collect_repo_files(target_root: Path, *, limit: int) -> list[str]:
+    candidates: list[tuple[int, str]] = []
+    for file_path in target_root.rglob("*"):
+        if len(candidates) >= limit * 3:
+            break
+        if not file_path.is_file():
+            continue
+        relative = file_path.relative_to(target_root).as_posix()
+        first = relative.split("/", 1)[0]
+        if first in _CONTEXT_PACK_EXCLUDED_DIRS:
+            continue
+        priority = _repo_file_priority(relative)
+        candidates.append((priority, relative))
+    candidates.sort(key=lambda item: (item[0], len(item[1]), item[1]))
+    return [relative for _priority, relative in candidates[:limit]]
+
+
+def _repo_file_priority(relative: str) -> int:
+    normalized = relative.lower()
+    if normalized.startswith(".governed-ai/"):
+        return 0
+    if normalized.startswith("docs/"):
+        return 1
+    if normalized.startswith("src/"):
+        return 2
+    if normalized.startswith("tests/"):
+        return 3
+    if normalized.startswith("scripts/"):
+        return 4
+    if normalized.startswith("packages/"):
+        return 5
+    if normalized.startswith("readme"):
+        return 0
+    return 10
+
+
+def _dominant_commands_from_profile(profile: dict) -> list[str]:
+    commands: list[str] = []
+    for group in ("build_commands", "test_commands", "contract_commands", "invariant_commands"):
+        raw_group = profile.get(group)
+        if not isinstance(raw_group, list):
+            continue
+        for item in raw_group:
+            if not isinstance(item, dict):
+                continue
+            command = item.get("command")
+            if isinstance(command, str) and command.strip():
+                commands.append(command.strip())
+    return _dedupe_preserve_order(commands)[:10]
+
+
+def _collect_failure_signatures(runtime_root: Path, *, limit: int) -> list[str]:
+    artifacts_root = runtime_root / "artifacts"
+    if not artifacts_root.exists():
+        return []
+    signatures: list[str] = []
+    for file_path in sorted(artifacts_root.rglob("*.txt")):
+        if len(signatures) >= limit:
+            break
+        if "verification-output" not in file_path.as_posix().lower():
+            continue
+        try:
+            lines = file_path.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            continue
+        for line in lines:
+            normalized = line.strip()
+            if not normalized:
+                continue
+            if not _FAILURE_SIGNATURE_PATTERN.search(normalized):
+                continue
+            signatures.append(normalized[:180])
+            if len(signatures) >= limit:
+                break
+    return _dedupe_preserve_order(signatures)
+
+
+def _age_seconds(generated_at: str | None) -> int | None:
+    if not generated_at:
+        return None
+    try:
+        marker = datetime.fromisoformat(generated_at)
+    except ValueError:
+        return None
+    if marker.tzinfo is None:
+        marker = marker.replace(tzinfo=timezone.utc)
+    now = datetime.now(timezone.utc)
+    age = (now - marker).total_seconds()
+    if age < 0:
+        return 0
+    return int(age)
+
+
+def _dedupe_preserve_order(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        ordered.append(value)
+    return ordered
