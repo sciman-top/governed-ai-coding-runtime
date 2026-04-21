@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260421 GAP-084 Claim Drift Guard Closeout](./20260421-gap-084-claim-drift-guard-closeout.md)
+  - closeout evidence for GAP-084 covering claim drift enforcement, evidence freshness gating, and time-bounded claim exception path checks
 - [20260421 GAP-083 Operator Remediation Depth Closeout](./20260421-gap-083-operator-remediation-depth-closeout.md)
   - closeout evidence for GAP-083 including operator write-status parity, deterministic doctor remediation actions, and remediation retry evidence persistence
 - [20260421 GAP-083 Doctor Deterministic Remediation Actions](./20260421-gap-083-doctor-deterministic-remediation-actions.md)

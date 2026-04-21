@@ -410,6 +410,8 @@ function Invoke-ClaimDriftSentinelCheck {
     throw "Claim catalog must contain at least one claim entry"
   }
 
+  $maxEvidenceAgeDays = 30
+  $now = Get-Date
   foreach ($claim in @($catalog.claims)) {
     foreach ($requiredField in @("claim_id", "claim_text", "proof_command", "evidence_link")) {
       if (-not $claim.PSObject.Properties.Name.Contains($requiredField)) {
@@ -424,6 +426,21 @@ function Invoke-ClaimDriftSentinelCheck {
     $evidencePath = Join-Path (Get-Location) ([string]$claim.evidence_link)
     if (-not (Test-Path $evidencePath)) {
       throw "Claim $($claim.claim_id) references missing evidence file: $($claim.evidence_link)"
+    }
+    $evidenceName = [System.IO.Path]::GetFileName($evidencePath)
+    $evidenceDate = $null
+    if ($evidenceName -match '^(\d{8})-') {
+      $rawDate = $Matches[1]
+      $parsed = [datetime]::MinValue
+      if ([datetime]::TryParseExact($rawDate, "yyyyMMdd", [System.Globalization.CultureInfo]::InvariantCulture, [System.Globalization.DateTimeStyles]::AssumeLocal, [ref]$parsed)) {
+        $evidenceDate = $parsed
+      }
+    }
+    if ($null -eq $evidenceDate) {
+      $evidenceDate = (Get-Item $evidencePath).LastWriteTime
+    }
+    if ($evidenceDate -lt $now.AddDays(-$maxEvidenceAgeDays)) {
+      throw "Claim $($claim.claim_id) references stale evidence older than $maxEvidenceAgeDays days: $($claim.evidence_link)"
     }
 
     if (-not $claim.PSObject.Properties.Name.Contains("source_refs") -or $null -eq $claim.source_refs -or @($claim.source_refs).Count -lt 1) {
@@ -453,6 +470,59 @@ function Invoke-ClaimDriftSentinelCheck {
   }
 
   Write-CheckOk "claim-drift-sentinel"
+  Write-CheckOk "claim-evidence-freshness"
+}
+
+function Invoke-ClaimExceptionPathCheck {
+  $exceptionsPath = Join-Path (Get-Location) "docs/product/claim-exceptions.json"
+  if (-not (Test-Path $exceptionsPath)) {
+    throw "Claim exceptions file not found: $exceptionsPath"
+  }
+
+  $data = Get-Content -Raw $exceptionsPath | ConvertFrom-Json
+  if ($null -eq $data.exceptions) {
+    throw "Claim exceptions file must define exceptions array"
+  }
+  if (-not ($data.exceptions -is [System.Array])) {
+    throw "Claim exceptions 'exceptions' field must be an array"
+  }
+
+  $now = Get-Date
+  foreach ($exception in @($data.exceptions)) {
+    foreach ($requiredField in @("claim_id", "owner", "reason", "recovery_plan", "rollback_ref", "evidence_link", "expires_at", "status", "review_ref")) {
+      if (-not $exception.PSObject.Properties.Name.Contains($requiredField)) {
+        throw "Claim exception missing required field: $requiredField"
+      }
+      $value = [string]$exception.$requiredField
+      if ([string]::IsNullOrWhiteSpace($value)) {
+        throw "Claim exception field '$requiredField' must be non-empty"
+      }
+    }
+
+    $rollbackPath = Join-Path (Get-Location) ([string]$exception.rollback_ref)
+    if (-not (Test-Path $rollbackPath)) {
+      throw "Claim exception rollback_ref missing: $($exception.rollback_ref)"
+    }
+    $evidencePath = Join-Path (Get-Location) ([string]$exception.evidence_link)
+    if (-not (Test-Path $evidencePath)) {
+      throw "Claim exception evidence_link missing: $($exception.evidence_link)"
+    }
+
+    $status = ([string]$exception.status).ToLowerInvariant()
+    if ($status -notin @("active", "resolved", "expired", "revoked")) {
+      throw "Claim exception status must be one of active/resolved/expired/revoked"
+    }
+
+    $expiresAt = [datetime]::MinValue
+    if (-not [datetime]::TryParse([string]$exception.expires_at, [ref]$expiresAt)) {
+      throw "Claim exception expires_at is invalid: $($exception.expires_at)"
+    }
+    if ($status -eq "active" -and $expiresAt -lt $now) {
+      throw "Claim exception is active but expired: $($exception.claim_id)"
+    }
+  }
+
+  Write-CheckOk "claim-exception-paths"
 }
 
 function Invoke-ContractChecks {
@@ -477,6 +547,7 @@ function Invoke-DocsChecks {
   Invoke-HostReplacementClaimBoundaryScan
   Invoke-GapEvidenceSloCheck
   Invoke-ClaimDriftSentinelCheck
+  Invoke-ClaimExceptionPathCheck
   Invoke-PostCloseoutQueueSyncCheck
 }
 

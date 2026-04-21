@@ -13,7 +13,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - non-goals remain non-goals: no enterprise org model, no marketplace, no default multi-agent orchestration, no memory-first product identity
 - governance-optimization lane `GAP-061` through `GAP-068` was the follow-on queue after `GAP-060` and is now complete on the current branch baseline (verified on 2026-04-20), while older lifecycle `GAP` entries remain completion history
 - post-closeout optimization queue `GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20) and does not reopen hybrid final-state closure
-- optimized best-state near-term gap horizon queue remains active, with `GAP-080` through `GAP-083` complete on the current branch baseline (verified on 2026-04-21) and `GAP-084` as the remaining execution-horizon backlog derived from `NT-01..05` / `NTP-01..05`
+- optimized best-state near-term gap horizon queue is complete on the current branch baseline, with `GAP-080` through `GAP-084` verified complete on 2026-04-21 and no remaining execution-horizon backlog from `NT-01..05` / `NTP-01..05`
 
 ## Current Baseline
 - PRD, architecture, ADRs, specs, runtime contract primitives, repo verifier entrypoints, sample repo profiles, and a runtime-consumable control pack already exist.
@@ -29,7 +29,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Direct-To-Hybrid-Final-State Mainline / GAP-046` through `GAP-060` are complete on the current branch baseline (verified on 2026-04-20).
 - `Governance Optimization Lane / GAP-061` through `GAP-068` are complete on the current branch baseline (verified on 2026-04-20).
 - `Post-Closeout Optimization Queue / GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20).
-- `Near-Term Gap Horizon Queue / GAP-080` through `GAP-083` are complete on the current branch baseline (verified on 2026-04-21), and `GAP-084` remains the active execution-horizon queue from the optimized best-state definition.
+- `Near-Term Gap Horizon Queue / GAP-080` through `GAP-084` are complete on the current branch baseline (verified on 2026-04-21); new near-term queue IDs start after `GAP-084` unless regressions reopen this range.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -535,15 +535,15 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: HITL
 - Blocked by: GAP-083
 - User stories: 18, 21, 29, 31, 44
-- Status: planned for execution horizon
+- Status: complete on current branch baseline (claim drift, evidence freshness, and claim exception path checks are all enforced by docs CI on 2026-04-21)
 - What to build:
   - enforce claim-to-evidence alignment for roadmap, plan, backlog, and closeout language in CI
   - add freshness checks so final-state claims automatically downgrade when evidence stales
   - keep human review checkpoints for claim exceptions, waiver expiry, and rollback readiness
 - Acceptance criteria:
-  - [ ] CI fails when completion or capability claims outrun executable evidence
-  - [ ] stale closeout evidence is detected and flagged before release-facing claim updates
-  - [ ] claim exception paths remain time-bounded, reviewable, and rollback-linked
+  - [x] CI fails when completion or capability claims outrun executable evidence
+  - [x] stale closeout evidence is detected and flagged before release-facing claim updates
+  - [x] claim exception paths remain time-bounded, reviewable, and rollback-linked
 
 ## Vision
 
