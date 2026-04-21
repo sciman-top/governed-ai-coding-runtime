@@ -30,7 +30,7 @@
 - 通过 session bridge 运行 attached write 治理闭环（`write_request` / `write_approve` / `write_execute` / `write_status`），并产出 approval/evidence/handoff/replay refs
 - 运行 safe-mode Codex adapter smoke trial，并输出 task/binding/evidence/verification wiring
 - 运行一个基于 repo-profile 的 multi-repo trial runner，并输出每个 repo 的 posture、adapter tier、verification/evidence refs 和 follow-ups
-- 把外部仓库（例如 `D:\OneDrive\CODE\ClassroomToolkit`）attach 到本运行时，生成 `.governed-ai/` 轻量接入包，并通过 status/doctor/session-bridge 查看 posture
+- 把外部仓库（例如 `..\ClassroomToolkit`）attach 到本运行时，生成 `.governed-ai/` 轻量接入包，并通过 status/doctor/session-bridge 查看 posture
 - 运行 CLI-first runtime smoke path：创建任务、执行本地 worker、跑 `build -> test -> contract -> doctor`、写 evidence/handoff/replay、查询 runtime status
 - 在 Python 中复用 `packages/contracts` 下的任务、repo profile、审批、执行运行时、artifact/replay、验证、handoff、eval/trace 等契约原语
 
@@ -43,7 +43,7 @@
 
 现在能否用于其他项目？
 - 可以，**但边界是“治理 sidecar / attach-first metadata + runtime-managed gate/write flows + explicit degrade semantics”**。
-- 对 `D:\OneDrive\CODE\ClassroomToolkit` 这类仓库，已经可以生成或校验 `.governed-ai`、挂到 machine-local runtime state、跑 status/doctor、执行 gate 流、执行受治理写流并保留证据链。
+- 对 `..\ClassroomToolkit` 这类仓库，已经可以生成或校验 `.governed-ai`、挂到 machine-local runtime state、跑 status/doctor、执行 gate 流、执行受治理写流并保留证据链。
 - 仍不能宣称“Codex CLI 在所有外部仓、所有环境下已经被本项目完整接管用于真实高风险编码写入”。
 
 如何快速使用（推荐三条路径）：
@@ -95,16 +95,16 @@ python scripts/run-multi-repo-trial.py
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-check.ps1 `
-  -AttachmentRoot "D:\OneDrive\CODE\ClassroomToolkit" `
-  -AttachmentRuntimeStateRoot "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit" `
+  -AttachmentRoot "..\ClassroomToolkit" `
+  -AttachmentRuntimeStateRoot ".runtime\attachments\classroomtoolkit" `
   -Mode "quick"
 ```
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow.ps1 `
   -FlowMode "daily" `
-  -AttachmentRoot "D:\OneDrive\CODE\ClassroomToolkit" `
-  -AttachmentRuntimeStateRoot "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit" `
+  -AttachmentRoot "..\ClassroomToolkit" `
+  -AttachmentRuntimeStateRoot ".runtime\attachments\classroomtoolkit" `
   -Mode "quick"
 ```
 
@@ -162,7 +162,7 @@ Available now:
 - Codex capability readiness surfaced in runtime status/doctor, including tier/flow/degrade metadata
 - Runtime-managed gate execution through session bridge (`run_quick_gate` / `run_full_gate`, with optional `plan_only`)
 - Runtime-managed attached write governance flow through session bridge (`write_request` / `write_approve` / `write_execute` / `write_status`) with approval/evidence/handoff/replay refs
-- External target-repo attachment for repos such as `D:\OneDrive\CODE\ClassroomToolkit`
+- External target-repo attachment for repos such as `..\ClassroomToolkit`
 - A CLI-first governed runtime smoke path with persisted evidence, handoff, replay, and runtime status
 - Python contract primitives under `packages/contracts`
 
@@ -204,3 +204,4 @@ Concrete assistance for AI coding:
 - evidence/handoff/replay linkage for traceable delivery and rollback
 - reusable multi-repo governance via light packs and preset flows
 - host-decoupled governance layer without replacing upstream auth ownership
+

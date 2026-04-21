@@ -3,7 +3,7 @@
 ## Short Answer
 Yes, but with the current product boundary.
 
-Today you can use this runtime against an existing repository such as `D:\OneDrive\CODE\ClassroomToolkit` as a machine-local governance sidecar:
+Today you can use this runtime against an existing repository such as `..\ClassroomToolkit` as a machine-local governance sidecar:
 - generate or validate a repo-local light pack under `.governed-ai/`
 - keep mutable runtime state machine-local
 - inspect attachment posture through `status` and `doctor`
@@ -26,8 +26,8 @@ From this repository root:
 
 ```powershell
 python scripts/attach-target-repo.py `
-  --target-repo "D:\OneDrive\CODE\ClassroomToolkit" `
-  --runtime-state-root "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit" `
+  --target-repo "..\ClassroomToolkit" `
+  --runtime-state-root ".runtime\attachments\classroomtoolkit" `
   --repo-id "classroomtoolkit" `
   --display-name "ClassroomToolkit" `
   --primary-language "csharp" `
@@ -47,22 +47,22 @@ PowerShell note:
 This creates or validates:
 
 ```text
-D:\OneDrive\CODE\ClassroomToolkit\.governed-ai\repo-profile.json
-D:\OneDrive\CODE\ClassroomToolkit\.governed-ai\light-pack.json
+..\ClassroomToolkit\.governed-ai\repo-profile.json
+..\ClassroomToolkit\.governed-ai\light-pack.json
 ```
 
 ### 2. Check Attachment Posture
 
 ```powershell
 python scripts/run-governed-task.py status --json `
-  --attachment-root "D:\OneDrive\CODE\ClassroomToolkit" `
-  --attachment-runtime-state-root "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit"
+  --attachment-root "..\ClassroomToolkit" `
+  --attachment-runtime-state-root ".runtime\attachments\classroomtoolkit"
 ```
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1 `
-  -AttachmentRoot "D:\OneDrive\CODE\ClassroomToolkit" `
-  -RuntimeStateRoot "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit"
+  -AttachmentRoot "..\ClassroomToolkit" `
+  -RuntimeStateRoot ".runtime\attachments\classroomtoolkit"
 ```
 
 Expected attachment posture:
@@ -78,8 +78,8 @@ python scripts/session-bridge.py repo-posture `
   --task-id "task-classroom-001" `
   --repo-binding-id "binding-classroomtoolkit" `
   --adapter-id "codex-cli" `
-  --attachment-root "D:\OneDrive\CODE\ClassroomToolkit" `
-  --attachment-runtime-state-root "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit"
+  --attachment-root "..\ClassroomToolkit" `
+  --attachment-runtime-state-root ".runtime\attachments\classroomtoolkit"
 ```
 
 Run a runtime-managed gate flow (use `--plan-only` if you only need the plan):
@@ -92,16 +92,16 @@ python scripts/session-bridge.py request-gate `
   --adapter-id "codex-cli" `
   --mode "quick" `
   --policy-status "allow" `
-  --attachment-root "D:\OneDrive\CODE\ClassroomToolkit" `
-  --attachment-runtime-state-root "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit"
+  --attachment-root "..\ClassroomToolkit" `
+  --attachment-runtime-state-root ".runtime\attachments\classroomtoolkit"
 ```
 
 Execute the declared gate commands inside the attached repo:
 
 ```powershell
 python scripts/run-governed-task.py verify-attachment `
-  --attachment-root "D:\OneDrive\CODE\ClassroomToolkit" `
-  --attachment-runtime-state-root "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit" `
+  --attachment-root "..\ClassroomToolkit" `
+  --attachment-runtime-state-root ".runtime\attachments\classroomtoolkit" `
   --mode "quick" `
   --task-id "task-classroom-verify-001" `
   --run-id "run-classroom-verify-001" `
@@ -112,8 +112,8 @@ Evaluate write governance posture before real edits:
 
 ```powershell
 python scripts/run-governed-task.py govern-attachment-write `
-  --attachment-root "D:\OneDrive\CODE\ClassroomToolkit" `
-  --attachment-runtime-state-root "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit" `
+  --attachment-root "..\ClassroomToolkit" `
+  --attachment-runtime-state-root ".runtime\attachments\classroomtoolkit" `
   --task-id "task-classroom-write-001" `
   --tool-name "apply_patch" `
   --target-path "src/ClassroomToolkit.App/MainWindow.ZOrder.cs" `
@@ -131,7 +131,7 @@ Approve or reject an escalated write request:
 
 ```powershell
 python scripts/run-governed-task.py decide-attachment-write `
-  --attachment-runtime-state-root "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit" `
+  --attachment-runtime-state-root ".runtime\attachments\classroomtoolkit" `
   --approval-id "approval-xxxx" `
   --decision "approve" `
   --decided-by "operator" `
@@ -142,8 +142,8 @@ Execute an approved write request:
 
 ```powershell
 python scripts/run-governed-task.py execute-attachment-write `
-  --attachment-root "D:\OneDrive\CODE\ClassroomToolkit" `
-  --attachment-runtime-state-root "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit" `
+  --attachment-root "..\ClassroomToolkit" `
+  --attachment-runtime-state-root ".runtime\attachments\classroomtoolkit" `
   --task-id "task-classroom-write-001" `
   --tool-name "write_file" `
   --target-path "src/ClassroomToolkit.App/.governed-runtime-probe.txt" `
@@ -158,8 +158,8 @@ python scripts/run-governed-task.py execute-attachment-write `
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-check.ps1 `
-  -AttachmentRoot "D:\OneDrive\CODE\ClassroomToolkit" `
-  -AttachmentRuntimeStateRoot "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit" `
+  -AttachmentRoot "..\ClassroomToolkit" `
+  -AttachmentRuntimeStateRoot ".runtime\attachments\classroomtoolkit" `
   -Mode "quick" `
   -WriteTargetPath "src/ClassroomToolkit.App/MainWindow.ZOrder.cs" `
   -WriteTier "medium" `
@@ -194,8 +194,8 @@ Onboard mode (first-time attach + runtime check):
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow.ps1 `
   -FlowMode "onboard" `
-  -AttachmentRoot "D:\OneDrive\CODE\ClassroomToolkit" `
-  -AttachmentRuntimeStateRoot "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit" `
+  -AttachmentRoot "..\ClassroomToolkit" `
+  -AttachmentRuntimeStateRoot ".runtime\attachments\classroomtoolkit" `
   -RepoId "classroomtoolkit" `
   -DisplayName "ClassroomToolkit" `
   -PrimaryLanguage "csharp" `
@@ -211,8 +211,8 @@ Daily mode (skip attach, run check chain directly):
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow.ps1 `
   -FlowMode "daily" `
-  -AttachmentRoot "D:\OneDrive\CODE\ClassroomToolkit" `
-  -AttachmentRuntimeStateRoot "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit" `
+  -AttachmentRoot "..\ClassroomToolkit" `
+  -AttachmentRuntimeStateRoot ".runtime\attachments\classroomtoolkit" `
   -Mode "quick"
 ```
 
@@ -258,10 +258,10 @@ The runtime repo itself can be attached as a target repo, but the same invariant
 - `runtime_state_root` must stay outside the target repo root
 
 Invalid self-attachment example:
-- `D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\self-runtime`
+- `.runtime\attachments\self-runtime`
 
 Valid self-attachment example:
-- `D:\OneDrive\CODE\governed-ai-runtime-state\self-runtime`
+- `..\governed-ai-runtime-state\self-runtime`
 
 The special case is operational, not architectural:
 - no separate contract path exists for self-attachment
@@ -282,7 +282,7 @@ Profile-based multi-repo trial:
 
 ```powershell
 python scripts/run-multi-repo-trial.py `
-  --repo-profile "D:\OneDrive\CODE\ClassroomToolkit\.governed-ai\repo-profile.json"
+  --repo-profile "..\ClassroomToolkit\.governed-ai\repo-profile.json"
 ```
 
 ## Current Boundary
@@ -299,3 +299,4 @@ python scripts/run-multi-repo-trial.py `
 - [多仓试运行快速开始](./multi-repo-trial-quickstart.zh-CN.md)
 - [Codex Direct Adapter](../product/codex-direct-adapter.md)
 - [Chinese Version](./use-with-existing-repo.zh-CN.md)
+

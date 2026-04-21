@@ -24,8 +24,8 @@ python scripts/attach-target-repo.py `
 
 ```powershell
 python scripts/attach-target-repo.py `
-  --target-repo "D:\OneDrive\CODE\ClassroomToolkit" `
-  --runtime-state-root "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit" `
+  --target-repo "..\ClassroomToolkit" `
+  --runtime-state-root ".runtime\attachments\classroomtoolkit" `
   --repo-id "classroomtoolkit" `
   --display-name "ClassroomToolkit" `
   --primary-language "csharp" `
@@ -123,11 +123,12 @@ fail-closed 行为：
 可以，但必须把 `runtime_state_root` 放在仓外。
 
 例如：
-- 无效：`D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\self-runtime`
-- 有效：`D:\OneDrive\CODE\governed-ai-runtime-state\self-runtime`
+- 无效：`.runtime\attachments\self-runtime`
+- 有效：`..\governed-ai-runtime-state\self-runtime`
 
 ## 相关文档
 - [Repo Attachment Binding Spec](../specs/repo-attachment-binding-spec.md)
 - [Generic Target-Repo Attachment Blueprint](../architecture/generic-target-repo-attachment-blueprint.md)
 - [在现有仓库中使用](../quickstart/use-with-existing-repo.zh-CN.md)
 - [English Version](./target-repo-attachment-flow.md)
+

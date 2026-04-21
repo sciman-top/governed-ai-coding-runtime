@@ -22,12 +22,12 @@ python scripts/attach-target-repo.py `
 If `.governed-ai/light-pack.json` already exists, the command validates it by default and does not overwrite it. Use `--overwrite` only when the attachment files should be regenerated intentionally.
 
 ## ClassroomToolkit Example
-The current branch can already attach an existing external repo such as `D:\OneDrive\CODE\ClassroomToolkit`:
+The current branch can already attach an existing external repo such as `..\ClassroomToolkit`:
 
 ```powershell
 python scripts/attach-target-repo.py `
-  --target-repo "D:\OneDrive\CODE\ClassroomToolkit" `
-  --runtime-state-root "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit" `
+  --target-repo "..\ClassroomToolkit" `
+  --runtime-state-root ".runtime\attachments\classroomtoolkit" `
   --repo-id "classroomtoolkit" `
   --display-name "ClassroomToolkit" `
   --primary-language "csharp" `
@@ -135,8 +135,8 @@ The rule does not change:
 - `runtime_state_root` must stay outside the target repo root
 
 Example:
-- invalid: `D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\self-runtime`
-- valid: `D:\OneDrive\CODE\governed-ai-runtime-state\self-runtime`
+- invalid: `.runtime\attachments\self-runtime`
+- valid: `..\governed-ai-runtime-state\self-runtime`
 
 ## Related
 - [Repo Attachment Binding Spec](../specs/repo-attachment-binding-spec.md)
@@ -144,3 +144,4 @@ Example:
 - [Use With An Existing Repo](../quickstart/use-with-existing-repo.md)
 - [在现有仓库中使用](../quickstart/use-with-existing-repo.zh-CN.md)
 - [Chinese Version](./target-repo-attachment-flow.zh-CN.md)
+

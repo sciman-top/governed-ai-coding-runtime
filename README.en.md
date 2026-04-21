@@ -26,7 +26,7 @@ Available now:
 - Runtime-managed attached write governance flow through session bridge (`write_request` / `write_approve` / `write_execute` / `write_status`) with approval/evidence/handoff/replay refs.
 - A safe-mode Codex adapter smoke trial that reports task, binding, evidence, and verification wiring.
 - A profile-based multi-repo trial runner that reports per-repo posture, adapter tier, verification refs, evidence refs, and follow-ups.
-- Attachment of an external target repo such as `D:\OneDrive\CODE\ClassroomToolkit`, including `.governed-ai` light-pack generation or validation plus status/doctor/session-bridge posture checks.
+- Attachment of an external target repo such as `..\ClassroomToolkit`, including `.governed-ai` light-pack generation or validation plus status/doctor/session-bridge posture checks.
 - A CLI-first governed runtime smoke path with persisted artifacts, verification outputs, evidence bundles, handoff packages, replay references, and runtime status.
 - Python contract primitives for task intake, repo profiles, approvals, write governance, execution runtime, artifact/replay persistence, verification, delivery handoff, eval/trace, second-repo pilot checks, and a minimal control-console facade.
 
@@ -43,7 +43,7 @@ Not available yet:
 ## Can I Use This With Another Repo?
 Yes, with the current boundary.
 
-For a repo such as `D:\OneDrive\CODE\ClassroomToolkit`, you can already:
+For a repo such as `..\ClassroomToolkit`, you can already:
 
 - generate or validate `.governed-ai/repo-profile.json` and `.governed-ai/light-pack.json`
 - bind repo-local declarations to machine-local runtime state
@@ -199,7 +199,7 @@ Expected per-repo output includes:
 - `follow_ups`
 
 ### 6. Use It With An Existing Repo
-For an external repo such as `D:\OneDrive\CODE\ClassroomToolkit`, start here:
+For an external repo such as `..\ClassroomToolkit`, start here:
 
 - [Use With An Existing Repo](docs/quickstart/use-with-existing-repo.md)
 - [Use With An Existing Repo (Chinese)](docs/quickstart/use-with-existing-repo.zh-CN.md)
@@ -212,8 +212,8 @@ Daily one-command check:
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-check.ps1 `
-  -AttachmentRoot "D:\OneDrive\CODE\ClassroomToolkit" `
-  -AttachmentRuntimeStateRoot "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit" `
+  -AttachmentRoot "..\ClassroomToolkit" `
+  -AttachmentRuntimeStateRoot ".runtime\attachments\classroomtoolkit" `
   -Mode "quick"
 ```
 
@@ -222,8 +222,8 @@ Two-mode one-command flow:
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow.ps1 `
   -FlowMode "daily" `
-  -AttachmentRoot "D:\OneDrive\CODE\ClassroomToolkit" `
-  -AttachmentRuntimeStateRoot "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit" `
+  -AttachmentRoot "..\ClassroomToolkit" `
+  -AttachmentRuntimeStateRoot ".runtime\attachments\classroomtoolkit" `
   -Mode "quick"
 ```
 
@@ -336,3 +336,4 @@ Current verification baseline:
 - [Codex CLI/App 集成指南](docs/product/codex-cli-app-integration-guide.zh-CN.md)
 - [Runtime Compatibility And Upgrade Policy](docs/product/runtime-compatibility-and-upgrade-policy.md)
 - [Maintenance, Deprecation, And Retirement Policy](docs/product/maintenance-deprecation-and-retirement-policy.md)
+

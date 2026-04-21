@@ -1,7 +1,7 @@
 # AGENTS.md — governed-ai-coding-runtime 项目承接规则
 **承接来源**: `GlobalUser/AGENTS.md v9.39`
-**适用范围**: `D:\OneDrive\CODE\governed-ai-coding-runtime`  
-**最后更新**: `2026-04-17`
+**适用范围**: `governed-ai-coding-runtime 仓库根目录（repo root）`  
+**最后更新**: `2026-04-21`
 
 ## 1. 阅读指引
 - 本文件只写本仓事实、门禁命令、证据位置和回滚入口，不重写全局 `R/E` 语义。

@@ -26,7 +26,7 @@
 - 可以通过 session-bridge 执行 attached write 治理闭环（`write_request` / `write_approve` / `write_execute` / `write_status`），并保留 approval/evidence/handoff/replay refs。
 - 可以运行一个 safe-mode 的 Codex adapter smoke trial，并检查 task / binding / evidence / verification 线路是否连通。
 - 可以运行一个基于 repo-profile 的 multi-repo trial runner，并输出每个 repo 的 posture、adapter tier、verification/evidence refs 和 follow-ups。
-- 可以把外部仓库（例如 `D:\OneDrive\CODE\ClassroomToolkit`）attach 到本运行时，生成 `.governed-ai` 轻量接入包，并通过 status / doctor / session-bridge 使用这些能力。
+- 可以把外部仓库（例如 `..\ClassroomToolkit`）attach 到本运行时，生成 `.governed-ai` 轻量接入包，并通过 status / doctor / session-bridge 使用这些能力。
 - 可以运行 CLI-first governed runtime smoke task，得到本地 artifact、verification、evidence、handoff 与 runtime status。
 - 可以直接查看 compatibility/upgrade/deprecation/retirement policy，并在 runtime status 与 operator UI 中看到维护状态。
 
@@ -43,7 +43,7 @@
 ## 现在能否用于其他项目
 可以，但要按当前边界理解。
 
-对 `D:\OneDrive\CODE\ClassroomToolkit` 这类仓库，你现在已经可以：
+对 `..\ClassroomToolkit` 这类仓库，你现在已经可以：
 
 - 生成或校验 `.governed-ai/repo-profile.json` 和 `.governed-ai/light-pack.json`
 - 把 repo-local 声明绑定到 machine-local runtime state
@@ -197,7 +197,7 @@ python scripts/run-multi-repo-trial.py
 - `follow_ups`
 
 ### 6. 在现有仓库中使用本项目
-如果目标仓是 `D:\OneDrive\CODE\ClassroomToolkit` 这类外部仓，推荐直接看：
+如果目标仓是 `..\ClassroomToolkit` 这类外部仓，推荐直接看：
 
 - [Use With An Existing Repo](docs/quickstart/use-with-existing-repo.md)
 - [在现有仓库中使用](docs/quickstart/use-with-existing-repo.zh-CN.md)
@@ -210,8 +210,8 @@ python scripts/run-multi-repo-trial.py
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-check.ps1 `
-  -AttachmentRoot "D:\OneDrive\CODE\ClassroomToolkit" `
-  -AttachmentRuntimeStateRoot "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit" `
+  -AttachmentRoot "..\ClassroomToolkit" `
+  -AttachmentRuntimeStateRoot ".runtime\attachments\classroomtoolkit" `
   -Mode "quick"
 ```
 
@@ -220,8 +220,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-check.ps1 `
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow.ps1 `
   -FlowMode "daily" `
-  -AttachmentRoot "D:\OneDrive\CODE\ClassroomToolkit" `
-  -AttachmentRuntimeStateRoot "D:\OneDrive\CODE\governed-ai-coding-runtime\.runtime\attachments\classroomtoolkit" `
+  -AttachmentRoot "..\ClassroomToolkit" `
+  -AttachmentRuntimeStateRoot ".runtime\attachments\classroomtoolkit" `
   -Mode "quick"
 ```
 
@@ -334,3 +334,4 @@ PY
 - [Codex CLI/App 集成指南](docs/product/codex-cli-app-integration-guide.zh-CN.md)
 - [Runtime Compatibility And Upgrade Policy](docs/product/runtime-compatibility-and-upgrade-policy.md)
 - [Maintenance, Deprecation, And Retirement Policy](docs/product/maintenance-deprecation-and-retirement-policy.md)
+
