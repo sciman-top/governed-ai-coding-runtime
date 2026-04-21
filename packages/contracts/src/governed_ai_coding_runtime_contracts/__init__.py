@@ -98,6 +98,16 @@ from governed_ai_coding_runtime_contracts.target_repo_speed_kpi import (
     TargetRepoSpeedKpiSnapshot,
     export_target_repo_speed_kpi,
 )
+from governed_ai_coding_runtime_contracts.interaction_governance import (
+    InteractionSignal,
+    ResponsePolicy,
+    TeachingBudget,
+    build_interaction_signal,
+    build_response_policy,
+    build_task_created_policy,
+    build_teaching_budget,
+    derive_response_policy,
+)
 
 __all__ = [
     "PolicyDecision",
@@ -122,6 +132,9 @@ __all__ = [
     "AdapterConformanceResult",
     "TargetRepoSpeedKpiRecord",
     "TargetRepoSpeedKpiSnapshot",
+    "InteractionSignal",
+    "ResponsePolicy",
+    "TeachingBudget",
     "RepoAttachmentBinding",
     "RepoAttachmentPosture",
     "RepoAttachmentResult",
@@ -139,6 +152,10 @@ __all__ = [
     "build_codex_adapter_profile",
     "build_codex_adapter_profile_from_probe",
     "build_multi_repo_trial_record",
+    "build_interaction_signal",
+    "build_response_policy",
+    "build_task_created_policy",
+    "build_teaching_budget",
     "classify_codex_adapter",
     "codex_capability_readiness_to_dict",
     "codex_probe_to_dict",
@@ -169,6 +186,7 @@ __all__ = [
     "evaluate_codex_trial_conformance",
     "evaluate_runtime_check_conformance",
     "build_parity_matrix",
+    "derive_response_policy",
     "export_target_repo_speed_kpi",
     "govern_attached_write_request",
     "decide_attached_write_request",

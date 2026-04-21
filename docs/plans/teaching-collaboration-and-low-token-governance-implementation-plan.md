@@ -174,14 +174,14 @@ Task 1 interaction core contracts
 - Create: `tests/runtime/test_interaction_governance.py`
 
 **Acceptance criteria:**
-- [ ] Helpers can represent signals, policy posture, and budget state without requiring a service boundary.
-- [ ] Helpers fail closed on invalid signal kinds, posture values, or budget status names.
-- [ ] Clarification integration remains compatible with the existing clarification primitives instead of replacing them.
-- [ ] Tests cover task-created, repeated-failure, observation-gap, term-confusion, and budget-pressure cases.
+- [x] Helpers can represent signals, policy posture, and budget state without requiring a service boundary.
+- [x] Helpers fail closed on invalid signal kinds, posture values, or budget status names.
+- [x] Clarification integration remains compatible with the existing clarification primitives instead of replacing them.
+- [x] Tests cover task-created, repeated-failure, observation-gap, term-confusion, and budget-pressure cases.
 
 **Verification:**
-- [ ] Run `python -m unittest tests.runtime.test_interaction_governance -v`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [x] Run `python -m unittest tests.runtime.test_interaction_governance -v`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
 
 **Dependencies:** Task 2.
 

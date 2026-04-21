@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260422 Interaction Governance Python Primitives](./20260422-interaction-governance-python-primitives.md)
+  - evidence companion for Task 3 of the interaction-governance lane, adding task-scoped Python primitives, fail-closed validation, clarification-compatible policy derivation, and runtime tests
 - [20260422 Interaction Schema And Catalog Wiring](./20260422-interaction-schema-catalog-wiring.md)
   - evidence companion for Task 2 of the interaction-governance lane, adding five schemas, five examples, schema-catalog wiring, and examples index updates
 - [20260422 Interaction Core Specs](./20260422-interaction-core-specs.md)
