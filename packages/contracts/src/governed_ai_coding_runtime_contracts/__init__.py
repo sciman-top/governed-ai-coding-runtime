@@ -87,6 +87,12 @@ from governed_ai_coding_runtime_contracts.attached_write_execution import (
     decide_attached_write_request,
     execute_attached_write_request,
 )
+from governed_ai_coding_runtime_contracts.adapter_conformance import (
+    AdapterConformanceResult,
+    build_parity_matrix,
+    evaluate_codex_trial_conformance,
+    evaluate_runtime_check_conformance,
+)
 
 __all__ = [
     "PolicyDecision",
@@ -108,6 +114,7 @@ __all__ = [
     "AttachedWriteGovernanceResult",
     "AttachedApprovalDecisionResult",
     "AttachedWriteExecutionResult",
+    "AdapterConformanceResult",
     "RepoAttachmentBinding",
     "RepoAttachmentPosture",
     "RepoAttachmentResult",
@@ -152,6 +159,9 @@ __all__ = [
     "session_bridge_result_to_dict",
     "project_codex_profile_to_adapter_contract",
     "run_multi_repo_trial",
+    "evaluate_codex_trial_conformance",
+    "evaluate_runtime_check_conformance",
+    "build_parity_matrix",
     "govern_attached_write_request",
     "decide_attached_write_request",
     "execute_attached_write_request",

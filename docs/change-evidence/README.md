@@ -4,6 +4,16 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260421 GAP-082 Service-Primary Convergence Runtime-Gate Baseline](./20260421-gap-082-service-primary-convergence-runtime-gate-baseline.md)
+  - evidence companion for adding runtime-gate enforcement of service API parity tests and promoting `GAP-082` to in-progress
+- [20260421 GAP-081 Non-Codex Conformance Closeout](./20260421-gap-081-non-codex-conformance-closeout.md)
+  - closeout evidence for `GAP-081`, including shared Codex/non-Codex conformance gating and non-Codex adapter-event linkage parity
+- [20260421 Relative Path Normalization For Attachment Guides](./20260421-relative-path-normalization-for-attachment-guides.md)
+  - evidence companion for replacing machine-specific absolute attachment paths in active docs with repo-root-relative examples and updating scope metadata
+- [20260421 GAP-081 Non-Codex Conformance Baseline](./20260421-gap-081-non-codex-conformance-baseline.md)
+  - evidence companion for introducing shared Codex/non-Codex conformance gates and parity-matrix reporting
+- [20260421 GAP-080 Live Host Closure Closeout](./20260421-gap-080-live-host-closure-closeout.md)
+  - closeout evidence for `GAP-080`, including live attached loop continuity, approval-bound medium write execution, and stable handoff/replay/evidence linkage
 - [20260420 Readonly Path Traversal Guard](./20260420-readonly-path-traversal-guard.md)
   - evidence companion for fail-closing readonly path traversal (`..`) that could bypass allow-scope prefix checks
 - [20260420 Direct-To-Hybrid Plan Checkbox Reconciliation](./20260420-direct-to-hybrid-plan-checkbox-reconciliation.md)

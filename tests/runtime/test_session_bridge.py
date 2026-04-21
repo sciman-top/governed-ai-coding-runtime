@@ -404,6 +404,63 @@ class SessionBridgeCommandTests(unittest.TestCase):
             self.assertTrue(result.payload["adapter_event_ref"])
             self.assertGreaterEqual(result.payload["adapter_event_summary"]["gate_run_count"], 2)
 
+    def test_non_codex_quick_gate_also_emits_adapter_event_linkage(self) -> None:
+        module = self._module()
+        repo_attachment = importlib.import_module("governed_ai_coding_runtime_contracts.repo_attachment")
+        policy_decision = importlib.import_module("governed_ai_coding_runtime_contracts.policy_decision")
+        decision = policy_decision.build_policy_decision(
+            task_id="task-exec-generic-gate",
+            action_id="action-generic-allow",
+            risk_tier="low",
+            subject="session_command:run_gate",
+            status="allow",
+            decision_basis=["attached repo gate plan is allowed for generic adapter"],
+            evidence_ref="artifacts/task-exec-generic-gate/policy/allow.json",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            self._seed_task(workspace, task_id="task-exec-generic-gate")
+            target_repo = workspace / "target"
+            target_repo.mkdir()
+            runtime_state_root = workspace / "runtime-state" / "target"
+            python = sys.executable.replace("\\", "/")
+            repo_attachment.attach_target_repo(
+                target_repo_root=str(target_repo),
+                runtime_state_root=str(runtime_state_root),
+                repo_id="target",
+                display_name="Target",
+                primary_language="python",
+                build_command=f"{python} -c \"print('build-pass')\"",
+                test_command=f"{python} -c \"print('test-pass')\"",
+                contract_command=f"{python} -c \"print('contract-pass')\"",
+                adapter_preference="process_bridge",
+            )
+
+            command = module.build_session_bridge_command(
+                command_id="cmd-exec-generic-gate",
+                command_type="run_quick_gate",
+                task_id="task-exec-generic-gate",
+                repo_binding_id="binding-target",
+                adapter_id="generic.process.cli",
+                risk_tier="low",
+                payload={"run_id": "run-generic-1"},
+                policy_decision=decision,
+            )
+            result = module.handle_session_bridge_command(
+                command,
+                task_root=workspace / ".runtime" / "tasks",
+                repo_root=workspace,
+                attachment_root=target_repo,
+                attachment_runtime_state_root=runtime_state_root,
+            )
+
+            self.assertEqual(result.status, "verification_completed")
+            self.assertTrue(result.payload["adapter_event_ref"])
+            self.assertIsInstance(result.payload["adapter_event_summary"], dict)
+            self.assertGreaterEqual(result.payload["adapter_event_summary"]["gate_run_count"], 2)
+            self.assertEqual(result.payload["session_identity"]["flow_kind"], "manual_handoff")
+
     def test_attached_repo_quick_gate_prefers_target_repo_declared_commands(self) -> None:
         module = self._module()
         repo_attachment = importlib.import_module("governed_ai_coding_runtime_contracts.repo_attachment")

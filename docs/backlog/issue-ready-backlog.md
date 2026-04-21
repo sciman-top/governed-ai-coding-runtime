@@ -13,7 +13,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - non-goals remain non-goals: no enterprise org model, no marketplace, no default multi-agent orchestration, no memory-first product identity
 - governance-optimization lane `GAP-061` through `GAP-068` was the follow-on queue after `GAP-060` and is now complete on the current branch baseline (verified on 2026-04-20), while older lifecycle `GAP` entries remain completion history
 - post-closeout optimization queue `GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20) and does not reopen hybrid final-state closure
-- optimized best-state near-term gap horizon queue `GAP-080` through `GAP-084` is now the active execution-horizon backlog derived from `NT-01..05` / `NTP-01..05`
+- optimized best-state near-term gap horizon queue remains active, with `GAP-080` and `GAP-081` complete on the current branch baseline (verified on 2026-04-21) and `GAP-082` through `GAP-084` as the remaining execution-horizon backlog derived from `NT-01..05` / `NTP-01..05`
 
 ## Current Baseline
 - PRD, architecture, ADRs, specs, runtime contract primitives, repo verifier entrypoints, sample repo profiles, and a runtime-consumable control pack already exist.
@@ -29,7 +29,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Direct-To-Hybrid-Final-State Mainline / GAP-046` through `GAP-060` are complete on the current branch baseline (verified on 2026-04-20).
 - `Governance Optimization Lane / GAP-061` through `GAP-068` are complete on the current branch baseline (verified on 2026-04-20).
 - `Post-Closeout Optimization Queue / GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20).
-- `Near-Term Gap Horizon Queue / GAP-080` through `GAP-084` is planned as the active execution-horizon queue from the optimized best-state definition.
+- `Near-Term Gap Horizon Queue / GAP-080` and `GAP-081` are complete on the current branch baseline (verified on 2026-04-21), and `GAP-082` through `GAP-084` remain the active execution-horizon queue from the optimized best-state definition.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -479,35 +479,35 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: HITL
 - Blocked by: GAP-074
 - User stories: 2, 11, 13, 14, 43
-- Status: planned for execution horizon
+- Status: complete on current branch baseline (verified on 2026-04-21)
 - What to build:
   - prove one real live-session governed loop from handshake through handoff/replay without breaking runtime-owned identity
   - preserve stable session, continuation, and task linkage across request, approval, execution, verification, and replay
   - export runtime-owned evidence snapshots that distinguish real live execution from fallback paths
 - Acceptance criteria:
-  - [ ] one live attached path preserves session identity and continuation across request, approval, execute, verify, handoff, and replay
-  - [ ] runtime evidence can link all live-loop events back to one governed task with stable refs
-  - [ ] fallback or manual paths remain explicit and cannot be mistaken for live closure
+  - [x] one live attached path preserves session identity and continuation across request, approval, execute, verify, handoff, and replay
+  - [x] runtime evidence can link all live-loop events back to one governed task with stable refs
+  - [x] fallback or manual paths remain explicit and cannot be mistaken for live closure
 
 ### GAP-081 NTP-02 Non-Codex Conformance
 - Type: AFK
 - Blocked by: GAP-080
 - User stories: 20, 31, 37, 44, 46
-- Status: planned for execution horizon
+- Status: complete on current branch baseline (verified on 2026-04-21)
 - What to build:
   - build shared adapter conformance checks that apply to Codex and at least one non-Codex adapter
   - make non-Codex guarantee levels auditable through the same gate and evidence model
   - keep adapter registry output comparable across hosts without weakening fail-closed semantics
 - Acceptance criteria:
-  - [ ] at least one non-Codex adapter passes the same conformance gate family used by Codex
-  - [ ] non-Codex trials emit equivalent runtime evidence linkage fields
-  - [ ] parity matrix clearly records supported, degraded, and blocked capabilities per host
+  - [x] at least one non-Codex adapter passes the same conformance gate family used by Codex
+  - [x] non-Codex trials emit equivalent runtime evidence linkage fields
+  - [x] parity matrix clearly records supported, degraded, and blocked capabilities per host
 
 ### GAP-082 NTP-03 Service-Primary Convergence
 - Type: AFK
 - Blocked by: GAP-081
 - User stories: 1, 11, 13, 17, 39
-- Status: planned for execution horizon
+- Status: in progress on current branch baseline (runtime service-parity gate slice verified on 2026-04-21)
 - What to build:
   - enforce API-first runtime boundaries and keep CLI as a wrapper-only compatibility surface
   - add API/CLI parity guards for execution-like commands and operator reads

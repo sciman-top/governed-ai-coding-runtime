@@ -1262,8 +1262,6 @@ def _record_adapter_events(
     handoff_refs: list[str],
     unsupported_events: list[dict],
 ) -> tuple[str | None, dict | None]:
-    if command.adapter_id != "codex-cli":
-        return None, None
     identity = dict(session_identity) if isinstance(session_identity, dict) else _session_identity(
         command,
         continuation_id=continuation_id,
@@ -1278,23 +1276,76 @@ def _record_adapter_events(
     if not isinstance(unsupported_capabilities, list):
         unsupported_capabilities = []
     timeline = EvidenceTimeline()
-    session = CodexSessionEvidence(
-        task_id=task_id,
-        adapter_id=command.adapter_id,
-        adapter_tier=str(identity.get("adapter_tier", "manual_handoff")),
-        flow_kind=flow_kind,
-        file_changes=file_changes,
-        tool_calls=tool_calls,
-        gate_runs=gate_runs,
-        approvals=[approval for approval in approvals if approval],
-        handoff_refs=handoff_refs,
-        unsupported_capabilities=[str(item) for item in unsupported_capabilities if isinstance(item, str)],
-        execution_id=execution_id,
-        continuation_id=continuation_id,
-        event_source=event_source,
-        unsupported_events=unsupported_events,
-    )
-    record_codex_session_evidence(timeline, session)
+    if command.adapter_id == "codex-cli":
+        session = CodexSessionEvidence(
+            task_id=task_id,
+            adapter_id=command.adapter_id,
+            adapter_tier=str(identity.get("adapter_tier", "manual_handoff")),
+            flow_kind=flow_kind,
+            file_changes=file_changes,
+            tool_calls=tool_calls,
+            gate_runs=gate_runs,
+            approvals=[approval for approval in approvals if approval],
+            handoff_refs=handoff_refs,
+            unsupported_capabilities=[str(item) for item in unsupported_capabilities if isinstance(item, str)],
+            execution_id=execution_id,
+            continuation_id=continuation_id,
+            event_source=event_source,
+            unsupported_events=unsupported_events,
+        )
+        record_codex_session_evidence(timeline, session)
+    else:
+        base_payload = {
+            "adapter_id": command.adapter_id,
+            "adapter_tier": str(identity.get("adapter_tier", "manual_handoff")),
+            "flow_kind": flow_kind,
+            "execution_id": execution_id,
+            "continuation_id": continuation_id,
+            "event_source": event_source,
+        }
+        timeline.append(
+            task_id,
+            "adapter_posture",
+            {
+                **base_payload,
+                "unsupported_capabilities": [str(item) for item in unsupported_capabilities if isinstance(item, str)],
+            },
+        )
+        for path in file_changes:
+            timeline.append(task_id, "adapter_file_change", {**base_payload, "path": path})
+        for tool_call in tool_calls:
+            timeline.append(task_id, "adapter_tool_call", {**base_payload, **tool_call})
+        for artifact_ref in gate_runs:
+            timeline.append(task_id, "adapter_gate_run", {**base_payload, "artifact_ref": artifact_ref})
+        for approval_id in approvals:
+            if approval_id:
+                timeline.append(task_id, "adapter_approval_event", {**base_payload, "approval_id": approval_id})
+        for handoff_ref in handoff_refs:
+            timeline.append(task_id, "adapter_handoff", {**base_payload, "handoff_ref": handoff_ref})
+        for capability in unsupported_capabilities:
+            timeline.append(
+                task_id,
+                "adapter_unsupported_event",
+                {
+                    **base_payload,
+                    "capability": capability,
+                    "reason": "unsupported capability recorded by adapter posture",
+                },
+            )
+        for raw_event in unsupported_events:
+            if not isinstance(raw_event, dict):
+                continue
+            timeline.append(
+                task_id,
+                "adapter_unsupported_event",
+                {
+                    **base_payload,
+                    "capability": raw_event.get("capability"),
+                    "event_type": raw_event.get("event_type"),
+                    "reason": raw_event.get("reason") or "unsupported adapter event",
+                    "raw_event": raw_event,
+                },
+            )
     summary = summarize_adapter_evidence(task_id, timeline)
     events = [
         {
@@ -1531,6 +1582,14 @@ def _session_identity(
         identity["unsupported_capabilities"] = handshake.unsupported_capabilities
         identity["posture_reason"] = handshake.posture_reason
         identity["continuation_id"] = handshake.continuation_id
+    else:
+        identity.setdefault("adapter_tier", "manual_handoff")
+        identity.setdefault("flow_kind", "manual_handoff")
+        identity.setdefault(
+            "posture_reason",
+            "non-codex adapter uses generic fallback posture until live host conformance is promoted",
+        )
+        identity.setdefault("unsupported_capabilities", [])
 
     if session_id is not None:
         identity["session_id"] = session_id
