@@ -1,0 +1,15 @@
+{
+  "signal_id": "sig-bugfix-gap-001",
+  "task_id": "task-bugfix-500",
+  "signal_kind": "observation_gap",
+  "severity": "medium",
+  "confidence": 0.9,
+  "source": "user_input",
+  "summary": "User reported a 500 error without reproducible expected-vs-actual details or server logs.",
+  "evidence_refs": [
+    "evidence://task-bugfix-500/intake"
+  ],
+  "recorded_at": "2026-04-22T08:00:00Z",
+  "affected_scope": "bugfix"
+}
+

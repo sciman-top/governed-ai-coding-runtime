@@ -32,6 +32,13 @@ This directory holds the normative contract descriptions that the schema drafts 
 ### Agent compatibility
 - [Agent Adapter Contract Spec](./agent-adapter-contract-spec.md)
 
+### Interaction governance
+- [Interaction Signal Spec](./interaction-signal-spec.md)
+- [Response Policy Spec](./response-policy-spec.md)
+- [Teaching Budget Spec](./teaching-budget-spec.md)
+- [Interaction Evidence Spec](./interaction-evidence-spec.md)
+- [Learning Efficiency Metrics Spec](./learning-efficiency-metrics-spec.md)
+
 ## Reading Order
 1. [Task Lifecycle And State Machine Spec](./task-lifecycle-and-state-machine-spec.md)
 2. [Risk Tier And Approval Spec](./risk-tier-and-approval-spec.md)

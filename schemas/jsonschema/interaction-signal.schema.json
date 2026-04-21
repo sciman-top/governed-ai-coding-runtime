@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/interaction-signal.schema.json",
+  "title": "Interaction Signal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "signal_id",
+    "task_id",
+    "signal_kind",
+    "severity",
+    "confidence",
+    "source",
+    "summary",
+    "evidence_refs",
+    "recorded_at"
+  ],
+  "properties": {
+    "signal_id": {
+      "type": "string"
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "signal_kind": {
+      "type": "string",
+      "enum": [
+        "intent_drift",
+        "goal_scope_mismatch",
+        "expected_actual_missing",
+        "symptom_root_cause_confusion",
+        "term_confusion",
+        "repeated_question_no_progress",
+        "repeated_failure",
+        "observation_gap",
+        "budget_pressure",
+        "verbosity_overrun",
+        "handoff_risk"
+      ]
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "user_input",
+        "task_state",
+        "runtime_event",
+        "verification_result",
+        "operator_feedback",
+        "replay_analysis"
+      ]
+    },
+    "summary": {
+      "type": "string"
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "actor_id": {
+      "type": "string"
+    },
+    "affected_scope": {
+      "type": "string"
+    },
+    "related_signal_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}
+

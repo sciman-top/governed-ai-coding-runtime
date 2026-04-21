@@ -15,6 +15,11 @@ Provide minimal but realistic JSON instances that exercise the repository's curr
 - `control-pack/`: sample control-pack metadata
 - `policy-decision/`: policy decision examples
 - `agent-adapter-contract/`: sample adapter posture examples
+- `interaction-signal/`: observable interaction trigger examples
+- `response-policy/`: bounded response policy examples
+- `teaching-budget/`: explanation and clarification budget examples
+- `interaction-evidence/`: interaction-trace evidence examples
+- `learning-efficiency-metrics/`: bounded interaction metrics examples
 
 ## Example Files
 - `control-pack/minimum-governance-kernel.example.json`
@@ -31,6 +36,11 @@ Provide minimal but realistic JSON instances that exercise the repository's curr
 - `policy-decision/escalate-write.example.json`
 - `agent-adapter-contract/manual-handoff.example.json`
 - `agent-adapter-contract/process-bridge.example.json`
+- `interaction-signal/default-bugfix-gap.example.json`
+- `response-policy/guided-clarify.example.json`
+- `teaching-budget/default-runtime.example.json`
+- `interaction-evidence/checklist-first-bugfix.example.json`
+- `learning-efficiency-metrics/baseline.example.json`
 
 ## Validation
 Each example should validate against its matching schema:
@@ -74,6 +84,21 @@ Get-Content -Raw 'schemas/examples/agent-adapter-contract/manual-handoff.example
 
 Get-Content -Raw 'schemas/examples/agent-adapter-contract/process-bridge.example.json' |
   Test-Json -SchemaFile 'schemas/jsonschema/agent-adapter-contract.schema.json'
+
+Get-Content -Raw 'schemas/examples/interaction-signal/default-bugfix-gap.example.json' |
+  Test-Json -SchemaFile 'schemas/jsonschema/interaction-signal.schema.json'
+
+Get-Content -Raw 'schemas/examples/response-policy/guided-clarify.example.json' |
+  Test-Json -SchemaFile 'schemas/jsonschema/response-policy.schema.json'
+
+Get-Content -Raw 'schemas/examples/teaching-budget/default-runtime.example.json' |
+  Test-Json -SchemaFile 'schemas/jsonschema/teaching-budget.schema.json'
+
+Get-Content -Raw 'schemas/examples/interaction-evidence/checklist-first-bugfix.example.json' |
+  Test-Json -SchemaFile 'schemas/jsonschema/interaction-evidence.schema.json'
+
+Get-Content -Raw 'schemas/examples/learning-efficiency-metrics/baseline.example.json' |
+  Test-Json -SchemaFile 'schemas/jsonschema/learning-efficiency-metrics.schema.json'
 ```
 
 ## Notes
@@ -81,4 +106,5 @@ Get-Content -Raw 'schemas/examples/agent-adapter-contract/process-bridge.example
 - The repo-profile examples demonstrate `same kernel, different profiles` across Python and TypeScript targets.
 - The control-pack example demonstrates bundle metadata; it does not contain executable policy or hook code.
 - The adapter examples demonstrate honest fallback posture for non-Codex integrations.
+- The interaction-governance examples demonstrate checklist-first bugfix guidance, bounded response policy, and token-budget-aware behavior.
 - They are reference assets, not normative defaults for every repository.

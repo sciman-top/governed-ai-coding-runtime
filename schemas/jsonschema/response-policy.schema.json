@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/response-policy.schema.json",
+  "title": "Response Policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "policy_id",
+    "task_id",
+    "mode",
+    "teaching_level",
+    "clarification_mode",
+    "compression_mode",
+    "max_questions",
+    "max_observation_items",
+    "term_explain_limit",
+    "restatement_required",
+    "stop_or_escalate",
+    "rationale_signal_ids"
+  ],
+  "properties": {
+    "policy_id": {
+      "type": "string"
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "terse",
+        "guided",
+        "teaching"
+      ]
+    },
+    "teaching_level": {
+      "type": "string",
+      "enum": [
+        "none",
+        "term_only",
+        "concept_only",
+        "task_scoped"
+      ]
+    },
+    "clarification_mode": {
+      "type": "string",
+      "enum": [
+        "none",
+        "light",
+        "required"
+      ]
+    },
+    "compression_mode": {
+      "type": "string",
+      "enum": [
+        "none",
+        "stage_summary",
+        "aggressive_compaction",
+        "ref_only"
+      ]
+    },
+    "max_questions": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3
+    },
+    "max_observation_items": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "term_explain_limit": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "restatement_required": {
+      "type": "boolean"
+    },
+    "stop_or_escalate": {
+      "type": "string",
+      "enum": [
+        "continue",
+        "pause_for_user_input",
+        "switch_to_checklist",
+        "handoff_only",
+        "stop_on_budget"
+      ]
+    },
+    "rationale_signal_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "posture": {
+      "type": "string",
+      "enum": [
+        "aligned",
+        "clarifying",
+        "guiding",
+        "teaching",
+        "compressing",
+        "handoff_only",
+        "stopped_on_budget"
+      ]
+    },
+    "checklist_kind": {
+      "type": "string"
+    },
+    "summary_template": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}
+

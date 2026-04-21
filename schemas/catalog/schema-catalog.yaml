@@ -1,4 +1,4 @@
-schema_catalog_version: "1.8"
+schema_catalog_version: "1.9"
 items:
   - name: control-registry
     path: schemas/jsonschema/control-registry.schema.json
@@ -72,3 +72,18 @@ items:
   - name: target-repo-speed-kpi
     path: schemas/jsonschema/target-repo-speed-kpi.schema.json
     source_spec: docs/specs/target-repo-speed-kpi-spec.md
+  - name: interaction-signal
+    path: schemas/jsonschema/interaction-signal.schema.json
+    source_spec: docs/specs/interaction-signal-spec.md
+  - name: response-policy
+    path: schemas/jsonschema/response-policy.schema.json
+    source_spec: docs/specs/response-policy-spec.md
+  - name: teaching-budget
+    path: schemas/jsonschema/teaching-budget.schema.json
+    source_spec: docs/specs/teaching-budget-spec.md
+  - name: interaction-evidence
+    path: schemas/jsonschema/interaction-evidence.schema.json
+    source_spec: docs/specs/interaction-evidence-spec.md
+  - name: learning-efficiency-metrics
+    path: schemas/jsonschema/learning-efficiency-metrics.schema.json
+    source_spec: docs/specs/learning-efficiency-metrics-spec.md

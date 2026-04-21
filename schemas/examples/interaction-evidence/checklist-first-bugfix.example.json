@@ -1,0 +1,37 @@
+{
+  "interaction_evidence_id": "ie-bugfix-500-001",
+  "task_id": "task-bugfix-500",
+  "applied_policy_ref": "policy-guided-clarify-001",
+  "trigger_signal_refs": [
+    "sig-bugfix-gap-001"
+  ],
+  "task_restatement": "Current task is to diagnose the 500 error without assuming the root cause before logs and repro details exist.",
+  "clarification_questions": [
+    "What request path and payload reproduce the 500?"
+  ],
+  "clarification_answers": [
+    null
+  ],
+  "observation_checklist": [
+    "Capture the request path and parameters.",
+    "Capture the server-side error log for the failing request.",
+    "Compare the last known-good call with the failing one."
+  ],
+  "terms_explained": [
+    "500 is a server-side failure symptom, not a root cause by itself."
+  ],
+  "compression_action": "none",
+  "before_after_summary": {
+    "before": "User requested a direct fix with insufficient bug observation data.",
+    "after": "Session shifted into checklist-first guidance before root-cause reasoning."
+  },
+  "budget_snapshot": {
+    "budget_status": "healthy",
+    "remaining_explanation_budget": 720,
+    "remaining_clarification_budget": 780,
+    "remaining_compaction_budget": 600
+  },
+  "outcome_assessment": "awaiting_user_input",
+  "created_at": "2026-04-22T08:05:00Z"
+}
+

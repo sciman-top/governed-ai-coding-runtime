@@ -121,14 +121,14 @@ Task 1 interaction core contracts
 - Create: `docs/specs/learning-efficiency-metrics-spec.md`
 
 **Acceptance criteria:**
-- [ ] Each spec defines purpose, required fields, optional fields, and invariants.
-- [ ] Specs use “observable signals” language rather than psychological inference language.
-- [ ] `ResponsePolicy` states posture limits and degrade behavior explicitly.
-- [ ] `TeachingBudget` distinguishes explanation, clarification, and compaction budgets.
-- [ ] `InteractionEvidence` and `LearningEfficiencyMetrics` align with existing evidence/trace semantics instead of inventing a new storage model.
+- [x] Each spec defines purpose, required fields, optional fields, and invariants.
+- [x] Specs use “observable signals” language rather than psychological inference language.
+- [x] `ResponsePolicy` states posture limits and degrade behavior explicitly.
+- [x] `TeachingBudget` distinguishes explanation, clarification, and compaction budgets.
+- [x] `InteractionEvidence` and `LearningEfficiencyMetrics` align with existing evidence/trace semantics instead of inventing a new storage model.
 
 **Verification:**
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
 
 **Dependencies:** None.
 
@@ -152,13 +152,13 @@ Task 1 interaction core contracts
 - Modify: `schemas/catalog/schema-catalog.yaml`
 
 **Acceptance criteria:**
-- [ ] Each new spec has one schema and one example.
-- [ ] Schema enums and required fields match the specs exactly.
-- [ ] New assets participate in existing schema parse, example validation, and catalog pairing gates.
-- [ ] Example records demonstrate bugfix/checklist-first and budget-pressure scenarios.
+- [x] Each new spec has one schema and one example.
+- [x] Schema enums and required fields match the specs exactly.
+- [x] New assets participate in existing schema parse, example validation, and catalog pairing gates.
+- [x] Example records demonstrate bugfix/checklist-first and budget-pressure scenarios.
 
 **Verification:**
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
 
 **Dependencies:** Task 1.
 
@@ -360,4 +360,3 @@ The plan intentionally stops short of:
 - runtime mutation based only on metrics
 
 Those items require additional product evidence and should remain follow-on proposals rather than implicit scope creep inside this lane.
-

@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/interaction-evidence.schema.json",
+  "title": "Interaction Evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "interaction_evidence_id",
+    "task_id",
+    "applied_policy_ref",
+    "trigger_signal_refs",
+    "task_restatement",
+    "clarification_questions",
+    "clarification_answers",
+    "observation_checklist",
+    "terms_explained",
+    "compression_action",
+    "before_after_summary",
+    "budget_snapshot",
+    "outcome_assessment",
+    "created_at"
+  ],
+  "properties": {
+    "interaction_evidence_id": {
+      "type": "string"
+    },
+    "task_id": {
+      "type": "string"
+    },
+    "applied_policy_ref": {
+      "type": "string"
+    },
+    "trigger_signal_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "task_restatement": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "clarification_questions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "clarification_answers": {
+      "type": "array",
+      "items": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "observation_checklist": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "terms_explained": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "compression_action": {
+      "type": "string",
+      "enum": [
+        "none",
+        "stage_summary",
+        "aggressive_compaction",
+        "ref_only"
+      ]
+    },
+    "before_after_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "before",
+        "after"
+      ],
+      "properties": {
+        "before": {
+          "type": "string"
+        },
+        "after": {
+          "type": "string"
+        }
+      }
+    },
+    "budget_snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "budget_status"
+      ],
+      "properties": {
+        "budget_status": {
+          "type": "string",
+          "enum": [
+            "healthy",
+            "warning",
+            "near_limit",
+            "exhausted"
+          ]
+        },
+        "remaining_explanation_budget": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "remaining_clarification_budget": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "remaining_compaction_budget": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "outcome_assessment": {
+      "type": "string",
+      "enum": [
+        "alignment_improved",
+        "still_blocked",
+        "awaiting_user_input",
+        "degraded_on_budget",
+        "handed_off"
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "stop_or_degrade_reason": {
+      "type": "string"
+    },
+    "replay_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "operator_follow_up_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}
+

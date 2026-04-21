@@ -1,0 +1,20 @@
+{
+  "policy_id": "policy-guided-clarify-001",
+  "task_id": "task-bugfix-500",
+  "mode": "guided",
+  "teaching_level": "term_only",
+  "clarification_mode": "light",
+  "compression_mode": "none",
+  "max_questions": 2,
+  "max_observation_items": 4,
+  "term_explain_limit": 1,
+  "restatement_required": true,
+  "stop_or_escalate": "continue",
+  "rationale_signal_ids": [
+    "sig-bugfix-gap-001"
+  ],
+  "posture": "guiding",
+  "checklist_kind": "bugfix-observation",
+  "summary_template": "goal-plan-changes-verification-risks"
+}
+

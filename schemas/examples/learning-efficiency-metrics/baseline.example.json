@@ -1,0 +1,19 @@
+{
+  "task_id": "task-bugfix-500",
+  "restatement_count": 1,
+  "clarification_rounds": 1,
+  "term_explanation_count": 1,
+  "observation_prompt_count": 1,
+  "compression_count": 0,
+  "budget_downgrade_count": 0,
+  "token_spend_total": 1500,
+  "token_spend_explanation": 180,
+  "token_spend_clarification": 120,
+  "repeated_misunderstanding_count": 0,
+  "rework_after_misalignment_count": 0,
+  "user_confirmed_alignment_count": 0,
+  "issue_resolution_without_repeated_question": 0,
+  "recorded_at": "2026-04-22T08:10:00Z",
+  "metrics_source_ref": "evidence://task-bugfix-500/interaction-trace"
+}
+

@@ -4,6 +4,10 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260422 Interaction Schema And Catalog Wiring](./20260422-interaction-schema-catalog-wiring.md)
+  - evidence companion for Task 2 of the interaction-governance lane, adding five schemas, five examples, schema-catalog wiring, and examples index updates
+- [20260422 Interaction Core Specs](./20260422-interaction-core-specs.md)
+  - evidence companion for Task 1 of the interaction-governance implementation lane, landing the first five reviewable core specs and updating spec-plan indexes
 - [20260422 教学式协作与低 Token 治理实现计划](./20260422-teaching-collaboration-low-token-implementation-plan.md)
   - evidence companion for the bounded implementation plan that decomposes interaction-governance design into specs, schemas, Python primitives, evidence/trace integration, and minimal read-model projection
 - [20260422 教学式协作与低 Token 治理总设计](./20260422-teaching-collaboration-low-token-governance-design.md)

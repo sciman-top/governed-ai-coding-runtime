@@ -1,0 +1,22 @@
+{
+  "task_id": "task-bugfix-500",
+  "total_token_budget": 6000,
+  "execution_budget": 3600,
+  "clarification_budget": 900,
+  "explanation_budget": 900,
+  "compaction_budget": 600,
+  "used_execution_tokens": 1200,
+  "used_clarification_tokens": 120,
+  "used_explanation_tokens": 180,
+  "used_compaction_tokens": 0,
+  "soft_thresholds": {
+    "warning_tokens": 4200,
+    "near_limit_tokens": 5400
+  },
+  "hard_thresholds": {
+    "stop_tokens": 6000
+  },
+  "budget_status": "healthy",
+  "budget_source_ref": "task://task-bugfix-500/budgets"
+}
+

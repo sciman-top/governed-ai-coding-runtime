@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/teaching-budget.schema.json",
+  "title": "Teaching Budget",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_id",
+    "total_token_budget",
+    "execution_budget",
+    "clarification_budget",
+    "explanation_budget",
+    "compaction_budget",
+    "used_execution_tokens",
+    "used_clarification_tokens",
+    "used_explanation_tokens",
+    "used_compaction_tokens",
+    "soft_thresholds",
+    "hard_thresholds",
+    "budget_status"
+  ],
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "total_token_budget": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "execution_budget": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "clarification_budget": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "explanation_budget": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "compaction_budget": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "used_execution_tokens": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "used_clarification_tokens": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "used_explanation_tokens": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "used_compaction_tokens": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "soft_thresholds": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "hard_thresholds": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "budget_status": {
+      "type": "string",
+      "enum": [
+        "healthy",
+        "warning",
+        "near_limit",
+        "exhausted"
+      ]
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "budget_source_ref": {
+      "type": "string"
+    },
+    "last_compaction_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}
+

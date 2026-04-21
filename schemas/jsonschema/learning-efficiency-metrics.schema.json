@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/learning-efficiency-metrics.schema.json",
+  "title": "Learning Efficiency Metrics",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_id",
+    "restatement_count",
+    "clarification_rounds",
+    "term_explanation_count",
+    "observation_prompt_count",
+    "compression_count",
+    "budget_downgrade_count",
+    "token_spend_total",
+    "token_spend_explanation",
+    "token_spend_clarification",
+    "repeated_misunderstanding_count",
+    "rework_after_misalignment_count",
+    "user_confirmed_alignment_count",
+    "issue_resolution_without_repeated_question",
+    "recorded_at"
+  ],
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "restatement_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "clarification_rounds": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "term_explanation_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "observation_prompt_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "compression_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "budget_downgrade_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "token_spend_total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "token_spend_explanation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "token_spend_clarification": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "repeated_misunderstanding_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "rework_after_misalignment_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "user_confirmed_alignment_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "issue_resolution_without_repeated_question": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "metrics_source_ref": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}
+
