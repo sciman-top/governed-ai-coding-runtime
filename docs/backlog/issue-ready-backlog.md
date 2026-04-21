@@ -514,7 +514,7 @@ The entries below record the executed queue for complete hybrid final-state and 
   - detect and block contract drift between service paths and wrapper paths
 - Acceptance criteria:
   - [x] API and CLI execution-like commands remain parity-checked in CI
-  - [ ] CLI behavior is implemented through service boundaries rather than parallel runtime logic
+  - [x] CLI behavior is implemented through service boundaries rather than parallel runtime logic
   - [x] parity drift fails verification before merge
 
 ### GAP-083 NTP-04 Operator Remediation Depth
