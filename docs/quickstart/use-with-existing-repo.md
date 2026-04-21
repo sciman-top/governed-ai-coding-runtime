@@ -180,6 +180,12 @@ Exit behavior:
 - returns exit code `0` only when the chain passes and gate results are all `pass`
 - returns exit code `1` when any step fails or any verification gate result is `fail`
 - when `-ExecuteWriteFlow` is enabled, output also includes real `handoff_ref` and `replay_ref` for the executed write flow
+- runtime-check now emits `summary.session_id` / `summary.resume_id` / `summary.continuation_id` and `live_loop` closure diagnostics (`flow_kind`, continuity booleans, `closure_state`, and linked runtime refs)
+
+Optional identity override flags:
+- `-SessionId`
+- `-ResumeId`
+- `-ContinuationId`
 
 ### 5. Two-Mode One-Command Flow
 

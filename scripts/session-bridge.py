@@ -60,6 +60,8 @@ def main() -> int:
         subparsers.add_parser("inspect-evidence", help="Inspect evidence refs for a task or run.")
     )
     inspect_evidence_parser.add_argument("--run-id")
+    inspect_evidence_parser.add_argument("--attachment-root")
+    inspect_evidence_parser.add_argument("--attachment-runtime-state-root")
     inspect_evidence_parser.set_defaults(command_type="inspect_evidence")
 
     inspect_handoff_parser = _add_common(
@@ -67,6 +69,8 @@ def main() -> int:
     )
     inspect_handoff_parser.add_argument("--run-id")
     inspect_handoff_parser.add_argument("--handoff-ref")
+    inspect_handoff_parser.add_argument("--attachment-root")
+    inspect_handoff_parser.add_argument("--attachment-runtime-state-root")
     inspect_handoff_parser.set_defaults(command_type="inspect_handoff")
 
     write_request_parser = _add_common(

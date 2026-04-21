@@ -794,9 +794,16 @@ class SessionBridgeCommandTests(unittest.TestCase):
             self.assertTrue(execute_result.payload["adapter_event_ref"])
             self.assertGreaterEqual(execute_result.payload["adapter_event_summary"]["file_change_count"], 1)
             execute_identity = execute_result.payload["session_identity"]
+            adapter_event_payload = json.loads(
+                (runtime_state_root / execute_result.payload["adapter_event_ref"]).read_text(encoding="utf-8")
+            )
             self.assertEqual(execute_identity["session_id"], request_identity["session_id"])
             self.assertEqual(execute_identity["resume_id"], request_identity["resume_id"])
             self.assertEqual(execute_identity["continuation_id"], flow_execution_id)
+            self.assertEqual(adapter_event_payload["session_identity"]["session_id"], request_identity["session_id"])
+            self.assertEqual(adapter_event_payload["session_identity"]["resume_id"], request_identity["resume_id"])
+            self.assertEqual(adapter_event_payload["session_identity"]["continuation_id"], flow_execution_id)
+            self.assertEqual(adapter_event_payload["flow_kind"], execute_identity["flow_kind"])
             self.assertEqual((target_repo / "docs" / "plan.md").read_text(encoding="utf-8"), "patched via session bridge")
 
             status_command = module.build_session_bridge_command(

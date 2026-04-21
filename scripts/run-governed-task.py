@@ -96,6 +96,9 @@ def main() -> int:
     govern_attachment_write_parser.add_argument("--tier", choices=["low", "medium", "high"], default="medium")
     govern_attachment_write_parser.add_argument("--rollback-reference", default="")
     govern_attachment_write_parser.add_argument("--adapter-id", default="codex-cli")
+    govern_attachment_write_parser.add_argument("--session-id")
+    govern_attachment_write_parser.add_argument("--resume-id")
+    govern_attachment_write_parser.add_argument("--continuation-id")
     govern_attachment_write_parser.add_argument("--json", action="store_true")
 
     decide_attachment_write_parser = subparsers.add_parser(
@@ -107,7 +110,11 @@ def main() -> int:
     decide_attachment_write_parser.add_argument("--approval-id", required=True)
     decide_attachment_write_parser.add_argument("--decision", choices=["approve", "reject"], required=True)
     decide_attachment_write_parser.add_argument("--decided-by", default="operator")
+    decide_attachment_write_parser.add_argument("--task-id", default="attachment-write")
     decide_attachment_write_parser.add_argument("--adapter-id", default="codex-cli")
+    decide_attachment_write_parser.add_argument("--session-id")
+    decide_attachment_write_parser.add_argument("--resume-id")
+    decide_attachment_write_parser.add_argument("--continuation-id")
     decide_attachment_write_parser.add_argument("--json", action="store_true")
 
     execute_attachment_write_parser = subparsers.add_parser(
@@ -130,6 +137,9 @@ def main() -> int:
     execute_attachment_write_parser.add_argument("--content", required=True)
     execute_attachment_write_parser.add_argument("--approval-id")
     execute_attachment_write_parser.add_argument("--adapter-id", default="codex-cli")
+    execute_attachment_write_parser.add_argument("--session-id")
+    execute_attachment_write_parser.add_argument("--resume-id")
+    execute_attachment_write_parser.add_argument("--continuation-id")
     execute_attachment_write_parser.add_argument("--json", action="store_true")
 
     status_parser = subparsers.add_parser("status", help="Print runtime status snapshot")
@@ -163,6 +173,9 @@ def main() -> int:
             tier=args.tier,
             rollback_reference=args.rollback_reference,
             adapter_id=args.adapter_id,
+            session_id=args.session_id,
+            resume_id=args.resume_id,
+            continuation_id=args.continuation_id,
         )
     elif args.command == "decide-attachment-write":
         payload = decide_attachment_write(
@@ -170,7 +183,11 @@ def main() -> int:
             approval_id=args.approval_id,
             decision=args.decision,
             decided_by=args.decided_by,
+            task_id=args.task_id,
             adapter_id=args.adapter_id,
+            session_id=args.session_id,
+            resume_id=args.resume_id,
+            continuation_id=args.continuation_id,
         )
     elif args.command == "execute-attachment-write":
         payload = execute_attachment_write(
@@ -185,6 +202,9 @@ def main() -> int:
             content=args.content,
             approval_id=args.approval_id,
             adapter_id=args.adapter_id,
+            session_id=args.session_id,
+            resume_id=args.resume_id,
+            continuation_id=args.continuation_id,
         )
     else:
         payload = snapshot_payload(
@@ -457,7 +477,23 @@ def govern_attachment_write(
     tier: str,
     rollback_reference: str,
     adapter_id: str,
+    session_id: str | None = None,
+    resume_id: str | None = None,
+    continuation_id: str | None = None,
 ) -> dict:
+    payload = {
+        "tool_name": tool_name,
+        "command": command_text or "",
+        "target_path": target_path,
+        "tier": tier,
+        "rollback_reference": rollback_reference,
+    }
+    if session_id:
+        payload["session_id"] = session_id
+    if resume_id:
+        payload["resume_id"] = resume_id
+    if continuation_id:
+        payload["continuation_id"] = continuation_id
     command = build_session_bridge_command(
         command_id=f"cli-govern-{task_id}",
         command_type="write_request",
@@ -465,13 +501,7 @@ def govern_attachment_write(
         repo_binding_id="attachment-binding",
         adapter_id=adapter_id,
         risk_tier=tier,
-        payload={
-            "tool_name": tool_name,
-            "command": command_text or "",
-            "target_path": target_path,
-            "tier": tier,
-            "rollback_reference": rollback_reference,
-        },
+        payload=payload,
     )
     result = handle_session_bridge_command(
         command,
@@ -490,19 +520,30 @@ def decide_attachment_write(
     decision: str,
     decided_by: str,
     adapter_id: str,
+    task_id: str = "attachment-write",
+    session_id: str | None = None,
+    resume_id: str | None = None,
+    continuation_id: str | None = None,
 ) -> dict:
+    payload = {
+        "approval_id": approval_id,
+        "decision": decision,
+        "decided_by": decided_by,
+    }
+    if session_id:
+        payload["session_id"] = session_id
+    if resume_id:
+        payload["resume_id"] = resume_id
+    if continuation_id:
+        payload["continuation_id"] = continuation_id
     command = build_session_bridge_command(
         command_id=f"cli-approve-{approval_id}",
         command_type="write_approve",
-        task_id="attachment-write",
+        task_id=task_id,
         repo_binding_id="attachment-binding",
         adapter_id=adapter_id,
         risk_tier="medium",
-        payload={
-            "approval_id": approval_id,
-            "decision": decision,
-            "decided_by": decided_by,
-        },
+        payload=payload,
     )
     result = handle_session_bridge_command(
         command,
@@ -526,7 +567,24 @@ def execute_attachment_write(
     content: str,
     approval_id: str | None,
     adapter_id: str,
+    session_id: str | None = None,
+    resume_id: str | None = None,
+    continuation_id: str | None = None,
 ) -> dict:
+    request_payload = {
+        "tool_name": tool_name,
+        "command": command_text or "",
+        "target_path": target_path,
+        "tier": tier,
+        "rollback_reference": rollback_reference,
+        "approval_id": approval_id,
+    }
+    if session_id:
+        request_payload["session_id"] = session_id
+    if resume_id:
+        request_payload["resume_id"] = resume_id
+    if continuation_id:
+        request_payload["continuation_id"] = continuation_id
     request_command = build_session_bridge_command(
         command_id=f"cli-exec-request-{task_id}",
         command_type="write_request",
@@ -534,14 +592,7 @@ def execute_attachment_write(
         repo_binding_id="attachment-binding",
         adapter_id=adapter_id,
         risk_tier=tier,
-        payload={
-            "tool_name": tool_name,
-            "command": command_text or "",
-            "target_path": target_path,
-            "tier": tier,
-            "rollback_reference": rollback_reference,
-            "approval_id": approval_id,
-        },
+        payload=request_payload,
     )
     request_result = handle_session_bridge_command(
         request_command,
@@ -551,6 +602,27 @@ def execute_attachment_write(
         attachment_runtime_state_root=attachment_runtime_state_root,
     )
 
+    request_identity = request_result.payload.get("session_identity")
+    if not isinstance(request_identity, dict):
+        request_identity = {}
+    resolved_session_id = session_id or request_identity.get("session_id")
+    resolved_resume_id = resume_id or request_identity.get("resume_id")
+    resolved_continuation_id = continuation_id or request_result.payload.get("continuation_id")
+    execute_payload = {
+        "tool_name": tool_name,
+        "command": command_text or "",
+        "target_path": target_path,
+        "tier": tier,
+        "rollback_reference": rollback_reference,
+        "content": content,
+        "approval_id": approval_id or request_result.payload.get("approval_id"),
+        "execution_id": request_result.payload.get("execution_id"),
+        "continuation_id": resolved_continuation_id,
+    }
+    if isinstance(resolved_session_id, str) and resolved_session_id.strip():
+        execute_payload["session_id"] = resolved_session_id.strip()
+    if isinstance(resolved_resume_id, str) and resolved_resume_id.strip():
+        execute_payload["resume_id"] = resolved_resume_id.strip()
     execute_command = build_session_bridge_command(
         command_id=f"cli-exec-{task_id}",
         command_type="write_execute",
@@ -558,17 +630,7 @@ def execute_attachment_write(
         repo_binding_id="attachment-binding",
         adapter_id=adapter_id,
         risk_tier=tier,
-        payload={
-            "tool_name": tool_name,
-            "command": command_text or "",
-            "target_path": target_path,
-            "tier": tier,
-            "rollback_reference": rollback_reference,
-            "content": content,
-            "approval_id": approval_id or request_result.payload.get("approval_id"),
-            "execution_id": request_result.payload.get("execution_id"),
-            "continuation_id": request_result.payload.get("continuation_id"),
-        },
+        payload=execute_payload,
         policy_decision_ref=request_result.payload.get("policy_decision_ref"),
     )
     execute_result = handle_session_bridge_command(

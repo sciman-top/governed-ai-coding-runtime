@@ -679,6 +679,7 @@ def handle_session_bridge_command(
                     run_id=execution_id,
                     execution_id=execution_id,
                     continuation_id=continuation_id,
+                    session_identity=session_identity,
                     file_changes=[],
                     tool_calls=[
                         {
@@ -794,6 +795,7 @@ def handle_session_bridge_command(
                 run_id=execution_id,
                 execution_id=execution_id,
                 continuation_id=continuation_id,
+                session_identity=session_identity,
                 file_changes=[execution.target_path] if execution.execution_status == "executed" else [],
                 tool_calls=[
                     {
@@ -865,6 +867,7 @@ def handle_session_bridge_command(
         except ValueError as exc:
             return _degraded(command, reason=str(exc))
         if plan_only:
+            session_identity = _session_identity(command, continuation_id=continuation_id)
             return SessionBridgeResult(
                 command_id=command.command_id,
                 command_type=command.command_type,
@@ -873,7 +876,7 @@ def handle_session_bridge_command(
                     "execution_id": execution_id,
                     "continuation_id": continuation_id,
                     "adapter_id": command.adapter_id,
-                    "session_identity": _session_identity(command, continuation_id=continuation_id),
+                    "session_identity": session_identity,
                     "run_id": run_id,
                     "mode": plan.mode,
                     "plan_only": True,
@@ -896,6 +899,7 @@ def handle_session_bridge_command(
                 cwd=_verification_cwd(repo_root=Path(repo_root), attachment_root=attachment_root),
             ),
         )
+        session_identity = _session_identity(command, continuation_id=continuation_id)
         adapter_event_ref, adapter_event_summary = _record_adapter_events(
             command=command,
             artifact_store=artifact_store,
@@ -903,6 +907,7 @@ def handle_session_bridge_command(
             run_id=execution_id,
             execution_id=execution_id,
             continuation_id=continuation_id,
+            session_identity=session_identity,
             file_changes=[],
             tool_calls=[],
             gate_runs=list(verification_artifact.result_artifact_refs.values()),
@@ -927,7 +932,7 @@ def handle_session_bridge_command(
                 "execution_id": execution_id,
                 "continuation_id": continuation_id,
                 "adapter_id": command.adapter_id,
-                "session_identity": _session_identity(command, continuation_id=continuation_id),
+                "session_identity": session_identity,
                 "run_id": run_id,
                 "mode": plan.mode,
                 "plan_only": False,
@@ -1249,6 +1254,7 @@ def _record_adapter_events(
     run_id: str,
     execution_id: str,
     continuation_id: str,
+    session_identity: dict | None = None,
     file_changes: list[str],
     tool_calls: list[dict],
     gate_runs: list[str],
@@ -1258,7 +1264,10 @@ def _record_adapter_events(
 ) -> tuple[str | None, dict | None]:
     if command.adapter_id != "codex-cli":
         return None, None
-    identity = _session_identity(command, continuation_id=continuation_id)
+    identity = dict(session_identity) if isinstance(session_identity, dict) else _session_identity(
+        command,
+        continuation_id=continuation_id,
+    )
     flow_kind = (
         identity.get("flow_kind")
         if isinstance(identity.get("flow_kind"), str)
@@ -1306,6 +1315,7 @@ def _record_adapter_events(
             "run_id": run_id,
             "execution_id": execution_id,
             "continuation_id": continuation_id,
+            "session_identity": identity,
             "flow_kind": flow_kind,
             "event_source": event_source,
             "events": events,

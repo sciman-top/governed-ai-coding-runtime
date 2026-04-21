@@ -180,6 +180,12 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-check.ps1 `
 - 全链路通过且 gate 结果全是 `pass` 时，返回 `0`
 - 任一步骤失败或任一 gate 为 `fail` 时，返回 `1`
 - 开启 `-ExecuteWriteFlow` 后，输出会包含真实 `handoff_ref` 与 `replay_ref`
+- `runtime-check` 现在会输出 `summary.session_id` / `summary.resume_id` / `summary.continuation_id`，以及 `live_loop` 闭环诊断（`flow_kind`、连续性布尔值、`closure_state`、runtime refs）
+
+可选 identity 覆盖参数：
+- `-SessionId`
+- `-ResumeId`
+- `-ContinuationId`
 
 ### 5. 双模式一键流
 

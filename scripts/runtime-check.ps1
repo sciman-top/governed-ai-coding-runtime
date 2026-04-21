@@ -16,6 +16,9 @@ param(
   [string]$CommandId = ("cmd-" + (Get-Date -Format "yyyyMMddHHmmss")),
   [string]$RepoBindingId = "",
   [string]$AdapterId = "codex-cli",
+  [string]$SessionId = "",
+  [string]$ResumeId = "",
+  [string]$ContinuationId = "",
 
   [switch]$SkipVerifyAttachment,
 
@@ -122,11 +125,67 @@ function Build-WriteToolCommand {
   return ""
 }
 
+function Get-OptionalField {
+  param(
+    [object]$Payload,
+    [Parameter(Mandatory = $true)]
+    [string]$FieldName
+  )
+  if ($null -eq $Payload) {
+    return ""
+  }
+  if ($Payload.PSObject.Properties.Name -contains $FieldName -and $null -ne $Payload.$FieldName) {
+    return [string]$Payload.$FieldName
+  }
+  return ""
+}
+
+function Get-IdentityField {
+  param(
+    [object]$Payload,
+    [Parameter(Mandatory = $true)]
+    [string]$FieldName
+  )
+  if ($null -eq $Payload) {
+    return ""
+  }
+  if (-not ($Payload.PSObject.Properties.Name -contains "session_identity")) {
+    return ""
+  }
+  $identity = $Payload.session_identity
+  if ($null -eq $identity) {
+    return ""
+  }
+  if ($identity.PSObject.Properties.Name -contains $FieldName -and $null -ne $identity.$FieldName) {
+    return [string]$identity.$FieldName
+  }
+  return ""
+}
+
+function Add-Ref {
+  param(
+    [System.Collections.Generic.List[string]]$Refs,
+    [string]$Value
+  )
+  if ($null -eq $Refs) {
+    return
+  }
+  if ([string]::IsNullOrWhiteSpace($Value)) {
+    return
+  }
+  if (-not $Refs.Contains($Value)) {
+    $Refs.Add($Value) | Out-Null
+  }
+}
+
 $python = Get-PythonCommand
 $steps = New-Object System.Collections.Generic.List[object]
 $hasFailure = $false
 $resolvedAttachmentRoot = Resolve-AbsolutePath -PathValue $AttachmentRoot
 $resolvedAttachmentRuntimeStateRoot = Resolve-AbsolutePath -PathValue $AttachmentRuntimeStateRoot
+$resolvedSessionId = if (-not [string]::IsNullOrWhiteSpace($SessionId)) { $SessionId } else { "session-$TaskId" }
+$resolvedResumeId = if (-not [string]::IsNullOrWhiteSpace($ResumeId)) { $ResumeId } else { "resume-$TaskId" }
+$resolvedContinuationId = if (-not [string]::IsNullOrWhiteSpace($ContinuationId)) { $ContinuationId } else { "${TaskId}:$RunId" }
 
 $statusStep = Invoke-CommandCapture -Label "status" -Command {
   & $python "scripts/run-governed-task.py" "status" "--json" "--attachment-root" $resolvedAttachmentRoot "--attachment-runtime-state-root" $resolvedAttachmentRuntimeStateRoot
@@ -143,7 +202,7 @@ if (-not $statusPayload) {
 
 $resolvedBindingId = $RepoBindingId
 if ([string]::IsNullOrWhiteSpace($resolvedBindingId)) {
-  if ($statusPayload -and $statusPayload.attachments -and $statusPayload.attachments.Count -gt 0) {
+  if ($statusPayload -and $statusPayload.attachments -and @($statusPayload.attachments).Count -gt 0) {
     $resolvedBindingId = [string]$statusPayload.attachments[0].binding_id
   }
 }
@@ -152,7 +211,7 @@ if ([string]::IsNullOrWhiteSpace($resolvedBindingId)) {
 }
 
 $attachmentHealth = "unknown"
-if ($statusPayload -and $statusPayload.attachments -and $statusPayload.attachments.Count -gt 0) {
+if ($statusPayload -and $statusPayload.attachments -and @($statusPayload.attachments).Count -gt 0) {
   $attachmentHealth = [string]$statusPayload.attachments[0].binding_state
   if ($attachmentHealth -ne "healthy") {
     $hasFailure = $true
@@ -168,7 +227,7 @@ if ($doctorStep.exit_code -ne 0) {
 }
 
 $requestGateStep = Invoke-CommandCapture -Label "session-bridge-request-gate" -Command {
-  & $python "scripts/session-bridge.py" "request-gate" "--command-id" $CommandId "--task-id" $TaskId "--repo-binding-id" $resolvedBindingId "--adapter-id" $AdapterId "--mode" $Mode "--policy-status" $PolicyStatus "--attachment-root" $resolvedAttachmentRoot "--attachment-runtime-state-root" $resolvedAttachmentRuntimeStateRoot
+  & $python "scripts/session-bridge.py" "request-gate" "--command-id" $CommandId "--task-id" $TaskId "--repo-binding-id" $resolvedBindingId "--adapter-id" $AdapterId "--mode" $Mode "--policy-status" $PolicyStatus "--attachment-root" $resolvedAttachmentRoot "--attachment-runtime-state-root" $resolvedAttachmentRuntimeStateRoot "--session-id" $resolvedSessionId "--resume-id" $resolvedResumeId "--continuation-id" $resolvedContinuationId
 }
 $steps.Add($requestGateStep) | Out-Null
 if ($requestGateStep.exit_code -ne 0) {
@@ -204,6 +263,9 @@ if (-not $SkipVerifyAttachment) {
 $writeGovernancePayload = $null
 $writeApprovalPayload = $null
 $writeExecutePayload = $null
+$writeStatusPayload = $null
+$inspectEvidencePayload = $null
+$inspectHandoffPayload = $null
 if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
   $resolvedWriteToolCommand = Build-WriteToolCommand -ToolName $WriteToolName -TargetPath $WriteTargetPath -Content $WriteContent -ExplicitCommand $WriteToolCommand
   if ([string]::IsNullOrWhiteSpace($RollbackReference)) {
@@ -221,6 +283,9 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
       "--target-path", $WriteTargetPath,
       "--tier", $WriteTier,
       "--rollback-reference", $RollbackReference,
+      "--session-id", $resolvedSessionId,
+      "--resume-id", $resolvedResumeId,
+      "--continuation-id", $resolvedContinuationId,
       "--json"
     )
     if (-not [string]::IsNullOrWhiteSpace($resolvedWriteToolCommand)) {
@@ -242,7 +307,7 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
     if ($writeGovernancePayload.approval_id) {
       $resolvedApprovalId = [string]$writeGovernancePayload.approval_id
       $approveStep = Invoke-CommandCapture -Label "decide-attachment-write" -Command {
-        & $python "scripts/run-governed-task.py" "decide-attachment-write" "--attachment-runtime-state-root" $resolvedAttachmentRuntimeStateRoot "--approval-id" $resolvedApprovalId "--decision" "approve" "--decided-by" "runtime-check" "--adapter-id" $AdapterId "--json"
+        & $python "scripts/run-governed-task.py" "decide-attachment-write" "--attachment-runtime-state-root" $resolvedAttachmentRuntimeStateRoot "--approval-id" $resolvedApprovalId "--decision" "approve" "--decided-by" "runtime-check" "--task-id" $TaskId "--adapter-id" $AdapterId "--session-id" $resolvedSessionId "--resume-id" $resolvedResumeId "--continuation-id" $resolvedContinuationId "--json"
       }
       $steps.Add($approveStep) | Out-Null
       if ($approveStep.exit_code -ne 0) {
@@ -266,6 +331,9 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
       "--tier", $WriteTier,
       "--rollback-reference", $RollbackReference,
       "--content", $WriteContent,
+      "--session-id", $resolvedSessionId,
+      "--resume-id", $resolvedResumeId,
+      "--continuation-id", $resolvedContinuationId,
       "--json"
     )
     if (-not [string]::IsNullOrWhiteSpace($resolvedWriteToolCommand)) {
@@ -288,7 +356,225 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
     elseif ($writeExecutePayload.execution_status -ne "executed") {
       $hasFailure = $true
     }
+
+    $resolvedWriteApprovalId = ""
+    if ($writeExecutePayload -and $writeExecutePayload.approval_id) {
+      $resolvedWriteApprovalId = [string]$writeExecutePayload.approval_id
+    }
+    elseif (-not [string]::IsNullOrWhiteSpace($resolvedApprovalId)) {
+      $resolvedWriteApprovalId = $resolvedApprovalId
+    }
+
+    $writeStatusStep = Invoke-CommandCapture -Label "session-bridge-write-status" -Command {
+      $statusArgs = @(
+        "scripts/session-bridge.py",
+        "write-status",
+        "--command-id", "$CommandId-write-status",
+        "--task-id", $TaskId,
+        "--repo-binding-id", $resolvedBindingId,
+        "--adapter-id", $AdapterId,
+        "--risk-tier", $WriteTier,
+        "--attachment-runtime-state-root", $resolvedAttachmentRuntimeStateRoot,
+        "--target-path", $WriteTargetPath,
+        "--session-id", $resolvedSessionId,
+        "--resume-id", $resolvedResumeId,
+        "--continuation-id", $resolvedContinuationId
+      )
+      if (-not [string]::IsNullOrWhiteSpace($resolvedWriteApprovalId)) {
+        $statusArgs += @("--approval-id", $resolvedWriteApprovalId)
+      }
+      & $python @statusArgs
+    }
+    $steps.Add($writeStatusStep) | Out-Null
+    if ($writeStatusStep.exit_code -ne 0) {
+      $hasFailure = $true
+    }
+    $writeStatusPayload = Try-ParseJson -Raw $writeStatusStep.output
+    if (-not $writeStatusPayload) {
+      $hasFailure = $true
+    }
+    elseif ($writeStatusPayload.payload) {
+      $writeStatusPayload = $writeStatusPayload.payload
+    }
+
+    $inspectEvidenceStep = Invoke-CommandCapture -Label "session-bridge-inspect-evidence" -Command {
+      & $python "scripts/session-bridge.py" "inspect-evidence" "--command-id" "$CommandId-inspect-evidence" "--task-id" $TaskId "--repo-binding-id" $resolvedBindingId "--adapter-id" $AdapterId "--risk-tier" "low" "--attachment-root" $resolvedAttachmentRoot "--attachment-runtime-state-root" $resolvedAttachmentRuntimeStateRoot "--session-id" $resolvedSessionId "--resume-id" $resolvedResumeId "--continuation-id" $resolvedContinuationId
+    }
+    $steps.Add($inspectEvidenceStep) | Out-Null
+    if ($inspectEvidenceStep.exit_code -ne 0) {
+      $hasFailure = $true
+    }
+    $inspectEvidencePayload = Try-ParseJson -Raw $inspectEvidenceStep.output
+    if (-not $inspectEvidencePayload) {
+      $hasFailure = $true
+    }
+    elseif ($inspectEvidencePayload.payload) {
+      $inspectEvidencePayload = $inspectEvidencePayload.payload
+    }
+
+    $inspectHandoffStep = Invoke-CommandCapture -Label "session-bridge-inspect-handoff" -Command {
+      $handoffArgs = @(
+        "scripts/session-bridge.py",
+        "inspect-handoff",
+        "--command-id", "$CommandId-inspect-handoff",
+        "--task-id", $TaskId,
+        "--repo-binding-id", $resolvedBindingId,
+        "--adapter-id", $AdapterId,
+        "--risk-tier", "low",
+        "--attachment-root", $resolvedAttachmentRoot,
+        "--attachment-runtime-state-root", $resolvedAttachmentRuntimeStateRoot,
+        "--session-id", $resolvedSessionId,
+        "--resume-id", $resolvedResumeId,
+        "--continuation-id", $resolvedContinuationId
+      )
+      if ($writeExecutePayload -and $writeExecutePayload.handoff_ref) {
+        $handoffArgs += @("--handoff-ref", [string]$writeExecutePayload.handoff_ref)
+      }
+      & $python @handoffArgs
+    }
+    $steps.Add($inspectHandoffStep) | Out-Null
+    if ($inspectHandoffStep.exit_code -ne 0) {
+      $hasFailure = $true
+    }
+    $inspectHandoffPayload = Try-ParseJson -Raw $inspectHandoffStep.output
+    if (-not $inspectHandoffPayload) {
+      $hasFailure = $true
+    }
+    elseif ($inspectHandoffPayload.payload) {
+      $inspectHandoffPayload = $inspectHandoffPayload.payload
+    }
   }
+}
+
+$requestGateCommandPayload = $null
+if ($requestGatePayload -and $requestGatePayload.payload) {
+  $requestGateCommandPayload = $requestGatePayload.payload
+}
+
+$payloadsForContinuity = @()
+if ($requestGateCommandPayload) { $payloadsForContinuity += $requestGateCommandPayload }
+if ($writeGovernancePayload) { $payloadsForContinuity += $writeGovernancePayload }
+if ($writeApprovalPayload) { $payloadsForContinuity += $writeApprovalPayload }
+if ($writeExecutePayload) { $payloadsForContinuity += $writeExecutePayload }
+if ($writeStatusPayload) { $payloadsForContinuity += $writeStatusPayload }
+
+$sessionValues = New-Object System.Collections.Generic.List[string]
+$resumeValues = New-Object System.Collections.Generic.List[string]
+$continuationValues = New-Object System.Collections.Generic.List[string]
+foreach ($payload in $payloadsForContinuity) {
+  $sessionValue = Get-IdentityField -Payload $payload -FieldName "session_id"
+  if (-not [string]::IsNullOrWhiteSpace($sessionValue)) {
+    $sessionValues.Add($sessionValue) | Out-Null
+  }
+  $resumeValue = Get-IdentityField -Payload $payload -FieldName "resume_id"
+  if (-not [string]::IsNullOrWhiteSpace($resumeValue)) {
+    $resumeValues.Add($resumeValue) | Out-Null
+  }
+  $continuationValue = Get-IdentityField -Payload $payload -FieldName "continuation_id"
+  if (-not [string]::IsNullOrWhiteSpace($continuationValue)) {
+    $continuationValues.Add($continuationValue) | Out-Null
+  }
+  $directContinuation = Get-OptionalField -Payload $payload -FieldName "continuation_id"
+  if (-not [string]::IsNullOrWhiteSpace($directContinuation)) {
+    $continuationValues.Add($directContinuation) | Out-Null
+  }
+}
+$sessionIdentityContinuity = (@($sessionValues | Select-Object -Unique).Count -le 1)
+$resumeIdentityContinuity = (@($resumeValues | Select-Object -Unique).Count -le 1)
+$continuationContinuity = (@($continuationValues | Select-Object -Unique).Count -le 1)
+
+$flowKind = ""
+foreach ($payload in @($writeExecutePayload, $writeStatusPayload, $writeGovernancePayload, $requestGateCommandPayload)) {
+  $candidateFlowKind = Get-IdentityField -Payload $payload -FieldName "flow_kind"
+  if (-not [string]::IsNullOrWhiteSpace($candidateFlowKind)) {
+    $flowKind = $candidateFlowKind
+    break
+  }
+}
+if ([string]::IsNullOrWhiteSpace($flowKind)) {
+  $flowKind = "unknown"
+}
+
+$fallbackReason = ""
+if ($flowKind -ne "live_attach") {
+  foreach ($payload in @($writeExecutePayload, $writeStatusPayload, $writeGovernancePayload, $requestGateCommandPayload)) {
+    $candidateReason = Get-IdentityField -Payload $payload -FieldName "posture_reason"
+    if (-not [string]::IsNullOrWhiteSpace($candidateReason)) {
+      $fallbackReason = $candidateReason
+      break
+    }
+  }
+}
+
+$runtimeRefs = New-Object System.Collections.Generic.List[string]
+if ($requestGateCommandPayload) {
+  Add-Ref -Refs $runtimeRefs -Value (Get-OptionalField -Payload $requestGateCommandPayload -FieldName "adapter_event_ref")
+  Add-Ref -Refs $runtimeRefs -Value (Get-OptionalField -Payload $requestGateCommandPayload -FieldName "evidence_link")
+  if ($requestGateCommandPayload.result_artifact_refs) {
+    foreach ($property in $requestGateCommandPayload.result_artifact_refs.PSObject.Properties) {
+      if ($property -and $property.Value) {
+        Add-Ref -Refs $runtimeRefs -Value ([string]$property.Value)
+      }
+    }
+  }
+}
+if ($writeExecutePayload) {
+  Add-Ref -Refs $runtimeRefs -Value (Get-OptionalField -Payload $writeExecutePayload -FieldName "artifact_ref")
+  Add-Ref -Refs $runtimeRefs -Value (Get-OptionalField -Payload $writeExecutePayload -FieldName "adapter_event_ref")
+  Add-Ref -Refs $runtimeRefs -Value (Get-OptionalField -Payload $writeExecutePayload -FieldName "handoff_ref")
+  Add-Ref -Refs $runtimeRefs -Value (Get-OptionalField -Payload $writeExecutePayload -FieldName "replay_ref")
+}
+if ($inspectEvidencePayload -and $inspectEvidencePayload.evidence_refs) {
+  foreach ($ref in $inspectEvidencePayload.evidence_refs) {
+    Add-Ref -Refs $runtimeRefs -Value ([string]$ref)
+  }
+}
+if ($inspectHandoffPayload -and $inspectHandoffPayload.handoff_refs) {
+  foreach ($ref in $inspectHandoffPayload.handoff_refs) {
+    Add-Ref -Refs $runtimeRefs -Value ([string]$ref)
+  }
+}
+if ($inspectHandoffPayload -and $inspectHandoffPayload.replay_refs) {
+  foreach ($ref in $inspectHandoffPayload.replay_refs) {
+    Add-Ref -Refs $runtimeRefs -Value ([string]$ref)
+  }
+}
+
+$verificationLinked = $false
+if ($requestGateCommandPayload -and $requestGateCommandPayload.result_artifact_refs) {
+  $verificationLinked = (@($requestGateCommandPayload.result_artifact_refs.PSObject.Properties).Count -gt 0)
+}
+$writeLinked = $false
+if ($writeExecutePayload) {
+  $writeLinked = (
+    -not [string]::IsNullOrWhiteSpace((Get-OptionalField -Payload $writeExecutePayload -FieldName "handoff_ref")) -and
+    -not [string]::IsNullOrWhiteSpace((Get-OptionalField -Payload $writeExecutePayload -FieldName "replay_ref")) -and
+    -not [string]::IsNullOrWhiteSpace((Get-OptionalField -Payload $writeExecutePayload -FieldName "adapter_event_ref"))
+  )
+}
+$inspectionLinked = ($null -ne $inspectEvidencePayload -and $null -ne $inspectHandoffPayload)
+$evidenceLinkageComplete = $verificationLinked -and (($null -eq $writeExecutePayload) -or ($writeLinked -and $inspectionLinked))
+
+$fallbackExplicit = ($flowKind -ne "live_attach")
+$closureState = "incomplete"
+if (($flowKind -eq "live_attach") -and $sessionIdentityContinuity -and $resumeIdentityContinuity -and $continuationContinuity -and $evidenceLinkageComplete) {
+  $closureState = "live_closure_ready"
+}
+elseif ($fallbackExplicit -and $sessionIdentityContinuity -and $resumeIdentityContinuity -and $continuationContinuity -and $evidenceLinkageComplete) {
+  $closureState = "fallback_explicit"
+}
+
+$liveLoopSummary = @{
+  flow_kind = $flowKind
+  is_live_attach = ($flowKind -eq "live_attach")
+  fallback_explicit = $fallbackExplicit
+  fallback_reason = $(if (-not [string]::IsNullOrWhiteSpace($fallbackReason)) { $fallbackReason } else { $null })
+  session_identity_continuity = $sessionIdentityContinuity
+  resume_identity_continuity = $resumeIdentityContinuity
+  continuation_continuity = $continuationContinuity
+  evidence_linkage_complete = $evidenceLinkageComplete
+  closure_state = $closureState
+  runtime_refs = @($runtimeRefs)
 }
 
 $summary = @{
@@ -299,6 +585,11 @@ $summary = @{
   run_id = $RunId
   command_id = $CommandId
   repo_binding_id = $resolvedBindingId
+  session_id = $resolvedSessionId
+  resume_id = $resolvedResumeId
+  continuation_id = $resolvedContinuationId
+  flow_kind = $flowKind
+  closure_state = $closureState
   attachment_health = $attachmentHealth
   overall_status = $(if ($hasFailure) { "fail" } else { "pass" })
 }
@@ -311,6 +602,10 @@ $result = @{
   write_governance = $writeGovernancePayload
   write_approval = $writeApprovalPayload
   write_execute = $writeExecutePayload
+  write_status = $writeStatusPayload
+  inspect_evidence = $inspectEvidencePayload
+  inspect_handoff = $inspectHandoffPayload
+  live_loop = $liveLoopSummary
   steps = $steps
 }
 
@@ -353,6 +648,10 @@ else {
     if ($writeExecutePayload.replay_ref) {
       Write-Host ("Replay Ref: " + [string]$writeExecutePayload.replay_ref)
     }
+  }
+  if ($liveLoopSummary) {
+    Write-Host ("Flow Kind: " + [string]$liveLoopSummary.flow_kind)
+    Write-Host ("Closure State: " + [string]$liveLoopSummary.closure_state)
   }
 }
 

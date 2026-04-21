@@ -20,6 +20,9 @@ param(
   [string]$CommandId = ("cmd-" + (Get-Date -Format "yyyyMMddHHmmss")),
   [string]$RepoBindingId = "",
   [string]$AdapterId = "codex-cli",
+  [string]$SessionId = "",
+  [string]$ResumeId = "",
+  [string]$ContinuationId = "",
 
   [string]$WriteTargetPath = "",
   [ValidateSet("low", "medium", "high")]
@@ -188,6 +191,15 @@ $checkArgs = @(
 )
 if (-not [string]::IsNullOrWhiteSpace($RepoBindingId)) {
   $checkArgs += @("-RepoBindingId", $RepoBindingId)
+}
+if (-not [string]::IsNullOrWhiteSpace($SessionId)) {
+  $checkArgs += @("-SessionId", $SessionId)
+}
+if (-not [string]::IsNullOrWhiteSpace($ResumeId)) {
+  $checkArgs += @("-ResumeId", $ResumeId)
+}
+if (-not [string]::IsNullOrWhiteSpace($ContinuationId)) {
+  $checkArgs += @("-ContinuationId", $ContinuationId)
 }
 if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
   $checkArgs += @("-WriteTargetPath", $WriteTargetPath, "-WriteTier", $WriteTier, "-WriteToolName", $WriteToolName)
