@@ -1,6 +1,7 @@
 """Runtime read model for CLI-first operator visibility."""
 
 from dataclasses import asdict, dataclass, field
+import json
 from pathlib import Path
 
 from governed_ai_coding_runtime_contracts.maintenance_policy import (
@@ -23,6 +24,12 @@ class RuntimeTaskStatus:
     artifact_refs: list[str]
     evidence_refs: list[str]
     verification_refs: list[str]
+    interaction_posture: str | None = None
+    latest_task_restatement: str | None = None
+    interaction_budget_status: str | None = None
+    clarification_active: bool = False
+    latest_compression_action: str | None = None
+    outstanding_observation_items_count: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -161,6 +168,10 @@ class RuntimeStatusStore:
             artifact_refs=active_run.artifact_refs if active_run else [],
             evidence_refs=active_run.evidence_refs if active_run else [],
             verification_refs=active_run.verification_refs if active_run else [],
+            **_interaction_projection(
+                runtime_root=self._runtime_root,
+                evidence_refs=active_run.evidence_refs if active_run else [],
+            ),
         )
 
     def _attachment_statuses(self) -> list[RuntimeAttachmentStatus]:
@@ -203,6 +214,21 @@ def _runtime_task_status_from_dict(raw: dict) -> RuntimeTaskStatus:
         artifact_refs=_required_string_list(raw.get("artifact_refs"), "artifact_refs"),
         evidence_refs=_required_string_list(raw.get("evidence_refs"), "evidence_refs"),
         verification_refs=_required_string_list(raw.get("verification_refs"), "verification_refs"),
+        interaction_posture=_optional_string(raw.get("interaction_posture"), "interaction_posture"),
+        latest_task_restatement=_optional_string(raw.get("latest_task_restatement"), "latest_task_restatement"),
+        interaction_budget_status=_optional_string(
+            raw.get("interaction_budget_status"),
+            "interaction_budget_status",
+        ),
+        clarification_active=_optional_bool(raw.get("clarification_active"), "clarification_active", default=False),
+        latest_compression_action=_optional_string(
+            raw.get("latest_compression_action"),
+            "latest_compression_action",
+        ),
+        outstanding_observation_items_count=_optional_int(
+            raw.get("outstanding_observation_items_count"),
+            "outstanding_observation_items_count",
+        ),
     )
 
 
@@ -255,3 +281,87 @@ def _optional_object(value: object, field_name: str) -> dict | None:
         msg = f"{field_name} must be an object"
         raise ValueError(msg)
     return dict(value)
+
+
+def _optional_bool(value: object, field_name: str, *, default: bool | None = None) -> bool | None:
+    if value is None:
+        return default
+    if not isinstance(value, bool):
+        msg = f"{field_name} must be a boolean"
+        raise ValueError(msg)
+    return value
+
+
+def _optional_int(value: object, field_name: str) -> int | None:
+    if value is None:
+        return None
+    if not isinstance(value, int):
+        msg = f"{field_name} must be an integer"
+        raise ValueError(msg)
+    return value
+
+
+def _interaction_projection(*, runtime_root: Path, evidence_refs: list[str]) -> dict[str, object]:
+    empty = {
+        "interaction_posture": None,
+        "latest_task_restatement": None,
+        "interaction_budget_status": None,
+        "clarification_active": False,
+        "latest_compression_action": None,
+        "outstanding_observation_items_count": None,
+    }
+    interaction_trace = _load_latest_interaction_trace(runtime_root=runtime_root, evidence_refs=evidence_refs)
+    if interaction_trace is None:
+        return empty
+
+    applied_policies = interaction_trace.get("applied_policies", [])
+    task_restatements = interaction_trace.get("task_restatements", [])
+    budget_snapshots = interaction_trace.get("budget_snapshots", [])
+    clarification_rounds = interaction_trace.get("clarification_rounds", [])
+    compression_actions = interaction_trace.get("compression_actions", [])
+    observation_checklists = interaction_trace.get("observation_checklists", [])
+
+    empty["interaction_posture"] = _last_mapping_value(applied_policies, "posture")
+    empty["latest_task_restatement"] = task_restatements[-1] if task_restatements else None
+    empty["interaction_budget_status"] = _last_mapping_value(budget_snapshots, "budget_status")
+    empty["clarification_active"] = bool(clarification_rounds)
+    empty["latest_compression_action"] = _last_mapping_value(compression_actions, "compression_mode")
+    empty["outstanding_observation_items_count"] = _last_list_size(observation_checklists, "items")
+    return empty
+
+
+def _load_latest_interaction_trace(*, runtime_root: Path, evidence_refs: list[str]) -> dict | None:
+    for evidence_ref in reversed(evidence_refs):
+        candidate = runtime_root / Path(evidence_ref)
+        if not candidate.exists():
+            continue
+        try:
+            payload = json.loads(candidate.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        interaction_trace = payload.get("interaction_trace")
+        if isinstance(interaction_trace, dict):
+            return interaction_trace
+    return None
+
+
+def _last_mapping_value(items: object, field_name: str) -> str | None:
+    if not isinstance(items, list):
+        return None
+    for item in reversed(items):
+        if isinstance(item, dict):
+            value = item.get(field_name)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+    return None
+
+
+def _last_list_size(items: object, field_name: str) -> int | None:
+    if not isinstance(items, list):
+        return None
+    for item in reversed(items):
+        if isinstance(item, dict):
+            value = item.get(field_name)
+            if isinstance(value, list):
+                return len(value)
+    return None

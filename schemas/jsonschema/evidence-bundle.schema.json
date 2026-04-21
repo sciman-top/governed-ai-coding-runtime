@@ -285,6 +285,235 @@
         "follow_up_categories"
       ]
     },
+    "interaction_trace": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "signals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "signal_id": {
+                "type": "string"
+              },
+              "signal_kind": {
+                "type": "string"
+              },
+              "severity": {
+                "type": "string"
+              },
+              "summary": {
+                "type": "string"
+              },
+              "evidence_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "signal_id",
+              "signal_kind",
+              "severity",
+              "summary",
+              "evidence_refs"
+            ]
+          }
+        },
+        "applied_policies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "policy_id": {
+                "type": "string"
+              },
+              "mode": {
+                "type": "string"
+              },
+              "posture": {
+                "type": "string"
+              },
+              "clarification_mode": {
+                "type": "string"
+              },
+              "compression_mode": {
+                "type": "string"
+              },
+              "stop_or_escalate": {
+                "type": "string"
+              },
+              "rationale_signal_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "policy_id",
+              "mode",
+              "posture",
+              "clarification_mode",
+              "compression_mode",
+              "stop_or_escalate",
+              "rationale_signal_ids"
+            ]
+          }
+        },
+        "task_restatements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "clarification_rounds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "scenario": {
+                "type": "string"
+              },
+              "questions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "answers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "scenario",
+              "questions",
+              "answers"
+            ]
+          }
+        },
+        "observation_checklists": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "checklist_kind": {
+                "type": "string"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "checklist_kind",
+              "items"
+            ]
+          }
+        },
+        "terms_explained": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "term": {
+                "type": "string"
+              },
+              "explanation_summary": {
+                "type": "string"
+              },
+              "task_role": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "term",
+              "explanation_summary",
+              "task_role"
+            ]
+          }
+        },
+        "compression_actions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "compression_mode": {
+                "type": "string"
+              },
+              "summary": {
+                "type": "string"
+              },
+              "retained_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "compression_mode",
+              "summary",
+              "retained_refs"
+            ]
+          }
+        },
+        "budget_snapshots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "budget_status": {
+                "type": "string"
+              },
+              "used_explanation_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "used_clarification_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "used_compaction_tokens": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "total_token_budget": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "budget_status",
+              "used_explanation_tokens",
+              "used_clarification_tokens",
+              "used_compaction_tokens",
+              "total_token_budget"
+            ]
+          }
+        },
+        "alignment_outcome": {
+          "type": "string"
+        },
+        "stop_or_degrade_reason": {
+          "type": "string"
+        }
+      }
+    },
     "created_at": {
       "format": "date-time",
       "type": "string"

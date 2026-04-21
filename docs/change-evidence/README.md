@@ -4,6 +4,10 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260422 Interaction Governance Lane Closeout](./20260422-interaction-governance-lane-closeout.md)
+  - closeout evidence for the bounded interaction-governance lane, recording metrics baseline, completion boundary, authoritative plan-index status, and final gate results
+- [20260422 Interaction Evidence, Trace, And Runtime Projection](./20260422-interaction-evidence-trace-and-runtime-projection.md)
+  - evidence companion for Tasks 4 through 8 of the interaction-governance lane, landing `interaction_trace`, trace/postmortem interaction failure classes, task-intake defaults, minimal runtime/operator projection, and repo-profile interaction defaults
 - [20260422 Interaction Governance Python Primitives](./20260422-interaction-governance-python-primitives.md)
   - evidence companion for Task 3 of the interaction-governance lane, adding task-scoped Python primitives, fail-closed validation, clarification-compatible policy derivation, and runtime tests
 - [20260422 Interaction Schema And Catalog Wiring](./20260422-interaction-schema-catalog-wiring.md)

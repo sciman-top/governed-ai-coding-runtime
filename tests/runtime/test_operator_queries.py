@@ -57,7 +57,23 @@ class OperatorQueryTests(unittest.TestCase):
             (artifacts_root / "verification-output").mkdir(parents=True, exist_ok=True)
             (artifacts_root / "handoff" / "package.json").write_text("{}", encoding="utf-8")
             (artifacts_root / "replay" / "write-flow.json").write_text("{}", encoding="utf-8")
-            (artifacts_root / "evidence" / "bundle.json").write_text("{}", encoding="utf-8")
+            (artifacts_root / "evidence" / "bundle.json").write_text(
+                json.dumps(
+                    {
+                        "interaction_trace": {
+                            "applied_policies": [{"posture": "clarifying"}],
+                            "task_restatements": ["Restate the failing request before retrying."],
+                            "clarification_rounds": [{"scenario": "bugfix", "questions": [], "answers": []}],
+                            "observation_checklists": [{"checklist_kind": "bugfix", "items": ["request", "logs", "diff"]}],
+                            "compression_actions": [{"compression_mode": "stage_summary"}],
+                            "budget_snapshots": [{"budget_status": "near_limit"}],
+                        }
+                    },
+                    indent=2,
+                    sort_keys=True,
+                ),
+                encoding="utf-8",
+            )
             (artifacts_root / "verification-output" / "test.txt").write_text("ok", encoding="utf-8")
 
             store = task_store.FileTaskStore(workspace / ".runtime" / "tasks")
@@ -109,6 +125,12 @@ class OperatorQueryTests(unittest.TestCase):
             self.assertIn("artifacts/task-operator/run-1/evidence/bundle.json", result.evidence_refs)
             self.assertIn("artifacts/task-operator/run-1/handoff/package.json", result.handoff_refs)
             self.assertIn("artifacts/task-operator/run-1/replay/write-flow.json", result.replay_refs)
+            self.assertEqual(result.interaction_posture, "clarifying")
+            self.assertEqual(result.latest_task_restatement, "Restate the failing request before retrying.")
+            self.assertEqual(result.interaction_budget_status, "near_limit")
+            self.assertTrue(result.clarification_active)
+            self.assertEqual(result.latest_compression_action, "stage_summary")
+            self.assertEqual(result.outstanding_observation_items_count, 3)
             self.assertEqual(result.posture_summary.binding_state, "healthy")
             self.assertIsNotNone(result.posture_summary.context_pack_summary)
             self.assertTrue(result.posture_summary.context_pack_summary["exists"])
@@ -146,6 +168,8 @@ class OperatorQueryTests(unittest.TestCase):
             self.assertEqual(result.evidence_refs, [])
             self.assertEqual(result.handoff_refs, [])
             self.assertEqual(result.replay_refs, [])
+            self.assertIsNone(result.interaction_posture)
+            self.assertFalse(result.clarification_active)
             self.assertIsNotNone(result.posture_summary)
             self.assertEqual(result.posture_summary.binding_state, "healthy")
 

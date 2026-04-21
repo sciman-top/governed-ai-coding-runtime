@@ -60,8 +60,14 @@ The grading policy must distinguish at least these failure classes:
 - `poor_outcome_quality`
 - `reviewer_disagreement`
 - `repeated_failure_signature`
+- `misalignment_not_caught`
+- `over_explained_under_budget_pressure`
+- `under_explained_with_high_user_confusion`
+- `repeated_question_without_signal_upgrade`
+- `observation_gap_ignored`
+- `compression_without_recoverable_summary`
 
-The first four classes come directly from trace grading. The last two are postmortem input classes that can enrich later improvement proposals without being treated as runtime execution success.
+The first four classes come directly from trace grading. The remaining classes are postmortem input classes that can enrich later improvement proposals without being treated as runtime execution success.
 
 ## Postmortem Input Model
 Failed runs and reviewer feedback must be normalized into explicit postmortem inputs rather than ad hoc notes.
@@ -81,6 +87,15 @@ Failed runs and reviewer feedback must be normalized into explicit postmortem in
 - `follow_up_scope`
 - `recorded_at`
 
+### Interaction Failure Inputs
+Interaction-quality failures must remain postmortem-ready inputs instead of a fifth primary grading dimension.
+
+When an interaction failure classification is recorded, the input should also capture:
+- the triggering evidence refs
+- the affected trace-grading dimensions
+- the affected interaction signal or policy refs when available
+- whether the failure came from over-explaining, under-explaining, missed alignment, or unrecoverable compression
+
 ### follow_up_scope
 - `kernel`
 - `adapter`
@@ -93,6 +108,7 @@ Failed runs and reviewer feedback must be normalized into explicit postmortem in
 - `missing_evidence` and `replay_gap` are fail-closed grades and cannot be downgraded into warnings.
 - `policy_miss` must point to at least one missing or incompatible `policy_decision_ref` or approval reference.
 - Postmortem inputs must link back to one or more evidence references and at least one affected trace-grading dimension.
+- Interaction-oriented postmortem inputs may enrich the postmortem record, but they must not autonomously mutate policy or overwrite the original four trace grades.
 - Reviewer feedback may generate a postmortem input even when runtime gates passed, but it must not rewrite the original trace grades.
 - Repeated-failure signatures may aggregate multiple runs, but they must retain the member run refs instead of replacing them with one anecdotal summary.
 

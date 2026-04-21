@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+_ALLOWED_INTERACTION_DEFAULT_MODES = {"terse", "guided", "teaching"}
+
 _ALLOWED_TRANSITIONS = {
     ("created", "scoped"),
     ("scoped", "planned"),
@@ -31,6 +33,8 @@ class TaskIntake:
     acceptance: list[str]
     repo: str
     budgets: dict[str, int]
+    interaction_defaults: dict[str, object] | None = None
+    interaction_budget_overrides: dict[str, int] | None = None
 
     def __post_init__(self) -> None:
         if not self.goal.strip():
@@ -48,6 +52,12 @@ class TaskIntake:
         if not self.budgets:
             msg = "budgets are required"
             raise ValueError(msg)
+        if self.interaction_defaults is not None:
+            self.interaction_defaults = _normalize_interaction_defaults(self.interaction_defaults)
+        if self.interaction_budget_overrides is not None:
+            self.interaction_budget_overrides = _normalize_interaction_budget_overrides(
+                self.interaction_budget_overrides
+            )
 
 
 def validate_transition(previous_state: str, next_state: str) -> bool:
@@ -55,3 +65,44 @@ def validate_transition(previous_state: str, next_state: str) -> bool:
         msg = f"illegal transition: {previous_state} -> {next_state}"
         raise ValueError(msg)
     return True
+
+
+def _normalize_interaction_defaults(interaction_defaults: dict[str, object]) -> dict[str, object]:
+    if not isinstance(interaction_defaults, dict):
+        msg = "interaction_defaults must be a dict"
+        raise ValueError(msg)
+
+    normalized = dict(interaction_defaults)
+    default_mode = normalized.get("default_mode")
+    if default_mode is not None and default_mode not in _ALLOWED_INTERACTION_DEFAULT_MODES:
+        msg = f"unsupported interaction default_mode: {default_mode}"
+        raise ValueError(msg)
+
+    max_questions = normalized.get("max_questions")
+    if max_questions is not None:
+        if not isinstance(max_questions, int):
+            msg = "interaction_defaults.max_questions must be an int"
+            raise ValueError(msg)
+        if max_questions < 0 or max_questions > 3:
+            msg = "interaction_defaults.max_questions must stay within clarification cap 0..3"
+            raise ValueError(msg)
+
+    return normalized
+
+
+def _normalize_interaction_budget_overrides(
+    interaction_budget_overrides: dict[str, int],
+) -> dict[str, int]:
+    if not isinstance(interaction_budget_overrides, dict):
+        msg = "interaction_budget_overrides must be a dict"
+        raise ValueError(msg)
+
+    normalized = dict(interaction_budget_overrides)
+    for budget_name, budget_value in normalized.items():
+        if not isinstance(budget_value, int):
+            msg = f"interaction_budget_overrides.{budget_name} must be an int"
+            raise ValueError(msg)
+        if budget_value < 0:
+            msg = f"interaction_budget_overrides.{budget_name} must be non-negative"
+            raise ValueError(msg)
+    return normalized

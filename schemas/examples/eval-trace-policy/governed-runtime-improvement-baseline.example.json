@@ -38,7 +38,13 @@
       "replay_gap",
       "poor_outcome_quality",
       "reviewer_disagreement",
-      "repeated_failure_signature"
+      "repeated_failure_signature",
+      "misalignment_not_caught",
+      "over_explained_under_budget_pressure",
+      "under_explained_with_high_user_confusion",
+      "repeated_question_without_signal_upgrade",
+      "observation_gap_ignored",
+      "compression_without_recoverable_summary"
     ]
   },
   "postmortem_inputs": {
@@ -58,7 +64,11 @@
       "recorded_at"
     ],
     "required_dimension_links": true,
-    "minimum_evidence_refs": 1
+    "minimum_evidence_refs": 1,
+    "interaction_ref_fields": [
+      "interaction_signal_refs",
+      "interaction_policy_refs"
+    ]
   },
   "improvement_signal_flow": {
     "trigger_order": [

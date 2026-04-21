@@ -518,6 +518,45 @@
           "status"
         ]
       }
+    },
+    "interaction_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_mode": {
+          "type": "string",
+          "enum": [
+            "terse",
+            "guided",
+            "teaching"
+          ]
+        },
+        "term_explain_style": {
+          "type": "string",
+          "enum": [
+            "definition_only",
+            "definition_plus_task_role",
+            "definition_plus_common_mistake"
+          ]
+        },
+        "default_checklist_kind": {
+          "type": "string"
+        },
+        "compaction_preference": {
+          "type": "string",
+          "enum": [
+            "stage_summary",
+            "aggressive_compaction",
+            "ref_only"
+          ]
+        },
+        "summary_template": {
+          "type": "string"
+        },
+        "handoff_teaching_notes": {
+          "type": "string"
+        }
+      }
     }
   }
 }

@@ -126,6 +126,40 @@
             "items": {
               "type": "string"
             }
+          },
+          "interaction_posture": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "latest_task_restatement": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "interaction_budget_status": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "clarification_active": {
+            "type": "boolean"
+          },
+          "latest_compression_action": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "outstanding_observation_items_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
           }
         }
       }

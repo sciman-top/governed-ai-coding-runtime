@@ -38,6 +38,12 @@ class OperatorQueryResult:
     verification_refs: list[str]
     handoff_refs: list[str]
     replay_refs: list[str]
+    interaction_posture: str | None
+    latest_task_restatement: str | None
+    interaction_budget_status: str | None
+    clarification_active: bool
+    latest_compression_action: str | None
+    outstanding_observation_items_count: int | None
     posture_summary: OperatorPostureSummary | None
     read_only: bool = True
 
@@ -95,6 +101,10 @@ def query_operator_attachment_surface(
         [ref for ref in evidence_refs + artifact_refs if "replay" in ref] + scan["replay_refs"]
     )
     approval_refs = _dedupe_preserve_order(scan["approval_refs"])
+    interaction_projection = _interaction_projection(
+        runtime_state_root=Path(attachment_runtime_state_root) if attachment_runtime_state_root else None,
+        evidence_refs=evidence_refs,
+    )
 
     return OperatorQueryResult(
         task_id=normalized_task_id,
@@ -110,6 +120,12 @@ def query_operator_attachment_surface(
         verification_refs=verification_refs,
         handoff_refs=handoff_refs,
         replay_refs=replay_refs,
+        interaction_posture=interaction_projection["interaction_posture"],
+        latest_task_restatement=interaction_projection["latest_task_restatement"],
+        interaction_budget_status=interaction_projection["interaction_budget_status"],
+        clarification_active=interaction_projection["clarification_active"],
+        latest_compression_action=interaction_projection["latest_compression_action"],
+        outstanding_observation_items_count=interaction_projection["outstanding_observation_items_count"],
         posture_summary=_posture_summary(
             attachment_root=attachment_root,
             attachment_runtime_state_root=attachment_runtime_state_root,
@@ -221,3 +237,72 @@ def _dedupe_preserve_order(values: list[str]) -> list[str]:
         seen.add(value)
         ordered.append(value)
     return ordered
+
+
+def _interaction_projection(*, runtime_state_root: Path | None, evidence_refs: list[str]) -> dict[str, object]:
+    empty = {
+        "interaction_posture": None,
+        "latest_task_restatement": None,
+        "interaction_budget_status": None,
+        "clarification_active": False,
+        "latest_compression_action": None,
+        "outstanding_observation_items_count": None,
+    }
+    if runtime_state_root is None:
+        return empty
+
+    for evidence_ref in reversed(evidence_refs):
+        candidate = runtime_state_root / Path(evidence_ref)
+        if not candidate.exists():
+            continue
+        try:
+            payload = json.loads(candidate.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        interaction_trace = payload.get("interaction_trace")
+        if not isinstance(interaction_trace, dict):
+            continue
+        empty["interaction_posture"] = _last_mapping_value(
+            interaction_trace.get("applied_policies", []),
+            "posture",
+        )
+        task_restatements = interaction_trace.get("task_restatements", [])
+        empty["latest_task_restatement"] = task_restatements[-1] if isinstance(task_restatements, list) and task_restatements else None
+        empty["interaction_budget_status"] = _last_mapping_value(
+            interaction_trace.get("budget_snapshots", []),
+            "budget_status",
+        )
+        clarification_rounds = interaction_trace.get("clarification_rounds", [])
+        empty["clarification_active"] = isinstance(clarification_rounds, list) and bool(clarification_rounds)
+        empty["latest_compression_action"] = _last_mapping_value(
+            interaction_trace.get("compression_actions", []),
+            "compression_mode",
+        )
+        empty["outstanding_observation_items_count"] = _last_list_size(
+            interaction_trace.get("observation_checklists", []),
+            "items",
+        )
+        return empty
+    return empty
+
+
+def _last_mapping_value(items: object, field_name: str) -> str | None:
+    if not isinstance(items, list):
+        return None
+    for item in reversed(items):
+        if isinstance(item, dict):
+            value = item.get(field_name)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+    return None
+
+
+def _last_list_size(items: object, field_name: str) -> int | None:
+    if not isinstance(items, list):
+        return None
+    for item in reversed(items):
+        if isinstance(item, dict):
+            value = item.get(field_name)
+            if isinstance(value, list):
+                return len(value)
+    return None

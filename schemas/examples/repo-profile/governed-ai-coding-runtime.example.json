@@ -157,6 +157,14 @@
     "docs/README.md",
     "docs/quickstart/single-machine-runtime-quickstart.md"
   ],
+  "interaction_profile": {
+    "default_mode": "guided",
+    "term_explain_style": "definition_plus_task_role",
+    "default_checklist_kind": "bugfix",
+    "compaction_preference": "stage_summary",
+    "summary_template": "goal-plan-changes-verification-risks",
+    "handoff_teaching_notes": "Highlight the latest task restatement, unresolved observation gaps, and the current interaction posture."
+  },
   "compatibility_signals": [
     {
       "capability": "structured_events",

@@ -5,8 +5,8 @@ This directory holds executable implementation plans that translate strategy and
 
 ## Current Authoritative Plan
 - [Teaching Collaboration And Low-Token Governance Implementation Plan](./teaching-collaboration-and-low-token-governance-implementation-plan.md)
-  - Status: planned bounded follow-on implementation lane derived from the approved `2026-04-22` interaction-governance design
-  - Scope: interaction signals, response policy, teaching budget, interaction evidence, learning-efficiency metrics, evidence/trace integration, and minimal runtime/operator projection
+  - Status: completed bounded follow-on implementation lane verified on `2026-04-22`
+  - Scope: interaction signals, response policy, teaching budget, interaction evidence, learning-efficiency metrics, evidence/trace integration, task-intake defaults, minimal runtime/operator projection, and repo-profile interaction defaults
 - [Direct-To-Hybrid Final-State Implementation Plan](./direct-to-hybrid-final-state-implementation-plan.md)
   - Status: completed direct closure implementation mainline (verified on 2026-04-20)
   - Scope: `Phase 0` through `Phase 5`; `Phase 0` planning closeout is complete on the current branch baseline, and the remaining active execution queue covers governed execution closure, live adapter reality, real attached multi-repo trials, machine-local sidecar default, service-shaped runtime extraction, and final hardening or closeout discipline

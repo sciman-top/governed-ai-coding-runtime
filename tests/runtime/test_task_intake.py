@@ -50,8 +50,59 @@ class TaskIntakeContractTests(unittest.TestCase):
                 "acceptance": ["goal is required", "repo is attached"],
                 "repo": "governed-ai-coding-runtime",
                 "budgets": {"max_steps": 10, "max_minutes": 30},
+                "interaction_defaults": None,
+                "interaction_budget_overrides": None,
             },
         )
+
+    def test_task_intake_accepts_optional_interaction_defaults_and_budget_overrides(self) -> None:
+        module = importlib.import_module("governed_ai_coding_runtime_contracts.task_intake")
+        task = module.TaskIntake(
+            goal="create governed task",
+            scope="phase 1 deterministic intake",
+            acceptance=["goal is required", "repo is attached"],
+            repo="governed-ai-coding-runtime",
+            budgets={"max_steps": 10, "max_minutes": 30},
+            interaction_defaults={
+                "default_mode": "guided",
+                "allow_teaching": True,
+                "max_questions": 3,
+            },
+            interaction_budget_overrides={
+                "clarification_budget": 300,
+                "explanation_budget": 500,
+            },
+        )
+
+        self.assertEqual(task.interaction_defaults["default_mode"], "guided")
+        self.assertEqual(task.interaction_defaults["max_questions"], 3)
+        self.assertEqual(task.interaction_budget_overrides["clarification_budget"], 300)
+
+    def test_task_intake_rejects_interaction_defaults_that_override_clarification_cap(self) -> None:
+        module = importlib.import_module("governed_ai_coding_runtime_contracts.task_intake")
+
+        with self.assertRaises(ValueError):
+            module.TaskIntake(
+                goal="create governed task",
+                scope="phase 1 deterministic intake",
+                acceptance=["goal is required", "repo is attached"],
+                repo="governed-ai-coding-runtime",
+                budgets={"max_steps": 10, "max_minutes": 30},
+                interaction_defaults={"default_mode": "guided", "max_questions": 4},
+            )
+
+    def test_task_intake_rejects_negative_interaction_budget_override(self) -> None:
+        module = importlib.import_module("governed_ai_coding_runtime_contracts.task_intake")
+
+        with self.assertRaises(ValueError):
+            module.TaskIntake(
+                goal="create governed task",
+                scope="phase 1 deterministic intake",
+                acceptance=["goal is required", "repo is attached"],
+                repo="governed-ai-coding-runtime",
+                budgets={"max_steps": 10, "max_minutes": 30},
+                interaction_budget_overrides={"clarification_budget": -1},
+            )
 
     def test_validate_transition_accepts_required_transition(self) -> None:
         module = importlib.import_module("governed_ai_coding_runtime_contracts.task_intake")

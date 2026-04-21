@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 import importlib
+import json
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACTS_SRC = ROOT / "packages" / "contracts" / "src"
@@ -103,6 +104,72 @@ class RuntimeStatusTests(unittest.TestCase):
                 snapshot.tasks[0].evidence_refs,
                 ["artifacts/task-status-rich/run-rich/evidence/evidence.json"],
             )
+
+    def test_runtime_status_projects_interaction_fields_from_evidence_bundle(self) -> None:
+        task_store = importlib.import_module("governed_ai_coding_runtime_contracts.task_store")
+        task_intake = importlib.import_module("governed_ai_coding_runtime_contracts.task_intake")
+        runtime_status = importlib.import_module("governed_ai_coding_runtime_contracts.runtime_status")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            evidence_path = workspace / "artifacts" / "task-status-interaction" / "run-1" / "evidence"
+            evidence_path.mkdir(parents=True, exist_ok=True)
+            (evidence_path / "bundle.json").write_text(
+                json.dumps(
+                    {
+                        "interaction_trace": {
+                            "applied_policies": [{"posture": "guiding"}],
+                            "task_restatements": ["Confirm the repro before changing code."],
+                            "clarification_rounds": [{"scenario": "bugfix", "questions": [], "answers": []}],
+                            "observation_checklists": [{"checklist_kind": "bugfix", "items": ["logs", "repro"]}],
+                            "compression_actions": [{"compression_mode": "stage_summary"}],
+                            "budget_snapshots": [{"budget_status": "warning"}],
+                        }
+                    },
+                    indent=2,
+                    sort_keys=True,
+                ),
+                encoding="utf-8",
+            )
+
+            store = task_store.FileTaskStore(workspace / "tasks")
+            store.save(
+                task_store.TaskRecord(
+                    task_id="task-status-interaction",
+                    task=task_intake.TaskIntake(
+                        goal="show interaction read model",
+                        scope="status",
+                        acceptance=["interaction fields are visible"],
+                        repo="governed-ai-coding-runtime",
+                        budgets={"max_steps": 5, "max_minutes": 15},
+                    ),
+                    current_state="executing",
+                    active_run_id="run-1",
+                    run_history=[
+                        task_store.TaskRunRecord(
+                            run_id="run-1",
+                            attempt_id="task-status-interaction-attempt-1",
+                            worker_id="worker-1",
+                            status="running",
+                            workspace_root=".governed-workspaces/python/task-status-interaction/run-1",
+                            started_at="2026-04-18T00:00:00+00:00",
+                            evidence_refs=["artifacts/task-status-interaction/run-1/evidence/bundle.json"],
+                        )
+                    ],
+                )
+            )
+
+            snapshot = runtime_status.RuntimeStatusStore(store.root_path, runtime_root=workspace).snapshot()
+
+            self.assertEqual(snapshot.tasks[0].interaction_posture, "guiding")
+            self.assertEqual(
+                snapshot.tasks[0].latest_task_restatement,
+                "Confirm the repro before changing code.",
+            )
+            self.assertEqual(snapshot.tasks[0].interaction_budget_status, "warning")
+            self.assertTrue(snapshot.tasks[0].clarification_active)
+            self.assertEqual(snapshot.tasks[0].latest_compression_action, "stage_summary")
+            self.assertEqual(snapshot.tasks[0].outstanding_observation_items_count, 2)
 
     def test_runtime_status_handles_empty_state(self) -> None:
         task_store = importlib.import_module("governed_ai_coding_runtime_contracts.task_store")
@@ -249,6 +316,48 @@ class RuntimeStatusTests(unittest.TestCase):
                     "attachments": [],
                 }
             )
+
+    def test_runtime_snapshot_reader_accepts_optional_interaction_projection(self) -> None:
+        runtime_status = importlib.import_module("governed_ai_coding_runtime_contracts.runtime_status")
+        snapshot = runtime_status.runtime_snapshot_from_dict(
+            {
+                "total_tasks": 1,
+                "maintenance": {
+                    "stage": "completed",
+                    "compatibility_policy_ref": "docs/product/runtime-compatibility-and-upgrade-policy.md",
+                    "upgrade_policy_ref": "docs/product/runtime-compatibility-and-upgrade-policy.md",
+                    "triage_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+                    "deprecation_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+                    "retirement_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+                },
+                "tasks": [
+                    {
+                        "task_id": "task-1",
+                        "current_state": "executing",
+                        "goal": "project interaction posture",
+                        "active_run_id": "run-1",
+                        "workspace_root": ".governed-workspaces/task-1/run-1",
+                        "rollback_ref": None,
+                        "approval_ids": [],
+                        "artifact_refs": [],
+                        "evidence_refs": [],
+                        "verification_refs": [],
+                        "interaction_posture": "guiding",
+                        "latest_task_restatement": "Confirm the repro before changing code.",
+                        "interaction_budget_status": "warning",
+                        "clarification_active": True,
+                        "latest_compression_action": "stage_summary",
+                        "outstanding_observation_items_count": 2,
+                    }
+                ],
+                "attachments": [],
+                "runtime_root": ".runtime",
+                "persistence_backend": "filesystem",
+            }
+        )
+
+        self.assertEqual(snapshot.tasks[0].interaction_posture, "guiding")
+        self.assertEqual(snapshot.tasks[0].outstanding_observation_items_count, 2)
 
 
 if __name__ == "__main__":

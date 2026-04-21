@@ -32,6 +32,7 @@ Define the per-repository configuration inherited by governed sessions.
 - context_files
 - reviewer_handoff_template
 - compatibility_signals
+- interaction_profile
 
 ## Inheritance Model
 1. platform defaults
@@ -45,12 +46,17 @@ Repo profiles may override:
 - allowed low-risk tools
 - optional eval suites
 - delivery templates
+- bounded interaction defaults
 
 Repo profiles may not override:
 - evidence minimum fields
 - high-risk approval requirements
 - control registry semantics
 - rollback reference requirement
+- clarification hard caps
+- hard budget stop semantics
+- explicit degrade behavior
+- canonical gate order
 
 ## Rollout Posture
 - `current_mode`: currently active execution posture for this repo
@@ -83,6 +89,19 @@ Repos may declare local persistence hints for the Foundation task store:
 - `artifact_root`
 - `replay_root`
 
+## Interaction Profile
+Repos may declare bounded collaboration defaults through `interaction_profile`.
+
+Supported fields:
+- `default_mode`
+- `term_explain_style`
+- `default_checklist_kind`
+- `compaction_preference`
+- `summary_template`
+- `handoff_teaching_notes`
+
+These defaults tune how a repo prefers guidance to be phrased, but they do not weaken the shared clarification, budget, or approval boundaries.
+
 ## Verification
 A repo profile is valid only if:
 - all required commands are present or explicitly marked not applicable
@@ -90,4 +109,5 @@ A repo profile is valid only if:
 - quick and full gates have unambiguous command order
 - rollout posture uses a supported governance posture name
 - compatibility degrade behavior is explicit whenever support is partial or unsupported
+- interaction defaults stay bounded and do not redefine hard clarification or stop-on-budget behavior
 - managed workspaces and runtime-local storage roots stay on one machine in the first Full Runtime stage

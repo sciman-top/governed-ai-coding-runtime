@@ -20,6 +20,17 @@ _MINIMUM_COMPLETION_FIELDS = [
     "open_questions",
 ]
 
+_INTERACTION_TRACE_LIST_FIELDS = [
+    "signals",
+    "applied_policies",
+    "task_restatements",
+    "clarification_rounds",
+    "observation_checklists",
+    "terms_explained",
+    "compression_actions",
+    "budget_snapshots",
+]
+
 
 @dataclass(frozen=True, slots=True)
 class EvidenceEvent:
@@ -139,6 +150,7 @@ def build_evidence_bundle(
     replay_case_ref: str | None = None,
     failure_signature: str | None = None,
     trial_feedback: dict | None = None,
+    interaction_trace: dict | None = None,
 ) -> dict:
     created_at = datetime.now(UTC).isoformat()
     verification_results = [
@@ -149,7 +161,7 @@ def build_evidence_bundle(
         }
         for gate_id, result in verification_artifact.results.items()
     ]
-    return {
+    bundle = {
         "task_id": task_id,
         "repo_id": repo_id,
         "goal": goal,
@@ -180,6 +192,9 @@ def build_evidence_bundle(
         "replay_case_ref": replay_case_ref,
         "trial_feedback": trial_feedback,
     }
+    if interaction_trace is not None:
+        bundle["interaction_trace"] = _normalize_interaction_trace(interaction_trace)
+    return bundle
 
 
 def _verification_status(result: str) -> str:
@@ -189,6 +204,30 @@ def _verification_status(result: str) -> str:
         "advisory": "advisory",
         "not_run": "skipped_not_applicable",
     }.get(result, "skipped_not_applicable")
+
+
+def _normalize_interaction_trace(interaction_trace: dict) -> dict:
+    if not isinstance(interaction_trace, dict):
+        msg = "interaction_trace must be a dict"
+        raise ValueError(msg)
+
+    normalized = dict(interaction_trace)
+    for field_name in _INTERACTION_TRACE_LIST_FIELDS:
+        field_value = normalized.get(field_name)
+        if field_value is None:
+            normalized[field_name] = []
+            continue
+        if not isinstance(field_value, list):
+            msg = f"interaction_trace.{field_name} must be a list"
+            raise ValueError(msg)
+
+    for scalar_field in ("alignment_outcome", "stop_or_degrade_reason"):
+        field_value = normalized.get(scalar_field)
+        if field_value is not None and not isinstance(field_value, str):
+            msg = f"interaction_trace.{scalar_field} must be a string when present"
+            raise ValueError(msg)
+
+    return normalized
 
 
 def _count_events(events: list[EvidenceEvent], event_type: str) -> int:

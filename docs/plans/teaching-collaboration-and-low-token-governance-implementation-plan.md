@@ -195,18 +195,18 @@ Task 1 interaction core contracts
 - Modify: `docs/specs/evidence-bundle-spec.md`
 - Modify: `schemas/jsonschema/evidence-bundle.schema.json`
 - Modify: `packages/contracts/src/governed_ai_coding_runtime_contracts/evidence.py`
-- Modify: `tests/runtime/test_evidence.py`
+- Modify: `tests/runtime/test_evidence_timeline.py`
 
 **Acceptance criteria:**
-- [ ] `interaction_trace` is modeled as an optional structured extension of the evidence bundle.
-- [ ] The extension records signals, applied policies, restatements, clarification rounds, checklists, terms explained, compression actions, budget snapshots, and stop/degrade reasons.
-- [ ] Existing evidence consumers remain compatible when `interaction_trace` is absent.
-- [ ] The extension does not create a parallel evidence store.
+- [x] `interaction_trace` is modeled as an optional structured extension of the evidence bundle.
+- [x] The extension records signals, applied policies, restatements, clarification rounds, checklists, terms explained, compression actions, budget snapshots, and stop/degrade reasons.
+- [x] Existing evidence consumers remain compatible when `interaction_trace` is absent.
+- [x] The extension does not create a parallel evidence store.
 
 **Verification:**
-- [ ] Run `python -m unittest tests.runtime.test_evidence -v`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [x] Run `python -m unittest tests.runtime.test_evidence_timeline -v`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
 
 **Dependencies:** Task 3.
 
@@ -221,20 +221,20 @@ Task 1 interaction core contracts
 - Modify: `schemas/jsonschema/eval-trace-policy.schema.json`
 
 **Acceptance criteria:**
-- [ ] Primary grading dimensions remain unchanged.
-- [ ] Postmortem-ready interaction failure classifications are added, including:
+- [x] Primary grading dimensions remain unchanged.
+- [x] Postmortem-ready interaction failure classifications are added, including:
   - `misalignment_not_caught`
   - `over_explained_under_budget_pressure`
   - `under_explained_with_high_user_confusion`
   - `repeated_question_without_signal_upgrade`
   - `observation_gap_ignored`
   - `compression_without_recoverable_summary`
-- [ ] The new interaction inputs point back to evidence refs and affected dimensions.
-- [ ] The spec remains explicit that postmortem inputs do not autonomously mutate policy.
+- [x] The new interaction inputs point back to evidence refs and affected dimensions.
+- [x] The spec remains explicit that postmortem inputs do not autonomously mutate policy.
 
 **Verification:**
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
 
 **Dependencies:** Task 4.
 
@@ -249,14 +249,14 @@ Task 1 interaction core contracts
 - Modify: `tests/runtime/test_task_intake.py`
 
 **Acceptance criteria:**
-- [ ] Task intake can carry optional `interaction_defaults`.
-- [ ] Task intake can carry optional `interaction_budget_overrides`.
-- [ ] Existing task creation flows remain valid when the new fields are absent.
-- [ ] Defaults do not override hard clarification caps or safety boundaries.
+- [x] Task intake can carry optional `interaction_defaults`.
+- [x] Task intake can carry optional `interaction_budget_overrides`.
+- [x] Existing task creation flows remain valid when the new fields are absent.
+- [x] Defaults do not override hard clarification caps or safety boundaries.
 
 **Verification:**
-- [ ] Run `python -m unittest tests.runtime.test_task_intake -v`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [x] Run `python -m unittest tests.runtime.test_task_intake -v`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
 
 **Dependencies:** Task 3.
 
@@ -275,15 +275,15 @@ Task 1 interaction core contracts
 - Modify: `tests/runtime/test_operator_queries.py`
 
 **Acceptance criteria:**
-- [ ] Runtime/operator read models can project current interaction posture.
-- [ ] Read models can project the latest task restatement, budget status, clarification activity, compression action, and outstanding observation items count.
-- [ ] Read models stay read-only and compatible with current operator-surface semantics.
-- [ ] The projection is optional when no interaction data exists.
+- [x] Runtime/operator read models can project current interaction posture.
+- [x] Read models can project the latest task restatement, budget status, clarification activity, compression action, and outstanding observation items count.
+- [x] Read models stay read-only and compatible with current operator-surface semantics.
+- [x] The projection is optional when no interaction data exists.
 
 **Verification:**
-- [ ] Run `python -m unittest tests.runtime.test_runtime_status tests.runtime.test_operator_queries -v`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [x] Run `python -m unittest tests.runtime.test_runtime_status tests.runtime.test_operator_queries -v`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
 
 **Dependencies:** Tasks 4, 6.
 
@@ -298,19 +298,19 @@ Task 1 interaction core contracts
 - Modify: `schemas/jsonschema/repo-profile.schema.json`
 
 **Acceptance criteria:**
-- [ ] Repo profiles may declare bounded interaction defaults such as:
+- [x] Repo profiles may declare bounded interaction defaults such as:
   - `interaction_profile.default_mode`
   - `interaction_profile.term_explain_style`
   - `interaction_profile.default_checklist_kind`
   - `interaction_profile.compaction_preference`
   - `interaction_profile.summary_template`
   - `interaction_profile.handoff_teaching_notes`
-- [ ] Repo profiles may not override hard clarification caps, hard budget stops, explicit degrade semantics, or canonical gate order.
-- [ ] Repo-profile examples remain consistent with summary and handoff templates already in use.
+- [x] Repo profiles may not override hard clarification caps, hard budget stops, explicit degrade semantics, or canonical gate order.
+- [x] Repo-profile examples remain consistent with summary and handoff templates already in use.
 
 **Verification:**
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
 
 **Dependencies:** Tasks 2, 7.
 
@@ -326,9 +326,9 @@ Task 1 interaction core contracts
 - Create: `docs/change-evidence/<date>-teaching-collaboration-low-token-implementation-plan.md`
 
 **Acceptance criteria:**
-- [ ] The plan index records this implementation plan as a bounded follow-on lane.
-- [ ] Change evidence captures the final task chain, verification results, risks, and rollback notes.
-- [ ] The baseline metrics set is documented as:
+- [x] The plan index records this implementation plan as a bounded follow-on lane.
+- [x] Change evidence captures the final task chain, verification results, risks, and rollback notes.
+- [x] The baseline metrics set is documented as:
   - `alignment_confirm_rate`
   - `misalignment_detect_rate`
   - `repeated_failure_before_clarify`
@@ -337,14 +337,14 @@ Task 1 interaction core contracts
   - `compression_trigger_rate`
   - `explanation_token_share`
   - `handoff_recovery_success_rate`
-- [ ] Evidence clearly states which parts are design-and-contract complete versus runtime-behavior complete.
+- [x] Evidence clearly states which parts are design-and-contract complete versus runtime-behavior complete.
 
 **Verification:**
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
-- [ ] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`.
+- [x] Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`.
 
 **Dependencies:** Tasks 1 through 8.
 

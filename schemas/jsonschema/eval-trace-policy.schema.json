@@ -89,7 +89,13 @@
               "replay_gap",
               "poor_outcome_quality",
               "reviewer_disagreement",
-              "repeated_failure_signature"
+              "repeated_failure_signature",
+              "misalignment_not_caught",
+              "over_explained_under_budget_pressure",
+              "under_explained_with_high_user_confusion",
+              "repeated_question_without_signal_upgrade",
+              "observation_gap_ignored",
+              "compression_without_recoverable_summary"
             ],
             "type": "string"
           }
@@ -143,6 +149,17 @@
         "minimum_evidence_refs": {
           "minimum": 1,
           "type": "integer"
+        },
+        "interaction_ref_fields": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "interaction_signal_refs",
+              "interaction_policy_refs"
+            ],
+            "type": "string"
+          }
         }
       }
     },

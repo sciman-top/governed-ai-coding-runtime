@@ -175,6 +175,141 @@ class EvidenceTimelineTests(unittest.TestCase):
         self.assertEqual(bundle["trial_feedback"]["trial_id"], "trial-001")
         self.assertEqual(bundle["trial_feedback"]["adapter_tier"], "process_bridge")
 
+    def test_evidence_bundle_keeps_backward_compatibility_when_interaction_trace_is_absent(self) -> None:
+        module = importlib.import_module("governed_ai_coding_runtime_contracts.evidence")
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+        plan = verification_runner.build_verification_plan("quick")
+        artifact = verification_runner.build_verification_artifact(
+            plan,
+            "docs/change-evidence/trial.md",
+            {"test": "pass", "contract": "pass"},
+        )
+
+        bundle = module.build_evidence_bundle(
+            task_id="task-plain",
+            repo_id="python-service",
+            goal="exercise plain evidence",
+            acceptance_criteria=["plain record still builds"],
+            verification_artifact=artifact,
+            rollback_ref="git:HEAD~1",
+            final_status="completed",
+            final_summary="plain evidence completed",
+            artifact_refs=["artifacts/task-plain/evidence/bundle.json"],
+        )
+
+        self.assertNotIn("interaction_trace", bundle)
+
+    def test_evidence_bundle_can_embed_interaction_trace_extension(self) -> None:
+        module = importlib.import_module("governed_ai_coding_runtime_contracts.evidence")
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+        plan = verification_runner.build_verification_plan("quick")
+        artifact = verification_runner.build_verification_artifact(
+            plan,
+            "docs/change-evidence/trial.md",
+            {"test": "pass", "contract": "pass"},
+        )
+
+        bundle = module.build_evidence_bundle(
+            task_id="task-interaction",
+            repo_id="python-service",
+            goal="exercise interaction evidence",
+            acceptance_criteria=["interaction trace is linked"],
+            verification_artifact=artifact,
+            rollback_ref="git:HEAD~1",
+            final_status="completed",
+            final_summary="interaction evidence completed",
+            artifact_refs=["artifacts/task-interaction/evidence/bundle.json"],
+            interaction_trace={
+                "signals": [
+                    {
+                        "signal_id": "signal-1",
+                        "signal_kind": "observation_gap",
+                        "severity": "medium",
+                        "summary": "expected vs actual was missing",
+                        "evidence_refs": ["artifacts/task-interaction/logs/runtime.txt"],
+                    }
+                ],
+                "applied_policies": [
+                    {
+                        "policy_id": "policy-1",
+                        "mode": "guided",
+                        "posture": "guiding",
+                        "clarification_mode": "light",
+                        "compression_mode": "none",
+                        "stop_or_escalate": "continue",
+                        "rationale_signal_ids": ["signal-1"],
+                    }
+                ],
+                "task_restatements": ["Confirm the bug before selecting a fix."],
+                "clarification_rounds": [
+                    {
+                        "scenario": "bugfix",
+                        "questions": ["What did you expect?", "What actually happened?"],
+                        "answers": ["Expected 200", "Observed 500"],
+                    }
+                ],
+                "observation_checklists": [
+                    {
+                        "checklist_kind": "bugfix",
+                        "items": ["capture logs", "record repro steps"],
+                    }
+                ],
+                "terms_explained": [
+                    {
+                        "term": "expected_vs_actual",
+                        "explanation_summary": "Separate the target behavior from the observed failure.",
+                        "task_role": "bug triage",
+                    }
+                ],
+                "compression_actions": [
+                    {
+                        "compression_mode": "stage_summary",
+                        "summary": "retained bug repro state only",
+                        "retained_refs": ["artifacts/task-interaction/handoff.md"],
+                    }
+                ],
+                "budget_snapshots": [
+                    {
+                        "budget_status": "warning",
+                        "used_explanation_tokens": 120,
+                        "used_clarification_tokens": 64,
+                        "used_compaction_tokens": 12,
+                        "total_token_budget": 4000,
+                    }
+                ],
+                "alignment_outcome": "user confirmed the clarified target state",
+                "stop_or_degrade_reason": "none",
+            },
+        )
+
+        self.assertEqual(bundle["interaction_trace"]["signals"][0]["signal_kind"], "observation_gap")
+        self.assertEqual(bundle["interaction_trace"]["applied_policies"][0]["posture"], "guiding")
+        self.assertEqual(bundle["interaction_trace"]["budget_snapshots"][0]["budget_status"], "warning")
+
+    def test_evidence_bundle_rejects_invalid_interaction_trace_shape(self) -> None:
+        module = importlib.import_module("governed_ai_coding_runtime_contracts.evidence")
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+        plan = verification_runner.build_verification_plan("quick")
+        artifact = verification_runner.build_verification_artifact(
+            plan,
+            "docs/change-evidence/trial.md",
+            {"test": "pass", "contract": "pass"},
+        )
+
+        with self.assertRaises(ValueError):
+            module.build_evidence_bundle(
+                task_id="task-invalid-interaction",
+                repo_id="python-service",
+                goal="exercise invalid interaction evidence",
+                acceptance_criteria=["interaction trace must validate"],
+                verification_artifact=artifact,
+                rollback_ref="git:HEAD~1",
+                final_status="completed",
+                final_summary="invalid interaction evidence rejected",
+                artifact_refs=["artifacts/task-invalid/evidence/bundle.json"],
+                interaction_trace={"signals": "not-a-list"},
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
