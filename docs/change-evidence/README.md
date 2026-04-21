@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260422 教学式协作与低 Token 治理实现计划](./20260422-teaching-collaboration-low-token-implementation-plan.md)
+  - evidence companion for the bounded implementation plan that decomposes interaction-governance design into specs, schemas, Python primitives, evidence/trace integration, and minimal read-model projection
 - [20260422 教学式协作与低 Token 治理总设计](./20260422-teaching-collaboration-low-token-governance-design.md)
   - evidence companion for the new top-level design that aligns teaching-style collaboration, token budgets, interaction signals, compression rules, and evidence/trace integration
 - [20260422 目标仓清单单一真源落地](./20260422-target-repo-catalog-single-source.md)
