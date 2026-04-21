@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260421 GAP-082 Service Parity Expansion](./20260421-gap-082-service-parity-expansion.md)
+  - evidence companion for expanding `GAP-082` parity coverage to full-gate planning, write-execution approval-path checks, and operator read parity under runtime CI
 - [20260421 GAP-082 Service-Primary Convergence Runtime-Gate Baseline](./20260421-gap-082-service-primary-convergence-runtime-gate-baseline.md)
   - evidence companion for adding runtime-gate enforcement of service API parity tests and promoting `GAP-082` to in-progress
 - [20260421 GAP-081 Non-Codex Conformance Closeout](./20260421-gap-081-non-codex-conformance-closeout.md)

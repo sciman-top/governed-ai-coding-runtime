@@ -26,6 +26,7 @@ class OperatorApiTests(unittest.TestCase):
     def test_operator_routes_expose_status_and_evidence_queries(self) -> None:
         service_facade_module = _load_module("packages/agent-runtime/service_facade.py", "service_facade")
         app_module = _load_module("apps/control-plane/app.py", "control_plane_app")
+        session_bridge = importlib.import_module("governed_ai_coding_runtime_contracts.session_bridge")
         task_store = importlib.import_module("governed_ai_coding_runtime_contracts.task_store")
         task_intake = importlib.import_module("governed_ai_coding_runtime_contracts.task_intake")
 
@@ -73,15 +74,63 @@ class OperatorApiTests(unittest.TestCase):
                 route="/operator",
                 payload={"action": "inspect_handoff", "task_id": "task-operator-api", "run_id": "run-operator"},
             )
+            direct_status = session_bridge.handle_session_bridge_command(
+                session_bridge.build_session_bridge_command(
+                    command_id="direct-operator-status",
+                    command_type="inspect_status",
+                    task_id="operator-status",
+                    repo_binding_id="operator-status",
+                    adapter_id="codex-cli",
+                    risk_tier="low",
+                    payload={},
+                ),
+                task_root=tasks_root,
+                repo_root=workspace,
+            )
+            direct_evidence = session_bridge.handle_session_bridge_command(
+                session_bridge.build_session_bridge_command(
+                    command_id="direct-operator-evidence",
+                    command_type="inspect_evidence",
+                    task_id="task-operator-api",
+                    repo_binding_id="binding-task-operator-api",
+                    adapter_id="codex-cli",
+                    risk_tier="low",
+                    payload={"run_id": "run-operator"},
+                ),
+                task_root=tasks_root,
+                repo_root=workspace,
+            )
+            direct_handoff = session_bridge.handle_session_bridge_command(
+                session_bridge.build_session_bridge_command(
+                    command_id="direct-operator-handoff",
+                    command_type="inspect_handoff",
+                    task_id="task-operator-api",
+                    repo_binding_id="binding-task-operator-api",
+                    adapter_id="codex-cli",
+                    risk_tier="low",
+                    payload={"run_id": "run-operator"},
+                ),
+                task_root=tasks_root,
+                repo_root=workspace,
+            )
 
             self.assertEqual(status_result["status"], "ok")
+            self.assertEqual(status_result["status"], direct_status.status)
             self.assertEqual(status_result["service_boundary"], "control-plane")
             self.assertEqual(evidence_result["status"], "ok")
+            self.assertEqual(evidence_result["status"], direct_evidence.status)
+            self.assertEqual(evidence_result["payload"]["task_id"], direct_evidence.payload["task_id"])
+            self.assertEqual(evidence_result["payload"]["run_id"], direct_evidence.payload["run_id"])
+            self.assertEqual(evidence_result["payload"]["evidence_refs"], direct_evidence.payload["evidence_refs"])
             self.assertIn(
                 "artifacts/task-operator-api/run-operator/evidence/bundle.json",
                 evidence_result["payload"]["evidence_refs"],
             )
             self.assertEqual(handoff_result["status"], "ok")
+            self.assertEqual(handoff_result["status"], direct_handoff.status)
+            self.assertEqual(handoff_result["payload"]["task_id"], direct_handoff.payload["task_id"])
+            self.assertEqual(handoff_result["payload"]["run_id"], direct_handoff.payload["run_id"])
+            self.assertEqual(handoff_result["payload"]["handoff_refs"], direct_handoff.payload["handoff_refs"])
             self.assertIn(
                 "artifacts/task-operator-api/run-operator/handoff/package.json",
                 handoff_result["payload"]["handoff_refs"],

@@ -501,7 +501,7 @@ function Invoke-RuntimeChecks {
 
   Write-CheckOk "runtime-unittest"
 
-  & $python.Source -m unittest tests.service.test_session_api
+  & $python.Source -m unittest tests.service.test_session_api tests.service.test_operator_api
   if ($LASTEXITCODE -ne 0) {
     throw "Service API parity tests failed"
   }
