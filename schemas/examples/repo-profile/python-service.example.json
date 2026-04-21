@@ -170,6 +170,14 @@
     "docs/architecture.md",
     "docs/runbooks/release.md"
   ],
+  "interaction_profile": {
+    "default_mode": "guided",
+    "term_explain_style": "definition_plus_common_mistake",
+    "default_checklist_kind": "bugfix",
+    "compaction_preference": "stage_summary",
+    "summary_template": "goal-plan-changes-verification-risks",
+    "handoff_teaching_notes": "Keep bug triage focused on expected vs actual, request context, logs, and rollback notes."
+  },
   "compatibility_signals": [
     {
       "capability": "structured_events",

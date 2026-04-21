@@ -26,7 +26,7 @@ from governed_ai_coding_runtime_contracts.repo_attachment import validate_light_
 from governed_ai_coding_runtime_contracts.repo_profile import load_repo_profile
 from governed_ai_coding_runtime_contracts.replay import build_replay_reference
 from governed_ai_coding_runtime_contracts.runtime_roots import ensure_runtime_roots, resolve_runtime_roots
-from governed_ai_coding_runtime_contracts.task_intake import TaskIntake
+from governed_ai_coding_runtime_contracts.task_intake import TaskIntake, apply_interaction_profile_defaults
 from governed_ai_coding_runtime_contracts.task_store import FileTaskStore, TaskRecord, TaskRunRecord
 from governed_ai_coding_runtime_contracts.verification_runner import (
     build_verification_plan,
@@ -215,7 +215,15 @@ def main() -> int:
     return 0
 
 
-def create_task(*, task_id: str | None, goal: str, scope: str, repo: str) -> dict:
+def create_task(
+    *,
+    task_id: str | None,
+    goal: str,
+    scope: str,
+    repo: str,
+    interaction_defaults: dict[str, object] | None = None,
+    interaction_budget_overrides: dict[str, int] | None = None,
+) -> dict:
     store = FileTaskStore(TASK_ROOT)
     identifier = task_id or f"task-{uuid4().hex[:8]}"
     record = TaskRecord(
@@ -226,6 +234,8 @@ def create_task(*, task_id: str | None, goal: str, scope: str, repo: str) -> dic
             acceptance=["task executes through the governed runtime"],
             repo=repo,
             budgets={"max_steps": 10, "max_minutes": 30},
+            interaction_defaults=interaction_defaults,
+            interaction_budget_overrides=interaction_budget_overrides,
         ),
         current_state="planned",
     )
@@ -235,8 +245,15 @@ def create_task(*, task_id: str | None, goal: str, scope: str, repo: str) -> dic
 
 def run_task(*, task_id: str | None, goal: str, scope: str, repo: str, profile_path: str, mode: str) -> dict:
     store = FileTaskStore(TASK_ROOT)
-    identifier = task_id or create_task(task_id=None, goal=goal, scope=scope, repo=repo)["task_id"]
     profile = load_repo_profile(profile_path)
+    identifier = task_id or create_task(
+        task_id=None,
+        goal=goal,
+        scope=scope,
+        repo=repo,
+        interaction_defaults=_interaction_defaults_from_profile(profile),
+    )["task_id"]
+    _apply_profile_interaction_defaults_to_record(store, identifier, profile)
     runtime = ExecutionRuntime(store=store, runtime_workspaces_root=WORKSPACES_ROOT.as_posix())
     artifact_store = LocalArtifactStore(ARTIFACT_ROOT)
 
@@ -303,6 +320,7 @@ def run_task(*, task_id: str | None, goal: str, scope: str, repo: str, profile_p
         artifact_refs=run.artifact_refs + list(verification_artifact.result_artifact_refs.values()),
         replay_case_ref=replay_ref or None,
         failure_signature="verification failed" if replay_ref else None,
+        interaction_trace=_interaction_trace_for_record(record, profile),
     )
     evidence_artifact = artifact_store.write_json(
         task_id=record.task_id,
@@ -409,6 +427,68 @@ def snapshot_payload(
             "reason": str(exc),
         }
     return payload
+
+
+def _interaction_defaults_from_profile(profile: object) -> dict[str, object] | None:
+    interaction_profile = getattr(profile, "interaction_profile", None)
+    if not isinstance(interaction_profile, dict) or not interaction_profile:
+        return None
+    defaults: dict[str, object] = {}
+    for field_name in (
+        "default_mode",
+        "default_checklist_kind",
+        "summary_template",
+        "handoff_teaching_notes",
+        "term_explain_style",
+    ):
+        if field_name in interaction_profile:
+            defaults[field_name] = interaction_profile[field_name]
+    return defaults or None
+
+
+def _apply_profile_interaction_defaults_to_record(store: FileTaskStore, task_id: str, profile: object) -> None:
+    record = store.load(task_id)
+    updated_task = apply_interaction_profile_defaults(
+        record.task,
+        getattr(profile, "interaction_profile", None),
+    )
+    if updated_task is record.task:
+        return
+    record.task = updated_task
+    store.save(record)
+
+
+def _interaction_trace_for_record(record: TaskRecord, profile: object) -> dict | None:
+    interaction_defaults = record.task.interaction_defaults or _interaction_defaults_from_profile(profile)
+    if not interaction_defaults:
+        return None
+    mode = interaction_defaults.get("default_mode", "guided")
+    interaction_profile = getattr(profile, "interaction_profile", {})
+    compression_mode = "none"
+    if isinstance(interaction_profile, dict):
+        compression_mode = interaction_profile.get("compaction_preference", "none")
+    return {
+        "signals": [],
+        "applied_policies": [
+            {
+                "policy_id": f"{record.task_id}:repo-profile-interaction-defaults",
+                "mode": str(mode),
+                "posture": "aligned",
+                "clarification_mode": "none",
+                "compression_mode": str(compression_mode),
+                "stop_or_escalate": "continue",
+                "rationale_signal_ids": [],
+            }
+        ],
+        "task_restatements": [],
+        "clarification_rounds": [],
+        "observation_checklists": [],
+        "terms_explained": [],
+        "compression_actions": [],
+        "budget_snapshots": [],
+        "alignment_outcome": "repo profile interaction defaults applied",
+        "stop_or_degrade_reason": "none",
+    }
 
 
 def run_attachment_verification(

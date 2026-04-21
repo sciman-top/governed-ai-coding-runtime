@@ -104,6 +104,44 @@ class TaskIntakeContractTests(unittest.TestCase):
                 interaction_budget_overrides={"clarification_budget": -1},
             )
 
+    def test_task_intake_can_apply_repo_interaction_profile_defaults(self) -> None:
+        module = importlib.import_module("governed_ai_coding_runtime_contracts.task_intake")
+        task = module.TaskIntake(
+            goal="create governed task",
+            scope="phase 1 deterministic intake",
+            acceptance=["goal is required", "repo is attached"],
+            repo="governed-ai-coding-runtime",
+            budgets={"max_steps": 10, "max_minutes": 30},
+        )
+
+        updated = module.apply_interaction_profile_defaults(
+            task,
+            {
+                "default_mode": "guided",
+                "default_checklist_kind": "bugfix",
+                "summary_template": "goal-plan-changes-verification-risks",
+            },
+        )
+
+        self.assertIsNone(task.interaction_defaults)
+        self.assertEqual(updated.interaction_defaults["default_mode"], "guided")
+        self.assertEqual(updated.interaction_defaults["default_checklist_kind"], "bugfix")
+
+    def test_task_intake_keeps_explicit_interaction_defaults_over_repo_profile(self) -> None:
+        module = importlib.import_module("governed_ai_coding_runtime_contracts.task_intake")
+        task = module.TaskIntake(
+            goal="create governed task",
+            scope="phase 1 deterministic intake",
+            acceptance=["goal is required", "repo is attached"],
+            repo="governed-ai-coding-runtime",
+            budgets={"max_steps": 10, "max_minutes": 30},
+            interaction_defaults={"default_mode": "terse"},
+        )
+
+        updated = module.apply_interaction_profile_defaults(task, {"default_mode": "guided"})
+
+        self.assertEqual(updated.interaction_defaults["default_mode"], "terse")
+
     def test_validate_transition_accepts_required_transition(self) -> None:
         module = importlib.import_module("governed_ai_coding_runtime_contracts.task_intake")
         self.assertTrue(module.validate_transition("created", "scoped"))

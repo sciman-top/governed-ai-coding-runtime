@@ -67,6 +67,38 @@ def validate_transition(previous_state: str, next_state: str) -> bool:
     return True
 
 
+def apply_interaction_profile_defaults(
+    task: TaskIntake,
+    interaction_profile: dict[str, object] | None,
+) -> TaskIntake:
+    if not interaction_profile:
+        return task
+    if task.interaction_defaults is not None:
+        return task
+
+    defaults: dict[str, object] = {}
+    if "default_mode" in interaction_profile:
+        defaults["default_mode"] = interaction_profile["default_mode"]
+    if "default_checklist_kind" in interaction_profile:
+        defaults["default_checklist_kind"] = interaction_profile["default_checklist_kind"]
+    if "summary_template" in interaction_profile:
+        defaults["summary_template"] = interaction_profile["summary_template"]
+    if "handoff_teaching_notes" in interaction_profile:
+        defaults["handoff_teaching_notes"] = interaction_profile["handoff_teaching_notes"]
+    if "term_explain_style" in interaction_profile:
+        defaults["term_explain_style"] = interaction_profile["term_explain_style"]
+
+    return TaskIntake(
+        goal=task.goal,
+        scope=task.scope,
+        acceptance=list(task.acceptance),
+        repo=task.repo,
+        budgets=dict(task.budgets),
+        interaction_defaults=defaults or None,
+        interaction_budget_overrides=task.interaction_budget_overrides,
+    )
+
+
 def _normalize_interaction_defaults(interaction_defaults: dict[str, object]) -> dict[str, object]:
     if not isinstance(interaction_defaults, dict):
         msg = "interaction_defaults must be a dict"

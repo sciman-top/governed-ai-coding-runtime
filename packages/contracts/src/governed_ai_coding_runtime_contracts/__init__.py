@@ -108,6 +108,7 @@ from governed_ai_coding_runtime_contracts.interaction_governance import (
     build_teaching_budget,
     derive_response_policy,
 )
+from governed_ai_coding_runtime_contracts.task_intake import apply_interaction_profile_defaults
 
 __all__ = [
     "PolicyDecision",
@@ -177,6 +178,7 @@ __all__ = [
     "requires_human_approval",
     "resolve_launch_fallback",
     "adapter_selection_from_dict",
+    "apply_interaction_profile_defaults",
     "run_launch_mode",
     "session_bridge_result_from_dict",
     "manual_handoff_result",

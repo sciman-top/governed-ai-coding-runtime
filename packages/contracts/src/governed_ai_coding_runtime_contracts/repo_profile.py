@@ -12,6 +12,7 @@ class RepoProfile:
     path_policies: dict
     rollout_posture: dict
     compatibility_signals: list[dict]
+    interaction_profile: dict
     raw: dict
 
     @classmethod
@@ -43,12 +44,14 @@ class RepoProfile:
         if not isinstance(compatibility_signals, list):
             msg = "compatibility_signals must be a list"
             raise ValueError(msg)
+        interaction_profile = _normalize_interaction_profile(raw.get("interaction_profile", {}))
         return cls(
             repo_id=repo_id,
             primary_language=primary_language,
             path_policies=path_policies,
             rollout_posture=rollout_posture,
             compatibility_signals=compatibility_signals,
+            interaction_profile=interaction_profile,
             raw=raw,
         )
 
@@ -69,3 +72,25 @@ def _required_string(raw: dict, key: str) -> str:
         msg = f"{key} is required"
         raise ValueError(msg)
     return value
+
+
+def _normalize_interaction_profile(value: object) -> dict:
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        msg = "interaction_profile must be an object"
+        raise ValueError(msg)
+    normalized = dict(value)
+    default_mode = normalized.get("default_mode")
+    if default_mode is not None and default_mode not in {"terse", "guided", "teaching"}:
+        msg = f"unsupported interaction_profile.default_mode: {default_mode}"
+        raise ValueError(msg)
+    compaction_preference = normalized.get("compaction_preference")
+    if compaction_preference is not None and compaction_preference not in {
+        "stage_summary",
+        "aggressive_compaction",
+        "ref_only",
+    }:
+        msg = f"unsupported interaction_profile.compaction_preference: {compaction_preference}"
+        raise ValueError(msg)
+    return normalized

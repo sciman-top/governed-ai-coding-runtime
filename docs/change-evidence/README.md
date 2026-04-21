@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260422 Interaction Profile Runtime Enforcement](./20260422-interaction-profile-runtime-enforcement.md)
+  - evidence companion for applying repo-profile `interaction_profile` defaults into task intake and runtime evidence generation
 - [20260422 Interaction Governance Lane Closeout](./20260422-interaction-governance-lane-closeout.md)
   - closeout evidence for the bounded interaction-governance lane, recording metrics baseline, completion boundary, authoritative plan-index status, and final gate results
 - [20260422 Interaction Evidence, Trace, And Runtime Projection](./20260422-interaction-evidence-trace-and-runtime-projection.md)
