@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260421 GAP-082 CLI Service-Boundary Wrapper Convergence](./20260421-gap-082-cli-service-boundary-wrapper-convergence.md)
+  - evidence companion for routing attached execution CLI flows through control-plane service boundaries while preserving existing payload contracts
 - [20260421 GAP-082 Service Parity Expansion](./20260421-gap-082-service-parity-expansion.md)
   - evidence companion for expanding `GAP-082` parity coverage to full-gate planning, write-execution approval-path checks, and operator read parity under runtime CI
 - [20260421 GAP-082 Service-Primary Convergence Runtime-Gate Baseline](./20260421-gap-082-service-primary-convergence-runtime-gate-baseline.md)

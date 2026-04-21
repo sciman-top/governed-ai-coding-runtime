@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict
+import importlib.util
 import json
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,14 +27,9 @@ from governed_ai_coding_runtime_contracts.repo_profile import load_repo_profile
 from governed_ai_coding_runtime_contracts.replay import build_replay_reference
 from governed_ai_coding_runtime_contracts.runtime_status import RuntimeStatusStore
 from governed_ai_coding_runtime_contracts.runtime_roots import ensure_runtime_roots, resolve_runtime_roots
-from governed_ai_coding_runtime_contracts.session_bridge import (
-    build_session_bridge_command,
-    handle_session_bridge_command,
-)
 from governed_ai_coding_runtime_contracts.task_intake import TaskIntake
 from governed_ai_coding_runtime_contracts.task_store import FileTaskStore, TaskRecord, TaskRunRecord
 from governed_ai_coding_runtime_contracts.verification_runner import (
-    build_repo_profile_verification_plan,
     build_verification_plan,
     run_verification_plan,
 )
@@ -441,28 +437,29 @@ def run_attachment_verification(
         runtime_state_root=str(attachment_runtime_root),
     )
     profile = load_repo_profile(attachment.repo_profile_path)
-    plan = build_repo_profile_verification_plan(
-        mode,
-        profile_raw=profile.raw,
+    command_type = "run_quick_gate" if mode == "quick" else "run_full_gate"
+    response = _dispatch_session_command(
+        command_type=command_type,
         task_id=task_id,
-        run_id=run_id,
+        repo_binding_id=attachment.binding.binding_id,
+        adapter_id="codex-cli",
+        risk_tier="low",
+        payload={"run_id": run_id, "plan_only": False},
+        command_id=f"cli-verify-{task_id}-{run_id}",
+        attachment_root=attachment_root,
+        attachment_runtime_state_root=attachment_runtime_state_root,
     )
-    artifact_store = LocalArtifactStore(attachment_runtime_root)
-    artifact = run_verification_plan(
-        plan,
-        artifact_store=artifact_store,
-        execute_gate=lambda gate: _execute_gate_at_root(gate.command, cwd=Path(attachment_root)),
-    )
+    payload = _response_payload(response)
     return {
         "repo_id": profile.repo_id,
         "binding_id": attachment.binding.binding_id,
-        "mode": artifact.mode,
-        "task_id": artifact.task_id,
-        "run_id": artifact.run_id,
-        "gate_order": artifact.gate_order,
-        "results": artifact.results,
-        "result_artifact_refs": artifact.result_artifact_refs,
-        "evidence_link": artifact.evidence_link,
+        "mode": payload["mode"],
+        "task_id": task_id,
+        "run_id": payload["run_id"],
+        "gate_order": payload["gate_order"],
+        "results": payload["results"],
+        "result_artifact_refs": payload["result_artifact_refs"],
+        "evidence_link": payload["evidence_link"],
     }
 
 
@@ -481,7 +478,7 @@ def govern_attachment_write(
     resume_id: str | None = None,
     continuation_id: str | None = None,
 ) -> dict:
-    payload = {
+    request_payload = {
         "tool_name": tool_name,
         "command": command_text or "",
         "target_path": target_path,
@@ -489,28 +486,23 @@ def govern_attachment_write(
         "rollback_reference": rollback_reference,
     }
     if session_id:
-        payload["session_id"] = session_id
+        request_payload["session_id"] = session_id
     if resume_id:
-        payload["resume_id"] = resume_id
+        request_payload["resume_id"] = resume_id
     if continuation_id:
-        payload["continuation_id"] = continuation_id
-    command = build_session_bridge_command(
-        command_id=f"cli-govern-{task_id}",
+        request_payload["continuation_id"] = continuation_id
+    response = _dispatch_session_command(
         command_type="write_request",
         task_id=task_id,
         repo_binding_id="attachment-binding",
         adapter_id=adapter_id,
         risk_tier=tier,
-        payload=payload,
-    )
-    result = handle_session_bridge_command(
-        command,
-        task_root=TASK_ROOT,
-        repo_root=ROOT,
+        payload=request_payload,
+        command_id=f"cli-govern-{task_id}",
         attachment_root=attachment_root,
         attachment_runtime_state_root=attachment_runtime_state_root,
     )
-    return result.payload
+    return _response_payload(response)
 
 
 def decide_attachment_write(
@@ -525,33 +517,28 @@ def decide_attachment_write(
     resume_id: str | None = None,
     continuation_id: str | None = None,
 ) -> dict:
-    payload = {
+    decision_payload = {
         "approval_id": approval_id,
         "decision": decision,
         "decided_by": decided_by,
     }
     if session_id:
-        payload["session_id"] = session_id
+        decision_payload["session_id"] = session_id
     if resume_id:
-        payload["resume_id"] = resume_id
+        decision_payload["resume_id"] = resume_id
     if continuation_id:
-        payload["continuation_id"] = continuation_id
-    command = build_session_bridge_command(
-        command_id=f"cli-approve-{approval_id}",
+        decision_payload["continuation_id"] = continuation_id
+    response = _dispatch_session_command(
         command_type="write_approve",
         task_id=task_id,
         repo_binding_id="attachment-binding",
         adapter_id=adapter_id,
         risk_tier="medium",
-        payload=payload,
-    )
-    result = handle_session_bridge_command(
-        command,
-        task_root=TASK_ROOT,
-        repo_root=ROOT,
+        payload=decision_payload,
+        command_id=f"cli-approve-{approval_id}",
         attachment_runtime_state_root=attachment_runtime_state_root,
     )
-    return result.payload
+    return _response_payload(response)
 
 
 def execute_attachment_write(
@@ -585,29 +572,25 @@ def execute_attachment_write(
         request_payload["resume_id"] = resume_id
     if continuation_id:
         request_payload["continuation_id"] = continuation_id
-    request_command = build_session_bridge_command(
-        command_id=f"cli-exec-request-{task_id}",
+    request_response = _dispatch_session_command(
         command_type="write_request",
         task_id=task_id,
         repo_binding_id="attachment-binding",
         adapter_id=adapter_id,
         risk_tier=tier,
         payload=request_payload,
-    )
-    request_result = handle_session_bridge_command(
-        request_command,
-        task_root=TASK_ROOT,
-        repo_root=ROOT,
+        command_id=f"cli-exec-request-{task_id}",
         attachment_root=attachment_root,
         attachment_runtime_state_root=attachment_runtime_state_root,
     )
+    request_result = _response_payload(request_response)
 
-    request_identity = request_result.payload.get("session_identity")
+    request_identity = request_result.get("session_identity")
     if not isinstance(request_identity, dict):
         request_identity = {}
     resolved_session_id = session_id or request_identity.get("session_id")
     resolved_resume_id = resume_id or request_identity.get("resume_id")
-    resolved_continuation_id = continuation_id or request_result.payload.get("continuation_id")
+    resolved_continuation_id = continuation_id or request_result.get("continuation_id")
     execute_payload = {
         "tool_name": tool_name,
         "command": command_text or "",
@@ -615,32 +598,26 @@ def execute_attachment_write(
         "tier": tier,
         "rollback_reference": rollback_reference,
         "content": content,
-        "approval_id": approval_id or request_result.payload.get("approval_id"),
-        "execution_id": request_result.payload.get("execution_id"),
+        "approval_id": approval_id or request_result.get("approval_id"),
+        "execution_id": request_result.get("execution_id"),
         "continuation_id": resolved_continuation_id,
     }
     if isinstance(resolved_session_id, str) and resolved_session_id.strip():
         execute_payload["session_id"] = resolved_session_id.strip()
     if isinstance(resolved_resume_id, str) and resolved_resume_id.strip():
         execute_payload["resume_id"] = resolved_resume_id.strip()
-    execute_command = build_session_bridge_command(
-        command_id=f"cli-exec-{task_id}",
+    execute_response = _dispatch_session_command(
         command_type="write_execute",
         task_id=task_id,
         repo_binding_id="attachment-binding",
         adapter_id=adapter_id,
         risk_tier=tier,
         payload=execute_payload,
-        policy_decision_ref=request_result.payload.get("policy_decision_ref"),
-    )
-    execute_result = handle_session_bridge_command(
-        execute_command,
-        task_root=TASK_ROOT,
-        repo_root=ROOT,
+        command_id=f"cli-exec-{task_id}",
         attachment_root=attachment_root,
         attachment_runtime_state_root=attachment_runtime_state_root,
     )
-    return execute_result.payload
+    return _response_payload(execute_response)
 
 
 def render_payload(payload: dict) -> str:
@@ -781,6 +758,63 @@ def _configure_runtime_roots(*, runtime_root: str | None, compat_runtime_root: b
     ARTIFACT_ROOT = Path(_RUNTIME_ROOTS.artifacts_root)
     REPLAY_ROOT = Path(_RUNTIME_ROOTS.replay_root)
     WORKSPACES_ROOT = Path(_RUNTIME_ROOTS.workspaces_root)
+
+
+def _load_module(path: Path, module_name: str) -> Any:
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        msg = f"unable to load module: {path}"
+        raise RuntimeError(msg)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _build_control_plane_app() -> Any:
+    facade_module = _load_module(ROOT / "packages" / "agent-runtime" / "service_facade.py", "runtime_service_facade")
+    app_module = _load_module(ROOT / "apps" / "control-plane" / "app.py", "runtime_control_plane_app")
+    facade = facade_module.RuntimeServiceFacade(repo_root=ROOT, task_root=TASK_ROOT)
+    return app_module.ControlPlaneApplication(facade=facade)
+
+
+def _dispatch_session_command(
+    *,
+    command_type: str,
+    task_id: str,
+    repo_binding_id: str,
+    adapter_id: str,
+    risk_tier: str,
+    payload: dict,
+    command_id: str,
+    attachment_root: str | Path | None = None,
+    attachment_runtime_state_root: str | Path | None = None,
+) -> dict:
+    app = _build_control_plane_app()
+    return app.dispatch(
+        route="/session",
+        payload={
+            "command_type": command_type,
+            "task_id": task_id,
+            "repo_binding_id": repo_binding_id,
+            "adapter_id": adapter_id,
+            "risk_tier": risk_tier,
+            "payload": payload,
+            "command_id": command_id,
+            "attachment_root": str(attachment_root) if attachment_root is not None else None,
+            "attachment_runtime_state_root": (
+                str(attachment_runtime_state_root) if attachment_runtime_state_root is not None else None
+            ),
+        },
+    )
+
+
+def _response_payload(response: dict) -> dict:
+    payload = response.get("payload") if isinstance(response, dict) else None
+    if not isinstance(payload, dict):
+        msg = "invalid control-plane response payload"
+        raise RuntimeError(msg)
+    return payload
 
 
 if __name__ == "__main__":
