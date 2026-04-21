@@ -376,6 +376,49 @@ The repository should only claim complete hybrid final-state closure when all of
 Claim reference:
 - `docs/change-evidence/20260420-direct-to-hybrid-final-state-closeout.md`
 
+## Optimized Best-State Definition (2026-04-21)
+The repository keeps the existing hybrid final-state shape, but raises the engineering bar with four explicit invariants:
+
+1. Runtime execution truth:
+- attach-first governed execution is real for both Codex and at least one non-Codex adapter path
+- approval, verification, evidence, handoff, replay, and rollback stay linked by one runtime-owned execution chain
+
+2. Service-boundary truth:
+- control/session/operator surfaces are API-first in runtime behavior
+- CLI and facade paths remain compatibility wrappers, not a second execution model
+
+3. Operability truth:
+- machine-local runtime state, migration, and rollback are deterministic and testable
+- runtime posture failures are remediable through doctor/operator guidance
+
+4. Claim-discipline truth:
+- closure claims are evidence-backed, continuously re-verifiable, and downgraded when drift is detected
+
+### Quantified Acceptance Targets
+| dimension | target | minimum evidence |
+|---|---|---|
+| governed execution closure | >= 95% successful medium-risk loops over last 30 attached runs | attached-repo loop evidence + replay/handoff refs |
+| live-host continuity | >= 95% continuity id preservation from request to handoff | session-bridge runtime tests + runtime evidence snapshots |
+| non-Codex parity | >= 1 non-Codex path passes the same conformance gate set as Codex path | adapter parity test report and trial evidence |
+| service parity | API and CLI parity tests remain green for all execution-like commands | service/runtime parity test suite |
+| recoverability | >= 90% posture failures have guided remediation path and successful retry evidence | doctor/runtime status evidence plus recovery runbook replay |
+| claim freshness | closure evidence regenerated within the declared verification window | latest closeout evidence stamp and gate run outputs |
+
+## Gap Horizons From The Optimized Definition
+### Near-Term Gaps (next 1-2 quarters)
+- close live host integration end-to-end beyond smoke posture (real handshake, real event ingestion, real continuation chain)
+- establish non-Codex conformance parity and publish repeatable evidence
+- converge service-shaped runtime as primary control surface while keeping compatibility wrappers
+- harden operator query completeness and remediation-backed doctor behavior
+- enforce claim-drift detection in CI for roadmap/plan/evidence consistency
+
+### Long-Term Gaps (2+ quarters, trigger-based)
+- introduce workflow orchestration depth when pause/resume/compensation complexity exceeds local runtime simplicity
+- introduce policy-runtime separation depth when policy cardinality and audit pressure exceed local decision surfaces
+- expand data-plane depth (event stream/object-store/indexed evidence) when scale and retention pressure require it
+- productize multi-host first-class adapters beyond Codex after conformance parity and governance consistency are proven
+- harden production operations (SLO/error-budget/chaos/failover) after transition runtime is stable under real workloads
+
 ## Canonical Planning Package
 The canonical planning package now consists of three direct companions:
 

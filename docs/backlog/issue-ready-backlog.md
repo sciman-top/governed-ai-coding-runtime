@@ -13,6 +13,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - non-goals remain non-goals: no enterprise org model, no marketplace, no default multi-agent orchestration, no memory-first product identity
 - governance-optimization lane `GAP-061` through `GAP-068` was the follow-on queue after `GAP-060` and is now complete on the current branch baseline (verified on 2026-04-20), while older lifecycle `GAP` entries remain completion history
 - post-closeout optimization queue `GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20) and does not reopen hybrid final-state closure
+- optimized best-state near-term gap horizon queue `GAP-080` through `GAP-084` is now the active execution-horizon backlog derived from `NT-01..05` / `NTP-01..05`
 
 ## Current Baseline
 - PRD, architecture, ADRs, specs, runtime contract primitives, repo verifier entrypoints, sample repo profiles, and a runtime-consumable control pack already exist.
@@ -28,10 +29,11 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Direct-To-Hybrid-Final-State Mainline / GAP-046` through `GAP-060` are complete on the current branch baseline (verified on 2026-04-20).
 - `Governance Optimization Lane / GAP-061` through `GAP-068` are complete on the current branch baseline (verified on 2026-04-20).
 - `Post-Closeout Optimization Queue / GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20).
+- `Near-Term Gap Horizon Queue / GAP-080` through `GAP-084` is planned as the active execution-horizon queue from the optimized best-state definition.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
-The entries below record the executed queue for complete hybrid final-state and governance-optimization closure, plus the post-closeout optimization queue. The historical lifecycle backlog remains below as completion history and dependency context.
+The entries below record the executed queue for complete hybrid final-state and governance-optimization closure, plus the post-closeout optimization queue and the active near-term gap horizon queue. The historical lifecycle backlog remains below as completion history and dependency context.
 
 ### Phase 0: Canonical Re-Baseline
 
@@ -470,6 +472,78 @@ The entries below record the executed queue for complete hybrid final-state and 
   - [x] docs checks fail when post-closeout queue summary lines drift away from the current seed-backed id range
   - [x] post-closeout queue expansion remains renderable by issue seeding script without label-mapping gaps
   - [x] backlog and roadmap summaries consistently reflect the same post-closeout queue completion range
+
+## Near-Term Gap Horizon Queue (Optimized Best-State)
+
+### GAP-080 NTP-01 Live Host Closure
+- Type: HITL
+- Blocked by: GAP-074
+- User stories: 2, 11, 13, 14, 43
+- Status: planned for execution horizon
+- What to build:
+  - prove one real live-session governed loop from handshake through handoff/replay without breaking runtime-owned identity
+  - preserve stable session, continuation, and task linkage across request, approval, execution, verification, and replay
+  - export runtime-owned evidence snapshots that distinguish real live execution from fallback paths
+- Acceptance criteria:
+  - [ ] one live attached path preserves session identity and continuation across request, approval, execute, verify, handoff, and replay
+  - [ ] runtime evidence can link all live-loop events back to one governed task with stable refs
+  - [ ] fallback or manual paths remain explicit and cannot be mistaken for live closure
+
+### GAP-081 NTP-02 Non-Codex Conformance
+- Type: AFK
+- Blocked by: GAP-080
+- User stories: 20, 31, 37, 44, 46
+- Status: planned for execution horizon
+- What to build:
+  - build shared adapter conformance checks that apply to Codex and at least one non-Codex adapter
+  - make non-Codex guarantee levels auditable through the same gate and evidence model
+  - keep adapter registry output comparable across hosts without weakening fail-closed semantics
+- Acceptance criteria:
+  - [ ] at least one non-Codex adapter passes the same conformance gate family used by Codex
+  - [ ] non-Codex trials emit equivalent runtime evidence linkage fields
+  - [ ] parity matrix clearly records supported, degraded, and blocked capabilities per host
+
+### GAP-082 NTP-03 Service-Primary Convergence
+- Type: AFK
+- Blocked by: GAP-081
+- User stories: 1, 11, 13, 17, 39
+- Status: planned for execution horizon
+- What to build:
+  - enforce API-first runtime boundaries and keep CLI as a wrapper-only compatibility surface
+  - add API/CLI parity guards for execution-like commands and operator reads
+  - detect and block contract drift between service paths and wrapper paths
+- Acceptance criteria:
+  - [ ] API and CLI execution-like commands remain parity-checked in CI
+  - [ ] CLI behavior is implemented through service boundaries rather than parallel runtime logic
+  - [ ] parity drift fails verification before merge
+
+### GAP-083 NTP-04 Operator Remediation Depth
+- Type: AFK
+- Blocked by: GAP-082
+- User stories: 11, 12, 14, 27, 40
+- Status: planned for execution horizon
+- What to build:
+  - expand attachment-scoped query coverage for approvals, evidence, replay, and posture diagnostics
+  - deepen doctor remediation flows with deterministic recovery actions and retry guidance
+  - capture remediation outcomes as evidence-backed artifacts for follow-up decisions
+- Acceptance criteria:
+  - [ ] operator queries can diagnose and track posture or recovery state without raw-log reconstruction
+  - [ ] doctor outputs include deterministic remediation actions for missing, stale, and invalid posture states
+  - [ ] remediation retries produce auditable evidence suitable for handoff and replay
+
+### GAP-084 NTP-05 Claim Drift Guard
+- Type: HITL
+- Blocked by: GAP-083
+- User stories: 18, 21, 29, 31, 44
+- Status: planned for execution horizon
+- What to build:
+  - enforce claim-to-evidence alignment for roadmap, plan, backlog, and closeout language in CI
+  - add freshness checks so final-state claims automatically downgrade when evidence stales
+  - keep human review checkpoints for claim exceptions, waiver expiry, and rollback readiness
+- Acceptance criteria:
+  - [ ] CI fails when completion or capability claims outrun executable evidence
+  - [ ] stale closeout evidence is detected and flagged before release-facing claim updates
+  - [ ] claim exception paths remain time-bounded, reviewable, and rollback-linked
 
 ## Vision
 

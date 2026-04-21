@@ -615,6 +615,30 @@ Phase 5
 - Operator queries, runtime-reader parity, and remediation-capable doctor behavior are real.
 - Final-state claims are backed by evidence, gates, and synced backlog truth.
 
+## Gap Horizon Planning (Optimized Best-State)
+
+### Near-Term Gap Packages (Execution Horizon)
+These packages should be prioritized next because they close executable truth gaps without introducing premature platform width.
+
+| package id | objective | primary outputs | verification floor |
+|---|---|---|---|
+| `NTP-01 live-host-closure` | prove real live-session governed loop closure | live handshake to handoff/replay chain, continuation-id stability, runtime-owned evidence linkage | session bridge runtime tests + attached repo e2e loop + evidence snapshots |
+| `NTP-02 non-codex-conformance` | make non-Codex guarantee level auditable and comparable to Codex | shared adapter conformance suite, parity matrix, non-Codex trial evidence | adapter registry/codex tests + non-Codex trial loop tests |
+| `NTP-03 service-primary-convergence` | keep API-first runtime boundary as primary while retaining compatibility wrappers | API/CLI parity guardrails, wrapper-only CLI contract, drift tests | service parity suite + runtime gate checks |
+| `NTP-04 operator-remediation-depth` | close remaining posture/query/remediation gaps with deterministic recovery | attachment-scoped query coverage, doctor remediation actions, retry evidence | operator query tests + doctor/runtime tests |
+| `NTP-05 claim-drift-guard` | prevent roadmap/plan claims outrunning executable truth | CI guard for claim/evidence alignment, freshness checks for closeout evidence | docs/scripts checks + full gate chain in CI |
+
+### Long-Term Gap Packages (North-Star Hardening Horizon)
+These packages remain deferred until near-term packages are stable and evidenced.
+
+| package id | trigger to start | deferred scope |
+|---|---|---|
+| `LTP-01 orchestration-depth` | pause/resume/compensation complexity exceeds local runtime simplicity | workflow orchestration hardening (`Temporal`-class capability) |
+| `LTP-02 policy-runtime-separation` | policy growth and audit burden exceed local decision surface maintainability | policy runtime separation (`OPA/Rego`-class capability) |
+| `LTP-03 data-plane-scaling` | retention/replay/query pressure exceeds current persistence model | event-stream/indexed-evidence/object-store tiering |
+| `LTP-04 multi-host-first-class` | non-Codex parity is stable and product demand requires deeper host coverage | first-class adapters beyond Codex with same governance guarantees |
+| `LTP-05 operations-hardening` | transition service runtime is stable under sustained load | production SLO, error-budget, failover, and operational resilience stack |
+
 ## Risks And Mitigations
 
 | Risk | Impact | Mitigation |

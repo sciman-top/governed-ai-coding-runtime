@@ -283,6 +283,28 @@ The repository may claim narrower truths after earlier phases:
 4. After `Phase 3`: attach-first multi-repo onboarding and machine-local sidecar posture are real.
 5. After `Phase 4`: service-shaped runtime deployment is real.
 
+## Near-Term Gap Lanes (Execution Horizon)
+These lanes define the current actionable gap set for reaching an optimized hybrid best-state.
+
+| lane id | mapped phases | gap statement | done when |
+|---|---|---|---|
+| `NT-01` | Phase 1 -> Phase 2 | Live host execution closure is not yet proven end-to-end for real sessions. | one live attached path preserves session identity and continuation across request, approval, execute, verify, handoff, and replay with runtime-owned evidence. |
+| `NT-02` | Phase 2 | Non-Codex path guarantees are weaker than Codex path guarantees. | at least one non-Codex adapter passes the same conformance gate set and emits equivalent runtime evidence linkage. |
+| `NT-03` | Phase 3 | Multi-repo onboarding still depends on partial synthetic or profile-driven evidence in some flows. | two or more attached external repos run reproducible trial loops with differentiated runtime-sourced outcomes. |
+| `NT-04` | Phase 4 | Service-shaped runtime is landed but still vulnerable to API/CLI drift over time. | API/CLI parity stays green for execution-like commands and CLI is only a wrapper surface for the same execution bus. |
+| `NT-05` | Phase 5 | Claim discipline is still mostly human-governed and can drift under rapid iteration. | CI enforces claim-to-evidence consistency and fails when roadmap/plan completion labels outrun executable evidence. |
+
+## Long-Term Gap Lanes (North-Star Hardening Horizon)
+These lanes are intentionally deferred until near-term lanes are stable.
+
+| lane id | trigger to start | deferred capabilities |
+|---|---|---|
+| `LT-01` | execution pause/resume/compensation graph becomes hard to manage in local runtime flow code | workflow orchestration depth (`Temporal`-class capability) |
+| `LT-02` | policy cardinality and compliance audit burden exceed local policy decision surfaces | externalized policy runtime depth (`OPA/Rego`-class capability) |
+| `LT-03` | event throughput and replay retention pressure exceed current persistence path | data-plane expansion (event stream, indexed evidence, retention tiers) |
+| `LT-04` | non-Codex conformance parity is stable and multi-host demand is product-critical | first-class multi-host adapter productization beyond Codex |
+| `LT-05` | transition runtime is stable under sustained real workloads | production-grade SLO/error-budget/failover and operations hardening stack |
+
 ## Companion Deliverables
 This roadmap is paired with:
 1. a direct implementation plan

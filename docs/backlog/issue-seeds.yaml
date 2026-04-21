@@ -1,4 +1,4 @@
-issue_seed_version: "3.8"
+issue_seed_version: "3.9"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment
@@ -285,3 +285,28 @@ issues:
     type: AFK
     blocked_by: [GAP-073]
     user_stories: [21, 23, 29, 31, 44]
+  - id: GAP-080
+    title: NTP-01 Live Host Closure
+    type: HITL
+    blocked_by: [GAP-074]
+    user_stories: [2, 11, 13, 14, 43]
+  - id: GAP-081
+    title: NTP-02 Non-Codex Conformance
+    type: AFK
+    blocked_by: [GAP-080]
+    user_stories: [20, 31, 37, 44, 46]
+  - id: GAP-082
+    title: NTP-03 Service-Primary Convergence
+    type: AFK
+    blocked_by: [GAP-081]
+    user_stories: [1, 11, 13, 17, 39]
+  - id: GAP-083
+    title: NTP-04 Operator Remediation Depth
+    type: AFK
+    blocked_by: [GAP-082]
+    user_stories: [11, 12, 14, 27, 40]
+  - id: GAP-084
+    title: NTP-05 Claim Drift Guard
+    type: HITL
+    blocked_by: [GAP-083]
+    user_stories: [18, 21, 29, 31, 44]
