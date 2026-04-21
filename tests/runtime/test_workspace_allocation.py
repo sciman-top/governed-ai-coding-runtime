@@ -40,7 +40,7 @@ class WorkspaceAllocationTests(unittest.TestCase):
         )
 
         with self.assertRaises(ValueError):
-            workspace.allocate_workspace("task-123", profile, workspace_root="D:/OneDrive/CODE/live-repo")
+            workspace.allocate_workspace("task-123", profile, workspace_root="C:/live-repo")
 
     def test_write_path_policy_comes_from_profile(self) -> None:
         workspace = importlib.import_module("governed_ai_coding_runtime_contracts.workspace")
@@ -57,3 +57,4 @@ class WorkspaceAllocationTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
