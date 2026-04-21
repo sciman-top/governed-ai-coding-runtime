@@ -160,6 +160,8 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             self.assertIn("REMEDIATE", missing_completed.stdout)
             self.assertIn("REMEDIATE-ACTION", missing_completed.stdout)
             self.assertIn("scripts/attach-target-repo.py", missing_completed.stdout)
+            self.assertIn("REMEDIATE-EVIDENCE", missing_completed.stdout)
+            self.assertTrue((workspace / "state" / "missing" / "doctor" / "latest-remediation.json").exists())
 
             healthy_root = workspace / "healthy"
             healthy_root.mkdir()
@@ -178,6 +180,8 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             healthy_completed = self._run_doctor_attachment(script, healthy_root, workspace / "state" / "healthy")
             self.assertEqual(healthy_completed.returncode, 0)
             self.assertIn("OK attachment-posture-healthy", healthy_completed.stdout)
+            self.assertIn("REMEDIATE-EVIDENCE", healthy_completed.stdout)
+            self.assertTrue((workspace / "state" / "healthy" / "doctor" / "latest-remediation.json").exists())
 
             invalid_root = workspace / "invalid"
             (invalid_root / ".governed-ai").mkdir(parents=True)
@@ -191,6 +195,8 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             self.assertIn("REMEDIATE", invalid_completed.stdout)
             self.assertIn("REMEDIATE-ACTION", invalid_completed.stdout)
             self.assertIn("scripts/attach-target-repo.py", invalid_completed.stdout)
+            self.assertIn("REMEDIATE-EVIDENCE", invalid_completed.stdout)
+            self.assertTrue((workspace / "state" / "invalid" / "doctor" / "latest-remediation.json").exists())
 
             stale_root = workspace / "stale"
             stale_root.mkdir()
@@ -216,6 +222,8 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             self.assertIn("REMEDIATE", stale_completed.stdout)
             self.assertIn("REMEDIATE-ACTION", stale_completed.stdout)
             self.assertIn("scripts/attach-target-repo.py", stale_completed.stdout)
+            self.assertIn("REMEDIATE-EVIDENCE", stale_completed.stdout)
+            self.assertTrue((workspace / "state" / "stale" / "doctor" / "latest-remediation.json").exists())
 
     def _run_doctor_attachment(self, script: Path, attachment_root: Path, runtime_state_root: Path) -> subprocess.CompletedProcess:
         return subprocess.run(

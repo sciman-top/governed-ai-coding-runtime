@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260421 GAP-083 Operator Remediation Depth Closeout](./20260421-gap-083-operator-remediation-depth-closeout.md)
+  - closeout evidence for GAP-083 including operator write-status parity, deterministic doctor remediation actions, and remediation retry evidence persistence
 - [20260421 GAP-083 Doctor Deterministic Remediation Actions](./20260421-gap-083-doctor-deterministic-remediation-actions.md)
   - evidence companion for deterministic doctor remediation actions (`REMEDIATE-ACTION`) across missing/invalid/stale attachment posture failures
 - [20260421 GAP-082 Closeout And GAP-083 Operator Write-Status Baseline](./20260421-gap-082-closeout-and-gap-083-operator-write-status-baseline.md)

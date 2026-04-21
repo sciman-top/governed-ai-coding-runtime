@@ -47,6 +47,42 @@ function Resolve-AttachmentRemediationActions {
   }
 }
 
+function Write-AttachmentRemediationEvidence {
+  param(
+    [string]$RuntimeStateRoot,
+    [string]$AttachmentRoot,
+    [string]$BindingState,
+    [bool]$FailClosed,
+    [string]$Remediation,
+    [string[]]$Actions
+  )
+
+  if ([string]::IsNullOrWhiteSpace($RuntimeStateRoot)) {
+    return $null
+  }
+  $doctorRoot = Join-Path $RuntimeStateRoot "doctor"
+  New-Item -ItemType Directory -Path $doctorRoot -Force | Out-Null
+
+  $timestamp = (Get-Date).ToString("yyyyMMddTHHmmssfff")
+  $record = [ordered]@{
+    timestamp = (Get-Date).ToUniversalTime().ToString("o")
+    attachment_root = $AttachmentRoot
+    runtime_state_root = $RuntimeStateRoot
+    binding_state = $BindingState
+    fail_closed = $FailClosed
+    remediation = $Remediation
+    remediation_actions = $Actions
+    retry_mode = "doctor"
+    evidence_kind = "attachment_remediation"
+  }
+  $recordJson = ($record | ConvertTo-Json -Depth 6)
+  $historyPath = Join-Path $doctorRoot ("remediation-" + $timestamp + ".json")
+  $latestPath = Join-Path $doctorRoot "latest-remediation.json"
+  Set-Content -Path $historyPath -Value $recordJson -Encoding utf8
+  Set-Content -Path $latestPath -Value $recordJson -Encoding utf8
+  return (Resolve-Path $historyPath).Path
+}
+
 function Assert-PathExists {
   param(
     [string]$Path,
@@ -205,12 +241,22 @@ print(
   $normalizedAttachmentPosture = ($attachmentJson.binding_state.Trim()).Replace("_", "-")
   $failClosed = [bool]$attachmentJson.fail_closed
   $remediation = [string]$attachmentJson.remediation
+  $actions = Resolve-AttachmentRemediationActions -BindingState $normalizedAttachmentPosture -AttachmentRoot $AttachmentRoot -RuntimeStateRoot $RuntimeStateRoot
+  $remediationEvidencePath = Write-AttachmentRemediationEvidence `
+    -RuntimeStateRoot $RuntimeStateRoot `
+    -AttachmentRoot $AttachmentRoot `
+    -BindingState $normalizedAttachmentPosture `
+    -FailClosed $failClosed `
+    -Remediation $remediation `
+    -Actions $actions
+  if (-not [string]::IsNullOrWhiteSpace($remediationEvidencePath)) {
+    Write-Host "REMEDIATE-EVIDENCE $remediationEvidencePath"
+  }
   if ($failClosed) {
     Write-Host "FAIL attachment-posture-$normalizedAttachmentPosture"
     if (-not [string]::IsNullOrWhiteSpace($remediation)) {
       Write-Host "REMEDIATE $remediation"
     }
-    $actions = Resolve-AttachmentRemediationActions -BindingState $normalizedAttachmentPosture -AttachmentRoot $AttachmentRoot -RuntimeStateRoot $RuntimeStateRoot
     foreach ($action in $actions) {
       Write-Host "REMEDIATE-ACTION $action"
     }
