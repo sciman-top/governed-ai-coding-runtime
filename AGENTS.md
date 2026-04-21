@@ -1,7 +1,7 @@
 # AGENTS.md — governed-ai-coding-runtime 项目承接规则
 **承接来源**: `GlobalUser/AGENTS.md v9.39`
 **适用范围**: `governed-ai-coding-runtime 仓库根目录（repo root）`  
-**最后更新**: `2026-04-21`
+**最后更新**: `2026-04-22`
 
 ## 1. 阅读指引
 - 本文件只写本仓事实、门禁命令、证据位置和回滚入口，不重写全局 `R/E` 语义。
@@ -64,4 +64,15 @@
 - `subject` 需要短、具体、可检索，优先表达本次变更的事实，不写口号。
 - 技术名词、文件名、协议名、ADR 编号可以保留英文或中英混合，以保证跨工具检索和历史追溯。
 - 若变更面向外部共享历史、跨团队协作或后续回滚定位，优先保证语义清晰，其次再考虑语言纯度。
+
+## F. 跨仓迁移最小模板（可选增强）
+- 目标仓 `repo-profile` 字段草案入口：`schemas/examples/repo-profile/target-repo-fast-full-template.example.json`。
+- 脚本骨架入口：
+  - `scripts/governance/fast-check.ps1`（本地快速反馈，优先读取 `quick_gate_commands`）。
+  - `scripts/governance/full-check.ps1`（交付前全量检查，优先读取 `full_gate_commands`）。
+  - `scripts/governance/gate-runner-common.ps1`（公共执行逻辑，避免 fast/full 漂移）。
+- 若目标仓未声明 `quick_gate_commands/full_gate_commands`，骨架回退到基础命令组：
+  - `fast`: `test + contract(or invariant)`
+  - `full`: `build + test + contract(or invariant)`
+- 该增强只提供“迁移落地入口”，不改变本仓硬门禁顺序与语义；最终验收仍以 `build -> test -> contract/invariant -> hotspot` 为准。
 

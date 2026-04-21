@@ -235,6 +235,14 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
   -SkipVerifyAttachment
 ```
 
+Preset single source of truth:
+- `scripts/runtime-flow-preset.ps1` now reads targets from `docs/targets/target-repos-catalog.json`.
+- List available targets:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
+```
+
 ## What Happens If Paths Change
 - If the target repo moves:
   - the `.governed-ai` files move with it

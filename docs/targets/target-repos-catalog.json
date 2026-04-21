@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "catalog_id": "default-target-repos",
+  "targets": {
+    "classroomtoolkit": {
+      "attachment_root": "${code_root}/ClassroomToolkit",
+      "attachment_runtime_state_root": "${runtime_state_base}/classroomtoolkit",
+      "repo_id": "classroomtoolkit",
+      "display_name": "ClassroomToolkit",
+      "primary_language": "csharp",
+      "build_command": "dotnet build ClassroomToolkit.sln -c Debug",
+      "test_command": "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug",
+      "contract_command": "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug"
+    },
+    "self-runtime": {
+      "attachment_root": "${repo_root}",
+      "attachment_runtime_state_root": "${code_root}/governed-ai-runtime-state/self-runtime",
+      "repo_id": "governed-ai-coding-runtime",
+      "display_name": "Governed AI Coding Runtime",
+      "primary_language": "python",
+      "build_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1",
+      "test_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime",
+      "contract_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract"
+    },
+    "skills-manager": {
+      "attachment_root": "${code_root}/skills-manager",
+      "attachment_runtime_state_root": "${runtime_state_base}/skills-manager",
+      "repo_id": "skills-manager",
+      "display_name": "skills-manager",
+      "primary_language": "python",
+      "build_command": "python --version",
+      "test_command": "python --version",
+      "contract_command": "python --version"
+    }
+  }
+}

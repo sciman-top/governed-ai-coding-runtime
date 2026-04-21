@@ -1,5 +1,4 @@
 param(
-  [ValidateSet("classroomtoolkit", "self-runtime", "skills-manager")]
   [string]$Target = "classroomtoolkit",
 
   [ValidateSet("onboard", "daily")]
@@ -30,7 +29,8 @@ param(
   [switch]$SkipVerifyAttachment,
 
   [switch]$Overwrite,
-  [switch]$Json
+  [switch]$Json,
+  [switch]$ListTargets
 )
 
 Set-StrictMode -Version Latest
@@ -44,46 +44,89 @@ function Resolve-AbsolutePath {
   return [System.IO.Path]::GetFullPath((Join-Path (Get-Location).Path $PathValue))
 }
 
+function Expand-TemplateString {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Value,
+    [Parameter(Mandatory = $true)]
+    [hashtable]$Variables
+  )
+
+  $expanded = $Value
+  foreach ($name in $Variables.Keys) {
+    $expanded = $expanded.Replace('$' + '{' + $name + '}', [string]$Variables[$name])
+  }
+  return $expanded
+}
+
+function Load-TargetConfigMap {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$CatalogPath,
+    [Parameter(Mandatory = $true)]
+    [hashtable]$Variables
+  )
+
+  if (-not (Test-Path -LiteralPath $CatalogPath)) {
+    throw "Target catalog not found: $CatalogPath"
+  }
+
+  $catalog = Get-Content -Raw -LiteralPath $CatalogPath | ConvertFrom-Json
+  if (-not ($catalog -and $catalog.targets)) {
+    throw "Target catalog is missing 'targets': $CatalogPath"
+  }
+
+  $map = @{}
+  foreach ($entry in $catalog.targets.PSObject.Properties) {
+    $name = [string]$entry.Name
+    $rawConfig = $entry.Value
+    $map[$name] = @{
+      AttachmentRoot = Resolve-AbsolutePath -PathValue (Expand-TemplateString -Value ([string]$rawConfig.attachment_root) -Variables $Variables)
+      AttachmentRuntimeStateRoot = Resolve-AbsolutePath -PathValue (Expand-TemplateString -Value ([string]$rawConfig.attachment_runtime_state_root) -Variables $Variables)
+      RepoId = [string]$rawConfig.repo_id
+      DisplayName = [string]$rawConfig.display_name
+      PrimaryLanguage = [string]$rawConfig.primary_language
+      BuildCommand = [string]$rawConfig.build_command
+      TestCommand = [string]$rawConfig.test_command
+      ContractCommand = [string]$rawConfig.contract_command
+    }
+  }
+
+  return $map
+}
+
 $repoRoot = Resolve-AbsolutePath -PathValue (Join-Path $PSScriptRoot "..")
 $codeRoot = Split-Path $repoRoot -Parent
 $runtimeStateBase = Join-Path $repoRoot ".runtime\attachments"
+$catalogPath = Join-Path $repoRoot "docs\targets\target-repos-catalog.json"
+$templateVariables = @{
+  repo_root = $repoRoot
+  code_root = $codeRoot
+  runtime_state_base = $runtimeStateBase
+}
+$targetConfigMap = Load-TargetConfigMap -CatalogPath $catalogPath -Variables $templateVariables
 
-$targetConfigMap = @{
-  "classroomtoolkit" = @{
-    AttachmentRoot = Join-Path $codeRoot "ClassroomToolkit"
-    AttachmentRuntimeStateRoot = Join-Path $runtimeStateBase "classroomtoolkit"
-    RepoId = "classroomtoolkit"
-    DisplayName = "ClassroomToolkit"
-    PrimaryLanguage = "csharp"
-    BuildCommand = "dotnet build ClassroomToolkit.sln -c Debug"
-    TestCommand = "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug"
-    ContractCommand = "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug"
+if ($ListTargets) {
+  $targetNames = @($targetConfigMap.Keys | Sort-Object)
+  if ($Json) {
+    @{
+      catalog_path = $catalogPath
+      targets = $targetNames
+    } | ConvertTo-Json -Depth 4
   }
-  "self-runtime" = @{
-    AttachmentRoot = $repoRoot
-    AttachmentRuntimeStateRoot = Join-Path $codeRoot "governed-ai-runtime-state\self-runtime"
-    RepoId = "governed-ai-coding-runtime"
-    DisplayName = "Governed AI Coding Runtime"
-    PrimaryLanguage = "python"
-    BuildCommand = "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1"
-    TestCommand = "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime"
-    ContractCommand = "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract"
+  else {
+    Write-Host ("catalog={0}" -f $catalogPath)
+    foreach ($name in $targetNames) {
+      Write-Host ("- {0}" -f $name)
+    }
   }
-  "skills-manager" = @{
-    AttachmentRoot = Join-Path $codeRoot "skills-manager"
-    AttachmentRuntimeStateRoot = Join-Path $runtimeStateBase "skills-manager"
-    RepoId = "skills-manager"
-    DisplayName = "skills-manager"
-    PrimaryLanguage = "python"
-    BuildCommand = "python --version"
-    TestCommand = "python --version"
-    ContractCommand = "python --version"
-  }
+  exit 0
 }
 
 $targetConfig = $targetConfigMap[$Target]
 if (-not $targetConfig) {
-  throw "Unsupported target preset: $Target"
+  $available = @($targetConfigMap.Keys | Sort-Object) -join ", "
+  throw "Unsupported target preset: $Target. Available targets: $available"
 }
 
 $runtimeFlowPath = Join-Path $PSScriptRoot "runtime-flow.ps1"

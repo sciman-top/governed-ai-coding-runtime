@@ -4,6 +4,10 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260422 目标仓清单单一真源落地](./20260422-target-repo-catalog-single-source.md)
+  - evidence companion for moving target-repo preset list into `docs/targets/target-repos-catalog.json` and wiring `runtime-flow-preset.ps1` to load targets dynamically
+- [20260422 Repo-Profile 字段草案与 Fast/Full 门禁骨架](./20260422-repo-profile-fast-full-gate-skeleton.md)
+  - evidence companion for project-level rule enhancements plus reusable `repo-profile` field draft and `scripts/governance/fast-check.ps1` / `full-check.ps1` skeleton entrypoints
 - [20260421 Layered Verification Gates L1 L2 L3](./20260421-layered-verification-gates-l1-l2-l3.md)
   - evidence companion for promoting verification to layered `l1/l2/l3` execution while preserving `quick/full` compatibility across runtime, session bridge, and target-repo wrappers
 - [20260421 GAP-084 Claim Drift Guard Closeout](./20260421-gap-084-claim-drift-guard-closeout.md)

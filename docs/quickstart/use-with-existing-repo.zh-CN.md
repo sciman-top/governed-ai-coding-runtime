@@ -235,6 +235,14 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
   -SkipVerifyAttachment
 ```
 
+预设清单单一真源：
+- `scripts/runtime-flow-preset.ps1` 现在从 `docs/targets/target-repos-catalog.json` 读取目标仓。
+- 查看当前可用 target 列表：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
+```
+
 ## 路径变化会有什么影响
 - 目标仓路径变化：
   - `.governed-ai` 会跟仓一起移动
