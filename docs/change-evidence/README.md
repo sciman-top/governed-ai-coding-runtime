@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260421 GAP-082 Closeout And GAP-083 Operator Write-Status Baseline](./20260421-gap-082-closeout-and-gap-083-operator-write-status-baseline.md)
+  - evidence companion for closing GAP-082 and starting GAP-083 with operator write-status query coverage through service-boundary routes
 - [20260421 GAP-082 CLI Wrapper Service-Dispatch Tests](./20260421-gap-082-cli-wrapper-service-dispatch-tests.md)
   - evidence companion for wrapper-focused unit tests proving `run-governed-task.py` execution/read paths dispatch through control-plane `/session` service boundaries
 - [20260421 GAP-082 Service Wrapper Drift Guard](./20260421-gap-082-service-wrapper-drift-guard.md)

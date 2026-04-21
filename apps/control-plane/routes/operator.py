@@ -23,6 +23,14 @@ def handle_operator_route(facade: Any, payload: dict) -> dict:
             run_id=_string_or_none(payload.get("run_id")),
             handoff_ref=_string_or_none(payload.get("handoff_ref")),
         )
+    if action == "write_status":
+        return facade.operator_write_status(
+            task_id=_string_or_default(payload.get("task_id"), "attachment-write"),
+            approval_id=_string_or_none(payload.get("approval_id")),
+            target_path=_string_or_none(payload.get("target_path")),
+            execution_id=_string_or_none(payload.get("execution_id")),
+            attachment_runtime_state_root=_string_or_none(payload.get("attachment_runtime_state_root")),
+        )
     msg = f"unsupported operator action: {action}"
     raise ValueError(msg)
 

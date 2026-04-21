@@ -144,6 +144,33 @@ class RuntimeServiceFacade:
             command_id=f"api-operator-handoff-{task_id}",
         )
 
+    def operator_write_status(
+        self,
+        *,
+        task_id: str,
+        approval_id: str | None = None,
+        target_path: str | None = None,
+        execution_id: str | None = None,
+        attachment_runtime_state_root: str | Path | None = None,
+    ) -> dict:
+        payload: dict[str, str] = {}
+        if approval_id:
+            payload["approval_id"] = approval_id
+        if target_path:
+            payload["target_path"] = target_path
+        if execution_id:
+            payload["execution_id"] = execution_id
+        return self.session_command(
+            command_type="write_status",
+            task_id=task_id,
+            repo_binding_id=f"binding-{task_id}",
+            adapter_id="codex-cli",
+            risk_tier="low",
+            payload=payload,
+            command_id=f"api-operator-write-status-{task_id}",
+            attachment_runtime_state_root=attachment_runtime_state_root,
+        )
+
     def _execute_session_command(
         self,
         *,

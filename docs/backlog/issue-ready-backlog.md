@@ -13,7 +13,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - non-goals remain non-goals: no enterprise org model, no marketplace, no default multi-agent orchestration, no memory-first product identity
 - governance-optimization lane `GAP-061` through `GAP-068` was the follow-on queue after `GAP-060` and is now complete on the current branch baseline (verified on 2026-04-20), while older lifecycle `GAP` entries remain completion history
 - post-closeout optimization queue `GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20) and does not reopen hybrid final-state closure
-- optimized best-state near-term gap horizon queue remains active, with `GAP-080` and `GAP-081` complete on the current branch baseline (verified on 2026-04-21) and `GAP-082` through `GAP-084` as the remaining execution-horizon backlog derived from `NT-01..05` / `NTP-01..05`
+- optimized best-state near-term gap horizon queue remains active, with `GAP-080` through `GAP-082` complete on the current branch baseline (verified on 2026-04-21) and `GAP-083` through `GAP-084` as the remaining execution-horizon backlog derived from `NT-01..05` / `NTP-01..05`
 
 ## Current Baseline
 - PRD, architecture, ADRs, specs, runtime contract primitives, repo verifier entrypoints, sample repo profiles, and a runtime-consumable control pack already exist.
@@ -29,7 +29,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Direct-To-Hybrid-Final-State Mainline / GAP-046` through `GAP-060` are complete on the current branch baseline (verified on 2026-04-20).
 - `Governance Optimization Lane / GAP-061` through `GAP-068` are complete on the current branch baseline (verified on 2026-04-20).
 - `Post-Closeout Optimization Queue / GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20).
-- `Near-Term Gap Horizon Queue / GAP-080` and `GAP-081` are complete on the current branch baseline (verified on 2026-04-21), and `GAP-082` through `GAP-084` remain the active execution-horizon queue from the optimized best-state definition.
+- `Near-Term Gap Horizon Queue / GAP-080` through `GAP-082` are complete on the current branch baseline (verified on 2026-04-21), and `GAP-083` through `GAP-084` remain the active execution-horizon queue from the optimized best-state definition.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -507,7 +507,7 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: AFK
 - Blocked by: GAP-081
 - User stories: 1, 11, 13, 17, 39
-- Status: in progress on current branch baseline (runtime service/CLI parity gate now covers quick/full plan parity, write-execution approval-path parity, and operator read parity; attached execution plus status CLI paths are service-boundary wrappers as of 2026-04-21)
+- Status: complete on current branch baseline (runtime service-primary convergence acceptance closed on 2026-04-21 with wrapper dispatch tests and drift guards)
 - What to build:
   - enforce API-first runtime boundaries and keep CLI as a wrapper-only compatibility surface
   - add API/CLI parity guards for execution-like commands and operator reads
@@ -521,7 +521,7 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: AFK
 - Blocked by: GAP-082
 - User stories: 11, 12, 14, 27, 40
-- Status: planned for execution horizon
+- Status: in progress on current branch baseline (operator write-status query surface added with service/session parity coverage on 2026-04-21)
 - What to build:
   - expand attachment-scoped query coverage for approvals, evidence, replay, and posture diagnostics
   - deepen doctor remediation flows with deterministic recovery actions and retry guidance

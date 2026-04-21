@@ -12,7 +12,7 @@ Seed the function-first full lifecycle of the project so it can evolve from a co
 - `Direct-To-Hybrid-Final-State Mainline / GAP-045` through `GAP-060` are complete on the current branch baseline.
 - `Governance Optimization Lane / GAP-061` through `GAP-068` are complete on the current branch baseline.
 - `Post-Closeout Optimization Queue / GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20).
-- `Near-Term Gap Horizon Queue / GAP-080` and `GAP-081` are complete on the current branch baseline (verified on 2026-04-21), and `GAP-082` through `GAP-084` remain the active execution-horizon queue (derived from `NT-01..05` and `NTP-01..05`).
+- `Near-Term Gap Horizon Queue / GAP-080` through `GAP-082` are complete on the current branch baseline (verified on 2026-04-21), and `GAP-083` through `GAP-084` remain the active execution-horizon queue (derived from `NT-01..05` and `NTP-01..05`).
 - `GAP-018` through `GAP-068` remain completion history and dependency context for the active queue.
 
 ## Vision
@@ -72,7 +72,7 @@ Seed the function-first full lifecycle of the project so it can evolve from a co
 1. Do not reopen `GAP-018` through `GAP-044` unless a verified regression requires it.
 2. Keep `GAP-045` through `GAP-068` as completed closure and optimization history unless verified regressions require reopening.
 3. Keep `GAP-069` through `GAP-074` as completed post-closeout optimization history unless verified regressions require reopening.
-4. Keep `GAP-082` through `GAP-084` as the active near-term execution queue unless verified regressions require reopening older ranges.
+4. Keep `GAP-083` through `GAP-084` as the active near-term execution queue unless verified regressions require reopening older ranges.
 5. Introduce any further queue only as new IDs beyond `GAP-084`.
 6. Add new IDs only after acceptance criteria and dependency wiring are explicit in both markdown and seed YAML.
 

@@ -1,5 +1,6 @@
 import importlib
 import importlib.util
+import json
 import sys
 import tempfile
 import unittest
@@ -61,6 +62,24 @@ class OperatorApiTests(unittest.TestCase):
                 ],
             )
             store.save(record)
+            approvals_root = workspace / ".runtime" / "approvals"
+            approvals_root.mkdir(parents=True, exist_ok=True)
+            (approvals_root / "approval-operator.json").write_text(
+                json.dumps(
+                    {
+                        "approval_id": "approval-operator",
+                        "task_id": "task-operator-api",
+                        "tool_name": "write_file",
+                        "target_path": "docs/operator.txt",
+                        "tier": "medium",
+                        "status": "approved",
+                        "reason": "operator approved",
+                    },
+                    indent=2,
+                    sort_keys=True,
+                ),
+                encoding="utf-8",
+            )
 
             facade = service_facade_module.RuntimeServiceFacade(repo_root=workspace, task_root=tasks_root)
             app = app_module.ControlPlaneApplication(facade=facade)
@@ -73,6 +92,16 @@ class OperatorApiTests(unittest.TestCase):
             handoff_result = app.dispatch(
                 route="/operator",
                 payload={"action": "inspect_handoff", "task_id": "task-operator-api", "run_id": "run-operator"},
+            )
+            write_status_result = app.dispatch(
+                route="/operator",
+                payload={
+                    "action": "write_status",
+                    "task_id": "task-operator-api",
+                    "approval_id": "approval-operator",
+                    "target_path": "docs/operator.txt",
+                    "attachment_runtime_state_root": str(workspace / ".runtime"),
+                },
             )
             direct_status = session_bridge.handle_session_bridge_command(
                 session_bridge.build_session_bridge_command(
@@ -113,6 +142,23 @@ class OperatorApiTests(unittest.TestCase):
                 task_root=tasks_root,
                 repo_root=workspace,
             )
+            direct_write_status = session_bridge.handle_session_bridge_command(
+                session_bridge.build_session_bridge_command(
+                    command_id="direct-operator-write-status",
+                    command_type="write_status",
+                    task_id="task-operator-api",
+                    repo_binding_id="binding-task-operator-api",
+                    adapter_id="codex-cli",
+                    risk_tier="low",
+                    payload={
+                        "approval_id": "approval-operator",
+                        "target_path": "docs/operator.txt",
+                    },
+                ),
+                task_root=tasks_root,
+                repo_root=workspace,
+                attachment_runtime_state_root=workspace / ".runtime",
+            )
 
             self.assertEqual(status_result["status"], "ok")
             self.assertEqual(status_result["status"], direct_status.status)
@@ -134,6 +180,15 @@ class OperatorApiTests(unittest.TestCase):
             self.assertIn(
                 "artifacts/task-operator-api/run-operator/handoff/package.json",
                 handoff_result["payload"]["handoff_refs"],
+            )
+            self.assertEqual(write_status_result["status"], direct_write_status.status)
+            self.assertEqual(
+                write_status_result["payload"]["approval_status"],
+                direct_write_status.payload["approval_status"],
+            )
+            self.assertEqual(
+                write_status_result["payload"]["approval_ref"],
+                direct_write_status.payload["approval_ref"],
             )
 
 
