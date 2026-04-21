@@ -200,6 +200,13 @@ def main() -> int:
         if args.execution_id:
             payload["execution_id"] = args.execution_id
 
+    if args.session_id:
+        payload["session_id"] = args.session_id
+    if args.resume_id:
+        payload["resume_id"] = args.resume_id
+    if args.continuation_id:
+        payload["continuation_id"] = args.continuation_id
+
     bridge_command_type = "bind_task" if command_type == "launch" else command_type
     command = build_session_bridge_command(
         command_id=args.command_id,
@@ -245,6 +252,9 @@ def _add_common(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     parser.add_argument("--repo-binding-id", required=True)
     parser.add_argument("--adapter-id", default="manual-handoff")
     parser.add_argument("--risk-tier", choices=["low", "medium", "high"], default="low")
+    parser.add_argument("--session-id")
+    parser.add_argument("--resume-id")
+    parser.add_argument("--continuation-id")
     return parser
 
 

@@ -45,6 +45,7 @@ def govern_attached_write_request(
     target_path: str,
     tier: str,
     rollback_reference: str,
+    session_identity: dict | None = None,
 ) -> AttachedWriteGovernanceResult:
     attachment_root_path = Path(attachment_root)
     runtime_state_root_path = Path(attachment_runtime_state_root)
@@ -100,6 +101,7 @@ def govern_attached_write_request(
             target_path=target_path,
             tier=tier,
             reason=f"{tier} write requires approval for {target_path}",
+            session_identity=session_identity,
         )
     return AttachedWriteGovernanceResult(
         repo_id=profile.repo_id,
@@ -123,6 +125,7 @@ def _persist_approval_request(
     target_path: str,
     tier: str,
     reason: str,
+    session_identity: dict | None = None,
 ) -> None:
     approvals_root = runtime_state_root / _APPROVALS_DIR
     approvals_root.mkdir(parents=True, exist_ok=True)
@@ -139,6 +142,8 @@ def _persist_approval_request(
         "requested_at": datetime.now(UTC).isoformat(),
         "decided_at": None,
     }
+    if session_identity is not None:
+        record["session_identity"] = session_identity
     record_path.write_text(
         json.dumps(record, indent=2, sort_keys=True),
         encoding="utf-8",

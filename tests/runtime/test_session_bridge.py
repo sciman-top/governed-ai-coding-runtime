@@ -694,6 +694,8 @@ class SessionBridgeCommandTests(unittest.TestCase):
                     "target_path": "docs/plan.md",
                     "tier": "medium",
                     "rollback_reference": "git diff -- docs/plan.md",
+                    "session_id": "session-live-bridge-001",
+                    "resume_id": "resume-live-bridge-001",
                 },
             )
             request_result = module.handle_session_bridge_command(
@@ -713,6 +715,17 @@ class SessionBridgeCommandTests(unittest.TestCase):
             self.assertEqual(request_result.payload["continuation_id"], flow_execution_id)
             self.assertEqual(request_result.payload["adapter_id"], "codex-cli")
             self.assertIn("approval_ref", request_result.payload)
+            request_identity = request_result.payload["session_identity"]
+            self.assertEqual(request_identity["session_id"], "session-live-bridge-001")
+            self.assertEqual(request_identity["resume_id"], "resume-live-bridge-001")
+            self.assertEqual(request_identity["continuation_id"], flow_execution_id)
+
+            approval_record = json.loads(
+                (runtime_state_root / "approvals" / f"{approval_id}.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(approval_record["session_id"], "session-live-bridge-001")
+            self.assertEqual(approval_record["resume_id"], "resume-live-bridge-001")
+            self.assertEqual(approval_record["continuation_id"], flow_execution_id)
 
             approve_command = module.build_session_bridge_command(
                 command_id="cmd-write-approve",
@@ -738,6 +751,10 @@ class SessionBridgeCommandTests(unittest.TestCase):
             self.assertEqual(approve_result.payload["approval_status"], "approved")
             self.assertEqual(approve_result.payload["execution_id"], flow_execution_id)
             self.assertEqual(approve_result.payload["continuation_id"], flow_execution_id)
+            approve_identity = approve_result.payload["session_identity"]
+            self.assertEqual(approve_identity["session_id"], request_identity["session_id"])
+            self.assertEqual(approve_identity["resume_id"], request_identity["resume_id"])
+            self.assertEqual(approve_identity["continuation_id"], flow_execution_id)
 
             execute_command = module.build_session_bridge_command(
                 command_id="cmd-write-execute",
@@ -776,6 +793,10 @@ class SessionBridgeCommandTests(unittest.TestCase):
             self.assertIn(execute_result.payload["replay_ref"], execute_result.payload["artifact_refs"])
             self.assertTrue(execute_result.payload["adapter_event_ref"])
             self.assertGreaterEqual(execute_result.payload["adapter_event_summary"]["file_change_count"], 1)
+            execute_identity = execute_result.payload["session_identity"]
+            self.assertEqual(execute_identity["session_id"], request_identity["session_id"])
+            self.assertEqual(execute_identity["resume_id"], request_identity["resume_id"])
+            self.assertEqual(execute_identity["continuation_id"], flow_execution_id)
             self.assertEqual((target_repo / "docs" / "plan.md").read_text(encoding="utf-8"), "patched via session bridge")
 
             status_command = module.build_session_bridge_command(
@@ -799,6 +820,10 @@ class SessionBridgeCommandTests(unittest.TestCase):
             self.assertEqual(status_result.payload["execution_id"], flow_execution_id)
             self.assertEqual(status_result.payload["continuation_id"], flow_execution_id)
             self.assertEqual(status_result.payload["adapter_id"], "codex-cli")
+            status_identity = status_result.payload["session_identity"]
+            self.assertEqual(status_identity["session_id"], request_identity["session_id"])
+            self.assertEqual(status_identity["resume_id"], request_identity["resume_id"])
+            self.assertEqual(status_identity["continuation_id"], flow_execution_id)
 
     def test_inspect_handoff_returns_payload_and_known_refs(self) -> None:
         module = self._module()
