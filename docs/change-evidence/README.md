@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260422 教学式协作与低 Token 治理总设计](./20260422-teaching-collaboration-low-token-governance-design.md)
+  - evidence companion for the new top-level design that aligns teaching-style collaboration, token budgets, interaction signals, compression rules, and evidence/trace integration
 - [20260422 目标仓清单单一真源落地](./20260422-target-repo-catalog-single-source.md)
   - evidence companion for moving target-repo preset list into `docs/targets/target-repos-catalog.json` and wiring `runtime-flow-preset.ps1` to load targets dynamically
 - [20260422 Repo-Profile 字段草案与 Fast/Full 门禁骨架](./20260422-repo-profile-fast-full-gate-skeleton.md)
