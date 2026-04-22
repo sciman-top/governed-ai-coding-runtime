@@ -43,6 +43,7 @@ class RepoProfile:
         if not (raw.get("contract_commands") or raw.get("invariant_commands")):
             msg = "contract or invariant command is required"
             raise ValueError(msg)
+        _validate_additional_gate_commands(raw.get("additional_gate_commands", []))
         compatibility_signals = raw.get("compatibility_signals", [])
         if not isinstance(compatibility_signals, list):
             msg = "compatibility_signals must be a list"
@@ -103,3 +104,31 @@ def _normalize_interaction_profile(value: object) -> dict:
         msg = f"unsupported interaction_profile.compaction_preference: {compaction_preference}"
         raise ValueError(msg)
     return normalized
+
+
+def _validate_additional_gate_commands(value: object) -> None:
+    if value is None:
+        return
+    if not isinstance(value, list):
+        msg = "additional_gate_commands must be a list"
+        raise ValueError(msg)
+    allowed_profiles = {"quick", "full", "l1", "l2", "l3", "all", "*"}
+    for index, item in enumerate(value):
+        if not isinstance(item, dict):
+            msg = f"additional_gate_commands[{index}] must be an object"
+            raise ValueError(msg)
+        _required_string(item, "id")
+        _required_string(item, "command")
+        profiles = item.get("profiles")
+        if profiles is None:
+            continue
+        if not isinstance(profiles, list):
+            msg = f"additional_gate_commands[{index}].profiles must be a list"
+            raise ValueError(msg)
+        for profile in profiles:
+            if not isinstance(profile, str) or not profile.strip():
+                msg = f"additional_gate_commands[{index}].profiles entries must be non-empty strings"
+                raise ValueError(msg)
+            if profile.strip().lower() not in allowed_profiles:
+                msg = f"unsupported additional_gate_commands[{index}].profiles value: {profile}"
+                raise ValueError(msg)

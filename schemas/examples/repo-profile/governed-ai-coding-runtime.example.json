@@ -149,6 +149,18 @@
       "description": "Canonical doctor gate."
     }
   ],
+  "additional_gate_commands": [
+    {
+      "id": "ui-sampling",
+      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/quality/sample-ui-performance.ps1",
+      "required": false,
+      "blocking": false,
+      "profiles": [
+        "full"
+      ],
+      "description": "Optional UI sampling for trend tracking without blocking delivery."
+    }
+  ],
   "extra_eval_suites": [
     "runtime-smoke"
   ],

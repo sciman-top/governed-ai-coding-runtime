@@ -43,6 +43,7 @@ from governed_ai_coding_runtime_contracts.verification_runner import (
     build_repo_profile_verification_plan,
     build_verification_plan,
     run_verification_plan,
+    verification_overall_outcome,
 )
 
 
@@ -1036,6 +1037,8 @@ def handle_session_bridge_command(
                     "plan_only": True,
                     "gate_order": [gate.gate_id for gate in plan.gates],
                     "commands": [gate.command for gate in plan.gates],
+                    "required_gate_ids": [gate.gate_id for gate in plan.gates if gate.required],
+                    "blocking_gate_ids": [gate.gate_id for gate in plan.gates if gate.blocking],
                     "entrypoint_policy": entrypoint_policy,
                 },
                 policy_decision_ref=command.policy_decision_ref,
@@ -1094,15 +1097,15 @@ def handle_session_bridge_command(
                 "gate_order": [gate.gate_id for gate in plan.gates],
                 "commands": [gate.command for gate in plan.gates],
                 "results": verification_artifact.results,
+                "required_gate_ids": verification_artifact.required_gate_ids,
+                "blocking_gate_ids": verification_artifact.blocking_gate_ids,
                 "result_artifact_refs": verification_artifact.result_artifact_refs,
                 "risky_artifact_refs": verification_artifact.risky_artifact_refs,
                 "evidence_link": verification_artifact.evidence_link,
                 "adapter_event_ref": adapter_event_ref,
                 "adapter_event_summary": adapter_event_summary,
                 "entrypoint_policy": entrypoint_policy,
-                "outcome": "pass"
-                if all(result == "pass" for result in verification_artifact.results.values())
-                else "fail",
+                "outcome": verification_overall_outcome(verification_artifact),
             },
             policy_decision_ref=command.policy_decision_ref,
         )

@@ -33,6 +33,8 @@ param(
   [string]$WriteContent = "governed runtime write probe",
   [switch]$ExecuteWriteFlow,
 
+  [switch]$SkipSourceStringContractGuard,
+
   [switch]$Json
 )
 
@@ -267,10 +269,32 @@ if (-not $SkipVerifyAttachment) {
   if (-not $verifyPayload) {
     $hasFailure = $true
   }
-  elseif ($verifyPayload.results) {
-    foreach ($gate in $verifyPayload.results.PSObject.Properties.Name) {
-      if ([string]$verifyPayload.results.$gate -ne "pass") {
+  else {
+    $verifyOutcome = ""
+    if ($verifyPayload.PSObject.Properties.Name -contains "outcome") {
+      $verifyOutcome = [string]$verifyPayload.outcome
+    }
+    if (-not [string]::IsNullOrWhiteSpace($verifyOutcome)) {
+      if ($verifyOutcome -ne "pass") {
         $hasFailure = $true
+      }
+    }
+    elseif ($verifyPayload.results) {
+      $blockingGateIds = @()
+      if ($verifyPayload.PSObject.Properties.Name -contains "blocking_gate_ids" -and $verifyPayload.blocking_gate_ids) {
+        $blockingGateIds = @($verifyPayload.blocking_gate_ids | ForEach-Object { [string]$_ })
+      }
+      if (@($blockingGateIds).Count -eq 0) {
+        $blockingGateIds = @($verifyPayload.results.PSObject.Properties.Name)
+      }
+      foreach ($gate in $blockingGateIds) {
+        if (-not ($verifyPayload.results.PSObject.Properties.Name -contains $gate)) {
+          $hasFailure = $true
+          continue
+        }
+        if ([string]$verifyPayload.results.$gate -ne "pass") {
+          $hasFailure = $true
+        }
       }
     }
   }
@@ -488,6 +512,31 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
   }
 }
 
+$sourceStringContractGuardPayload = $null
+if (-not $SkipSourceStringContractGuard) {
+  $sourceStringContractGuardStep = Invoke-CommandCapture -Label "source-string-contract-guard" -Command {
+    & $python "scripts/check-source-string-contract-guard.py" "--target-repo-root" $resolvedAttachmentRoot "--configuration" "Debug" "--json"
+  }
+  $steps.Add($sourceStringContractGuardStep) | Out-Null
+  if ($sourceStringContractGuardStep.exit_code -ne 0) {
+    $hasFailure = $true
+  }
+  $sourceStringContractGuardPayload = Try-ParseJson -Raw $sourceStringContractGuardStep.output
+  if (-not $sourceStringContractGuardPayload) {
+    $hasFailure = $true
+  }
+  else {
+    $guardStatus = ""
+    if ($sourceStringContractGuardPayload.PSObject.Properties.Name -contains "status") {
+      $guardStatus = [string]$sourceStringContractGuardPayload.status
+    }
+    if ($guardStatus -eq "fail") {
+      $hasFailure = $true
+      $nextActions.Add("repair source-string contract drift in target repo and rerun runtime-check") | Out-Null
+    }
+  }
+}
+
 $requestGateCommandPayload = $null
 if ($requestGatePayload -and $requestGatePayload.payload) {
   $requestGateCommandPayload = $requestGatePayload.payload
@@ -649,6 +698,7 @@ $result = @{
   status = $statusPayload
   request_gate = $requestGatePayload
   verify_attachment = $verifyPayload
+  source_string_contract_guard = $sourceStringContractGuardPayload
   write_governance = $writeGovernancePayload
   write_preflight = $writePreflight
   write_approval = $writeApprovalPayload
@@ -679,6 +729,18 @@ else {
     Write-Host ("Verification: " + ($gatePairs -join ", "))
     if ($verifyPayload.evidence_link) {
       Write-Host ("Evidence: " + [string]$verifyPayload.evidence_link)
+    }
+  }
+  if ($sourceStringContractGuardPayload) {
+    $guardStatus = ""
+    if ($sourceStringContractGuardPayload.PSObject.Properties.Name -contains "status") {
+      $guardStatus = [string]$sourceStringContractGuardPayload.status
+    }
+    if (-not [string]::IsNullOrWhiteSpace($guardStatus)) {
+      Write-Host ("SourceStringContractGuard: " + $guardStatus)
+    }
+    if ($sourceStringContractGuardPayload.reason) {
+      Write-Host ("SourceStringContractGuardReason: " + [string]$sourceStringContractGuardPayload.reason)
     }
   }
   if ($writeGovernancePayload -and $writeGovernancePayload.policy_decision) {

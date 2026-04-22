@@ -746,6 +746,19 @@ def _validate_gate_commands(raw: dict) -> None:
         msg = "contract_commands or invariant_commands requires at least one command"
         raise ValueError(msg)
 
+    additional_commands = raw.get("additional_gate_commands", [])
+    if additional_commands is None:
+        return
+    if not isinstance(additional_commands, list):
+        msg = "additional_gate_commands must be a list"
+        raise ValueError(msg)
+    for index, command in enumerate(additional_commands):
+        if not isinstance(command, dict):
+            msg = f"additional_gate_commands[{index}] must be an object"
+            raise ValueError(msg)
+        _required_string(command.get("id"), f"additional_gate_commands[{index}].id")
+        _required_string(command.get("command"), f"additional_gate_commands[{index}].command")
+
 
 def _validate_path_policies(raw: dict) -> None:
     path_policies = raw.get("path_policies")
@@ -857,7 +870,7 @@ def _repo_file_priority(relative: str) -> int:
 
 def _dominant_commands_from_profile(profile: dict) -> list[str]:
     commands: list[str] = []
-    for group in ("build_commands", "test_commands", "contract_commands", "invariant_commands"):
+    for group in ("build_commands", "test_commands", "contract_commands", "invariant_commands", "additional_gate_commands"):
         raw_group = profile.get(group)
         if not isinstance(raw_group, list):
             continue

@@ -493,6 +493,8 @@ class SessionBridgeCommandTests(unittest.TestCase):
             self.assertEqual(result.payload["execution_id"], "task-execute-gate:run-exec-1")
             self.assertEqual(result.payload["continuation_id"], "task-execute-gate:run-exec-1")
             self.assertEqual(result.payload["outcome"], "pass")
+            self.assertEqual(result.payload["required_gate_ids"], ["test", "contract"])
+            self.assertEqual(result.payload["blocking_gate_ids"], ["test", "contract"])
             self.assertEqual(result.payload["results"], {"test": "pass", "contract": "pass"})
             self.assertIn("test", result.payload["result_artifact_refs"])
             self.assertIn("contract", result.payload["result_artifact_refs"])

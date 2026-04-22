@@ -19,6 +19,7 @@ class VerificationGate:
     canonical_name: str
     command: str
     required: bool
+    blocking: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,6 +43,8 @@ class VerificationArtifact:
     escalation_conditions: list[str]
     risky_artifact_refs: list[str]
     cache_hits: dict[str, bool] = field(default_factory=dict)
+    required_gate_ids: list[str] = field(default_factory=list)
+    blocking_gate_ids: list[str] = field(default_factory=list)
 
 
 def verification_artifact_to_dict(artifact: VerificationArtifact) -> dict:
@@ -67,6 +70,8 @@ def verification_artifact_from_dict(raw: dict) -> VerificationArtifact:
             raise ValueError(msg)
         for key, value in cache_hits_raw.items():
             cache_hits[_required_string(key, "cache_hits")] = bool(value)
+    required_gate_ids = _required_string_list(raw.get("required_gate_ids", []), "required_gate_ids")
+    blocking_gate_ids = _required_string_list(raw.get("blocking_gate_ids", []), "blocking_gate_ids")
     escalation_conditions = _required_string_list(raw.get("escalation_conditions"), "escalation_conditions")
     risky_artifact_refs = _required_string_list(raw.get("risky_artifact_refs"), "risky_artifact_refs")
     return VerificationArtifact(
@@ -78,6 +83,8 @@ def verification_artifact_from_dict(raw: dict) -> VerificationArtifact:
         results=results,
         result_artifact_refs=result_artifact_refs,
         cache_hits=cache_hits,
+        required_gate_ids=required_gate_ids,
+        blocking_gate_ids=blocking_gate_ids,
         escalation_conditions=escalation_conditions,
         risky_artifact_refs=risky_artifact_refs,
     )
@@ -212,9 +219,24 @@ def build_verification_artifact(
         results=results,
         result_artifact_refs=result_artifact_refs or {},
         cache_hits=cache_hits or {},
+        required_gate_ids=[gate.gate_id for gate in plan.gates if gate.required],
+        blocking_gate_ids=[gate.gate_id for gate in plan.gates if gate.blocking],
         escalation_conditions=plan.escalation_conditions,
         risky_artifact_refs=risky_artifact_refs or [],
     )
+
+
+def verification_has_blocking_failures(artifact: VerificationArtifact) -> bool:
+    if not artifact.blocking_gate_ids:
+        return any(result != "pass" for result in artifact.results.values())
+    for gate_id in artifact.blocking_gate_ids:
+        if artifact.results.get(gate_id, "fail") != "pass":
+            return True
+    return False
+
+
+def verification_overall_outcome(artifact: VerificationArtifact) -> str:
+    return "fail" if verification_has_blocking_failures(artifact) else "pass"
 
 
 def run_verification_plan(
@@ -361,12 +383,44 @@ def _gates_from_repo_profile(raw: dict, *, mode: str) -> list[VerificationGate]:
                     canonical_name=gate_id,
                     command=gate_command.strip(),
                     required=bool(command.get("required", True)),
+                    blocking=bool(command.get("blocking", command.get("required", True))),
                 )
             )
             seen_gate_ids.add(gate_id)
 
         if seen_gate_ids.issuperset(required_gate_ids):
             break
+
+    additional_commands = raw.get("additional_gate_commands", [])
+    if additional_commands is not None:
+        if not isinstance(additional_commands, list):
+            msg = "additional_gate_commands must be a list"
+            raise ValueError(msg)
+        for index, command in enumerate(additional_commands):
+            if not isinstance(command, dict):
+                msg = f"additional_gate_commands[{index}] must be an object"
+                raise ValueError(msg)
+            if not _command_applies_to_mode(command, mode=mode, level=level):
+                continue
+            gate_id = _gate_id_for_group("additional_gate_commands", command)
+            if gate_id in seen_gate_ids:
+                continue
+            gate_command = command.get("command")
+            if not isinstance(gate_command, str) or not gate_command.strip():
+                msg = f"additional_gate_commands[{index}] command is missing a runnable command string"
+                raise ValueError(msg)
+            required = bool(command.get("required", False))
+            gates.append(
+                VerificationGate(
+                    gate_id=gate_id,
+                    canonical_name=gate_id,
+                    command=gate_command.strip(),
+                    required=required,
+                    blocking=bool(command.get("blocking", required)),
+                )
+            )
+            seen_gate_ids.add(gate_id)
+
     if declared_groups_present:
         if not seen_gate_ids.issuperset(required_gate_ids):
             requirement = _required_gate_ids_text(required_gate_ids)
@@ -387,10 +441,49 @@ def _gate_id_for_group(group: str, command: dict) -> str:
         if isinstance(command_id, str) and command_id.strip() in {"build", "test", "contract", "doctor", "hotspot"}:
             normalized = command_id.strip()
             return "doctor" if normalized == "hotspot" else normalized
+    if group == "additional_gate_commands":
+        command_id = command.get("id")
+        if isinstance(command_id, str) and command_id.strip():
+            return command_id.strip()
+        msg = "additional_gate_commands entry requires non-empty id"
+        raise ValueError(msg)
     command_id = command.get("id")
     if isinstance(command_id, str) and command_id.strip():
         return command_id.strip()
     return group
+
+
+def _command_applies_to_mode(command: dict, *, mode: str, level: VerificationLevel) -> bool:
+    profiles = command.get("profiles")
+    if profiles is None:
+        return True
+    if not isinstance(profiles, list):
+        msg = "additional_gate_commands.profiles must be a list when provided"
+        raise ValueError(msg)
+    if not profiles:
+        return True
+
+    normalized_profiles: set[str] = set()
+    for profile in profiles:
+        if not isinstance(profile, str) or not profile.strip():
+            msg = "additional_gate_commands.profiles entries must be non-empty strings"
+            raise ValueError(msg)
+        normalized_profiles.add(profile.strip().lower())
+
+    if "*" in normalized_profiles or "all" in normalized_profiles:
+        return True
+    normalized_mode = _required_mode(mode)
+    if normalized_mode.lower() in normalized_profiles:
+        return True
+    if level == "l1" and ("quick" in normalized_profiles or "l1" in normalized_profiles):
+        return True
+    if level in {"l2", "l3"} and (
+        "full" in normalized_profiles
+        or "l2" in normalized_profiles
+        or "l3" in normalized_profiles
+    ):
+        return True
+    return False
 
 
 def _required_mode(value: object) -> VerificationMode:

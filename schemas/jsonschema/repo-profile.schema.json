@@ -257,6 +257,52 @@
       },
       "type": "array"
     },
+    "additional_gate_commands": {
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "blocking": {
+            "type": "boolean"
+          },
+          "profiles": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "quick",
+                "full",
+                "l1",
+                "l2",
+                "l3",
+                "all",
+                "*"
+              ]
+            }
+          },
+          "description": {
+            "type": "string"
+          },
+          "not_applicable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "command"
+        ]
+      },
+      "type": "array"
+    },
     "risk_defaults": {
       "type": "object",
       "additionalProperties": false,

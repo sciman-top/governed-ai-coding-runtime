@@ -216,6 +216,76 @@ class VerificationRunnerTests(unittest.TestCase):
                 },
             )
 
+    def test_repo_profile_additional_gate_commands_apply_by_profile(self) -> None:
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+
+        quick_plan = verification_runner.build_repo_profile_verification_plan(
+            "quick",
+            task_id="task-profile-quick",
+            run_id="run-profile-quick",
+            profile_raw={
+                "test_commands": [{"id": "test", "command": "python -m unittest"}],
+                "contract_commands": [{"id": "contract", "command": "python -m unittest tests/contracts"}],
+                "additional_gate_commands": [
+                    {"id": "quick-extra", "command": "python scripts/quick-extra.py", "profiles": ["quick"]},
+                    {"id": "full-extra", "command": "python scripts/full-extra.py", "profiles": ["full"]},
+                ],
+            },
+        )
+
+        full_plan = verification_runner.build_repo_profile_verification_plan(
+            "l2",
+            task_id="task-profile-full",
+            run_id="run-profile-full",
+            profile_raw={
+                "build_commands": [{"id": "build", "command": "python -m build"}],
+                "test_commands": [{"id": "test", "command": "python -m unittest"}],
+                "contract_commands": [{"id": "contract", "command": "python -m unittest tests/contracts"}],
+                "additional_gate_commands": [
+                    {"id": "quick-extra", "command": "python scripts/quick-extra.py", "profiles": ["quick"]},
+                    {"id": "full-extra", "command": "python scripts/full-extra.py", "profiles": ["full"]},
+                ],
+            },
+        )
+
+        self.assertEqual([gate.gate_id for gate in quick_plan.gates], ["test", "contract", "quick-extra"])
+        self.assertEqual([gate.gate_id for gate in full_plan.gates], ["build", "test", "contract", "full-extra"])
+
+    def test_verification_overall_outcome_ignores_non_blocking_failures(self) -> None:
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+
+        plan = verification_runner.VerificationPlan(
+            mode="quick",
+            task_id="task-non-blocking",
+            run_id="run-non-blocking",
+            gates=[
+                verification_runner.VerificationGate(
+                    gate_id="test",
+                    canonical_name="test",
+                    command="python -m unittest",
+                    required=True,
+                    blocking=True,
+                ),
+                verification_runner.VerificationGate(
+                    gate_id="ui-sampling",
+                    canonical_name="ui-sampling",
+                    command="python scripts/sample_ui.py",
+                    required=False,
+                    blocking=False,
+                ),
+            ],
+            escalation_conditions=[],
+        )
+        artifact = verification_runner.build_verification_artifact(
+            plan=plan,
+            evidence_link="docs/change-evidence/example.md",
+            results={"test": "pass", "ui-sampling": "fail"},
+            result_artifact_refs={"test": "a.txt", "ui-sampling": "b.txt"},
+        )
+
+        self.assertFalse(verification_runner.verification_has_blocking_failures(artifact))
+        self.assertEqual(verification_runner.verification_overall_outcome(artifact), "pass")
+
     def test_verification_artifact_reader_requires_contract_shape(self) -> None:
         verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
         artifact = verification_runner.verification_artifact_from_dict(

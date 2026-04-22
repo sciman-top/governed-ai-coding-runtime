@@ -38,6 +38,7 @@ from governed_ai_coding_runtime_contracts.task_store import FileTaskStore, TaskR
 from governed_ai_coding_runtime_contracts.verification_runner import (
     build_verification_plan,
     run_verification_plan,
+    verification_overall_outcome,
 )
 from governed_ai_coding_runtime_contracts.worker import SynchronousLocalWorker
 from governed_ai_coding_runtime_contracts.workflow import fail_task, transition_task
@@ -308,7 +309,7 @@ def run_task(*, task_id: str | None, goal: str, scope: str, repo: str, profile_p
 
     replay_ref = ""
     record = store.load(record.task_id)
-    if any(result != "pass" for result in verification_artifact.results.values()):
+    if verification_overall_outcome(verification_artifact) != "pass":
         replay = build_replay_reference(
             task_id=record.task_id,
             run_id=run.run_id,
@@ -575,6 +576,12 @@ def run_attachment_verification(
         "run_id": run_id,
         "gate_order": payload["gate_order"],
         "results": payload["results"],
+        "required_gate_ids": payload.get("required_gate_ids", []),
+        "blocking_gate_ids": payload.get("blocking_gate_ids", []),
+        "outcome": payload.get(
+            "outcome",
+            "fail" if any(result != "pass" for result in payload["results"].values()) else "pass",
+        ),
         "result_artifact_refs": payload["result_artifact_refs"],
         "evidence_link": payload["evidence_link"],
     }

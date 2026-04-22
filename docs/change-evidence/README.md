@@ -4,6 +4,10 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260423 Additional Gate Commands with Blocking Profile Semantics](./20260423-additional-gate-commands-blocking-profile.md)
+  - evidence companion for `additional_gate_commands` plus `blocking/profiles` semantics across verification runner, session bridge, runtime-check, schema, and regression tests
+- [20260423 Source String Contract Guard for Runtime Check](./20260423-source-string-contract-guard-runtime-check.md)
+  - evidence companion for `runtime-check` source-string contract drift detection and migration regression hardening
 - [20260422 Active Targets Unified Batch Validation](./20260422-active-targets-unified-batch-validation.md)
   - evidence companion for the same-batch 5-target `onboard + daily` validation run and the new `summary-active-targets-latest.json` pointer
 - [20260422 Target Repo Catalog Github/Vps Expansion](./20260422-target-repo-catalog-github-vps-expansion.md)

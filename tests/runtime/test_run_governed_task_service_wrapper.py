@@ -287,6 +287,50 @@ class RunGovernedTaskServiceWrapperTests(unittest.TestCase):
         self.assertEqual(fake_app.calls[0]["payload"]["command_type"], "run_full_gate")
         self.assertEqual(fake_app.calls[0]["payload"]["payload"]["gate_level"], "l2")
 
+    def test_run_attachment_verification_prefers_service_outcome_for_non_blocking_failures(self) -> None:
+        module = _load_run_governed_task_module()
+        fake_app = _FakeApp(
+            [
+                {
+                    "payload": {
+                        "mode": "quick",
+                        "run_id": "run-3",
+                        "gate_order": ["test", "contract", "ui-sampling"],
+                        "results": {"test": "pass", "contract": "pass", "ui-sampling": "fail"},
+                        "required_gate_ids": ["test", "contract"],
+                        "blocking_gate_ids": ["test", "contract"],
+                        "outcome": "pass",
+                        "result_artifact_refs": {
+                            "test": "a.json",
+                            "contract": "b.json",
+                            "ui-sampling": "c.json",
+                        },
+                        "evidence_link": "artifacts/task/run-3/verification-output/contract.json",
+                    }
+                }
+            ]
+        )
+        fake_attachment = SimpleNamespace(
+            binding=SimpleNamespace(binding_id="binding-3"),
+            repo_profile_path="schemas/examples/repo-profile/python-service.example.json",
+        )
+        fake_profile = SimpleNamespace(repo_id="target-repo")
+
+        with patch.object(module, "_build_control_plane_app", return_value=fake_app), patch.object(
+            module, "validate_light_pack", return_value=fake_attachment
+        ), patch.object(module, "load_repo_profile", return_value=fake_profile):
+            payload = module.run_attachment_verification(
+                attachment_root=str(ROOT),
+                attachment_runtime_state_root=str(ROOT / ".runtime"),
+                mode="quick",
+                task_id="task-verify-non-blocking",
+                run_id="run-3",
+            )
+
+        self.assertEqual(payload["outcome"], "pass")
+        self.assertEqual(payload["blocking_gate_ids"], ["test", "contract"])
+        self.assertEqual(payload["results"]["ui-sampling"], "fail")
+
     def test_write_replay_case_rejects_unsafe_task_id(self) -> None:
         module = _load_run_governed_task_module()
         replay = importlib.import_module("governed_ai_coding_runtime_contracts.replay")

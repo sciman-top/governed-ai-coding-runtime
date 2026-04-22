@@ -98,6 +98,26 @@ class RepoProfileContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.RepoProfile.from_dict(raw)
 
+    def test_repo_profile_rejects_invalid_additional_gate_profiles(self) -> None:
+        module = importlib.import_module("governed_ai_coding_runtime_contracts.repo_profile")
+        raw = {
+            "repo_id": "bad-repo",
+            "primary_language": "python",
+            "rollout_posture": {"current_mode": "observe", "target_mode": "advisory"},
+            "build_commands": [{"id": "build", "command": "uv build"}],
+            "test_commands": [{"id": "test", "command": "uv run pytest"}],
+            "contract_commands": [{"id": "contract", "command": "uv run pytest tests/contracts"}],
+            "invariant_commands": [],
+            "tool_allowlist": ["shell"],
+            "path_policies": {"read_allow": ["src/**"], "write_allow": [], "blocked": []},
+            "additional_gate_commands": [
+                {"id": "ui-sampling", "command": "uv run python scripts/ui_sampling.py", "profiles": ["nightly"]}
+            ],
+        }
+
+        with self.assertRaises(ValueError):
+            module.RepoProfile.from_dict(raw)
+
 
 if __name__ == "__main__":
     unittest.main()
