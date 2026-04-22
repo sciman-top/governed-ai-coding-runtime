@@ -519,6 +519,92 @@
         ]
       }
     },
+    "auto_commit_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "on": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "any_pass",
+              "fast_pass",
+              "full_pass",
+              "milestone"
+            ]
+          }
+        },
+        "milestone_markers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "require_all_required_gates_pass": {
+          "type": "boolean"
+        },
+        "commit_message_template": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled"
+      ]
+    },
+    "required_entrypoint_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "current_mode": {
+          "type": "string",
+          "enum": [
+            "advisory",
+            "targeted_enforced",
+            "repo_wide_enforced"
+          ]
+        },
+        "target_mode": {
+          "type": "string",
+          "enum": [
+            "advisory",
+            "targeted_enforced",
+            "repo_wide_enforced"
+          ]
+        },
+        "canonical_entrypoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allow_direct_entrypoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "targeted_enforcement_scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "promotion_condition_ref": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "current_mode",
+        "target_mode",
+        "canonical_entrypoints",
+        "allow_direct_entrypoints",
+        "targeted_enforcement_scopes"
+      ]
+    },
     "interaction_profile": {
       "type": "object",
       "additionalProperties": false,

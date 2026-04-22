@@ -76,6 +76,7 @@ class AttachedRepoE2ETests(unittest.TestCase):
             self.assertEqual(completed.returncode, 0, completed.stderr)
             payload = json.loads(completed.stdout)
             self.assertEqual(payload["summary"]["overall_status"], "pass")
+            self.assertEqual(payload["dependency_baseline"]["status"], "pass")
             self.assertEqual(payload["write_execute"]["execution_status"], "executed")
             self.assertTrue(payload["write_execute"]["handoff_ref"])
             self.assertTrue(payload["write_execute"]["replay_ref"])
@@ -300,6 +301,8 @@ class AttachedRepoE2ETests(unittest.TestCase):
                 check=False,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 cwd=ROOT,
             )
 
@@ -311,6 +314,66 @@ class AttachedRepoE2ETests(unittest.TestCase):
             self.assertTrue(payload["write_preflight"]["retry_command"])
             self.assertIsNone(payload["write_execute"])
             self.assertTrue(payload["next_actions"])
+
+    def test_runtime_check_fails_when_target_repo_dependency_baseline_is_missing(self) -> None:
+        from governed_ai_coding_runtime_contracts.repo_attachment import attach_target_repo
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "target"
+            target_repo.mkdir()
+            runtime_state_root = workspace / "runtime-state" / "target"
+            attach_target_repo(
+                target_repo_root=str(target_repo),
+                runtime_state_root=str(runtime_state_root),
+                repo_id="target",
+                display_name="Target",
+                primary_language="python",
+                build_command="cmd /c exit 0",
+                test_command="cmd /c exit 0",
+                contract_command="cmd /c exit 0",
+                adapter_preference="process_bridge",
+            )
+            (target_repo / ".governed-ai" / "dependency-baseline.json").unlink(missing_ok=True)
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    "scripts/runtime-check.ps1",
+                    "-AttachmentRoot",
+                    str(target_repo),
+                    "-AttachmentRuntimeStateRoot",
+                    str(runtime_state_root),
+                    "-Mode",
+                    "quick",
+                    "-TaskId",
+                    "task-attached-missing-baseline",
+                    "-RunId",
+                    "run-attached-missing-baseline",
+                    "-CommandId",
+                    "cmd-attached-missing-baseline",
+                    "-Json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=ROOT,
+            )
+
+            self.assertNotEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["summary"]["overall_status"], "fail")
+            baseline_steps = [step for step in payload["steps"] if step["label"] == "dependency-baseline-target-repo"]
+            self.assertEqual(len(baseline_steps), 1)
+            self.assertNotEqual(baseline_steps[0]["exit_code"], 0)
+            self.assertTrue(payload["next_actions"])
+            self.assertIn("create or refresh target repo baseline metadata", payload["next_actions"][0])
 
 
 if __name__ == "__main__":

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from pathlib import Path
 import json
+from uuid import uuid4
 
 
 @dataclass(frozen=True, slots=True)
@@ -26,7 +28,7 @@ class FilesystemArtifactStore:
     def write_json(self, *, relative_path: str, payload: dict) -> StoredArtifact:
         path = self._resolve(relative_path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+        _atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
         return StoredArtifact(
             absolute_path=path.as_posix(),
             relative_path=path.relative_to(self._root).as_posix(),
@@ -36,7 +38,7 @@ class FilesystemArtifactStore:
     def write_text(self, *, relative_path: str, content: str) -> StoredArtifact:
         path = self._resolve(relative_path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content, encoding="utf-8")
+        _atomic_write_text(path, content, encoding="utf-8")
         return StoredArtifact(
             absolute_path=path.as_posix(),
             relative_path=path.relative_to(self._root).as_posix(),
@@ -69,3 +71,15 @@ def _is_under(path: Path, parent: Path) -> bool:
     except ValueError:
         return False
     return True
+
+
+def _atomic_write_text(path: Path, content: str, *, encoding: str = "utf-8") -> None:
+    temporary = path.with_name(f".{path.name}.{uuid4().hex}.tmp")
+    try:
+        temporary.write_text(content, encoding=encoding)
+        os.replace(temporary, path)
+    finally:
+        try:
+            temporary.unlink()
+        except FileNotFoundError:
+            pass

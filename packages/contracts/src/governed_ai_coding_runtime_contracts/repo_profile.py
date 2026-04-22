@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from pathlib import Path
 import json
 
+from governed_ai_coding_runtime_contracts.entrypoint_policy import normalize_required_entrypoint_policy
+
 
 @dataclass(slots=True)
 class RepoProfile:
@@ -12,6 +14,7 @@ class RepoProfile:
     path_policies: dict
     rollout_posture: dict
     compatibility_signals: list[dict]
+    required_entrypoint_policy: dict
     interaction_profile: dict
     raw: dict
 
@@ -44,15 +47,21 @@ class RepoProfile:
         if not isinstance(compatibility_signals, list):
             msg = "compatibility_signals must be a list"
             raise ValueError(msg)
+        required_entrypoint_policy = normalize_required_entrypoint_policy(
+            raw.get("required_entrypoint_policy")
+        )
         interaction_profile = _normalize_interaction_profile(raw.get("interaction_profile", {}))
+        normalized_raw = dict(raw)
+        normalized_raw["required_entrypoint_policy"] = required_entrypoint_policy
         return cls(
             repo_id=repo_id,
             primary_language=primary_language,
             path_policies=path_policies,
             rollout_posture=rollout_posture,
             compatibility_signals=compatibility_signals,
+            required_entrypoint_policy=required_entrypoint_policy,
             interaction_profile=interaction_profile,
-            raw=raw,
+            raw=normalized_raw,
         )
 
     def command_ids(self, group: str) -> list[str]:

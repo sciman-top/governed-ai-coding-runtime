@@ -287,6 +287,22 @@ class RunGovernedTaskServiceWrapperTests(unittest.TestCase):
         self.assertEqual(fake_app.calls[0]["payload"]["command_type"], "run_full_gate")
         self.assertEqual(fake_app.calls[0]["payload"]["payload"]["gate_level"], "l2")
 
+    def test_write_replay_case_rejects_unsafe_task_id(self) -> None:
+        module = _load_run_governed_task_module()
+        replay = importlib.import_module("governed_ai_coding_runtime_contracts.replay")
+
+        reference = replay.build_replay_reference(
+            task_id="../escape",
+            run_id="run-safe",
+            failure_reason="verification failed",
+            artifact_refs=["artifacts/task/run/evidence.json"],
+            verification_artifact_refs=[],
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir, patch.object(module, "REPLAY_ROOT", Path(tmp_dir)):
+            with self.assertRaisesRegex(ValueError, "task_id"):
+                module._write_replay_case(reference)
+
 
 if __name__ == "__main__":
     unittest.main()

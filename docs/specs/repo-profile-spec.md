@@ -32,6 +32,7 @@ Define the per-repository configuration inherited by governed sessions.
 - context_files
 - reviewer_handoff_template
 - compatibility_signals
+- auto_commit_policy
 - interaction_profile
 
 ## Inheritance Model
@@ -88,6 +89,19 @@ Repos may declare local persistence hints for the Foundation task store:
 - `supports_retry_timeout`
 - `artifact_root`
 - `replay_root`
+
+## Auto Commit Policy
+Repos may declare optional post-gate auto-commit behavior through `auto_commit_policy`.
+
+Supported fields:
+- `enabled`
+- `on` (`any_pass` / `fast_pass` / `full_pass` / `milestone`)
+- `milestone_markers`
+- `require_all_required_gates_pass`
+- `commit_message_template`
+
+When enabled, the runtime may stage all tracked and untracked changes and create one commit only after gate execution reaches a pass condition.
+The commit message template may reference runtime placeholders such as mode, timestamp, repo id, and milestone marker.
 
 ## Interaction Profile
 Repos may declare bounded collaboration defaults through `interaction_profile`.

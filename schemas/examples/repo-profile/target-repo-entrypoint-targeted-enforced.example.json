@@ -1,0 +1,221 @@
+{
+  "schema_version": "1.0",
+  "repo_id": "target-repo-entrypoint-targeted-enforced",
+  "display_name": "Target Repo Canonical Entrypoint Targeted Enforced",
+  "primary_language": "python",
+  "repo_root_locator": {
+    "kind": "local_path",
+    "value": "."
+  },
+  "rollout_posture": {
+    "current_mode": "observe",
+    "target_mode": "advisory",
+    "promotion_condition_ref": "docs/runbooks/control-rollback.md"
+  },
+  "build_commands": [
+    {
+      "id": "build",
+      "command": "python -m compileall src",
+      "required": true,
+      "description": "Compile source tree to catch syntax/runtime import errors."
+    }
+  ],
+  "test_commands": [
+    {
+      "id": "test",
+      "command": "python -m unittest discover -s tests -p \"test_*.py\"",
+      "required": true,
+      "description": "Run default repository test suite."
+    }
+  ],
+  "lint_commands": [
+    {
+      "id": "lint",
+      "command": "python -m ruff check src tests",
+      "required": false,
+      "description": "Optional lint baseline."
+    }
+  ],
+  "typecheck_commands": [
+    {
+      "id": "typecheck",
+      "command": "python -m mypy src",
+      "required": false,
+      "description": "Optional type-check baseline."
+    }
+  ],
+  "contract_commands": [
+    {
+      "id": "contract",
+      "command": "python -m unittest discover -s tests/contracts -p \"test_*.py\"",
+      "required": true,
+      "description": "Contract/invariant regression checks."
+    }
+  ],
+  "invariant_commands": [],
+  "risk_defaults": {
+    "default_write_tier": "medium",
+    "blocked_command_patterns": [
+      "git reset --hard",
+      "rm -rf",
+      "dropdb"
+    ],
+    "approval_required_command_patterns": [
+      "alembic upgrade head",
+      "python scripts/release.py"
+    ]
+  },
+  "approval_defaults": {
+    "medium_write_requires_approval": true,
+    "high_requires_explicit_approval": true
+  },
+  "tool_allowlist": [
+    "shell",
+    "apply_patch",
+    "rg",
+    "git",
+    "python"
+  ],
+  "path_policies": {
+    "read_allow": [
+      "src/**",
+      "tests/**",
+      "docs/**",
+      "README.md",
+      "pyproject.toml"
+    ],
+    "write_allow": [
+      "src/**",
+      "tests/**",
+      "docs/**",
+      "README.md",
+      "pyproject.toml"
+    ],
+    "blocked": [
+      ".git/**",
+      "infra/prod/**",
+      "secrets/**",
+      ".env*"
+    ]
+  },
+  "branch_policy": {
+    "default_branch": "main",
+    "working_branch_prefix": "codex/",
+    "allow_direct_push": false
+  },
+  "delivery_format": {
+    "summary_template": "goal-plan-changes-verification-risks",
+    "include_patch": false,
+    "include_pr_body": true
+  },
+  "repo_map_strategy": "hybrid",
+  "task_lifecycle": {
+    "persistence_kind": "file_json",
+    "store_root": ".runtime/tasks",
+    "supports_pause_resume": true,
+    "supports_retry_timeout": true
+  },
+  "required_entrypoint_policy": {
+    "current_mode": "targeted_enforced",
+    "target_mode": "repo_wide_enforced",
+    "canonical_entrypoints": [
+      "runtime-flow",
+      "runtime-flow-preset"
+    ],
+    "allow_direct_entrypoints": [
+      "run-governed-task.status",
+      "session-bridge.inspect_status",
+      "session-bridge.inspect_evidence",
+      "session-bridge.inspect_handoff",
+      "verify-repo"
+    ],
+    "targeted_enforcement_scopes": [
+      "run_quick_gate",
+      "run_full_gate",
+      "verify_attachment",
+      "govern_attachment_write",
+      "write_request",
+      "write_execute",
+      "execute_attachment_write"
+    ],
+    "promotion_condition_ref": "docs/governance/entrypoint-promotion.md"
+  },
+  "auto_commit_policy": {
+    "enabled": false,
+    "on": [
+      "full_pass",
+      "milestone"
+    ],
+    "milestone_markers": [
+      "checkpoint",
+      "milestone",
+      "release-candidate"
+    ],
+    "require_all_required_gates_pass": true,
+    "commit_message_template": "自动提交：{repo_id} {mode} 门禁通过 {timestamp} {milestone}"
+  },
+  "quick_gate_commands": [
+    {
+      "id": "test",
+      "command": "python -m unittest discover -s tests/unit -p \"test_*.py\"",
+      "required": true,
+      "description": "Fast unit feedback loop."
+    },
+    {
+      "id": "contract",
+      "command": "python -m unittest discover -s tests/contracts -p \"test_*.py\"",
+      "required": true,
+      "description": "Fast contract regression check."
+    }
+  ],
+  "full_gate_commands": [
+    {
+      "id": "build",
+      "command": "python -m compileall src",
+      "required": true,
+      "description": "Canonical build gate."
+    },
+    {
+      "id": "test",
+      "command": "python -m unittest discover -s tests -p \"test_*.py\"",
+      "required": true,
+      "description": "Canonical test gate."
+    },
+    {
+      "id": "contract",
+      "command": "python -m unittest discover -s tests/contracts -p \"test_*.py\"",
+      "required": true,
+      "description": "Canonical contract gate."
+    },
+    {
+      "id": "hotspot",
+      "command": "python scripts/doctor.py",
+      "required": false,
+      "description": "Optional hotspot/health gate when available."
+    }
+  ],
+  "extra_eval_suites": [
+    "smoke"
+  ],
+  "context_files": [
+    "README.md",
+    "docs/README.md"
+  ],
+  "interaction_profile": {
+    "default_mode": "guided",
+    "term_explain_style": "definition_plus_common_mistake",
+    "default_checklist_kind": "bugfix",
+    "compaction_preference": "stage_summary",
+    "summary_template": "goal-plan-changes-verification-risks",
+    "handoff_teaching_notes": "Keep handoff notes short and focused on expected vs actual, repro steps, and remaining evidence gaps."
+  },
+  "compatibility_signals": [
+    {
+      "capability": "native_attach",
+      "status": "partial_support",
+      "degrade_to": "advisory",
+      "reason": "Template profile requires per-repo command and policy adaptation."
+    }
+  ],
+  "reviewer_handoff_template": "Include changed modules, gate outputs, and rollback commands."
+}

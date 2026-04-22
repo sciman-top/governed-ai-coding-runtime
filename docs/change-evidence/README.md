@@ -4,6 +4,10 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260422 Active Targets Unified Batch Validation](./20260422-active-targets-unified-batch-validation.md)
+  - evidence companion for the same-batch 5-target `onboard + daily` validation run and the new `summary-active-targets-latest.json` pointer
+- [20260422 Target Repo Catalog Github/Vps Expansion](./20260422-target-repo-catalog-github-vps-expansion.md)
+  - evidence companion for expanding the active preset target catalog to `github-toolkit` and `vps-ssh-launcher`, promoting them to real Python gate commands, and validating `onboard + daily` execution
 - [20260422 Learning Efficiency Metrics Persistence](./20260422-learning-efficiency-metrics-persistence.md)
   - evidence companion for deriving learning-efficiency metrics from interaction evidence, persisting metrics artifacts, and exposing baseline summary rates
 - [20260422 Interaction Profile Runtime Enforcement](./20260422-interaction-profile-runtime-enforcement.md)

@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 import json
 from pathlib import Path
 
+from governed_ai_coding_runtime_contracts.file_guard import atomic_write_text, validate_file_component
 from governed_ai_coding_runtime_contracts.task_intake import TaskIntake
 
 
@@ -100,7 +101,7 @@ class FileTaskStore:
 
     def save(self, record: TaskRecord) -> Path:
         path = self._path_for(record.task_id)
-        path.write_text(json.dumps(record.to_dict(), indent=2, sort_keys=True), encoding="utf-8")
+        atomic_write_text(path, json.dumps(record.to_dict(), indent=2, sort_keys=True), encoding="utf-8")
         return path
 
     def load(self, task_id: str) -> TaskRecord:
@@ -134,4 +135,5 @@ class FileTaskStore:
         return updated
 
     def _path_for(self, task_id: str) -> Path:
-        return self._root / f"{task_id}.json"
+        normalized_task_id = validate_file_component(task_id, "task_id")
+        return self._root / f"{normalized_task_id}.json"

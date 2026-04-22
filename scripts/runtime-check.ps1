@@ -5,6 +5,8 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$AttachmentRuntimeStateRoot,
 
+  [string]$EntrypointId = "runtime-check",
+
   [ValidateSet("quick", "full", "l1", "l2", "l3")]
   [string]$Mode = "quick",
 
@@ -186,6 +188,20 @@ $resolvedAttachmentRuntimeStateRoot = Resolve-AbsolutePath -PathValue $Attachmen
 $resolvedSessionId = if (-not [string]::IsNullOrWhiteSpace($SessionId)) { $SessionId } else { "session-$TaskId" }
 $resolvedResumeId = if (-not [string]::IsNullOrWhiteSpace($ResumeId)) { $ResumeId } else { "resume-$TaskId" }
 $resolvedContinuationId = if (-not [string]::IsNullOrWhiteSpace($ContinuationId)) { $ContinuationId } else { "${TaskId}:$RunId" }
+$nextActions = New-Object System.Collections.Generic.List[string]
+
+$dependencyBaselineStep = Invoke-CommandCapture -Label "dependency-baseline-target-repo" -Command {
+  & $python "scripts/verify-dependency-baseline.py" "--target-repo-root" $resolvedAttachmentRoot "--require-target-repo-baseline"
+}
+$steps.Add($dependencyBaselineStep) | Out-Null
+if ($dependencyBaselineStep.exit_code -ne 0) {
+  $hasFailure = $true
+  $nextActions.Add("create or refresh target repo baseline metadata via attach flow, then re-run runtime-check") | Out-Null
+}
+$dependencyBaselinePayload = Try-ParseJson -Raw $dependencyBaselineStep.output
+if ($dependencyBaselineStep.exit_code -eq 0 -and -not $dependencyBaselinePayload) {
+  $hasFailure = $true
+}
 
 $statusStep = Invoke-CommandCapture -Label "status" -Command {
   & $python "scripts/run-governed-task.py" "status" "--json" "--attachment-root" $resolvedAttachmentRoot "--attachment-runtime-state-root" $resolvedAttachmentRuntimeStateRoot
@@ -227,7 +243,7 @@ if ($doctorStep.exit_code -ne 0) {
 }
 
 $requestGateStep = Invoke-CommandCapture -Label "session-bridge-request-gate" -Command {
-  & $python "scripts/session-bridge.py" "request-gate" "--command-id" $CommandId "--task-id" $TaskId "--repo-binding-id" $resolvedBindingId "--adapter-id" $AdapterId "--mode" $Mode "--policy-status" $PolicyStatus "--attachment-root" $resolvedAttachmentRoot "--attachment-runtime-state-root" $resolvedAttachmentRuntimeStateRoot "--session-id" $resolvedSessionId "--resume-id" $resolvedResumeId "--continuation-id" $resolvedContinuationId
+  & $python "scripts/session-bridge.py" "request-gate" "--command-id" $CommandId "--task-id" $TaskId "--repo-binding-id" $resolvedBindingId "--adapter-id" $AdapterId "--entrypoint-id" $EntrypointId "--mode" $Mode "--policy-status" $PolicyStatus "--attachment-root" $resolvedAttachmentRoot "--attachment-runtime-state-root" $resolvedAttachmentRuntimeStateRoot "--session-id" $resolvedSessionId "--resume-id" $resolvedResumeId "--continuation-id" $resolvedContinuationId
 }
 $steps.Add($requestGateStep) | Out-Null
 if ($requestGateStep.exit_code -ne 0) {
@@ -241,7 +257,7 @@ if (-not $requestGatePayload) {
 $verifyPayload = $null
 if (-not $SkipVerifyAttachment) {
   $verifyStep = Invoke-CommandCapture -Label "verify-attachment" -Command {
-    & $python "scripts/run-governed-task.py" "verify-attachment" "--attachment-root" $resolvedAttachmentRoot "--attachment-runtime-state-root" $resolvedAttachmentRuntimeStateRoot "--mode" $Mode "--task-id" $TaskId "--run-id" $RunId "--json"
+    & $python "scripts/run-governed-task.py" "verify-attachment" "--entrypoint-id" $EntrypointId "--attachment-root" $resolvedAttachmentRoot "--attachment-runtime-state-root" $resolvedAttachmentRuntimeStateRoot "--mode" $Mode "--task-id" $TaskId "--run-id" $RunId "--json"
   }
   $steps.Add($verifyStep) | Out-Null
   if ($verifyStep.exit_code -ne 0) {
@@ -267,7 +283,6 @@ $writeStatusPayload = $null
 $inspectEvidencePayload = $null
 $inspectHandoffPayload = $null
 $writePreflight = $null
-$nextActions = New-Object System.Collections.Generic.List[string]
 if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
   $resolvedWriteToolCommand = Build-WriteToolCommand -ToolName $WriteToolName -TargetPath $WriteTargetPath -Content $WriteContent -ExplicitCommand $WriteToolCommand
   if ([string]::IsNullOrWhiteSpace($RollbackReference)) {
@@ -281,6 +296,7 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
       "--attachment-runtime-state-root", $resolvedAttachmentRuntimeStateRoot,
       "--task-id", $TaskId,
       "--adapter-id", $AdapterId,
+      "--entrypoint-id", $EntrypointId,
       "--tool-name", $WriteToolName,
       "--target-path", $WriteTargetPath,
       "--tier", $WriteTier,
@@ -347,6 +363,7 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
       "--attachment-runtime-state-root", $resolvedAttachmentRuntimeStateRoot,
       "--task-id", $TaskId,
       "--adapter-id", $AdapterId,
+      "--entrypoint-id", $EntrypointId,
       "--tool-name", $WriteToolName,
       "--target-path", $WriteTargetPath,
       "--tier", $WriteTier,
@@ -394,6 +411,7 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
         "--task-id", $TaskId,
         "--repo-binding-id", $resolvedBindingId,
         "--adapter-id", $AdapterId,
+        "--entrypoint-id", $EntrypointId,
         "--risk-tier", $WriteTier,
         "--attachment-runtime-state-root", $resolvedAttachmentRuntimeStateRoot,
         "--target-path", $WriteTargetPath,
@@ -604,6 +622,7 @@ $liveLoopSummary = @{
 $summary = @{
   attachment_root = $resolvedAttachmentRoot
   attachment_runtime_state_root = $resolvedAttachmentRuntimeStateRoot
+  entrypoint_id = $EntrypointId
   mode = $Mode
   task_id = $TaskId
   run_id = $RunId
@@ -618,8 +637,15 @@ $summary = @{
   overall_status = $(if ($hasFailure) { "fail" } else { "pass" })
 }
 
+if ($requestGateCommandPayload -and $requestGateCommandPayload.entrypoint_policy) {
+  $summary.entrypoint_policy_mode = [string]$requestGateCommandPayload.entrypoint_policy.current_mode
+  $summary.entrypoint_drift = [bool]$requestGateCommandPayload.entrypoint_policy.drift_detected
+  $summary.entrypoint_blocked = [bool]$requestGateCommandPayload.entrypoint_policy.blocked
+}
+
 $result = @{
   summary = $summary
+  dependency_baseline = $dependencyBaselinePayload
   status = $statusPayload
   request_gate = $requestGatePayload
   verify_attachment = $verifyPayload

@@ -7,6 +7,11 @@ from pathlib import Path
 
 from governed_ai_coding_runtime_contracts.artifact_store import LocalArtifactStore
 from governed_ai_coding_runtime_contracts.attached_write_governance import govern_attached_write_request
+from governed_ai_coding_runtime_contracts.file_guard import (
+    atomic_write_text,
+    ensure_resolved_under,
+    validate_file_component,
+)
 from governed_ai_coding_runtime_contracts.policy_decision import PolicyDecision, build_policy_decision
 from governed_ai_coding_runtime_contracts.repo_attachment import validate_light_pack
 from governed_ai_coding_runtime_contracts.repo_profile import load_repo_profile
@@ -74,7 +79,7 @@ def decide_attached_write_request(
     record["status"] = new_status
     record["decided_by"] = normalized_decided_by
     record["decided_at"] = datetime.now(UTC).isoformat()
-    approval_path.write_text(json.dumps(record, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(approval_path, json.dumps(record, indent=2, sort_keys=True), encoding="utf-8")
 
     return AttachedApprovalDecisionResult(
         approval_id=approval_id,
@@ -255,9 +260,34 @@ def execute_attached_write_request(
             )
 
     target_abs_path = attachment_root_path / normalized_target_path
+    try:
+        _ensure_repo_local_write_target(
+            attachment_root=attachment_root_path,
+            target_abs_path=target_abs_path,
+            target_path=normalized_target_path,
+        )
+    except ValueError as exc:
+        denied = policy_decision_from_write_denial(
+            task_id=normalized_task_id,
+            tool_name=normalized_tool_name,
+            target_path=normalized_target_path,
+            tier=normalized_tier,
+            reason=str(exc),
+        )
+        return AttachedWriteExecutionResult(
+            repo_id=profile.repo_id,
+            binding_id=attachment.binding.binding_id,
+            task_id=normalized_task_id,
+            target_path=normalized_target_path,
+            write_tier=normalized_tier,
+            execution_status="denied",
+            policy_decision=denied,
+            approval_id=approval_id,
+            reason=str(exc),
+        )
     target_abs_path.parent.mkdir(parents=True, exist_ok=True)
     if normalized_tool_name == "write_file":
-        target_abs_path.write_text(content, encoding="utf-8")
+        atomic_write_text(target_abs_path, content, encoding="utf-8")
     else:
         with target_abs_path.open("a", encoding="utf-8") as stream:
             stream.write(content)
@@ -338,8 +368,17 @@ def _require_approved_request(
 
 
 def _approval_record_path(runtime_state_root: Path, approval_id: str) -> Path:
-    normalized_approval_id = _required_string(approval_id, "approval_id")
+    normalized_approval_id = validate_file_component(approval_id, "approval_id")
     return runtime_state_root / _APPROVALS_DIR / f"{normalized_approval_id}.json"
+
+
+def _ensure_repo_local_write_target(*, attachment_root: Path, target_abs_path: Path, target_path: str) -> None:
+    ensure_resolved_under(
+        target_abs_path,
+        attachment_root,
+        field_name="target_path",
+        message=f"target_path resolves outside attachment_root: {target_path}",
+    )
 
 
 def _required_string(value: str | None, field_name: str) -> str:

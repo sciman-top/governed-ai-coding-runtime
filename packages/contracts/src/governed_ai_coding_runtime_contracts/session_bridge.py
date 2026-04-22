@@ -3,7 +3,7 @@
 from dataclasses import asdict
 import hashlib
 import json
-import subprocess
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -19,12 +19,23 @@ from governed_ai_coding_runtime_contracts.codex_adapter import (
     handshake_codex_session,
     record_codex_session_evidence,
 )
+from governed_ai_coding_runtime_contracts.entrypoint_policy import evaluate_required_entrypoint_policy
 from governed_ai_coding_runtime_contracts.evidence import EvidenceTimeline, summarize_adapter_evidence
+from governed_ai_coding_runtime_contracts.file_guard import (
+    atomic_write_text,
+    ensure_resolved_under,
+    validate_file_component,
+)
 from governed_ai_coding_runtime_contracts.operator_queries import query_operator_attachment_surface
 from governed_ai_coding_runtime_contracts.policy_decision import PolicyDecision
 from governed_ai_coding_runtime_contracts.repo_attachment import inspect_attachment_posture, validate_light_pack
 from governed_ai_coding_runtime_contracts.repo_profile import load_repo_profile
 from governed_ai_coding_runtime_contracts.runtime_status import RuntimeStatusStore
+from governed_ai_coding_runtime_contracts.subprocess_guard import (
+    parse_optional_positive_timeout,
+    resolve_timeout_policy,
+    run_subprocess,
+)
 from governed_ai_coding_runtime_contracts.task_store import FileTaskStore
 from governed_ai_coding_runtime_contracts.tool_runner import execute_governed_command, govern_execution_request
 from governed_ai_coding_runtime_contracts.verification_runner import (
@@ -51,6 +62,9 @@ CommandType = Literal[
 ]
 ExecutionMode = Literal["read_only", "execute", "requires_approval"]
 RiskTier = Literal["low", "medium", "high"]
+SnapshotMode = Literal["auto", "balanced", "strict"]
+_SNAPSHOT_SMALL_FILE_LIMIT = 64 * 1024
+_SNAPSHOT_SAMPLE_SIZE = 4096
 SessionBridgeResultStatus = Literal[
     "ok",
     "bound",
@@ -85,6 +99,13 @@ EXECUTION_COMMAND_TYPES = {"run_quick_gate", "run_full_gate", "write_execute"}
 RISK_TIERS = {"low", "medium", "high"}
 EXECUTION_MODES = {"read_only", "execute", "requires_approval"}
 GOVERNED_TOOL_TYPES = {"shell", "git", "package"}
+_RUNTIME_PREFS_FILE = Path(".governed-ai") / "repo-profile.json"
+_RUNTIME_PREFS_KEY = "runtime_preferences"
+_RUNTIME_PREF_LAUNCH_SNAPSHOT_MODE = "launch_snapshot_mode"
+_RUNTIME_PREF_LAUNCH_TIMEOUT_SECONDS = "launch_timeout_seconds"
+_RUNTIME_PREF_SUBPROCESS_TIMEOUT_SECONDS = "subprocess_timeout_seconds"
+_RUNTIME_PREF_TIMEOUT_EXEMPT_ALLOWLIST = "timeout_exempt_allowlist"
+_GATE_TIMEOUT_ENV_KEY = "GOVERNED_GATE_TIMEOUT_SECONDS"
 
 
 @dataclass(frozen=True, slots=True)
@@ -226,6 +247,27 @@ def handle_session_bridge_command(
     if command.adapter_id == "unsupported-adapter":
         return _degraded(command, reason="adapter capability is unsupported")
 
+    entrypoint_policy = _entrypoint_policy_for_command(
+        command,
+        attachment_root=attachment_root,
+        attachment_runtime_state_root=attachment_runtime_state_root,
+    )
+    if entrypoint_policy is not None and entrypoint_policy["blocked"]:
+        return SessionBridgeResult(
+            command_id=command.command_id,
+            command_type=command.command_type,
+            status="denied",
+            payload={
+                "execution_id": _execution_id(command),
+                "continuation_id": _continuation_id(command),
+                "entrypoint_policy": entrypoint_policy,
+                "reason": entrypoint_policy["reason"],
+                "remediation_hint": entrypoint_policy["remediation_hint"],
+            },
+            policy_decision_ref=command.policy_decision_ref,
+            reason=entrypoint_policy["reason"],
+        )
+
     if command.command_type == "bind_task":
         store = FileTaskStore(Path(task_root))
         record = store.load(command.task_id)
@@ -312,9 +354,14 @@ def handle_session_bridge_command(
                         "reason": attachment.reason,
                         "remediation": attachment.remediation,
                         "fail_closed": attachment.fail_closed,
+                        "required_entrypoint_policy": _attachment_required_entrypoint_policy(
+                            attachment_root=attachment_root,
+                            attachment_runtime_state_root=attachment_runtime_state_root,
+                        ),
                     }
                     for attachment in snapshot.attachments
                 ],
+                "entrypoint_policy": entrypoint_policy,
             },
         )
 
@@ -407,6 +454,7 @@ def handle_session_bridge_command(
                     "replay_ref": None,
                     "reason": governance.reason,
                     "rollback_reference": rollback_reference,
+                    "entrypoint_policy": entrypoint_policy,
                 },
                 policy_decision_ref=policy_ref,
             )
@@ -479,6 +527,7 @@ def handle_session_bridge_command(
                 "remediation_hint": governance.remediation_hint,
                 "suggested_target_path": governance.suggested_target_path,
                 "allowed_write_scopes": list(governance.allowed_write_scopes),
+                "entrypoint_policy": entrypoint_policy,
                 "retry_command": _build_write_retry_command(
                     command=command,
                     attachment_root=attachment_root,
@@ -552,6 +601,7 @@ def handle_session_bridge_command(
                     "execution_id": _execution_id(command),
                     "continuation_id": _continuation_id(command),
                     "escalation_context": command.escalation_context or {},
+                    "entrypoint_policy": entrypoint_policy,
                 },
                 policy_decision_ref=command.policy_decision_ref,
             )
@@ -606,6 +656,7 @@ def handle_session_bridge_command(
                             "replay_ref": None,
                             "rollback_reference": rollback_reference,
                             "reason": "approval_rejected",
+                            "entrypoint_policy": entrypoint_policy,
                         },
                         policy_decision_ref=command.policy_decision_ref,
                     )
@@ -635,6 +686,7 @@ def handle_session_bridge_command(
                             "replay_ref": None,
                             "rollback_reference": rollback_reference,
                             "reason": "high risk tool execution requires fresh approval",
+                            "entrypoint_policy": entrypoint_policy,
                         },
                         policy_decision_ref=command.policy_decision_ref,
                     )
@@ -664,14 +716,67 @@ def handle_session_bridge_command(
                             "replay_ref": None,
                             "rollback_reference": rollback_reference,
                             "reason": "approval_required",
+                            "entrypoint_policy": entrypoint_policy,
                         },
                         policy_decision_ref=command.policy_decision_ref,
                     )
 
-                execution = execute_governed_command(
-                    command=command_text,
-                    cwd=str(_verification_cwd(repo_root=Path(repo_root), attachment_root=attachment_root)),
+                verification_cwd = _verification_cwd(repo_root=Path(repo_root), attachment_root=attachment_root)
+                runtime_preferences = _load_runtime_preferences(verification_cwd)
+                execution_timeout = _resolved_launch_timeout_seconds(
+                    command_payload=command.payload,
+                    explicit_timeout_seconds=None,
+                    runtime_preferences=runtime_preferences,
                 )
+                execution_timeout_exempt = _resolved_timeout_exempt(
+                    command_payload=command.payload,
+                    explicit_timeout_exempt=False,
+                )
+                try:
+                    execution = execute_governed_command(
+                        command=command_text,
+                        cwd=str(verification_cwd),
+                        timeout_seconds=execution_timeout,
+                        timeout_exempt=execution_timeout_exempt,
+                        timeout_exempt_allowlist=_runtime_pref_optional_string_list(
+                            runtime_preferences,
+                            _RUNTIME_PREF_TIMEOUT_EXEMPT_ALLOWLIST,
+                        ),
+                    )
+                except ValueError as exc:
+                    return SessionBridgeResult(
+                        command_id=command.command_id,
+                        command_type=command.command_type,
+                        status="denied",
+                        payload={
+                            "execution_id": execution_id,
+                            "continuation_id": continuation_id,
+                            "adapter_id": command.adapter_id,
+                            "session_identity": session_identity,
+                            "task_id": command.task_id,
+                            "tool_name": tool_name,
+                            "command": command_text,
+                            "execution_status": "denied",
+                            "timed_out": False,
+                            "timeout_seconds": execution_timeout,
+                            "timeout_exempt": execution_timeout_exempt,
+                            "artifact_ref": None,
+                            "artifact_refs": [],
+                            "approval_id": approval_id,
+                            "approval_ref": _approval_record_ref(
+                                attachment_runtime_state_root=attachment_runtime_state_root,
+                                approval_id=approval_id,
+                            ),
+                            "approval_status": approval_status,
+                            "handoff_ref": None,
+                            "replay_ref": None,
+                            "bytes_written": None,
+                            "reason": str(exc),
+                            "rollback_reference": rollback_reference,
+                            "entrypoint_policy": entrypoint_policy,
+                        },
+                        policy_decision_ref=command.policy_decision_ref,
+                    )
                 execution_status = "executed" if execution.exit_code == 0 else "denied"
                 artifact_store = LocalArtifactStore(
                     _verification_artifact_root(
@@ -689,6 +794,9 @@ def handle_session_bridge_command(
                         "exit_code": execution.exit_code,
                         "output": execution.output,
                         "tier": command.risk_tier,
+                        "timed_out": execution.timed_out,
+                        "timeout_seconds": execution.timeout_seconds,
+                        "timeout_exempt": execution.timeout_exempt,
                         "rollback_reference": rollback_reference,
                     },
                 )
@@ -705,6 +813,9 @@ def handle_session_bridge_command(
                         "tool_name": tool_name,
                         "command": command_text,
                         "execution_status": execution_status,
+                        "timed_out": execution.timed_out,
+                        "timeout_seconds": execution.timeout_seconds,
+                        "timeout_exempt": execution.timeout_exempt,
                         "approval_id": approval_id,
                         "artifact_ref": tool_artifact.relative_path,
                         "policy_decision_ref": command.policy_decision_ref,
@@ -755,6 +866,9 @@ def handle_session_bridge_command(
                         "tool_name": tool_name,
                         "command": command_text,
                         "execution_status": execution_status,
+                        "timed_out": execution.timed_out,
+                        "timeout_seconds": execution.timeout_seconds,
+                        "timeout_exempt": execution.timeout_exempt,
                         "artifact_ref": tool_artifact.relative_path,
                         "artifact_refs": artifact_refs,
                         "adapter_event_ref": adapter_event_ref,
@@ -770,6 +884,7 @@ def handle_session_bridge_command(
                         "bytes_written": None,
                         "reason": execution.output if execution.exit_code != 0 else None,
                         "rollback_reference": rollback_reference,
+                        "entrypoint_policy": entrypoint_policy,
                     },
                     policy_decision_ref=command.policy_decision_ref,
                 )
@@ -884,6 +999,7 @@ def handle_session_bridge_command(
                     "replay_ref": replay_ref,
                     "bytes_written": execution.bytes_written,
                     "reason": execution.reason,
+                    "entrypoint_policy": entrypoint_policy,
                 },
                 policy_decision_ref=execution.policy_decision.evidence_ref,
             )
@@ -920,6 +1036,7 @@ def handle_session_bridge_command(
                     "plan_only": True,
                     "gate_order": [gate.gate_id for gate in plan.gates],
                     "commands": [gate.command for gate in plan.gates],
+                    "entrypoint_policy": entrypoint_policy,
                 },
                 policy_decision_ref=command.policy_decision_ref,
             )
@@ -982,6 +1099,7 @@ def handle_session_bridge_command(
                 "evidence_link": verification_artifact.evidence_link,
                 "adapter_event_ref": adapter_event_ref,
                 "adapter_event_summary": adapter_event_summary,
+                "entrypoint_policy": entrypoint_policy,
                 "outcome": "pass"
                 if all(result == "pass" for result in verification_artifact.results.values())
                 else "fail",
@@ -1000,6 +1118,7 @@ def handle_session_bridge_command(
                 "adapter_id": command.adapter_id,
                 "session_identity": _session_identity(command),
                 "escalation_context": command.escalation_context or {},
+                "entrypoint_policy": entrypoint_policy,
             },
             policy_decision_ref=command.policy_decision_ref,
         )
@@ -1013,17 +1132,48 @@ def run_launch_mode(
     argv: list[str],
     cwd: str | Path,
     verification_refs: list[str] | None = None,
+    snapshot_scope: str | Path | None = None,
+    snapshot_mode: SnapshotMode = "auto",
+    timeout_seconds: object = None,
+    timeout_exempt: bool = False,
 ) -> SessionBridgeResult:
-    working_directory = Path(cwd)
-    before = _file_snapshot(working_directory)
-    completed = subprocess.run(
-        argv,
-        capture_output=True,
-        text=True,
-        cwd=working_directory,
-        check=False,
+    working_directory = Path(cwd).resolve(strict=False)
+    runtime_preferences = _load_runtime_preferences(working_directory)
+    snapshot_root = _resolve_snapshot_scope(working_directory, snapshot_scope)
+    normalized_snapshot_mode = _resolve_snapshot_mode(
+        snapshot_mode=_resolved_launch_snapshot_mode(
+            snapshot_mode=snapshot_mode,
+            command_payload=command.payload,
+            runtime_preferences=runtime_preferences,
+        ),
+        risk_tier=command.risk_tier,
     )
-    after = _file_snapshot(working_directory)
+    launch_timeout_seconds = _resolved_launch_timeout_seconds(
+        command_payload=command.payload,
+        explicit_timeout_seconds=timeout_seconds,
+        runtime_preferences=runtime_preferences,
+    )
+    launch_timeout_exempt = _resolved_timeout_exempt(
+        command_payload=command.payload,
+        explicit_timeout_exempt=timeout_exempt,
+    )
+    timeout_policy = resolve_timeout_policy(
+        command_text=" ".join(argv),
+        timeout_seconds=launch_timeout_seconds,
+        timeout_exempt=launch_timeout_exempt,
+        allowlist_patterns=_runtime_pref_optional_string_list(
+            runtime_preferences,
+            _RUNTIME_PREF_TIMEOUT_EXEMPT_ALLOWLIST,
+        ),
+    )
+    before = _file_snapshot(snapshot_root, relative_to=working_directory, snapshot_mode=normalized_snapshot_mode)
+    completed = run_subprocess(
+        command=argv,
+        shell=False,
+        cwd=working_directory,
+        timeout_seconds=timeout_policy.timeout_seconds,
+    )
+    after = _file_snapshot(snapshot_root, relative_to=working_directory, snapshot_mode=normalized_snapshot_mode)
     changed_files = sorted(path for path, digest in after.items() if before.get(path) != digest)
     deleted_files = sorted(path for path in before if path not in after)
     return SessionBridgeResult(
@@ -1037,6 +1187,10 @@ def run_launch_mode(
             "exit_code": completed.returncode,
             "stdout": completed.stdout,
             "stderr": completed.stderr,
+            "timed_out": completed.timed_out,
+            "timeout_seconds": timeout_policy.timeout_seconds,
+            "timeout_exempt": timeout_policy.timeout_exempt,
+            "snapshot_mode": normalized_snapshot_mode,
             "changed_files": changed_files,
             "deleted_files": deleted_files,
             "verification_refs": verification_refs or [],
@@ -1255,7 +1409,10 @@ def _write_status(
     approval_status = None
     approval_record_ref = None
     if attachment_runtime_state_root is not None and approval_id is not None:
-        approval_path = Path(attachment_runtime_state_root) / "approvals" / f"{approval_id}.json"
+        approval_path = _approval_file_path(
+            attachment_runtime_state_root=attachment_runtime_state_root,
+            approval_id=approval_id,
+        )
         if approval_path.exists():
             approval_status = _required_string(
                 json.loads(approval_path.read_text(encoding="utf-8")).get("status"),
@@ -1461,14 +1618,17 @@ def _approval_record_ref(
 ) -> str | None:
     if attachment_runtime_state_root is None or approval_id is None:
         return None
-    approval_path = Path(attachment_runtime_state_root) / "approvals" / f"{approval_id}.json"
+    approval_path = _approval_file_path(
+        attachment_runtime_state_root=attachment_runtime_state_root,
+        approval_id=approval_id,
+    )
     return approval_path.as_posix()
 
 
 def _tool_approval_id(command: SessionBridgeCommand) -> str:
     explicit = _payload_optional_string(command.payload, "approval_id")
     if explicit is not None:
-        return explicit
+        return validate_file_component(explicit, "approval_id")
     digest = hashlib.sha1(
         f"{command.task_id}:{_payload_required_string(command.payload, 'tool_name')}:{_payload_required_string(command.payload, 'command')}".encode(
             "utf-8"
@@ -1490,9 +1650,10 @@ def _persist_tool_approval_request(
 ) -> str:
     approvals_root = runtime_state_root / "approvals"
     approvals_root.mkdir(parents=True, exist_ok=True)
-    record_path = approvals_root / f"{approval_id}.json"
+    normalized_approval_id = validate_file_component(approval_id, "approval_id")
+    record_path = approvals_root / f"{normalized_approval_id}.json"
     payload = {
-        "approval_id": approval_id,
+        "approval_id": normalized_approval_id,
         "task_id": task_id,
         "tool_name": tool_name,
         "target_path": command_text,
@@ -1509,7 +1670,7 @@ def _persist_tool_approval_request(
             value = session_identity.get(field_name)
             if isinstance(value, str) and value.strip():
                 payload[field_name] = value.strip()
-    record_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(record_path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
     return record_path.as_posix()
 
 
@@ -1560,7 +1721,10 @@ def _tool_approval_status(
 ) -> str:
     if approval_id is None or attachment_runtime_state_root is None:
         return "missing"
-    approval_path = Path(attachment_runtime_state_root) / "approvals" / f"{approval_id}.json"
+    approval_path = _approval_file_path(
+        attachment_runtime_state_root=attachment_runtime_state_root,
+        approval_id=approval_id,
+    )
     if not approval_path.exists():
         return "missing"
     status = json.loads(approval_path.read_text(encoding="utf-8")).get("status")
@@ -1581,7 +1745,10 @@ def _load_approval_record(
 ) -> dict | None:
     if attachment_runtime_state_root is None or approval_id is None:
         return None
-    approval_path = Path(attachment_runtime_state_root) / "approvals" / f"{approval_id}.json"
+    approval_path = _approval_file_path(
+        attachment_runtime_state_root=attachment_runtime_state_root,
+        approval_id=approval_id,
+    )
     if not approval_path.exists():
         return None
     try:
@@ -1629,8 +1796,11 @@ def _persist_approval_session_identity(
         value = session_identity.get(field_name)
         if isinstance(value, str) and value.strip():
             record[field_name] = value.strip()
-    approval_path = Path(attachment_runtime_state_root) / "approvals" / f"{approval_id}.json"
-    approval_path.write_text(json.dumps(record, indent=2, sort_keys=True), encoding="utf-8")
+    approval_path = _approval_file_path(
+        attachment_runtime_state_root=attachment_runtime_state_root,
+        approval_id=approval_id,
+    )
+    atomic_write_text(approval_path, json.dumps(record, indent=2, sort_keys=True), encoding="utf-8")
 
 
 def _session_identity(
@@ -1722,6 +1892,75 @@ def _write_write_flow_refs(
     return handoff_artifact.relative_path, replay_artifact.relative_path
 
 
+def _entrypoint_policy_for_command(
+    command: SessionBridgeCommand,
+    *,
+    attachment_root: str | Path | None,
+    attachment_runtime_state_root: str | Path | None,
+) -> dict | None:
+    scope = _command_scope(command.command_type)
+    if scope is None:
+        return None
+    profile = _load_attachment_repo_profile(
+        attachment_root=attachment_root,
+        attachment_runtime_state_root=attachment_runtime_state_root,
+    )
+    if profile is None:
+        return None
+    return evaluate_required_entrypoint_policy(
+        profile.required_entrypoint_policy,
+        entrypoint_id=_command_entrypoint_id(command),
+        scope=scope,
+    )
+
+
+def _attachment_required_entrypoint_policy(
+    *,
+    attachment_root: str | Path | None,
+    attachment_runtime_state_root: str | Path | None,
+) -> dict | None:
+    profile = _load_attachment_repo_profile(
+        attachment_root=attachment_root,
+        attachment_runtime_state_root=attachment_runtime_state_root,
+    )
+    if profile is None:
+        return None
+    return dict(profile.required_entrypoint_policy)
+
+
+def _load_attachment_repo_profile(
+    *,
+    attachment_root: str | Path | None,
+    attachment_runtime_state_root: str | Path | None,
+):
+    if attachment_root is None or attachment_runtime_state_root is None:
+        return None
+    try:
+        attachment = validate_light_pack(
+            target_repo_root=str(attachment_root),
+            light_pack_path=str(Path(attachment_root) / ".governed-ai" / "light-pack.json"),
+            runtime_state_root=str(attachment_runtime_state_root),
+        )
+        return load_repo_profile(attachment.repo_profile_path)
+    except (OSError, ValueError):
+        return None
+
+
+def _command_scope(command_type: CommandType) -> str | None:
+    if command_type in {"run_quick_gate", "run_full_gate"}:
+        return command_type
+    if command_type in {"write_request", "write_execute", "inspect_status", "inspect_evidence", "inspect_handoff"}:
+        return command_type
+    return None
+
+
+def _command_entrypoint_id(command: SessionBridgeCommand) -> str:
+    explicit = _payload_optional_string(command.payload, "entrypoint_id")
+    if explicit is not None:
+        return explicit
+    return f"session-bridge.{command.command_type}"
+
+
 def _verification_plan_for_command(
     command: SessionBridgeCommand,
     *,
@@ -1759,16 +1998,102 @@ def _verification_plan_for_command(
     )
 
 
-def _file_snapshot(root: Path) -> dict[str, str]:
+def _file_snapshot(
+    root: Path,
+    *,
+    relative_to: Path | None = None,
+    snapshot_mode: SnapshotMode = "balanced",
+) -> dict[str, str]:
+    base = relative_to.resolve(strict=False) if relative_to is not None else root.resolve(strict=False)
+    normalized_snapshot_mode = _normalize_snapshot_mode(snapshot_mode)
     if not root.exists():
         return {}
+    if root.is_file():
+        try:
+            stat = root.stat()
+        except OSError:
+            return {}
+        return {root.relative_to(base).as_posix(): _snapshot_signature(root, stat, snapshot_mode=normalized_snapshot_mode)}
     snapshot: dict[str, str] = {}
     for path in root.rglob("*"):
         if not path.is_file() or ".git" in path.parts:
             continue
-        relative_path = path.relative_to(root).as_posix()
-        snapshot[relative_path] = hashlib.sha256(path.read_bytes()).hexdigest()
+        try:
+            stat = path.stat()
+        except OSError:
+            continue
+        relative_path = path.relative_to(base).as_posix()
+        snapshot[relative_path] = _snapshot_signature(path, stat, snapshot_mode=normalized_snapshot_mode)
     return snapshot
+
+
+def _snapshot_signature(path: Path, stat, *, snapshot_mode: SnapshotMode) -> str:
+    signature = f"{stat.st_size}:{stat.st_mtime_ns}"
+    try:
+        digest = hashlib.blake2b(digest_size=16)
+        with path.open("rb") as stream:
+            if snapshot_mode == "strict":
+                for chunk in iter(lambda: stream.read(65536), b""):
+                    digest.update(chunk)
+            else:
+                if stat.st_size <= _SNAPSHOT_SMALL_FILE_LIMIT:
+                    for chunk in iter(lambda: stream.read(65536), b""):
+                        digest.update(chunk)
+                else:
+                    sample_size = min(_SNAPSHOT_SAMPLE_SIZE, stat.st_size)
+                    for offset in _snapshot_sample_offsets(stat.st_size, sample_size):
+                        stream.seek(offset)
+                        digest.update(stream.read(sample_size))
+    except OSError:
+        return signature
+    return f"{signature}:{digest.hexdigest()}"
+
+
+def _snapshot_sample_offsets(size: int, sample_size: int) -> tuple[int, ...]:
+    if size <= sample_size:
+        return (0,)
+    offsets = {0, max(size - sample_size, 0)}
+    if size > sample_size * 2:
+        offsets.add(max((size // 2) - (sample_size // 2), 0))
+    return tuple(sorted(offsets))
+
+
+def _normalize_snapshot_mode(snapshot_mode: str) -> SnapshotMode:
+    normalized = snapshot_mode.strip().lower()
+    if normalized not in {"auto", "balanced", "strict"}:
+        msg = "snapshot_mode must be 'auto', 'balanced', or 'strict'"
+        raise ValueError(msg)
+    return normalized  # type: ignore[return-value]
+
+
+def _resolve_snapshot_mode(*, snapshot_mode: str, risk_tier: RiskTier) -> Literal["balanced", "strict"]:
+    normalized_snapshot_mode = _normalize_snapshot_mode(snapshot_mode)
+    if normalized_snapshot_mode == "auto":
+        return "strict" if risk_tier == "high" else "balanced"
+    return normalized_snapshot_mode  # type: ignore[return-value]
+
+
+def _resolve_snapshot_scope(working_directory: Path, snapshot_scope: str | Path | None) -> Path:
+    if snapshot_scope is None:
+        return working_directory
+    if isinstance(snapshot_scope, str) and not snapshot_scope.strip():
+        return working_directory
+    candidate = Path(snapshot_scope)
+    if not candidate.is_absolute():
+        candidate = working_directory / candidate
+    resolved = candidate.resolve(strict=False)
+    ensure_resolved_under(
+        resolved,
+        working_directory,
+        field_name="snapshot_scope",
+        message="snapshot_scope must stay under cwd",
+    )
+    return resolved
+
+
+def _approval_file_path(*, attachment_runtime_state_root: str | Path, approval_id: str) -> Path:
+    normalized_approval_id = validate_file_component(approval_id, "approval_id")
+    return Path(attachment_runtime_state_root) / "approvals" / f"{normalized_approval_id}.json"
 
 
 def _execution_id(
@@ -1831,18 +2156,99 @@ def _payload_optional_bool(payload: dict, field_name: str) -> bool:
 
 
 def _execute_gate_at_root(command: str, *, cwd: Path) -> tuple[int, str]:
-    completed = subprocess.run(
-        command,
+    gate_timeout = _env_optional_timeout(_GATE_TIMEOUT_ENV_KEY)
+    completed = run_subprocess(
+        command=command,
         shell=True,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
         cwd=cwd,
-        check=False,
+        timeout_seconds=gate_timeout,
     )
     output = "\n".join(part for part in [completed.stdout, completed.stderr] if part).strip()
     return completed.returncode, output
+
+
+def _resolved_launch_snapshot_mode(
+    *,
+    snapshot_mode: SnapshotMode,
+    command_payload: dict,
+    runtime_preferences: dict,
+) -> str:
+    command_snapshot_mode = _payload_optional_string(command_payload, "snapshot_mode")
+    if command_snapshot_mode is not None:
+        return command_snapshot_mode
+    if snapshot_mode != "auto":
+        return snapshot_mode
+    repo_snapshot_mode = _runtime_pref_optional_string(runtime_preferences, _RUNTIME_PREF_LAUNCH_SNAPSHOT_MODE)
+    return repo_snapshot_mode or snapshot_mode
+
+
+def _resolved_launch_timeout_seconds(
+    *,
+    command_payload: dict,
+    explicit_timeout_seconds: object,
+    runtime_preferences: dict,
+) -> float | None:
+    payload_timeout = parse_optional_positive_timeout(command_payload.get("timeout_seconds"), "timeout_seconds")
+    if payload_timeout is not None:
+        return payload_timeout
+    cli_timeout = parse_optional_positive_timeout(explicit_timeout_seconds, "timeout_seconds")
+    if cli_timeout is not None:
+        return cli_timeout
+    repo_launch_timeout = _runtime_pref_optional_timeout(runtime_preferences, _RUNTIME_PREF_LAUNCH_TIMEOUT_SECONDS)
+    if repo_launch_timeout is not None:
+        return repo_launch_timeout
+    return _runtime_pref_optional_timeout(runtime_preferences, _RUNTIME_PREF_SUBPROCESS_TIMEOUT_SECONDS)
+
+
+def _resolved_timeout_exempt(*, command_payload: dict, explicit_timeout_exempt: bool) -> bool:
+    if "timeout_exempt" in command_payload:
+        return _payload_optional_bool(command_payload, "timeout_exempt")
+    return bool(explicit_timeout_exempt)
+
+
+def _load_runtime_preferences(repo_root: Path) -> dict:
+    profile_path = repo_root / _RUNTIME_PREFS_FILE
+    if not profile_path.exists():
+        return {}
+    try:
+        payload = json.loads(profile_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    raw = payload.get(_RUNTIME_PREFS_KEY)
+    if not isinstance(raw, dict):
+        return {}
+    return dict(raw)
+
+
+def _runtime_pref_optional_string(runtime_preferences: dict, key: str) -> str | None:
+    value = runtime_preferences.get(key)
+    if isinstance(value, str) and value.strip():
+        return value.strip()
+    return None
+
+
+def _runtime_pref_optional_timeout(runtime_preferences: dict, key: str) -> float | None:
+    return parse_optional_positive_timeout(runtime_preferences.get(key), key)
+
+
+def _runtime_pref_optional_string_list(runtime_preferences: dict, key: str) -> list[str]:
+    value = runtime_preferences.get(key)
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        raise ValueError(f"{key} must be a list")
+    normalized: list[str] = []
+    for index, item in enumerate(value):
+        if not isinstance(item, str) or not item.strip():
+            raise ValueError(f"{key}[{index}] must be a non-empty string")
+        normalized.append(item.strip())
+    return normalized
+
+
+def _env_optional_timeout(env_key: str) -> float | None:
+    return parse_optional_positive_timeout(os.environ.get(env_key), env_key)
 
 
 def _required_enum(value: str, field_name: str, valid_values: set[str]) -> str:

@@ -6,6 +6,8 @@ from pathlib import Path
 import json
 import re
 
+from governed_ai_coding_runtime_contracts.file_guard import atomic_write_text
+
 
 _SLUG = re.compile(r"[^A-Za-z0-9._-]+")
 
@@ -31,14 +33,14 @@ class LocalArtifactStore:
         relative_path = self._relative_path(task_id=task_id, run_id=run_id, kind=kind, label=label, suffix=".txt")
         path = self._root / relative_path
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content, encoding="utf-8")
+        atomic_write_text(path, content, encoding="utf-8")
         return self._build_ref(task_id=task_id, run_id=run_id, kind=kind, label=label, relative_path=relative_path)
 
     def write_json(self, *, task_id: str, run_id: str, kind: str, label: str, payload: dict) -> ArtifactRef:
         relative_path = self._relative_path(task_id=task_id, run_id=run_id, kind=kind, label=label, suffix=".json")
         path = self._root / relative_path
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+        atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
         return self._build_ref(task_id=task_id, run_id=run_id, kind=kind, label=label, relative_path=relative_path)
 
     def _build_ref(self, *, task_id: str, run_id: str, kind: str, label: str, relative_path: str) -> ArtifactRef:

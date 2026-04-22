@@ -192,9 +192,11 @@ class RepoAttachmentBindingTests(unittest.TestCase):
             governed_dir = repo_root / ".governed-ai"
             profile_path = governed_dir / "repo-profile.json"
             light_pack_path = governed_dir / "light-pack.json"
+            dependency_baseline_path = governed_dir / "dependency-baseline.json"
             self.assertEqual(result.operation, "created")
             self.assertTrue(profile_path.exists())
             self.assertTrue(light_pack_path.exists())
+            self.assertTrue(dependency_baseline_path.exists())
             context_pack_path = runtime_root / "context" / "context-pack.json"
             self.assertTrue(context_pack_path.exists())
             self.assertFalse((repo_root / ".runtime").exists())
@@ -204,12 +206,18 @@ class RepoAttachmentBindingTests(unittest.TestCase):
             self.assertIsNotNone(result.context_pack_summary)
             self.assertEqual(Path(result.context_pack_summary["context_pack_path"]), context_pack_path.resolve())
             self.assertFalse(result.context_pack_summary["is_stale"])
+            profile = json.loads(profile_path.read_text(encoding="utf-8"))
+            self.assertEqual(profile["required_entrypoint_policy"]["current_mode"], "advisory")
+            self.assertIn("runtime-flow", profile["required_entrypoint_policy"]["canonical_entrypoints"])
 
             light_pack = json.loads(light_pack_path.read_text(encoding="utf-8"))
             self.assertEqual(light_pack["pack_kind"], "repo_attachment_light_pack")
             self.assertEqual(light_pack["repo_profile_ref"], ".governed-ai/repo-profile.json")
             self.assertNotIn("runtime_code", light_pack)
             self.assertNotIn("task_store", light_pack)
+            dependency_baseline = json.loads(dependency_baseline_path.read_text(encoding="utf-8"))
+            self.assertEqual(dependency_baseline["baseline_kind"], "target_repo_dependency_baseline")
+            self.assertEqual(dependency_baseline["repo_id"], "new-target")
 
     def test_attach_target_repo_can_resolve_runtime_state_root_from_runtime_roots_model(self) -> None:
         module = self._module()
@@ -266,6 +274,10 @@ class RepoAttachmentBindingTests(unittest.TestCase):
 
             self.assertEqual(result.operation, "validated")
             self.assertEqual((governed_dir / "light-pack.json").read_text(encoding="utf-8"), original_light_pack)
+            dependency_baseline_path = governed_dir / "dependency-baseline.json"
+            self.assertTrue(dependency_baseline_path.exists())
+            dependency_baseline = json.loads(dependency_baseline_path.read_text(encoding="utf-8"))
+            self.assertEqual(dependency_baseline["repo_id"], "existing-target")
             self.assertEqual(result.binding.binding_id, "binding-existing-target")
             self.assertIsNotNone(result.context_pack_summary)
             self.assertTrue(result.context_pack_summary["exists"])
@@ -488,6 +500,8 @@ class RepoAttachmentBindingTests(unittest.TestCase):
                 profile["contract_commands"][0]["command"],
                 "python -m unittest discover -s tests/contracts",
             )
+            self.assertIn("auto_commit_policy", profile)
+            self.assertFalse(profile["auto_commit_policy"]["enabled"])
 
     def test_attach_target_repo_cli_requires_gate_commands_without_infer_flag(self) -> None:
         with tempfile.TemporaryDirectory() as workspace:

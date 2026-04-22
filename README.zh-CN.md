@@ -62,6 +62,15 @@
 - 路径 B（外部仓 attach-first，推荐）：先 `attach-target-repo`，再跑 `runtime-flow.ps1 -FlowMode daily` 作为日常治理链。
 - 路径 C（中高风险写入）：用 `govern-attachment-write -> decide-attachment-write -> execute-attachment-write` 走审批与回滚引用闭环。
 
+## 统一入口建议
+- 如果你要“一键日常使用”，优先走 `runtime-flow.ps1` 或 `runtime-flow-preset.ps1`
+- 如果你要先观察绕过统一入口的情况，把 `required_entrypoint_policy.current_mode` 设为 `advisory`
+- 如果你要拦截 direct gate/write 入口、但保留只读状态查询，把它设为 `targeted_enforced`
+- 如果你要在仓级范围强制 canonical entrypoint，把它设为 `repo_wide_enforced`
+- 可直接复制的配置和命令见：
+  - [Use With An Existing Repo](docs/quickstart/use-with-existing-repo.md)
+  - [在现有仓库中使用](docs/quickstart/use-with-existing-repo.zh-CN.md)
+
 ## 对 AI 编码的具体辅助作用
 - 会话前能力可见：在执行前就能看到 `adapter_tier`、`flow_kind`、`degrade_reason`，避免运行中才发现能力降级。
 - 验收链统一执行：`build -> test -> contract/invariant -> hotspot` 由 runtime-managed gate 流统一执行，降低漏检。

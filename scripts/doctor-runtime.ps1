@@ -47,6 +47,21 @@ function Resolve-AttachmentRemediationActions {
   }
 }
 
+function Resolve-DependencyBaselineRemediationActions {
+  param(
+    [string]$AttachmentRoot,
+    [string]$RuntimeStateRoot
+  )
+
+  $quotedAttachmentRoot = '"' + $AttachmentRoot + '"'
+  $quotedRuntimeStateRoot = '"' + $RuntimeStateRoot + '"'
+  return @(
+    "python scripts/attach-target-repo.py --target-repo $quotedAttachmentRoot --runtime-state-root $quotedRuntimeStateRoot --overwrite",
+    "python scripts/verify-dependency-baseline.py --target-repo-root $quotedAttachmentRoot --require-target-repo-baseline",
+    "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1 -AttachmentRoot $quotedAttachmentRoot -RuntimeStateRoot $quotedRuntimeStateRoot"
+  )
+}
+
 function Write-AttachmentRemediationEvidence {
   param(
     [string]$RuntimeStateRoot,
@@ -110,6 +125,9 @@ foreach ($pathCheck in @(
   @{ Path = "schemas/catalog/schema-catalog.yaml"; Check = "runtime-path-schema-catalog" },
   @{ Path = "docs/specs"; Check = "runtime-path-specs" },
   @{ Path = "tests/runtime"; Check = "runtime-path-tests" },
+  @{ Path = "docs/dependency-baseline.md"; Check = "dependency-baseline-doc" },
+  @{ Path = "docs/dependency-baseline.json"; Check = "dependency-baseline-manifest" },
+  @{ Path = "scripts/verify-dependency-baseline.py"; Check = "dependency-baseline-script" },
   @{ Path = "docs/product/runtime-compatibility-and-upgrade-policy.md"; Check = "runtime-policy-compatibility" },
   @{ Path = "docs/product/maintenance-deprecation-and-retirement-policy.md"; Check = "runtime-policy-maintenance" }
 )) {
@@ -262,5 +280,34 @@ print(
     }
     throw "Attachment posture requires remediation before execution can continue"
   }
+
+  $dependencyBaselineResult = & $python.Source "scripts/verify-dependency-baseline.py" "--target-repo-root" $AttachmentRoot "--require-target-repo-baseline" 2>&1
+  $dependencyBaselineExitCode = $LASTEXITCODE
+  if ($dependencyBaselineExitCode -ne 0) {
+    $baselineRemediation = "target repo dependency baseline is required under docs/dependency-baseline.md or .governed-ai/dependency-baseline.json"
+    $baselineActions = Resolve-DependencyBaselineRemediationActions -AttachmentRoot $AttachmentRoot -RuntimeStateRoot $RuntimeStateRoot
+    $baselineEvidencePath = Write-AttachmentRemediationEvidence `
+      -RuntimeStateRoot $RuntimeStateRoot `
+      -AttachmentRoot $AttachmentRoot `
+      -BindingState "missing-target-repo-dependency-baseline" `
+      -FailClosed $true `
+      -Remediation $baselineRemediation `
+      -Actions $baselineActions
+    if (-not [string]::IsNullOrWhiteSpace($baselineEvidencePath)) {
+      Write-Host "REMEDIATE-EVIDENCE $baselineEvidencePath"
+    }
+    Write-Host "FAIL attachment-posture-missing-target-repo-dependency-baseline"
+    $baselineDetail = (($dependencyBaselineResult | ForEach-Object { "$_" }) -join "`n").Trim()
+    if (-not [string]::IsNullOrWhiteSpace($baselineDetail)) {
+      Write-Host "DETAIL $baselineDetail"
+    }
+    Write-Host "REMEDIATE $baselineRemediation"
+    foreach ($action in $baselineActions) {
+      Write-Host "REMEDIATE-ACTION $action"
+    }
+    throw "Attachment posture requires target repo dependency baseline before execution can continue"
+  }
+
+  Write-CheckOk "attachment-target-repo-dependency-baseline"
   Write-CheckOk "attachment-posture-$normalizedAttachmentPosture"
 }

@@ -1,6 +1,7 @@
 param(
   [string]$RepoProfilePath = ".governed-ai/repo-profile.json",
   [string]$WorkingDirectory = "",
+  [string]$MilestoneTag = "",
   [switch]$ContinueOnError,
   [switch]$Json
 )
@@ -16,6 +17,7 @@ $result = Invoke-RepoProfileGateRun `
   -Mode "full" `
   -RepoProfilePath $RepoProfilePath `
   -WorkingDirectory $WorkingDirectory `
+  -MilestoneTag $MilestoneTag `
   -ContinueOnError:$ContinueOnError.IsPresent `
   -JsonOutput:$Json.IsPresent
 

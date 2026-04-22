@@ -138,6 +138,7 @@ $flowArgs = @(
   "-NoProfile",
   "-ExecutionPolicy", "Bypass",
   "-File", $runtimeFlowPath,
+  "-EntrypointId", "runtime-flow-preset",
   "-FlowMode", $FlowMode,
   "-AttachmentRoot", $targetConfig.AttachmentRoot,
   "-AttachmentRuntimeStateRoot", $targetConfig.AttachmentRuntimeStateRoot,

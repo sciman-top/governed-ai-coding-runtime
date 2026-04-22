@@ -64,6 +64,30 @@ class TaskStoreTests(unittest.TestCase):
             self.assertEqual(loaded.timeout_at, "2026-04-17T00:00:00Z")
             self.assertEqual(loaded.last_failure_reason, "timeout")
 
+    def test_rejects_task_ids_with_path_traversal(self) -> None:
+        task_store = importlib.import_module("governed_ai_coding_runtime_contracts.task_store")
+        task_intake = importlib.import_module("governed_ai_coding_runtime_contracts.task_intake")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            store = task_store.FileTaskStore(Path(tmp_dir))
+            record = task_store.TaskRecord(
+                task_id="../escape",
+                task=task_intake.TaskIntake(
+                    goal="reject unsafe ids",
+                    scope="foundation task store",
+                    acceptance=["unsafe ids do not escape the task root"],
+                    repo="governed-ai-coding-runtime",
+                    budgets={"max_steps": 1, "max_minutes": 1},
+                ),
+                current_state="planned",
+            )
+
+            with self.assertRaisesRegex(ValueError, "task_id"):
+                store.save(record)
+
+            with self.assertRaisesRegex(ValueError, "task_id"):
+                store.load("../escape")
+
 
 if __name__ == "__main__":
     unittest.main()

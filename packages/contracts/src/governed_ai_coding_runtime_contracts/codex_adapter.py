@@ -5,7 +5,6 @@ from __future__ import annotations
 import hashlib
 import os
 import re
-import subprocess
 from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime
 from functools import lru_cache
@@ -14,10 +13,13 @@ from typing import Callable
 
 from governed_ai_coding_runtime_contracts.adapter_registry import AdapterCapability, resolve_launch_fallback
 from governed_ai_coding_runtime_contracts.evidence import EvidenceEvent, EvidenceTimeline
+from governed_ai_coding_runtime_contracts.subprocess_guard import parse_optional_positive_timeout, run_subprocess
 
 _DEFAULT_CODEX_EXECUTABLE = "codex"
 _CODEX_EXECUTABLE_ENV_KEYS = ("GOVERNED_RUNTIME_CODEX_BIN", "CODEX_BIN")
 _FALLBACK_CODEX_EXECUTABLES = ("codex.cmd", "codex.exe")
+_CODEX_PROBE_TIMEOUT_SECONDS_ENV_KEY = "GOVERNED_CODEX_PROBE_TIMEOUT_SECONDS"
+_CODEX_PROBE_TIMEOUT_SECONDS_DEFAULT = 20.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -718,14 +720,17 @@ def _probe_codex_surface(
 
 def _default_probe_runner(argv: list[str], cwd: Path | None) -> tuple[int, str, str]:
     try:
-        completed = subprocess.run(
-            argv,
+        timeout_seconds = parse_optional_positive_timeout(
+            os.environ.get(_CODEX_PROBE_TIMEOUT_SECONDS_ENV_KEY),
+            _CODEX_PROBE_TIMEOUT_SECONDS_ENV_KEY,
+        )
+        if timeout_seconds is None:
+            timeout_seconds = _CODEX_PROBE_TIMEOUT_SECONDS_DEFAULT
+        completed = run_subprocess(
+            command=argv,
+            shell=False,
             cwd=cwd,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            check=False,
+            timeout_seconds=timeout_seconds,
         )
     except OSError as exc:
         return 127, "", str(exc)

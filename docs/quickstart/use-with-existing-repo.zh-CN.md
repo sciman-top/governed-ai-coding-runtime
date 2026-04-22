@@ -226,7 +226,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-classroomtool
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-classroomtoolkit.ps1 -FlowMode "onboard"
 ```
 
-多目标预设快捷命令（`classroomtoolkit` / `self-runtime` / `skills-manager`）：
+多目标预设快捷命令（`classroomtoolkit` / `github-toolkit` / `self-runtime` / `skills-manager` / `vps-ssh-launcher`）：
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
@@ -237,11 +237,85 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
 
 预设清单单一真源：
 - `scripts/runtime-flow-preset.ps1` 现在从 `docs/targets/target-repos-catalog.json` 读取目标仓。
+- `docs/targets/target-repos-catalog.json` 是 active preset 目标仓事实的持久化登记文件。
 - 查看当前可用 target 列表：
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
 ```
+
+### 6. 启用统一入口策略
+
+如果你希望目标仓的日常使用尽量收敛到一个治理入口，就在目标仓 `.governed-ai/repo-profile.json` 中增加 `required_entrypoint_policy`。
+
+推荐起步配置：
+
+```json
+"required_entrypoint_policy": {
+  "current_mode": "advisory",
+  "target_mode": "repo_wide_enforced",
+  "canonical_entrypoints": [
+    "runtime-flow",
+    "runtime-flow-preset"
+  ],
+  "allow_direct_entrypoints": [
+    "run-governed-task.status",
+    "session-bridge.inspect_status",
+    "session-bridge.inspect_evidence",
+    "session-bridge.inspect_handoff",
+    "verify-repo"
+  ],
+  "targeted_enforcement_scopes": [
+    "run_quick_gate",
+    "run_full_gate",
+    "verify_attachment",
+    "govern_attachment_write",
+    "write_request",
+    "write_execute",
+    "execute_attachment_write"
+  ],
+  "promotion_condition_ref": "docs/governance/entrypoint-promotion.md"
+}
+```
+
+模式选择：
+- `advisory`：只记录 drift，不阻断 direct 入口
+- `targeted_enforced`：阻断 direct gate/write 入口，但保留只读检查入口
+- `repo_wide_enforced`：在仓级范围阻断所有非 canonical、且非只读的入口
+
+推荐晋级路径：
+1. 先用 `advisory`
+2. 团队稳定改走 `runtime-flow` 或 `runtime-flow-preset` 后，再切到 `targeted_enforced`
+3. 只有在 direct 调用例外都已明确列入 allowlist 后，才切到 `repo_wide_enforced`
+
+推荐 canonical 日常命令：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow.ps1 `
+  -FlowMode "daily" `
+  -AttachmentRoot "..\ClassroomToolkit" `
+  -AttachmentRuntimeStateRoot ".runtime\attachments\classroomtoolkit" `
+  -Mode "quick"
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -Target "skills-manager" `
+  -FlowMode "daily" `
+  -SkipVerifyAttachment
+```
+
+启用强制后会发生什么：
+- direct 调用 `session-bridge request-gate`、`run-governed-task verify-attachment`、`govern-attachment-write`、`execute-attachment-write` 时，payload 会带上 `entrypoint_policy`
+- 如果当前策略应阻断该调用，CLI 会返回 denial payload，而不是继续静默执行
+- `runtime-check.ps1` 的 summary 会额外给出 `entrypoint_policy_mode`、`entrypoint_drift`、`entrypoint_blocked`
+
+哪些入口仍然有意保留：
+- `run-governed-task.py status`
+- `session-bridge.py status`
+- `session-bridge.py inspect-evidence`
+- `session-bridge.py inspect-handoff`
+- `verify-repo.ps1`
 
 ## 路径变化会有什么影响
 - 目标仓路径变化：

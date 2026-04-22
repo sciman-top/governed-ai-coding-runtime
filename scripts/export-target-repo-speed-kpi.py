@@ -11,6 +11,7 @@ if str(CONTRACTS_SRC) not in sys.path:
     sys.path.insert(0, str(CONTRACTS_SRC))
 
 from governed_ai_coding_runtime_contracts.target_repo_speed_kpi import export_target_repo_speed_kpi
+from governed_ai_coding_runtime_contracts.file_guard import atomic_write_text
 
 
 def main() -> int:
@@ -33,7 +34,7 @@ def main() -> int:
     payload = snapshot.to_dict()
     output_path = Path(args.output) if args.output else Path(args.runs_root) / f"kpi-{args.window_kind}.json"
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    atomic_write_text(output_path, json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps({"output": str(output_path.resolve(strict=False)), "record_count": snapshot.record_count}, indent=2))
     return 0
 

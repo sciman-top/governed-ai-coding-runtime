@@ -44,6 +44,7 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
         self.assertIn("OK python-command", completed.stdout)
         self.assertIn("OK gate-command-build", completed.stdout)
         self.assertIn("OK gate-command-doctor", completed.stdout)
+        self.assertIn("OK dependency-baseline-doc", completed.stdout)
 
     def test_verify_repo_exposes_build_and_doctor_checks(self) -> None:
         script = ROOT / "scripts" / "verify-repo.ps1"
@@ -182,9 +183,25 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             )
             healthy_completed = self._run_doctor_attachment(script, healthy_root, workspace / "state" / "healthy")
             self.assertEqual(healthy_completed.returncode, 0)
+            self.assertIn("OK attachment-target-repo-dependency-baseline", healthy_completed.stdout)
             self.assertIn("OK attachment-posture-healthy", healthy_completed.stdout)
             self.assertIn("REMEDIATE-EVIDENCE", healthy_completed.stdout)
             self.assertTrue((workspace / "state" / "healthy" / "doctor" / "latest-remediation.json").exists())
+
+            missing_baseline_path = healthy_root / ".governed-ai" / "dependency-baseline.json"
+            missing_baseline_path.unlink()
+            missing_baseline_completed = self._run_doctor_attachment(
+                script,
+                healthy_root,
+                workspace / "state" / "healthy",
+            )
+            self.assertNotEqual(missing_baseline_completed.returncode, 0)
+            self.assertIn(
+                "FAIL attachment-posture-missing-target-repo-dependency-baseline",
+                missing_baseline_completed.stdout,
+            )
+            self.assertIn("scripts/verify-dependency-baseline.py", missing_baseline_completed.stdout)
+            self.assertIn("REMEDIATE-ACTION", missing_baseline_completed.stdout)
 
             invalid_root = workspace / "invalid"
             (invalid_root / ".governed-ai").mkdir(parents=True)

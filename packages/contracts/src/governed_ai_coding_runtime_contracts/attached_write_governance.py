@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from governed_ai_coding_runtime_contracts.approval import ApprovalLedger
+from governed_ai_coding_runtime_contracts.file_guard import atomic_write_text, validate_file_component
 from governed_ai_coding_runtime_contracts.policy_decision import PolicyDecision
 from governed_ai_coding_runtime_contracts.repo_attachment import validate_light_pack
 from governed_ai_coding_runtime_contracts.repo_profile import load_repo_profile
@@ -188,9 +189,10 @@ def _persist_approval_request(
 ) -> None:
     approvals_root = runtime_state_root / _APPROVALS_DIR
     approvals_root.mkdir(parents=True, exist_ok=True)
-    record_path = approvals_root / f"{approval_id}.json"
+    normalized_approval_id = validate_file_component(approval_id, "approval_id")
+    record_path = approvals_root / f"{normalized_approval_id}.json"
     record = {
-        "approval_id": approval_id,
+        "approval_id": normalized_approval_id,
         "task_id": task_id,
         "tool_name": tool_name,
         "target_path": target_path,
@@ -203,7 +205,4 @@ def _persist_approval_request(
     }
     if session_identity is not None:
         record["session_identity"] = session_identity
-    record_path.write_text(
-        json.dumps(record, indent=2, sort_keys=True),
-        encoding="utf-8",
-    )
+    atomic_write_text(record_path, json.dumps(record, indent=2, sort_keys=True), encoding="utf-8")

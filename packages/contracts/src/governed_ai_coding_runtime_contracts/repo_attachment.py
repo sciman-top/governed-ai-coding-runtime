@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 from typing import Literal
 
+from governed_ai_coding_runtime_contracts.file_guard import atomic_write_text, ensure_resolved_under
 from governed_ai_coding_runtime_contracts.repo_profile import RepoProfile
 from governed_ai_coding_runtime_contracts.runtime_roots import resolve_runtime_roots
 
@@ -20,6 +21,7 @@ LIGHT_PACK_DIR = ".governed-ai"
 REPO_PROFILE_FILENAME = "repo-profile.json"
 LIGHT_PACK_FILENAME = "light-pack.json"
 CONTEXT_PACK_FILENAME = "context-pack.json"
+DEPENDENCY_BASELINE_FILENAME = "dependency-baseline.json"
 ADAPTER_PREFERENCES = {"native_attach", "process_bridge", "manual_handoff"}
 DOCTOR_POSTURES = {"missing_light_pack", "invalid_light_pack", "stale_binding", "healthy"}
 MUTABLE_STATE_ROOT_KEYS = {"tasks", "runs", "approvals", "artifacts", "replay"}
@@ -148,6 +150,7 @@ def attach_target_repo(
     governed_dir = target_root / LIGHT_PACK_DIR
     repo_profile_path = governed_dir / REPO_PROFILE_FILENAME
     light_pack_path = governed_dir / LIGHT_PACK_FILENAME
+    dependency_baseline_path = governed_dir / DEPENDENCY_BASELINE_FILENAME
 
     if light_pack_path.exists() and not overwrite:
         validated = validate_light_pack(
@@ -155,6 +158,15 @@ def attach_target_repo(
             light_pack_path=str(light_pack_path),
             runtime_state_root=str(runtime_root),
         )
+        validated_profile = _load_json_object(Path(validated.repo_profile_path), "repo_profile_ref")
+        validated_repo_id = _string_or_none(validated_profile.get("repo_id")) or target_root.name
+        written_files: list[str] = []
+        if _ensure_target_repo_dependency_baseline(
+            repo_id=validated_repo_id,
+            baseline_path=dependency_baseline_path,
+            overwrite=False,
+        ):
+            written_files.append(str(dependency_baseline_path))
         context_pack_summary = compile_attachment_context_pack(
             target_repo_root=target_root,
             runtime_state_root=runtime_root,
@@ -166,7 +178,7 @@ def attach_target_repo(
             binding=validated.binding,
             repo_profile_path=validated.repo_profile_path,
             light_pack_path=validated.light_pack_path,
-            written_files=validated.written_files,
+            written_files=written_files,
             context_pack_summary=context_pack_summary,
         )
 
@@ -193,6 +205,12 @@ def attach_target_repo(
     )
     _write_json(light_pack_path, light_pack)
     written_files.append(str(light_pack_path))
+    if _ensure_target_repo_dependency_baseline(
+        repo_id=repo_id,
+        baseline_path=dependency_baseline_path,
+        overwrite=overwrite,
+    ):
+        written_files.append(str(dependency_baseline_path))
 
     result = validate_light_pack(
         target_repo_root=str(target_root),
@@ -297,6 +315,34 @@ def build_minimal_repo_profile(
         "path_policies": {"read_allow": ["**/*"], "write_allow": ["src/**", "tests/**", "docs/**"], "blocked": [".git/**"]},
         "branch_policy": {"default_branch": "main", "working_branch_prefix": "governed/", "allow_direct_push": False},
         "delivery_format": {"summary_template": "default", "include_patch": True, "include_pr_body": True},
+        "required_entrypoint_policy": {
+            "current_mode": "advisory",
+            "target_mode": "repo_wide_enforced",
+            "canonical_entrypoints": ["runtime-flow", "runtime-flow-preset"],
+            "allow_direct_entrypoints": [
+                "run-governed-task.status",
+                "session-bridge.inspect_status",
+                "session-bridge.inspect_evidence",
+                "session-bridge.inspect_handoff",
+                "verify-repo",
+            ],
+            "targeted_enforcement_scopes": [
+                "run_quick_gate",
+                "run_full_gate",
+                "verify_attachment",
+                "govern_attachment_write",
+                "write_request",
+                "write_execute",
+                "execute_attachment_write",
+            ],
+        },
+        "auto_commit_policy": {
+            "enabled": False,
+            "on": ["full_pass", "milestone"],
+            "milestone_markers": ["checkpoint", "milestone", "release-candidate"],
+            "require_all_required_gates_pass": True,
+            "commit_message_template": "自动提交：{repo_id} {mode} 门禁通过 {timestamp} {milestone}",
+        },
         "compatibility_signals": [
             {
                 "capability": "native_attach",
@@ -619,9 +665,12 @@ def resolve_attachment_runtime_state_root(
 
 def _repo_local_path(target_repo_root: Path, value: str, field_name: str) -> Path:
     candidate = _resolve_path(Path(_required_string(value, field_name)), target_repo_root)
-    if not _is_under(candidate, target_repo_root):
-        msg = f"{field_name} must stay inside target_repo_root"
-        raise ValueError(msg)
+    ensure_resolved_under(
+        candidate,
+        target_repo_root,
+        field_name=field_name,
+        message=f"{field_name} must stay inside target_repo_root",
+    )
     return candidate
 
 
@@ -652,7 +701,25 @@ def _load_json_object(path: Path, field_name: str) -> dict:
 
 
 def _write_json(path: Path, payload: dict) -> None:
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _ensure_target_repo_dependency_baseline(*, repo_id: str, baseline_path: Path, overwrite: bool) -> bool:
+    if baseline_path.exists() and not overwrite:
+        return False
+    baseline_payload = {
+        "schema_version": DEFAULT_SCHEMA_VERSION,
+        "baseline_kind": "target_repo_dependency_baseline",
+        "repo_id": _required_string(repo_id, "repo_id"),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "owner_runtime": "governed-ai-coding-runtime",
+        "verify_command": (
+            "python scripts/verify-dependency-baseline.py "
+            "--target-repo-root <target-repo-root> --require-target-repo-baseline"
+        ),
+    }
+    _write_json(baseline_path, baseline_payload)
+    return True
 
 
 def _validate_repo_profile_for_attachment(raw: dict) -> RepoProfile:

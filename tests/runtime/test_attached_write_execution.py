@@ -1,6 +1,7 @@
 import sys
 import tempfile
 import unittest
+import os
 from pathlib import Path
 import importlib
 import json
@@ -173,6 +174,74 @@ class AttachedWriteExecutionTests(unittest.TestCase):
         self.assertEqual(denied.policy_decision.status, "deny")
         self.assertEqual(denied.reason, "approval_stale_or_missing")
         self.assertFalse(target_file.exists())
+
+    def test_decide_rejects_unsafe_approval_ids(self) -> None:
+        execution_module = importlib.import_module("governed_ai_coding_runtime_contracts.attached_write_execution")
+        _target_repo, runtime_state_root = self._attached_target()
+
+        with self.assertRaisesRegex(ValueError, "approval_id"):
+            execution_module.decide_attached_write_request(
+                attachment_runtime_state_root=runtime_state_root,
+                approval_id="../../escape",
+                decision="approve",
+                decided_by="operator",
+            )
+
+    def test_write_file_updates_symlink_target_without_replacing_link(self) -> None:
+        execution_module = importlib.import_module("governed_ai_coding_runtime_contracts.attached_write_execution")
+        target_repo, runtime_state_root = self._attached_target()
+        source_file = target_repo / "src" / "source.txt"
+        source_file.parent.mkdir(parents=True, exist_ok=True)
+        source_file.write_text("before\n", encoding="utf-8")
+        link_path = target_repo / "src" / "linked.txt"
+
+        try:
+            os.symlink(source_file, link_path)
+        except (OSError, NotImplementedError):
+            self.skipTest("file symlinks are not available in this environment")
+
+        result = execution_module.execute_attached_write_request(
+            attachment_root=target_repo,
+            attachment_runtime_state_root=runtime_state_root,
+            task_id="task-write-symlink",
+            tool_name="write_file",
+            target_path="src/linked.txt",
+            tier="low",
+            rollback_reference="git diff -- src/linked.txt",
+            content="after\n",
+        )
+
+        self.assertEqual(result.execution_status, "executed")
+        self.assertTrue(link_path.is_symlink())
+        self.assertEqual(source_file.read_text(encoding="utf-8"), "after\n")
+
+    def test_write_file_denies_symlink_target_outside_attachment_root(self) -> None:
+        execution_module = importlib.import_module("governed_ai_coding_runtime_contracts.attached_write_execution")
+        target_repo, runtime_state_root = self._attached_target()
+        external_file = target_repo.parent / "outside.txt"
+        external_file.write_text("outside-before\n", encoding="utf-8")
+        link_path = target_repo / "src" / "outside-link.txt"
+        link_path.parent.mkdir(parents=True, exist_ok=True)
+
+        try:
+            os.symlink(external_file, link_path)
+        except (OSError, NotImplementedError):
+            self.skipTest("file symlinks are not available in this environment")
+
+        result = execution_module.execute_attached_write_request(
+            attachment_root=target_repo,
+            attachment_runtime_state_root=runtime_state_root,
+            task_id="task-write-symlink-outside",
+            tool_name="write_file",
+            target_path="src/outside-link.txt",
+            tier="low",
+            rollback_reference="git diff -- src/outside-link.txt",
+            content="outside-after\n",
+        )
+
+        self.assertEqual(result.execution_status, "denied")
+        self.assertIn("outside attachment_root", result.reason or "")
+        self.assertEqual(external_file.read_text(encoding="utf-8"), "outside-before\n")
 
     def _attached_target(self) -> tuple[Path, Path]:
         repo_attachment = importlib.import_module("governed_ai_coding_runtime_contracts.repo_attachment")

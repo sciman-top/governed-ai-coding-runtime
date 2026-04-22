@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from pathlib import Path
-import subprocess
 from typing import Literal
 
 from governed_ai_coding_runtime_contracts.artifact_store import LocalArtifactStore
 from governed_ai_coding_runtime_contracts.attached_write_governance import govern_attached_write_request
 from governed_ai_coding_runtime_contracts.repo_attachment import inspect_attachment_posture, validate_light_pack
 from governed_ai_coding_runtime_contracts.repo_profile import load_repo_profile
+from governed_ai_coding_runtime_contracts.subprocess_guard import parse_optional_positive_timeout, run_subprocess
 from governed_ai_coding_runtime_contracts.verification_runner import (
     build_repo_profile_verification_plan,
     run_verification_plan,
@@ -23,6 +24,7 @@ ReplayQuality = Literal["replay_ready", "needs_follow_up", "insufficient"]
 _FOLLOW_UP_CATEGORIES = {"repo_specific", "onboarding_generic", "adapter_generic", "contract_generic"}
 _REPLAY_QUALITIES = {"replay_ready", "needs_follow_up", "insufficient"}
 _ADAPTER_TIERS = {"native_attach", "process_bridge", "manual_handoff"}
+_GATE_TIMEOUT_ENV_KEY = "GOVERNED_GATE_TIMEOUT_SECONDS"
 
 
 @dataclass(frozen=True, slots=True)
@@ -335,15 +337,12 @@ def _runtime_root_map(attachment_roots: list[str], runtime_roots: list[str]) -> 
 
 
 def _execute_gate(command: str, *, cwd: Path) -> tuple[int, str]:
-    completed = subprocess.run(
-        command,
+    timeout_seconds = parse_optional_positive_timeout(os.environ.get(_GATE_TIMEOUT_ENV_KEY), _GATE_TIMEOUT_ENV_KEY)
+    completed = run_subprocess(
+        command=command,
         shell=True,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
         cwd=cwd,
-        check=False,
+        timeout_seconds=timeout_seconds,
     )
     output = "\n".join(part for part in [completed.stdout, completed.stderr] if part).strip()
     return completed.returncode, output

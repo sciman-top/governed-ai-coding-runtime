@@ -3,8 +3,12 @@
 from dataclasses import dataclass
 import fnmatch
 from pathlib import PurePosixPath
-import subprocess
 from typing import Any
+
+from governed_ai_coding_runtime_contracts.subprocess_guard import (
+    resolve_timeout_policy,
+    run_subprocess,
+)
 
 _READONLY_SIDE_EFFECTS = {"none", "filesystem_read", "network_read"}
 _SUPPORTED_GOVERNED_TOOLS = {"shell", "git", "package"}
@@ -37,6 +41,9 @@ class ToolGovernanceDecision:
 class ToolExecutionResult:
     exit_code: int
     output: str
+    timed_out: bool = False
+    timeout_seconds: float | None = None
+    timeout_exempt: bool = False
 
 
 def validate_readonly_request(request: ToolRequest, repo_profile: Any) -> bool:
@@ -103,19 +110,35 @@ def govern_execution_request(
     return ToolGovernanceDecision(status="allow", reason="bounded low-risk execution", requires_approval=False)
 
 
-def execute_governed_command(*, command: str, cwd: str | None = None) -> ToolExecutionResult:
-    completed = subprocess.run(
-        command,
+def execute_governed_command(
+    *,
+    command: str,
+    cwd: str | None = None,
+    timeout_seconds: object = None,
+    timeout_exempt: bool = False,
+    timeout_exempt_allowlist: list[str] | None = None,
+) -> ToolExecutionResult:
+    normalized_command = _required_string(command, "command")
+    timeout_policy = resolve_timeout_policy(
+        command_text=normalized_command,
+        timeout_seconds=timeout_seconds,
+        timeout_exempt=timeout_exempt,
+        allowlist_patterns=timeout_exempt_allowlist,
+    )
+    completed = run_subprocess(
+        command=normalized_command,
         shell=True,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
         cwd=cwd,
-        check=False,
+        timeout_seconds=timeout_policy.timeout_seconds,
     )
     output = "\n".join(part for part in [completed.stdout, completed.stderr] if part).strip()
-    return ToolExecutionResult(exit_code=completed.returncode, output=output)
+    return ToolExecutionResult(
+        exit_code=completed.returncode,
+        output=output,
+        timed_out=completed.timed_out,
+        timeout_seconds=timeout_policy.timeout_seconds,
+        timeout_exempt=timeout_policy.timeout_exempt,
+    )
 
 
 def _is_allowed_path(target_path: str, path_policies: dict) -> bool:

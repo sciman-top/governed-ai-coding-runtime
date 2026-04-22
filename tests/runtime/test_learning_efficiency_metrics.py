@@ -79,6 +79,24 @@ class LearningEfficiencyMetricsTests(unittest.TestCase):
             self.assertEqual(payload["metrics_source_ref"], "artifacts/task-1/run-1/evidence/bundle.json")
             self.assertEqual(payload["issue_resolution_without_repeated_question"], 1)
 
+    def test_persist_learning_efficiency_metrics_rejects_unsafe_path_segments(self) -> None:
+        module = importlib.import_module("governed_ai_coding_runtime_contracts.learning_efficiency_metrics")
+        record = module.build_learning_efficiency_metrics(
+            task_id="task-1",
+            evidence_bundle={"final_outcome": {"status": "completed"}},
+        )
+        unsafe_record = module.LearningEfficiencyMetricsRecord(
+            **{**record.to_dict(), "task_id": "../escape"}
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            with self.assertRaisesRegex(ValueError, "task_id"):
+                module.persist_learning_efficiency_metrics(
+                    output_root=tmp_dir,
+                    run_id="run-1",
+                    record=unsafe_record,
+                )
+
     def test_summarize_learning_efficiency_metrics_baseline_rates(self) -> None:
         module = importlib.import_module("governed_ai_coding_runtime_contracts.learning_efficiency_metrics")
         first = module.build_learning_efficiency_metrics(

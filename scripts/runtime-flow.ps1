@@ -9,6 +9,8 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$AttachmentRuntimeStateRoot,
 
+  [string]$EntrypointId = "runtime-flow",
+
   [ValidateSet("quick", "full", "l1", "l2", "l3")]
   [string]$Mode = "quick",
 
@@ -182,6 +184,7 @@ $checkArgs = @(
   "scripts/runtime-check.ps1",
   "-AttachmentRoot", $resolvedAttachmentRoot,
   "-AttachmentRuntimeStateRoot", $resolvedAttachmentRuntimeStateRoot,
+  "-EntrypointId", $EntrypointId,
   "-Mode", $Mode,
   "-PolicyStatus", $PolicyStatus,
   "-TaskId", $TaskId,

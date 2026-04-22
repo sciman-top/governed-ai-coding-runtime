@@ -226,7 +226,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-classroomtool
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-classroomtoolkit.ps1 -FlowMode "onboard"
 ```
 
-Multi-target preset shortcut (`classroomtoolkit` / `self-runtime` / `skills-manager`):
+Multi-target preset shortcut (`classroomtoolkit` / `github-toolkit` / `self-runtime` / `skills-manager` / `vps-ssh-launcher`):
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
@@ -237,11 +237,85 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
 
 Preset single source of truth:
 - `scripts/runtime-flow-preset.ps1` now reads targets from `docs/targets/target-repos-catalog.json`.
+- `docs/targets/target-repos-catalog.json` is the persistent registry for active preset target-repo facts.
 - List available targets:
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
 ```
+
+### 6. Enable The Canonical Entrypoint Policy
+
+If you want to standardize daily usage around one governed entrypoint, add `required_entrypoint_policy` to the target repo's `.governed-ai/repo-profile.json`.
+
+Recommended starter policy:
+
+```json
+"required_entrypoint_policy": {
+  "current_mode": "advisory",
+  "target_mode": "repo_wide_enforced",
+  "canonical_entrypoints": [
+    "runtime-flow",
+    "runtime-flow-preset"
+  ],
+  "allow_direct_entrypoints": [
+    "run-governed-task.status",
+    "session-bridge.inspect_status",
+    "session-bridge.inspect_evidence",
+    "session-bridge.inspect_handoff",
+    "verify-repo"
+  ],
+  "targeted_enforcement_scopes": [
+    "run_quick_gate",
+    "run_full_gate",
+    "verify_attachment",
+    "govern_attachment_write",
+    "write_request",
+    "write_execute",
+    "execute_attachment_write"
+  ],
+  "promotion_condition_ref": "docs/governance/entrypoint-promotion.md"
+}
+```
+
+Mode selection:
+- `advisory`: record drift, do not block direct entrypoints
+- `targeted_enforced`: block direct gate/write entrypoints, keep read-only inspection entrypoints usable
+- `repo_wide_enforced`: block all non-canonical non-read-only entrypoints repo-wide
+
+Recommended promotion path:
+1. Start with `advisory`
+2. Move to `targeted_enforced` after the team is routinely using `runtime-flow` or `runtime-flow-preset`
+3. Move to `repo_wide_enforced` only after direct-call exceptions are intentionally allowlisted
+
+Canonical daily commands:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow.ps1 `
+  -FlowMode "daily" `
+  -AttachmentRoot "..\ClassroomToolkit" `
+  -AttachmentRuntimeStateRoot ".runtime\attachments\classroomtoolkit" `
+  -Mode "quick"
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -Target "skills-manager" `
+  -FlowMode "daily" `
+  -SkipVerifyAttachment
+```
+
+What changes after enforcement:
+- direct `session-bridge request-gate`, `run-governed-task verify-attachment`, `govern-attachment-write`, and `execute-attachment-write` calls will surface `entrypoint_policy` in their payload
+- when policy mode blocks the call, CLI wrappers return a denial payload instead of silently continuing
+- `runtime-check.ps1` surfaces `entrypoint_policy_mode`, `entrypoint_drift`, and `entrypoint_blocked` in its summary
+
+What remains intentionally allowed:
+- `run-governed-task.py status`
+- `session-bridge.py status`
+- `session-bridge.py inspect-evidence`
+- `session-bridge.py inspect-handoff`
+- `verify-repo.ps1`
 
 ## What Happens If Paths Change
 - If the target repo moves:

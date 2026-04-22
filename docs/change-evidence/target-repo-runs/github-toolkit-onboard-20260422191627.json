@@ -1,0 +1,258 @@
+{
+  "flow_mode": "onboard",
+  "overall_status": "pass",
+  "runtime_check": {
+    "payload": {
+      "inspect_evidence": null,
+      "steps": [
+        {
+          "output": "{\n  \"attachments\": [\n    {\n      \"adapter_preference\": \"native_attach\",\n      \"binding_id\": \"binding-github-toolkit\",\n      \"binding_state\": \"healthy\",\n      \"fail_closed\": false,\n      \"gate_profile\": \"default\",\n      \"light_pack_path\": \"D:\\\\CODE\\\\github-toolkit\\\\.governed-ai\\\\light-pack.json\",\n      \"reason\": null,\n      \"remediation\": null,\n      \"repo_id\": \"github-toolkit\"\n    }\n  ],\n  \"codex_capability\": {\n    \"adapter_tier\": \"native_attach\",\n    \"evidence_export_available\": true,\n    \"failure_stage\": null,\n    \"flow_kind\": \"live_attach\",\n    \"live_attach_available\": true,\n    \"probe_attempts\": 1,\n    \"remediation_hint\": \"Validate native attach via `codex.cmd exec resume --help` and a controlled `exec resume --last --json` probe when needed.\",\n    \"resume_available\": true,\n    \"stability_state\": \"single_pass\",\n    \"status\": \"ready\",\n    \"structured_events_available\": true,\n    \"unsupported_capabilities\": []\n  },\n  \"maintenance\": {\n    \"compatibility_policy_ref\": \"docs/product/runtime-compatibility-and-upgrade-policy.md\",\n    \"deprecation_policy_ref\": \"docs/product/maintenance-deprecation-and-retirement-policy.md\",\n    \"retirement_policy_ref\": \"docs/product/maintenance-deprecation-and-retirement-policy.md\",\n    \"stage\": \"completed\",\n    \"triage_policy_ref\": \"docs/product/maintenance-deprecation-and-retirement-policy.md\",\n    \"upgrade_policy_ref\": \"docs/product/runtime-compatibility-and-upgrade-policy.md\"\n  },\n  \"runtime_roots\": {\n    \"artifacts_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/artifacts\",\n    \"compatibility_mode\": false,\n    \"replay_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/replay\",\n    \"runtime_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime\",\n    \"tasks_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/tasks\",\n    \"workspaces_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/workspaces\"\n  },\n  \"tasks\": [],\n  \"total_tasks\": 0\n}",
+          "label": "status",
+          "exit_code": 0
+        },
+        {
+          "output": "OK python-command\nOK runtime-path-contracts\nOK runtime-path-schema-catalog\nOK runtime-path-specs\nOK runtime-path-tests\nOK runtime-policy-compatibility\nOK runtime-policy-maintenance\nOK schema-catalog-visible\nOK gate-command-build\nOK gate-command-test\nOK gate-command-contract\nOK gate-command-doctor\nOK gate-command-operator\nOK runtime-status-surface\nOK maintenance-policy-visible\nOK codex-capability-ready\nOK adapter-posture-visible\nREMEDIATE-EVIDENCE D:\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\github-toolkit\\doctor\\remediation-20260422T191631593.json\nOK attachment-posture-healthy",
+          "label": "doctor",
+          "exit_code": 0
+        },
+        {
+          "output": "{\n  \"command_id\": \"cmd-onboard-github-toolkit-20260422191627\",\n  \"command_type\": \"run_quick_gate\",\n  \"payload\": {\n    \"adapter_event_ref\": \"artifacts/task-onboard-github-toolkit-20260422191627/task-onboard-github-toolkit-20260422191627-session-bridge-request/evidence/adapter-events.json\",\n    \"adapter_event_summary\": {\n      \"approval_event_count\": 0,\n      \"file_change_count\": 0,\n      \"gate_run_count\": 2,\n      \"handoff_ref_count\": 0,\n      \"live_event_count\": 3,\n      \"manual_event_count\": 0,\n      \"task_id\": \"task-onboard-github-toolkit-20260422191627\",\n      \"tool_call_count\": 0,\n      \"unsupported_event_count\": 0\n    },\n    \"adapter_id\": \"codex-cli\",\n    \"commands\": [\n      \"python -m unittest test_toolkit.py\",\n      \"python -m unittest test_toolkit.py\"\n    ],\n    \"continuation_id\": \"task-onboard-github-toolkit-20260422191627:run-onboard-github-toolkit-20260422191627\",\n    \"evidence_link\": \"artifacts/task-onboard-github-toolkit-20260422191627/session-bridge-request/verification-output/contract.txt\",\n    \"execution_id\": \"task-onboard-github-toolkit-20260422191627:session-bridge-request\",\n    \"gate_order\": [\n      \"test\",\n      \"contract\"\n    ],\n    \"mode\": \"quick\",\n    \"outcome\": \"pass\",\n    \"plan_only\": false,\n    \"result_artifact_refs\": {\n      \"contract\": \"artifacts/task-onboard-github-toolkit-20260422191627/session-bridge-request/verification-output/contract.txt\",\n      \"test\": \"artifacts/task-onboard-github-toolkit-20260422191627/session-bridge-request/verification-output/test.txt\"\n    },\n    \"results\": {\n      \"contract\": \"pass\",\n      \"test\": \"pass\"\n    },\n    \"risky_artifact_refs\": [],\n    \"run_id\": \"session-bridge-request\",\n    \"session_identity\": {\n      \"adapter_id\": \"codex-cli\",\n      \"adapter_tier\": \"native_attach\",\n      \"continuation_id\": \"task-onboard-github-toolkit-20260422191627:run-onboard-github-toolkit-20260422191627\",\n      \"flow_kind\": \"live_attach\",\n      \"live_attach_available\": true,\n      \"posture_reason\": \"codex status command is unavailable; native attach is inferred from resume command surface\",\n      \"resume_id\": \"resume-task-onboard-github-toolkit-20260422191627\",\n      \"session_id\": \"session-task-onboard-github-toolkit-20260422191627\",\n      \"unsupported_capabilities\": []\n    }\n  },\n  \"policy_decision_ref\": \"artifacts/task-onboard-github-toolkit-20260422191627/policy/session-bridge-allow.json\",\n  \"reason\": null,\n  \"status\": \"verification_completed\",\n  \"unsupported_capability_behavior\": null\n}",
+          "label": "session-bridge-request-gate",
+          "exit_code": 0
+        },
+        {
+          "output": "{\n  \"binding_id\": \"binding-github-toolkit\",\n  \"evidence_link\": \"artifacts/task-onboard-github-toolkit-20260422191627/run-onboard-github-toolkit-20260422191627/verification-output/contract.txt\",\n  \"gate_order\": [\n    \"test\",\n    \"contract\"\n  ],\n  \"mode\": \"quick\",\n  \"repo_id\": \"github-toolkit\",\n  \"result_artifact_refs\": {\n    \"contract\": \"artifacts/task-onboard-github-toolkit-20260422191627/run-onboard-github-toolkit-20260422191627/verification-output/contract.txt\",\n    \"test\": \"artifacts/task-onboard-github-toolkit-20260422191627/run-onboard-github-toolkit-20260422191627/verification-output/test.txt\"\n  },\n  \"results\": {\n    \"contract\": \"pass\",\n    \"test\": \"pass\"\n  },\n  \"run_id\": \"run-onboard-github-toolkit-20260422191627\",\n  \"task_id\": \"task-onboard-github-toolkit-20260422191627\"\n}",
+          "label": "verify-attachment",
+          "exit_code": 0
+        }
+      ],
+      "write_governance": null,
+      "write_approval": null,
+      "live_loop": {
+        "fallback_reason": null,
+        "is_live_attach": true,
+        "evidence_linkage_complete": true,
+        "continuation_continuity": true,
+        "resume_identity_continuity": true,
+        "flow_kind": "live_attach",
+        "closure_state": "live_closure_ready",
+        "fallback_explicit": false,
+        "runtime_refs": [
+          "artifacts/task-onboard-github-toolkit-20260422191627/task-onboard-github-toolkit-20260422191627-session-bridge-request/evidence/adapter-events.json",
+          "artifacts/task-onboard-github-toolkit-20260422191627/session-bridge-request/verification-output/contract.txt",
+          "artifacts/task-onboard-github-toolkit-20260422191627/session-bridge-request/verification-output/test.txt"
+        ],
+        "session_identity_continuity": true
+      },
+      "request_gate": {
+        "command_id": "cmd-onboard-github-toolkit-20260422191627",
+        "command_type": "run_quick_gate",
+        "payload": {
+          "adapter_event_ref": "artifacts/task-onboard-github-toolkit-20260422191627/task-onboard-github-toolkit-20260422191627-session-bridge-request/evidence/adapter-events.json",
+          "adapter_event_summary": {
+            "approval_event_count": 0,
+            "file_change_count": 0,
+            "gate_run_count": 2,
+            "handoff_ref_count": 0,
+            "live_event_count": 3,
+            "manual_event_count": 0,
+            "task_id": "task-onboard-github-toolkit-20260422191627",
+            "tool_call_count": 0,
+            "unsupported_event_count": 0
+          },
+          "adapter_id": "codex-cli",
+          "commands": [
+            "python -m unittest test_toolkit.py",
+            "python -m unittest test_toolkit.py"
+          ],
+          "continuation_id": "task-onboard-github-toolkit-20260422191627:run-onboard-github-toolkit-20260422191627",
+          "evidence_link": "artifacts/task-onboard-github-toolkit-20260422191627/session-bridge-request/verification-output/contract.txt",
+          "execution_id": "task-onboard-github-toolkit-20260422191627:session-bridge-request",
+          "gate_order": [
+            "test",
+            "contract"
+          ],
+          "mode": "quick",
+          "outcome": "pass",
+          "plan_only": false,
+          "result_artifact_refs": {
+            "contract": "artifacts/task-onboard-github-toolkit-20260422191627/session-bridge-request/verification-output/contract.txt",
+            "test": "artifacts/task-onboard-github-toolkit-20260422191627/session-bridge-request/verification-output/test.txt"
+          },
+          "results": {
+            "contract": "pass",
+            "test": "pass"
+          },
+          "risky_artifact_refs": [],
+          "run_id": "session-bridge-request",
+          "session_identity": {
+            "adapter_id": "codex-cli",
+            "adapter_tier": "native_attach",
+            "continuation_id": "task-onboard-github-toolkit-20260422191627:run-onboard-github-toolkit-20260422191627",
+            "flow_kind": "live_attach",
+            "live_attach_available": true,
+            "posture_reason": "codex status command is unavailable; native attach is inferred from resume command surface",
+            "resume_id": "resume-task-onboard-github-toolkit-20260422191627",
+            "session_id": "session-task-onboard-github-toolkit-20260422191627",
+            "unsupported_capabilities": []
+          }
+        },
+        "policy_decision_ref": "artifacts/task-onboard-github-toolkit-20260422191627/policy/session-bridge-allow.json",
+        "reason": null,
+        "status": "verification_completed",
+        "unsupported_capability_behavior": null
+      },
+      "write_execute": null,
+      "verify_attachment": {
+        "binding_id": "binding-github-toolkit",
+        "evidence_link": "artifacts/task-onboard-github-toolkit-20260422191627/run-onboard-github-toolkit-20260422191627/verification-output/contract.txt",
+        "gate_order": [
+          "test",
+          "contract"
+        ],
+        "mode": "quick",
+        "repo_id": "github-toolkit",
+        "result_artifact_refs": {
+          "contract": "artifacts/task-onboard-github-toolkit-20260422191627/run-onboard-github-toolkit-20260422191627/verification-output/contract.txt",
+          "test": "artifacts/task-onboard-github-toolkit-20260422191627/run-onboard-github-toolkit-20260422191627/verification-output/test.txt"
+        },
+        "results": {
+          "contract": "pass",
+          "test": "pass"
+        },
+        "run_id": "run-onboard-github-toolkit-20260422191627",
+        "task_id": "task-onboard-github-toolkit-20260422191627"
+      },
+      "write_preflight": null,
+      "write_status": null,
+      "status": {
+        "attachments": [
+          {
+            "adapter_preference": "native_attach",
+            "binding_id": "binding-github-toolkit",
+            "binding_state": "healthy",
+            "fail_closed": false,
+            "gate_profile": "default",
+            "light_pack_path": "D:\\CODE\\github-toolkit\\.governed-ai\\light-pack.json",
+            "reason": null,
+            "remediation": null,
+            "repo_id": "github-toolkit"
+          }
+        ],
+        "codex_capability": {
+          "adapter_tier": "native_attach",
+          "evidence_export_available": true,
+          "failure_stage": null,
+          "flow_kind": "live_attach",
+          "live_attach_available": true,
+          "probe_attempts": 1,
+          "remediation_hint": "Validate native attach via `codex.cmd exec resume --help` and a controlled `exec resume --last --json` probe when needed.",
+          "resume_available": true,
+          "stability_state": "single_pass",
+          "status": "ready",
+          "structured_events_available": true,
+          "unsupported_capabilities": []
+        },
+        "maintenance": {
+          "compatibility_policy_ref": "docs/product/runtime-compatibility-and-upgrade-policy.md",
+          "deprecation_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+          "retirement_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+          "stage": "completed",
+          "triage_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+          "upgrade_policy_ref": "docs/product/runtime-compatibility-and-upgrade-policy.md"
+        },
+        "runtime_roots": {
+          "artifacts_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/artifacts",
+          "compatibility_mode": false,
+          "replay_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/replay",
+          "runtime_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime",
+          "tasks_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/tasks",
+          "workspaces_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/workspaces"
+        },
+        "tasks": [],
+        "total_tasks": 0
+      },
+      "next_actions": [],
+      "inspect_handoff": null,
+      "summary": {
+        "attachment_health": "healthy",
+        "session_id": "session-task-onboard-github-toolkit-20260422191627",
+        "flow_kind": "live_attach",
+        "overall_status": "pass",
+        "resume_id": "resume-task-onboard-github-toolkit-20260422191627",
+        "attachment_runtime_state_root": "D:\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\github-toolkit",
+        "mode": "quick",
+        "run_id": "run-onboard-github-toolkit-20260422191627",
+        "repo_binding_id": "binding-github-toolkit",
+        "closure_state": "live_closure_ready",
+        "command_id": "cmd-onboard-github-toolkit-20260422191627",
+        "attachment_root": "D:\\CODE\\github-toolkit",
+        "task_id": "task-onboard-github-toolkit-20260422191627",
+        "continuation_id": "task-onboard-github-toolkit-20260422191627:run-onboard-github-toolkit-20260422191627"
+      }
+    },
+    "exit_code": 0
+  },
+  "next_actions": [],
+  "onboard_attach": {
+    "payload": {
+      "binding": {
+        "adapter_preference": "native_attach",
+        "binding_id": "binding-github-toolkit",
+        "doctor_posture": "healthy",
+        "gate_profile": "default",
+        "light_pack_path": "D:\\CODE\\github-toolkit\\.governed-ai\\light-pack.json",
+        "mutable_state_roots": {
+          "approvals": "D:\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\github-toolkit\\approvals",
+          "artifacts": "D:\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\github-toolkit\\artifacts",
+          "replay": "D:\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\github-toolkit\\replay",
+          "runs": "D:\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\github-toolkit\\runs",
+          "tasks": "D:\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\github-toolkit\\tasks"
+        },
+        "repo_profile_ref": "D:\\CODE\\github-toolkit\\.governed-ai\\repo-profile.json",
+        "runtime_state_root": "D:\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\github-toolkit",
+        "schema_version": "1.0",
+        "target_repo_root": "D:\\CODE\\github-toolkit"
+      },
+      "context_pack_summary": {
+        "age_seconds": 0,
+        "context_pack_path": "D:\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\github-toolkit\\context\\context-pack.json",
+        "dominant_commands": [
+          "python -m py_compile gh_utils.py list-forks.py sync-forks.py test_toolkit.py",
+          "python -m unittest test_toolkit.py"
+        ],
+        "exists": true,
+        "failure_signatures": [],
+        "generated_at": "2026-04-22T19:16:29.02035+08:00",
+        "hot_files": [
+          "README.md",
+          ".governed-ai/light-pack.json",
+          ".governed-ai/repo-profile.json",
+          "docs/runtime-probe-20260420230743.txt",
+          "scripts/git-acl-guard.ps1",
+          "setup.bat",
+          ".gitignore",
+          "gh_utils.py",
+          "list-forks.py",
+          "sync-forks.py"
+        ],
+        "is_stale": false,
+        "refresh_command": "python scripts/attach-target-repo.py --target-repo \"D:/CODE/github-toolkit\" --runtime-state-root \"D:/CODE/governed-ai-coding-runtime/.runtime/attachments/github-toolkit\" --overwrite",
+        "repo_map_file_count": 10,
+        "source_light_pack_path": "D:\\CODE\\github-toolkit\\.governed-ai\\light-pack.json",
+        "source_repo_profile_path": "D:\\CODE\\github-toolkit\\.governed-ai\\repo-profile.json",
+        "stale_after_seconds": 86400
+      },
+      "gate_command_source": "explicit",
+      "inferred_gate_defaults_used": false,
+      "light_pack_path": "D:\\CODE\\github-toolkit\\.governed-ai\\light-pack.json",
+      "operation": "created",
+      "repo_profile_path": "D:\\CODE\\github-toolkit\\.governed-ai\\repo-profile.json",
+      "written_files": [
+        "D:\\CODE\\github-toolkit\\.governed-ai\\repo-profile.json",
+        "D:\\CODE\\github-toolkit\\.governed-ai\\light-pack.json"
+      ]
+    },
+    "exit_code": 0
+  }
+}

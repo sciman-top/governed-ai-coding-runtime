@@ -40,11 +40,11 @@
   - `alternative_verification`: `scripts/verify-repo.ps1 -Check Doctor`
   - `evidence_link`: `docs/change-evidence/*.md`
   - `expires_at`: `n/a`
-- `E5 供应链门禁`：`gate_na`
-  - `reason`: 尚无 `pyproject.toml`、`package.json`、lockfile 或依赖清单
-  - `alternative_verification`: 新增依赖前先落地包管理清单与 CI 校验
+- `E5 供应链门禁`：`active`
+  - `reason`: 当前以 `docs/dependency-baseline.*` + `scripts/verify-dependency-baseline.py` 强制执行 stdlib-only Python 依赖基线，并显式阻断未声明的第三方导入
+  - `alternative_verification`: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Dependency`
   - `evidence_link`: `docs/change-evidence/*.md`
-  - `expires_at`: `2026-05-31`
+  - `expires_at`: `n/a`
 - `E6 数据结构变更`：`active`
   - 触发范围：`docs/specs/*`、`schemas/jsonschema/*`、`schemas/catalog/schema-catalog.yaml`
   - 必做动作：同步更新配套文档/Schema/Catalog，并在证据中记录兼容性和回滚说明

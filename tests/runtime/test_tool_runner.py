@@ -114,6 +114,41 @@ class ReadOnlyToolRunnerTests(unittest.TestCase):
         self.assertEqual(summary.accepted_count, 1)
         self.assertEqual(summary.tool_names, ["shell"])
 
+    def test_execute_governed_command_supports_timeout(self) -> None:
+        tool_runner = importlib.import_module("governed_ai_coding_runtime_contracts.tool_runner")
+        command = f"\"{sys.executable}\" -c \"import time; time.sleep(2)\""
+        result = tool_runner.execute_governed_command(command=command, timeout_seconds=1)
+
+        self.assertEqual(result.exit_code, 124)
+        self.assertTrue(result.timed_out)
+        self.assertIn("timed out", result.output)
+
+    def test_execute_governed_command_timeout_exempt_requires_allowlist(self) -> None:
+        tool_runner = importlib.import_module("governed_ai_coding_runtime_contracts.tool_runner")
+        command = f"\"{sys.executable}\" -c \"print('ok')\""
+
+        with self.assertRaisesRegex(ValueError, "allowlisted"):
+            tool_runner.execute_governed_command(
+                command=command,
+                timeout_seconds=1,
+                timeout_exempt=True,
+            )
+
+    def test_execute_governed_command_timeout_exempt_can_use_repo_allowlist(self) -> None:
+        tool_runner = importlib.import_module("governed_ai_coding_runtime_contracts.tool_runner")
+        command = f"\"{sys.executable}\" -c \"import time; time.sleep(0.2)\""
+        result = tool_runner.execute_governed_command(
+            command=command,
+            timeout_seconds=1,
+            timeout_exempt=True,
+            timeout_exempt_allowlist=["*time.sleep*"],
+        )
+
+        self.assertEqual(result.exit_code, 0)
+        self.assertFalse(result.timed_out)
+        self.assertIsNone(result.timeout_seconds)
+        self.assertTrue(result.timeout_exempt)
+
 
 if __name__ == "__main__":
     unittest.main()

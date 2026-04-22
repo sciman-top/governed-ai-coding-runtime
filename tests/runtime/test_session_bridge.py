@@ -334,6 +334,80 @@ class SessionBridgeCommandTests(unittest.TestCase):
         self.assertEqual(result.payload["mode"], "l2")
         self.assertEqual(result.payload["gate_order"], ["build", "test", "contract"])
 
+    def test_local_session_bridge_enforces_required_canonical_entrypoint_policy(self) -> None:
+        module = self._module()
+        repo_attachment = importlib.import_module("governed_ai_coding_runtime_contracts.repo_attachment")
+        decision = self._policy_decision(task_id="task-entrypoint-policy", status="allow", risk_tier="low")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            self._seed_task(workspace, task_id="task-entrypoint-policy")
+            target_repo = workspace / "target"
+            target_repo.mkdir()
+            runtime_state_root = workspace / "runtime-state" / "target"
+            repo_attachment.attach_target_repo(
+                target_repo_root=str(target_repo),
+                runtime_state_root=str(runtime_state_root),
+                repo_id="target",
+                display_name="Target",
+                primary_language="python",
+                build_command="cmd /c exit 0",
+                test_command="cmd /c exit 0",
+                contract_command="cmd /c exit 0",
+                adapter_preference="process_bridge",
+            )
+
+            profile_path = target_repo / ".governed-ai" / "repo-profile.json"
+            profile = json.loads(profile_path.read_text(encoding="utf-8"))
+            profile["required_entrypoint_policy"]["current_mode"] = "targeted_enforced"
+            profile_path.write_text(json.dumps(profile, indent=2, sort_keys=True), encoding="utf-8")
+
+            blocked_command = module.build_session_bridge_command(
+                command_id="cmd-entrypoint-policy-blocked",
+                command_type="run_quick_gate",
+                task_id="task-entrypoint-policy",
+                repo_binding_id="binding-target",
+                adapter_id="codex-cli",
+                risk_tier="low",
+                payload={"run_id": "run-entrypoint-policy", "plan_only": True},
+                policy_decision=decision,
+            )
+            blocked_result = module.handle_session_bridge_command(
+                blocked_command,
+                task_root=workspace / ".runtime" / "tasks",
+                repo_root=workspace,
+                attachment_root=target_repo,
+                attachment_runtime_state_root=runtime_state_root,
+            )
+
+            self.assertEqual(blocked_result.status, "denied")
+            self.assertTrue(blocked_result.payload["entrypoint_policy"]["blocked"])
+
+            allowed_command = module.build_session_bridge_command(
+                command_id="cmd-entrypoint-policy-allowed",
+                command_type="run_quick_gate",
+                task_id="task-entrypoint-policy",
+                repo_binding_id="binding-target",
+                adapter_id="codex-cli",
+                risk_tier="low",
+                payload={
+                    "run_id": "run-entrypoint-policy",
+                    "plan_only": True,
+                    "entrypoint_id": "runtime-flow",
+                },
+                policy_decision=decision,
+            )
+            allowed_result = module.handle_session_bridge_command(
+                allowed_command,
+                task_root=workspace / ".runtime" / "tasks",
+                repo_root=workspace,
+                attachment_root=target_repo,
+                attachment_runtime_state_root=runtime_state_root,
+            )
+
+            self.assertEqual(allowed_result.status, "verification_requested")
+            self.assertFalse(allowed_result.payload["entrypoint_policy"]["blocked"])
+
     def test_codex_session_identity_includes_flow_kind_and_preserves_explicit_ids(self) -> None:
         module = self._module()
         decision = self._policy_decision(status="allow", risk_tier="low")
@@ -910,6 +984,30 @@ class SessionBridgeCommandTests(unittest.TestCase):
             self.assertEqual(status_identity["resume_id"], request_identity["resume_id"])
             self.assertEqual(status_identity["continuation_id"], flow_execution_id)
 
+    def test_write_status_rejects_unsafe_approval_ids(self) -> None:
+        module = self._module()
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            self._seed_task(workspace, task_id="task-write-unsafe")
+            command = module.build_session_bridge_command(
+                command_id="cmd-write-status-unsafe",
+                command_type="write_status",
+                task_id="task-write-unsafe",
+                repo_binding_id="binding-target",
+                adapter_id="codex-cli",
+                risk_tier="medium",
+                payload={"approval_id": "../../escape", "target_path": "docs/plan.md"},
+            )
+
+            with self.assertRaisesRegex(ValueError, "approval_id"):
+                module.handle_session_bridge_command(
+                    command,
+                    task_root=workspace / ".runtime" / "tasks",
+                    repo_root=workspace,
+                    attachment_runtime_state_root=workspace / "runtime-state" / "target",
+                )
+
     def test_write_request_preflight_deny_returns_retry_command(self) -> None:
         module = self._module()
         repo_attachment = importlib.import_module("governed_ai_coding_runtime_contracts.repo_attachment")
@@ -1144,6 +1242,336 @@ class SessionBridgeCommandTests(unittest.TestCase):
             ["artifacts/task-123/run-1/verification-output/test.txt"],
         )
 
+    def test_launch_mode_captures_deleted_files(self) -> None:
+        module = self._module()
+        command = module.build_session_bridge_command(
+            command_id="cmd-launch-delete",
+            command_type="bind_task",
+            task_id="task-123",
+            repo_binding_id="binding-python-service",
+            adapter_id="codex-cli",
+            risk_tier="low",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cwd = Path(tmp_dir)
+            (cwd / "delete-me.txt").write_text("stale", encoding="utf-8")
+            result = module.run_launch_mode(
+                command,
+                argv=[
+                    sys.executable,
+                    "-c",
+                    "from pathlib import Path; Path('delete-me.txt').unlink()",
+                ],
+                cwd=cwd,
+            )
+
+        self.assertEqual(result.payload["exit_code"], 0)
+        self.assertIn("delete-me.txt", result.payload["deleted_files"])
+
+    def test_launch_mode_detects_same_size_rewrite(self) -> None:
+        module = self._module()
+        command = module.build_session_bridge_command(
+            command_id="cmd-launch-rewrite",
+            command_type="bind_task",
+            task_id="task-123",
+            repo_binding_id="binding-python-service",
+            adapter_id="codex-cli",
+            risk_tier="low",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cwd = Path(tmp_dir)
+            (cwd / "same-size.txt").write_text("abc", encoding="utf-8")
+            result = module.run_launch_mode(
+                command,
+                argv=[
+                    sys.executable,
+                    "-c",
+                    "import time; from pathlib import Path; time.sleep(0.02); Path('same-size.txt').write_text('xyz')",
+                ],
+                cwd=cwd,
+            )
+
+        self.assertEqual(result.payload["exit_code"], 0)
+        self.assertIn("same-size.txt", result.payload["changed_files"])
+
+    def test_launch_mode_detects_same_size_rewrite_when_mtime_is_restored(self) -> None:
+        module = self._module()
+        command = module.build_session_bridge_command(
+            command_id="cmd-launch-rewrite-restored-mtime",
+            command_type="bind_task",
+            task_id="task-123",
+            repo_binding_id="binding-python-service",
+            adapter_id="codex-cli",
+            risk_tier="low",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cwd = Path(tmp_dir)
+            target = cwd / "same-size.txt"
+            target.write_text("abc", encoding="utf-8")
+            before = target.stat()
+            result = module.run_launch_mode(
+                command,
+                argv=[
+                    sys.executable,
+                    "-c",
+                    (
+                        "import os; "
+                        "from pathlib import Path; "
+                        "path = Path('same-size.txt'); "
+                        "path.write_text('xyz', encoding='utf-8'); "
+                        f"os.utime(path, ns=({before.st_atime_ns}, {before.st_mtime_ns}))"
+                    ),
+                ],
+                cwd=cwd,
+            )
+
+        self.assertEqual(result.payload["exit_code"], 0)
+        self.assertIn("same-size.txt", result.payload["changed_files"])
+        self.assertEqual(result.payload["snapshot_mode"], "balanced")
+
+    def test_launch_mode_defaults_to_strict_for_high_risk(self) -> None:
+        module = self._module()
+        command = module.build_session_bridge_command(
+            command_id="cmd-launch-default-strict-high-risk",
+            command_type="bind_task",
+            task_id="task-123",
+            repo_binding_id="binding-python-service",
+            adapter_id="codex-cli",
+            risk_tier="high",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            result = module.run_launch_mode(
+                command,
+                argv=[sys.executable, "-c", "print('launched-high')"],
+                cwd=Path(tmp_dir),
+            )
+
+        self.assertEqual(result.payload["exit_code"], 0)
+        self.assertEqual(result.payload["snapshot_mode"], "strict")
+
+    def test_launch_mode_strict_snapshot_detects_large_file_change_outside_balanced_samples(self) -> None:
+        module = self._module()
+        command = module.build_session_bridge_command(
+            command_id="cmd-launch-rewrite-strict-large-file",
+            command_type="bind_task",
+            task_id="task-123",
+            repo_binding_id="binding-python-service",
+            adapter_id="codex-cli",
+            risk_tier="low",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cwd = Path(tmp_dir)
+            target = cwd / "large.txt"
+            content = "a" * 20000
+            target.write_text(content, encoding="utf-8")
+            before = target.stat()
+            result = module.run_launch_mode(
+                command,
+                argv=[
+                    sys.executable,
+                    "-c",
+                    (
+                        "import os; "
+                        "from pathlib import Path; "
+                        "path = Path('large.txt'); "
+                        "content = path.read_text(encoding='utf-8'); "
+                        "path.write_text(content[:5000] + 'b' + content[5001:], encoding='utf-8'); "
+                        f"os.utime(path, ns=({before.st_atime_ns}, {before.st_mtime_ns}))"
+                    ),
+                ],
+                cwd=cwd,
+                snapshot_mode="strict",
+            )
+
+        self.assertEqual(result.payload["exit_code"], 0)
+        self.assertEqual(result.payload["snapshot_mode"], "strict")
+        self.assertIn("large.txt", result.payload["changed_files"])
+
+    def test_launch_mode_can_limit_snapshot_scope(self) -> None:
+        module = self._module()
+        command = module.build_session_bridge_command(
+            command_id="cmd-launch-scope",
+            command_type="bind_task",
+            task_id="task-123",
+            repo_binding_id="binding-python-service",
+            adapter_id="codex-cli",
+            risk_tier="low",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cwd = Path(tmp_dir)
+            (cwd / "inside").mkdir()
+            (cwd / "inside" / "tracked.txt").write_text("old", encoding="utf-8")
+            (cwd / "outside.txt").write_text("old", encoding="utf-8")
+            result = module.run_launch_mode(
+                command,
+                argv=[
+                    sys.executable,
+                    "-c",
+                    (
+                        "from pathlib import Path; "
+                        "Path('inside/tracked.txt').write_text('new'); "
+                        "Path('outside.txt').write_text('new')"
+                    ),
+                ],
+                cwd=cwd,
+                snapshot_scope="inside",
+            )
+
+        self.assertEqual(result.payload["exit_code"], 0)
+        self.assertIn("inside/tracked.txt", result.payload["changed_files"])
+        self.assertNotIn("outside.txt", result.payload["changed_files"])
+
+    def test_launch_mode_rejects_snapshot_scope_outside_cwd(self) -> None:
+        module = self._module()
+        command = module.build_session_bridge_command(
+            command_id="cmd-launch-scope-outside",
+            command_type="bind_task",
+            task_id="task-123",
+            repo_binding_id="binding-python-service",
+            adapter_id="codex-cli",
+            risk_tier="low",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cwd = Path(tmp_dir)
+            with self.assertRaisesRegex(ValueError, "snapshot_scope"):
+                module.run_launch_mode(
+                    command,
+                    argv=[sys.executable, "-c", "print('noop')"],
+                    cwd=cwd,
+                    snapshot_scope="../outside",
+                )
+
+    def test_launch_mode_rejects_unknown_snapshot_mode(self) -> None:
+        module = self._module()
+        command = module.build_session_bridge_command(
+            command_id="cmd-launch-scope-mode-invalid",
+            command_type="bind_task",
+            task_id="task-123",
+            repo_binding_id="binding-python-service",
+            adapter_id="codex-cli",
+            risk_tier="low",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cwd = Path(tmp_dir)
+            with self.assertRaisesRegex(ValueError, "snapshot_mode"):
+                module.run_launch_mode(
+                    command,
+                    argv=[sys.executable, "-c", "print('noop')"],
+                    cwd=cwd,
+                    snapshot_mode="unknown",
+                )
+
+    def test_launch_mode_uses_repo_configured_snapshot_mode_when_auto(self) -> None:
+        module = self._module()
+        command = module.build_session_bridge_command(
+            command_id="cmd-launch-repo-snapshot-mode",
+            command_type="bind_task",
+            task_id="task-123",
+            repo_binding_id="binding-python-service",
+            adapter_id="codex-cli",
+            risk_tier="low",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cwd = Path(tmp_dir)
+            (cwd / ".governed-ai").mkdir(parents=True, exist_ok=True)
+            (cwd / ".governed-ai" / "repo-profile.json").write_text(
+                json.dumps({"runtime_preferences": {"launch_snapshot_mode": "strict"}}, indent=2),
+                encoding="utf-8",
+            )
+            result = module.run_launch_mode(
+                command,
+                argv=[sys.executable, "-c", "print('snapshot-mode')"],
+                cwd=cwd,
+            )
+
+        self.assertEqual(result.payload["exit_code"], 0)
+        self.assertEqual(result.payload["snapshot_mode"], "strict")
+
+    def test_launch_mode_supports_timeout(self) -> None:
+        module = self._module()
+        command = module.build_session_bridge_command(
+            command_id="cmd-launch-timeout",
+            command_type="bind_task",
+            task_id="task-123",
+            repo_binding_id="binding-python-service",
+            adapter_id="codex-cli",
+            risk_tier="low",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            result = module.run_launch_mode(
+                command,
+                argv=[sys.executable, "-c", "import time; time.sleep(2)"],
+                cwd=Path(tmp_dir),
+                timeout_seconds=1,
+            )
+
+        self.assertEqual(result.payload["exit_code"], 124)
+        self.assertTrue(result.payload["timed_out"])
+        self.assertEqual(result.payload["timeout_seconds"], 1.0)
+        self.assertFalse(result.payload["timeout_exempt"])
+
+    def test_launch_mode_timeout_exempt_requires_allowlisted_command(self) -> None:
+        module = self._module()
+        command = module.build_session_bridge_command(
+            command_id="cmd-launch-timeout-exempt-deny",
+            command_type="bind_task",
+            task_id="task-123",
+            repo_binding_id="binding-python-service",
+            adapter_id="codex-cli",
+            risk_tier="low",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            with self.assertRaisesRegex(ValueError, "allowlisted"):
+                module.run_launch_mode(
+                    command,
+                    argv=[sys.executable, "-c", "print('no-exempt')"],
+                    cwd=Path(tmp_dir),
+                    timeout_seconds=1,
+                    timeout_exempt=True,
+                )
+
+    def test_launch_mode_timeout_exempt_can_use_repo_allowlist(self) -> None:
+        module = self._module()
+        command = module.build_session_bridge_command(
+            command_id="cmd-launch-timeout-exempt-allow",
+            command_type="bind_task",
+            task_id="task-123",
+            repo_binding_id="binding-python-service",
+            adapter_id="codex-cli",
+            risk_tier="low",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            cwd = Path(tmp_dir)
+            (cwd / ".governed-ai").mkdir(parents=True, exist_ok=True)
+            (cwd / ".governed-ai" / "repo-profile.json").write_text(
+                json.dumps({"runtime_preferences": {"timeout_exempt_allowlist": ["*time.sleep*"]}}, indent=2),
+                encoding="utf-8",
+            )
+            result = module.run_launch_mode(
+                command,
+                argv=[sys.executable, "-c", "import time; time.sleep(0.2)"],
+                cwd=cwd,
+                timeout_seconds=1,
+                timeout_exempt=True,
+            )
+
+        self.assertEqual(result.payload["exit_code"], 0)
+        self.assertFalse(result.payload["timed_out"])
+        self.assertTrue(result.payload["timeout_exempt"])
+        self.assertIsNone(result.payload["timeout_seconds"])
+
     def test_manual_handoff_remains_available_when_process_bridge_unavailable(self) -> None:
         adapter_registry = importlib.import_module("governed_ai_coding_runtime_contracts.adapter_registry")
         module = self._module()
@@ -1188,6 +1616,7 @@ class SessionBridgeCommandTests(unittest.TestCase):
     def _policy_decision(
         self,
         *,
+        task_id: str = "task-123",
         status: str,
         risk_tier: str,
         required_approval_ref: str | None = None,
@@ -1195,13 +1624,13 @@ class SessionBridgeCommandTests(unittest.TestCase):
     ):
         policy_decision = importlib.import_module("governed_ai_coding_runtime_contracts.policy_decision")
         return policy_decision.build_policy_decision(
-            task_id="task-123",
+            task_id=task_id,
             action_id=f"action-{status}",
             risk_tier=risk_tier,
             subject="session_command:run_gate",
             status=status,
             decision_basis=[f"policy decision is {status}"],
-            evidence_ref=f"artifacts/task-123/policy/{status}.json",
+            evidence_ref=f"artifacts/{task_id}/policy/{status}.json",
             required_approval_ref=required_approval_ref,
             remediation_hint=remediation_hint,
         )

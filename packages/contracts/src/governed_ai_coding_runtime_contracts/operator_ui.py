@@ -3,6 +3,7 @@
 from html import escape
 from pathlib import Path
 
+from governed_ai_coding_runtime_contracts.file_guard import atomic_write_text
 from governed_ai_coding_runtime_contracts.runtime_status import RuntimeSnapshot
 
 
@@ -79,7 +80,7 @@ def render_runtime_snapshot_html(snapshot: RuntimeSnapshot) -> str:
 
 def write_runtime_snapshot_html(snapshot: RuntimeSnapshot, output_path: Path) -> Path:
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(render_runtime_snapshot_html(snapshot), encoding="utf-8")
+    atomic_write_text(output_path, render_runtime_snapshot_html(snapshot), encoding="utf-8")
     return output_path
 
 

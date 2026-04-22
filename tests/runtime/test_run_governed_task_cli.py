@@ -125,6 +125,89 @@ class RunGovernedTaskCliTests(unittest.TestCase):
             self.assertEqual(payload["gate_order"], ["build", "test", "contract"])
             self.assertEqual(payload["results"], {"build": "pass", "test": "pass", "contract": "pass"})
 
+    def test_verify_attachment_enforces_required_canonical_entrypoint_policy(self) -> None:
+        from governed_ai_coding_runtime_contracts.repo_attachment import attach_target_repo
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "target"
+            target_repo.mkdir()
+            runtime_state_root = workspace / "runtime-state" / "target"
+            attach_target_repo(
+                target_repo_root=str(target_repo),
+                runtime_state_root=str(runtime_state_root),
+                repo_id="target",
+                display_name="Target",
+                primary_language="python",
+                build_command="cmd /c exit 0",
+                test_command="cmd /c exit 0",
+                contract_command="cmd /c exit 0",
+                adapter_preference="process_bridge",
+            )
+
+            profile_path = target_repo / ".governed-ai" / "repo-profile.json"
+            profile = json.loads(profile_path.read_text(encoding="utf-8"))
+            profile["required_entrypoint_policy"]["current_mode"] = "targeted_enforced"
+            profile_path.write_text(json.dumps(profile, indent=2, sort_keys=True), encoding="utf-8")
+
+            blocked = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/run-governed-task.py",
+                    "verify-attachment",
+                    "--attachment-root",
+                    str(target_repo),
+                    "--attachment-runtime-state-root",
+                    str(runtime_state_root),
+                    "--mode",
+                    "quick",
+                    "--task-id",
+                    "task-verify-attachment-policy",
+                    "--run-id",
+                    "run-verify-attachment-policy",
+                    "--json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertNotEqual(blocked.returncode, 0)
+            blocked_payload = json.loads(blocked.stdout)
+            self.assertEqual(blocked_payload["status"], "entrypoint_policy_denied")
+            self.assertTrue(blocked_payload["entrypoint_policy"]["blocked"])
+
+            allowed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/run-governed-task.py",
+                    "verify-attachment",
+                    "--attachment-root",
+                    str(target_repo),
+                    "--attachment-runtime-state-root",
+                    str(runtime_state_root),
+                    "--mode",
+                    "quick",
+                    "--task-id",
+                    "task-verify-attachment-policy",
+                    "--run-id",
+                    "run-verify-attachment-policy",
+                    "--entrypoint-id",
+                    "runtime-flow",
+                    "--json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(allowed.returncode, 0, allowed.stderr)
+            allowed_payload = json.loads(allowed.stdout)
+            self.assertEqual(allowed_payload["results"], {"test": "pass", "contract": "pass"})
+            self.assertFalse(allowed_payload["entrypoint_policy"]["blocked"])
+
     def test_govern_attachment_write_help(self) -> None:
         completed = subprocess.run(
             [sys.executable, "scripts/run-governed-task.py", "govern-attachment-write", "--help"],

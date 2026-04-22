@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "python": {
+    "scan_roots": [
+      "apps",
+      "packages",
+      "scripts",
+      "tests"
+    ],
+    "allowed_local_modules": [
+      "governed_ai_coding_runtime_contracts"
+    ],
+    "allowed_external_modules": []
+  },
+  "host_tooling": [
+    {
+      "name": "python",
+      "required": true
+    },
+    {
+      "name": "pwsh",
+      "required": true
+    },
+    {
+      "name": "git",
+      "required": false
+    },
+    {
+      "name": "codex",
+      "required": false
+    }
+  ],
+  "target_repo": {
+    "baseline_paths": [
+      "docs/dependency-baseline.md",
+      ".governed-ai/dependency-baseline.json"
+    ]
+  }
+}

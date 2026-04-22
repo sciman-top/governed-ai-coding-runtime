@@ -15,6 +15,7 @@ VERIFICATION_MODE_CHOICES = ["quick", "full", "l1", "l2", "l3"]
 
 from governed_ai_coding_runtime_contracts.policy_decision import build_policy_decision
 from governed_ai_coding_runtime_contracts.adapter_registry import resolve_launch_fallback
+from governed_ai_coding_runtime_contracts.entrypoint_policy import EntrypointPolicyViolation
 from governed_ai_coding_runtime_contracts.session_bridge import (
     build_session_bridge_command,
     handle_session_bridge_command,
@@ -110,6 +111,8 @@ def main() -> int:
     write_execute_parser.add_argument("--policy-decision-ref")
     write_execute_parser.add_argument("--approval-ref")
     write_execute_parser.add_argument("--remediation-hint")
+    write_execute_parser.add_argument("--timeout-seconds", type=float)
+    write_execute_parser.add_argument("--timeout-exempt", action="store_true")
     write_execute_parser.set_defaults(command_type="write_execute")
 
     write_status_parser = _add_common(
@@ -130,6 +133,10 @@ def main() -> int:
         )
     )
     launch_parser.add_argument("--process-bridge-unavailable", action="store_true")
+    launch_parser.add_argument("--snapshot-scope")
+    launch_parser.add_argument("--snapshot-mode", choices=["auto", "balanced", "strict"], default="auto")
+    launch_parser.add_argument("--timeout-seconds", type=float)
+    launch_parser.add_argument("--timeout-exempt", action="store_true")
     launch_parser.add_argument("argv", nargs=argparse.REMAINDER)
     launch_parser.set_defaults(command_type="launch")
 
@@ -184,6 +191,10 @@ def main() -> int:
             payload["approval_id"] = args.approval_id
         if args.policy_decision_ref:
             payload["policy_decision_ref"] = args.policy_decision_ref
+        if args.timeout_seconds is not None:
+            payload["timeout_seconds"] = args.timeout_seconds
+        if args.timeout_exempt:
+            payload["timeout_exempt"] = True
         policy_decision_ref = args.policy_decision_ref
         if policy_decision_ref is None:
             policy_decision = build_policy_decision(
@@ -212,6 +223,8 @@ def main() -> int:
         payload["resume_id"] = args.resume_id
     if args.continuation_id:
         payload["continuation_id"] = args.continuation_id
+    if args.entrypoint_id:
+        payload["entrypoint_id"] = args.entrypoint_id
 
     bridge_command_type = "bind_task" if command_type == "launch" else command_type
     command = build_session_bridge_command(
@@ -225,30 +238,52 @@ def main() -> int:
         policy_decision=policy_decision,
         policy_decision_ref=getattr(args, "policy_decision_ref", None),
     )
-    if command_type == "launch":
-        capability = resolve_launch_fallback(
-            adapter_id=args.adapter_id,
-            native_attach_available=False,
-            process_bridge_available=not args.process_bridge_unavailable,
-        )
-        if capability.tier == "manual_handoff":
-            result = manual_handoff_result(command, reason=capability.reason)
+    try:
+        if command_type == "launch":
+            capability = resolve_launch_fallback(
+                adapter_id=args.adapter_id,
+                native_attach_available=False,
+                process_bridge_available=not args.process_bridge_unavailable,
+            )
+            if capability.tier == "manual_handoff":
+                result = manual_handoff_result(command, reason=capability.reason)
+            else:
+                argv = args.argv
+                if argv and argv[0] == "--":
+                    argv = argv[1:]
+                if not argv:
+                    argv = [sys.executable, "-c", "print('session bridge launch fallback')"]
+                result = run_launch_mode(
+                    command,
+                    argv=argv,
+                    cwd=Path(args.repo_root),
+                    snapshot_scope=args.snapshot_scope,
+                    snapshot_mode=args.snapshot_mode,
+                    timeout_seconds=args.timeout_seconds,
+                    timeout_exempt=args.timeout_exempt,
+                )
         else:
-            argv = args.argv
-            if argv and argv[0] == "--":
-                argv = argv[1:]
-            if not argv:
-                argv = [sys.executable, "-c", "print('session bridge launch fallback')"]
-            result = run_launch_mode(command, argv=argv, cwd=Path(args.repo_root))
-    else:
-        result = handle_session_bridge_command(
-            command,
-            task_root=Path(args.task_root),
-            repo_root=Path(args.repo_root),
-            attachment_root=getattr(args, "attachment_root", None),
-            attachment_runtime_state_root=getattr(args, "attachment_runtime_state_root", None),
-        )
+            result = handle_session_bridge_command(
+                command,
+                task_root=Path(args.task_root),
+                repo_root=Path(args.repo_root),
+                attachment_root=getattr(args, "attachment_root", None),
+                attachment_runtime_state_root=getattr(args, "attachment_runtime_state_root", None),
+            )
+    except EntrypointPolicyViolation as exc:
+        payload = {
+            "status": "entrypoint_policy_denied",
+            "entrypoint_policy": exc.evaluation,
+            "reason": exc.evaluation.get("reason"),
+            "remediation_hint": exc.evaluation.get("remediation_hint"),
+        }
+        print(json.dumps(payload, indent=2, sort_keys=True))
+        return 1
     print(json.dumps(asdict(result), indent=2, sort_keys=True))
+    if result.status == "denied":
+        entrypoint_policy = result.payload.get("entrypoint_policy")
+        if isinstance(entrypoint_policy, dict) and entrypoint_policy.get("blocked") is True:
+            return 1
     return 0
 
 
@@ -261,6 +296,7 @@ def _add_common(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     parser.add_argument("--session-id")
     parser.add_argument("--resume-id")
     parser.add_argument("--continuation-id")
+    parser.add_argument("--entrypoint-id")
     return parser
 
 

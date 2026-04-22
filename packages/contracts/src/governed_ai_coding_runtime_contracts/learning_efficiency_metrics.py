@@ -7,6 +7,8 @@ from datetime import UTC, datetime
 import json
 from pathlib import Path
 
+from governed_ai_coding_runtime_contracts.file_guard import atomic_write_text, validate_file_component
+
 
 @dataclass(frozen=True, slots=True)
 class LearningEfficiencyMetricsRecord:
@@ -114,11 +116,12 @@ def persist_learning_efficiency_metrics(
     run_id: str | None = None,
 ) -> Path:
     root = Path(output_root)
-    run_segment = run_id or record.run_id or "latest"
-    output_dir = root / record.task_id / run_segment / "metrics"
+    task_segment = validate_file_component(record.task_id, "task_id")
+    run_segment = validate_file_component(run_id or record.run_id or "latest", "run_id")
+    output_dir = root / task_segment / run_segment / "metrics"
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "learning-efficiency.json"
-    output_path.write_text(json.dumps(record.to_dict(), indent=2, sort_keys=True), encoding="utf-8")
+    atomic_write_text(output_path, json.dumps(record.to_dict(), indent=2, sort_keys=True), encoding="utf-8")
     return output_path
 
 

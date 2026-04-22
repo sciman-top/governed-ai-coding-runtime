@@ -33,6 +33,10 @@ Provide minimal but realistic JSON instances that exercise the repository's curr
 - `repo-profile/python-service.example.json`
 - `repo-profile/typescript-webapp.example.json`
 - `repo-profile/target-repo-fast-full-template.example.json`
+- `repo-profile/target-repo-entrypoint-advisory.example.json`
+- `repo-profile/target-repo-entrypoint-targeted-enforced.example.json`
+- `repo-profile/target-repo-entrypoint-repo-wide-enforced.example.json`
+- `repo-profile/target-repo-milestone-autocommit.example.json`
 - `policy-decision/escalate-write.example.json`
 - `agent-adapter-contract/manual-handoff.example.json`
 - `agent-adapter-contract/process-bridge.example.json`
@@ -74,6 +78,18 @@ Get-Content -Raw 'schemas/examples/repo-profile/typescript-webapp.example.json' 
   Test-Json -SchemaFile 'schemas/jsonschema/repo-profile.schema.json'
 
 Get-Content -Raw 'schemas/examples/repo-profile/target-repo-fast-full-template.example.json' |
+  Test-Json -SchemaFile 'schemas/jsonschema/repo-profile.schema.json'
+
+Get-Content -Raw 'schemas/examples/repo-profile/target-repo-entrypoint-advisory.example.json' |
+  Test-Json -SchemaFile 'schemas/jsonschema/repo-profile.schema.json'
+
+Get-Content -Raw 'schemas/examples/repo-profile/target-repo-entrypoint-targeted-enforced.example.json' |
+  Test-Json -SchemaFile 'schemas/jsonschema/repo-profile.schema.json'
+
+Get-Content -Raw 'schemas/examples/repo-profile/target-repo-entrypoint-repo-wide-enforced.example.json' |
+  Test-Json -SchemaFile 'schemas/jsonschema/repo-profile.schema.json'
+
+Get-Content -Raw 'schemas/examples/repo-profile/target-repo-milestone-autocommit.example.json' |
   Test-Json -SchemaFile 'schemas/jsonschema/repo-profile.schema.json'
 
 Get-Content -Raw 'schemas/examples/policy-decision/escalate-write.example.json' |

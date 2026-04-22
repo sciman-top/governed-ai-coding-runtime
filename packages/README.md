@@ -11,3 +11,4 @@ Shared runtime packages live here.
 - `packages/contracts/` is the active Python contract package shipped by the current repository baseline.
 - Additional packages remain deferred until `Full Runtime` and later stages need clearer module boundaries than the current single package provides.
 - Package manager metadata is still intentionally absent; add it only with explicit dependency and supply-chain evidence.
+- The repository now enforces a stdlib-only Python dependency baseline through `docs/dependency-baseline.*` and `scripts/verify-dependency-baseline.py`.

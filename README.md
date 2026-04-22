@@ -197,6 +197,13 @@ How to use quickly (recommended paths):
 - Path B (attach-first for external repos): run `attach-target-repo` once, then use `runtime-flow.ps1 -FlowMode daily` as the daily governance chain.
 - Path C (risky writes): run `govern-attachment-write -> decide-attachment-write -> execute-attachment-write` for medium/high-risk mutations.
 
+Canonical entrypoint recommendation:
+- if you want one-command daily use, prefer `runtime-flow.ps1` or `runtime-flow-preset.ps1`
+- if you want to observe drift first, set `required_entrypoint_policy.current_mode` to `advisory`
+- if you want to block direct gate/write entrypoints but keep read-only inspection open, set it to `targeted_enforced`
+- if you want repo-wide canonical-entrypoint enforcement, set it to `repo_wide_enforced`
+- operator-facing copy/paste examples: [Use With An Existing Repo](docs/quickstart/use-with-existing-repo.md) / [在现有仓库中使用](docs/quickstart/use-with-existing-repo.zh-CN.md)
+
 Concrete assistance for AI coding:
 - pre-execution capability visibility (tier/flow/degrade) to avoid hidden posture mismatch
 - canonical gate chain execution to reduce partial-check drift

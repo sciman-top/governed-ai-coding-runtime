@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("All", "Build", "Contract", "Doctor", "Docs", "Runtime", "Scripts")]
+  [ValidateSet("All", "Build", "Contract", "Dependency", "Doctor", "Docs", "Runtime", "Scripts")]
   [string]$Check = "All"
 )
 
@@ -9,6 +9,18 @@ $ErrorActionPreference = "Stop"
 function Write-CheckOk {
   param([string]$Name)
   Write-Host "OK $Name"
+}
+
+function Resolve-PythonCommand {
+  $python = Get-Command python -ErrorAction SilentlyContinue
+  if (-not $python) {
+    $python = Get-Command python3 -ErrorAction SilentlyContinue
+  }
+  if (-not $python) {
+    throw "Required command not found: python or python3"
+  }
+
+  return $python
 }
 
 function Invoke-SchemaJsonParse {
@@ -529,6 +541,17 @@ function Invoke-ContractChecks {
   Invoke-SchemaJsonParse
   Invoke-SchemaExampleValidation
   Invoke-SchemaCatalogPairing
+  Invoke-DependencyBaselineChecks
+}
+
+function Invoke-DependencyBaselineChecks {
+  $python = Resolve-PythonCommand
+  & $python.Source "scripts/verify-dependency-baseline.py"
+  if ($LASTEXITCODE -ne 0) {
+    throw "Dependency baseline checks failed"
+  }
+
+  Write-CheckOk "dependency-baseline"
 }
 
 function Invoke-BuildChecks {
@@ -557,13 +580,7 @@ function Invoke-ScriptChecks {
 }
 
 function Invoke-RuntimeChecks {
-  $python = Get-Command python -ErrorAction SilentlyContinue
-  if (-not $python) {
-    $python = Get-Command python3 -ErrorAction SilentlyContinue
-  }
-  if (-not $python) {
-    throw "Required command not found: python or python3"
-  }
+  $python = Resolve-PythonCommand
 
   & $python.Source -m unittest discover -s tests/runtime -p "test_*.py"
   if ($LASTEXITCODE -ne 0) {
@@ -605,6 +622,7 @@ function Invoke-DoctorChecks {
 switch ($Check) {
   "Build" { Invoke-BuildChecks }
   "Contract" { Invoke-ContractChecks }
+  "Dependency" { Invoke-DependencyBaselineChecks }
   "Doctor" { Invoke-DoctorChecks }
   "Docs" { Invoke-DocsChecks }
   "Runtime" { Invoke-RuntimeChecks }
