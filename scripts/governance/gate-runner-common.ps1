@@ -89,7 +89,7 @@ function Select-PreferredCommand {
     [object[]]$Commands
   )
 
-  if ($null -eq $Commands -or $Commands.Count -eq 0) {
+  if ($null -eq $Commands -or @($Commands).Count -eq 0) {
     return $null
   }
 
@@ -99,7 +99,7 @@ function Select-PreferredCommand {
       $_.required -eq $true
     }
   )
-  if ($required.Count -gt 0) {
+  if (@($required).Count -gt 0) {
     return $required[0]
   }
   return $Commands[0]
@@ -164,7 +164,7 @@ function Resolve-FastGateCommands {
   )
 
   $quick = Get-CommandGroup -Profile $Profile -GroupName "quick_gate_commands"
-  if ($quick.Count -gt 0) {
+  if (@($quick).Count -gt 0) {
     $commands = @()
     $index = 0
     foreach ($entry in $quick) {
@@ -205,7 +205,7 @@ function Resolve-FullGateCommands {
   )
 
   $full = Get-CommandGroup -Profile $Profile -GroupName "full_gate_commands"
-  if ($full.Count -gt 0) {
+  if (@($full).Count -gt 0) {
     $commands = @()
     $index = 0
     foreach ($entry in $full) {
