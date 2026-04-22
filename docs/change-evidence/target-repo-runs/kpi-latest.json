@@ -1,66 +1,66 @@
 {
-  "generated_at": "2026-04-21T16:06:51.931937+00:00",
+  "generated_at": "2026-04-22T15:04:40.067164+00:00",
   "record_count": 5,
   "records": [
     {
       "deny_to_success_retries": 0,
       "fallback_rate": 0.0,
-      "first_pass_latency_seconds": 357,
-      "latest_evidence_ref": "artifacts/task-classroomtoolkit-daily-allowedscope-20260420230050/run-classroomtoolkit-daily-allowedscope-20260420230050/verification-output/contract.txt",
+      "first_pass_latency_seconds": 41,
+      "latest_evidence_ref": "artifacts/task-daily-classroomtoolkit-20260422191548/run-daily-classroomtoolkit-20260422191548/verification-output/contract.txt",
       "medium_risk_loop_success_ratio": null,
-      "onboarding_latency_seconds": 357,
+      "onboarding_latency_seconds": 41,
       "target": "classroomtoolkit",
       "total_daily_runs": 1,
-      "window_end_utc": "2026-04-20T23:00:50+00:00",
-      "window_start_utc": "2026-04-20T23:00:50+00:00"
+      "window_end_utc": "2026-04-22T19:15:48+00:00",
+      "window_start_utc": "2026-04-22T19:15:48+00:00"
     },
     {
       "deny_to_success_retries": 0,
       "fallback_rate": 0.0,
-      "first_pass_latency_seconds": 0,
-      "latest_evidence_ref": "artifacts/task-github-toolkit-daily-deny-20260420230743/run-github-toolkit-daily-deny-20260420230743/verification-output/contract.txt",
+      "first_pass_latency_seconds": 6,
+      "latest_evidence_ref": "artifacts/task-daily-github-toolkit-20260422191633/run-daily-github-toolkit-20260422191633/verification-output/contract.txt",
       "medium_risk_loop_success_ratio": null,
-      "onboarding_latency_seconds": 0,
+      "onboarding_latency_seconds": 6,
       "target": "github-toolkit",
       "total_daily_runs": 1,
-      "window_end_utc": "2026-04-20T23:07:43+00:00",
-      "window_start_utc": "2026-04-20T23:07:43+00:00"
+      "window_end_utc": "2026-04-22T19:16:33+00:00",
+      "window_start_utc": "2026-04-22T19:16:33+00:00"
     },
     {
       "deny_to_success_retries": 0,
       "fallback_rate": 0.0,
-      "first_pass_latency_seconds": 318,
-      "latest_evidence_ref": "artifacts/task-self-runtime-daily-allowedscope-20260420230134/run-self-runtime-daily-allowedscope-20260420230134/verification-output/contract.txt",
+      "first_pass_latency_seconds": 139,
+      "latest_evidence_ref": "artifacts/task-daily-self-runtime-20260422191858/run-daily-self-runtime-20260422191858/verification-output/contract.txt",
       "medium_risk_loop_success_ratio": null,
-      "onboarding_latency_seconds": 318,
+      "onboarding_latency_seconds": 139,
       "target": "self-runtime",
       "total_daily_runs": 1,
-      "window_end_utc": "2026-04-20T23:01:34+00:00",
-      "window_start_utc": "2026-04-20T23:01:34+00:00"
+      "window_end_utc": "2026-04-22T19:18:58+00:00",
+      "window_start_utc": "2026-04-22T19:18:58+00:00"
     },
     {
       "deny_to_success_retries": 0,
       "fallback_rate": 0.0,
-      "first_pass_latency_seconds": 220,
-      "latest_evidence_ref": "artifacts/task-skills-manager-daily-allowedscope-20260420230317/run-skills-manager-daily-allowedscope-20260420230317/verification-output/contract.txt",
+      "first_pass_latency_seconds": 6,
+      "latest_evidence_ref": "artifacts/task-daily-skills-manager-20260422192117/run-daily-skills-manager-20260422192117/verification-output/contract.txt",
       "medium_risk_loop_success_ratio": null,
-      "onboarding_latency_seconds": 220,
+      "onboarding_latency_seconds": 6,
       "target": "skills-manager",
       "total_daily_runs": 1,
-      "window_end_utc": "2026-04-20T23:03:17+00:00",
-      "window_start_utc": "2026-04-20T23:03:17+00:00"
+      "window_end_utc": "2026-04-22T19:21:17+00:00",
+      "window_start_utc": "2026-04-22T19:21:17+00:00"
     },
     {
       "deny_to_success_retries": 0,
       "fallback_rate": 0.0,
-      "first_pass_latency_seconds": 0,
-      "latest_evidence_ref": "artifacts/task-vps-ssh-launcher-daily-deny-20260420230759/run-vps-ssh-launcher-daily-deny-20260420230759/verification-output/contract.txt",
+      "first_pass_latency_seconds": 7,
+      "latest_evidence_ref": "artifacts/task-daily-vps-ssh-launcher-20260422192129/run-daily-vps-ssh-launcher-20260422192129/verification-output/contract.txt",
       "medium_risk_loop_success_ratio": null,
-      "onboarding_latency_seconds": 0,
+      "onboarding_latency_seconds": 7,
       "target": "vps-ssh-launcher",
       "total_daily_runs": 1,
-      "window_end_utc": "2026-04-20T23:07:59+00:00",
-      "window_start_utc": "2026-04-20T23:07:59+00:00"
+      "window_end_utc": "2026-04-22T19:21:29+00:00",
+      "window_start_utc": "2026-04-22T19:21:29+00:00"
     }
   ],
   "schema_version": "1.0",

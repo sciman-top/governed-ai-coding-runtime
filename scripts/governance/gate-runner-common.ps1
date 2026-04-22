@@ -308,7 +308,7 @@ function Get-AutoCommitPolicy {
   $onValues = @("any_pass")
   if (Test-ObjectProperty -Object $rawPolicy -Name "on") {
     $configuredOn = @(Convert-ToStringArray -Value $rawPolicy.on)
-    if ($configuredOn.Count -gt 0) {
+    if (@($configuredOn).Count -gt 0) {
       $onValues = $configuredOn
     }
   }
@@ -375,7 +375,7 @@ function Get-AutoCommitTrigger {
   }
   if ((Test-StringInArray -Value "milestone" -Candidates $triggers) -and -not [string]::IsNullOrWhiteSpace($MilestoneTag)) {
     $markers = @(Convert-ToStringArray -Value $Policy.milestone_markers)
-    if ($markers.Count -eq 0 -or (Test-StringInArray -Value $MilestoneTag -Candidates $markers)) {
+    if (@($markers).Count -eq 0 -or (Test-StringInArray -Value $MilestoneTag -Candidates $markers)) {
       return "milestone"
     }
   }
