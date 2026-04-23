@@ -4,6 +4,9 @@
 This directory holds executable implementation plans that translate strategy and backlog into ordered work.
 
 ## Current Authoritative Plan
+- [Continuous Execution Readiness And Rollout Plan](./continuous-execution-readiness-and-rollout-plan.md)
+  - Status: active kickoff plan for continuous-execution readiness and rollout (started on `2026-04-23`)
+  - Scope: readiness trigger contract, token-efficient teaching envelope, runtime interaction-default enforcement, learning-efficiency guardrails, and two-repo rollout proof
 - [Teaching Collaboration And Low-Token Governance Implementation Plan](./teaching-collaboration-and-low-token-governance-implementation-plan.md)
   - Status: completed bounded follow-on implementation lane verified on `2026-04-22`
   - Scope: interaction signals, response policy, teaching budget, interaction evidence, learning-efficiency metrics, evidence/trace integration, task-intake defaults, minimal runtime/operator projection, and repo-profile interaction defaults
@@ -50,6 +53,7 @@ This directory holds executable implementation plans that translate strategy and
    - [20260418 Governance Runtime Strategy Alignment Closeout](../change-evidence/20260418-governance-runtime-strategy-alignment-closeout.md)
    - [20260418 Governance Runtime Strategy Alignment Plan](../change-evidence/20260418-governance-runtime-strategy-alignment-plan.md)
 3. Use the roadmap and backlog to understand current posture:
+   - use [Continuous Execution Readiness And Rollout Plan](./continuous-execution-readiness-and-rollout-plan.md) as the active loop-oriented execution baseline
    - the local runtime baseline through `Maintenance Baseline / GAP-034` is complete on the current branch baseline
    - use [Direct-To-Hybrid Final-State Implementation Plan](./direct-to-hybrid-final-state-implementation-plan.md) as the completed closure execution record
    - use [Governance Optimization Lane Implementation Plan](./governance-optimization-lane-implementation-plan.md) as the completed governance-lane execution history after `GAP-060`

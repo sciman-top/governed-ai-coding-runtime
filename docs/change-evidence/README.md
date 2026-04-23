@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260423 Continuous Execution Readiness Kickoff](./20260423-continuous-execution-readiness-kickoff.md)
+  - evidence companion for activating loop-oriented execution baseline with explicit readiness trigger, phased task plan, and gate-ordered verification requirements
 - [20260423 Target Repo Runs Retention Prune](./20260423-target-repo-runs-retention-prune.md)
   - evidence companion for bounded retention cleanup of `target-repo-runs`, plus one-click `runtime-flow-preset` prune hooks and dry-run-safe operator usage
 - [20260423 Target Repo Problem Trace And KPI Aggregation](./20260423-target-repo-problem-trace-kpi.md)
