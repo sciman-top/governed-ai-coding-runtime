@@ -48,6 +48,7 @@ param(
   [string]$AdapterPreference = "native_attach",
   [string]$GateProfile = "default",
   [switch]$Overwrite,
+  [string]$GovernanceBaselinePath = "",
 
   [switch]$Json
 )
@@ -110,6 +111,8 @@ function Resolve-AbsolutePath {
 $python = Get-PythonCommand
 $attachPayload = $null
 $attachResult = $null
+$governanceSyncPayload = $null
+$governanceSyncExitCode = 0
 $resolvedAttachmentRoot = Resolve-AbsolutePath -PathValue $AttachmentRoot
 $resolvedAttachmentRuntimeStateRoot = Resolve-AbsolutePath -PathValue $AttachmentRuntimeStateRoot
 
@@ -174,6 +177,66 @@ if ($FlowMode -eq "onboard") {
   }
 
   $attachPayload = Try-ParseJson -Raw $attachResult.output
+
+  if (-not [string]::IsNullOrWhiteSpace($GovernanceBaselinePath)) {
+    $resolvedGovernanceBaselinePath = Resolve-AbsolutePath -PathValue $GovernanceBaselinePath
+    if (-not (Test-Path -LiteralPath $resolvedGovernanceBaselinePath)) {
+      if ($Json) {
+        @{
+          flow_mode = $FlowMode
+          overall_status = "fail"
+          onboard_attach = @{
+            exit_code = $attachResult.exit_code
+            payload = $attachPayload
+          }
+          governance_baseline_sync = @{
+            exit_code = 1
+            payload = $null
+            reason = "baseline_file_not_found"
+          }
+        } | ConvertTo-Json -Depth 80
+      }
+      else {
+        Write-Host "[FAIL] governance-baseline-sync"
+        Write-Host ("Missing governance baseline file: " + $resolvedGovernanceBaselinePath)
+      }
+      exit 1
+    }
+
+    $governanceSyncArgs = @(
+      "scripts/apply-target-repo-governance.py",
+      "--target-repo", $resolvedAttachmentRoot,
+      "--baseline-path", $resolvedGovernanceBaselinePath
+    )
+    $governanceSyncResult = Invoke-Captured -Command { & $python @governanceSyncArgs }
+    $governanceSyncExitCode = $governanceSyncResult.exit_code
+    $governanceSyncPayload = Try-ParseJson -Raw $governanceSyncResult.output
+
+    if ($governanceSyncResult.exit_code -ne 0) {
+      if ($Json) {
+        @{
+          flow_mode = $FlowMode
+          overall_status = "fail"
+          onboard_attach = @{
+            exit_code = $attachResult.exit_code
+            payload = $attachPayload
+          }
+          governance_baseline_sync = @{
+            exit_code = $governanceSyncResult.exit_code
+            payload = $governanceSyncPayload
+            reason = "sync_failed"
+          }
+        } | ConvertTo-Json -Depth 80
+      }
+      else {
+        Write-Host "[FAIL] governance-baseline-sync"
+        if ($governanceSyncResult.output) {
+          Write-Host $governanceSyncResult.output
+        }
+      }
+      exit 1
+    }
+  }
 }
 
 $checkArgs = @(
@@ -257,6 +320,10 @@ if ($Json) {
       exit_code = $checkResult.exit_code
       payload = $checkPayload
     }
+    governance_baseline_sync = @{
+      exit_code = $governanceSyncExitCode
+      payload = $governanceSyncPayload
+    }
     next_actions = @($nextActions)
   } | ConvertTo-Json -Depth 80
 }
@@ -265,6 +332,9 @@ else {
     Write-Host "[OK] onboard-attach (exit=0)"
     if ($attachPayload -and $attachPayload.gate_command_source) {
       Write-Host ("Onboard gate command source: " + [string]$attachPayload.gate_command_source)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($GovernanceBaselinePath)) {
+      Write-Host ("Governance baseline sync: exit=" + $governanceSyncExitCode)
     }
   }
   if ($checkPayload -and $checkPayload.summary) {

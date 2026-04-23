@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260423 全目标仓一键治理下发与一致性硬门禁](./20260423-all-target-governance-one-click-enforcement-and-consistency-gate.md)
+  - evidence companion for `-AllTargets` batch governance rollout, baseline-only sync path, and fail-closed target-repo governance consistency gate
 - [20260423 Additional Gate Commands with Blocking Profile Semantics](./20260423-additional-gate-commands-blocking-profile.md)
   - evidence companion for `additional_gate_commands` plus `blocking/profiles` semantics across verification runner, session bridge, runtime-check, schema, and regression tests
 - [20260423 Source String Contract Guard for Runtime Check](./20260423-source-string-contract-guard-runtime-check.md)

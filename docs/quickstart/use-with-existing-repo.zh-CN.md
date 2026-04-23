@@ -244,6 +244,61 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
 ```
 
+对当前 active targets 一键全量应用（含统一入口策略 + 里程碑自动提交基线）：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -FlowMode "onboard" `
+  -Mode "quick" `
+  -Overwrite `
+  -Json
+```
+
+如果你只想强制同步治理特性（不执行目标仓 onboard 校验），可用：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -ApplyGovernanceBaselineOnly `
+  -Json
+```
+
+如果你要对所有 active targets 一键执行“特性基线同步 + 里程碑自动提交（中文备注）”，可用：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -ApplyFeatureBaselineAndMilestoneCommit `
+  -MilestoneTag "milestone" `
+  -Json
+```
+
+如果你要一键执行“全部现有功能”（旧流程 runtime-flow + 特性基线同步 + 里程碑自动提交），可用：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -ApplyAllFeatures `
+  -FlowMode "daily" `
+  -MilestoneTag "milestone" `
+  -Json
+```
+
+基线同步行为：
+- `onboard` 模式下，`runtime-flow-preset.ps1` 默认会把 `docs/targets/target-repo-governance-baseline.json` 中的治理特性块同步到目标仓 profile。
+- 当前默认基线覆盖 `required_entrypoint_policy` 与里程碑 `auto_commit_policy`。
+- 如需刻意跳过该同步，可显式传 `-SkipGovernanceBaselineSync`。
+
+一致性硬门禁：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract
+```
+
+- 合约门禁现在包含 `target-repo-governance-consistency`。
+- 任一 active target 缺少基线治理特性时会 fail-closed 阻断。
+
 ### 6. 启用统一入口策略
 
 如果你希望目标仓的日常使用尽量收敛到一个治理入口，就在目标仓 `.governed-ai/repo-profile.json` 中增加 `required_entrypoint_policy`。

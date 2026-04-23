@@ -84,6 +84,7 @@ class DependencyBaselineTests(unittest.TestCase):
 
         self.assertEqual(completed.returncode, 0, completed.stderr)
         self.assertIn("OK dependency-baseline", completed.stdout)
+        self.assertIn("OK target-repo-governance-consistency", completed.stdout)
 
     def test_dependency_baseline_detects_missing_required_host_tool(self) -> None:
         module = _load_dependency_script()

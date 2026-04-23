@@ -542,6 +542,7 @@ function Invoke-ContractChecks {
   Invoke-SchemaExampleValidation
   Invoke-SchemaCatalogPairing
   Invoke-DependencyBaselineChecks
+  Invoke-TargetRepoGovernanceConsistencyChecks
 }
 
 function Invoke-DependencyBaselineChecks {
@@ -552,6 +553,20 @@ function Invoke-DependencyBaselineChecks {
   }
 
   Write-CheckOk "dependency-baseline"
+}
+
+function Invoke-TargetRepoGovernanceConsistencyChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-target-repo-governance-consistency.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Target repo governance consistency checks failed"
+    }
+    throw "Target repo governance consistency checks failed`n$detail"
+  }
+
+  Write-CheckOk "target-repo-governance-consistency"
 }
 
 function Invoke-BuildChecks {

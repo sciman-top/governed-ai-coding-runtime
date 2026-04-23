@@ -244,6 +244,61 @@ Preset single source of truth:
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
 ```
 
+One-command apply across all active targets (includes canonical entrypoint policy + milestone auto-commit baseline):
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -FlowMode "onboard" `
+  -Mode "quick" `
+  -Overwrite `
+  -Json
+```
+
+If you only need to force-sync governance features (without running target-repo onboard checks), use:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -ApplyGovernanceBaselineOnly `
+  -Json
+```
+
+If you need one-click "feature baseline sync + milestone auto-commit" across all active targets, use:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -ApplyFeatureBaselineAndMilestoneCommit `
+  -MilestoneTag "milestone" `
+  -Json
+```
+
+If you need one-click apply for all current features (legacy runtime-flow + feature baseline sync + milestone auto-commit), use:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -ApplyAllFeatures `
+  -FlowMode "daily" `
+  -MilestoneTag "milestone" `
+  -Json
+```
+
+Baseline sync behavior:
+- In `onboard` mode, `runtime-flow-preset.ps1` now syncs governance feature blocks from `docs/targets/target-repo-governance-baseline.json` by default.
+- The default baseline includes `required_entrypoint_policy` and milestone `auto_commit_policy`.
+- If you intentionally need a raw onboard run without sync, pass `-SkipGovernanceBaselineSync`.
+
+Consistency hard gate:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract
+```
+
+- Contract checks now include `target-repo-governance-consistency`.
+- If any active target repo is missing baseline governance features, the gate fails closed.
+
 ### 6. Enable The Canonical Entrypoint Policy
 
 If you want to standardize daily usage around one governed entrypoint, add `required_entrypoint_policy` to the target repo's `.governed-ai/repo-profile.json`.
