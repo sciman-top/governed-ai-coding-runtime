@@ -39,11 +39,21 @@ param(
   [switch]$ApplyGovernanceBaselineOnly,
   [switch]$ApplyFeatureBaselineAndMilestoneCommit,
   [string]$MilestoneTag = "milestone",
+  [switch]$AutoMilestoneGateMode,
+  [string]$TaskType = "",
+  [switch]$ReleaseCandidate,
+  [ValidateSet("full", "fast")]
+  [string]$MilestoneGateMode = "full",
   [int]$MilestoneGateTimeoutSeconds = 900,
+  [int]$MilestoneCommandTimeoutSeconds = 0,
+  [int]$RuntimeFlowTimeoutSeconds = 0,
+  [int]$GovernanceSyncTimeoutSeconds = 0,
+  [int]$BatchTimeoutSeconds = 0,
   [string]$CatalogPath = "",
   [string]$GovernanceBaselinePath = "",
   [string]$RuntimeFlowPath = "",
   [string]$GovernanceFullCheckPath = "",
+  [string]$GovernanceFastCheckPath = "",
   [switch]$PruneTargetRepoRuns,
   [string]$PruneRunsRoot = "",
   [int]$PruneKeepDays = 30,
@@ -92,18 +102,101 @@ function Invoke-CommandCapture {
   param(
     [Parameter(Mandatory = $true)]
     [string]$Executable,
-    [string[]]$Arguments = @()
+    [string[]]$Arguments = @(),
+    [int]$TimeoutSeconds = 0,
+    [string]$WorkingDirectory = ""
   )
 
-  $output = & $Executable @Arguments 2>&1
-  $exitCode = $LASTEXITCODE
-  if ($null -eq $exitCode) {
-    $exitCode = 0
+  if ($TimeoutSeconds -lt 0) {
+    throw "TimeoutSeconds must be >= 0."
+  }
+
+  $resolvedWorkingDirectory = ""
+  if (-not [string]::IsNullOrWhiteSpace($WorkingDirectory)) {
+    $resolvedWorkingDirectory = Resolve-AbsolutePath -PathValue $WorkingDirectory
+    if (-not (Test-Path -LiteralPath $resolvedWorkingDirectory)) {
+      throw "WorkingDirectory not found: $resolvedWorkingDirectory"
+    }
+  }
+
+  $timedOut = $false
+  $exitCode = 0
+  $outputText = ""
+  if ($TimeoutSeconds -gt 0) {
+    $stdoutPath = [System.IO.Path]::GetTempFileName()
+    $stderrPath = [System.IO.Path]::GetTempFileName()
+    try {
+      $startArgs = @{
+        FilePath               = $Executable
+        ArgumentList           = $Arguments
+        NoNewWindow            = $true
+        PassThru               = $true
+        RedirectStandardOutput = $stdoutPath
+        RedirectStandardError  = $stderrPath
+      }
+      if (-not [string]::IsNullOrWhiteSpace($resolvedWorkingDirectory)) {
+        $startArgs["WorkingDirectory"] = $resolvedWorkingDirectory
+      }
+
+      $process = Start-Process @startArgs
+      $completed = $process.WaitForExit($TimeoutSeconds * 1000)
+      if (-not $completed) {
+        $timedOut = $true
+        try {
+          Stop-Process -Id $process.Id -Force -ErrorAction Stop
+        }
+        catch {
+        }
+        $null = $process.WaitForExit(5000)
+        $exitCode = 124
+      }
+      else {
+        $exitCode = [int]$process.ExitCode
+      }
+
+      $stdoutText = Get-Content -LiteralPath $stdoutPath -Raw -ErrorAction SilentlyContinue
+      $stderrText = Get-Content -LiteralPath $stderrPath -Raw -ErrorAction SilentlyContinue
+      $segments = @()
+      if (-not [string]::IsNullOrWhiteSpace($stdoutText)) {
+        $segments += $stdoutText.TrimEnd()
+      }
+      if (-not [string]::IsNullOrWhiteSpace($stderrText)) {
+        $segments += $stderrText.TrimEnd()
+      }
+      if ($timedOut) {
+        $segments += ("command timed out after {0}s: {1}" -f $TimeoutSeconds, $Executable)
+      }
+      $outputText = ($segments -join [Environment]::NewLine).TrimEnd()
+    }
+    finally {
+      Remove-Item -LiteralPath $stdoutPath -ErrorAction SilentlyContinue
+      Remove-Item -LiteralPath $stderrPath -ErrorAction SilentlyContinue
+    }
+  }
+  else {
+    if (-not [string]::IsNullOrWhiteSpace($resolvedWorkingDirectory)) {
+      Push-Location -LiteralPath $resolvedWorkingDirectory
+    }
+    try {
+      $output = & $Executable @Arguments 2>&1
+      $exitCode = $LASTEXITCODE
+      if ($null -eq $exitCode) {
+        $exitCode = 0
+      }
+      $outputText = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).TrimEnd()
+    }
+    finally {
+      if (-not [string]::IsNullOrWhiteSpace($resolvedWorkingDirectory)) {
+        Pop-Location
+      }
+    }
   }
 
   return [pscustomobject]@{
     exit_code = [int]$exitCode
-    output    = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).TrimEnd()
+    output    = $outputText
+    timed_out = [bool]$timedOut
+    timeout_seconds = [int]$TimeoutSeconds
   }
 }
 
@@ -129,6 +222,128 @@ function Write-BatchProgressLine {
     $line = "{0} {1}" -f $line, $Detail.Trim()
   }
   Write-Host $line
+}
+
+function Resolve-MilestoneGateStrategy {
+  param(
+    [Parameter(Mandatory = $true)]
+    [bool]$AutoEnabled,
+    [Parameter(Mandatory = $true)]
+    [ValidateSet("full", "fast")]
+    [string]$RequestedMode,
+    [Parameter(Mandatory = $true)]
+    [ValidateSet("onboard", "daily")]
+    [string]$FlowModeValue,
+    [Parameter(Mandatory = $true)]
+    [ValidateSet("quick", "full", "l1", "l2", "l3")]
+    [string]$VerificationModeValue,
+    [Parameter(Mandatory = $true)]
+    [ValidateSet("allow", "escalate", "deny")]
+    [string]$PolicyStatusValue,
+    [Parameter(Mandatory = $true)]
+    [ValidateSet("low", "medium", "high")]
+    [string]$WriteTierValue,
+    [Parameter(Mandatory = $true)]
+    [bool]$ExecuteWriteFlowEnabled,
+    [Parameter(Mandatory = $true)]
+    [bool]$ReleaseCandidateEnabled,
+    [string]$TaskTypeValue = ""
+  )
+
+  if (-not $AutoEnabled) {
+    return [pscustomobject]@{
+      mode   = $RequestedMode
+      source = "manual"
+      reason = "manual_override"
+    }
+  }
+
+  $normalizedTaskType = ""
+  if (-not [string]::IsNullOrWhiteSpace($TaskTypeValue)) {
+    $normalizedTaskType = $TaskTypeValue.Trim().ToLowerInvariant()
+  }
+  $highRiskTaskTypes = @("release", "schema", "contract", "migration", "security", "hotfix", "incident", "rollback")
+  $lowRiskTaskTypes = @("docs", "documentation", "chore", "style", "comment", "spelling", "format", "refactor_low_risk")
+
+  if ($ReleaseCandidateEnabled) {
+    return [pscustomobject]@{
+      mode   = "full"
+      source = "auto"
+      reason = "release_candidate_full"
+    }
+  }
+  if ($FlowModeValue -eq "onboard") {
+    return [pscustomobject]@{
+      mode   = "full"
+      source = "auto"
+      reason = "onboard_requires_full"
+    }
+  }
+  if ($VerificationModeValue -in @("full", "l3")) {
+    return [pscustomobject]@{
+      mode   = "full"
+      source = "auto"
+      reason = "verification_mode_high"
+    }
+  }
+  if ($PolicyStatusValue -ne "allow") {
+    return [pscustomobject]@{
+      mode   = "full"
+      source = "auto"
+      reason = "policy_not_allow"
+    }
+  }
+  if ($WriteTierValue -eq "high") {
+    return [pscustomobject]@{
+      mode   = "full"
+      source = "auto"
+      reason = "write_tier_high"
+    }
+  }
+  if ($ExecuteWriteFlowEnabled) {
+    return [pscustomobject]@{
+      mode   = "full"
+      source = "auto"
+      reason = "execute_write_flow_enabled"
+    }
+  }
+  if (-not [string]::IsNullOrWhiteSpace($normalizedTaskType)) {
+    if ($normalizedTaskType -in $highRiskTaskTypes) {
+      return [pscustomobject]@{
+        mode   = "full"
+        source = "auto"
+        reason = "task_type_high_risk"
+      }
+    }
+    if ($normalizedTaskType -in $lowRiskTaskTypes) {
+      return [pscustomobject]@{
+        mode   = "fast"
+        source = "auto"
+        reason = "task_type_low_risk"
+      }
+    }
+    if ($normalizedTaskType -eq "bugfix") {
+      return [pscustomobject]@{
+        mode   = "fast"
+        source = "auto"
+        reason = "task_type_bugfix"
+      }
+    }
+  }
+
+  if (($FlowModeValue -eq "daily") -and ($VerificationModeValue -in @("quick", "l1", "l2")) -and ($WriteTierValue -in @("low", "medium"))) {
+    return [pscustomobject]@{
+      mode   = "fast"
+      source = "auto"
+      reason = "daily_low_to_medium_risk"
+    }
+  }
+
+  return [pscustomobject]@{
+    mode   = "full"
+    source = "auto"
+    reason = "fallback_full"
+  }
 }
 
 function Try-ParseJson {
@@ -282,7 +497,8 @@ function Invoke-GovernanceBaselineSync {
     [Parameter(Mandatory = $true)]
     [string]$BaselinePath,
     [Parameter(Mandatory = $true)]
-    [string]$PythonCommand
+    [string]$PythonCommand,
+    [int]$CommandTimeoutSeconds = 0
   )
 
   $syncScriptPath = Join-Path $RepoRoot "scripts\apply-target-repo-governance.py"
@@ -295,14 +511,27 @@ function Invoke-GovernanceBaselineSync {
     "--target-repo", $TargetConfig.AttachmentRoot,
     "--baseline-path", $BaselinePath
   )
-  $result = Invoke-CommandCapture -Executable $PythonCommand -Arguments $args
+  $result = Invoke-CommandCapture `
+    -Executable $PythonCommand `
+    -Arguments $args `
+    -TimeoutSeconds $CommandTimeoutSeconds `
+    -WorkingDirectory $RepoRoot
   $payload = Try-ParseJson -Raw $result.output
   $status = if ($result.exit_code -eq 0) { "pass" } else { "fail" }
+  $reason = if ($status -eq "pass") {
+    "ok"
+  }
+  elseif ($result.timed_out) {
+    "apply_timed_out"
+  }
+  else {
+    "apply_failed"
+  }
 
   return [pscustomobject]@{
     target    = $TargetName
     status    = $status
-    reason    = if ($status -eq "pass") { "ok" } else { "apply_failed" }
+    reason    = $reason
     exit_code = $result.exit_code
     payload   = $payload
     output    = $result.output
@@ -327,6 +556,8 @@ function Invoke-TargetPresetFlow {
     [bool]$IsBatchMode,
     [Parameter(Mandatory = $true)]
     [string]$PythonCommand,
+    [int]$RuntimeFlowCommandTimeoutSeconds = 0,
+    [int]$GovernanceSyncCommandTimeoutSeconds = 0,
     [bool]$EmitProgress = $false
   )
 
@@ -392,15 +623,20 @@ function Invoke-TargetPresetFlow {
     $flowArgs += "-Json"
   }
 
-  $flowResult = Invoke-CommandCapture -Executable "pwsh" -Arguments $flowArgs
+  $flowResult = Invoke-CommandCapture `
+    -Executable "pwsh" `
+    -Arguments $flowArgs `
+    -TimeoutSeconds $RuntimeFlowCommandTimeoutSeconds `
+    -WorkingDirectory $RepoRoot
   $flowDurationMs = [int][Math]::Round(((Get-Date) - $flowStartedAt).TotalMilliseconds)
   $flowStatus = if ($flowResult.exit_code -eq 0) { "pass" } else { "fail" }
+  $flowTimeoutTag = if ($flowResult.timed_out) { " timed_out=true" } else { "" }
   Write-BatchProgressLine `
     -Enabled $EmitProgress `
     -TargetName $TargetName `
     -Stage "runtime_flow" `
     -Status $flowStatus `
-    -Detail ("duration_ms={0} exit_code={1}" -f $flowDurationMs, $flowResult.exit_code)
+    -Detail ("duration_ms={0} exit_code={1}{2}" -f $flowDurationMs, $flowResult.exit_code, $flowTimeoutTag)
   $flowPayload = Try-ParseJson -Raw $flowResult.output
 
   $syncResult = [pscustomobject]@{
@@ -420,7 +656,8 @@ function Invoke-TargetPresetFlow {
         -TargetConfig $TargetConfig `
         -RepoRoot $RepoRoot `
         -BaselinePath $GovernanceBaselinePathResolved `
-        -PythonCommand $PythonCommand
+        -PythonCommand $PythonCommand `
+        -CommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds
       $syncDurationMs = [int][Math]::Round(((Get-Date) - $syncStartedAt).TotalMilliseconds)
       Write-BatchProgressLine `
         -Enabled $EmitProgress `
@@ -481,6 +718,8 @@ function Invoke-TargetPresetFlow {
       commit_message     = ""
       trigger            = ""
       milestone_tag      = ""
+      gate_mode          = ""
+      command_timeout_seconds = 0
     }
     exit_code              = $exitCode
   }
@@ -497,7 +736,8 @@ function Invoke-TargetGovernanceBaselineOnly {
     [Parameter(Mandatory = $true)]
     [string]$GovernanceBaselinePathResolved,
     [Parameter(Mandatory = $true)]
-    [string]$PythonCommand
+    [string]$PythonCommand,
+    [int]$GovernanceSyncCommandTimeoutSeconds = 0
   )
 
   $syncResult = Invoke-GovernanceBaselineSync `
@@ -505,7 +745,8 @@ function Invoke-TargetGovernanceBaselineOnly {
     -TargetConfig $TargetConfig `
     -RepoRoot $RepoRoot `
     -BaselinePath $GovernanceBaselinePathResolved `
-    -PythonCommand $PythonCommand
+    -PythonCommand $PythonCommand `
+    -CommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds
   $exitCode = if ($syncResult.status -eq "fail") { 1 } else { 0 }
 
   return [pscustomobject]@{
@@ -528,6 +769,8 @@ function Invoke-TargetGovernanceBaselineOnly {
       commit_message    = ""
       trigger           = ""
       milestone_tag     = ""
+      gate_mode         = ""
+      command_timeout_seconds = 0
     }
     exit_code              = $exitCode
   }
@@ -540,11 +783,15 @@ function Invoke-TargetMilestoneAutoCommit {
     [Parameter(Mandatory = $true)]
     [hashtable]$TargetConfig,
     [Parameter(Mandatory = $true)]
-    [string]$FullCheckPath,
+    [string]$GateCheckPath,
+    [Parameter(Mandatory = $true)]
+    [ValidateSet("full", "fast")]
+    [string]$GateMode,
     [Parameter(Mandatory = $true)]
     [string]$MilestoneTagValue,
     [Parameter(Mandatory = $true)]
-    [int]$MilestoneGateTimeoutSeconds
+    [int]$MilestoneGateTimeoutSeconds,
+    [int]$MilestoneCommandTimeoutSeconds = 0
   )
 
   $repoProfilePath = Join-Path $TargetConfig.AttachmentRoot ".governed-ai\repo-profile.json"
@@ -562,23 +809,45 @@ function Invoke-TargetMilestoneAutoCommit {
       commit_message     = ""
       trigger            = ""
       milestone_tag      = $MilestoneTagValue
+      gate_mode          = $GateMode
+      command_timeout_seconds = 0
     }
+  }
+
+  $effectiveMilestoneCommandTimeoutSeconds = 0
+  if ($MilestoneCommandTimeoutSeconds -gt 0) {
+    $effectiveMilestoneCommandTimeoutSeconds = $MilestoneCommandTimeoutSeconds
+  }
+  elseif ($MilestoneGateTimeoutSeconds -gt 0) {
+    $effectiveMilestoneCommandTimeoutSeconds = $MilestoneGateTimeoutSeconds + 120
   }
 
   $args = @(
     "-NoProfile",
     "-ExecutionPolicy", "Bypass",
-    "-File", $FullCheckPath,
+    "-File", $GateCheckPath,
     "-RepoProfilePath", $repoProfilePath,
     "-WorkingDirectory", $TargetConfig.AttachmentRoot,
     "-MilestoneTag", $MilestoneTagValue,
     "-GateTimeoutSeconds", [string]$MilestoneGateTimeoutSeconds,
     "-Json"
   )
-  $result = Invoke-CommandCapture -Executable "pwsh" -Arguments $args
+  $result = Invoke-CommandCapture `
+    -Executable "pwsh" `
+    -Arguments $args `
+    -TimeoutSeconds $effectiveMilestoneCommandTimeoutSeconds `
+    -WorkingDirectory $TargetConfig.AttachmentRoot
   $payload = Try-ParseJson -Raw $result.output
   $status = if ($result.exit_code -eq 0) { "pass" } else { "fail" }
-  $reason = if ($status -eq "pass") { "ok" } else { "full_check_failed" }
+  $reason = if ($status -eq "pass") {
+    "ok"
+  }
+  elseif ($result.timed_out) {
+    "gate_check_timed_out"
+  }
+  else {
+    "{0}_check_failed" -f $GateMode
+  }
 
   $autoCommitStatus = ""
   $autoCommitReason = ""
@@ -616,6 +885,8 @@ function Invoke-TargetMilestoneAutoCommit {
     commit_message     = $commitMessage
     trigger            = $trigger
     milestone_tag      = $MilestoneTagValue
+    gate_mode          = $GateMode
+    command_timeout_seconds = $effectiveMilestoneCommandTimeoutSeconds
   }
 }
 
@@ -632,11 +903,16 @@ function Invoke-TargetFeatureBaselineAndMilestoneCommit {
     [Parameter(Mandatory = $true)]
     [string]$PythonCommand,
     [Parameter(Mandatory = $true)]
-    [string]$GovernanceFullCheckPathResolved,
+    [string]$MilestoneGateCheckPathResolved,
     [Parameter(Mandatory = $true)]
     [string]$MilestoneTagValue,
     [Parameter(Mandatory = $true)]
     [int]$MilestoneGateTimeoutSeconds,
+    [Parameter(Mandatory = $true)]
+    [ValidateSet("full", "fast")]
+    [string]$MilestoneGateModeValue,
+    [int]$MilestoneCommandTimeoutSeconds = 0,
+    [int]$GovernanceSyncCommandTimeoutSeconds = 0,
     [bool]$EmitProgress = $false
   )
 
@@ -647,7 +923,8 @@ function Invoke-TargetFeatureBaselineAndMilestoneCommit {
     -TargetConfig $TargetConfig `
     -RepoRoot $RepoRoot `
     -BaselinePath $GovernanceBaselinePathResolved `
-    -PythonCommand $PythonCommand
+    -PythonCommand $PythonCommand `
+    -CommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds
   $syncDurationMs = [int][Math]::Round(((Get-Date) - $syncStartedAt).TotalMilliseconds)
   Write-BatchProgressLine `
     -Enabled $EmitProgress `
@@ -669,6 +946,8 @@ function Invoke-TargetFeatureBaselineAndMilestoneCommit {
     commit_message     = ""
     trigger            = ""
     milestone_tag      = $MilestoneTagValue
+    gate_mode          = $MilestoneGateModeValue
+    command_timeout_seconds = $(if ($MilestoneCommandTimeoutSeconds -gt 0) { $MilestoneCommandTimeoutSeconds } elseif ($MilestoneGateTimeoutSeconds -gt 0) { $MilestoneGateTimeoutSeconds + 120 } else { 0 })
   }
   if ($syncResult.status -eq "pass") {
     Write-BatchProgressLine `
@@ -676,14 +955,16 @@ function Invoke-TargetFeatureBaselineAndMilestoneCommit {
       -TargetName $TargetName `
       -Stage "milestone_commit" `
       -Status "start" `
-      -Detail ("milestone_tag={0} timeout_s={1}" -f $MilestoneTagValue, $MilestoneGateTimeoutSeconds)
+      -Detail ("mode={0} milestone_tag={1} gate_timeout_s={2}" -f $MilestoneGateModeValue, $MilestoneTagValue, $MilestoneGateTimeoutSeconds)
     $milestoneStartedAt = Get-Date
     $milestoneResult = Invoke-TargetMilestoneAutoCommit `
       -TargetName $TargetName `
       -TargetConfig $TargetConfig `
-      -FullCheckPath $GovernanceFullCheckPathResolved `
+      -GateCheckPath $MilestoneGateCheckPathResolved `
+      -GateMode $MilestoneGateModeValue `
       -MilestoneTagValue $MilestoneTagValue `
-      -MilestoneGateTimeoutSeconds $MilestoneGateTimeoutSeconds
+      -MilestoneGateTimeoutSeconds $MilestoneGateTimeoutSeconds `
+      -MilestoneCommandTimeoutSeconds $MilestoneCommandTimeoutSeconds
     $milestoneDurationMs = [int][Math]::Round(((Get-Date) - $milestoneStartedAt).TotalMilliseconds)
     Write-BatchProgressLine `
       -Enabled $EmitProgress `
@@ -733,11 +1014,17 @@ function Invoke-TargetAllFeatures {
     [Parameter(Mandatory = $true)]
     [string]$PythonCommand,
     [Parameter(Mandatory = $true)]
-    [string]$GovernanceFullCheckPathResolved,
+    [string]$MilestoneGateCheckPathResolved,
     [Parameter(Mandatory = $true)]
     [string]$MilestoneTagValue,
     [Parameter(Mandatory = $true)]
     [int]$MilestoneGateTimeoutSeconds,
+    [Parameter(Mandatory = $true)]
+    [ValidateSet("full", "fast")]
+    [string]$MilestoneGateModeValue,
+    [int]$MilestoneCommandTimeoutSeconds = 0,
+    [int]$RuntimeFlowCommandTimeoutSeconds = 0,
+    [int]$GovernanceSyncCommandTimeoutSeconds = 0,
     [bool]$EmitProgress = $false
   )
 
@@ -750,6 +1037,8 @@ function Invoke-TargetAllFeatures {
     -ShouldSyncGovernanceBaseline ($FlowMode -eq "onboard") `
     -IsBatchMode $IsBatchMode `
     -PythonCommand $PythonCommand `
+    -RuntimeFlowCommandTimeoutSeconds $RuntimeFlowCommandTimeoutSeconds `
+    -GovernanceSyncCommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds `
     -EmitProgress $EmitProgress
 
   $syncResult = $flowResultEnvelope.governance_sync_result
@@ -763,7 +1052,8 @@ function Invoke-TargetAllFeatures {
         -TargetConfig $TargetConfig `
         -RepoRoot $RepoRoot `
         -BaselinePath $GovernanceBaselinePathResolved `
-        -PythonCommand $PythonCommand
+        -PythonCommand $PythonCommand `
+        -CommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds
       $syncDurationMs = [int][Math]::Round(((Get-Date) - $syncStartedAt).TotalMilliseconds)
       Write-BatchProgressLine `
         -Enabled $EmitProgress `
@@ -790,6 +1080,8 @@ function Invoke-TargetAllFeatures {
     commit_message     = ""
     trigger            = ""
     milestone_tag      = $MilestoneTagValue
+    gate_mode          = $MilestoneGateModeValue
+    command_timeout_seconds = $(if ($MilestoneCommandTimeoutSeconds -gt 0) { $MilestoneCommandTimeoutSeconds } elseif ($MilestoneGateTimeoutSeconds -gt 0) { $MilestoneGateTimeoutSeconds + 120 } else { 0 })
   }
   if ($flowResultEnvelope.flow_result.exit_code -eq 0) {
     if ($syncResult.status -eq "pass") {
@@ -798,14 +1090,16 @@ function Invoke-TargetAllFeatures {
         -TargetName $TargetName `
         -Stage "milestone_commit" `
         -Status "start" `
-        -Detail ("milestone_tag={0} timeout_s={1}" -f $MilestoneTagValue, $MilestoneGateTimeoutSeconds)
+        -Detail ("mode={0} milestone_tag={1} gate_timeout_s={2}" -f $MilestoneGateModeValue, $MilestoneTagValue, $MilestoneGateTimeoutSeconds)
       $milestoneStartedAt = Get-Date
       $milestoneResult = Invoke-TargetMilestoneAutoCommit `
         -TargetName $TargetName `
         -TargetConfig $TargetConfig `
-        -FullCheckPath $GovernanceFullCheckPathResolved `
+        -GateCheckPath $MilestoneGateCheckPathResolved `
+        -GateMode $MilestoneGateModeValue `
         -MilestoneTagValue $MilestoneTagValue `
-        -MilestoneGateTimeoutSeconds $MilestoneGateTimeoutSeconds
+        -MilestoneGateTimeoutSeconds $MilestoneGateTimeoutSeconds `
+        -MilestoneCommandTimeoutSeconds $MilestoneCommandTimeoutSeconds
       $milestoneDurationMs = [int][Math]::Round(((Get-Date) - $milestoneStartedAt).TotalMilliseconds)
       Write-BatchProgressLine `
         -Enabled $EmitProgress `
@@ -828,6 +1122,8 @@ function Invoke-TargetAllFeatures {
         commit_message     = ""
         trigger            = ""
         milestone_tag      = $MilestoneTagValue
+        gate_mode          = $MilestoneGateModeValue
+        command_timeout_seconds = $(if ($MilestoneCommandTimeoutSeconds -gt 0) { $MilestoneCommandTimeoutSeconds } elseif ($MilestoneGateTimeoutSeconds -gt 0) { $MilestoneGateTimeoutSeconds + 120 } else { 0 })
       }
       Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "milestone_commit" -Status "skipped" -Detail "reason=baseline_sync_failed"
     }
@@ -886,6 +1182,12 @@ $governanceFullCheckPathResolved = if ([string]::IsNullOrWhiteSpace($GovernanceF
 else {
   Resolve-AbsolutePath -PathValue $GovernanceFullCheckPath
 }
+$governanceFastCheckPathResolved = if ([string]::IsNullOrWhiteSpace($GovernanceFastCheckPath)) {
+  Join-Path $repoRoot "scripts\governance\fast-check.ps1"
+}
+else {
+  Resolve-AbsolutePath -PathValue $GovernanceFastCheckPath
+}
 $pruneRunsRootResolved = if ([string]::IsNullOrWhiteSpace($PruneRunsRoot)) {
   Join-Path $repoRoot "docs\change-evidence\target-repo-runs"
 }
@@ -909,6 +1211,37 @@ if ($PruneKeepLatestPerTarget -lt 0) {
 }
 if ($MilestoneGateTimeoutSeconds -lt 0) {
   throw "-MilestoneGateTimeoutSeconds must be >= 0."
+}
+if ($MilestoneCommandTimeoutSeconds -lt 0) {
+  throw "-MilestoneCommandTimeoutSeconds must be >= 0."
+}
+if ($RuntimeFlowTimeoutSeconds -lt 0) {
+  throw "-RuntimeFlowTimeoutSeconds must be >= 0."
+}
+if ($GovernanceSyncTimeoutSeconds -lt 0) {
+  throw "-GovernanceSyncTimeoutSeconds must be >= 0."
+}
+if ($BatchTimeoutSeconds -lt 0) {
+  throw "-BatchTimeoutSeconds must be >= 0."
+}
+$milestoneGateStrategy = Resolve-MilestoneGateStrategy `
+  -AutoEnabled $AutoMilestoneGateMode.IsPresent `
+  -RequestedMode $MilestoneGateMode `
+  -FlowModeValue $FlowMode `
+  -VerificationModeValue $Mode `
+  -PolicyStatusValue $PolicyStatus `
+  -WriteTierValue $WriteTier `
+  -ExecuteWriteFlowEnabled $ExecuteWriteFlow.IsPresent `
+  -ReleaseCandidateEnabled $ReleaseCandidate.IsPresent `
+  -TaskTypeValue $TaskType
+$effectiveMilestoneGateMode = [string]$milestoneGateStrategy.mode
+$milestoneGateModeSource = [string]$milestoneGateStrategy.source
+$milestoneGateModeReason = [string]$milestoneGateStrategy.reason
+$milestoneGateCheckPathResolved = if ($effectiveMilestoneGateMode -eq "fast") {
+  $governanceFastCheckPathResolved
+}
+else {
+  $governanceFullCheckPathResolved
 }
 $pythonCommand = Resolve-PythonCommand
 $templateVariables = @{
@@ -941,8 +1274,8 @@ if ((-not (Test-Path -LiteralPath $runtimeFlowPath)) -and (-not $applyFeatureBas
 if ((((($FlowMode -eq "onboard") -and -not $SkipGovernanceBaselineSync.IsPresent)) -or $applyFeatureBaselineOnly -or $applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) -and -not (Test-Path -LiteralPath $governanceBaselinePathResolved)) {
   throw "Missing target-repo-governance-baseline.json at $governanceBaselinePathResolved"
 }
-if (($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) -and -not (Test-Path -LiteralPath $governanceFullCheckPathResolved)) {
-  throw "Missing full-check.ps1 at $governanceFullCheckPathResolved"
+if (($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) -and -not (Test-Path -LiteralPath $milestoneGateCheckPathResolved)) {
+  throw ("Missing milestone gate script ({0}) at {1}" -f $effectiveMilestoneGateMode, $milestoneGateCheckPathResolved)
 }
 
 $selectedTargets = @()
@@ -960,8 +1293,25 @@ else {
 $targetRuns = @()
 $targetCount = @($selectedTargets).Count
 $progressEnabled = ($AllTargets -and -not $Json)
+$batchStartedAt = Get-Date
+$batchTimedOut = $false
+$batchElapsedSeconds = 0
 $targetIndex = 0
 foreach ($targetName in $selectedTargets) {
+  if ($BatchTimeoutSeconds -gt 0) {
+    $batchElapsedSeconds = [int][Math]::Floor(((Get-Date) - $batchStartedAt).TotalSeconds)
+    if ($batchElapsedSeconds -ge $BatchTimeoutSeconds) {
+      $batchTimedOut = $true
+      Write-BatchProgressLine `
+        -Enabled $progressEnabled `
+        -TargetName "__batch__" `
+        -Stage "batch" `
+        -Status "fail" `
+        -Detail ("reason=batch_timeout_exceeded elapsed_s={0} timeout_s={1}" -f $batchElapsedSeconds, $BatchTimeoutSeconds)
+      break
+    }
+  }
+
   $targetIndex += 1
   $targetConfig = $targetConfigMap[$targetName]
   if (-not $targetConfig) {
@@ -980,13 +1330,17 @@ foreach ($targetName in $selectedTargets) {
   else {
     "runtime_flow_only"
   }
+  $gateStrategyTag = ""
+  if ($applyAllFeatures -or $applyFeatureBaselineAndMilestoneCommit) {
+    $gateStrategyTag = (" milestone_gate_mode={0} source={1} reason={2}" -f $effectiveMilestoneGateMode, $milestoneGateModeSource, $milestoneGateModeReason)
+  }
   $targetStartedAt = Get-Date
   Write-BatchProgressLine `
     -Enabled $progressEnabled `
     -TargetName $targetName `
     -Stage "target" `
     -Status "start" `
-    -Detail ("index={0}/{1} mode={2}" -f $targetIndex, $targetCount, $runModeLabel)
+    -Detail ("index={0}/{1} mode={2}{3}" -f $targetIndex, $targetCount, $runModeLabel, $gateStrategyTag)
 
   if ($AllTargets -and -not $Json) {
     Write-Host ("==> target={0} ({1}/{2})" -f $targetName, $targetIndex, $targetCount)
@@ -1002,9 +1356,13 @@ foreach ($targetName in $selectedTargets) {
       -GovernanceBaselinePathResolved $governanceBaselinePathResolved `
       -IsBatchMode $AllTargets.IsPresent `
       -PythonCommand $pythonCommand `
-      -GovernanceFullCheckPathResolved $governanceFullCheckPathResolved `
+      -MilestoneGateCheckPathResolved $milestoneGateCheckPathResolved `
       -MilestoneTagValue $MilestoneTag `
       -MilestoneGateTimeoutSeconds $MilestoneGateTimeoutSeconds `
+      -MilestoneGateModeValue $effectiveMilestoneGateMode `
+      -MilestoneCommandTimeoutSeconds $MilestoneCommandTimeoutSeconds `
+      -RuntimeFlowCommandTimeoutSeconds $RuntimeFlowTimeoutSeconds `
+      -GovernanceSyncCommandTimeoutSeconds $GovernanceSyncTimeoutSeconds `
       -EmitProgress $progressEnabled
   }
   elseif ($applyFeatureBaselineAndMilestoneCommit) {
@@ -1014,9 +1372,12 @@ foreach ($targetName in $selectedTargets) {
       -RepoRoot $repoRoot `
       -GovernanceBaselinePathResolved $governanceBaselinePathResolved `
       -PythonCommand $pythonCommand `
-      -GovernanceFullCheckPathResolved $governanceFullCheckPathResolved `
+      -MilestoneGateCheckPathResolved $milestoneGateCheckPathResolved `
       -MilestoneTagValue $MilestoneTag `
       -MilestoneGateTimeoutSeconds $MilestoneGateTimeoutSeconds `
+      -MilestoneGateModeValue $effectiveMilestoneGateMode `
+      -MilestoneCommandTimeoutSeconds $MilestoneCommandTimeoutSeconds `
+      -GovernanceSyncCommandTimeoutSeconds $GovernanceSyncTimeoutSeconds `
       -EmitProgress $progressEnabled
   }
   elseif ($applyFeatureBaselineOnly) {
@@ -1025,7 +1386,8 @@ foreach ($targetName in $selectedTargets) {
       -TargetConfig $targetConfig `
       -RepoRoot $repoRoot `
       -GovernanceBaselinePathResolved $governanceBaselinePathResolved `
-      -PythonCommand $pythonCommand
+      -PythonCommand $pythonCommand `
+      -GovernanceSyncCommandTimeoutSeconds $GovernanceSyncTimeoutSeconds
   }
   else {
     $targetRun = Invoke-TargetPresetFlow `
@@ -1037,6 +1399,8 @@ foreach ($targetName in $selectedTargets) {
       -ShouldSyncGovernanceBaseline (($FlowMode -eq "onboard") -and -not $SkipGovernanceBaselineSync.IsPresent) `
       -IsBatchMode $AllTargets.IsPresent `
       -PythonCommand $pythonCommand `
+      -RuntimeFlowCommandTimeoutSeconds $RuntimeFlowTimeoutSeconds `
+      -GovernanceSyncCommandTimeoutSeconds $GovernanceSyncTimeoutSeconds `
       -EmitProgress $progressEnabled
   }
   $targetRuns += $targetRun
@@ -1115,7 +1479,7 @@ $pruneForJson = Convert-PruneResultForJson `
   -DryRun $PruneDryRun.IsPresent
 
 $hasPruneFailure = ($PruneTargetRepoRuns -and $pruneResult.status -eq "fail")
-$overallExitCode = if (($failureCount -gt 0) -or $hasPruneFailure) { 1 } else { 0 }
+$overallExitCode = if (($failureCount -gt 0) -or $hasPruneFailure -or $batchTimedOut) { 1 } else { 0 }
 
 if ($Json) {
   if (-not $AllTargets -and @($targetRuns).Count -eq 1) {
@@ -1178,6 +1542,10 @@ if ($Json) {
           status             = $single.milestone_commit_result.status
           reason             = $single.milestone_commit_result.reason
           exit_code          = $single.milestone_commit_result.exit_code
+          gate_mode          = if ($single.milestone_commit_result.PSObject.Properties.Name -contains "gate_mode") { $single.milestone_commit_result.gate_mode } else { "" }
+          gate_mode_source   = $milestoneGateModeSource
+          gate_mode_reason   = $milestoneGateModeReason
+          command_timeout_seconds = if ($single.milestone_commit_result.PSObject.Properties.Name -contains "command_timeout_seconds") { $single.milestone_commit_result.command_timeout_seconds } else { 0 }
           auto_commit_status = $single.milestone_commit_result.auto_commit_status
           auto_commit_reason = $single.milestone_commit_result.auto_commit_reason
           commit_hash        = $single.milestone_commit_result.commit_hash
@@ -1209,10 +1577,15 @@ if ($Json) {
   else {
     $results = @(
       $targetRuns | ForEach-Object {
+        $flowTimedOut = $false
+        if ($_.flow_result -and ($_.flow_result.PSObject.Properties.Name -contains "timed_out")) {
+          $flowTimedOut = [bool]$_.flow_result.timed_out
+        }
         [ordered]@{
           target                   = $_.target
           exit_code                = $_.exit_code
           flow_exit_code           = $_.flow_result.exit_code
+          flow_timed_out           = $flowTimedOut
           governance_sync_status   = $_.governance_sync_result.status
           governance_sync_reason   = $_.governance_sync_result.reason
           governance_sync_exit_code = $_.governance_sync_result.exit_code
@@ -1220,6 +1593,10 @@ if ($Json) {
           milestone_commit_status  = $_.milestone_commit_result.status
           milestone_commit_reason  = $_.milestone_commit_result.reason
           milestone_commit_exit_code = $_.milestone_commit_result.exit_code
+          milestone_gate_mode      = if ($_.milestone_commit_result.PSObject.Properties.Name -contains "gate_mode") { $_.milestone_commit_result.gate_mode } else { "" }
+          milestone_gate_mode_source = $milestoneGateModeSource
+          milestone_gate_mode_reason = $milestoneGateModeReason
+          milestone_command_timeout_seconds = if ($_.milestone_commit_result.PSObject.Properties.Name -contains "command_timeout_seconds") { $_.milestone_commit_result.command_timeout_seconds } else { 0 }
           auto_commit_status       = $_.milestone_commit_result.auto_commit_status
           auto_commit_reason       = $_.milestone_commit_result.auto_commit_reason
           auto_commit_commit_hash  = $_.milestone_commit_result.commit_hash
@@ -1232,6 +1609,7 @@ if ($Json) {
       runtime_flow_path               = $runtimeFlowPath
       governance_baseline_path        = $governanceBaselinePathResolved
       governance_full_check_path      = $governanceFullCheckPathResolved
+      governance_fast_check_path      = $governanceFastCheckPathResolved
       all_targets                     = [bool]$AllTargets
       flow_mode                       = $FlowMode
       apply_all_features              = [bool]$applyAllFeatures
@@ -1239,8 +1617,20 @@ if ($Json) {
       apply_governance_baseline_only  = [bool]$ApplyGovernanceBaselineOnly
       apply_feature_baseline_and_milestone_commit = [bool]$applyFeatureBaselineAndMilestoneCommit
       governance_baseline_sync_active = ($applyAllFeatures -or $applyFeatureBaselineOnly -or $applyFeatureBaselineAndMilestoneCommit -or (($FlowMode -eq "onboard") -and -not $SkipGovernanceBaselineSync.IsPresent))
+      milestone_gate_mode             = if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) { $effectiveMilestoneGateMode } else { "" }
+      milestone_gate_mode_source      = if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) { $milestoneGateModeSource } else { "" }
+      milestone_gate_mode_reason      = if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) { $milestoneGateModeReason } else { "" }
       milestone_tag                   = if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) { $MilestoneTag } else { "" }
       milestone_gate_timeout_seconds  = if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) { $MilestoneGateTimeoutSeconds } else { 0 }
+      milestone_command_timeout_seconds = if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) { $MilestoneCommandTimeoutSeconds } else { 0 }
+      auto_milestone_gate_mode        = [bool]$AutoMilestoneGateMode
+      task_type                       = $TaskType
+      release_candidate               = [bool]$ReleaseCandidate
+      runtime_flow_timeout_seconds    = $RuntimeFlowTimeoutSeconds
+      governance_sync_timeout_seconds = $GovernanceSyncTimeoutSeconds
+      batch_timeout_seconds           = $BatchTimeoutSeconds
+      batch_timed_out                 = $batchTimedOut
+      batch_elapsed_seconds           = if ($BatchTimeoutSeconds -gt 0) { [int][Math]::Floor(((Get-Date) - $batchStartedAt).TotalSeconds) } else { 0 }
       target_count                    = @($targetRuns).Count
       failure_count                   = $failureCount
       results                         = $results
@@ -1252,7 +1642,7 @@ if ($Json) {
   }
 }
 elseif ($AllTargets) {
-  Write-Host ("batch-summary: targets={0}, failures={1}" -f @($targetRuns).Count, $failureCount)
+  Write-Host ("batch-summary: targets={0}, failures={1}, timed_out={2}" -f @($targetRuns).Count, $failureCount, $batchTimedOut)
 }
 
 if ((-not $Json) -and $PruneTargetRepoRuns) {
