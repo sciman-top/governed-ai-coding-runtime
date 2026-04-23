@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260423 All-Targets Timeout And Progress Hardening](./20260423-all-targets-timeout-progress-hardening.md)
+  - evidence companion for per-gate timeout enforcement, `AllTargets` staged progress logging, and milestone full-check timeout defaults
 - [20260423 Low-Token Interaction Profile Baseline Sync](./20260423-low-token-interaction-profile-baseline-sync.md)
   - evidence companion for promoting low-token `interaction_profile` defaults into target-repo governance baseline, one-click all-target sync, and gate-ordered verification
 - [20260423 Continuous Execution Readiness Kickoff](./20260423-continuous-execution-readiness-kickoff.md)

@@ -39,6 +39,7 @@ param(
   [switch]$ApplyGovernanceBaselineOnly,
   [switch]$ApplyFeatureBaselineAndMilestoneCommit,
   [string]$MilestoneTag = "milestone",
+  [int]$MilestoneGateTimeoutSeconds = 900,
   [string]$CatalogPath = "",
   [string]$GovernanceBaselinePath = "",
   [string]$RuntimeFlowPath = "",
@@ -104,6 +105,30 @@ function Invoke-CommandCapture {
     exit_code = [int]$exitCode
     output    = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).TrimEnd()
   }
+}
+
+function Write-BatchProgressLine {
+  param(
+    [Parameter(Mandatory = $true)]
+    [bool]$Enabled,
+    [Parameter(Mandatory = $true)]
+    [string]$TargetName,
+    [Parameter(Mandatory = $true)]
+    [string]$Stage,
+    [Parameter(Mandatory = $true)]
+    [string]$Status,
+    [string]$Detail = ""
+  )
+
+  if (-not $Enabled) {
+    return
+  }
+
+  $line = "batch-progress: target={0} stage={1} status={2} at={3}" -f $TargetName, $Stage, $Status, (Get-Date).ToString("o")
+  if (-not [string]::IsNullOrWhiteSpace($Detail)) {
+    $line = "{0} {1}" -f $line, $Detail.Trim()
+  }
+  Write-Host $line
 }
 
 function Try-ParseJson {
@@ -301,8 +326,12 @@ function Invoke-TargetPresetFlow {
     [Parameter(Mandatory = $true)]
     [bool]$IsBatchMode,
     [Parameter(Mandatory = $true)]
-    [string]$PythonCommand
+    [string]$PythonCommand,
+    [bool]$EmitProgress = $false
   )
+
+  $flowStartedAt = Get-Date
+  Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "runtime_flow" -Status "start" -Detail ("flow_mode={0}" -f $FlowMode)
 
   $taskIdForTarget = if ($IsBatchMode) { "$TaskId-$TargetName" } else { $TaskId }
   $runIdForTarget = if ($IsBatchMode) { "$RunId-$TargetName" } else { $RunId }
@@ -364,6 +393,14 @@ function Invoke-TargetPresetFlow {
   }
 
   $flowResult = Invoke-CommandCapture -Executable "pwsh" -Arguments $flowArgs
+  $flowDurationMs = [int][Math]::Round(((Get-Date) - $flowStartedAt).TotalMilliseconds)
+  $flowStatus = if ($flowResult.exit_code -eq 0) { "pass" } else { "fail" }
+  Write-BatchProgressLine `
+    -Enabled $EmitProgress `
+    -TargetName $TargetName `
+    -Stage "runtime_flow" `
+    -Status $flowStatus `
+    -Detail ("duration_ms={0} exit_code={1}" -f $flowDurationMs, $flowResult.exit_code)
   $flowPayload = Try-ParseJson -Raw $flowResult.output
 
   $syncResult = [pscustomobject]@{
@@ -376,12 +413,21 @@ function Invoke-TargetPresetFlow {
   }
   if ($ShouldSyncGovernanceBaseline) {
     if ($flowResult.exit_code -eq 0) {
+      Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "governance_sync" -Status "start" -Detail "source=runtime_flow"
+      $syncStartedAt = Get-Date
       $syncResult = Invoke-GovernanceBaselineSync `
         -TargetName $TargetName `
         -TargetConfig $TargetConfig `
         -RepoRoot $RepoRoot `
         -BaselinePath $GovernanceBaselinePathResolved `
         -PythonCommand $PythonCommand
+      $syncDurationMs = [int][Math]::Round(((Get-Date) - $syncStartedAt).TotalMilliseconds)
+      Write-BatchProgressLine `
+        -Enabled $EmitProgress `
+        -TargetName $TargetName `
+        -Stage "governance_sync" `
+        -Status ([string]$syncResult.status) `
+        -Detail ("source=runtime_flow duration_ms={0} exit_code={1}" -f $syncDurationMs, $syncResult.exit_code)
     }
     else {
       $syncResult = [pscustomobject]@{
@@ -392,6 +438,7 @@ function Invoke-TargetPresetFlow {
         payload   = $null
         output    = ""
       }
+      Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "governance_sync" -Status "skipped" -Detail "reason=runtime_flow_failed"
     }
   }
   elseif ($FlowMode -eq "onboard") {
@@ -403,6 +450,7 @@ function Invoke-TargetPresetFlow {
       payload   = $null
       output    = ""
     }
+    Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "governance_sync" -Status "skipped" -Detail "reason=explicit_skip"
   }
 
   $exitCode = 0
@@ -494,7 +542,9 @@ function Invoke-TargetMilestoneAutoCommit {
     [Parameter(Mandatory = $true)]
     [string]$FullCheckPath,
     [Parameter(Mandatory = $true)]
-    [string]$MilestoneTagValue
+    [string]$MilestoneTagValue,
+    [Parameter(Mandatory = $true)]
+    [int]$MilestoneGateTimeoutSeconds
   )
 
   $repoProfilePath = Join-Path $TargetConfig.AttachmentRoot ".governed-ai\repo-profile.json"
@@ -522,6 +572,7 @@ function Invoke-TargetMilestoneAutoCommit {
     "-RepoProfilePath", $repoProfilePath,
     "-WorkingDirectory", $TargetConfig.AttachmentRoot,
     "-MilestoneTag", $MilestoneTagValue,
+    "-GateTimeoutSeconds", [string]$MilestoneGateTimeoutSeconds,
     "-Json"
   )
   $result = Invoke-CommandCapture -Executable "pwsh" -Arguments $args
@@ -583,15 +634,27 @@ function Invoke-TargetFeatureBaselineAndMilestoneCommit {
     [Parameter(Mandatory = $true)]
     [string]$GovernanceFullCheckPathResolved,
     [Parameter(Mandatory = $true)]
-    [string]$MilestoneTagValue
+    [string]$MilestoneTagValue,
+    [Parameter(Mandatory = $true)]
+    [int]$MilestoneGateTimeoutSeconds,
+    [bool]$EmitProgress = $false
   )
 
+  Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "governance_sync" -Status "start" -Detail "source=baseline_only"
+  $syncStartedAt = Get-Date
   $syncResult = Invoke-GovernanceBaselineSync `
     -TargetName $TargetName `
     -TargetConfig $TargetConfig `
     -RepoRoot $RepoRoot `
     -BaselinePath $GovernanceBaselinePathResolved `
     -PythonCommand $PythonCommand
+  $syncDurationMs = [int][Math]::Round(((Get-Date) - $syncStartedAt).TotalMilliseconds)
+  Write-BatchProgressLine `
+    -Enabled $EmitProgress `
+    -TargetName $TargetName `
+    -Stage "governance_sync" `
+    -Status ([string]$syncResult.status) `
+    -Detail ("source=baseline_only duration_ms={0} exit_code={1}" -f $syncDurationMs, $syncResult.exit_code)
 
   $milestoneResult = [pscustomobject]@{
     target             = $TargetName
@@ -608,11 +671,29 @@ function Invoke-TargetFeatureBaselineAndMilestoneCommit {
     milestone_tag      = $MilestoneTagValue
   }
   if ($syncResult.status -eq "pass") {
+    Write-BatchProgressLine `
+      -Enabled $EmitProgress `
+      -TargetName $TargetName `
+      -Stage "milestone_commit" `
+      -Status "start" `
+      -Detail ("milestone_tag={0} timeout_s={1}" -f $MilestoneTagValue, $MilestoneGateTimeoutSeconds)
+    $milestoneStartedAt = Get-Date
     $milestoneResult = Invoke-TargetMilestoneAutoCommit `
       -TargetName $TargetName `
       -TargetConfig $TargetConfig `
       -FullCheckPath $GovernanceFullCheckPathResolved `
-      -MilestoneTagValue $MilestoneTagValue
+      -MilestoneTagValue $MilestoneTagValue `
+      -MilestoneGateTimeoutSeconds $MilestoneGateTimeoutSeconds
+    $milestoneDurationMs = [int][Math]::Round(((Get-Date) - $milestoneStartedAt).TotalMilliseconds)
+    Write-BatchProgressLine `
+      -Enabled $EmitProgress `
+      -TargetName $TargetName `
+      -Stage "milestone_commit" `
+      -Status ([string]$milestoneResult.status) `
+      -Detail ("duration_ms={0} exit_code={1} auto_commit_status={2}" -f $milestoneDurationMs, $milestoneResult.exit_code, $milestoneResult.auto_commit_status)
+  }
+  else {
+    Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "milestone_commit" -Status "skipped" -Detail "reason=baseline_sync_failed"
   }
 
   $exitCode = 0
@@ -654,7 +735,10 @@ function Invoke-TargetAllFeatures {
     [Parameter(Mandatory = $true)]
     [string]$GovernanceFullCheckPathResolved,
     [Parameter(Mandatory = $true)]
-    [string]$MilestoneTagValue
+    [string]$MilestoneTagValue,
+    [Parameter(Mandatory = $true)]
+    [int]$MilestoneGateTimeoutSeconds,
+    [bool]$EmitProgress = $false
   )
 
   $flowResultEnvelope = Invoke-TargetPresetFlow `
@@ -665,19 +749,32 @@ function Invoke-TargetAllFeatures {
     -GovernanceBaselinePathResolved $GovernanceBaselinePathResolved `
     -ShouldSyncGovernanceBaseline ($FlowMode -eq "onboard") `
     -IsBatchMode $IsBatchMode `
-    -PythonCommand $PythonCommand
+    -PythonCommand $PythonCommand `
+    -EmitProgress $EmitProgress
 
   $syncResult = $flowResultEnvelope.governance_sync_result
   if ($flowResultEnvelope.flow_result.exit_code -eq 0) {
     $flowSyncStatus = if ($null -ne $syncResult -and $syncResult.PSObject.Properties.Name -contains "status") { [string]$syncResult.status } else { "" }
     if ($flowSyncStatus -ne "pass") {
+      Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "governance_sync" -Status "start" -Detail "source=all_features_fallback"
+      $syncStartedAt = Get-Date
       $syncResult = Invoke-GovernanceBaselineSync `
         -TargetName $TargetName `
         -TargetConfig $TargetConfig `
         -RepoRoot $RepoRoot `
         -BaselinePath $GovernanceBaselinePathResolved `
         -PythonCommand $PythonCommand
+      $syncDurationMs = [int][Math]::Round(((Get-Date) - $syncStartedAt).TotalMilliseconds)
+      Write-BatchProgressLine `
+        -Enabled $EmitProgress `
+        -TargetName $TargetName `
+        -Stage "governance_sync" `
+        -Status ([string]$syncResult.status) `
+        -Detail ("source=all_features_fallback duration_ms={0} exit_code={1}" -f $syncDurationMs, $syncResult.exit_code)
     }
+  }
+  else {
+    Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "governance_sync" -Status "skipped" -Detail "reason=runtime_flow_failed"
   }
 
   $milestoneResult = [pscustomobject]@{
@@ -696,11 +793,26 @@ function Invoke-TargetAllFeatures {
   }
   if ($flowResultEnvelope.flow_result.exit_code -eq 0) {
     if ($syncResult.status -eq "pass") {
+      Write-BatchProgressLine `
+        -Enabled $EmitProgress `
+        -TargetName $TargetName `
+        -Stage "milestone_commit" `
+        -Status "start" `
+        -Detail ("milestone_tag={0} timeout_s={1}" -f $MilestoneTagValue, $MilestoneGateTimeoutSeconds)
+      $milestoneStartedAt = Get-Date
       $milestoneResult = Invoke-TargetMilestoneAutoCommit `
         -TargetName $TargetName `
         -TargetConfig $TargetConfig `
         -FullCheckPath $GovernanceFullCheckPathResolved `
-        -MilestoneTagValue $MilestoneTagValue
+        -MilestoneTagValue $MilestoneTagValue `
+        -MilestoneGateTimeoutSeconds $MilestoneGateTimeoutSeconds
+      $milestoneDurationMs = [int][Math]::Round(((Get-Date) - $milestoneStartedAt).TotalMilliseconds)
+      Write-BatchProgressLine `
+        -Enabled $EmitProgress `
+        -TargetName $TargetName `
+        -Stage "milestone_commit" `
+        -Status ([string]$milestoneResult.status) `
+        -Detail ("duration_ms={0} exit_code={1} auto_commit_status={2}" -f $milestoneDurationMs, $milestoneResult.exit_code, $milestoneResult.auto_commit_status)
     }
     else {
       $milestoneResult = [pscustomobject]@{
@@ -717,7 +829,11 @@ function Invoke-TargetAllFeatures {
         trigger            = ""
         milestone_tag      = $MilestoneTagValue
       }
+      Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "milestone_commit" -Status "skipped" -Detail "reason=baseline_sync_failed"
     }
+  }
+  else {
+    Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "milestone_commit" -Status "skipped" -Detail "reason=runtime_flow_failed"
   }
 
   $exitCode = 0
@@ -791,6 +907,9 @@ if ($PruneKeepDays -lt 0) {
 if ($PruneKeepLatestPerTarget -lt 0) {
   throw "-PruneKeepLatestPerTarget must be >= 0."
 }
+if ($MilestoneGateTimeoutSeconds -lt 0) {
+  throw "-MilestoneGateTimeoutSeconds must be >= 0."
+}
 $pythonCommand = Resolve-PythonCommand
 $templateVariables = @{
   repo_root = $repoRoot
@@ -839,14 +958,38 @@ else {
   $selectedTargets = @($Target)
 }
 $targetRuns = @()
+$targetCount = @($selectedTargets).Count
+$progressEnabled = ($AllTargets -and -not $Json)
+$targetIndex = 0
 foreach ($targetName in $selectedTargets) {
+  $targetIndex += 1
   $targetConfig = $targetConfigMap[$targetName]
   if (-not $targetConfig) {
     throw "Target config not found in catalog for target: $targetName"
   }
 
+  $runModeLabel = if ($applyAllFeatures) {
+    "apply_all_features"
+  }
+  elseif ($applyFeatureBaselineAndMilestoneCommit) {
+    "baseline_and_milestone"
+  }
+  elseif ($applyFeatureBaselineOnly) {
+    "baseline_only"
+  }
+  else {
+    "runtime_flow_only"
+  }
+  $targetStartedAt = Get-Date
+  Write-BatchProgressLine `
+    -Enabled $progressEnabled `
+    -TargetName $targetName `
+    -Stage "target" `
+    -Status "start" `
+    -Detail ("index={0}/{1} mode={2}" -f $targetIndex, $targetCount, $runModeLabel)
+
   if ($AllTargets -and -not $Json) {
-    Write-Host ("==> target={0}" -f $targetName)
+    Write-Host ("==> target={0} ({1}/{2})" -f $targetName, $targetIndex, $targetCount)
   }
 
   $targetRun = $null
@@ -860,7 +1003,9 @@ foreach ($targetName in $selectedTargets) {
       -IsBatchMode $AllTargets.IsPresent `
       -PythonCommand $pythonCommand `
       -GovernanceFullCheckPathResolved $governanceFullCheckPathResolved `
-      -MilestoneTagValue $MilestoneTag
+      -MilestoneTagValue $MilestoneTag `
+      -MilestoneGateTimeoutSeconds $MilestoneGateTimeoutSeconds `
+      -EmitProgress $progressEnabled
   }
   elseif ($applyFeatureBaselineAndMilestoneCommit) {
     $targetRun = Invoke-TargetFeatureBaselineAndMilestoneCommit `
@@ -870,7 +1015,9 @@ foreach ($targetName in $selectedTargets) {
       -GovernanceBaselinePathResolved $governanceBaselinePathResolved `
       -PythonCommand $pythonCommand `
       -GovernanceFullCheckPathResolved $governanceFullCheckPathResolved `
-      -MilestoneTagValue $MilestoneTag
+      -MilestoneTagValue $MilestoneTag `
+      -MilestoneGateTimeoutSeconds $MilestoneGateTimeoutSeconds `
+      -EmitProgress $progressEnabled
   }
   elseif ($applyFeatureBaselineOnly) {
     $targetRun = Invoke-TargetGovernanceBaselineOnly `
@@ -889,9 +1036,19 @@ foreach ($targetName in $selectedTargets) {
       -GovernanceBaselinePathResolved $governanceBaselinePathResolved `
       -ShouldSyncGovernanceBaseline (($FlowMode -eq "onboard") -and -not $SkipGovernanceBaselineSync.IsPresent) `
       -IsBatchMode $AllTargets.IsPresent `
-      -PythonCommand $pythonCommand
+      -PythonCommand $pythonCommand `
+      -EmitProgress $progressEnabled
   }
   $targetRuns += $targetRun
+
+  $targetDurationMs = [int][Math]::Round(((Get-Date) - $targetStartedAt).TotalMilliseconds)
+  $targetStatus = if ($targetRun.exit_code -eq 0) { "pass" } else { "fail" }
+  Write-BatchProgressLine `
+    -Enabled $progressEnabled `
+    -TargetName $targetName `
+    -Stage "target" `
+    -Status $targetStatus `
+    -Detail ("index={0}/{1} duration_ms={2} exit_code={3}" -f $targetIndex, $targetCount, $targetDurationMs, $targetRun.exit_code)
 
   if (-not $Json) {
     if (-not [string]::IsNullOrWhiteSpace($targetRun.flow_result.output)) {
@@ -1083,6 +1240,7 @@ if ($Json) {
       apply_feature_baseline_and_milestone_commit = [bool]$applyFeatureBaselineAndMilestoneCommit
       governance_baseline_sync_active = ($applyAllFeatures -or $applyFeatureBaselineOnly -or $applyFeatureBaselineAndMilestoneCommit -or (($FlowMode -eq "onboard") -and -not $SkipGovernanceBaselineSync.IsPresent))
       milestone_tag                   = if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) { $MilestoneTag } else { "" }
+      milestone_gate_timeout_seconds  = if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) { $MilestoneGateTimeoutSeconds } else { 0 }
       target_count                    = @($targetRuns).Count
       failure_count                   = $failureCount
       results                         = $results

@@ -353,6 +353,42 @@ function Test-StringInArray {
   return $false
 }
 
+function Resolve-GateTimeoutSeconds {
+  param(
+    [int]$ExplicitTimeoutSeconds = 0
+  )
+
+  if ($ExplicitTimeoutSeconds -lt 0) {
+    throw "Gate timeout seconds must be >= 0."
+  }
+  if ($ExplicitTimeoutSeconds -gt 0) {
+    return $ExplicitTimeoutSeconds
+  }
+
+  $rawTimeout = [Environment]::GetEnvironmentVariable("GOVERNED_GATE_TIMEOUT_SECONDS")
+  if ([string]::IsNullOrWhiteSpace($rawTimeout)) {
+    return 0
+  }
+
+  [double]$parsed = 0
+  $parsedOk = [double]::TryParse(
+    $rawTimeout,
+    [System.Globalization.NumberStyles]::Float,
+    [System.Globalization.CultureInfo]::InvariantCulture,
+    [ref]$parsed
+  )
+  if (-not $parsedOk) {
+    throw "Invalid GOVERNED_GATE_TIMEOUT_SECONDS: '$rawTimeout'. Expected a positive number or 0."
+  }
+  if ($parsed -lt 0) {
+    throw "Invalid GOVERNED_GATE_TIMEOUT_SECONDS: '$rawTimeout'. Expected >= 0."
+  }
+  if ($parsed -eq 0) {
+    return 0
+  }
+  return [int][Math]::Ceiling($parsed)
+}
+
 function Get-AutoCommitTrigger {
   param(
     [Parameter(Mandatory)]
@@ -577,31 +613,89 @@ function Invoke-GateCommand {
     [Parameter(Mandatory)]
     [object]$Gate,
     [Parameter(Mandatory)]
-    [string]$WorkingDirectory
+    [string]$WorkingDirectory,
+    [int]$TimeoutSeconds = 0
   )
 
   $startedAt = Get-Date
-  Write-Host ("==> [{0}] {1}" -f $Gate.gate_id, $Gate.command)
+  if ($TimeoutSeconds -gt 0) {
+    Write-Host ("==> [{0}] {1} (timeout={2}s)" -f $Gate.gate_id, $Gate.command, $TimeoutSeconds)
+  }
+  else {
+    Write-Host ("==> [{0}] {1}" -f $Gate.gate_id, $Gate.command)
+  }
 
-  Push-Location -LiteralPath $WorkingDirectory
-  try {
-    $outputLines = & pwsh -NoProfile -ExecutionPolicy Bypass -Command $Gate.command 2>&1
-    $exitCode = $LASTEXITCODE
-    if ($null -eq $exitCode) {
-      $exitCode = 0
+  $timedOut = $false
+  $exitCode = 0
+  $outputText = ""
+  if ($TimeoutSeconds -gt 0) {
+    $stdoutPath = [System.IO.Path]::GetTempFileName()
+    $stderrPath = [System.IO.Path]::GetTempFileName()
+    try {
+      $process = Start-Process `
+        -FilePath "pwsh" `
+        -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $Gate.command) `
+        -WorkingDirectory $WorkingDirectory `
+        -NoNewWindow `
+        -PassThru `
+        -RedirectStandardOutput $stdoutPath `
+        -RedirectStandardError $stderrPath
+      $completed = $process.WaitForExit($TimeoutSeconds * 1000)
+      if (-not $completed) {
+        $timedOut = $true
+        try {
+          Stop-Process -Id $process.Id -Force -ErrorAction Stop
+        }
+        catch {
+        }
+        $null = $process.WaitForExit(5000)
+        $exitCode = 124
+      }
+      else {
+        $exitCode = [int]$process.ExitCode
+      }
+
+      $stdoutText = Get-Content -LiteralPath $stdoutPath -Raw -ErrorAction SilentlyContinue
+      $stderrText = Get-Content -LiteralPath $stderrPath -Raw -ErrorAction SilentlyContinue
+      $segments = @()
+      if (-not [string]::IsNullOrWhiteSpace($stdoutText)) {
+        $segments += $stdoutText.TrimEnd()
+      }
+      if (-not [string]::IsNullOrWhiteSpace($stderrText)) {
+        $segments += $stderrText.TrimEnd()
+      }
+      if ($timedOut) {
+        $segments += ("gate timed out after {0}s" -f $TimeoutSeconds)
+      }
+      $outputText = ($segments -join [Environment]::NewLine).TrimEnd()
+    }
+    finally {
+      Remove-Item -LiteralPath $stdoutPath -ErrorAction SilentlyContinue
+      Remove-Item -LiteralPath $stderrPath -ErrorAction SilentlyContinue
     }
   }
-  finally {
-    Pop-Location
+  else {
+    Push-Location -LiteralPath $WorkingDirectory
+    try {
+      $outputLines = & pwsh -NoProfile -ExecutionPolicy Bypass -Command $Gate.command 2>&1
+      $exitCode = $LASTEXITCODE
+      if ($null -eq $exitCode) {
+        $exitCode = 0
+      }
+    }
+    finally {
+      Pop-Location
+    }
+    $outputText = (($outputLines | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).TrimEnd()
   }
 
-  $outputText = (($outputLines | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).TrimEnd()
   if (-not [string]::IsNullOrWhiteSpace($outputText)) {
     Write-Host $outputText
   }
 
   $finishedAt = Get-Date
   $status = if ([int]$exitCode -eq 0) { "pass" } else { "fail" }
+  $reason = if ($timedOut) { "timed_out" } elseif ([int]$exitCode -eq 0) { "ok" } else { "command_failed" }
 
   return [pscustomobject]@{
     gate_id      = $Gate.gate_id
@@ -609,6 +703,9 @@ function Invoke-GateCommand {
     source_group = $Gate.source_group
     command      = $Gate.command
     status       = $status
+    reason       = $reason
+    timed_out    = [bool]$timedOut
+    timeout_seconds = [int]$TimeoutSeconds
     exit_code    = [int]$exitCode
     duration_ms  = [int][Math]::Round(($finishedAt - $startedAt).TotalMilliseconds)
     started_at   = $startedAt.ToString("o")
@@ -624,9 +721,10 @@ function Write-GateRunSummary {
     [int]$ExitCode
   )
 
-  Write-Host ("mode={0} source={1} exit_code={2}" -f $Summary.mode, $Summary.command_source, $ExitCode)
+  Write-Host ("mode={0} source={1} exit_code={2} gate_timeout_seconds={3}" -f $Summary.mode, $Summary.command_source, $ExitCode, $Summary.gate_timeout_seconds)
   foreach ($result in $Summary.detailed) {
-    Write-Host ("- {0}: {1} (required={2}, exit={3}, {4}ms)" -f $result.gate_id, $result.status, $result.required, $result.exit_code, $result.duration_ms)
+    $timeoutTag = if ($result.timed_out) { ", timed_out=true" } else { "" }
+    Write-Host ("- {0}: {1} (required={2}, exit={3}, {4}ms, reason={5}{6})" -f $result.gate_id, $result.status, $result.required, $result.exit_code, $result.duration_ms, $result.reason, $timeoutTag)
   }
   if ($Summary.auto_commit) {
     Write-Host ("auto_commit: status={0}, reason={1}, trigger={2}, hash={3}" -f $Summary.auto_commit.status, $Summary.auto_commit.reason, $Summary.auto_commit.trigger, $Summary.auto_commit.commit_hash)
@@ -641,6 +739,7 @@ function Invoke-RepoProfileGateRun {
     [string]$RepoProfilePath = ".governed-ai/repo-profile.json",
     [string]$WorkingDirectory = "",
     [string]$MilestoneTag = "",
+    [int]$GateTimeoutSeconds = 0,
     [switch]$ContinueOnError,
     [switch]$JsonOutput
   )
@@ -649,13 +748,14 @@ function Invoke-RepoProfileGateRun {
   $resolvedWorkingDirectory = Resolve-GateWorkingDirectory -ResolvedRepoProfilePath $resolvedProfilePath -WorkingDirectory $WorkingDirectory
   $profile = Get-RepoProfileObject -ResolvedRepoProfilePath $resolvedProfilePath
   $resolved = Resolve-GateCommands -Mode $Mode -Profile $profile
+  $effectiveGateTimeoutSeconds = Resolve-GateTimeoutSeconds -ExplicitTimeoutSeconds $GateTimeoutSeconds
   $autoCommitPolicy = Get-AutoCommitPolicy -Profile $profile
 
   $startedAt = Get-Date
   $results = @()
 
   foreach ($gate in $resolved.commands) {
-    $result = Invoke-GateCommand -Gate $gate -WorkingDirectory $resolvedWorkingDirectory
+    $result = Invoke-GateCommand -Gate $gate -WorkingDirectory $resolvedWorkingDirectory -TimeoutSeconds $effectiveGateTimeoutSeconds
     $results += $result
     if ($result.status -eq "fail" -and $result.required -and -not $ContinueOnError.IsPresent) {
       break
@@ -685,6 +785,7 @@ function Invoke-RepoProfileGateRun {
     command_source    = $resolved.source
     repo_profile_path = $resolvedProfilePath
     working_directory = $resolvedWorkingDirectory
+    gate_timeout_seconds = $effectiveGateTimeoutSeconds
     gate_order        = @($results | ForEach-Object { $_.gate_id })
     results           = $resultMap
     detailed          = $results
