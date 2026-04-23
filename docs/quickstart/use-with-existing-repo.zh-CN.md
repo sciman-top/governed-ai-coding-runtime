@@ -285,6 +285,20 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
   -Json
 ```
 
+如果你希望一键执行后自动清理历史 target-repo 问题痕迹，可加：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -ApplyAllFeatures `
+  -FlowMode "daily" `
+  -MilestoneTag "milestone" `
+  -PruneTargetRepoRuns `
+  -PruneKeepDays 30 `
+  -PruneKeepLatestPerTarget 30 `
+  -Json
+```
+
 基线同步行为：
 - `onboard` 模式下，`runtime-flow-preset.ps1` 默认会把 `docs/targets/target-repo-governance-baseline.json` 中的治理特性块同步到目标仓 profile。
 - 当前默认基线覆盖 `required_entrypoint_policy` 与里程碑 `auto_commit_policy`。

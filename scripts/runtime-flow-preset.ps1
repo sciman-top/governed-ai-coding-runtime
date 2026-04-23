@@ -42,7 +42,12 @@ param(
   [string]$CatalogPath = "",
   [string]$GovernanceBaselinePath = "",
   [string]$RuntimeFlowPath = "",
-  [string]$GovernanceFullCheckPath = ""
+  [string]$GovernanceFullCheckPath = "",
+  [switch]$PruneTargetRepoRuns,
+  [string]$PruneRunsRoot = "",
+  [int]$PruneKeepDays = 30,
+  [int]$PruneKeepLatestPerTarget = 30,
+  [switch]$PruneDryRun
 )
 
 Set-StrictMode -Version Latest
@@ -113,6 +118,95 @@ function Try-ParseJson {
   }
   catch {
     return $null
+  }
+}
+
+function Invoke-PruneTargetRepoRuns {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$RepoRoot,
+    [Parameter(Mandatory = $true)]
+    [string]$RunsRoot,
+    [Parameter(Mandatory = $true)]
+    [string]$PythonCommand,
+    [Parameter(Mandatory = $true)]
+    [int]$KeepDays,
+    [Parameter(Mandatory = $true)]
+    [int]$KeepLatestPerTarget,
+    [Parameter(Mandatory = $true)]
+    [bool]$DryRun
+  )
+
+  $pruneScriptPath = Join-Path $RepoRoot "scripts\prune-target-repo-runs.py"
+  if (-not (Test-Path -LiteralPath $pruneScriptPath)) {
+    return [pscustomobject]@{
+      status    = "fail"
+      reason    = "prune_script_not_found"
+      exit_code = 1
+      runs_root = $RunsRoot
+      payload   = $null
+      output    = ("prune script not found: {0}" -f $pruneScriptPath)
+    }
+  }
+
+  $args = @(
+    $pruneScriptPath,
+    "--runs-root", $RunsRoot,
+    "--keep-days", [string]$KeepDays,
+    "--keep-latest-per-target", [string]$KeepLatestPerTarget
+  )
+  if ($DryRun) {
+    $args += "--dry-run"
+  }
+
+  $result = Invoke-CommandCapture -Executable $PythonCommand -Arguments $args
+  $payload = Try-ParseJson -Raw $result.output
+  $status = if ($result.exit_code -eq 0) { "pass" } else { "fail" }
+  $reason = if ($status -eq "pass") { "ok" } else { "prune_failed" }
+  if ($payload -and $payload.PSObject.Properties.Name -contains "reason" -and -not [string]::IsNullOrWhiteSpace([string]$payload.reason)) {
+    $reason = [string]$payload.reason
+  }
+
+  return [pscustomobject]@{
+    status    = $status
+    reason    = $reason
+    exit_code = $result.exit_code
+    runs_root = $RunsRoot
+    payload   = $payload
+    output    = $result.output
+  }
+}
+
+function Convert-PruneResultForJson {
+  param(
+    [Parameter(Mandatory = $true)]
+    [object]$PruneResult,
+    [Parameter(Mandatory = $true)]
+    [int]$KeepDays,
+    [Parameter(Mandatory = $true)]
+    [int]$KeepLatestPerTarget,
+    [Parameter(Mandatory = $true)]
+    [bool]$DryRun
+  )
+
+  $summary = $null
+  if ($PruneResult.payload -and $PruneResult.payload.PSObject.Properties.Name -contains "summary") {
+    $summary = $PruneResult.payload.summary
+  }
+
+  return [ordered]@{
+    status                 = [string]$PruneResult.status
+    reason                 = [string]$PruneResult.reason
+    exit_code              = [int]$PruneResult.exit_code
+    runs_root              = [string]$PruneResult.runs_root
+    keep_days              = $KeepDays
+    keep_latest_per_target = $KeepLatestPerTarget
+    dry_run                = $DryRun
+    total_run_files        = $(if ($summary -and ($summary.PSObject.Properties.Name -contains "total_run_files")) { [int]$summary.total_run_files } else { 0 })
+    kept                   = $(if ($summary -and ($summary.PSObject.Properties.Name -contains "kept")) { [int]$summary.kept } else { 0 })
+    delete_candidates      = $(if ($summary -and ($summary.PSObject.Properties.Name -contains "delete_candidates")) { [int]$summary.delete_candidates } else { 0 })
+    deleted                = $(if ($summary -and ($summary.PSObject.Properties.Name -contains "deleted")) { [int]$summary.deleted } else { 0 })
+    failed_deletions       = $(if ($summary -and ($summary.PSObject.Properties.Name -contains "failed_deletions")) { [int]$summary.failed_deletions } else { 0 })
   }
 }
 
@@ -676,6 +770,12 @@ $governanceFullCheckPathResolved = if ([string]::IsNullOrWhiteSpace($GovernanceF
 else {
   Resolve-AbsolutePath -PathValue $GovernanceFullCheckPath
 }
+$pruneRunsRootResolved = if ([string]::IsNullOrWhiteSpace($PruneRunsRoot)) {
+  Join-Path $repoRoot "docs\change-evidence\target-repo-runs"
+}
+else {
+  Resolve-AbsolutePath -PathValue $PruneRunsRoot
+}
 $applyAllFeatures = [bool]$ApplyAllFeatures
 $applyFeatureBaselineOnly = ($ApplyGovernanceBaselineOnly -or $ApplyFeatureBaselineOnly)
 $applyFeatureBaselineAndMilestoneCommit = [bool]$ApplyFeatureBaselineAndMilestoneCommit
@@ -684,6 +784,12 @@ if ($applyAllFeatures -and ($applyFeatureBaselineOnly -or $applyFeatureBaselineA
 }
 if ($applyFeatureBaselineOnly -and $applyFeatureBaselineAndMilestoneCommit) {
   throw "-ApplyFeatureBaselineOnly/-ApplyGovernanceBaselineOnly and -ApplyFeatureBaselineAndMilestoneCommit are mutually exclusive."
+}
+if ($PruneKeepDays -lt 0) {
+  throw "-PruneKeepDays must be >= 0."
+}
+if ($PruneKeepLatestPerTarget -lt 0) {
+  throw "-PruneKeepLatestPerTarget must be >= 0."
 }
 $pythonCommand = Resolve-PythonCommand
 $templateVariables = @{
@@ -827,7 +933,32 @@ foreach ($targetName in $selectedTargets) {
 }
 
 $failureCount = @($targetRuns | Where-Object { $_.exit_code -ne 0 }).Count
-$overallExitCode = if ($failureCount -gt 0) { 1 } else { 0 }
+$pruneResult = [pscustomobject]@{
+  status    = "skipped"
+  reason    = "not_requested"
+  exit_code = 0
+  runs_root = $pruneRunsRootResolved
+  payload   = $null
+  output    = ""
+}
+if ($PruneTargetRepoRuns) {
+  $pruneResult = Invoke-PruneTargetRepoRuns `
+    -RepoRoot $repoRoot `
+    -RunsRoot $pruneRunsRootResolved `
+    -PythonCommand $pythonCommand `
+    -KeepDays $PruneKeepDays `
+    -KeepLatestPerTarget $PruneKeepLatestPerTarget `
+    -DryRun $PruneDryRun.IsPresent
+}
+
+$pruneForJson = Convert-PruneResultForJson `
+  -PruneResult $pruneResult `
+  -KeepDays $PruneKeepDays `
+  -KeepLatestPerTarget $PruneKeepLatestPerTarget `
+  -DryRun $PruneDryRun.IsPresent
+
+$hasPruneFailure = ($PruneTargetRepoRuns -and $pruneResult.status -eq "fail")
+$overallExitCode = if (($failureCount -gt 0) -or $hasPruneFailure) { 1 } else { 0 }
 
 if ($Json) {
   if (-not $AllTargets -and @($targetRuns).Count -eq 1) {
@@ -836,7 +967,40 @@ if ($Json) {
     $syncReason = [string]$single.governance_sync_result.reason
     if (($syncStatus -eq "skipped") -and ($syncReason -in @("flow_mode_not_onboard", "explicit_skip", "runtime_flow_failed"))) {
       if (-not [string]::IsNullOrWhiteSpace($single.flow_result.output)) {
-        Write-Host $single.flow_result.output
+        if (-not $PruneTargetRepoRuns) {
+          Write-Host $single.flow_result.output
+        }
+        else {
+          $flowOnlyPayload = Try-ParseJson -Raw $single.flow_result.output
+          if ($null -ne $flowOnlyPayload) {
+            $wrappedFlowOnly = [ordered]@{}
+            foreach ($property in $flowOnlyPayload.PSObject.Properties) {
+              $wrappedFlowOnly[$property.Name] = $property.Value
+            }
+            $wrappedFlowOnly["prune_target_repo_runs"] = $pruneForJson
+            Write-Host ($wrappedFlowOnly | ConvertTo-Json -Depth 20)
+          }
+          else {
+            $flowOnlyFallback = [ordered]@{
+              target                 = $single.target
+              exit_code              = $single.exit_code
+              flow_exit_code         = $single.flow_result.exit_code
+              flow_output            = $single.flow_result.output
+              prune_target_repo_runs = $pruneForJson
+            }
+            Write-Host ($flowOnlyFallback | ConvertTo-Json -Depth 20)
+          }
+        }
+      }
+      elseif ($PruneTargetRepoRuns) {
+        $flowOnlyEmpty = [ordered]@{
+          target                 = $single.target
+          exit_code              = $single.exit_code
+          flow_exit_code         = $single.flow_result.exit_code
+          flow_output            = ""
+          prune_target_repo_runs = $pruneForJson
+        }
+        Write-Host ($flowOnlyEmpty | ConvertTo-Json -Depth 20)
       }
     }
     else {
@@ -864,6 +1028,9 @@ if ($Json) {
           trigger            = $single.milestone_commit_result.trigger
           milestone_tag      = $single.milestone_commit_result.milestone_tag
         }
+        if ($PruneTargetRepoRuns) {
+          $wrapped["prune_target_repo_runs"] = $pruneForJson
+        }
         Write-Host ($wrapped | ConvertTo-Json -Depth 20)
       }
       else {
@@ -874,6 +1041,9 @@ if ($Json) {
           flow_output             = $single.flow_result.output
           governance_baseline_sync = $single.governance_sync_result
           milestone_commit        = $single.milestone_commit_result
+        }
+        if ($PruneTargetRepoRuns) {
+          $fallback["prune_target_repo_runs"] = $pruneForJson
         }
         Write-Host ($fallback | ConvertTo-Json -Depth 20)
       }
@@ -917,11 +1087,24 @@ if ($Json) {
       failure_count                   = $failureCount
       results                         = $results
     }
+    if ($PruneTargetRepoRuns) {
+      $payload["prune_target_repo_runs"] = $pruneForJson
+    }
     Write-Host ($payload | ConvertTo-Json -Depth 20)
   }
 }
 elseif ($AllTargets) {
   Write-Host ("batch-summary: targets={0}, failures={1}" -f @($targetRuns).Count, $failureCount)
+}
+
+if ((-not $Json) -and $PruneTargetRepoRuns) {
+  Write-Host (
+    "prune_target_repo_runs: status={0} delete_candidates={1} deleted={2} failed_deletions={3}" -f
+      $pruneForJson.status,
+      $pruneForJson.delete_candidates,
+      $pruneForJson.deleted,
+      $pruneForJson.failed_deletions
+  )
 }
 
 exit $overallExitCode

@@ -571,6 +571,94 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                 self.assertEqual(profile["required_entrypoint_policy"]["current_mode"], "targeted_enforced")
                 self.assertEqual(profile["auto_commit_policy"]["enabled"], True)
 
+    def test_runtime_flow_preset_single_target_prunes_target_repo_runs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_a = workspace / "repo-a"
+            _write_json(
+                repo_a / ".governed-ai" / "repo-profile.json",
+                {
+                    "repo_id": "repo-a",
+                    "required_entrypoint_policy": {"current_mode": "advisory"},
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": str(repo_a),
+                            "attachment_runtime_state_root": str(workspace / "state" / "repo-a"),
+                            "repo_id": "repo-a",
+                            "display_name": "repo-a",
+                            "primary_language": "python",
+                            "build_command": "python --version",
+                            "test_command": "python --version",
+                            "contract_command": "python --version",
+                        }
+                    },
+                },
+            )
+
+            fake_runtime_flow_path = workspace / "fake-runtime-flow.ps1"
+            _write_fake_runtime_flow_script(fake_runtime_flow_path)
+
+            runs_root = workspace / "target-repo-runs"
+            _write_json(runs_root / "repo-a-onboard-20260101010101.json", {"id": "onboard"})
+            _write_json(runs_root / "repo-a-daily-20260102020202.json", {"id": "daily-old"})
+            _write_json(runs_root / "repo-a-daily-20260103030303.json", {"id": "daily-new"})
+            _write_json(runs_root / "summary-active-targets-latest.json", {"summary": "keep"})
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "runtime-flow-preset.ps1"),
+                    "-Target",
+                    "repo-a",
+                    "-FlowMode",
+                    "daily",
+                    "-Mode",
+                    "quick",
+                    "-Json",
+                    "-CatalogPath",
+                    str(catalog_path),
+                    "-RuntimeFlowPath",
+                    str(fake_runtime_flow_path),
+                    "-PruneTargetRepoRuns",
+                    "-PruneRunsRoot",
+                    str(runs_root),
+                    "-PruneKeepDays",
+                    "0",
+                    "-PruneKeepLatestPerTarget",
+                    "1",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["overall_status"], "pass")
+            self.assertEqual(payload["flow_mode"], "daily")
+            self.assertIn("prune_target_repo_runs", payload)
+            self.assertEqual(payload["prune_target_repo_runs"]["status"], "pass")
+            self.assertEqual(payload["prune_target_repo_runs"]["delete_candidates"], 2)
+            self.assertEqual(payload["prune_target_repo_runs"]["deleted"], 2)
+            self.assertFalse((runs_root / "repo-a-onboard-20260101010101.json").exists())
+            self.assertFalse((runs_root / "repo-a-daily-20260102020202.json").exists())
+            self.assertTrue((runs_root / "repo-a-daily-20260103030303.json").exists())
+            self.assertTrue((runs_root / "summary-active-targets-latest.json").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

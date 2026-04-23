@@ -285,6 +285,20 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
   -Json
 ```
 
+If you want to automatically prune old target-repo problem traces after the one-click run:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -ApplyAllFeatures `
+  -FlowMode "daily" `
+  -MilestoneTag "milestone" `
+  -PruneTargetRepoRuns `
+  -PruneKeepDays 30 `
+  -PruneKeepLatestPerTarget 30 `
+  -Json
+```
+
 Baseline sync behavior:
 - In `onboard` mode, `runtime-flow-preset.ps1` now syncs governance feature blocks from `docs/targets/target-repo-governance-baseline.json` by default.
 - The default baseline includes `required_entrypoint_policy` and milestone `auto_commit_policy`.
