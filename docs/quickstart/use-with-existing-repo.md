@@ -301,7 +301,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
 
 Baseline sync behavior:
 - In `onboard` mode, `runtime-flow-preset.ps1` now syncs governance feature blocks from `docs/targets/target-repo-governance-baseline.json` by default.
-- The default baseline includes `required_entrypoint_policy` and milestone `auto_commit_policy`.
+- The default baseline includes `required_entrypoint_policy`, milestone `auto_commit_policy`, and low-token `interaction_profile` defaults.
 - If you intentionally need a raw onboard run without sync, pass `-SkipGovernanceBaselineSync`.
 
 Consistency hard gate:

@@ -301,7 +301,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
 
 基线同步行为：
 - `onboard` 模式下，`runtime-flow-preset.ps1` 默认会把 `docs/targets/target-repo-governance-baseline.json` 中的治理特性块同步到目标仓 profile。
-- 当前默认基线覆盖 `required_entrypoint_policy` 与里程碑 `auto_commit_policy`。
+- 当前默认基线覆盖 `required_entrypoint_policy`、里程碑 `auto_commit_policy`、以及低 token `interaction_profile` 默认项。
 - 如需刻意跳过该同步，可显式传 `-SkipGovernanceBaselineSync`。
 
 一致性硬门禁：

@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260423 Low-Token Interaction Profile Baseline Sync](./20260423-low-token-interaction-profile-baseline-sync.md)
+  - evidence companion for promoting low-token `interaction_profile` defaults into target-repo governance baseline, one-click all-target sync, and gate-ordered verification
 - [20260423 Continuous Execution Readiness Kickoff](./20260423-continuous-execution-readiness-kickoff.md)
   - evidence companion for activating loop-oriented execution baseline with explicit readiness trigger, phased task plan, and gate-ordered verification requirements
 - [20260423 Target Repo Runs Retention Prune](./20260423-target-repo-runs-retention-prune.md)

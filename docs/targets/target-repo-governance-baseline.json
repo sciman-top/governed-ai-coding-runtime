@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "baseline_id": "active-target-governance-baseline",
-  "sync_revision": "2026-04-23.1",
+  "sync_revision": "2026-04-23.2",
   "required_profile_overrides": {
     "required_entrypoint_policy": {
       "current_mode": "targeted_enforced",
@@ -40,6 +40,14 @@
       ],
       "require_all_required_gates_pass": true,
       "commit_message_template": "自动提交：{repo_id} 里程碑 {milestone} 门禁通过 {timestamp}"
+    },
+    "interaction_profile": {
+      "default_mode": "guided",
+      "term_explain_style": "definition_plus_task_role",
+      "default_checklist_kind": "bugfix",
+      "compaction_preference": "stage_summary",
+      "summary_template": "goal-plan-changes-verification-risks",
+      "handoff_teaching_notes": "Keep handoff notes short and focused on expected vs actual, repro steps, and remaining evidence gaps."
     }
   }
 }
