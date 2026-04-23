@@ -78,10 +78,23 @@ function Try-ParseJson {
   if ([string]::IsNullOrWhiteSpace($Raw)) {
     return $null
   }
+  $normalized = $Raw.Trim()
   try {
-    return ($Raw | ConvertFrom-Json -Depth 40)
+    return ($normalized | ConvertFrom-Json -Depth 40)
   }
   catch {
+    for ($index = 0; $index -lt $normalized.Length; $index++) {
+      if ($normalized[$index] -ne '{') {
+        continue
+      }
+      $candidate = $normalized.Substring($index)
+      try {
+        return ($candidate | ConvertFrom-Json -Depth 40)
+      }
+      catch {
+        continue
+      }
+    }
     return $null
   }
 }

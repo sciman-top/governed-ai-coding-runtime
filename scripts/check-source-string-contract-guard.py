@@ -172,6 +172,8 @@ def run_source_string_contract_guard(
                 check=False,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 cwd=target_repo_root,
             )
         except FileNotFoundError:
