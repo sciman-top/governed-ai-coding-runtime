@@ -24,6 +24,10 @@ class TargetRepoSpeedKpiRecord:
     deny_to_success_retries: int
     fallback_rate: float
     medium_risk_loop_success_ratio: float | None
+    problem_run_rate: float
+    problem_recovery_retries: int
+    latest_problem_signature: str | None
+    latest_problem_run_ref: str | None
     window_start_utc: str | None
     window_end_utc: str | None
     latest_evidence_ref: str | None
@@ -95,6 +99,10 @@ def _build_record(target: str, entries: list[dict], *, window_kind: WindowKind, 
             deny_to_success_retries=0,
             fallback_rate=0.0,
             medium_risk_loop_success_ratio=None,
+            problem_run_rate=0.0,
+            problem_recovery_retries=0,
+            latest_problem_signature=None,
+            latest_problem_run_ref=None,
             window_start_utc=None,
             window_end_utc=None,
             latest_evidence_ref=None,
@@ -106,7 +114,12 @@ def _build_record(target: str, entries: list[dict], *, window_kind: WindowKind, 
     medium_total = 0
     medium_success = 0
     deny_to_success_retries = 0
+    problem_runs = 0
+    problem_recovery_retries = 0
     previous_denied = False
+    previous_problem = False
+    latest_problem_signature = None
+    latest_problem_run_ref = None
 
     for entry in selected_daily:
         if _is_fallback_run(entry["payload"]):
@@ -122,6 +135,15 @@ def _build_record(target: str, entries: list[dict], *, window_kind: WindowKind, 
         if previous_denied and current_success:
             deny_to_success_retries += 1
         previous_denied = current_denied
+
+        has_problem = _has_problem(entry["payload"])
+        if has_problem:
+            problem_runs += 1
+            latest_problem_signature = _problem_signature(entry["payload"])
+            latest_problem_run_ref = entry["path"].name
+        if previous_problem and not has_problem:
+            problem_recovery_retries += 1
+        previous_problem = has_problem
 
     latest_daily = selected_daily[-1]
     closest_onboard = _closest_onboard(onboard, latest_daily["timestamp"])
@@ -139,6 +161,10 @@ def _build_record(target: str, entries: list[dict], *, window_kind: WindowKind, 
         deny_to_success_retries=deny_to_success_retries,
         fallback_rate=round(fallback_runs / len(selected_daily), 4),
         medium_risk_loop_success_ratio=(round(medium_success / medium_total, 4) if medium_total > 0 else None),
+        problem_run_rate=round(problem_runs / len(selected_daily), 4),
+        problem_recovery_retries=problem_recovery_retries,
+        latest_problem_signature=latest_problem_signature,
+        latest_problem_run_ref=latest_problem_run_ref,
         window_start_utc=window_start,
         window_end_utc=window_end,
         latest_evidence_ref=_latest_evidence_ref(latest_daily["payload"]),
@@ -207,6 +233,77 @@ def _latest_evidence_ref(payload: dict) -> str | None:
     return None
 
 
+def _has_problem(payload: dict) -> bool:
+    runtime_check = _required_object(payload.get("runtime_check"), "runtime_check")
+    if runtime_check is not None:
+        exit_code = runtime_check.get("exit_code")
+        if isinstance(exit_code, int) and exit_code != 0:
+            return True
+    runtime_payload = _runtime_payload(payload)
+    if runtime_payload is None:
+        return _top_level_overall_status_failed(payload)
+
+    problem_trace = _problem_trace(runtime_payload)
+    if problem_trace is not None:
+        has_problem = problem_trace.get("has_problem")
+        if isinstance(has_problem, bool):
+            return has_problem
+
+    summary = _required_object(runtime_payload.get("summary"), "summary")
+    if summary is not None:
+        overall_status = summary.get("overall_status")
+        if isinstance(overall_status, str) and overall_status.strip().lower() != "pass":
+            return True
+
+    if _verify_has_non_pass(runtime_payload):
+        return True
+
+    write_status = _write_status(payload)
+    if isinstance(write_status, str) and write_status.strip().lower() in {"denied", "deny", "failed", "error"}:
+        return True
+
+    return _top_level_overall_status_failed(payload)
+
+
+def _problem_signature(payload: dict) -> str | None:
+    runtime_payload = _runtime_payload(payload)
+    if runtime_payload is None:
+        if _top_level_overall_status_failed(payload):
+            return "runtime_flow:fail"
+        return None
+
+    problem_trace = _problem_trace(runtime_payload)
+    if problem_trace is not None:
+        failure_signature = problem_trace.get("failure_signature")
+        if isinstance(failure_signature, str):
+            normalized = failure_signature.strip()
+            if normalized and normalized.lower() != "none":
+                return normalized
+        failure_stage = problem_trace.get("failure_stage")
+        if isinstance(failure_stage, str):
+            normalized_stage = failure_stage.strip()
+            if normalized_stage and normalized_stage.lower() != "none":
+                return normalized_stage
+
+    summary = _required_object(runtime_payload.get("summary"), "summary")
+    if summary is not None:
+        overall_status = summary.get("overall_status")
+        if isinstance(overall_status, str) and overall_status.strip().lower() != "pass":
+            return f"summary:{overall_status.strip().lower()}"
+
+    write_status = _write_status(payload)
+    if isinstance(write_status, str):
+        normalized_write = write_status.strip().lower()
+        if normalized_write in {"denied", "deny", "failed", "error"}:
+            return f"write:{normalized_write}"
+
+    if _verify_has_non_pass(runtime_payload):
+        return "verify_attachment:non_pass"
+    if _top_level_overall_status_failed(payload):
+        return "runtime_flow:fail"
+    return None
+
+
 def _session_identity(payload: dict) -> dict | None:
     runtime_check = _required_object(payload.get("runtime_check"), "runtime_check")
     if runtime_check is None:
@@ -229,6 +326,35 @@ def _session_identity(payload: dict) -> dict | None:
         if session_identity is not None:
             return session_identity
     return None
+
+
+def _runtime_payload(payload: dict) -> dict | None:
+    runtime_check = _required_object(payload.get("runtime_check"), "runtime_check")
+    if runtime_check is None:
+        return None
+    return _required_object(runtime_check.get("payload"), "runtime_check.payload")
+
+
+def _problem_trace(runtime_payload: dict) -> dict | None:
+    return _required_object(runtime_payload.get("problem_trace"), "problem_trace")
+
+
+def _verify_has_non_pass(runtime_payload: dict) -> bool:
+    verify_attachment = _required_object(runtime_payload.get("verify_attachment"), "verify_attachment")
+    if verify_attachment is None:
+        return False
+    results = _required_object(verify_attachment.get("results"), "verify_attachment.results")
+    if results is None:
+        return False
+    for status in results.values():
+        if isinstance(status, str) and status.strip().lower() != "pass":
+            return True
+    return False
+
+
+def _top_level_overall_status_failed(payload: dict) -> bool:
+    overall_status = payload.get("overall_status")
+    return isinstance(overall_status, str) and overall_status.strip().lower() != "pass"
 
 
 def _load_run_entries(runs_root: Path) -> list[dict]:

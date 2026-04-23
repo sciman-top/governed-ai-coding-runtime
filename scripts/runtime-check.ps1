@@ -257,6 +257,7 @@ if (-not $requestGatePayload) {
 }
 
 $verifyPayload = $null
+$verifyStep = $null
 if (-not $SkipVerifyAttachment) {
   $verifyStep = Invoke-CommandCapture -Label "verify-attachment" -Command {
     & $python "scripts/run-governed-task.py" "verify-attachment" "--entrypoint-id" $EntrypointId "--attachment-root" $resolvedAttachmentRoot "--attachment-runtime-state-root" $resolvedAttachmentRuntimeStateRoot "--mode" $Mode "--task-id" $TaskId "--run-id" $RunId "--json"
@@ -513,6 +514,7 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
 }
 
 $sourceStringContractGuardPayload = $null
+$sourceStringContractGuardStep = $null
 if (-not $SkipSourceStringContractGuard) {
   $sourceStringContractGuardStep = Invoke-CommandCapture -Label "source-string-contract-guard" -Command {
     & $python "scripts/check-source-string-contract-guard.py" "--target-repo-root" $resolvedAttachmentRoot "--configuration" "Debug" "--json"
@@ -692,6 +694,163 @@ if ($requestGateCommandPayload -and $requestGateCommandPayload.entrypoint_policy
   $summary.entrypoint_blocked = [bool]$requestGateCommandPayload.entrypoint_policy.blocked
 }
 
+$failedStepLabels = New-Object System.Collections.Generic.List[string]
+foreach ($step in $steps) {
+  if ($step -and $step.exit_code -ne 0) {
+    $failedStepLabels.Add([string]$step.label) | Out-Null
+  }
+}
+
+$gateFailureIds = New-Object System.Collections.Generic.List[string]
+if ($verifyPayload -and $verifyPayload.results) {
+  foreach ($gateName in $verifyPayload.results.PSObject.Properties.Name) {
+    if ([string]$verifyPayload.results.$gateName -ne "pass") {
+      Add-Ref -Refs $gateFailureIds -Value ([string]$gateName)
+    }
+  }
+}
+if ($requestGateCommandPayload -and $requestGateCommandPayload.results) {
+  foreach ($gateName in $requestGateCommandPayload.results.PSObject.Properties.Name) {
+    if ([string]$requestGateCommandPayload.results.$gateName -ne "pass") {
+      Add-Ref -Refs $gateFailureIds -Value ("request_gate:" + [string]$gateName)
+    }
+  }
+}
+
+$requestGateOutcome = ""
+if ($requestGateCommandPayload -and $requestGateCommandPayload.PSObject.Properties.Name -contains "outcome") {
+  $requestGateOutcome = [string]$requestGateCommandPayload.outcome
+}
+
+$writeGovernanceStatus = ""
+if ($writeGovernancePayload -and $writeGovernancePayload.PSObject.Properties.Name -contains "governance_status") {
+  $writeGovernanceStatus = [string]$writeGovernancePayload.governance_status
+}
+$writePolicyStatus = ""
+if ($writeGovernancePayload -and $writeGovernancePayload.PSObject.Properties.Name -contains "policy_status") {
+  $writePolicyStatus = [string]$writeGovernancePayload.policy_status
+}
+$writeExecutionStatus = ""
+if ($writeExecutePayload -and $writeExecutePayload.PSObject.Properties.Name -contains "execution_status") {
+  $writeExecutionStatus = [string]$writeExecutePayload.execution_status
+}
+$writeFailureReason = ""
+if ($writePreflight -and $writePreflight.reason) {
+  $writeFailureReason = [string]$writePreflight.reason
+}
+elseif ($writeExecutePayload -and $writeExecutePayload.reason) {
+  $writeFailureReason = [string]$writeExecutePayload.reason
+}
+elseif ($writeGovernancePayload -and $writeGovernancePayload.reason) {
+  $writeFailureReason = [string]$writeGovernancePayload.reason
+}
+$writeRetryCommand = ""
+if ($writePreflight -and $writePreflight.retry_command) {
+  $writeRetryCommand = [string]$writePreflight.retry_command
+}
+
+$sourceGuardStatus = ""
+if ($sourceStringContractGuardPayload -and $sourceStringContractGuardPayload.PSObject.Properties.Name -contains "status") {
+  $sourceGuardStatus = [string]$sourceStringContractGuardPayload.status
+}
+
+$failureStage = "none"
+$failureReason = ""
+if ($hasFailure) {
+  if ($dependencyBaselineStep.exit_code -ne 0 -or -not $dependencyBaselinePayload) {
+    $failureStage = "dependency_baseline"
+    if ($dependencyBaselinePayload -and $dependencyBaselinePayload.reason) {
+      $failureReason = [string]$dependencyBaselinePayload.reason
+    }
+  }
+  elseif ($statusStep.exit_code -ne 0 -or -not $statusPayload) {
+    $failureStage = "status"
+  }
+  elseif ($doctorStep.exit_code -ne 0) {
+    $failureStage = "doctor"
+  }
+  elseif ($requestGateStep.exit_code -ne 0 -or -not $requestGatePayload) {
+    $failureStage = "request_gate"
+  }
+  elseif (-not [string]::IsNullOrWhiteSpace($requestGateOutcome) -and $requestGateOutcome -ne "pass") {
+    $failureStage = "request_gate"
+    $failureReason = "request_gate_outcome=" + $requestGateOutcome
+  }
+  elseif ((-not $SkipVerifyAttachment) -and (($verifyStep -and $verifyStep.exit_code -ne 0) -or -not $verifyPayload -or @($gateFailureIds).Count -gt 0)) {
+    $failureStage = "verify_attachment"
+    if (@($gateFailureIds).Count -gt 0) {
+      $failureReason = "gate_failures=" + (@($gateFailureIds) -join ",")
+    }
+  }
+  elseif ($writePreflight -and $writePreflight.blocked -eq $true) {
+    $failureStage = "write_preflight"
+    $failureReason = $writeFailureReason
+  }
+  elseif ($writeGovernancePayload -and (
+      $writePolicyStatus -in @("deny", "escalate") -or
+      $writeGovernanceStatus -in @("denied", "paused", "rejected")
+    )) {
+    $failureStage = "write_governance"
+    $failureReason = $writeFailureReason
+  }
+  elseif ($ExecuteWriteFlow -and $null -eq $writeExecutePayload) {
+    $failureStage = "write_execute"
+    $failureReason = "missing_write_execute_payload"
+  }
+  elseif ($writeExecutePayload -and -not [string]::IsNullOrWhiteSpace($writeExecutionStatus) -and $writeExecutionStatus -ne "executed") {
+    $failureStage = "write_execute"
+    $failureReason = $writeFailureReason
+  }
+  elseif ((-not $SkipSourceStringContractGuard) -and (
+      ($sourceStringContractGuardStep -and $sourceStringContractGuardStep.exit_code -ne 0) -or
+      $sourceGuardStatus -eq "fail"
+    )) {
+    $failureStage = "source_string_contract_guard"
+    if ($sourceStringContractGuardPayload -and $sourceStringContractGuardPayload.reason) {
+      $failureReason = [string]$sourceStringContractGuardPayload.reason
+    }
+  }
+  else {
+    $failureStage = "unknown"
+  }
+}
+
+$failureSignature = "none"
+if ($failureStage -ne "none") {
+  $failureSignature = $failureStage
+  if ($failureStage -eq "verify_attachment" -and @($gateFailureIds).Count -gt 0) {
+    $failureSignature = "verify_attachment:" + (@($gateFailureIds) -join ",")
+  }
+  elseif ($failureStage -eq "write_governance" -and -not [string]::IsNullOrWhiteSpace($writePolicyStatus)) {
+    $failureSignature = "write_governance:" + $writePolicyStatus
+  }
+  elseif ($failureStage -eq "write_execute" -and -not [string]::IsNullOrWhiteSpace($writeExecutionStatus)) {
+    $failureSignature = "write_execute:" + $writeExecutionStatus
+  }
+  elseif ($failureStage -eq "source_string_contract_guard" -and -not [string]::IsNullOrWhiteSpace($sourceGuardStatus)) {
+    $failureSignature = "source_string_contract_guard:" + $sourceGuardStatus
+  }
+}
+
+$problemTrace = @{
+  has_problem = $hasFailure
+  failure_stage = $failureStage
+  failure_signature = $failureSignature
+  failure_reason = $(if (-not [string]::IsNullOrWhiteSpace($failureReason)) { $failureReason } else { $null })
+  failed_steps = @($failedStepLabels)
+  gate_failure_ids = @($gateFailureIds)
+  write_issue = @{
+    governance_status = $(if (-not [string]::IsNullOrWhiteSpace($writeGovernanceStatus)) { $writeGovernanceStatus } else { $null })
+    policy_status = $(if (-not [string]::IsNullOrWhiteSpace($writePolicyStatus)) { $writePolicyStatus } else { $null })
+    execution_status = $(if (-not [string]::IsNullOrWhiteSpace($writeExecutionStatus)) { $writeExecutionStatus } else { $null })
+    preflight_blocked = [bool]($writePreflight -and $writePreflight.blocked -eq $true)
+    reason = $(if (-not [string]::IsNullOrWhiteSpace($writeFailureReason)) { $writeFailureReason } else { $null })
+    retry_command = $(if (-not [string]::IsNullOrWhiteSpace($writeRetryCommand)) { $writeRetryCommand } else { $null })
+    target_path = $(if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) { $WriteTargetPath } else { $null })
+  }
+  next_actions = @($nextActions)
+}
+
 $result = @{
   summary = $summary
   dependency_baseline = $dependencyBaselinePayload
@@ -707,6 +866,7 @@ $result = @{
   inspect_evidence = $inspectEvidencePayload
   inspect_handoff = $inspectHandoffPayload
   next_actions = @($nextActions)
+  problem_trace = $problemTrace
   live_loop = $liveLoopSummary
   steps = $steps
 }

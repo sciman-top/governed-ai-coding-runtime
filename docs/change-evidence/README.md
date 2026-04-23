@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260423 Target Repo Problem Trace And KPI Aggregation](./20260423-target-repo-problem-trace-kpi.md)
+  - evidence companion for structured target-repo problem traces in `runtime-check` and KPI-level aggregation of problem rate/recovery/signature pointers
 - [20260423 全目标仓一键治理下发与一致性硬门禁](./20260423-all-target-governance-one-click-enforcement-and-consistency-gate.md)
   - evidence companion for `-AllTargets` batch governance rollout, baseline-only sync path, and fail-closed target-repo governance consistency gate
 - [20260423 Additional Gate Commands with Blocking Profile Semantics](./20260423-additional-gate-commands-blocking-profile.md)

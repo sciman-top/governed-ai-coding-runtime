@@ -21,6 +21,10 @@ Define a versioned KPI snapshot for target-repo onboarding and daily loop speed 
 - records[].onboarding_latency_seconds
 - records[].first_pass_latency_seconds
 - records[].medium_risk_loop_success_ratio
+- records[].problem_run_rate
+- records[].problem_recovery_retries
+- records[].latest_problem_signature
+- records[].latest_problem_run_ref
 - records[].window_start_utc
 - records[].window_end_utc
 - records[].latest_evidence_ref
@@ -34,6 +38,8 @@ Define a versioned KPI snapshot for target-repo onboarding and daily loop speed 
 - every speed claim must reference a concrete KPI snapshot file and window configuration
 - `fallback_rate` must stay within `[0, 1]`
 - `medium_risk_loop_success_ratio` must stay within `[0, 1]` when present
+- `problem_run_rate` must stay within `[0, 1]`
+- `problem_recovery_retries` counts fail-to-pass transitions inside the selected window
 - snapshots are read-model exports and may not mutate target-repo truth contracts
 
 ## Non-Goals

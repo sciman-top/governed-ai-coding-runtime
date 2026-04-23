@@ -47,6 +47,10 @@
           "deny_to_success_retries",
           "fallback_rate",
           "medium_risk_loop_success_ratio",
+          "problem_run_rate",
+          "problem_recovery_retries",
+          "latest_problem_signature",
+          "latest_problem_run_ref",
           "window_start_utc",
           "window_end_utc",
           "latest_evidence_ref"
@@ -89,6 +93,27 @@
             ],
             "minimum": 0,
             "maximum": 1
+          },
+          "problem_run_rate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "problem_recovery_retries": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "latest_problem_signature": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "latest_problem_run_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "window_start_utc": {
             "type": [
