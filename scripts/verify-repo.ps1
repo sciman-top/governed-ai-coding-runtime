@@ -545,6 +545,7 @@ function Invoke-ContractChecks {
   Invoke-SchemaExampleValidation
   Invoke-SchemaCatalogPairing
   Invoke-DependencyBaselineChecks
+  Invoke-TargetRepoRolloutContractChecks
   Invoke-TargetRepoGovernanceConsistencyChecks
 }
 
@@ -570,6 +571,20 @@ function Invoke-TargetRepoGovernanceConsistencyChecks {
   }
 
   Write-CheckOk "target-repo-governance-consistency"
+}
+
+function Invoke-TargetRepoRolloutContractChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-target-repo-rollout-contract.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Target repo rollout contract checks failed"
+    }
+    throw "Target repo rollout contract checks failed`n$detail"
+  }
+
+  Write-CheckOk "target-repo-rollout-contract"
 }
 
 function Invoke-BuildChecks {

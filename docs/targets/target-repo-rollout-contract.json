@@ -1,0 +1,95 @@
+{
+  "schema_version": "1.0",
+  "contract_id": "target-repo-rollout-contract",
+  "sync_revision": "2026-04-25.1",
+  "canonical_one_click_entrypoint": {
+    "script": "scripts/runtime-flow-preset.ps1",
+    "all_targets_apply_all_features_args": [
+      "-AllTargets",
+      "-ApplyAllFeatures"
+    ],
+    "feature_baseline_and_milestone_args": [
+      "-AllTargets",
+      "-ApplyFeatureBaselineAndMilestoneCommit",
+      "-MilestoneTag",
+      "milestone"
+    ],
+    "required_json_fields": [
+      "apply_all_features",
+      "apply_feature_baseline_and_milestone_commit",
+      "governance_baseline_sync_active",
+      "milestone_gate_mode",
+      "milestone_gate_mode_source",
+      "milestone_gate_mode_reason",
+      "milestone_tag",
+      "auto_commit_trigger"
+    ]
+  },
+  "milestone_auto_commit": {
+    "baseline_field": "auto_commit_policy",
+    "required_trigger": "milestone",
+    "required_markers": [
+      "checkpoint",
+      "milestone",
+      "release-candidate"
+    ],
+    "require_all_required_gates_pass": true,
+    "message_language": "zh-CN",
+    "required_message_tokens": [
+      "自动提交",
+      "里程碑",
+      "{repo_id}",
+      "{milestone}",
+      "{timestamp}"
+    ]
+  },
+  "target_profile_features": [
+    {
+      "feature_id": "target-repo-entrypoint-enforcement",
+      "baseline_fields": [
+        "required_entrypoint_policy"
+      ],
+      "rollout_modes": [
+        "apply_all_features",
+        "feature_baseline_only",
+        "feature_baseline_and_milestone_commit"
+      ],
+      "milestone_commit_required": false
+    },
+    {
+      "feature_id": "milestone-auto-commit-zh-cn",
+      "baseline_fields": [
+        "auto_commit_policy"
+      ],
+      "rollout_modes": [
+        "apply_all_features",
+        "feature_baseline_and_milestone_commit"
+      ],
+      "milestone_commit_required": true
+    },
+    {
+      "feature_id": "low-token-guided-interaction-profile",
+      "baseline_fields": [
+        "interaction_profile"
+      ],
+      "rollout_modes": [
+        "apply_all_features",
+        "feature_baseline_only",
+        "feature_baseline_and_milestone_commit"
+      ],
+      "milestone_commit_required": false
+    },
+    {
+      "feature_id": "windows-process-environment-policy",
+      "baseline_fields": [
+        "windows_process_environment_policy"
+      ],
+      "rollout_modes": [
+        "apply_all_features",
+        "feature_baseline_only",
+        "feature_baseline_and_milestone_commit"
+      ],
+      "milestone_commit_required": false
+    }
+  ]
+}
