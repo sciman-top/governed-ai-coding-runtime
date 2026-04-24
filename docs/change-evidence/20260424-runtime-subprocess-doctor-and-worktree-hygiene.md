@@ -27,10 +27,17 @@
   - Emits the input command and timeout metadata in structured JSON instead of reading a non-existent result field.
 - `scripts/doctor-runtime.ps1`
   - Adds the same Windows environment initialization used by other runtime PowerShell entrypoints.
+- `scripts/Initialize-WindowsProcessEnvironment.ps1`
+  - Promotes the Windows process environment initializer into one shared PowerShell helper.
+- `scripts/verify-repo.ps1`, `scripts/runtime-flow.ps1`, `scripts/runtime-flow-preset.ps1`, `scripts/doctor-runtime.ps1`, `scripts/governance/gate-runner-common.ps1`
+  - Dot-source the shared initializer instead of carrying duplicate local function bodies.
+- `apps/control-plane/main.py`
+  - Converts invalid `--payload-json` and route validation failures into structured JSON error payloads with non-zero exit codes instead of Python tracebacks.
 - `.gitignore`
   - Ignores `.vs/` and common Visual Studio user-state files.
 - Tests
   - Added `tests/runtime/test_subprocess_guard.py`.
+  - Added `tests/service/test_control_plane_cli.py`.
   - Extended `tests/runtime/test_tool_runner_governance.py`.
   - Extended `tests/runtime/test_runtime_doctor.py`.
 - Repository hygiene
@@ -38,7 +45,11 @@
 
 ## Verification
 - `python -m unittest tests.runtime.test_subprocess_guard tests.runtime.test_tool_runner_governance -v` -> pass (`Ran 6 tests`)
+- `python -m unittest tests.service.test_control_plane_cli -v` -> pass (`Ran 3 tests`)
 - `python apps/tool-runner/main.py --command 'python -c "print(''tool-cli-ok'')"'` -> pass, structured JSON output
+- `python apps/control-plane/main.py --route /operator --payload-json '{"action":"unsupported"}'` -> structured JSON error, no traceback
+- `python apps/control-plane/main.py --route /health --payload-json '{'` -> structured JSON error, no traceback
+- `rg -n "function Initialize-WindowsProcessEnvironment" scripts` -> only `scripts/Initialize-WindowsProcessEnvironment.ps1`
 - `python -m unittest tests.runtime.test_runtime_doctor.RuntimeBuildAndDoctorScriptTests.test_doctor_runtime_script_succeeds tests.runtime.test_runtime_doctor.RuntimeBuildAndDoctorScriptTests.test_doctor_runtime_initializes_windows_process_environment -v` -> pass
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1` -> pass (`OK python-bytecode`, `OK python-import`)
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime` -> pass (`Ran 369 tests`, plus 5 service checks)

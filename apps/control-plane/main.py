@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+from json import JSONDecodeError
 from pathlib import Path
 import sys
 
@@ -39,7 +40,6 @@ def main() -> int:
         repo_root / "packages" / "observability" / "runtime_tracing.py",
         "runtime_tracing",
     )
-    payload = json.loads(args.payload_json)
     tracer = tracer_module.RuntimeTracer()
     facade = facade_module.RuntimeServiceFacade(
         repo_root=repo_root,
@@ -47,10 +47,41 @@ def main() -> int:
         tracer=tracer,
     )
     app = app_module.ControlPlaneApplication(facade=facade)
-    result = app.dispatch(route=args.route, payload=payload)
+    try:
+        payload = json.loads(args.payload_json)
+        if not isinstance(payload, dict):
+            raise ValueError("payload-json must decode to an object")
+        result = app.dispatch(route=args.route, payload=payload)
+        exit_code = 0
+    except JSONDecodeError as exc:
+        result = _error_payload(
+            route=args.route,
+            error_code="invalid_payload_json",
+            message=str(exc),
+        )
+        exit_code = 2
+    except ValueError as exc:
+        result = _error_payload(
+            route=args.route,
+            error_code="validation_error",
+            message=str(exc),
+        )
+        exit_code = 2
     result.setdefault("trace_event_count", len(tracer.events()))
     print(json.dumps(result, indent=2, sort_keys=True))
-    return 0
+    return exit_code
+
+
+def _error_payload(*, route: str, error_code: str, message: str) -> dict:
+    return {
+        "service": "control-plane",
+        "route": route,
+        "status": "error",
+        "error": {
+            "code": error_code,
+            "message": message,
+        },
+    }
 
 
 if __name__ == "__main__":
