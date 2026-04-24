@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260424 Runtime Subprocess, Doctor, And Worktree Hygiene](./20260424-runtime-subprocess-doctor-and-worktree-hygiene.md)
+  - evidence companion for Windows subprocess shell lookup hardening, `doctor-runtime` Codex capability normalization, tool-runner CLI output repair, and removal of tracked `.vs/` local state
 - [20260424 Target Repo Speed And Loop Guard Hardening](./20260424-target-repo-speed-and-loop-guard-hardening.md)
   - evidence companion for task-driven auto milestone gate strategy (`manual|auto` with `fast|full`), subprocess timeout guards, and batch timeout stop conditions in `runtime-flow-preset`
 - [20260423 All-Targets Timeout And Progress Hardening](./20260423-all-targets-timeout-progress-hardening.md)

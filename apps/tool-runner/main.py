@@ -23,9 +23,12 @@ def main() -> int:
     print(
         json.dumps(
             {
-                "command": result.command,
+                "command": args.command,
                 "exit_code": result.exit_code,
                 "output": result.output,
+                "timed_out": result.timed_out,
+                "timeout_seconds": result.timeout_seconds,
+                "timeout_exempt": result.timeout_exempt,
             },
             sort_keys=True,
         )

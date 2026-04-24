@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import os
 import shutil
 import json
 import unittest
@@ -45,6 +46,34 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
         self.assertIn("OK gate-command-build", completed.stdout)
         self.assertIn("OK gate-command-doctor", completed.stdout)
         self.assertIn("OK dependency-baseline-doc", completed.stdout)
+
+    @unittest.skipUnless(os.name == "nt", "Windows process environment normalization")
+    def test_doctor_runtime_initializes_windows_process_environment(self) -> None:
+        script = ROOT / "scripts" / "doctor-runtime.ps1"
+        pwsh = shutil.which("pwsh")
+        codex = shutil.which("codex")
+        if not pwsh:
+            self.skipTest("pwsh is not available")
+        if not codex:
+            self.skipTest("codex is not available")
+
+        env = os.environ.copy()
+        env.pop("SystemRoot", None)
+        env.pop("WINDIR", None)
+        env.pop("ComSpec", None)
+        completed = subprocess.run(
+            [pwsh, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script)],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+            env=env,
+        )
+
+        self.assertIn("OK codex-capability-ready", completed.stdout)
+        self.assertNotIn("WARN codex-capability-blocked", completed.stdout)
 
     def test_verify_repo_exposes_build_and_doctor_checks(self) -> None:
         script = ROOT / "scripts" / "verify-repo.ps1"

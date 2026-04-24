@@ -6,6 +6,11 @@ Desktop.ini
 # Editor and workspace settings
 .vscode/
 .idea/
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
 *.swp
 *.swo
 *~

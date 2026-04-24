@@ -61,6 +61,7 @@ def run_subprocess(
     cwd: str | Path | None = None,
     timeout_seconds: float | None = None,
 ) -> SubprocessResult:
+    env = _subprocess_environment()
     kwargs = {
         "capture_output": True,
         "text": True,
@@ -69,8 +70,10 @@ def run_subprocess(
         "cwd": cwd,
         "check": False,
         "shell": shell,
-        "env": _subprocess_environment(),
+        "env": env,
     }
+    if shell and os.name == "nt" and env.get("ComSpec"):
+        kwargs["executable"] = env["ComSpec"]
     try:
         completed = subprocess.run(
             command,

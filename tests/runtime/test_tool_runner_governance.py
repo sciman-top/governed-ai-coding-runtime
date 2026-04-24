@@ -2,6 +2,8 @@ import sys
 import unittest
 from pathlib import Path
 import importlib
+import json
+import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACTS_SRC = ROOT / "packages" / "contracts" / "src"
@@ -65,6 +67,30 @@ class ToolRunnerGovernanceTests(unittest.TestCase):
 
         self.assertEqual(result.exit_code, 0)
         self.assertIn("tool-ok", result.output)
+
+    def test_tool_runner_cli_emits_structured_result(self) -> None:
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "apps" / "tool-runner" / "main.py"),
+                "--command",
+                f"{sys.executable} -c \"print('tool-cli-ok')\"",
+                "--cwd",
+                str(ROOT),
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        payload = json.loads(completed.stdout)
+        self.assertEqual(payload["exit_code"], 0)
+        self.assertEqual(payload["command"], f"{sys.executable} -c \"print('tool-cli-ok')\"")
+        self.assertIn("tool-cli-ok", payload["output"])
+        self.assertFalse(payload["timed_out"])
 
 
 if __name__ == "__main__":
