@@ -34,6 +34,7 @@ class TargetRepoRolloutContractTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         payload = json.loads(completed.stdout)
         self.assertEqual(payload["status"], "pass")
+        self.assertGreaterEqual(payload["capability_count"], 10)
         self.assertGreaterEqual(payload["feature_count"], 4)
         self.assertEqual(payload["errors"], [])
 
@@ -81,6 +82,60 @@ class TargetRepoRolloutContractTests(unittest.TestCase):
             codes = {error["code"] for error in payload["errors"]}
             self.assertIn("auto_commit_policy_template_not_chinese", codes)
             self.assertIn("auto_commit_policy_template_missing_token", codes)
+
+    def test_fails_when_profile_baseline_capability_is_missing_rollout_feature(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            contract = json.loads(DEFAULT_CONTRACT_PATH.read_text(encoding="utf-8"))
+            contract["target_repo_capabilities"].append(
+                {
+                    "capability_id": "new-profile-capability",
+                    "distribution_scope": "profile_baseline",
+                    "reason": "must be distributed to target repos",
+                    "baseline_fields": ["new_profile_policy"],
+                }
+            )
+            contract_path = workspace / "contract.json"
+            _write_json(contract_path, contract)
+
+            baseline = json.loads(DEFAULT_BASELINE_PATH.read_text(encoding="utf-8"))
+            baseline["required_profile_overrides"]["new_profile_policy"] = {"enabled": True}
+            baseline_path = workspace / "baseline.json"
+            _write_json(baseline_path, baseline)
+
+            completed = _run_rollout_contract_check(
+                "--contract-path",
+                str(contract_path),
+                "--baseline-path",
+                str(baseline_path),
+            )
+
+            self.assertNotEqual(completed.returncode, 0)
+            payload = json.loads(completed.stdout)
+            codes = {error["code"] for error in payload["errors"]}
+            self.assertIn("profile_capability_missing_rollout_feature", codes)
+
+    def test_fails_when_runtime_only_capability_declares_baseline_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            contract = json.loads(DEFAULT_CONTRACT_PATH.read_text(encoding="utf-8"))
+            contract["target_repo_capabilities"].append(
+                {
+                    "capability_id": "bad-runtime-only-capability",
+                    "distribution_scope": "runtime_orchestrated",
+                    "reason": "runtime-owned feature",
+                    "baseline_fields": ["bad_policy"],
+                }
+            )
+            contract_path = workspace / "contract.json"
+            _write_json(contract_path, contract)
+
+            completed = _run_rollout_contract_check("--contract-path", str(contract_path))
+
+            self.assertNotEqual(completed.returncode, 0)
+            payload = json.loads(completed.stdout)
+            codes = {error["code"] for error in payload["errors"]}
+            self.assertIn("non_profile_capability_declares_baseline_fields", codes)
 
 
 if __name__ == "__main__":

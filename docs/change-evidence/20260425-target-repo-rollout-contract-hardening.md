@@ -12,9 +12,13 @@
 ## Changes
 - Added `docs/targets/target-repo-rollout-contract.json` as the machine-readable source for:
   - canonical all-target one-click entrypoint
+  - target-repo capability classification (`profile_baseline`, `runtime_orchestrated`, `repo_local_artifact`, `runtime_only`)
   - target profile features that must be covered by `ApplyAllFeatures`
   - milestone auto-commit trigger and Chinese message requirements
 - Added `scripts/verify-target-repo-rollout-contract.py` to fail closed when:
+  - a target-repo-related capability is not classified with a distribution decision and reason
+  - a `profile_baseline` capability is not represented in both `required_profile_overrides` and `target_profile_features`
+  - a non-profile capability tries to declare baseline fields
   - a baseline override field is not registered in the rollout contract
   - a registered feature is not covered by `apply_all_features`
   - the canonical one-click script does not expose the declared arguments or JSON fields

@@ -43,6 +43,70 @@
       "{timestamp}"
     ]
   },
+  "target_repo_capabilities": [
+    {
+      "capability_id": "target-repo-entrypoint-enforcement",
+      "distribution_scope": "profile_baseline",
+      "reason": "目标仓必须知道并执行统一入口约束，否则会绕过 runtime-flow-preset。",
+      "baseline_fields": [
+        "required_entrypoint_policy"
+      ]
+    },
+    {
+      "capability_id": "milestone-auto-commit-zh-cn",
+      "distribution_scope": "profile_baseline",
+      "reason": "目标仓自动提交策略必须随 profile 下发，才能在目标仓 git 上生成中文里程碑提交。",
+      "baseline_fields": [
+        "auto_commit_policy"
+      ]
+    },
+    {
+      "capability_id": "low-token-guided-interaction-profile",
+      "distribution_scope": "profile_baseline",
+      "reason": "交互策略影响目标仓 AI 编码过程，应随目标仓 profile 统一同步。",
+      "baseline_fields": [
+        "interaction_profile"
+      ]
+    },
+    {
+      "capability_id": "windows-process-environment-policy",
+      "distribution_scope": "profile_baseline",
+      "reason": "Windows 子进程环境策略影响目标仓脚本执行可靠性，应随目标仓 profile 统一同步。",
+      "baseline_fields": [
+        "windows_process_environment_policy"
+      ]
+    },
+    {
+      "capability_id": "target-repo-problem-trace-and-kpi",
+      "distribution_scope": "runtime_orchestrated",
+      "reason": "问题痕迹和 KPI 聚合写入本 runtime 的 docs/change-evidence/target-repo-runs，不应复制为目标仓 profile 字段。"
+    },
+    {
+      "capability_id": "target-repo-runs-retention-prune",
+      "distribution_scope": "runtime_orchestrated",
+      "reason": "保留期清理由 runtime-flow-preset 执行，清理对象是 runtime evidence store，不是目标仓声明。"
+    },
+    {
+      "capability_id": "target-repo-gate-speed-controls",
+      "distribution_scope": "runtime_orchestrated",
+      "reason": "fast/full、auto milestone gate 和 timeout 是一键运行参数及 catalog/profile gate 命令组合，不是需要复制的新目标仓治理字段。"
+    },
+    {
+      "capability_id": "source-string-contract-guard",
+      "distribution_scope": "runtime_orchestrated",
+      "reason": "source-string contract guard 由 runtime-check 调用目标仓测试，不应把 runtime 检查器复制到目标仓。"
+    },
+    {
+      "capability_id": "target-repo-dependency-baseline-enforcement",
+      "distribution_scope": "repo_local_artifact",
+      "reason": "依赖基线是目标仓本地受管文件和门禁事实，按目标仓已有 .governed-ai/dependency-baseline.json 管理，不属于 profile override 下发字段。"
+    },
+    {
+      "capability_id": "native-attach-runtime-flow",
+      "distribution_scope": "runtime_orchestrated",
+      "reason": "native attach/live attach 是 runtime 连接姿态和运行流，不应把 runtime kernel 复制到目标仓。"
+    }
+  ],
   "target_profile_features": [
     {
       "feature_id": "target-repo-entrypoint-enforcement",

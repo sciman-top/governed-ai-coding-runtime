@@ -164,6 +164,112 @@ def _validate_feature_registry(
             )
 
 
+def _validate_capability_classification(
+    contract: dict[str, Any],
+    baseline_overrides: dict[str, Any],
+    errors: list[dict[str, str]],
+) -> None:
+    capabilities = contract.get("target_repo_capabilities")
+    if not isinstance(capabilities, list) or not capabilities:
+        _add_error(errors, "missing_target_repo_capabilities", "target_repo_capabilities must be a non-empty list")
+        return
+
+    features = contract.get("target_profile_features")
+    feature_by_id: dict[str, dict[str, Any]] = {}
+    if isinstance(features, list):
+        for feature in features:
+            if not isinstance(feature, dict):
+                continue
+            feature_id = feature.get("feature_id")
+            if isinstance(feature_id, str) and feature_id.strip():
+                feature_by_id[feature_id] = feature
+
+    allowed_scopes = {
+        "profile_baseline",
+        "runtime_orchestrated",
+        "repo_local_artifact",
+        "runtime_only",
+    }
+    capability_ids: set[str] = set()
+    profile_baseline_fields: set[str] = set()
+    for index, capability in enumerate(capabilities):
+        if not isinstance(capability, dict):
+            _add_error(errors, "invalid_capability_entry", f"target_repo_capabilities[{index}] must be an object")
+            continue
+
+        capability_id = capability.get("capability_id")
+        if not isinstance(capability_id, str) or not capability_id.strip():
+            _add_error(errors, "invalid_capability_id", f"target_repo_capabilities[{index}].capability_id is required")
+            continue
+        if capability_id in capability_ids:
+            _add_error(errors, "duplicate_capability_id", f"duplicate capability_id: {capability_id}")
+        capability_ids.add(capability_id)
+
+        scope = capability.get("distribution_scope")
+        if scope not in allowed_scopes:
+            _add_error(
+                errors,
+                "invalid_capability_distribution_scope",
+                f"{capability_id}.distribution_scope must be one of: {', '.join(sorted(allowed_scopes))}",
+            )
+            continue
+
+        reason = capability.get("reason")
+        if not isinstance(reason, str) or not reason.strip():
+            _add_error(errors, "missing_capability_reason", f"{capability_id} must explain its distribution decision")
+
+        fields = _as_string_list(capability.get("baseline_fields"))
+        if scope == "profile_baseline":
+            if not fields:
+                _add_error(errors, "profile_capability_missing_fields", f"{capability_id} must declare baseline_fields")
+            feature = feature_by_id.get(capability_id)
+            if feature is None:
+                _add_error(
+                    errors,
+                    "profile_capability_missing_rollout_feature",
+                    f"{capability_id} is profile_baseline but missing from target_profile_features",
+                )
+            else:
+                feature_fields = set(_as_string_list(feature.get("baseline_fields")))
+                missing_from_feature = sorted(set(fields) - feature_fields)
+                if missing_from_feature:
+                    _add_error(
+                        errors,
+                        "profile_capability_field_missing_from_feature",
+                        f"{capability_id} baseline field(s) not present in target_profile_features: {', '.join(missing_from_feature)}",
+                    )
+            for field in fields:
+                profile_baseline_fields.add(field)
+                if field not in baseline_overrides:
+                    _add_error(
+                        errors,
+                        "profile_capability_field_missing_from_baseline",
+                        f"{capability_id} declares {field}, but baseline.required_profile_overrides does not define it",
+                    )
+        elif fields:
+            _add_error(
+                errors,
+                "non_profile_capability_declares_baseline_fields",
+                f"{capability_id} is {scope} and must not declare baseline_fields",
+            )
+
+    for feature_id in sorted(feature_by_id.keys()):
+        if feature_id not in capability_ids:
+            _add_error(
+                errors,
+                "rollout_feature_missing_capability_classification",
+                f"{feature_id} is in target_profile_features but missing from target_repo_capabilities",
+            )
+
+    for field in sorted(baseline_overrides.keys()):
+        if field not in profile_baseline_fields:
+            _add_error(
+                errors,
+                "baseline_field_missing_profile_capability",
+                f"baseline.required_profile_overrides.{field} is not classified as a profile_baseline capability field",
+            )
+
+
 def _validate_milestone_auto_commit(
     contract: dict[str, Any],
     baseline_overrides: dict[str, Any],
@@ -279,6 +385,11 @@ def main() -> int:
         baseline_overrides=baseline_overrides,
         errors=errors,
     )
+    _validate_capability_classification(
+        contract=contract,
+        baseline_overrides=baseline_overrides,
+        errors=errors,
+    )
     _validate_milestone_auto_commit(
         contract=contract,
         baseline_overrides=baseline_overrides,
@@ -291,6 +402,9 @@ def main() -> int:
         "baseline_path": str(baseline_path),
         "runtime_flow_preset_path": str(runtime_flow_preset_path),
         "sync_revision": sync_revision,
+        "capability_count": len(contract.get("target_repo_capabilities", []))
+        if isinstance(contract.get("target_repo_capabilities"), list)
+        else 0,
         "feature_count": len(contract.get("target_profile_features", []))
         if isinstance(contract.get("target_profile_features"), list)
         else 0,
