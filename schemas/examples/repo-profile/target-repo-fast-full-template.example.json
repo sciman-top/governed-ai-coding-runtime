@@ -109,6 +109,7 @@
     "include_pr_body": true
   },
   "repo_map_strategy": "hybrid",
+  "gate_timeout_seconds": 300,
   "task_lifecycle": {
     "persistence_kind": "file_json",
     "store_root": ".runtime/tasks",
@@ -159,12 +160,14 @@
       "id": "test",
       "command": "python -m unittest discover -s tests/unit -p \"test_*.py\"",
       "required": true,
+      "timeout_seconds": 120,
       "description": "Fast unit feedback loop."
     },
     {
       "id": "contract",
       "command": "python -m unittest discover -s tests/contracts -p \"test_*.py\"",
       "required": true,
+      "timeout_seconds": 120,
       "description": "Fast contract regression check."
     }
   ],
@@ -173,24 +176,29 @@
       "id": "build",
       "command": "python -m compileall src",
       "required": true,
+      "timeout_seconds": 180,
       "description": "Canonical build gate."
     },
     {
       "id": "test",
       "command": "python -m unittest discover -s tests -p \"test_*.py\"",
       "required": true,
+      "timeout_seconds": 300,
       "description": "Canonical test gate."
     },
     {
       "id": "contract",
       "command": "python -m unittest discover -s tests/contracts -p \"test_*.py\"",
       "required": true,
+      "timeout_seconds": 180,
       "description": "Canonical contract gate."
     },
     {
       "id": "hotspot",
       "command": "python scripts/doctor.py",
       "required": false,
+      "blocking": false,
+      "timeout_seconds": 120,
       "description": "Optional hotspot/health gate when available."
     }
   ],

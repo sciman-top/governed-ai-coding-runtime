@@ -103,8 +103,15 @@
           "required": {
             "type": "boolean"
           },
+          "blocking": {
+            "type": "boolean"
+          },
           "description": {
             "type": "string"
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "minimum": 0
           },
           "not_applicable": {
             "type": "boolean"
@@ -132,8 +139,15 @@
           "required": {
             "type": "boolean"
           },
+          "blocking": {
+            "type": "boolean"
+          },
           "description": {
             "type": "string"
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "minimum": 0
           },
           "not_applicable": {
             "type": "boolean"
@@ -159,8 +173,15 @@
           "required": {
             "type": "boolean"
           },
+          "blocking": {
+            "type": "boolean"
+          },
           "description": {
             "type": "string"
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "minimum": 0
           },
           "not_applicable": {
             "type": "boolean"
@@ -187,8 +208,15 @@
           "required": {
             "type": "boolean"
           },
+          "blocking": {
+            "type": "boolean"
+          },
           "description": {
             "type": "string"
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "minimum": 0
           },
           "not_applicable": {
             "type": "boolean"
@@ -215,8 +243,15 @@
           "required": {
             "type": "boolean"
           },
+          "blocking": {
+            "type": "boolean"
+          },
           "description": {
             "type": "string"
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "minimum": 0
           },
           "not_applicable": {
             "type": "boolean"
@@ -243,8 +278,15 @@
           "required": {
             "type": "boolean"
           },
+          "blocking": {
+            "type": "boolean"
+          },
           "description": {
             "type": "string"
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "minimum": 0
           },
           "not_applicable": {
             "type": "boolean"
@@ -280,6 +322,7 @@
               "type": "string",
               "enum": [
                 "quick",
+                "fast",
                 "full",
                 "l1",
                 "l2",
@@ -291,6 +334,10 @@
           },
           "description": {
             "type": "string"
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "minimum": 0
           },
           "not_applicable": {
             "type": "boolean"
@@ -430,6 +477,10 @@
       ],
       "type": "string"
     },
+    "gate_timeout_seconds": {
+      "type": "integer",
+      "minimum": 0
+    },
     "quick_gate_commands": {
       "items": {
         "type": "object",
@@ -444,8 +495,15 @@
           "required": {
             "type": "boolean"
           },
+          "blocking": {
+            "type": "boolean"
+          },
           "description": {
             "type": "string"
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "minimum": 0
           },
           "not_applicable": {
             "type": "boolean"
@@ -472,8 +530,15 @@
           "required": {
             "type": "boolean"
           },
+          "blocking": {
+            "type": "boolean"
+          },
           "description": {
             "type": "string"
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "minimum": 0
           },
           "not_applicable": {
             "type": "boolean"

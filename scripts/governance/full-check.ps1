@@ -3,6 +3,7 @@ param(
   [string]$WorkingDirectory = "",
   [string]$MilestoneTag = "",
   [int]$GateTimeoutSeconds = 0,
+  [int]$MaxGateCount = 50,
   [switch]$ContinueOnError,
   [switch]$Json
 )
@@ -20,6 +21,7 @@ $result = Invoke-RepoProfileGateRun `
   -WorkingDirectory $WorkingDirectory `
   -MilestoneTag $MilestoneTag `
   -GateTimeoutSeconds $GateTimeoutSeconds `
+  -MaxGateCount $MaxGateCount `
   -ContinueOnError:$ContinueOnError.IsPresent `
   -JsonOutput:$Json.IsPresent
 

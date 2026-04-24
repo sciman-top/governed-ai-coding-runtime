@@ -64,6 +64,38 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+function Initialize-WindowsProcessEnvironment {
+  if (-not $IsWindows) {
+    return
+  }
+
+  $windowsRoot = $env:SystemRoot
+  if ([string]::IsNullOrWhiteSpace($windowsRoot)) {
+    $windowsRoot = $env:WINDIR
+  }
+  if ([string]::IsNullOrWhiteSpace($windowsRoot)) {
+    $windowsRoot = "C:\Windows"
+  }
+
+  if ([string]::IsNullOrWhiteSpace($env:SystemRoot)) {
+    $env:SystemRoot = $windowsRoot
+  }
+  if ([string]::IsNullOrWhiteSpace($env:WINDIR)) {
+    $env:WINDIR = $windowsRoot
+  }
+  if ([string]::IsNullOrWhiteSpace($env:ComSpec)) {
+    $cmdPath = Join-Path $windowsRoot "System32\cmd.exe"
+    if (Test-Path -LiteralPath $cmdPath) {
+      $env:ComSpec = $cmdPath
+    }
+  }
+  if ([string]::IsNullOrWhiteSpace($env:SystemDrive)) {
+    $env:SystemDrive = ([System.IO.Path]::GetPathRoot($windowsRoot)).TrimEnd("\")
+  }
+}
+
+Initialize-WindowsProcessEnvironment
+
 function Resolve-AbsolutePath {
   param([Parameter(Mandatory = $true)][string]$PathValue)
   if ([System.IO.Path]::IsPathRooted($PathValue)) {
@@ -1522,6 +1554,16 @@ if ($Json) {
           prune_target_repo_runs = $pruneForJson
         }
         Write-Host ($flowOnlyEmpty | ConvertTo-Json -Depth 20)
+      }
+      else {
+        $flowOnlyFallback = [ordered]@{
+          target         = $single.target
+          exit_code      = $single.exit_code
+          flow_exit_code = $single.flow_result.exit_code
+          flow_timed_out = if ($single.flow_result.PSObject.Properties.Name -contains "timed_out") { [bool]$single.flow_result.timed_out } else { $false }
+          flow_output    = $single.flow_result.output
+        }
+        Write-Host ($flowOnlyFallback | ConvertTo-Json -Depth 20)
       }
     }
     else {

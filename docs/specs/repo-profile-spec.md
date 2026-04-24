@@ -25,8 +25,10 @@ Define the per-repository configuration inherited by governed sessions.
 
 ## Optional Fields
 - repo_map_strategy
+- gate_timeout_seconds
 - quick_gate_commands
 - full_gate_commands
+- additional_gate_commands
 - task_lifecycle
 - extra_eval_suites
 - context_files
@@ -44,6 +46,7 @@ Define the per-repository configuration inherited by governed sessions.
 Repo profiles may override:
 - command entrypoints
 - timeouts
+- per-gate `timeout_seconds`
 - allowed low-risk tools
 - optional eval suites
 - delivery templates
@@ -121,6 +124,8 @@ A repo profile is valid only if:
 - all required commands are present or explicitly marked not applicable
 - all path policies compile into deterministic allow/deny checks
 - quick and full gates have unambiguous command order
+- `l1/l2/l3` layered gates preserve the canonical order within their declared scope
+- gate timeout values are non-negative and `0` means no profile-provided timeout
 - rollout posture uses a supported governance posture name
 - compatibility degrade behavior is explicit whenever support is partial or unsupported
 - interaction defaults stay bounded and do not redefine hard clarification or stop-on-budget behavior

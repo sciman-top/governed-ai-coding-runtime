@@ -56,6 +56,38 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+function Initialize-WindowsProcessEnvironment {
+  if (-not $IsWindows) {
+    return
+  }
+
+  $windowsRoot = $env:SystemRoot
+  if ([string]::IsNullOrWhiteSpace($windowsRoot)) {
+    $windowsRoot = $env:WINDIR
+  }
+  if ([string]::IsNullOrWhiteSpace($windowsRoot)) {
+    $windowsRoot = "C:\Windows"
+  }
+
+  if ([string]::IsNullOrWhiteSpace($env:SystemRoot)) {
+    $env:SystemRoot = $windowsRoot
+  }
+  if ([string]::IsNullOrWhiteSpace($env:WINDIR)) {
+    $env:WINDIR = $windowsRoot
+  }
+  if ([string]::IsNullOrWhiteSpace($env:ComSpec)) {
+    $cmdPath = Join-Path $windowsRoot "System32\cmd.exe"
+    if (Test-Path -LiteralPath $cmdPath) {
+      $env:ComSpec = $cmdPath
+    }
+  }
+  if ([string]::IsNullOrWhiteSpace($env:SystemDrive)) {
+    $env:SystemDrive = ([System.IO.Path]::GetPathRoot($windowsRoot)).TrimEnd("\")
+  }
+}
+
+Initialize-WindowsProcessEnvironment
+
 function Get-PythonCommand {
   $python = Get-Command python -ErrorAction SilentlyContinue
   if (-not $python) {

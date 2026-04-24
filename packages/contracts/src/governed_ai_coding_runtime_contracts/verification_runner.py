@@ -247,6 +247,7 @@ def run_verification_plan(
     metadata_store: object | None = None,
     cache_store: object | None = None,
     cache_scope_key: str | None = None,
+    continue_on_error: bool = False,
 ) -> VerificationArtifact:
     if not plan.task_id or not plan.run_id:
         msg = "task_id and run_id are required to run verification"
@@ -257,6 +258,7 @@ def run_verification_plan(
     cache_hits: dict[str, bool] = {}
     risky_artifact_refs: list[str] = []
 
+    last_evidence_link = ""
     for gate in plan.gates:
         cache_key = _verification_cache_key(
             mode=plan.mode,
@@ -290,6 +292,9 @@ def run_verification_plan(
         if artifact.risky:
             risky_artifact_refs.append(artifact.relative_path)
         results[gate.gate_id] = "pass" if exit_code == 0 else "fail"
+        last_evidence_link = artifact.relative_path
+        if exit_code != 0 and gate.blocking and not continue_on_error:
+            break
 
     if metadata_store is not None and hasattr(metadata_store, "upsert"):
         metadata_store.upsert(
@@ -305,9 +310,13 @@ def run_verification_plan(
             },
         )
 
+    if not last_evidence_link:
+        msg = "verification plan must contain at least one runnable gate"
+        raise ValueError(msg)
+
     return build_verification_artifact(
         plan=plan,
-        evidence_link=result_artifact_refs[plan.gates[-1].gate_id],
+        evidence_link=last_evidence_link,
         results=results,
         result_artifact_refs=result_artifact_refs,
         cache_hits=cache_hits,

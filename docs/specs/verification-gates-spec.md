@@ -26,6 +26,9 @@ Define the layered verification model (`l1/l2/l3`) for governed AI coding while 
 ### Compatibility Aliases
 - `quick` is an alias of `l1`
 - `full` is an alias of `l3`
+- `fast-check.ps1` remains the compatibility entrypoint for `l1`
+- `full-check.ps1` remains the compatibility entrypoint for `l3`
+- `level-check.ps1 -Level l1|l2|l3` is the explicit layered target-repo entrypoint
 
 ## Canonical Order
 1. build
@@ -59,11 +62,14 @@ L3/full gate must run when:
 - reason_codes
 - artifact_refs
 - risky_artifact_refs
+- timeout_seconds
+- blocking
 
 ## Runtime Binding
 - `quick/full/l1/l2/l3` verification may bind to a persisted `task_id` and `run_id`
 - gate outputs should persist as artifact-backed records under the runtime artifact store
 - the canonical gate order remains `build -> test -> contract/invariant -> hotspot`
+- local target-repo gate runners may stop after the first blocking failure unless diagnostic mode explicitly requests continue-on-error
 
 ## Execution Contexts
 

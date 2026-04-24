@@ -1,6 +1,38 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+function Initialize-WindowsProcessEnvironment {
+  if (-not $IsWindows) {
+    return
+  }
+
+  $windowsRoot = $env:SystemRoot
+  if ([string]::IsNullOrWhiteSpace($windowsRoot)) {
+    $windowsRoot = $env:WINDIR
+  }
+  if ([string]::IsNullOrWhiteSpace($windowsRoot)) {
+    $windowsRoot = "C:\Windows"
+  }
+
+  if ([string]::IsNullOrWhiteSpace($env:SystemRoot)) {
+    $env:SystemRoot = $windowsRoot
+  }
+  if ([string]::IsNullOrWhiteSpace($env:WINDIR)) {
+    $env:WINDIR = $windowsRoot
+  }
+  if ([string]::IsNullOrWhiteSpace($env:ComSpec)) {
+    $cmdPath = Join-Path $windowsRoot "System32\cmd.exe"
+    if (Test-Path -LiteralPath $cmdPath) {
+      $env:ComSpec = $cmdPath
+    }
+  }
+  if ([string]::IsNullOrWhiteSpace($env:SystemDrive)) {
+    $env:SystemDrive = ([System.IO.Path]::GetPathRoot($windowsRoot)).TrimEnd("\")
+  }
+}
+
+Initialize-WindowsProcessEnvironment
+
 function Test-ObjectProperty {
   param(
     [Parameter(Mandatory)]
@@ -10,6 +42,59 @@ function Test-ObjectProperty {
   )
 
   return $Object.PSObject.Properties.Name -contains $Name
+}
+
+function Convert-ToNonNegativeSeconds {
+  param(
+    [Parameter(Mandatory)]
+    [object]$Value,
+    [Parameter(Mandatory)]
+    [string]$FieldName
+  )
+
+  if ($null -eq $Value) {
+    return 0
+  }
+
+  [double]$parsed = 0
+  $parsedOk = [double]::TryParse(
+    ([string]$Value).Trim(),
+    [System.Globalization.NumberStyles]::Float,
+    [System.Globalization.CultureInfo]::InvariantCulture,
+    [ref]$parsed
+  )
+  if (-not $parsedOk -or $parsed -lt 0) {
+    throw "$FieldName must be a non-negative number."
+  }
+  if ($parsed -eq 0) {
+    return 0
+  }
+  return [int][Math]::Ceiling($parsed)
+}
+
+function Resolve-GateLevel {
+  param(
+    [Parameter(Mandatory)]
+    [ValidateSet("fast", "quick", "full", "l1", "l2", "l3")]
+    [string]$Mode
+  )
+
+  switch ($Mode.ToLowerInvariant()) {
+    "fast" { return "l1" }
+    "quick" { return "l1" }
+    "l1" { return "l1" }
+    "l2" { return "l2" }
+    default { return "l3" }
+  }
+}
+
+function Test-GateIdIsHotspot {
+  param(
+    [Parameter(Mandatory)]
+    [string]$GateId
+  )
+
+  return $GateId -in @("doctor", "hotspot", "health", "health_check")
 }
 
 function Resolve-RepoProfilePath {
@@ -143,17 +228,29 @@ function New-GateCommandRecord {
     $required = [bool]$Entry.required
   }
 
+  $blocking = $required
+  if (Test-ObjectProperty -Object $Entry -Name "blocking") {
+    $blocking = [bool]$Entry.blocking
+  }
+
   $description = ""
   if ((Test-ObjectProperty -Object $Entry -Name "description") -and $null -ne $Entry.description) {
     $description = [string]$Entry.description
   }
 
+  $timeoutSeconds = 0
+  if (Test-ObjectProperty -Object $Entry -Name "timeout_seconds") {
+    $timeoutSeconds = Convert-ToNonNegativeSeconds -Value $Entry.timeout_seconds -FieldName "$SourceGroup.$gateId.timeout_seconds"
+  }
+
   return [pscustomobject]@{
-    gate_id      = $gateId
-    command      = ([string]$Entry.command).Trim()
-    required     = $required
-    source_group = $SourceGroup
-    description  = $description
+    gate_id         = $gateId
+    command         = ([string]$Entry.command).Trim()
+    required        = $required
+    blocking        = $blocking
+    timeout_seconds = $timeoutSeconds
+    source_group    = $SourceGroup
+    description     = $description
   }
 }
 
@@ -241,19 +338,158 @@ function Resolve-FullGateCommands {
   }
 }
 
+function Resolve-L2GateCommands {
+  param(
+    [Parameter(Mandatory)]
+    [object]$Profile
+  )
+
+  $full = Get-CommandGroup -Profile $Profile -GroupName "full_gate_commands"
+  if (@($full).Count -gt 0) {
+    $commands = @()
+    $index = 0
+    foreach ($entry in $full) {
+      $index += 1
+      $record = New-GateCommandRecord -Entry $entry -DefaultGateId ("full-{0}" -f $index) -SourceGroup "full_gate_commands"
+      if (Test-GateIdIsHotspot -GateId $record.gate_id) {
+        continue
+      }
+      $commands += $record
+    }
+    return [pscustomobject]@{
+      source   = "full_gate_commands:l2"
+      commands = $commands
+    }
+  }
+
+  $buildEntry = Select-PreferredCommand -Commands (Get-CommandGroup -Profile $Profile -GroupName "build_commands")
+  $testEntry = Select-PreferredCommand -Commands (Get-CommandGroup -Profile $Profile -GroupName "test_commands")
+  $contractEntry = Select-PreferredCommand -Commands (Get-CommandGroup -Profile $Profile -GroupName "contract_commands")
+  $contractSource = "contract_commands"
+  if ($null -eq $contractEntry) {
+    $contractEntry = Select-PreferredCommand -Commands (Get-CommandGroup -Profile $Profile -GroupName "invariant_commands")
+    $contractSource = "invariant_commands"
+  }
+
+  if ($null -eq $buildEntry -or $null -eq $testEntry -or $null -eq $contractEntry) {
+    throw "l2 gate fallback requires build_commands + test_commands + contract_commands (or invariant_commands)"
+  }
+
+  return [pscustomobject]@{
+    source   = "fallback:l2:build+test+contract"
+    commands = @(
+      (New-GateCommandRecord -Entry $buildEntry -DefaultGateId "build" -SourceGroup "build_commands"),
+      (New-GateCommandRecord -Entry $testEntry -DefaultGateId "test" -SourceGroup "test_commands"),
+      (New-GateCommandRecord -Entry $contractEntry -DefaultGateId "contract" -SourceGroup $contractSource)
+    )
+  }
+}
+
+function Test-AdditionalGateAppliesToMode {
+  param(
+    [Parameter(Mandatory)]
+    [object]$Entry,
+    [Parameter(Mandatory)]
+    [string]$Mode,
+    [Parameter(Mandatory)]
+    [ValidateSet("l1", "l2", "l3")]
+    [string]$Level
+  )
+
+  if (-not (Test-ObjectProperty -Object $Entry -Name "profiles") -or $null -eq $Entry.profiles) {
+    return $true
+  }
+
+  $profiles = @(Convert-ToStringArray -Value $Entry.profiles | ForEach-Object { $_.ToLowerInvariant() })
+  if (@($profiles).Count -eq 0) {
+    return $true
+  }
+
+  $modeValue = $Mode.ToLowerInvariant()
+  if ($profiles -contains "*" -or $profiles -contains "all" -or $profiles -contains $modeValue -or $profiles -contains $Level) {
+    return $true
+  }
+  if ($Level -eq "l1" -and ($profiles -contains "quick" -or $profiles -contains "fast")) {
+    return $true
+  }
+  if ($Level -in @("l2", "l3") -and $profiles -contains "full") {
+    return $true
+  }
+  return $false
+}
+
+function Add-AdditionalGateCommands {
+  param(
+    [Parameter(Mandatory)]
+    [object[]]$Commands,
+    [Parameter(Mandatory)]
+    [object]$Profile,
+    [Parameter(Mandatory)]
+    [string]$Mode,
+    [Parameter(Mandatory)]
+    [ValidateSet("l1", "l2", "l3")]
+    [string]$Level
+  )
+
+  $additional = Get-CommandGroup -Profile $Profile -GroupName "additional_gate_commands"
+  if (@($additional).Count -eq 0) {
+    return @($Commands)
+  }
+
+  $merged = @($Commands)
+  $seen = @{}
+  foreach ($command in $merged) {
+    $seen[[string]$command.gate_id] = $true
+  }
+
+  $index = 0
+  foreach ($entry in $additional) {
+    $index += 1
+    if (-not (Test-AdditionalGateAppliesToMode -Entry $entry -Mode $Mode -Level $Level)) {
+      continue
+    }
+    $record = New-GateCommandRecord -Entry $entry -DefaultGateId ("additional-{0}" -f $index) -SourceGroup "additional_gate_commands"
+    if ($seen.ContainsKey([string]$record.gate_id)) {
+      continue
+    }
+    $merged += $record
+    $seen[[string]$record.gate_id] = $true
+  }
+
+  return @($merged)
+}
+
 function Resolve-GateCommands {
   param(
     [Parameter(Mandatory)]
-    [ValidateSet("fast", "full")]
+    [ValidateSet("fast", "quick", "full", "l1", "l2", "l3")]
     [string]$Mode,
     [Parameter(Mandatory)]
     [object]$Profile
   )
 
-  if ($Mode -eq "fast") {
-    return Resolve-FastGateCommands -Profile $Profile
+  $level = Resolve-GateLevel -Mode $Mode
+  if ($level -eq "l1") {
+    $resolved = Resolve-FastGateCommands -Profile $Profile
   }
-  return Resolve-FullGateCommands -Profile $Profile
+  elseif ($level -eq "l2") {
+    $resolved = Resolve-L2GateCommands -Profile $Profile
+  }
+  else {
+    $resolved = Resolve-FullGateCommands -Profile $Profile
+  }
+
+  $commands = Add-AdditionalGateCommands -Commands @($resolved.commands) -Profile $Profile -Mode $Mode -Level $level
+  $source = $resolved.source
+  if (@($commands).Count -gt @($resolved.commands).Count) {
+    $source = "$source+additional_gate_commands"
+  }
+
+  return [pscustomobject]@{
+    source     = $source
+    gate_level = $level
+    commands   = $commands
+  }
 }
 
 function Convert-ToStringArray {
@@ -355,7 +591,8 @@ function Test-StringInArray {
 
 function Resolve-GateTimeoutSeconds {
   param(
-    [int]$ExplicitTimeoutSeconds = 0
+    [int]$ExplicitTimeoutSeconds = 0,
+    [object]$Profile = $null
   )
 
   if ($ExplicitTimeoutSeconds -lt 0) {
@@ -366,27 +603,30 @@ function Resolve-GateTimeoutSeconds {
   }
 
   $rawTimeout = [Environment]::GetEnvironmentVariable("GOVERNED_GATE_TIMEOUT_SECONDS")
-  if ([string]::IsNullOrWhiteSpace($rawTimeout)) {
-    return 0
+  if (-not [string]::IsNullOrWhiteSpace($rawTimeout)) {
+    [double]$parsed = 0
+    $parsedOk = [double]::TryParse(
+      $rawTimeout,
+      [System.Globalization.NumberStyles]::Float,
+      [System.Globalization.CultureInfo]::InvariantCulture,
+      [ref]$parsed
+    )
+    if (-not $parsedOk) {
+      throw "Invalid GOVERNED_GATE_TIMEOUT_SECONDS: '$rawTimeout'. Expected a positive number or 0."
+    }
+    if ($parsed -lt 0) {
+      throw "Invalid GOVERNED_GATE_TIMEOUT_SECONDS: '$rawTimeout'. Expected >= 0."
+    }
+    if ($parsed -eq 0) {
+      return 0
+    }
+    return [int][Math]::Ceiling($parsed)
   }
 
-  [double]$parsed = 0
-  $parsedOk = [double]::TryParse(
-    $rawTimeout,
-    [System.Globalization.NumberStyles]::Float,
-    [System.Globalization.CultureInfo]::InvariantCulture,
-    [ref]$parsed
-  )
-  if (-not $parsedOk) {
-    throw "Invalid GOVERNED_GATE_TIMEOUT_SECONDS: '$rawTimeout'. Expected a positive number or 0."
+  if ($null -ne $Profile -and (Test-ObjectProperty -Object $Profile -Name "gate_timeout_seconds")) {
+    return Convert-ToNonNegativeSeconds -Value $Profile.gate_timeout_seconds -FieldName "gate_timeout_seconds"
   }
-  if ($parsed -lt 0) {
-    throw "Invalid GOVERNED_GATE_TIMEOUT_SECONDS: '$rawTimeout'. Expected >= 0."
-  }
-  if ($parsed -eq 0) {
-    return 0
-  }
-  return [int][Math]::Ceiling($parsed)
+  return 0
 }
 
 function Get-AutoCommitTrigger {
@@ -394,19 +634,20 @@ function Get-AutoCommitTrigger {
     [Parameter(Mandatory)]
     [object]$Policy,
     [Parameter(Mandatory)]
-    [ValidateSet("fast", "full")]
+    [ValidateSet("fast", "quick", "full", "l1", "l2", "l3")]
     [string]$Mode,
     [string]$MilestoneTag = ""
   )
 
   $triggers = @(Convert-ToStringArray -Value $Policy.on)
+  $level = Resolve-GateLevel -Mode $Mode
   if (Test-StringInArray -Value "any_pass" -Candidates $triggers) {
     return "any_pass"
   }
-  if ($Mode -eq "fast" -and (Test-StringInArray -Value "fast_pass" -Candidates $triggers)) {
+  if ($level -eq "l1" -and (Test-StringInArray -Value "fast_pass" -Candidates $triggers)) {
     return "fast_pass"
   }
-  if ($Mode -eq "full" -and (Test-StringInArray -Value "full_pass" -Candidates $triggers)) {
+  if ($level -eq "l3" -and (Test-StringInArray -Value "full_pass" -Candidates $triggers)) {
     return "full_pass"
   }
   if ((Test-StringInArray -Value "milestone" -Candidates $triggers) -and -not [string]::IsNullOrWhiteSpace($MilestoneTag)) {
@@ -441,7 +682,7 @@ function Render-AutoCommitMessage {
     [Parameter(Mandatory)]
     [string]$Template,
     [Parameter(Mandatory)]
-    [ValidateSet("fast", "full")]
+    [ValidateSet("fast", "quick", "full", "l1", "l2", "l3")]
     [string]$Mode,
     [string]$RepoId = "unknown-repo",
     [string]$MilestoneTag = ""
@@ -461,7 +702,7 @@ function Invoke-AutoCommit {
   param(
     [object]$Policy,
     [Parameter(Mandatory)]
-    [ValidateSet("fast", "full")]
+    [ValidateSet("fast", "quick", "full", "l1", "l2", "l3")]
     [string]$Mode,
     [Parameter(Mandatory)]
     [string]$WorkingDirectory,
@@ -608,6 +849,27 @@ function Invoke-AutoCommit {
   }
 }
 
+function Stop-ProcessTree {
+  param(
+    [Parameter(Mandatory)]
+    [int]$ProcessId
+  )
+
+  $cim = Get-Command Get-CimInstance -ErrorAction SilentlyContinue
+  if ($cim) {
+    $children = @(Get-CimInstance Win32_Process -Filter "ParentProcessId=$ProcessId" -ErrorAction SilentlyContinue)
+    foreach ($child in $children) {
+      Stop-ProcessTree -ProcessId ([int]$child.ProcessId)
+    }
+  }
+
+  try {
+    Stop-Process -Id $ProcessId -Force -ErrorAction Stop
+  }
+  catch {
+  }
+}
+
 function Invoke-GateCommand {
   param(
     [Parameter(Mandatory)]
@@ -618,8 +880,13 @@ function Invoke-GateCommand {
   )
 
   $startedAt = Get-Date
-  if ($TimeoutSeconds -gt 0) {
-    Write-Host ("==> [{0}] {1} (timeout={2}s)" -f $Gate.gate_id, $Gate.command, $TimeoutSeconds)
+  $effectiveTimeoutSeconds = $TimeoutSeconds
+  if ((Test-ObjectProperty -Object $Gate -Name "timeout_seconds") -and [int]$Gate.timeout_seconds -gt 0) {
+    $effectiveTimeoutSeconds = [int]$Gate.timeout_seconds
+  }
+
+  if ($effectiveTimeoutSeconds -gt 0) {
+    Write-Host ("==> [{0}] {1} (timeout={2}s)" -f $Gate.gate_id, $Gate.command, $effectiveTimeoutSeconds)
   }
   else {
     Write-Host ("==> [{0}] {1}" -f $Gate.gate_id, $Gate.command)
@@ -628,7 +895,7 @@ function Invoke-GateCommand {
   $timedOut = $false
   $exitCode = 0
   $outputText = ""
-  if ($TimeoutSeconds -gt 0) {
+  if ($effectiveTimeoutSeconds -gt 0) {
     $stdoutPath = [System.IO.Path]::GetTempFileName()
     $stderrPath = [System.IO.Path]::GetTempFileName()
     try {
@@ -640,14 +907,10 @@ function Invoke-GateCommand {
         -PassThru `
         -RedirectStandardOutput $stdoutPath `
         -RedirectStandardError $stderrPath
-      $completed = $process.WaitForExit($TimeoutSeconds * 1000)
+      $completed = $process.WaitForExit($effectiveTimeoutSeconds * 1000)
       if (-not $completed) {
         $timedOut = $true
-        try {
-          Stop-Process -Id $process.Id -Force -ErrorAction Stop
-        }
-        catch {
-        }
+        Stop-ProcessTree -ProcessId ([int]$process.Id)
         $null = $process.WaitForExit(5000)
         $exitCode = 124
       }
@@ -665,7 +928,7 @@ function Invoke-GateCommand {
         $segments += $stderrText.TrimEnd()
       }
       if ($timedOut) {
-        $segments += ("gate timed out after {0}s" -f $TimeoutSeconds)
+        $segments += ("gate timed out after {0}s" -f $effectiveTimeoutSeconds)
       }
       $outputText = ($segments -join [Environment]::NewLine).TrimEnd()
     }
@@ -700,12 +963,13 @@ function Invoke-GateCommand {
   return [pscustomobject]@{
     gate_id      = $Gate.gate_id
     required     = [bool]$Gate.required
+    blocking     = [bool]$Gate.blocking
     source_group = $Gate.source_group
     command      = $Gate.command
     status       = $status
     reason       = $reason
     timed_out    = [bool]$timedOut
-    timeout_seconds = [int]$TimeoutSeconds
+    timeout_seconds = [int]$effectiveTimeoutSeconds
     exit_code    = [int]$exitCode
     duration_ms  = [int][Math]::Round(($finishedAt - $startedAt).TotalMilliseconds)
     started_at   = $startedAt.ToString("o")
@@ -721,10 +985,10 @@ function Write-GateRunSummary {
     [int]$ExitCode
   )
 
-  Write-Host ("mode={0} source={1} exit_code={2} gate_timeout_seconds={3}" -f $Summary.mode, $Summary.command_source, $ExitCode, $Summary.gate_timeout_seconds)
+  Write-Host ("mode={0} gate_level={1} source={2} exit_code={3} gate_timeout_seconds={4} max_gate_count={5}" -f $Summary.mode, $Summary.gate_level, $Summary.command_source, $ExitCode, $Summary.gate_timeout_seconds, $Summary.max_gate_count)
   foreach ($result in $Summary.detailed) {
     $timeoutTag = if ($result.timed_out) { ", timed_out=true" } else { "" }
-    Write-Host ("- {0}: {1} (required={2}, exit={3}, {4}ms, reason={5}{6})" -f $result.gate_id, $result.status, $result.required, $result.exit_code, $result.duration_ms, $result.reason, $timeoutTag)
+    Write-Host ("- {0}: {1} (required={2}, blocking={3}, exit={4}, {5}ms, reason={6}{7})" -f $result.gate_id, $result.status, $result.required, $result.blocking, $result.exit_code, $result.duration_ms, $result.reason, $timeoutTag)
   }
   if ($Summary.auto_commit) {
     Write-Host ("auto_commit: status={0}, reason={1}, trigger={2}, hash={3}" -f $Summary.auto_commit.status, $Summary.auto_commit.reason, $Summary.auto_commit.trigger, $Summary.auto_commit.commit_hash)
@@ -734,21 +998,32 @@ function Write-GateRunSummary {
 function Invoke-RepoProfileGateRun {
   param(
     [Parameter(Mandatory)]
-    [ValidateSet("fast", "full")]
+    [ValidateSet("fast", "quick", "full", "l1", "l2", "l3")]
     [string]$Mode,
     [string]$RepoProfilePath = ".governed-ai/repo-profile.json",
     [string]$WorkingDirectory = "",
     [string]$MilestoneTag = "",
     [int]$GateTimeoutSeconds = 0,
+    [int]$MaxGateCount = 50,
     [switch]$ContinueOnError,
     [switch]$JsonOutput
   )
+
+  if ($MaxGateCount -lt 0) {
+    throw "Max gate count must be >= 0."
+  }
 
   $resolvedProfilePath = Resolve-RepoProfilePath -RepoProfilePath $RepoProfilePath
   $resolvedWorkingDirectory = Resolve-GateWorkingDirectory -ResolvedRepoProfilePath $resolvedProfilePath -WorkingDirectory $WorkingDirectory
   $profile = Get-RepoProfileObject -ResolvedRepoProfilePath $resolvedProfilePath
   $resolved = Resolve-GateCommands -Mode $Mode -Profile $profile
-  $effectiveGateTimeoutSeconds = Resolve-GateTimeoutSeconds -ExplicitTimeoutSeconds $GateTimeoutSeconds
+  if (@($resolved.commands).Count -eq 0) {
+    throw "Resolved gate set is empty for mode '$Mode'."
+  }
+  if ($MaxGateCount -gt 0 -and @($resolved.commands).Count -gt $MaxGateCount) {
+    throw "Resolved gate count $(@($resolved.commands).Count) exceeds MaxGateCount $MaxGateCount."
+  }
+  $effectiveGateTimeoutSeconds = Resolve-GateTimeoutSeconds -ExplicitTimeoutSeconds $GateTimeoutSeconds -Profile $profile
   $autoCommitPolicy = Get-AutoCommitPolicy -Profile $profile
 
   $startedAt = Get-Date
@@ -757,13 +1032,13 @@ function Invoke-RepoProfileGateRun {
   foreach ($gate in $resolved.commands) {
     $result = Invoke-GateCommand -Gate $gate -WorkingDirectory $resolvedWorkingDirectory -TimeoutSeconds $effectiveGateTimeoutSeconds
     $results += $result
-    if ($result.status -eq "fail" -and $result.required -and -not $ContinueOnError.IsPresent) {
+    if ($result.status -eq "fail" -and $result.blocking -and -not $ContinueOnError.IsPresent) {
       break
     }
   }
 
-  $requiredFailures = @($results | Where-Object { $_.required -and $_.status -eq "fail" })
-  $exitCode = if ($requiredFailures.Count -gt 0) { 1 } else { 0 }
+  $blockingFailures = @($results | Where-Object { $_.blocking -and $_.status -eq "fail" })
+  $exitCode = if ($blockingFailures.Count -gt 0) { 1 } else { 0 }
   $autoCommitResult = Invoke-AutoCommit `
     -Policy $autoCommitPolicy `
     -Mode $Mode `
@@ -782,11 +1057,15 @@ function Invoke-RepoProfileGateRun {
 
   $summary = [ordered]@{
     mode              = $Mode
+    gate_level        = $resolved.gate_level
     command_source    = $resolved.source
     repo_profile_path = $resolvedProfilePath
     working_directory = $resolvedWorkingDirectory
     gate_timeout_seconds = $effectiveGateTimeoutSeconds
+    max_gate_count    = $MaxGateCount
     gate_order        = @($results | ForEach-Object { $_.gate_id })
+    required_gate_ids = @($results | Where-Object { $_.required } | ForEach-Object { $_.gate_id })
+    blocking_gate_ids = @($results | Where-Object { $_.blocking } | ForEach-Object { $_.gate_id })
     results           = $resultMap
     detailed          = $results
     auto_commit       = $autoCommitResult

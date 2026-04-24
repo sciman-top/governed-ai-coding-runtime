@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import fnmatch
+import os
 from pathlib import Path
 import subprocess
 from typing import Sequence
@@ -68,6 +69,7 @@ def run_subprocess(
         "cwd": cwd,
         "check": False,
         "shell": shell,
+        "env": _subprocess_environment(),
     }
     try:
         completed = subprocess.run(
@@ -152,6 +154,25 @@ def _coerce_output_text(value: object) -> str:
     if isinstance(value, str):
         return value
     return ""
+
+
+def _subprocess_environment() -> dict[str, str]:
+    env = os.environ.copy()
+    if os.name != "nt":
+        return env
+
+    windows_root = env.get("SystemRoot") or env.get("WINDIR") or r"C:\Windows"
+    if windows_root and "SystemRoot" not in env:
+        env["SystemRoot"] = windows_root
+    if windows_root and "WINDIR" not in env:
+        env["WINDIR"] = windows_root
+    if "ComSpec" not in env:
+        cmd_path = str(Path(windows_root) / "System32" / "cmd.exe")
+        if Path(cmd_path).exists():
+            env["ComSpec"] = cmd_path
+    if "SystemDrive" not in env:
+        env["SystemDrive"] = Path(windows_root).drive or "C:"
+    return env
 
 
 def _timeout_label(value: float | None) -> str:

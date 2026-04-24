@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -175,6 +176,7 @@ def run_source_string_contract_guard(
                 encoding="utf-8",
                 errors="replace",
                 cwd=target_repo_root,
+                env=_subprocess_environment(),
             )
         except FileNotFoundError:
             return {
@@ -252,6 +254,25 @@ def main() -> int:
             for class_name in payload["failed_classes"]:
                 print(f"[source-string-contract-guard] failed={class_name}")
     return exit_code
+
+
+def _subprocess_environment() -> dict[str, str]:
+    env = os.environ.copy()
+    if os.name != "nt":
+        return env
+
+    windows_root = env.get("SystemRoot") or env.get("WINDIR") or r"C:\Windows"
+    if windows_root and "SystemRoot" not in env:
+        env["SystemRoot"] = windows_root
+    if windows_root and "WINDIR" not in env:
+        env["WINDIR"] = windows_root
+    if "ComSpec" not in env:
+        cmd_path = str(Path(windows_root) / "System32" / "cmd.exe")
+        if Path(cmd_path).exists():
+            env["ComSpec"] = cmd_path
+    if "SystemDrive" not in env:
+        env["SystemDrive"] = Path(windows_root).drive or "C:"
+    return env
 
 
 if __name__ == "__main__":

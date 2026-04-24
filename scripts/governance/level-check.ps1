@@ -1,6 +1,8 @@
 param(
   [string]$RepoProfilePath = ".governed-ai/repo-profile.json",
   [string]$WorkingDirectory = "",
+  [ValidateSet("l1", "l2", "l3", "quick", "fast", "full")]
+  [string]$Level = "l1",
   [string]$MilestoneTag = "",
   [int]$GateTimeoutSeconds = 0,
   [int]$MaxGateCount = 50,
@@ -14,9 +16,9 @@ $ErrorActionPreference = "Stop"
 $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 . (Join-Path $scriptRoot "gate-runner-common.ps1")
 
-# Skeleton entrypoint for low-latency local checks.
+# Layered entrypoint for explicit l1/l2/l3 target-repo gate runs.
 $result = Invoke-RepoProfileGateRun `
-  -Mode "fast" `
+  -Mode $Level `
   -RepoProfilePath $RepoProfilePath `
   -WorkingDirectory $WorkingDirectory `
   -MilestoneTag $MilestoneTag `

@@ -156,6 +156,54 @@ class VerificationRunnerTests(unittest.TestCase):
             self.assertEqual(calls, [])
             self.assertEqual(second.cache_hits, {"test": True, "contract": True})
 
+    def test_verification_runner_stops_after_blocking_failure_by_default(self) -> None:
+        artifact_store = importlib.import_module("governed_ai_coding_runtime_contracts.artifact_store")
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            store = artifact_store.LocalArtifactStore(Path(tmp_dir))
+            plan = verification_runner.build_verification_plan("quick", task_id="task-fail-fast", run_id="run-fail-fast")
+            calls: list[str] = []
+
+            def _execute(gate) -> tuple[int, str]:
+                calls.append(gate.gate_id)
+                return 1, f"{gate.gate_id} failed"
+
+            artifact = verification_runner.run_verification_plan(
+                plan,
+                artifact_store=store,
+                execute_gate=_execute,
+            )
+
+            self.assertEqual(calls, ["test"])
+            self.assertEqual(artifact.results, {"test": "fail"})
+            self.assertEqual(verification_runner.verification_overall_outcome(artifact), "fail")
+            self.assertTrue(artifact.evidence_link.endswith("/test.txt"))
+
+    def test_verification_runner_can_continue_after_failure_for_diagnostics(self) -> None:
+        artifact_store = importlib.import_module("governed_ai_coding_runtime_contracts.artifact_store")
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            store = artifact_store.LocalArtifactStore(Path(tmp_dir))
+            plan = verification_runner.build_verification_plan("quick", task_id="task-diagnostic", run_id="run-diagnostic")
+            calls: list[str] = []
+
+            def _execute(gate) -> tuple[int, str]:
+                calls.append(gate.gate_id)
+                return 1, f"{gate.gate_id} failed"
+
+            artifact = verification_runner.run_verification_plan(
+                plan,
+                artifact_store=store,
+                execute_gate=_execute,
+                continue_on_error=True,
+            )
+
+            self.assertEqual(calls, ["test", "contract"])
+            self.assertEqual(artifact.results, {"test": "fail", "contract": "fail"})
+            self.assertTrue(artifact.evidence_link.endswith("/contract.txt"))
+
     def test_repo_profile_verification_plan_prefers_declared_commands(self) -> None:
         verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
 

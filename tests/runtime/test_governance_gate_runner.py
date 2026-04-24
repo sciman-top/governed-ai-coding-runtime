@@ -22,6 +22,157 @@ def _extract_json_payload(raw_stdout: str) -> dict:
 
 
 class GovernanceGateRunnerTests(unittest.TestCase):
+    def test_level_check_l2_runs_middle_gate_layer(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            profile_path = workspace / ".governed-ai" / "repo-profile.json"
+            _write_json(
+                profile_path,
+                {
+                    "repo_id": "layered-l2",
+                    "full_gate_commands": [
+                        {"id": "build", "required": True, "command": "Write-Host 'build-ok'"},
+                        {"id": "test", "required": True, "command": "Write-Host 'test-ok'"},
+                        {"id": "contract", "required": True, "command": "Write-Host 'contract-ok'"},
+                        {"id": "doctor", "required": True, "command": "Write-Host 'doctor-should-skip'"},
+                    ],
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "governance" / "level-check.ps1"),
+                    "-RepoProfilePath",
+                    str(profile_path),
+                    "-WorkingDirectory",
+                    str(workspace),
+                    "-Level",
+                    "l2",
+                    "-Json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = _extract_json_payload(completed.stdout)
+            self.assertEqual(payload["summary"]["gate_level"], "l2")
+            self.assertEqual(payload["summary"]["gate_order"], ["build", "test", "contract"])
+            self.assertNotIn("doctor-should-skip", completed.stdout)
+
+    def test_fast_check_runs_matching_additional_non_blocking_gate(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            profile_path = workspace / ".governed-ai" / "repo-profile.json"
+            _write_json(
+                profile_path,
+                {
+                    "repo_id": "additional-non-blocking",
+                    "test_commands": [{"id": "test", "required": True, "command": "Write-Host 'test-ok'"}],
+                    "contract_commands": [{"id": "contract", "required": True, "command": "Write-Host 'contract-ok'"}],
+                    "additional_gate_commands": [
+                        {
+                            "id": "quick-extra",
+                            "command": "Write-Host 'extra-failed'; exit 7",
+                            "profiles": ["quick"],
+                            "required": False,
+                            "blocking": False,
+                        },
+                        {
+                            "id": "full-extra",
+                            "command": "Write-Host 'full-extra-should-skip'",
+                            "profiles": ["full"],
+                            "required": True,
+                        },
+                    ],
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "governance" / "fast-check.ps1"),
+                    "-RepoProfilePath",
+                    str(profile_path),
+                    "-WorkingDirectory",
+                    str(workspace),
+                    "-Json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = _extract_json_payload(completed.stdout)
+            self.assertEqual(payload["summary"]["gate_order"], ["test", "contract", "quick-extra"])
+            self.assertEqual(payload["summary"]["results"]["quick-extra"], "fail")
+            self.assertEqual(payload["summary"]["detailed"][2]["blocking"], False)
+            self.assertNotIn("full-extra-should-skip", completed.stdout)
+
+    def test_gate_entry_timeout_overrides_global_timeout(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            profile_path = workspace / ".governed-ai" / "repo-profile.json"
+            _write_json(
+                profile_path,
+                {
+                    "repo_id": "per-gate-timeout",
+                    "full_gate_commands": [
+                        {
+                            "id": "slow-entry",
+                            "required": True,
+                            "timeout_seconds": 1,
+                            "command": "Start-Sleep -Seconds 2; Write-Host 'done'",
+                        }
+                    ],
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "governance" / "full-check.ps1"),
+                    "-RepoProfilePath",
+                    str(profile_path),
+                    "-WorkingDirectory",
+                    str(workspace),
+                    "-GateTimeoutSeconds",
+                    "30",
+                    "-Json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertNotEqual(completed.returncode, 0)
+            payload = _extract_json_payload(completed.stdout)
+            gate_result = payload["summary"]["detailed"][0]
+            self.assertEqual(gate_result["reason"], "timed_out")
+            self.assertEqual(gate_result["timeout_seconds"], 1)
+            self.assertEqual(gate_result["exit_code"], 124)
+
     def test_full_check_gate_timeout_seconds_param_enforces_timeout(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)
