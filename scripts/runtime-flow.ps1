@@ -84,6 +84,21 @@ function Initialize-WindowsProcessEnvironment {
   if ([string]::IsNullOrWhiteSpace($env:SystemDrive)) {
     $env:SystemDrive = ([System.IO.Path]::GetPathRoot($windowsRoot)).TrimEnd("\")
   }
+  if (-not [string]::IsNullOrWhiteSpace($env:USERPROFILE)) {
+    $profileRoot = $env:USERPROFILE
+    if ([string]::IsNullOrWhiteSpace($env:HOMEDRIVE)) {
+      $env:HOMEDRIVE = ([System.IO.Path]::GetPathRoot($profileRoot)).TrimEnd("\")
+    }
+    if ([string]::IsNullOrWhiteSpace($env:HOMEPATH)) {
+      $env:HOMEPATH = $profileRoot.Substring(([System.IO.Path]::GetPathRoot($profileRoot)).Length - 1)
+    }
+    if ([string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)) {
+      $env:LOCALAPPDATA = Join-Path $profileRoot "AppData\Local"
+    }
+    if ([string]::IsNullOrWhiteSpace($env:APPDATA)) {
+      $env:APPDATA = Join-Path $profileRoot "AppData\Roaming"
+    }
+  }
 }
 
 Initialize-WindowsProcessEnvironment

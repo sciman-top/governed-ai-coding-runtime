@@ -8,9 +8,9 @@
       "repo_id": "classroomtoolkit",
       "display_name": "ClassroomToolkit",
       "primary_language": "csharp",
-      "build_command": "dotnet build ClassroomToolkit.sln -c Debug",
-      "test_command": "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug",
-      "contract_command": "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug"
+      "build_command": "dotnet build ClassroomToolkit.sln -c Debug --no-restore",
+      "test_command": "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug --no-restore",
+      "contract_command": "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug --no-restore"
     },
     "github-toolkit": {
       "attachment_root": "${code_root}/github-toolkit",

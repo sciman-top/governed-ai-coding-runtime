@@ -163,6 +163,7 @@ def run_source_string_contract_guard(
             str(test_project),
             "-c",
             configuration,
+            "--no-restore",
             "-m:1",
             "--filter",
             filter_expr,
@@ -272,6 +273,20 @@ def _subprocess_environment() -> dict[str, str]:
             env["ComSpec"] = cmd_path
     if "SystemDrive" not in env:
         env["SystemDrive"] = Path(windows_root).drive or "C:"
+    user_profile = env.get("USERPROFILE")
+    if user_profile:
+        profile_path = Path(user_profile)
+        if "HOMEDRIVE" not in env:
+            env["HOMEDRIVE"] = profile_path.drive or env["SystemDrive"]
+        if "HOMEPATH" not in env:
+            try:
+                env["HOMEPATH"] = "\\" + str(profile_path.relative_to(profile_path.anchor)).rstrip("\\/")
+            except ValueError:
+                env["HOMEPATH"] = str(profile_path)
+        if "LOCALAPPDATA" not in env:
+            env["LOCALAPPDATA"] = str(profile_path / "AppData" / "Local")
+        if "APPDATA" not in env:
+            env["APPDATA"] = str(profile_path / "AppData" / "Roaming")
     return env
 
 
