@@ -15,6 +15,21 @@ def _write_json(path: Path, payload: dict) -> None:
 
 
 class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
+    def test_default_baseline_requires_windows_process_environment_policy(self) -> None:
+        baseline_path = ROOT / "docs" / "targets" / "target-repo-governance-baseline.json"
+        baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
+        policy = baseline["required_profile_overrides"]["windows_process_environment_policy"]
+
+        self.assertTrue(policy["enabled"])
+        self.assertIn("ComSpec", policy["required_variables"])
+        self.assertIn("SystemRoot", policy["required_variables"])
+        self.assertIn("PROGRAMDATA", policy["required_variables"])
+        self.assertIn("coding_guidance", policy)
+        self.assertIn("process_environment_incomplete", " ".join(policy["coding_guidance"]))
+        self.assertIn("Initialize-WindowsProcessEnvironment", policy["powershell_entrypoint_pattern"])
+        self.assertIn("python -c", policy["verification_commands"][0])
+        self.assertIn("node -e", policy["verification_commands"][1])
+
     def test_apply_target_repo_governance_updates_profile(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)

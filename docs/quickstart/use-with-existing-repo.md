@@ -301,7 +301,9 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
 
 Baseline sync behavior:
 - In `onboard` mode, `runtime-flow-preset.ps1` now syncs governance feature blocks from `docs/targets/target-repo-governance-baseline.json` by default.
-- The default baseline includes `required_entrypoint_policy`, milestone `auto_commit_policy`, and low-token `interaction_profile` defaults.
+- The default baseline includes `required_entrypoint_policy`, milestone `auto_commit_policy`, low-token `interaction_profile` defaults, and `windows_process_environment_policy`.
+- `windows_process_environment_policy` tells future coding work how to handle stripped Windows process environments before blaming Python, Node, pyright, pip-audit, or project code.
+- If a target repo adds PowerShell entrypoints that invoke Python, Node, Codex, or child PowerShell, initialize the Windows process environment first. See `docs/runbooks/windows-process-environment-recovery.md`.
 - If you intentionally need a raw onboard run without sync, pass `-SkipGovernanceBaselineSync`.
 
 Consistency hard gate:

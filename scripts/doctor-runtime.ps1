@@ -6,12 +6,91 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+function Test-WindowsPlatform {
+  if ($PSVersionTable.PSVersion.Major -lt 6) {
+    return $true
+  }
+  return $IsWindows
+}
+
+function Get-MissingWindowsProcessEnvironmentVariables {
+  if (-not (Test-WindowsPlatform)) {
+    return @()
+  }
+
+  $required = @("ComSpec", "SystemRoot", "WINDIR", "APPDATA", "LOCALAPPDATA", "PROGRAMDATA")
+  $missing = @()
+  foreach ($name in $required) {
+    if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name, "Process"))) {
+      $missing += $name
+    }
+  }
+  return $missing
+}
+
+$missingWindowsProcessEnvBeforeInit = @(Get-MissingWindowsProcessEnvironmentVariables)
+
 . "$PSScriptRoot\Initialize-WindowsProcessEnvironment.ps1"
 Initialize-WindowsProcessEnvironment
 
 function Write-CheckOk {
   param([string]$Name)
   Write-Host "OK $Name"
+}
+
+function Write-CheckWarn {
+  param([string]$Name)
+  Write-Host "WARN $Name"
+}
+
+function Assert-WindowsProcessEnvironmentHealth {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$PythonCommand,
+    [string[]]$MissingBeforeInit
+  )
+
+  if (-not (Test-WindowsPlatform)) {
+    return
+  }
+
+  $missingAfterInit = @(Get-MissingWindowsProcessEnvironmentVariables)
+  if ($missingAfterInit.Count -gt 0) {
+    throw ("Windows process environment is incomplete after initialization: " + ($missingAfterInit -join ", "))
+  }
+
+  Write-CheckOk "windows-process-environment"
+  if ($MissingBeforeInit.Count -gt 0) {
+    Write-CheckOk ("windows-process-environment-normalized:" + ($MissingBeforeInit -join ","))
+  }
+
+  $asyncioOutput = & $PythonCommand -c "import asyncio; print('asyncio ok')" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $hint = if ($MissingBeforeInit.Count -gt 0) {
+      "Process env was incomplete and has been normalized, but asyncio still fails. Re-check Windows Winsock/network provider health in a fresh elevated PowerShell."
+    }
+    else {
+      "Process env was complete before doctor started. This points to Windows Winsock/network provider health rather than repo code."
+    }
+    throw ("Python asyncio unavailable after Windows process environment normalization. $hint Output: " + (($asyncioOutput | Out-String).Trim()))
+  }
+  Write-CheckOk "python-asyncio"
+
+  $node = Get-Command node -ErrorAction SilentlyContinue
+  if ($node) {
+    $nodeOutput = & $node.Source -e "console.log('node ok')" 2>&1
+    if ($LASTEXITCODE -eq 0) {
+      Write-CheckOk "windows-node-csprng"
+    }
+    else {
+      Write-CheckWarn "windows-node-csprng-unavailable"
+      Write-Host ("HINT Node exists but cannot initialize crypto/CSPRNG. Run the same node probe in a fresh elevated PowerShell; if it also fails, repair Winsock/IP and reboot.")
+      Write-Host ("DETAIL " + (($nodeOutput | Out-String).Trim()))
+    }
+  }
+  else {
+    Write-CheckWarn "windows-node-not-found"
+  }
 }
 
 function Resolve-AttachmentRemediationActions {
@@ -122,6 +201,7 @@ if (-not $python) {
   throw "Required command not found: python or python3"
 }
 Write-CheckOk "python-command"
+Assert-WindowsProcessEnvironmentHealth -PythonCommand $python.Source -MissingBeforeInit $missingWindowsProcessEnvBeforeInit
 
 foreach ($pathCheck in @(
   @{ Path = "packages/contracts/src"; Check = "runtime-path-contracts" },

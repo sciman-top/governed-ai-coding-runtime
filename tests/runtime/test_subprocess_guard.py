@@ -26,6 +26,21 @@ class SubprocessGuardTests(unittest.TestCase):
         self.assertIn("guard-ok", completed.stdout)
         self.assertFalse(completed.timed_out)
 
+    @unittest.skipUnless(os.name == "nt", "Windows environment normalization")
+    def test_normalizes_programdata_for_windows_subprocesses(self) -> None:
+        import governed_ai_coding_runtime_contracts.subprocess_guard as guard
+
+        original_env = os.environ.copy()
+        try:
+            os.environ.clear()
+            os.environ["USERPROFILE"] = original_env.get("USERPROFILE", r"C:\Users\sciman")
+            normalized = guard._subprocess_environment()
+        finally:
+            os.environ.clear()
+            os.environ.update(original_env)
+
+        self.assertEqual(normalized.get("PROGRAMDATA"), r"C:\ProgramData")
+
 
 if __name__ == "__main__":
     unittest.main()

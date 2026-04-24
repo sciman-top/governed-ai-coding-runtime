@@ -1,5 +1,9 @@
 function Initialize-WindowsProcessEnvironment {
-  if (-not $IsWindows) {
+  $isWindowsPlatform = $true
+  if ($PSVersionTable.PSVersion.Major -ge 6) {
+    $isWindowsPlatform = $IsWindows
+  }
+  if (-not $isWindowsPlatform) {
     return
   }
 
@@ -40,5 +44,8 @@ function Initialize-WindowsProcessEnvironment {
     if ([string]::IsNullOrWhiteSpace($env:APPDATA)) {
       $env:APPDATA = Join-Path $profileRoot "AppData\Roaming"
     }
+  }
+  if ([string]::IsNullOrWhiteSpace($env:PROGRAMDATA) -and (Test-Path -LiteralPath "C:\ProgramData")) {
+    $env:PROGRAMDATA = "C:\ProgramData"
   }
 }

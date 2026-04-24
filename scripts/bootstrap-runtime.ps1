@@ -1,6 +1,9 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+. "$PSScriptRoot\Initialize-WindowsProcessEnvironment.ps1"
+Initialize-WindowsProcessEnvironment
+
 function Get-PythonCommand {
   $python = Get-Command python -ErrorAction SilentlyContinue
   if (-not $python) {

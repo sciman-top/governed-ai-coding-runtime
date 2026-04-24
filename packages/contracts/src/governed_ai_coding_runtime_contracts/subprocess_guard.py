@@ -189,6 +189,8 @@ def _subprocess_environment() -> dict[str, str]:
             env["LOCALAPPDATA"] = str(profile_path / "AppData" / "Local")
         if "APPDATA" not in env:
             env["APPDATA"] = str(profile_path / "AppData" / "Roaming")
+    if "PROGRAMDATA" not in env and Path(r"C:\ProgramData").exists():
+        env["PROGRAMDATA"] = r"C:\ProgramData"
     return env
 
 

@@ -1,6 +1,9 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+. "$PSScriptRoot\Initialize-WindowsProcessEnvironment.ps1"
+Initialize-WindowsProcessEnvironment
+
 function Write-CheckOk {
   param([string]$Name)
   Write-Host "OK $Name"

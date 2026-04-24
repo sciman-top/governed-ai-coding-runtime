@@ -33,6 +33,9 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+. "$PSScriptRoot\Initialize-WindowsProcessEnvironment.ps1"
+Initialize-WindowsProcessEnvironment
+
 $presetPath = Join-Path $PSScriptRoot "runtime-flow-preset.ps1"
 if (-not (Test-Path $presetPath)) {
   throw "Missing runtime-flow-preset.ps1 at $presetPath"

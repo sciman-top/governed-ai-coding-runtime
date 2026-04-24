@@ -43,6 +43,8 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
         )
 
         self.assertIn("OK python-command", completed.stdout)
+        self.assertIn("OK windows-process-environment", completed.stdout)
+        self.assertIn("OK python-asyncio", completed.stdout)
         self.assertIn("OK gate-command-build", completed.stdout)
         self.assertIn("OK gate-command-doctor", completed.stdout)
         self.assertIn("OK dependency-baseline-doc", completed.stdout)
@@ -73,7 +75,27 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
         )
 
         self.assertIn("OK codex-capability-ready", completed.stdout)
+        self.assertIn("OK windows-process-environment-normalized", completed.stdout)
+        self.assertIn("OK python-asyncio", completed.stdout)
         self.assertNotIn("WARN codex-capability-blocked", completed.stdout)
+
+    def test_runtime_entrypoints_initialize_windows_process_environment(self) -> None:
+        scripts = [
+            ROOT / "scripts" / "bootstrap-runtime.ps1",
+            ROOT / "scripts" / "build-runtime.ps1",
+            ROOT / "scripts" / "doctor-runtime.ps1",
+            ROOT / "scripts" / "runtime-check.ps1",
+            ROOT / "scripts" / "runtime-flow.ps1",
+            ROOT / "scripts" / "runtime-flow-classroomtoolkit.ps1",
+            ROOT / "scripts" / "runtime-flow-preset.ps1",
+            ROOT / "scripts" / "verify-repo.ps1",
+        ]
+
+        for script in scripts:
+            with self.subTest(script=script.name):
+                text = script.read_text(encoding="utf-8")
+                self.assertIn("Initialize-WindowsProcessEnvironment.ps1", text)
+                self.assertIn("Initialize-WindowsProcessEnvironment", text)
 
     def test_verify_repo_exposes_build_and_doctor_checks(self) -> None:
         script = ROOT / "scripts" / "verify-repo.ps1"
