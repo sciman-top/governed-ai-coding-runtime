@@ -63,6 +63,7 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
         env.pop("SystemRoot", None)
         env.pop("WINDIR", None)
         env.pop("ComSpec", None)
+        env.pop("ProgramFiles", None)
         completed = subprocess.run(
             [pwsh, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script)],
             check=True,
@@ -78,6 +79,33 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
         self.assertIn("OK windows-process-environment-normalized", completed.stdout)
         self.assertIn("OK python-asyncio", completed.stdout)
         self.assertNotIn("WARN codex-capability-blocked", completed.stdout)
+
+    @unittest.skipUnless(os.name == "nt", "Windows process environment normalization")
+    def test_initializer_restores_programfiles_and_tool_paths(self) -> None:
+        script = ROOT / "scripts" / "Initialize-WindowsProcessEnvironment.ps1"
+        pwsh = shutil.which("pwsh")
+        if not pwsh:
+            self.skipTest("pwsh is not available")
+
+        probe = (
+            f'. "{script}"; '
+            '$env:ProgramFiles=""; '
+            'Initialize-WindowsProcessEnvironment; '
+            'if ([string]::IsNullOrWhiteSpace($env:ProgramFiles)) { throw "missing ProgramFiles" }; '
+            'if ($env:PATH -notlike "*WindowsPowerShell*") { throw "missing powershell path" }; '
+            'Write-Host "OK initializer-programfiles-path"'
+        )
+        completed = subprocess.run(
+            [pwsh, "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", probe],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+        )
+
+        self.assertIn("OK initializer-programfiles-path", completed.stdout)
 
     def test_runtime_entrypoints_initialize_windows_process_environment(self) -> None:
         scripts = [

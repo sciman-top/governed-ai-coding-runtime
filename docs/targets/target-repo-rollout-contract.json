@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "contract_id": "target-repo-rollout-contract",
-  "sync_revision": "2026-04-25.1",
+  "sync_revision": "2026-04-25.2",
   "canonical_one_click_entrypoint": {
     "script": "scripts/runtime-flow-preset.ps1",
     "all_targets_apply_all_features_args": [

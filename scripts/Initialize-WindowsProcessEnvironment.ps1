@@ -1,4 +1,22 @@
 function Initialize-WindowsProcessEnvironment {
+  function Add-WindowsProcessPathEntry {
+    param([string]$PathEntry)
+
+    if ([string]::IsNullOrWhiteSpace($PathEntry)) {
+      return
+    }
+    if (-not (Test-Path -LiteralPath $PathEntry)) {
+      return
+    }
+
+    $currentPath = [Environment]::GetEnvironmentVariable("PATH", "Process")
+    $parts = @($currentPath -split [IO.Path]::PathSeparator | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    $alreadyPresent = @($parts | Where-Object { $_.TrimEnd("\") -ieq $PathEntry.TrimEnd("\") }).Count -gt 0
+    if (-not $alreadyPresent) {
+      [Environment]::SetEnvironmentVariable("PATH", ($PathEntry + [IO.Path]::PathSeparator + $currentPath), "Process")
+    }
+  }
+
   $isWindowsPlatform = $true
   if ($PSVersionTable.PSVersion.Major -ge 6) {
     $isWindowsPlatform = $IsWindows
@@ -47,5 +65,16 @@ function Initialize-WindowsProcessEnvironment {
   }
   if ([string]::IsNullOrWhiteSpace($env:PROGRAMDATA) -and (Test-Path -LiteralPath "C:\ProgramData")) {
     $env:PROGRAMDATA = "C:\ProgramData"
+  }
+  if ([string]::IsNullOrWhiteSpace($env:ProgramFiles) -and (Test-Path -LiteralPath "C:\Program Files")) {
+    $env:ProgramFiles = "C:\Program Files"
+  }
+
+  Add-WindowsProcessPathEntry (Join-Path $windowsRoot "System32")
+  Add-WindowsProcessPathEntry $windowsRoot
+  Add-WindowsProcessPathEntry (Join-Path $windowsRoot "System32\WindowsPowerShell\v1.0")
+  if (-not [string]::IsNullOrWhiteSpace($env:ProgramFiles)) {
+    Add-WindowsProcessPathEntry (Join-Path $env:ProgramFiles "Git\cmd")
+    Add-WindowsProcessPathEntry (Join-Path $env:ProgramFiles "GitHub CLI")
   }
 }

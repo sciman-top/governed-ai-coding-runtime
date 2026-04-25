@@ -191,6 +191,15 @@ def _subprocess_environment() -> dict[str, str]:
             env["APPDATA"] = str(profile_path / "AppData" / "Roaming")
     if "PROGRAMDATA" not in env and Path(r"C:\ProgramData").exists():
         env["PROGRAMDATA"] = r"C:\ProgramData"
+    if "ProgramFiles" not in env and Path(r"C:\Program Files").exists():
+        env["ProgramFiles"] = r"C:\Program Files"
+    _prepend_path_entry(env, str(Path(windows_root) / "System32"))
+    _prepend_path_entry(env, windows_root)
+    _prepend_path_entry(env, str(Path(windows_root) / "System32" / "WindowsPowerShell" / "v1.0"))
+    program_files = env.get("ProgramFiles")
+    if program_files:
+        _prepend_path_entry(env, str(Path(program_files) / "Git" / "cmd"))
+        _prepend_path_entry(env, str(Path(program_files) / "GitHub CLI"))
     return env
 
 
@@ -200,3 +209,13 @@ def _timeout_label(value: float | None) -> str:
     if value.is_integer():
         return f"{int(value)}s"
     return f"{value:.3f}s".rstrip("0").rstrip(".")
+
+
+def _prepend_path_entry(env: dict[str, str], path_entry: str) -> None:
+    if not path_entry or not Path(path_entry).exists():
+        return
+    current = env.get("PATH", "")
+    parts = [part for part in current.split(os.pathsep) if part]
+    if any(os.path.normcase(part) == os.path.normcase(path_entry) for part in parts):
+        return
+    env["PATH"] = os.pathsep.join([path_entry, *parts])

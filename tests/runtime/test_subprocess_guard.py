@@ -40,6 +40,8 @@ class SubprocessGuardTests(unittest.TestCase):
             os.environ.update(original_env)
 
         self.assertEqual(normalized.get("PROGRAMDATA"), r"C:\ProgramData")
+        self.assertEqual(normalized.get("ProgramFiles"), r"C:\Program Files")
+        self.assertIn(r"C:\Windows\System32", normalized.get("PATH", ""))
 
 
 if __name__ == "__main__":

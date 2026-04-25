@@ -18,7 +18,7 @@ function Get-MissingWindowsProcessEnvironmentVariables {
     return @()
   }
 
-  $required = @("ComSpec", "SystemRoot", "WINDIR", "APPDATA", "LOCALAPPDATA", "PROGRAMDATA")
+  $required = @("ComSpec", "SystemRoot", "WINDIR", "APPDATA", "LOCALAPPDATA", "PROGRAMDATA", "ProgramFiles")
   $missing = @()
   foreach ($name in $required) {
     if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name, "Process"))) {

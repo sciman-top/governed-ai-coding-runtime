@@ -13,7 +13,7 @@ In Codex, CI wrappers, or reduced PowerShell sessions, Python and Node can fail 
 There are two different failure layers:
 
 1. The Windows network provider or Winsock catalog is actually broken. In that case, the same probes fail in a fresh elevated PowerShell.
-2. The host is healthy, but the current agent process inherited an incomplete Windows process environment. The common missing variables are `ComSpec`, `SystemRoot`, `WINDIR`, `APPDATA`, `LOCALAPPDATA`, and `PROGRAMDATA`.
+2. The host is healthy, but the current agent process inherited an incomplete Windows process environment. The common missing variables are `ComSpec`, `SystemRoot`, `WINDIR`, `APPDATA`, `LOCALAPPDATA`, `PROGRAMDATA`, and `ProgramFiles`.
 
 Do not treat layer 2 as a repository logic bug or keep rerunning gates unchanged. Normalize the process environment first, then rerun the gate.
 
@@ -37,6 +37,9 @@ Python subprocess helpers on Windows must normalize the child environment before
 - `APPDATA`
 - `LOCALAPPDATA`
 - `PROGRAMDATA`
+- `ProgramFiles`
+
+The initializer also prepends existing Windows system paths and default Git/GitHub CLI install paths to the process `PATH` so wrappers do not misdiagnose `git` or `gh` as missing when the agent process started with a stripped environment.
 
 Target repo one-click governance baselines must carry a profile-level rule named `windows_process_environment_policy` so target repos do not regress when the baseline is re-applied.
 
@@ -51,6 +54,7 @@ Run these probes in the failing process and in a fresh elevated PowerShell:
 'APPDATA=' + $env:APPDATA
 'LOCALAPPDATA=' + $env:LOCALAPPDATA
 'PROGRAMDATA=' + $env:PROGRAMDATA
+'ProgramFiles=' + $env:ProgramFiles
 python -c "import asyncio; print('asyncio ok')"
 node -e "console.log('node ok')"
 ```
