@@ -4,6 +4,10 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260425 Pwsh-First Target Repo Policy](./20260425-pwsh-first-target-repo-policy.md)
+  - evidence companion for promoting PowerShell 7 / pwsh-first execution into target-repo governance baseline, CI/script cleanup, and all-target one-click sync
+- [20260425 One-Click Rollout Hook Enforcement](./20260425-one-click-rollout-hook-enforcement.md)
+  - evidence companion for repo-local pre-commit enforcement of the target-repo one-click rollout contract and Codex executable reference guard
 - [20260425 Target Repo Problem Trace Retention Hardening](./20260425-target-repo-problem-trace-retention-hardening.md)
   - evidence companion for richer target-repo problem traces, KPI problem signature aggregation, and auditable retention cleanup reporting
 - [20260425 Target Repo Rollout Contract Hardening](./20260425-target-repo-rollout-contract-hardening.md)

@@ -71,6 +71,10 @@ class FakePsycopgModule(types.SimpleNamespace):
         return self._connection
 
 
+def _raise_missing_psycopg(_name: str):
+    raise ModuleNotFoundError("psycopg")
+
+
 class PostgresPersistenceTests(unittest.TestCase):
     def setUp(self) -> None:
         self._original_psycopg = sys.modules.get("psycopg")
@@ -111,8 +115,13 @@ class PostgresPersistenceTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             persistence_module.PostgresMetadataStore("")
 
-        with self.assertRaises(RuntimeError):
-            persistence_module.PostgresMetadataStore("postgresql://example/db")
+        original_import_module = persistence_module.importlib.import_module
+        try:
+            persistence_module.importlib.import_module = _raise_missing_psycopg
+            with self.assertRaises(RuntimeError):
+                persistence_module.PostgresMetadataStore("postgresql://example/db")
+        finally:
+            persistence_module.importlib.import_module = original_import_module
 
 
 if __name__ == "__main__":

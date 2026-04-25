@@ -108,7 +108,7 @@ python scripts/run-codex-adapter-trial.py `
   --probe-live
 ```
 
-使用自定义可执行路径：
+使用自定义可执行命令或 shim：
 
 ```powershell
 python scripts/run-codex-adapter-trial.py `
@@ -116,8 +116,10 @@ python scripts/run-codex-adapter-trial.py `
   --task-id "task-codex-trial" `
   --binding-id "binding-python-service" `
   --probe-live `
-  --codex-bin "C:\tools\codex.exe"
+  --codex-bin "codex.cmd"
 ```
+
+在 Windows 上，不要硬编码精确的 `.exe` 可执行文件名，除非已经确认目标机器确实存在这个文件。优先使用 `codex`、`codex.cmd`，或通过 `--codex-bin` / `GOVERNED_RUNTIME_CODEX_BIN` 配置。
 
 预期 JSON 字段：
 - `mode`

@@ -18,6 +18,33 @@ DEFAULT_TIMEOUT_EXEMPT_ALLOWLIST = (
     "*pip check*",
 )
 _TIMEOUT_EXPIRED_EXIT_CODE = 124
+_SAFE_CODEX_ENV_POLICY_KEYS = (
+    "COMSPEC",
+    "ComSpec",
+    "WINDIR",
+    "windir",
+    "SYSTEMROOT",
+    "SystemRoot",
+    "APPDATA",
+    "LOCALAPPDATA",
+    "PROGRAMDATA",
+    "ProgramFiles",
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "ALL_PROXY",
+    "NO_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "all_proxy",
+    "no_proxy",
+)
+_WINDOWS_PERSISTED_ENV_REGISTRY_PATHS = (
+    ("user", "Environment"),
+    (
+        "machine",
+        r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment",
+    ),
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -164,43 +191,172 @@ def _subprocess_environment() -> dict[str, str]:
     if os.name != "nt":
         return env
 
-    windows_root = env.get("SystemRoot") or env.get("WINDIR") or r"C:\Windows"
-    if windows_root and "SystemRoot" not in env:
-        env["SystemRoot"] = windows_root
-    if windows_root and "WINDIR" not in env:
-        env["WINDIR"] = windows_root
-    if "ComSpec" not in env:
+    _merge_codex_shell_environment_policy(env)
+    _merge_persisted_windows_environment(env)
+
+    windows_root = _resolved_windows_root(env)
+    _ensure_canonical_env_key(env, "SystemRoot", windows_root)
+    _ensure_canonical_env_key(env, "WINDIR", windows_root)
+    comspec = _env_get(env, "ComSpec")
+    if comspec is not None:
+        comspec = _expand_windows_env_value(comspec, env)
+        _ensure_canonical_env_key(env, "ComSpec", comspec)
+    else:
         cmd_path = str(Path(windows_root) / "System32" / "cmd.exe")
         if Path(cmd_path).exists():
             env["ComSpec"] = cmd_path
-    if "SystemDrive" not in env:
+    if _env_get(env, "SystemDrive") is None:
         env["SystemDrive"] = Path(windows_root).drive or "C:"
-    user_profile = env.get("USERPROFILE")
+    user_profile = _env_get(env, "USERPROFILE")
     if user_profile:
         profile_path = Path(user_profile)
-        if "HOMEDRIVE" not in env:
-            env["HOMEDRIVE"] = profile_path.drive or env["SystemDrive"]
-        if "HOMEPATH" not in env:
+        _set_env_if_missing(env, "HOMEDRIVE", profile_path.drive or _env_get(env, "SystemDrive") or "C:")
+        if _env_get(env, "HOMEPATH") is None:
             try:
                 env["HOMEPATH"] = "\\" + str(profile_path.relative_to(profile_path.anchor)).rstrip("\\/")
             except ValueError:
                 env["HOMEPATH"] = str(profile_path)
-        if "LOCALAPPDATA" not in env:
-            env["LOCALAPPDATA"] = str(profile_path / "AppData" / "Local")
-        if "APPDATA" not in env:
-            env["APPDATA"] = str(profile_path / "AppData" / "Roaming")
-    if "PROGRAMDATA" not in env and Path(r"C:\ProgramData").exists():
+        _set_env_if_missing(env, "LOCALAPPDATA", str(profile_path / "AppData" / "Local"))
+        _set_env_if_missing(env, "APPDATA", str(profile_path / "AppData" / "Roaming"))
+    if _env_get(env, "PROGRAMDATA") is None and Path(r"C:\ProgramData").exists():
         env["PROGRAMDATA"] = r"C:\ProgramData"
-    if "ProgramFiles" not in env and Path(r"C:\Program Files").exists():
+    if _env_get(env, "ProgramFiles") is None and Path(r"C:\Program Files").exists():
         env["ProgramFiles"] = r"C:\Program Files"
     _prepend_path_entry(env, str(Path(windows_root) / "System32"))
     _prepend_path_entry(env, windows_root)
-    _prepend_path_entry(env, str(Path(windows_root) / "System32" / "WindowsPowerShell" / "v1.0"))
-    program_files = env.get("ProgramFiles")
+    program_files = _env_get(env, "ProgramFiles")
     if program_files:
+        _prepend_path_entry(env, str(Path(program_files) / "PowerShell" / "7"))
         _prepend_path_entry(env, str(Path(program_files) / "Git" / "cmd"))
         _prepend_path_entry(env, str(Path(program_files) / "GitHub CLI"))
+    _prepend_path_entry(env, str(Path(windows_root) / "System32" / "WindowsPowerShell" / "v1.0"))
     return env
+
+
+def _merge_codex_shell_environment_policy(env: dict[str, str]) -> None:
+    for key, value in _read_codex_shell_environment_policy_set(env).items():
+        _set_env_if_missing(env, key, value)
+
+
+def _read_codex_shell_environment_policy_set(env: dict[str, str]) -> dict[str, str]:
+    try:
+        import tomllib
+    except ModuleNotFoundError:
+        return {}
+
+    for config_path in _codex_config_candidates(env):
+        if not config_path.exists():
+            continue
+        try:
+            data = tomllib.loads(config_path.read_text(encoding="utf-8"))
+        except (OSError, tomllib.TOMLDecodeError):
+            continue
+        shell_policy = data.get("shell_environment_policy")
+        if not isinstance(shell_policy, dict):
+            continue
+        policy_set = shell_policy.get("set")
+        if not isinstance(policy_set, dict):
+            continue
+        safe_values: dict[str, str] = {}
+        for key in _SAFE_CODEX_ENV_POLICY_KEYS:
+            value = policy_set.get(key)
+            if isinstance(value, str) and value.strip():
+                safe_values[key] = value
+        return safe_values
+    return {}
+
+
+def _codex_config_candidates(env: dict[str, str]) -> list[Path]:
+    candidates: list[Path] = []
+    codex_home = _env_get(env, "CODEX_HOME")
+    if codex_home:
+        candidates.append(Path(codex_home) / "config.toml")
+    user_profile = _env_get(env, "USERPROFILE") or _env_get(env, "HOME")
+    if user_profile:
+        candidates.append(Path(user_profile) / ".codex" / "config.toml")
+    return candidates
+
+
+def _merge_persisted_windows_environment(env: dict[str, str]) -> None:
+    for key, value in _read_persisted_windows_environment().items():
+        _set_env_if_missing(env, key, _expand_windows_env_value(value, env))
+
+
+def _read_persisted_windows_environment() -> dict[str, str]:
+    try:
+        import winreg
+    except ImportError:
+        return {}
+
+    roots = {
+        "user": winreg.HKEY_CURRENT_USER,
+        "machine": winreg.HKEY_LOCAL_MACHINE,
+    }
+    values: dict[str, str] = {}
+    for scope, subkey in _WINDOWS_PERSISTED_ENV_REGISTRY_PATHS:
+        root = roots[scope]
+        try:
+            with winreg.OpenKey(root, subkey) as key_handle:
+                for name in _SAFE_CODEX_ENV_POLICY_KEYS:
+                    if name in values:
+                        continue
+                    try:
+                        raw_value, _value_type = winreg.QueryValueEx(key_handle, name)
+                    except OSError:
+                        continue
+                    if isinstance(raw_value, str) and raw_value.strip():
+                        values[name] = raw_value
+        except OSError:
+            continue
+    return values
+
+
+def _expand_windows_env_value(value: str, env: dict[str, str]) -> str:
+    expanded = value
+    defaults = {
+        "SystemRoot": _env_get(env, "SystemRoot") or _env_get(env, "WINDIR") or r"C:\Windows",
+        "WINDIR": _env_get(env, "WINDIR") or _env_get(env, "SystemRoot") or r"C:\Windows",
+        "USERPROFILE": _env_get(env, "USERPROFILE") or "",
+        "PROGRAMDATA": _env_get(env, "PROGRAMDATA") or r"C:\ProgramData",
+        "ProgramFiles": _env_get(env, "ProgramFiles") or r"C:\Program Files",
+    }
+    for key, replacement in defaults.items():
+        if replacement:
+            expanded = expanded.replace(f"%{key}%", replacement)
+            expanded = expanded.replace(f"%{key.upper()}%", replacement)
+    return expanded
+
+
+def _resolved_windows_root(env: dict[str, str]) -> str:
+    for key in ("SystemRoot", "WINDIR"):
+        candidate = _env_get(env, key)
+        if candidate and "%" not in candidate:
+            return candidate
+    return r"C:\Windows"
+
+
+def _env_get(env: dict[str, str], key: str) -> str | None:
+    value = env.get(key)
+    if isinstance(value, str) and value:
+        return value
+    lowered = key.lower()
+    for existing_key, existing_value in env.items():
+        if existing_key.lower() == lowered and isinstance(existing_value, str) and existing_value:
+            return existing_value
+    return None
+
+
+def _set_env_if_missing(env: dict[str, str], key: str, value: str | None) -> None:
+    if not value or _env_get(env, key) is not None:
+        return
+    env[key] = value
+
+
+def _ensure_canonical_env_key(env: dict[str, str], key: str, value: str | None) -> None:
+    existing = env.get(key)
+    if not value or (existing and "%" not in existing):
+        return
+    env[key] = value
 
 
 def _timeout_label(value: float | None) -> str:

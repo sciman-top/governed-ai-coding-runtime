@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "contract_id": "target-repo-rollout-contract",
-  "sync_revision": "2026-04-25.2",
+  "sync_revision": "2026-04-25.4",
   "canonical_one_click_entrypoint": {
     "script": "scripts/runtime-flow-preset.ps1",
     "all_targets_apply_all_features_args": [
@@ -71,7 +71,7 @@
     {
       "capability_id": "windows-process-environment-policy",
       "distribution_scope": "profile_baseline",
-      "reason": "Windows 子进程环境策略影响目标仓脚本执行可靠性，应随目标仓 profile 统一同步。",
+      "reason": "Windows 子进程环境和 Codex/代理继承策略影响目标仓脚本与 Codex/gh 网络执行可靠性，应随目标仓 profile 统一同步。",
       "baseline_fields": [
         "windows_process_environment_policy"
       ]

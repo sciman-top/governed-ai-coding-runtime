@@ -5,6 +5,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
+import importlib
 import json
 from pathlib import Path
 import sqlite3
@@ -90,6 +91,85 @@ class SqliteMetadataStore:
     @contextmanager
     def _connection(self):
         conn = sqlite3.connect(self._db_path)
+        try:
+            yield conn
+            conn.commit()
+        finally:
+            conn.close()
+
+
+class PostgresMetadataStore:
+    """Optional Postgres-backed metadata store with the SqliteMetadataStore interface."""
+
+    def __init__(self, dsn: str) -> None:
+        self._dsn = _required_string(dsn, "dsn")
+        try:
+            self._psycopg = importlib.import_module("psycopg")
+        except ImportError as exc:
+            msg = "psycopg is required for PostgresMetadataStore"
+            raise RuntimeError(msg) from exc
+
+    def upsert(self, *, namespace: str, key: str, payload: dict) -> MetadataRecord:
+        namespace_value = _required_string(namespace, "namespace")
+        key_value = _required_string(key, "key")
+        updated_at = datetime.now(UTC).isoformat()
+        with self._connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO runtime_metadata(namespace, key, payload, updated_at)
+                VALUES (%s, %s, %s::jsonb, %s::timestamptz)
+                ON CONFLICT(namespace, key) DO UPDATE SET
+                    payload = EXCLUDED.payload,
+                    updated_at = EXCLUDED.updated_at
+                """,
+                (namespace_value, key_value, json.dumps(payload, sort_keys=True), updated_at),
+            )
+        return MetadataRecord(namespace=namespace_value, key=key_value, payload=dict(payload), updated_at=updated_at)
+
+    def get(self, *, namespace: str, key: str) -> MetadataRecord | None:
+        namespace_value = _required_string(namespace, "namespace")
+        key_value = _required_string(key, "key")
+        with self._connection() as conn:
+            row = conn.execute(
+                """
+                SELECT namespace, key, payload::text, updated_at::text
+                FROM runtime_metadata
+                WHERE namespace = %s AND key = %s
+                """,
+                (namespace_value, key_value),
+            ).fetchone()
+        if row is None:
+            return None
+        return MetadataRecord(
+            namespace=row[0],
+            key=row[1],
+            payload=json.loads(row[2]),
+            updated_at=row[3],
+        )
+
+    def list_namespace(self, *, namespace: str) -> list[MetadataRecord]:
+        namespace_value = _required_string(namespace, "namespace")
+        with self._connection() as conn:
+            rows = conn.execute(
+                """
+                SELECT namespace, key, payload::text, updated_at::text
+                FROM runtime_metadata
+                WHERE namespace = %s
+                ORDER BY key
+                """,
+                (namespace_value,),
+            ).fetchall()
+        return [
+            MetadataRecord(namespace=row[0], key=row[1], payload=json.loads(row[2]), updated_at=row[3]) for row in rows
+        ]
+
+    @contextmanager
+    def _connection(self):
+        conn = self._psycopg.connect(self._dsn)
+        try:
+            setattr(conn, "last_dsn", self._dsn)
+        except (AttributeError, TypeError):
+            pass
         try:
             yield conn
             conn.commit()

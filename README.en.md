@@ -80,6 +80,10 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap-runtime.ps1
 ```
 
 ```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/install-repo-hooks.ps1
+```
+
+```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All
 ```
 

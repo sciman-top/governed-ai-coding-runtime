@@ -193,6 +193,29 @@ function Assert-PathExists {
   Write-CheckOk $CheckName
 }
 
+function Assert-RepoHookEnforcement {
+  Assert-PathExists -Path ".githooks/pre-commit" -CheckName "repo-hook-pre-commit"
+  Assert-PathExists -Path "scripts/hooks/pre-commit.ps1" -CheckName "repo-hook-script"
+  Assert-PathExists -Path "scripts/install-repo-hooks.ps1" -CheckName "repo-hook-installer"
+
+  $git = Get-Command git -ErrorAction SilentlyContinue
+  if (-not $git) {
+    Write-CheckWarn "repo-hooks-path-git-unavailable"
+    return
+  }
+  if (-not (Test-Path -LiteralPath ".git")) {
+    Write-CheckWarn "repo-hooks-path-no-git-metadata"
+    return
+  }
+
+  $configuredHooksPath = (& $git.Source -C (Get-Location).Path config --get core.hooksPath 2>$null) -join ""
+  if ($LASTEXITCODE -ne 0 -or $configuredHooksPath -ne ".githooks") {
+    throw "Git core.hooksPath must be .githooks for repo-local one-click rollout enforcement. Run: pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/install-repo-hooks.ps1"
+  }
+
+  Write-CheckOk "repo-hooks-path"
+}
+
 $python = Get-Command python -ErrorAction SilentlyContinue
 if (-not $python) {
   $python = Get-Command python3 -ErrorAction SilentlyContinue
@@ -235,6 +258,7 @@ foreach ($gateCommand in $gateCommands) {
 }
 
 Assert-PathExists -Path "scripts/run-governed-task.py" -CheckName "gate-command-operator"
+Assert-RepoHookEnforcement
 
 $statusJson = & $python.Source "scripts/run-governed-task.py" status --json
 if ($LASTEXITCODE -ne 0) {

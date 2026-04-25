@@ -48,6 +48,10 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
         self.assertIn("OK gate-command-build", completed.stdout)
         self.assertIn("OK gate-command-doctor", completed.stdout)
         self.assertIn("OK dependency-baseline-doc", completed.stdout)
+        self.assertIn("OK repo-hook-pre-commit", completed.stdout)
+        self.assertIn("OK repo-hook-script", completed.stdout)
+        self.assertIn("OK repo-hook-installer", completed.stdout)
+        self.assertIn("OK repo-hooks-path", completed.stdout)
 
     @unittest.skipUnless(os.name == "nt", "Windows process environment normalization")
     def test_doctor_runtime_initializes_windows_process_environment(self) -> None:
@@ -92,6 +96,7 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             '$env:ProgramFiles=""; '
             'Initialize-WindowsProcessEnvironment; '
             'if ([string]::IsNullOrWhiteSpace($env:ProgramFiles)) { throw "missing ProgramFiles" }; '
+            'if ($env:PATH -notlike "*PowerShell\\7*") { throw "missing powershell7 path" }; '
             'if ($env:PATH -notlike "*WindowsPowerShell*") { throw "missing powershell path" }; '
             'Write-Host "OK initializer-programfiles-path"'
         )

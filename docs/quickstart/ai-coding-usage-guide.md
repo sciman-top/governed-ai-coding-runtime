@@ -11,6 +11,7 @@ Use your host tool normally, and run this runtime for readiness, verification, a
 1. Bootstrap and health checks:
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap-runtime.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/install-repo-hooks.ps1
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All
 ```

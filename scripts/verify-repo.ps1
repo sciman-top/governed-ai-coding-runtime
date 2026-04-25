@@ -547,6 +547,7 @@ function Invoke-ContractChecks {
   Invoke-DependencyBaselineChecks
   Invoke-TargetRepoRolloutContractChecks
   Invoke-TargetRepoGovernanceConsistencyChecks
+  Invoke-TargetRepoPowerShellPolicyChecks
 }
 
 function Invoke-DependencyBaselineChecks {
@@ -587,6 +588,20 @@ function Invoke-TargetRepoRolloutContractChecks {
   Write-CheckOk "target-repo-rollout-contract"
 }
 
+function Invoke-TargetRepoPowerShellPolicyChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-target-repo-powershell-policy.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Target repo PowerShell policy checks failed"
+    }
+    throw "Target repo PowerShell policy checks failed`n$detail"
+  }
+
+  Write-CheckOk "target-repo-powershell-policy"
+}
+
 function Invoke-BuildChecks {
   & pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
   if ($LASTEXITCODE -ne 0) {
@@ -622,9 +637,9 @@ function Invoke-RuntimeChecks {
 
   Write-CheckOk "runtime-unittest"
 
-  & $python.Source -m unittest tests.service.test_session_api tests.service.test_operator_api
+  & $python.Source -m unittest discover -s tests/service -p "test_*.py"
   if ($LASTEXITCODE -ne 0) {
-    throw "Service API parity tests failed"
+    throw "Service tests failed"
   }
 
   Write-CheckOk "runtime-service-parity"

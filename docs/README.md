@@ -105,6 +105,12 @@ Current operator-facing bilingual set includes:
 pwsh -NoProfile -ExecutionPolicy Bypass -File ../scripts/verify-repo.ps1 -Check All
 ```
 
+From the repository root, install the repo-local hooks before running full verification:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/install-repo-hooks.ps1
+```
+
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
 ```

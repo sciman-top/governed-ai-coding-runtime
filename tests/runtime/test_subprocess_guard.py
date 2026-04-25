@@ -1,5 +1,6 @@
 import os
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -42,6 +43,40 @@ class SubprocessGuardTests(unittest.TestCase):
         self.assertEqual(normalized.get("PROGRAMDATA"), r"C:\ProgramData")
         self.assertEqual(normalized.get("ProgramFiles"), r"C:\Program Files")
         self.assertIn(r"C:\Windows\System32", normalized.get("PATH", ""))
+
+    @unittest.skipUnless(os.name == "nt", "Windows Codex environment policy")
+    def test_imports_safe_codex_shell_policy_proxy_vars(self) -> None:
+        import governed_ai_coding_runtime_contracts.subprocess_guard as guard
+
+        original_env = os.environ.copy()
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            codex_home = Path(tmp_dir)
+            (codex_home / "config.toml").write_text(
+                "\n".join(
+                    [
+                        "[shell_environment_policy.set]",
+                        'HTTP_PROXY = "http://127.0.0.1:10808"',
+                        'HTTPS_PROXY = "http://127.0.0.1:10808"',
+                        'NO_PROXY = "localhost,127.0.0.1,::1"',
+                        'ANTHROPIC_AUTH_TOKEN = "must-not-propagate"',
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            try:
+                os.environ.clear()
+                os.environ["CODEX_HOME"] = str(codex_home)
+                os.environ["USERPROFILE"] = original_env.get("USERPROFILE", r"C:\Users\sciman")
+                normalized = guard._subprocess_environment()
+            finally:
+                os.environ.clear()
+                os.environ.update(original_env)
+
+        self.assertEqual(normalized.get("HTTP_PROXY"), "http://127.0.0.1:10808")
+        self.assertEqual(normalized.get("HTTPS_PROXY"), "http://127.0.0.1:10808")
+        self.assertEqual(normalized.get("NO_PROXY"), "localhost,127.0.0.1,::1")
+        self.assertNotIn("ANTHROPIC_AUTH_TOKEN", normalized)
 
 
 if __name__ == "__main__":

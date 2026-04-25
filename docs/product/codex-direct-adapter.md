@@ -108,7 +108,7 @@ python scripts/run-codex-adapter-trial.py `
   --probe-live
 ```
 
-Use a custom executable path:
+Use a custom executable or shim:
 
 ```powershell
 python scripts/run-codex-adapter-trial.py `
@@ -116,8 +116,10 @@ python scripts/run-codex-adapter-trial.py `
   --task-id "task-codex-trial" `
   --binding-id "binding-python-service" `
   --probe-live `
-  --codex-bin "C:\tools\codex.exe"
+  --codex-bin "codex.cmd"
 ```
+
+On Windows, do not hard-code the exact `.exe` executable name unless that file has been verified on the target machine. Prefer `codex`, `codex.cmd`, or a configurable `--codex-bin` / `GOVERNED_RUNTIME_CODEX_BIN` value.
 
 Expected JSON fields:
 - `mode`
