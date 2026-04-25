@@ -26,8 +26,10 @@ class TargetRepoSpeedKpiRecord:
     medium_risk_loop_success_ratio: float | None
     problem_run_rate: float
     problem_recovery_retries: int
+    problem_signature_counts: dict[str, int]
     latest_problem_signature: str | None
     latest_problem_run_ref: str | None
+    latest_problem_evidence_ref: str | None
     window_start_utc: str | None
     window_end_utc: str | None
     latest_evidence_ref: str | None
@@ -101,8 +103,10 @@ def _build_record(target: str, entries: list[dict], *, window_kind: WindowKind, 
             medium_risk_loop_success_ratio=None,
             problem_run_rate=0.0,
             problem_recovery_retries=0,
+            problem_signature_counts={},
             latest_problem_signature=None,
             latest_problem_run_ref=None,
+            latest_problem_evidence_ref=None,
             window_start_utc=None,
             window_end_utc=None,
             latest_evidence_ref=None,
@@ -120,6 +124,8 @@ def _build_record(target: str, entries: list[dict], *, window_kind: WindowKind, 
     previous_problem = False
     latest_problem_signature = None
     latest_problem_run_ref = None
+    latest_problem_evidence_ref = None
+    problem_signature_counts: dict[str, int] = {}
 
     for entry in selected_daily:
         if _is_fallback_run(entry["payload"]):
@@ -139,8 +145,10 @@ def _build_record(target: str, entries: list[dict], *, window_kind: WindowKind, 
         has_problem = _has_problem(entry["payload"])
         if has_problem:
             problem_runs += 1
-            latest_problem_signature = _problem_signature(entry["payload"])
+            latest_problem_signature = _problem_signature(entry["payload"]) or "unknown"
+            problem_signature_counts[latest_problem_signature] = problem_signature_counts.get(latest_problem_signature, 0) + 1
             latest_problem_run_ref = entry["path"].name
+            latest_problem_evidence_ref = _latest_evidence_ref(entry["payload"])
         if previous_problem and not has_problem:
             problem_recovery_retries += 1
         previous_problem = has_problem
@@ -163,8 +171,10 @@ def _build_record(target: str, entries: list[dict], *, window_kind: WindowKind, 
         medium_risk_loop_success_ratio=(round(medium_success / medium_total, 4) if medium_total > 0 else None),
         problem_run_rate=round(problem_runs / len(selected_daily), 4),
         problem_recovery_retries=problem_recovery_retries,
+        problem_signature_counts=dict(sorted(problem_signature_counts.items())),
         latest_problem_signature=latest_problem_signature,
         latest_problem_run_ref=latest_problem_run_ref,
+        latest_problem_evidence_ref=latest_problem_evidence_ref,
         window_start_utc=window_start,
         window_end_utc=window_end,
         latest_evidence_ref=_latest_evidence_ref(latest_daily["payload"]),

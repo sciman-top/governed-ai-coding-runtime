@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260425 Target Repo Problem Trace Retention Hardening](./20260425-target-repo-problem-trace-retention-hardening.md)
+  - evidence companion for richer target-repo problem traces, KPI problem signature aggregation, and auditable retention cleanup reporting
 - [20260425 Target Repo Rollout Contract Hardening](./20260425-target-repo-rollout-contract-hardening.md)
   - evidence companion for making all-target one-click feature rollout and Chinese milestone auto-commit policy a fail-closed Contract gate
 - [20260424 Runtime Subprocess, Doctor, And Worktree Hygiene](./20260424-runtime-subprocess-doctor-and-worktree-hygiene.md)

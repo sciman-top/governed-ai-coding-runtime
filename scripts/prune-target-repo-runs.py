@@ -15,6 +15,7 @@ _DERIVED_FILE_PATTERN = re.compile(r"^(summary-|kpi-).+\.json$")
 @dataclass(frozen=True, slots=True)
 class RunEntry:
     target: str
+    flow: str
     timestamp: datetime
     path: Path
 
@@ -61,6 +62,7 @@ def prune_target_repo_runs(
             "keep_days": keep_days,
             "keep_latest_per_target": keep_latest_per_target,
             "dry_run": dry_run,
+            "retention_policy": _retention_policy(keep_days=keep_days, keep_latest_per_target=keep_latest_per_target),
             "summary": {
                 "total_run_files": 0,
                 "kept": 0,
@@ -70,6 +72,7 @@ def prune_target_repo_runs(
                 "derived_files_preserved": 0,
             },
             "targets": [],
+            "flows": [],
             "deleted_files": [],
             "failed_deletions": [],
         }
@@ -79,6 +82,7 @@ def prune_target_repo_runs(
     keep_paths = _build_keep_set(entries=entries, now=now, keep_days=keep_days, keep_latest_per_target=keep_latest_per_target)
 
     by_target: dict[str, dict[str, int]] = {}
+    by_flow: dict[str, dict[str, int]] = {}
     kept_entries: list[RunEntry] = []
     delete_entries: list[RunEntry] = []
     for entry in entries:
@@ -91,13 +95,25 @@ def prune_target_repo_runs(
                 "deleted": 0,
             },
         )
+        flow_stats = by_flow.setdefault(
+            entry.flow,
+            {
+                "total": 0,
+                "kept": 0,
+                "delete_candidates": 0,
+                "deleted": 0,
+            },
+        )
         target_stats["total"] += 1
+        flow_stats["total"] += 1
         if entry.path in keep_paths:
             kept_entries.append(entry)
             target_stats["kept"] += 1
+            flow_stats["kept"] += 1
         else:
             delete_entries.append(entry)
             target_stats["delete_candidates"] += 1
+            flow_stats["delete_candidates"] += 1
 
     deleted_files: list[str] = []
     failed_deletions: list[dict[str, str]] = []
@@ -107,6 +123,7 @@ def prune_target_repo_runs(
                 entry.path.unlink()
                 deleted_files.append(entry.path.name)
                 by_target[entry.target]["deleted"] += 1
+                by_flow[entry.flow]["deleted"] += 1
             except OSError as exc:
                 failed_deletions.append({"file": entry.path.name, "error": str(exc)})
 
@@ -120,6 +137,7 @@ def prune_target_repo_runs(
         "keep_days": keep_days,
         "keep_latest_per_target": keep_latest_per_target,
         "dry_run": dry_run,
+        "retention_policy": _retention_policy(keep_days=keep_days, keep_latest_per_target=keep_latest_per_target),
         "summary": {
             "total_run_files": len(entries),
             "kept": len(kept_entries),
@@ -129,6 +147,7 @@ def prune_target_repo_runs(
             "derived_files_preserved": len(derived_files),
         },
         "targets": _target_rows(by_target),
+        "flows": _flow_rows(by_flow),
         "deleted_files": sorted(deleted_files),
         "failed_deletions": failed_deletions,
     }
@@ -144,6 +163,7 @@ def _collect_entries(root: Path) -> tuple[list[RunEntry], list[Path]]:
             entries.append(
                 RunEntry(
                     target=match.group("target"),
+                    flow=match.group("flow"),
                     timestamp=_parse_stamp(match.group("stamp")),
                     path=path,
                 )
@@ -193,6 +213,32 @@ def _target_rows(by_target: dict[str, dict[str, int]]) -> list[dict]:
             }
         )
     return rows
+
+
+def _flow_rows(by_flow: dict[str, dict[str, int]]) -> list[dict]:
+    rows: list[dict] = []
+    for flow in sorted(by_flow):
+        stats = by_flow[flow]
+        rows.append(
+            {
+                "flow": flow,
+                "total": stats["total"],
+                "kept": stats["kept"],
+                "delete_candidates": stats["delete_candidates"],
+                "deleted": stats["deleted"],
+            }
+        )
+    return rows
+
+
+def _retention_policy(*, keep_days: int, keep_latest_per_target: int) -> dict:
+    return {
+        "strategy": "keep_days_or_latest_per_target",
+        "keep_days": keep_days,
+        "keep_latest_per_target": keep_latest_per_target,
+        "preserve_derived_files": True,
+        "derived_file_patterns": ["summary-*.json", "kpi-*.json"],
+    }
 
 
 def _parse_stamp(stamp: str) -> datetime:

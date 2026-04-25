@@ -198,6 +198,27 @@ function Add-Ref {
   }
 }
 
+function Get-StepOutputSummary {
+  param([object]$Step)
+  if ($null -eq $Step) {
+    return ""
+  }
+  if (-not ($Step.PSObject.Properties.Name -contains "output")) {
+    return ""
+  }
+  $rawOutput = [string]$Step.output
+  if ([string]::IsNullOrWhiteSpace($rawOutput)) {
+    return ""
+  }
+  $firstLine = @($rawOutput -split "(`r`n|`n|`r)") |
+    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+    Select-Object -First 1
+  if ([string]::IsNullOrWhiteSpace($firstLine)) {
+    return ""
+  }
+  return $firstLine.Trim()
+}
+
 $python = Get-PythonCommand
 $steps = New-Object System.Collections.Generic.List[object]
 $hasFailure = $false
@@ -831,6 +852,21 @@ if ($hasFailure) {
   }
 }
 
+if ($hasFailure -and [string]::IsNullOrWhiteSpace($failureReason)) {
+  foreach ($step in $steps) {
+    if ($step -and $step.exit_code -ne 0) {
+      $candidateReason = Get-StepOutputSummary -Step $step
+      if (-not [string]::IsNullOrWhiteSpace($candidateReason)) {
+        $failureReason = $candidateReason
+        break
+      }
+    }
+  }
+  if ([string]::IsNullOrWhiteSpace($failureReason)) {
+    $failureReason = $failureStage + "_failed"
+  }
+}
+
 $failureSignature = "none"
 if ($failureStage -ne "none") {
   $failureSignature = $failureStage
@@ -848,13 +884,57 @@ if ($failureStage -ne "none") {
   }
 }
 
+$problemKind = "none"
+if ($failureStage -ne "none") {
+  switch ($failureStage) {
+    "dependency_baseline" { $problemKind = "target_repo_contract"; break }
+    "status" { $problemKind = "runtime_status"; break }
+    "doctor" { $problemKind = "runtime_doctor"; break }
+    "request_gate" { $problemKind = "gate"; break }
+    "verify_attachment" { $problemKind = "gate"; break }
+    "write_preflight" { $problemKind = "write_policy"; break }
+    "write_governance" { $problemKind = "write_policy"; break }
+    "write_execute" { $problemKind = "write_execution"; break }
+    "source_string_contract_guard" { $problemKind = "runtime_contract"; break }
+    default { $problemKind = "unknown" }
+  }
+}
+
+$problemEvidenceRefs = New-Object System.Collections.Generic.List[string]
+foreach ($ref in $runtimeRefs) {
+  Add-Ref -Refs $problemEvidenceRefs -Value ([string]$ref)
+}
+if ($verifyPayload -and $verifyPayload.evidence_link) {
+  Add-Ref -Refs $problemEvidenceRefs -Value ([string]$verifyPayload.evidence_link)
+}
+if ($requestGateCommandPayload) {
+  Add-Ref -Refs $problemEvidenceRefs -Value (Get-OptionalField -Payload $requestGateCommandPayload -FieldName "evidence_link")
+}
+if ($writeExecutePayload) {
+  Add-Ref -Refs $problemEvidenceRefs -Value (Get-OptionalField -Payload $writeExecutePayload -FieldName "handoff_ref")
+  Add-Ref -Refs $problemEvidenceRefs -Value (Get-OptionalField -Payload $writeExecutePayload -FieldName "replay_ref")
+}
+
 $problemTrace = @{
   has_problem = $hasFailure
+  problem_kind = $problemKind
   failure_stage = $failureStage
   failure_signature = $failureSignature
   failure_reason = $(if (-not [string]::IsNullOrWhiteSpace($failureReason)) { $failureReason } else { $null })
   failed_steps = @($failedStepLabels)
   gate_failure_ids = @($gateFailureIds)
+  evidence_refs = @($problemEvidenceRefs)
+  target_context = @{
+    attachment_root = $resolvedAttachmentRoot
+    repo_binding_id = $(if (-not [string]::IsNullOrWhiteSpace($resolvedBindingId)) { $resolvedBindingId } else { $null })
+    entrypoint_id = $EntrypointId
+    mode = $Mode
+    task_id = $TaskId
+    run_id = $RunId
+    command_id = $CommandId
+    flow_kind = $flowKind
+    closure_state = $closureState
+  }
   write_issue = @{
     governance_status = $(if (-not [string]::IsNullOrWhiteSpace($writeGovernanceStatus)) { $writeGovernanceStatus } else { $null })
     policy_status = $(if (-not [string]::IsNullOrWhiteSpace($writePolicyStatus)) { $writePolicyStatus } else { $null })

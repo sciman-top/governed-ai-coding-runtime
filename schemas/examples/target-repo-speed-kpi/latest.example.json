@@ -6,6 +6,7 @@
       "deny_to_success_retries": 1,
       "fallback_rate": 0.25,
       "first_pass_latency_seconds": 1800,
+      "latest_problem_evidence_ref": "artifacts/task-classroomtoolkit-daily-20260420230012/run-classroomtoolkit-daily-20260420230012/verification-output/contract.txt",
       "latest_problem_run_ref": "classroomtoolkit-daily-deny-20260420230012.json",
       "latest_problem_signature": "write_governance:deny",
       "latest_evidence_ref": "artifacts/task-classroomtoolkit-daily-20260420230050/run-classroomtoolkit-daily-20260420230050/verification-output/contract.txt",
@@ -13,6 +14,9 @@
       "onboarding_latency_seconds": 1800,
       "problem_recovery_retries": 1,
       "problem_run_rate": 0.25,
+      "problem_signature_counts": {
+        "write_governance:deny": 1
+      },
       "target": "classroomtoolkit",
       "total_daily_runs": 4,
       "window_end_utc": "2026-04-20T23:00:50+00:00",
@@ -22,6 +26,7 @@
       "deny_to_success_retries": 0,
       "fallback_rate": 0,
       "first_pass_latency_seconds": 740,
+      "latest_problem_evidence_ref": null,
       "latest_problem_run_ref": null,
       "latest_problem_signature": null,
       "latest_evidence_ref": "artifacts/task-self-runtime-daily-20260420230134/run-self-runtime-daily-20260420230134/verification-output/contract.txt",
@@ -29,6 +34,7 @@
       "onboarding_latency_seconds": 740,
       "problem_recovery_retries": 0,
       "problem_run_rate": 0,
+      "problem_signature_counts": {},
       "target": "self-runtime",
       "total_daily_runs": 2,
       "window_end_utc": "2026-04-20T23:01:34+00:00",

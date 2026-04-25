@@ -52,8 +52,10 @@ class TargetRepoSpeedKpiTests(unittest.TestCase):
             self.assertEqual(record.medium_risk_loop_success_ratio, 1.0)
             self.assertEqual(record.problem_run_rate, 0.0)
             self.assertEqual(record.problem_recovery_retries, 0)
+            self.assertEqual(record.problem_signature_counts, {})
             self.assertIsNone(record.latest_problem_signature)
             self.assertIsNone(record.latest_problem_run_ref)
+            self.assertIsNone(record.latest_problem_evidence_ref)
             self.assertEqual(record.latest_evidence_ref, "artifacts/a-daily-allow/contract.txt")
             self.assertGreaterEqual(record.onboarding_latency_seconds or 0, 0)
 
@@ -96,8 +98,10 @@ class TargetRepoSpeedKpiTests(unittest.TestCase):
             self.assertEqual(record.medium_risk_loop_success_ratio, 0.5)
             self.assertEqual(record.problem_run_rate, 0.5)
             self.assertEqual(record.problem_recovery_retries, 1)
+            self.assertEqual(record.problem_signature_counts, {"write:denied": 1})
             self.assertEqual(record.latest_problem_signature, "write:denied")
             self.assertEqual(record.latest_problem_run_ref, "beta-daily-deny-20260420100000.json")
+            self.assertEqual(record.latest_problem_evidence_ref, "artifacts/b-daily-deny/contract.txt")
 
     def test_export_target_repo_speed_kpi_cli_writes_output(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -144,6 +148,7 @@ class TargetRepoSpeedKpiTests(unittest.TestCase):
             self.assertEqual(payload["records"][0]["target"], "gamma")
             self.assertEqual(payload["records"][0]["problem_run_rate"], 0.0)
             self.assertEqual(payload["records"][0]["problem_recovery_retries"], 0)
+            self.assertEqual(payload["records"][0]["problem_signature_counts"], {})
 
     def _write_run_file(
         self,

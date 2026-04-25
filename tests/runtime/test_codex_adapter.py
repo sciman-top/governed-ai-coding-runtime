@@ -4,6 +4,7 @@ import unittest
 import subprocess
 from dataclasses import fields
 from pathlib import Path
+from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACTS_SRC = ROOT / "packages" / "contracts" / "src"
@@ -176,6 +177,29 @@ class CodexAdapterTests(unittest.TestCase):
         self.assertEqual(probe.probe_commands[2].cmd, "codex.cmd --help")
         self.assertEqual(probe.probe_commands[3].cmd, "codex.cmd exec --help")
         self.assertEqual(probe.probe_commands[4].cmd, "codex.cmd status")
+
+    @unittest.skipUnless(sys.platform.startswith("win"), "Windows command shim behavior")
+    def test_default_probe_runner_uses_shell_for_windows_command_shims(self) -> None:
+        module = self._module()
+        calls = []
+
+        def fake_run_subprocess(**kwargs):
+            calls.append(kwargs)
+            return SimpleNamespace(returncode=0, stdout="codex-cli 0.124.0\n", stderr="")
+
+        original_run_subprocess = module.run_subprocess
+        module.run_subprocess = fake_run_subprocess
+        try:
+            exit_code, stdout, stderr = module._default_probe_runner(["codex", "--version"], ROOT)
+        finally:
+            module.run_subprocess = original_run_subprocess
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(stdout, "codex-cli 0.124.0\n")
+        self.assertEqual(stderr, "")
+        self.assertTrue(calls[0]["shell"])
+        self.assertIsInstance(calls[0]["command"], str)
+        self.assertIn("codex --version", calls[0]["command"])
 
     def test_codex_live_probe_retries_and_stabilizes_transient_failure(self) -> None:
         module = self._module()

@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import os
 import re
+import subprocess
 from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime
 from functools import lru_cache
@@ -726,9 +727,10 @@ def _default_probe_runner(argv: list[str], cwd: Path | None) -> tuple[int, str, 
         )
         if timeout_seconds is None:
             timeout_seconds = _CODEX_PROBE_TIMEOUT_SECONDS_DEFAULT
+        use_shell = os.name == "nt" and Path(argv[0]).suffix.lower() != ".exe"
         completed = run_subprocess(
-            command=argv,
-            shell=False,
+            command=subprocess.list2cmdline(argv) if use_shell else argv,
+            shell=use_shell,
             cwd=cwd,
             timeout_seconds=timeout_seconds,
         )

@@ -47,6 +47,13 @@ class PruneTargetRepoRunsScriptTests(unittest.TestCase):
             self.assertEqual(payload["summary"]["total_run_files"], 4)
             self.assertEqual(payload["summary"]["delete_candidates"], 2)
             self.assertEqual(payload["summary"]["deleted"], 0)
+            self.assertEqual(payload["retention_policy"]["strategy"], "keep_days_or_latest_per_target")
+            self.assertTrue(payload["retention_policy"]["preserve_derived_files"])
+            flows = {row["flow"]: row for row in payload["flows"]}
+            self.assertEqual(flows["onboard"]["total"], 1)
+            self.assertEqual(flows["onboard"]["delete_candidates"], 1)
+            self.assertEqual(flows["daily"]["total"], 3)
+            self.assertEqual(flows["daily"]["delete_candidates"], 1)
             self.assertTrue((runs_root / "alpha-onboard-20260101010101.json").exists())
             self.assertTrue((runs_root / "alpha-daily-20260102020202.json").exists())
             self.assertTrue((runs_root / "summary-active-targets-latest.json").exists())
@@ -81,6 +88,9 @@ class PruneTargetRepoRunsScriptTests(unittest.TestCase):
             self.assertEqual(payload["status"], "pass")
             self.assertEqual(payload["summary"]["delete_candidates"], 2)
             self.assertEqual(payload["summary"]["deleted"], 2)
+            flows = {row["flow"]: row for row in payload["flows"]}
+            self.assertEqual(flows["onboard"]["deleted"], 1)
+            self.assertEqual(flows["daily"]["deleted"], 1)
             self.assertFalse((runs_root / "alpha-onboard-20260101010101.json").exists())
             self.assertFalse((runs_root / "alpha-daily-20260102020202.json").exists())
             self.assertTrue((runs_root / "alpha-daily-20260103030303.json").exists())
