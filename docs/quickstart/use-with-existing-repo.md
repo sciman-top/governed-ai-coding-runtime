@@ -49,6 +49,7 @@ This creates or validates:
 ```text
 ..\ClassroomToolkit\.governed-ai\repo-profile.json
 ..\ClassroomToolkit\.governed-ai\light-pack.json
+..\ClassroomToolkit\.governed-ai\light-pack.provenance.json
 ```
 
 ### 2. Check Attachment Posture

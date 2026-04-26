@@ -45,6 +45,7 @@ python scripts/attach-target-repo.py `
 .governed-ai/
   repo-profile.json
   light-pack.json
+  light-pack.provenance.json
 ```
 
 它们应只包含声明信息：
@@ -54,6 +55,7 @@ python scripts/attach-target-repo.py `
 - approval / risk defaults
 - adapter preference
 - contract refs
+- 生成 light pack 的 provenance ref
 
 不应包含：
 - runtime 实现代码副本
@@ -61,6 +63,8 @@ python scripts/attach-target-repo.py `
 - approval ledgers
 - artifact payloads
 - replay bundles
+
+`light-pack.provenance.json` 会在 attach 流程写入新 light pack 时同步生成。它记录 generator、source reference、repo-profile input digest、light-pack output digest、target binding id 和 rollback reference。使用 `--overwrite` 重建 light pack 时，provenance 也会同步重建。
 
 ## Machine-Local State
 attachment binding 指向 machine-local `runtime_state_root`，mutable state 放在这里：
@@ -113,6 +117,11 @@ attachment posture：
 - `invalid_light_pack`
 - `stale_binding`
 - `healthy`
+
+light-pack provenance：
+- 由 attach 流程生成且 digest 匹配时，doctor 输出 `OK attachment-light-pack-provenance`
+- 旧的手写 light pack 若没有 `provenance_ref`，doctor 输出 `WARN attachment-light-pack-provenance-unsupported`
+- 如果声明了 provenance 但文件缺失或 digest 不匹配，会按 invalid light pack 处理，应通过 attach 流程重建
 
 remediation 行为：
 - `missing_light_pack`：重新执行 `scripts/attach-target-repo.py ...`，补齐 light pack。

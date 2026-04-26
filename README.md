@@ -40,7 +40,7 @@
 - 不应宣称“所有外部仓、所有高风险流程都已被 runtime 全量接管”
 - attach-first 已有 contract 与本地 entrypoint，但还不是“替代上游宿主 UI”的最终交互体验
 - `GAP-045..060` 是直达完整混合终态的主线且已完成；`GAP-061..068` 是 `GAP-060` 之后的治理优化 follow-on lane，现也已完成（2026-04-20），且不回写成终态闭环证明的一部分
-- `GAP-090..092` 远期缺口触发审计队列已完成；当前不启动任何 `LTP-01..05` 长期包，全部延期到未来触发证据再评估
+- `GAP-090..092` 远期缺口触发审计队列已完成；`GAP-093` 长期规划基线、`GAP-094` 执行 containment contract 切片、`GAP-095` provenance floor 已完成；当前不启动任何 `LTP-01..06` 长期包，全部延期到未来触发证据再评估
 
 现在能否用于其他项目？
 - 可以，**但边界是“治理 sidecar / attach-first metadata + runtime-managed gate/write flows + explicit degrade semantics”**。
@@ -177,6 +177,7 @@ Still in progress as the true end-state:
 - universal real-write takeover claims across all external repos and high-risk workflows
 - fuller attach-first user experience beyond the current local bridge and trial surfaces
 - `GAP-045..060` is the direct path to full hybrid final-state closure and is complete; `GAP-061..068` is the governance-only follow-on lane after `GAP-060` and is also complete (2026-04-20), without being back-written into the final-state closure proof itself
+- `GAP-093`, the `GAP-094` execution-containment contract slice, and the `GAP-095` provenance floor are complete; `GAP-096..102` remain planned, and `LTP-01..06` remain trigger-based rather than started implementation
 
 Primary docs:
 - [Single-Machine Runtime Quickstart](docs/quickstart/single-machine-runtime-quickstart.md)

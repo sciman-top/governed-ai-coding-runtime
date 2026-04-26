@@ -147,6 +147,96 @@
           },
           "compensating_action_type": {
             "type": "string"
+          },
+          "containment_profile": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "tool_family",
+              "workspace_root",
+              "allowed_path_roots",
+              "environment_policy",
+              "network_posture",
+              "timeout_ms",
+              "approval_class",
+              "evidence_refs",
+              "rollback_refs"
+            ],
+            "properties": {
+              "tool_family": {
+                "enum": [
+                  "file_write",
+                  "shell",
+                  "git",
+                  "package_manager",
+                  "browser_automation",
+                  "mcp_tool_bridge"
+                ],
+                "type": "string"
+              },
+              "workspace_root": {
+                "type": "string",
+                "minLength": 1
+              },
+              "allowed_path_roots": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "environment_policy": {
+                "enum": [
+                  "minimal",
+                  "sanitized_inherited",
+                  "repo_profile_declared"
+                ],
+                "type": "string"
+              },
+              "network_posture": {
+                "enum": [
+                  "deny",
+                  "read_only",
+                  "declared_by_tool",
+                  "allowlist_required"
+                ],
+                "type": "string"
+              },
+              "timeout_ms": {
+                "minimum": 1,
+                "type": "integer"
+              },
+              "approval_class": {
+                "enum": [
+                  "auto_execute",
+                  "auto_if_reversible",
+                  "explicit_user_approval",
+                  "deny"
+                ],
+                "type": "string"
+              },
+              "evidence_refs": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "rollback_refs": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "waiver_ref": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
           }
         },
         "required": [
@@ -161,7 +251,8 @@
           "sandbox_boundary",
           "trace_fields",
           "input_schema_ref",
-          "output_schema_ref"
+          "output_schema_ref",
+          "containment_profile"
         ]
       }
     }

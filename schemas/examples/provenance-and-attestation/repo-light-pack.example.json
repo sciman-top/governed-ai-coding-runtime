@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "attestation_id": "binding-python-service.light-pack",
+  "subject_type": "repo_light_pack",
+  "subject_ref": "D:/repos/python-service/.governed-ai/light-pack.json",
+  "subject_digest": "sha256:example-light-pack-digest",
+  "predicate_type": "governed-ai-coding-runtime/light-pack-provenance/v1",
+  "producer": "governed_ai_coding_runtime_contracts.repo_attachment",
+  "generator_version": "1.0",
+  "generated_at": "2026-04-27T00:00:00Z",
+  "source_ref": "packages/contracts/src/governed_ai_coding_runtime_contracts/repo_attachment.py",
+  "materials": [
+    {
+      "uri": "D:/repos/python-service/.governed-ai/repo-profile.json",
+      "version_or_digest": "sha256:example-repo-profile-digest"
+    },
+    {
+      "uri": "schemas/jsonschema/repo-attachment-binding.schema.json",
+      "version_or_digest": "repo-contract-ref"
+    }
+  ],
+  "input_digest": "sha256:example-repo-profile-digest",
+  "output_digest": "sha256:example-light-pack-digest",
+  "target_repo_binding": "binding-python-service",
+  "repo_id": "python-service",
+  "verification_status": "unverified",
+  "rollback_ref": "git diff -- .governed-ai/light-pack.json .governed-ai/light-pack.provenance.json",
+  "waiver_refs": [],
+  "notes": "Example local provenance record generated beside a repo attachment light pack."
+}

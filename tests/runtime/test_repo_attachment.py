@@ -192,11 +192,14 @@ class RepoAttachmentBindingTests(unittest.TestCase):
             governed_dir = repo_root / ".governed-ai"
             profile_path = governed_dir / "repo-profile.json"
             light_pack_path = governed_dir / "light-pack.json"
+            provenance_path = governed_dir / "light-pack.provenance.json"
             dependency_baseline_path = governed_dir / "dependency-baseline.json"
             self.assertEqual(result.operation, "created")
             self.assertTrue(profile_path.exists())
             self.assertTrue(light_pack_path.exists())
+            self.assertTrue(provenance_path.exists())
             self.assertTrue(dependency_baseline_path.exists())
+            self.assertEqual(Path(result.provenance_path), provenance_path.resolve())
             context_pack_path = runtime_root / "context" / "context-pack.json"
             self.assertTrue(context_pack_path.exists())
             self.assertFalse((repo_root / ".runtime").exists())
@@ -204,6 +207,7 @@ class RepoAttachmentBindingTests(unittest.TestCase):
             self.assertEqual(Path(result.binding.runtime_state_root), runtime_root.resolve())
             self.assertFalse(self._is_under(Path(result.binding.runtime_state_root), repo_root))
             self.assertIsNotNone(result.context_pack_summary)
+            self.assertIsNotNone(result.provenance_path)
             self.assertEqual(Path(result.context_pack_summary["context_pack_path"]), context_pack_path.resolve())
             self.assertFalse(result.context_pack_summary["is_stale"])
             profile = json.loads(profile_path.read_text(encoding="utf-8"))
@@ -213,8 +217,14 @@ class RepoAttachmentBindingTests(unittest.TestCase):
             light_pack = json.loads(light_pack_path.read_text(encoding="utf-8"))
             self.assertEqual(light_pack["pack_kind"], "repo_attachment_light_pack")
             self.assertEqual(light_pack["repo_profile_ref"], ".governed-ai/repo-profile.json")
+            self.assertEqual(light_pack["provenance_ref"], ".governed-ai/light-pack.provenance.json")
             self.assertNotIn("runtime_code", light_pack)
             self.assertNotIn("task_store", light_pack)
+            provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+            self.assertEqual(provenance["subject_type"], "repo_light_pack")
+            self.assertEqual(provenance["target_repo_binding"], "binding-new-target")
+            self.assertEqual(provenance["subject_digest"], provenance["output_digest"])
+            self.assertEqual(provenance["source_ref"], "packages/contracts/src/governed_ai_coding_runtime_contracts/repo_attachment.py")
             dependency_baseline = json.loads(dependency_baseline_path.read_text(encoding="utf-8"))
             self.assertEqual(dependency_baseline["baseline_kind"], "target_repo_dependency_baseline")
             self.assertEqual(dependency_baseline["repo_id"], "new-target")
@@ -281,6 +291,7 @@ class RepoAttachmentBindingTests(unittest.TestCase):
             self.assertEqual(result.binding.binding_id, "binding-existing-target")
             self.assertIsNotNone(result.context_pack_summary)
             self.assertTrue(result.context_pack_summary["exists"])
+            self.assertIsNone(result.provenance_path)
 
     def test_validate_light_pack_rejects_repo_profile_ref_outside_target_repo(self) -> None:
         module = self._module()
@@ -327,6 +338,34 @@ class RepoAttachmentBindingTests(unittest.TestCase):
             self._write_light_pack_inputs(repo_root, profile, self._light_pack_payload("bad-path-scope"))
 
             with self.assertRaisesRegex(ValueError, "path_policies.read_allow"):
+                module.validate_light_pack(
+                    target_repo_root=str(repo_root),
+                    light_pack_path=".governed-ai/light-pack.json",
+                    runtime_state_root=str(runtime_root),
+                )
+
+    def test_validate_light_pack_rejects_tampered_provenance_digest(self) -> None:
+        module = self._module()
+        with tempfile.TemporaryDirectory() as workspace:
+            repo_root = Path(workspace) / "tampered-provenance"
+            repo_root.mkdir()
+            runtime_root = Path(workspace) / "runtime-state" / "tampered-provenance"
+            module.attach_target_repo(
+                target_repo_root=str(repo_root),
+                runtime_state_root=str(runtime_root),
+                repo_id="tampered-provenance",
+                display_name="Tampered Provenance",
+                primary_language="python",
+                build_command="python -m compileall src",
+                test_command="python -m unittest discover",
+                contract_command="python -m unittest discover -s tests/contracts",
+            )
+            provenance_path = repo_root / ".governed-ai" / "light-pack.provenance.json"
+            provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+            provenance["subject_digest"] = "sha256:tampered"
+            provenance_path.write_text(json.dumps(provenance), encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "subject_digest"):
                 module.validate_light_pack(
                     target_repo_root=str(repo_root),
                     light_pack_path=".governed-ai/light-pack.json",
@@ -419,6 +458,7 @@ class RepoAttachmentBindingTests(unittest.TestCase):
             self.assertIsNotNone(healthy_posture.context_pack_summary)
             self.assertTrue(healthy_posture.context_pack_summary["exists"])
             self.assertFalse(healthy_posture.context_pack_summary["is_stale"])
+            self.assertEqual(healthy_posture.provenance_summary["state"], "present")
 
     def test_attachment_context_pack_staleness_is_detectable(self) -> None:
         module = self._module()
@@ -492,6 +532,7 @@ class RepoAttachmentBindingTests(unittest.TestCase):
             self.assertTrue(payload["inferred_gate_defaults_used"])
             self.assertIsInstance(payload["context_pack_summary"], dict)
             self.assertTrue(payload["context_pack_summary"]["exists"])
+            self.assertTrue(payload["provenance_path"].endswith("light-pack.provenance.json"))
 
             profile = json.loads((repo_root / ".governed-ai" / "repo-profile.json").read_text(encoding="utf-8"))
             self.assertEqual(profile["build_commands"][0]["command"], "python -m compileall src")

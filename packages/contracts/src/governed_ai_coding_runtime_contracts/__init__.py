@@ -42,7 +42,9 @@ from governed_ai_coding_runtime_contracts.repo_attachment import (
     RepoAttachmentResult,
     attach_target_repo,
     build_repo_attachment_binding,
+    build_light_pack_provenance_payload,
     inspect_attachment_posture,
+    inspect_light_pack_provenance,
     is_machine_local_state_path,
     resolve_attachment_runtime_state_root,
     validate_light_pack,
@@ -116,6 +118,14 @@ from governed_ai_coding_runtime_contracts.learning_efficiency_metrics import (
     persist_learning_efficiency_metrics,
     summarize_learning_efficiency_metrics,
 )
+from governed_ai_coding_runtime_contracts.tool_runner import (
+    ContainmentProfile,
+    build_containment_profile,
+    govern_contained_execution_request,
+    resolve_execution_tool_family,
+    validate_containment_profile,
+    validate_containment_registry,
+)
 
 __all__ = [
     "PolicyDecision",
@@ -142,6 +152,7 @@ __all__ = [
     "TargetRepoSpeedKpiSnapshot",
     "LearningEfficiencyMetricsRecord",
     "LearningEfficiencyMetricsSnapshot",
+    "ContainmentProfile",
     "InteractionSignal",
     "ResponsePolicy",
     "TeachingBudget",
@@ -155,6 +166,8 @@ __all__ = [
     "SessionBridgeResult",
     "attach_target_repo",
     "build_repo_attachment_binding",
+    "build_light_pack_provenance_payload",
+    "inspect_light_pack_provenance",
     "build_policy_decision",
     "build_session_bridge_command",
     "build_adapter_contract",
@@ -198,7 +211,9 @@ __all__ = [
     "evaluate_runtime_check_conformance",
     "build_parity_matrix",
     "build_learning_efficiency_metrics",
+    "build_containment_profile",
     "derive_response_policy",
+    "govern_contained_execution_request",
     "export_target_repo_speed_kpi",
     "persist_learning_efficiency_metrics",
     "summarize_learning_efficiency_metrics",
@@ -206,4 +221,7 @@ __all__ = [
     "decide_attached_write_request",
     "execute_attached_write_request",
     "validate_light_pack",
+    "resolve_execution_tool_family",
+    "validate_containment_profile",
+    "validate_containment_registry",
 ]

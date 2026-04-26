@@ -3,7 +3,7 @@
 ## Status
 - Created from the 2026-04-27 optimized hybrid final-state and stack-staging review.
 - Future-facing queue: `GAP-093..102`.
-- Current posture: planned. No long-term package is implemented by this document.
+- Current posture: `GAP-093` planning baseline, `GAP-094` containment contract slice, and `GAP-095` provenance floor are complete. No long-term package is implemented by this document.
 
 ## Goal
 Provide an implementation-ready plan for the long-term optimized hybrid final state while preserving the current rule that heavyweight components remain trigger-based.
@@ -34,10 +34,10 @@ AFK
 - Record evidence for the planning baseline.
 
 ### Acceptance Criteria
-- [ ] roadmap, implementation plan, backlog, issue seeds, plan index, and docs index agree on `GAP-093..102`
-- [ ] `LTP-01..06` are visible as trigger-based packages, not started work
-- [ ] issue rendering validates all task bodies without GitHub calls
-- [ ] evidence records commands, changed files, residual risks, and rollback
+- [x] roadmap, implementation plan, backlog, issue seeds, plan index, and docs index agree on `GAP-093..102`
+- [x] `LTP-01..06` are visible as trigger-based packages, not started work
+- [x] issue rendering validates all task bodies without GitHub calls
+- [x] evidence records commands, changed files, residual risks, and rollback
 
 ### Verification
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/github/create-roadmap-issues.ps1 -ValidateOnly -RenderAll`
@@ -72,10 +72,10 @@ AFK
 - Add fail-closed behavior for unclassified executable tool families.
 
 ### Acceptance Criteria
-- [ ] every governed executable tool family has a declared containment profile
-- [ ] unclassified executable tools fail closed or require explicit waiver
-- [ ] execution evidence records containment metadata and rollback metadata
-- [ ] containment contract has schema/spec/test coverage
+- [x] every governed executable tool family has a declared containment profile
+- [x] unclassified executable tools fail closed or require explicit waiver
+- [x] execution evidence records containment metadata and rollback metadata
+- [x] containment contract has schema/spec/test coverage
 
 ### Verification
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`
@@ -107,10 +107,10 @@ AFK
 - Make doctor/verifier surfaces report missing provenance for generated artifacts that claim release readiness.
 
 ### Acceptance Criteria
-- [ ] generated light packs and control packs can carry provenance metadata
-- [ ] release-adjacent artifacts have either provenance or an explicit waiver
-- [ ] verifier/doctor output distinguishes missing provenance from unsupported provenance
-- [ ] documentation explains rollback and regeneration behavior
+- [x] generated light packs and control packs can carry provenance metadata
+- [x] release-adjacent artifacts have either provenance or an explicit waiver
+- [x] verifier/doctor output distinguishes missing provenance from unsupported provenance
+- [x] documentation explains rollback and regeneration behavior
 
 ### Verification
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`

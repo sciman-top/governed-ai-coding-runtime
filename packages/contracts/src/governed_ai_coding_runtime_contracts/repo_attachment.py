@@ -3,6 +3,7 @@
 import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import hashlib
 from pathlib import Path
 import re
 from typing import Literal
@@ -20,6 +21,7 @@ DEFAULT_SCHEMA_VERSION = "1.0"
 LIGHT_PACK_DIR = ".governed-ai"
 REPO_PROFILE_FILENAME = "repo-profile.json"
 LIGHT_PACK_FILENAME = "light-pack.json"
+LIGHT_PACK_PROVENANCE_FILENAME = "light-pack.provenance.json"
 CONTEXT_PACK_FILENAME = "context-pack.json"
 DEPENDENCY_BASELINE_FILENAME = "dependency-baseline.json"
 ADAPTER_PREFERENCES = {"native_attach", "process_bridge", "manual_handoff"}
@@ -61,6 +63,7 @@ class RepoAttachmentResult:
     light_pack_path: str
     written_files: list[str]
     context_pack_summary: dict | None = None
+    provenance_path: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,6 +78,7 @@ class RepoAttachmentPosture:
     remediation: str | None = None
     fail_closed: bool = False
     context_pack_summary: dict | None = None
+    provenance_summary: dict | None = None
 
 
 def build_repo_attachment_binding(
@@ -150,6 +154,7 @@ def attach_target_repo(
     governed_dir = target_root / LIGHT_PACK_DIR
     repo_profile_path = governed_dir / REPO_PROFILE_FILENAME
     light_pack_path = governed_dir / LIGHT_PACK_FILENAME
+    light_pack_provenance_path = governed_dir / LIGHT_PACK_PROVENANCE_FILENAME
     dependency_baseline_path = governed_dir / DEPENDENCY_BASELINE_FILENAME
 
     if light_pack_path.exists() and not overwrite:
@@ -180,6 +185,7 @@ def attach_target_repo(
             light_pack_path=validated.light_pack_path,
             written_files=written_files,
             context_pack_summary=context_pack_summary,
+            provenance_path=validated.provenance_path,
         )
 
     governed_dir.mkdir(parents=True, exist_ok=True)
@@ -205,6 +211,14 @@ def attach_target_repo(
     )
     _write_json(light_pack_path, light_pack)
     written_files.append(str(light_pack_path))
+    provenance = build_light_pack_provenance_payload(
+        repo_id=repo_id,
+        repo_profile_path=repo_profile_path,
+        light_pack_path=light_pack_path,
+        provenance_path=light_pack_provenance_path,
+    )
+    _write_json(light_pack_provenance_path, provenance)
+    written_files.append(str(light_pack_provenance_path))
     if _ensure_target_repo_dependency_baseline(
         repo_id=repo_id,
         baseline_path=dependency_baseline_path,
@@ -230,6 +244,7 @@ def attach_target_repo(
         light_pack_path=result.light_pack_path,
         written_files=written_files,
         context_pack_summary=context_pack_summary,
+        provenance_path=result.provenance_path,
     )
 
 
@@ -276,12 +291,18 @@ def validate_light_pack(
         gate_profile=_required_string(light_pack.get("gate_profile"), "gate_profile"),
         doctor_posture="healthy",
     )
+    provenance_path = _validate_light_pack_provenance_if_declared(
+        target_root=target_root,
+        light_pack=light_pack,
+        light_pack_path=resolved_light_pack_path,
+    )
     return RepoAttachmentResult(
         operation="validated",
         binding=binding,
         repo_profile_path=str(resolved_repo_profile_path),
         light_pack_path=str(resolved_light_pack_path),
         written_files=[],
+        provenance_path=str(provenance_path) if provenance_path else None,
     )
 
 
@@ -371,6 +392,85 @@ def build_light_pack_payload(
             "repo_attachment_binding_schema": "schemas/jsonschema/repo-attachment-binding.schema.json",
             "repo_profile_schema": "schemas/jsonschema/repo-profile.schema.json",
         },
+        "provenance_ref": f"{LIGHT_PACK_DIR}/{LIGHT_PACK_PROVENANCE_FILENAME}",
+    }
+
+
+def build_light_pack_provenance_payload(
+    *,
+    repo_id: str,
+    repo_profile_path: str | Path,
+    light_pack_path: str | Path,
+    provenance_path: str | Path,
+) -> dict:
+    resolved_profile_path = Path(repo_profile_path).resolve(strict=False)
+    resolved_light_pack_path = Path(light_pack_path).resolve(strict=False)
+    resolved_provenance_path = Path(provenance_path).resolve(strict=False)
+    profile_digest = _sha256_file(resolved_profile_path)
+    light_pack_digest = _sha256_file(resolved_light_pack_path)
+    binding_id = f"binding-{_required_string(repo_id, 'repo_id')}"
+    return {
+        "schema_version": DEFAULT_SCHEMA_VERSION,
+        "attestation_id": f"{binding_id}.light-pack",
+        "subject_type": "repo_light_pack",
+        "subject_ref": str(resolved_light_pack_path),
+        "subject_digest": f"sha256:{light_pack_digest}",
+        "predicate_type": "governed-ai-coding-runtime/light-pack-provenance/v1",
+        "producer": "governed_ai_coding_runtime_contracts.repo_attachment",
+        "generator_version": DEFAULT_SCHEMA_VERSION,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source_ref": "packages/contracts/src/governed_ai_coding_runtime_contracts/repo_attachment.py",
+        "materials": [
+            {
+                "uri": str(resolved_profile_path),
+                "version_or_digest": f"sha256:{profile_digest}",
+            },
+            {
+                "uri": "schemas/jsonschema/repo-attachment-binding.schema.json",
+                "version_or_digest": "repo-contract-ref",
+            },
+            {
+                "uri": "schemas/jsonschema/repo-profile.schema.json",
+                "version_or_digest": "repo-contract-ref",
+            },
+        ],
+        "input_digest": f"sha256:{profile_digest}",
+        "output_digest": f"sha256:{light_pack_digest}",
+        "target_repo_binding": binding_id,
+        "repo_id": repo_id,
+        "verification_status": "unverified",
+        "rollback_ref": f"git diff -- {resolved_light_pack_path.name} {resolved_provenance_path.name}",
+        "notes": "Generated alongside repo-local light pack; digest validation is local and does not imply release signing.",
+    }
+
+
+def inspect_light_pack_provenance(
+    *,
+    target_repo_root: str | Path,
+    light_pack: dict,
+    light_pack_path: str | Path,
+) -> dict:
+    target_root = _existing_directory(str(target_repo_root), "target_repo_root")
+    resolved_light_pack_path = Path(light_pack_path).resolve(strict=False)
+    provenance_path = _validate_light_pack_provenance_if_declared(
+        target_root=target_root,
+        light_pack=light_pack,
+        light_pack_path=resolved_light_pack_path,
+    )
+    if provenance_path is None:
+        return {
+            "state": "unsupported",
+            "reason": "light pack has no provenance_ref",
+            "provenance_path": None,
+        }
+    provenance = _load_json_object(provenance_path, "provenance_ref")
+    return {
+        "state": "present",
+        "provenance_path": str(provenance_path),
+        "subject_digest": provenance.get("subject_digest"),
+        "output_digest": provenance.get("output_digest"),
+        "target_repo_binding": provenance.get("target_repo_binding"),
+        "verification_status": provenance.get("verification_status"),
     }
 
 
@@ -408,6 +508,7 @@ def inspect_attachment_posture(
                 repo_profile_path=None,
                 light_pack_path=resolved_light_pack_path,
             ),
+            provenance_summary={"state": "missing_light_pack"},
         )
 
     light_pack: dict = {}
@@ -447,6 +548,7 @@ def inspect_attachment_posture(
                 repo_profile_path=None,
                 light_pack_path=resolved_light_pack_path,
             ),
+            provenance_summary={"state": "invalid", "reason": str(exc)},
         )
 
     expected_binding_id = f"binding-{profile.repo_id}"
@@ -471,7 +573,14 @@ def inspect_attachment_posture(
                 repo_profile_path=Path(binding.repo_profile_ref),
                 light_pack_path=Path(binding.light_pack_path),
             ),
+            provenance_summary={"state": "not_checked", "reason": "stale_binding"},
         )
+
+    provenance_summary = inspect_light_pack_provenance(
+        target_repo_root=target_root,
+        light_pack=light_pack,
+        light_pack_path=resolved_light_pack_path,
+    )
 
     return RepoAttachmentPosture(
         repo_id=profile.repo_id,
@@ -488,6 +597,7 @@ def inspect_attachment_posture(
             repo_profile_path=Path(binding.repo_profile_ref),
             light_pack_path=Path(binding.light_pack_path),
         ),
+        provenance_summary=provenance_summary,
     )
 
 
@@ -702,6 +812,42 @@ def _load_json_object(path: Path, field_name: str) -> dict:
 
 def _write_json(path: Path, payload: dict) -> None:
     atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _validate_light_pack_provenance_if_declared(
+    *,
+    target_root: Path,
+    light_pack: dict,
+    light_pack_path: Path,
+) -> Path | None:
+    provenance_ref = _string_or_none(light_pack.get("provenance_ref"))
+    if provenance_ref is None:
+        return None
+    provenance_path = _repo_local_path(target_root, provenance_ref, "provenance_ref")
+    if not provenance_path.exists():
+        raise ValueError("provenance_ref does not exist")
+    provenance = _load_json_object(provenance_path, "provenance_ref")
+    subject_ref = _required_string(provenance.get("subject_ref"), "provenance.subject_ref")
+    subject_path = Path(subject_ref).resolve(strict=False)
+    if subject_path != light_pack_path.resolve(strict=False):
+        raise ValueError("provenance subject_ref must match light_pack_path")
+    expected_digest = f"sha256:{_sha256_file(light_pack_path)}"
+    actual_digest = _required_string(provenance.get("subject_digest"), "provenance.subject_digest")
+    if actual_digest != expected_digest:
+        raise ValueError("provenance subject_digest does not match light_pack_path")
+    target_repo_binding = _required_string(provenance.get("target_repo_binding"), "provenance.target_repo_binding")
+    binding_id = _required_string(light_pack.get("binding_id"), "binding_id")
+    if target_repo_binding != binding_id:
+        raise ValueError("provenance target_repo_binding does not match binding_id")
+    _required_string(provenance.get("input_digest"), "provenance.input_digest")
+    output_digest = _required_string(provenance.get("output_digest"), "provenance.output_digest")
+    if output_digest != expected_digest:
+        raise ValueError("provenance output_digest does not match light_pack_path")
+    return provenance_path
+
+
+def _sha256_file(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _ensure_target_repo_dependency_baseline(*, repo_id: str, baseline_path: Path, overwrite: bool) -> bool:

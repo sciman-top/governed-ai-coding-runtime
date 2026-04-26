@@ -149,6 +149,84 @@ class ReadOnlyToolRunnerTests(unittest.TestCase):
         self.assertIsNone(result.timeout_seconds)
         self.assertTrue(result.timeout_exempt)
 
+    def test_containment_profile_registry_requires_all_executable_families(self) -> None:
+        tool_runner = importlib.import_module("governed_ai_coding_runtime_contracts.tool_runner")
+        profiles = [
+            self._containment_profile(tool_runner, "file_write"),
+            self._containment_profile(tool_runner, "shell"),
+            self._containment_profile(tool_runner, "git"),
+            self._containment_profile(tool_runner, "package_manager"),
+            self._containment_profile(tool_runner, "browser_automation"),
+            self._containment_profile(tool_runner, "mcp_tool_bridge"),
+        ]
+
+        self.assertTrue(tool_runner.validate_containment_registry(profiles))
+
+    def test_containment_registry_fails_closed_when_family_is_missing(self) -> None:
+        tool_runner = importlib.import_module("governed_ai_coding_runtime_contracts.tool_runner")
+        profiles = [
+            self._containment_profile(tool_runner, "file_write"),
+            self._containment_profile(tool_runner, "shell"),
+        ]
+
+        with self.assertRaisesRegex(ValueError, "missing containment profiles"):
+            tool_runner.validate_containment_registry(profiles)
+
+    def test_contained_execution_denies_unclassified_tool_family(self) -> None:
+        tool_runner = importlib.import_module("governed_ai_coding_runtime_contracts.tool_runner")
+        decision = tool_runner.govern_contained_execution_request(
+            tool_name="unknown-tool",
+            command="unknown-tool run",
+            tier="low",
+            rollback_reference="git diff",
+            containment_profile=self._containment_profile(tool_runner, "shell"),
+        )
+
+        self.assertEqual(decision.status, "deny")
+        self.assertIn("unclassified executable tool family", decision.reason)
+
+    def test_contained_execution_requires_matching_containment_profile(self) -> None:
+        tool_runner = importlib.import_module("governed_ai_coding_runtime_contracts.tool_runner")
+        decision = tool_runner.govern_contained_execution_request(
+            tool_name="git",
+            command="git status --short",
+            tier="low",
+            rollback_reference="git diff",
+            containment_profile=self._containment_profile(tool_runner, "shell"),
+        )
+
+        self.assertEqual(decision.status, "deny")
+        self.assertIn("containment profile family mismatch", decision.reason)
+
+    def test_contained_execution_allows_bounded_declared_git_command(self) -> None:
+        tool_runner = importlib.import_module("governed_ai_coding_runtime_contracts.tool_runner")
+        decision = tool_runner.govern_contained_execution_request(
+            tool_name="git",
+            command="git status --short",
+            tier="low",
+            rollback_reference="git diff",
+            containment_profile=self._containment_profile(tool_runner, "git"),
+        )
+
+        self.assertEqual(decision.status, "allow")
+        self.assertFalse(decision.requires_approval)
+        self.assertEqual(decision.containment_profile.tool_family, "git")
+        self.assertEqual(decision.rollback_refs, ["git diff"])
+
+    @staticmethod
+    def _containment_profile(tool_runner, tool_family: str):
+        return tool_runner.build_containment_profile(
+            tool_family=tool_family,
+            workspace_root=".",
+            allowed_path_roots=["."],
+            environment_policy="sanitized_inherited",
+            network_posture="read_only",
+            timeout_seconds=30,
+            approval_class="auto_if_reversible",
+            evidence_refs=["artifacts/task-123/evidence/tool.json"],
+            rollback_refs=["git diff"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

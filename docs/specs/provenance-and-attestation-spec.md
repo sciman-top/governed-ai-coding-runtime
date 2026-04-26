@@ -20,6 +20,12 @@ Define the minimum provenance and attestation record for build artifacts, contro
 
 ## Optional Fields
 - build_ref
+- source_ref
+- generator_version
+- input_digest
+- output_digest
+- target_repo_binding
+- waiver_refs
 - control_pack_ref
 - repo_id
 - statement_ref
@@ -35,6 +41,7 @@ Define the minimum provenance and attestation record for build artifacts, contro
 - release
 - evidence_bundle
 - governance_asset
+- repo_light_pack
 
 ### verification_status
 - unverified
@@ -47,6 +54,7 @@ Define the minimum provenance and attestation record for build artifacts, contro
 - every material entry must identify a stable reference and digest or version
 - attestation records may prove provenance but may not replace approval, evidence, or rollback records
 - subject digest must be immutable for the lifetime of the attestation
+- generated repo light-pack attestations must include source reference, generator version, input digest, output digest, target repo binding, and waiver metadata when any waiver contributed to generation
 - governance-asset attestations must retain a rollback reference even when the subject is documentation-only, so promotion and review can reason about reversal
 - provenance may inform promotion or review decisions, but it must stay additive to runtime evidence and approval history
 

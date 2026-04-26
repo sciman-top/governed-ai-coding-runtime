@@ -44,6 +44,7 @@ class RuntimeAttachmentStatus:
     remediation: str | None
     fail_closed: bool
     context_pack_summary: dict | None = None
+    provenance_summary: dict | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,6 +195,7 @@ class RuntimeStatusStore:
                     remediation=posture.remediation,
                     fail_closed=posture.fail_closed,
                     context_pack_summary=posture.context_pack_summary,
+                    provenance_summary=posture.provenance_summary,
                 )
             )
         return statuses
@@ -251,6 +253,7 @@ def _runtime_attachment_status_from_dict(raw: dict) -> RuntimeAttachmentStatus:
         remediation=_optional_string(raw.get("remediation"), "remediation"),
         fail_closed=fail_closed,
         context_pack_summary=_optional_object(raw.get("context_pack_summary"), "context_pack_summary"),
+        provenance_summary=_optional_object(raw.get("provenance_summary"), "provenance_summary"),
     )
 
 

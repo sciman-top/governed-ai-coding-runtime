@@ -1,0 +1,122 @@
+{
+  "schema_version": "1.1",
+  "tools": [
+    {
+      "tool_name": "apply_patch",
+      "description": "Governed file mutation through patch application.",
+      "risk_class": "medium",
+      "approval_policy": "auto_if_reversible",
+      "side_effect_class": "filesystem_write",
+      "timeout_ms": 30000,
+      "retry_policy": "no_retry",
+      "idempotency_expectation": "preferred",
+      "sandbox_boundary": "repo_workspace",
+      "trace_fields": [
+        "task_id",
+        "tool_name",
+        "target_path",
+        "rollback_ref",
+        "containment_profile"
+      ],
+      "input_schema_ref": "schemas/jsonschema/tool-contract.schema.json",
+      "output_schema_ref": "schemas/jsonschema/evidence-bundle.schema.json",
+      "rollback_guidance": "Use git diff or git restore for the touched path.",
+      "containment_profile": {
+        "tool_family": "file_write",
+        "workspace_root": ".",
+        "allowed_path_roots": [
+          "docs",
+          "packages",
+          "schemas",
+          "scripts",
+          "tests"
+        ],
+        "environment_policy": "sanitized_inherited",
+        "network_posture": "deny",
+        "timeout_ms": 30000,
+        "approval_class": "auto_if_reversible",
+        "evidence_refs": [
+          "docs/change-evidence/*.md"
+        ],
+        "rollback_refs": [
+          "git diff -- <path>"
+        ]
+      }
+    },
+    {
+      "tool_name": "git",
+      "description": "Governed git inspection command family.",
+      "risk_class": "low",
+      "approval_policy": "auto_execute",
+      "side_effect_class": "process_spawn",
+      "timeout_ms": 30000,
+      "retry_policy": "no_retry",
+      "idempotency_expectation": "not_applicable",
+      "sandbox_boundary": "repo_workspace",
+      "trace_fields": [
+        "task_id",
+        "tool_name",
+        "command",
+        "exit_code",
+        "containment_profile"
+      ],
+      "input_schema_ref": "schemas/jsonschema/tool-contract.schema.json",
+      "output_schema_ref": "schemas/jsonschema/evidence-bundle.schema.json",
+      "containment_profile": {
+        "tool_family": "git",
+        "workspace_root": ".",
+        "allowed_path_roots": [
+          "."
+        ],
+        "environment_policy": "sanitized_inherited",
+        "network_posture": "deny",
+        "timeout_ms": 30000,
+        "approval_class": "auto_execute",
+        "evidence_refs": [
+          "docs/change-evidence/*.md"
+        ],
+        "rollback_refs": [
+          "git diff"
+        ]
+      }
+    },
+    {
+      "tool_name": "browser",
+      "description": "Declared browser automation family, disabled until explicitly scoped.",
+      "risk_class": "high",
+      "approval_policy": "explicit_user_approval",
+      "side_effect_class": "network_write",
+      "timeout_ms": 60000,
+      "retry_policy": "no_retry",
+      "idempotency_expectation": "best_effort",
+      "sandbox_boundary": "declared_session",
+      "trace_fields": [
+        "task_id",
+        "tool_name",
+        "target_url",
+        "containment_profile"
+      ],
+      "input_schema_ref": "schemas/jsonschema/tool-contract.schema.json",
+      "output_schema_ref": "schemas/jsonschema/evidence-bundle.schema.json",
+      "compensating_action_type": "manual_revert_or_followup_action",
+      "containment_profile": {
+        "tool_family": "browser_automation",
+        "workspace_root": ".",
+        "allowed_path_roots": [
+          "."
+        ],
+        "environment_policy": "minimal",
+        "network_posture": "allowlist_required",
+        "timeout_ms": 60000,
+        "approval_class": "deny",
+        "evidence_refs": [
+          "docs/change-evidence/*.md"
+        ],
+        "rollback_refs": [
+          "manual rollback note required"
+        ],
+        "waiver_ref": "waivers/browser-automation-required-before-enable"
+      }
+    }
+  ]
+}

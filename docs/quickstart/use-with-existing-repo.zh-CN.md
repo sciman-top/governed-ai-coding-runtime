@@ -49,6 +49,7 @@ PowerShell 注意：
 ```text
 ..\ClassroomToolkit\.governed-ai\repo-profile.json
 ..\ClassroomToolkit\.governed-ai\light-pack.json
+..\ClassroomToolkit\.governed-ai\light-pack.provenance.json
 ```
 
 ### 2. 检查 attachment posture

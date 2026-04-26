@@ -268,6 +268,7 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             healthy_completed = self._run_doctor_attachment(script, healthy_root, workspace / "state" / "healthy")
             self.assertEqual(healthy_completed.returncode, 0)
             self.assertIn("OK attachment-target-repo-dependency-baseline", healthy_completed.stdout)
+            self.assertIn("OK attachment-light-pack-provenance", healthy_completed.stdout)
             self.assertIn("OK attachment-posture-healthy", healthy_completed.stdout)
             self.assertIn("REMEDIATE-EVIDENCE", healthy_completed.stdout)
             self.assertTrue((workspace / "state" / "healthy" / "doctor" / "latest-remediation.json").exists())

@@ -28,6 +28,7 @@ Provide minimal but realistic JSON instances that exercise the repository's curr
 - `knowledge-source/docs-index-authoritative.example.json`
 - `waiver-and-exception/temporary-gate-waiver.example.json`
 - `provenance-and-attestation/schema-bundle-release.example.json`
+- `provenance-and-attestation/repo-light-pack.example.json`
 - `controlled-improvement-proposal/policy-rollout-review-proposal.example.json`
 - `repo-map-context-shaping/hybrid-default.example.json`
 - `repo-profile/python-service.example.json`
@@ -66,6 +67,9 @@ Get-Content -Raw 'schemas/examples/waiver-and-exception/temporary-gate-waiver.ex
   Test-Json -SchemaFile 'schemas/jsonschema/waiver-and-exception.schema.json'
 
 Get-Content -Raw 'schemas/examples/provenance-and-attestation/schema-bundle-release.example.json' |
+  Test-Json -SchemaFile 'schemas/jsonschema/provenance-and-attestation.schema.json'
+
+Get-Content -Raw 'schemas/examples/provenance-and-attestation/repo-light-pack.example.json' |
   Test-Json -SchemaFile 'schemas/jsonschema/provenance-and-attestation.schema.json'
 
 Get-Content -Raw 'schemas/examples/repo-map-context-shaping/hybrid-default.example.json' |

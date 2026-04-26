@@ -48,6 +48,7 @@ The generated target-repo light pack lives under:
 .governed-ai/
   repo-profile.json
   light-pack.json
+  light-pack.provenance.json
 ```
 
 These files are declarative:
@@ -57,6 +58,7 @@ These files are declarative:
 - approval and risk defaults
 - adapter preference
 - contract references
+- provenance reference for the generated light pack
 
 They must not contain:
 - copied runtime implementation code
@@ -64,6 +66,8 @@ They must not contain:
 - approval ledgers
 - artifact payloads
 - replay bundles
+
+`light-pack.provenance.json` is generated beside the light pack when the attach flow writes new files. It records the generator, source reference, repo-profile input digest, light-pack output digest, target binding id, and rollback reference. If the light pack is regenerated with `--overwrite`, its provenance is regenerated too.
 
 ## Machine-Local State
 The attachment binding points at a machine-local `runtime_state_root`. The runtime keeps mutable state there:
@@ -122,6 +126,11 @@ Attachment posture values:
 - `invalid_light_pack`
 - `stale_binding`
 - `healthy`
+
+Light-pack provenance:
+- generated light packs report `OK attachment-light-pack-provenance` in doctor when the provenance digest matches the light pack
+- older hand-written light packs without `provenance_ref` report `WARN attachment-light-pack-provenance-unsupported`
+- declared but missing or mismatched provenance is treated as an invalid light pack and should be regenerated with the attach flow
 
 Remediation behavior:
 - `missing_light_pack`: re-run `scripts/attach-target-repo.py ...` for the target repo and runtime-state root.

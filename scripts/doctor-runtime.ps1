@@ -352,6 +352,11 @@ print(
             "binding_state": posture.binding_state,
             "fail_closed": posture.fail_closed,
             "remediation": posture.remediation,
+            "provenance_state": (
+                posture.provenance_summary.get("state")
+                if isinstance(posture.provenance_summary, dict)
+                else None
+            ),
         },
         sort_keys=True,
     )
@@ -366,6 +371,7 @@ print(
   $normalizedAttachmentPosture = ($attachmentJson.binding_state.Trim()).Replace("_", "-")
   $failClosed = [bool]$attachmentJson.fail_closed
   $remediation = [string]$attachmentJson.remediation
+  $provenanceState = [string]$attachmentJson.provenance_state
   $actions = Resolve-AttachmentRemediationActions -BindingState $normalizedAttachmentPosture -AttachmentRoot $AttachmentRoot -RuntimeStateRoot $RuntimeStateRoot
   $remediationEvidencePath = Write-AttachmentRemediationEvidence `
     -RuntimeStateRoot $RuntimeStateRoot `
@@ -386,6 +392,13 @@ print(
       Write-Host "REMEDIATE-ACTION $action"
     }
     throw "Attachment posture requires remediation before execution can continue"
+  }
+
+  if ($provenanceState -eq "present") {
+    Write-CheckOk "attachment-light-pack-provenance"
+  }
+  elseif ($provenanceState -eq "unsupported") {
+    Write-CheckWarn "attachment-light-pack-provenance-unsupported"
   }
 
   $dependencyBaselineResult = & $python.Source "scripts/verify-dependency-baseline.py" "--target-repo-root" $AttachmentRoot "--require-target-repo-baseline" 2>&1

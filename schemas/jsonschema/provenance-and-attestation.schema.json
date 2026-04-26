@@ -60,7 +60,8 @@
         "schema_bundle",
         "release",
         "evidence_bundle",
-        "governance_asset"
+        "governance_asset",
+        "repo_light_pack"
       ],
       "type": "string"
     },
@@ -114,6 +115,27 @@
     },
     "build_ref": {
       "type": "string"
+    },
+    "source_ref": {
+      "type": "string"
+    },
+    "generator_version": {
+      "type": "string"
+    },
+    "input_digest": {
+      "type": "string"
+    },
+    "output_digest": {
+      "type": "string"
+    },
+    "target_repo_binding": {
+      "type": "string"
+    },
+    "waiver_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "control_pack_ref": {
       "type": "string"

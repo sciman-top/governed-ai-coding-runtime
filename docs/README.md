@@ -66,7 +66,7 @@
 - `Post-Closeout Optimization Queue / GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20).
 - `Near-Term Gap Horizon Queue / GAP-080` through `GAP-089` are complete on the current branch baseline (`GAP-080` through `GAP-084` verified on 2026-04-21; `GAP-085` through `GAP-089` verified on 2026-04-22).
 - `Long-Term Gap Trigger Audit Queue / GAP-090` through `GAP-092` is complete; all `LTP-01..05` packages remain deferred pending future trigger evidence.
-- `Optimized Hybrid Long-Term Implementation Queue / GAP-093` through `GAP-102` is planned from the 2026-04-27 stack review; it includes `LTP-06` as a trigger-based supply-chain-hardening candidate.
+- `Optimized Hybrid Long-Term Implementation Queue / GAP-093` planning baseline, `GAP-094` execution-containment contract slice, and `GAP-095` provenance floor are complete; `GAP-096` through `GAP-102` remain planned from the 2026-04-27 stack review, including `LTP-06` as a trigger-based supply-chain-hardening candidate.
 - New LTP implementation queue items beyond this package must use ids beyond `GAP-102` and must be selected by the applicable scope fence.
 - Active verification for this repo remains `build -> test -> contract/invariant -> doctor`, with docs and script checks still included in `verify-repo -Check All`.
 - `docs/change-evidence/` remains historical evidence and planning trace, not the primary user-facing product surface.

@@ -127,6 +127,7 @@ def main() -> int:
                 "binding": asdict(result.binding),
                 "repo_profile_path": result.repo_profile_path,
                 "light_pack_path": result.light_pack_path,
+                "provenance_path": result.provenance_path,
                 "written_files": result.written_files,
                 "context_pack_summary": result.context_pack_summary,
                 "gate_command_source": gate_command_source,

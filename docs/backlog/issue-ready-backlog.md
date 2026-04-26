@@ -669,46 +669,46 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: AFK
 - Blocked by: GAP-092
 - User stories: 1, 23, 29, 31
-- Status: planned
+- Status: complete on current branch baseline (validated on 2026-04-27)
 - What to build:
   - create the optimized hybrid long-term roadmap and implementation plan
   - add `GAP-093..102` to backlog, issue seeds, plan index, docs index, and evidence
   - extend issue-seeding label mapping for the new queue
   - keep `LTP-01..06` trigger-based rather than starting implementation
 - Acceptance criteria:
-  - [ ] roadmap, implementation plan, backlog, issue seeds, plan index, and docs index agree on `GAP-093..102`
-  - [ ] issue rendering validates all task bodies without GitHub calls
-  - [ ] evidence records commands, changed files, residual risks, and rollback
+  - [x] roadmap, implementation plan, backlog, issue seeds, plan index, and docs index agree on `GAP-093..102`
+  - [x] issue rendering validates all task bodies without GitHub calls
+  - [x] evidence records commands, changed files, residual risks, and rollback
 
 ### GAP-094 Execution Containment Contract And Tool Coverage Floor
 - Type: AFK
 - Blocked by: GAP-093
 - User stories: 8, 10, 17, 27, 31
-- Status: planned
+- Status: complete on current branch baseline (contract slice validated on 2026-04-27)
 - What to build:
   - inventory governed executable tool families such as file write, shell, git, package manager, browser automation, and MCP or tool bridges where present
   - define shared containment fields for workspace roots, path roots, environment policy, network posture, timeout, approval class, evidence refs, and rollback refs
   - make unclassified executable tool families fail closed or require explicit waiver
 - Acceptance criteria:
-  - [ ] every governed executable tool family has a declared containment profile
-  - [ ] unclassified executable tools fail closed or require explicit waiver
-  - [ ] execution evidence records containment metadata and rollback metadata
-  - [ ] containment contract has schema/spec/test coverage
+  - [x] every governed executable tool family has a declared containment profile
+  - [x] unclassified executable tools fail closed or require explicit waiver
+  - [x] execution evidence records containment metadata and rollback metadata
+  - [x] containment contract has schema/spec/test coverage
 
 ### GAP-095 Provenance And Light-Pack Release Evidence Floor
 - Type: AFK
 - Blocked by: GAP-094
 - User stories: 18, 21, 31, 37, 38, 44
-- Status: planned
+- Status: complete on current branch baseline (validated on 2026-04-27)
 - What to build:
   - define provenance records for generated repo-local light packs, control packs, and release-adjacent artifacts
   - record source ref, generator version, input hash, output hash, target repo binding, and waiver metadata
   - make doctor or verifier output distinguish missing provenance from unsupported provenance
 - Acceptance criteria:
-  - [ ] generated light packs and control packs can carry provenance metadata
-  - [ ] release-adjacent artifacts have either provenance or an explicit waiver
-  - [ ] verifier/doctor output distinguishes missing provenance from unsupported provenance
-  - [ ] documentation explains rollback and regeneration behavior
+  - [x] generated light packs and control packs can carry provenance metadata
+  - [x] release-adjacent artifacts have either provenance or an explicit waiver
+  - [x] verifier/doctor output distinguishes missing provenance from unsupported provenance
+  - [x] documentation explains rollback and regeneration behavior
 
 ### GAP-096 Service-Shaped Transition Stack Convergence Gate
 - Type: AFK
