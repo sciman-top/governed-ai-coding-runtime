@@ -8,6 +8,10 @@
       "-AllTargets",
       "-ApplyAllFeatures"
     ],
+    "coding_speed_profile_args": [
+      "-AllTargets",
+      "-ApplyCodingSpeedProfile"
+    ],
     "feature_baseline_and_milestone_args": [
       "-AllTargets",
       "-ApplyFeatureBaselineAndMilestoneCommit",
@@ -16,6 +20,7 @@
     ],
     "required_json_fields": [
       "apply_all_features",
+      "apply_coding_speed_profile",
       "apply_feature_baseline_and_milestone_commit",
       "governance_baseline_sync_active",
       "milestone_gate_mode",

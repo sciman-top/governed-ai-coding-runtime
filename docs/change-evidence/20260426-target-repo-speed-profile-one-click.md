@@ -136,9 +136,28 @@
   - Skip preconditions are fail-closed: governance baseline sync must report no changed catalog/profile/speed/managed-file fields, missing sync change fields are treated as changed, the target must be a git repository, and `git status --porcelain` must be empty.
   - Non-skippable cases still run the configured milestone gate: full/release/onboard/high-risk/write-flow paths, baseline sync changes, non-git targets, git status failures, and any pending target worktree changes.
   - JSON telemetry now exposes `clean_milestone_gate_skip_enabled`, `clean_milestone_gate_skip_source`, `milestone_gate_skipped`, and `milestone_gate_skip_reason`.
+- Coding-speed one-click alias:
+  - Added `runtime-flow-preset.ps1 -ApplyCodingSpeedProfile` as the user-facing alias for applying target-repo coding speed profile updates.
+  - The alias still uses the existing governance baseline sync path, catalog facts, quick/full speed-group derivation, and consistency checks; it does not create a second rollout implementation.
+  - JSON telemetry now exposes `apply_coding_speed_profile` so evidence can distinguish an intentional speed-profile apply from the broader `-ApplyGovernanceBaselineOnly` compatibility path.
+  - Updated the rollout contract and test-slicing policy so the direct one-click command is discoverable while preserving `-ApplyGovernanceBaselineOnly` as a compatible fallback.
 
 ## Verification
 - `Measure-Command { pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\runtime-flow-preset.ps1 -AllTargets -ApplyGovernanceBaselineOnly -Json | Out-Null }` -> baseline no-op sync `TotalSeconds=1.43`.
+- `Measure-Command { pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\runtime-flow-preset.ps1 -AllTargets -ApplyGovernanceBaselineOnly -Json | Out-Null }` -> pre-change no-op sync `TotalSeconds=1.53`.
+- `python -m unittest tests.runtime.test_runtime_flow_preset.RuntimeFlowPresetScriptTests.test_runtime_flow_preset_apply_governance_baseline_only_skips_runtime_flow` -> pre-change baseline passed, `Ran 1 test`.
+- `python scripts\verify-target-repo-governance-consistency.py` -> pre-change baseline passed, `target_count=5`, `drift_count=0`.
+- `python -m unittest tests.runtime.test_runtime_flow_preset.RuntimeFlowPresetScriptTests.test_runtime_flow_preset_apply_coding_speed_profile_alias_uses_baseline_sync` -> passed, `Ran 1 test`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -Command '$errors=$null; $tokens=$null; $null = [System.Management.Automation.Language.Parser]::ParseFile("scripts/runtime-flow-preset.ps1", [ref]$tokens, [ref]$errors); if ($errors.Count -gt 0) { $errors | ForEach-Object { $_.Message }; exit 1 }; "parse-ok"'` -> `parse-ok`.
+- `python -m json.tool docs\targets\target-repo-rollout-contract.json` + `target-repo-governance-baseline.json` + `target-repos-catalog.json` -> passed.
+- `python -m unittest tests.runtime.test_runtime_flow_preset` -> passed after alias, `Ran 16 tests`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\runtime-flow-preset.ps1 -AllTargets -ApplyCodingSpeedProfile -Json` -> passed, `target_count=5`, `failure_count=0`, `apply_coding_speed_profile=true`, all `governance_sync_changed=[]`, all `governance_sync_speed_changed=[]`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\build-runtime.ps1` -> passed after alias, `OK python-bytecode`, `OK python-import`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify-repo.ps1 -Check Runtime` -> passed after alias, `Ran 408 tests`, `skipped=2`, plus `Ran 10 tests`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify-repo.ps1 -Check Contract` -> passed after alias, including `target-repo-rollout-contract`, `target-repo-governance-consistency`, `target-repo-powershell-policy`, and `agent-rule-sync`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\doctor-runtime.ps1` -> passed after alias.
+- `python scripts\verify-target-repo-governance-consistency.py` -> passed after alias, `target_count=5`, `drift_count=0`.
+- `git diff --check` -> exit code `0`; only expected CRLF normalization warnings were printed.
 - `python -m unittest tests.runtime.test_runtime_flow_preset.RuntimeFlowPresetScriptTests.test_runtime_flow_preset_auto_fast_skips_clean_milestone_gate tests.runtime.test_runtime_flow_preset.RuntimeFlowPresetScriptTests.test_runtime_flow_preset_auto_fast_runs_gate_when_sync_changes` -> passed, `Ran 2 tests`.
 - `pwsh -NoProfile -ExecutionPolicy Bypass -Command '$errors=$null; $tokens=$null; $null = [System.Management.Automation.Language.Parser]::ParseFile("scripts/runtime-flow-preset.ps1", [ref]$tokens, [ref]$errors); if ($errors.Count -gt 0) { $errors | ForEach-Object { $_.Message }; exit 1 }; "parse-ok"'` -> `parse-ok`.
 - `python -m unittest tests.runtime.test_runtime_flow_preset` -> passed, `Ran 15 tests`.

@@ -35,6 +35,7 @@ param(
   [switch]$FailFast,
   [switch]$SkipGovernanceBaselineSync,
   [switch]$ApplyAllFeatures,
+  [switch]$ApplyCodingSpeedProfile,
   [switch]$ApplyFeatureBaselineOnly,
   [switch]$ApplyGovernanceBaselineOnly,
   [switch]$ApplyFeatureBaselineAndMilestoneCommit,
@@ -1568,13 +1569,14 @@ else {
   Resolve-AbsolutePath -PathValue $PruneRunsRoot
 }
 $applyAllFeatures = [bool]$ApplyAllFeatures
-$applyFeatureBaselineOnly = ($ApplyGovernanceBaselineOnly -or $ApplyFeatureBaselineOnly)
+$applyCodingSpeedProfile = [bool]$ApplyCodingSpeedProfile
+$applyFeatureBaselineOnly = ($ApplyGovernanceBaselineOnly -or $ApplyFeatureBaselineOnly -or $applyCodingSpeedProfile)
 $applyFeatureBaselineAndMilestoneCommit = [bool]$ApplyFeatureBaselineAndMilestoneCommit
 if ($applyAllFeatures -and ($applyFeatureBaselineOnly -or $applyFeatureBaselineAndMilestoneCommit)) {
-  throw "-ApplyAllFeatures is mutually exclusive with -ApplyFeatureBaselineOnly/-ApplyGovernanceBaselineOnly and -ApplyFeatureBaselineAndMilestoneCommit."
+  throw "-ApplyAllFeatures is mutually exclusive with -ApplyCodingSpeedProfile/-ApplyFeatureBaselineOnly/-ApplyGovernanceBaselineOnly and -ApplyFeatureBaselineAndMilestoneCommit."
 }
 if ($applyFeatureBaselineOnly -and $applyFeatureBaselineAndMilestoneCommit) {
-  throw "-ApplyFeatureBaselineOnly/-ApplyGovernanceBaselineOnly and -ApplyFeatureBaselineAndMilestoneCommit are mutually exclusive."
+  throw "-ApplyCodingSpeedProfile/-ApplyFeatureBaselineOnly/-ApplyGovernanceBaselineOnly and -ApplyFeatureBaselineAndMilestoneCommit are mutually exclusive."
 }
 if ($PruneKeepDays -lt 0) {
   throw "-PruneKeepDays must be >= 0."
@@ -1724,6 +1726,9 @@ foreach ($targetName in $selectedTargets) {
   }
   elseif ($applyFeatureBaselineAndMilestoneCommit) {
     "baseline_and_milestone"
+  }
+  elseif ($applyCodingSpeedProfile) {
+    "coding_speed_profile"
   }
   elseif ($applyFeatureBaselineOnly) {
     "baseline_only"
@@ -2088,6 +2093,7 @@ if ($Json) {
       all_targets                     = [bool]$AllTargets
       flow_mode                       = $FlowMode
       apply_all_features              = [bool]$applyAllFeatures
+      apply_coding_speed_profile      = [bool]$applyCodingSpeedProfile
       apply_feature_baseline_only     = [bool]$applyFeatureBaselineOnly
       apply_governance_baseline_only  = [bool]$ApplyGovernanceBaselineOnly
       apply_feature_baseline_and_milestone_commit = [bool]$applyFeatureBaselineAndMilestoneCommit

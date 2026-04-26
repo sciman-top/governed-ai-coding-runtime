@@ -481,6 +481,107 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             self.assertEqual(profile["required_entrypoint_policy"]["current_mode"], "targeted_enforced")
             self.assertEqual(profile["auto_commit_policy"]["enabled"], True)
 
+    def test_runtime_flow_preset_apply_coding_speed_profile_alias_uses_baseline_sync(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_a = workspace / "repo-a"
+            _write_json(
+                repo_a / ".governed-ai" / "repo-profile.json",
+                {
+                    "repo_id": "repo-a",
+                    "required_entrypoint_policy": {"current_mode": "advisory"},
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": str(repo_a),
+                            "attachment_runtime_state_root": str(workspace / "state" / "repo-a"),
+                            "repo_id": "repo-a",
+                            "display_name": "repo-a",
+                            "primary_language": "python",
+                            "build_command": "python --version",
+                            "test_command": "python -m unittest discover",
+                            "quick_test_command": "python -m unittest tests.test_fast",
+                            "quick_test_reason": "Focused fast regression slice.",
+                            "contract_command": "python -m unittest tests.test_contract",
+                        }
+                    },
+                },
+            )
+            baseline_path = workspace / "target-repo-governance-baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-04-26.9",
+                    "target_repo_speed_profile_policy": {
+                        "enabled": True,
+                        "materialize_quick_gate_commands": True,
+                        "materialize_full_gate_commands": True,
+                        "preserve_existing_gate_commands": True,
+                        "refresh_existing_derived_gate_commands": True,
+                        "default_gate_timeout_seconds": 90,
+                        "quick_gate_timeout_seconds": 30,
+                        "full_gate_timeout_seconds": 60,
+                    },
+                    "required_profile_overrides": {
+                        "required_entrypoint_policy": {"current_mode": "targeted_enforced"},
+                        "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                    },
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "runtime-flow-preset.ps1"),
+                    "-AllTargets",
+                    "-ApplyCodingSpeedProfile",
+                    "-Json",
+                    "-CatalogPath",
+                    str(catalog_path),
+                    "-GovernanceBaselinePath",
+                    str(baseline_path),
+                    "-RuntimeFlowPath",
+                    str(workspace / "missing-runtime-flow.ps1"),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertTrue(payload["apply_coding_speed_profile"])
+            self.assertTrue(payload["apply_feature_baseline_only"])
+            self.assertFalse(payload["apply_governance_baseline_only"])
+            self.assertTrue(payload["governance_baseline_sync_active"])
+            self.assertEqual(payload["failure_count"], 0)
+            self.assertEqual(payload["results"][0]["flow_exit_code"], 0)
+            self.assertEqual(payload["results"][0]["governance_sync_status"], "pass")
+            self.assertEqual(
+                payload["results"][0]["governance_sync_speed_changed"],
+                ["quick_gate_commands", "full_gate_commands", "gate_timeout_seconds"],
+            )
+
+            profile = json.loads((repo_a / ".governed-ai" / "repo-profile.json").read_text(encoding="utf-8"))
+            self.assertEqual(profile["quick_gate_commands"][0]["command"], "python -m unittest tests.test_fast")
+            self.assertEqual(profile["quick_gate_commands"][0]["description"], "Focused fast regression slice.")
+            self.assertEqual(profile["full_gate_commands"][1]["command"], "python -m unittest discover")
+
     def test_runtime_flow_preset_apply_governance_baseline_only_bootstraps_blank_target(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)

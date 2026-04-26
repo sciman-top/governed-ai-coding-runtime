@@ -7,7 +7,8 @@ Keep daily target-repo feedback fast without weakening full/release verification
 This policy is persisted through the target catalog and one-click governance baseline sync:
 
 - Source of truth: `docs/targets/target-repos-catalog.json`.
-- One-click apply: `scripts/runtime-flow-preset.ps1 -AllTargets -ApplyGovernanceBaselineOnly`.
+- One-click coding-speed apply: `scripts/runtime-flow-preset.ps1 -AllTargets -ApplyCodingSpeedProfile`.
+- Compatibility apply: `scripts/runtime-flow-preset.ps1 -AllTargets -ApplyGovernanceBaselineOnly`.
 - Apply implementation: `scripts/apply-target-repo-governance.py`.
 - Drift check: `scripts/verify-target-repo-governance-consistency.py`.
 - Execution: `scripts/governance/fast-check.ps1` reads `quick_gate_commands`; `full-check.ps1` reads `full_gate_commands`.
@@ -112,6 +113,6 @@ The full `self-runtime` test command remains `pwsh -NoProfile -ExecutionPolicy B
 Remove `quick_test_command` and optional companion fields from the target catalog entry, or remove `.governed-ai/quick-test-slice.recommendation.json`, then run:
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\runtime-flow-preset.ps1 -AllTargets -ApplyGovernanceBaselineOnly -Json
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\runtime-flow-preset.ps1 -AllTargets -ApplyCodingSpeedProfile -Json
 python scripts\verify-target-repo-governance-consistency.py
 ```
