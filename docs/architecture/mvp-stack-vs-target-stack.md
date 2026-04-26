@@ -84,6 +84,15 @@ The runtime should keep ports and boundaries clean enough that these capabilitie
 
 Final-state best practice is the north star. MVP implementation is the tracer bullet. A capability may be required by the final state while still deferred from the first runnable slice.
 
+## Convergence Gate
+Transition-stack adoption is now checked by `docs/architecture/transition-stack-convergence-policy.json` and `scripts/verify-transition-stack-convergence.py`.
+
+The gate enforces the following baseline:
+- observed `FastAPI`, `Pydantic`, PostgreSQL adapter, or external `OpenTelemetry` imports must map to an active boundary or fail closed
+- JSON Schema remains the cross-tool source of truth
+- local filesystem and SQLite-style operation remain valid for single-machine use
+- CLI/API parity tests and wrapper drift guards must stay wired before service-shaped dependencies can broaden behavior
+
 ## Recommended Implementation Order
 1. typed contracts and task model
 2. durable task store

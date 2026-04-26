@@ -15,7 +15,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - post-closeout optimization queue `GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20) and does not reopen hybrid final-state closure
 - optimized best-state near-term gap horizon queue `NTP-01..10` is complete on the current branch baseline (`GAP-080` through `GAP-084`, verified on 2026-04-21; `GAP-085` through `GAP-089`, verified on 2026-04-22)
 - long-term gap trigger audit queue `GAP-090` through `GAP-092` is complete; all `LTP-01..05` packages remain deferred pending future trigger evidence
-- optimized hybrid long-term implementation queue `GAP-093` through `GAP-102` is planned from the 2026-04-27 stack review; `LTP-01..06` remain trigger-based until explicit scope-fence evidence exists
+  - optimized hybrid long-term implementation queue `GAP-093` through `GAP-102` is complete on the current branch baseline; `LTP-01..06` remain trigger-based until fresh scope-fence evidence exists
 
 ## Current Baseline
 - PRD, architecture, ADRs, specs, runtime contract primitives, repo verifier entrypoints, sample repo profiles, and a runtime-consumable control pack already exist.
@@ -33,7 +33,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Post-Closeout Optimization Queue / GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20).
 - `Near-Term Gap Horizon Queue / GAP-080` through `GAP-089` are complete on the current branch baseline (`GAP-080` through `GAP-084` verified on 2026-04-21; `GAP-085` through `GAP-089` verified on 2026-04-22).
 - `Long-Term Gap Trigger Audit Queue / GAP-090` through `GAP-092` is complete; all `LTP-01..05` packages remain deferred pending future trigger evidence.
-- `Optimized Hybrid Long-Term Implementation Queue / GAP-093` through `GAP-102` is planned from the 2026-04-27 optimized final-state and stack-staging review.
+- `Optimized Hybrid Long-Term Implementation Queue / GAP-093` through `GAP-102` is complete on the current branch baseline; no `LTP-01..06` implementation package was selected.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -714,107 +714,107 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: AFK
 - Blocked by: GAP-095
 - User stories: 1, 11, 13, 17, 39, 44
-- Status: planned
+- Status: complete on current branch baseline (verified on 2026-04-27)
 - What to build:
   - define when transition-stack dependencies are allowed for API boundary, typed runtime validation, durable metadata, tracing, and containment
   - keep local single-machine use functional without forcing service infrastructure
   - add drift checks for API/CLI parity and boundary-owned validation
 - Acceptance criteria:
-  - [ ] `FastAPI` is allowed only for active service API boundaries
-  - [ ] `Pydantic v2` is used at API/runtime validation boundaries, not as duplicate schema truth
-  - [ ] SQLite/filesystem remain valid for local use while PostgreSQL is scoped to service-shaped metadata pressure
-  - [ ] tracing hooks exist at runtime/API boundaries without requiring a full observability stack
-  - [ ] CLI and API paths share the same contract behavior for execution-like commands
+  - [x] `FastAPI` is allowed only for active service API boundaries
+  - [x] `Pydantic v2` is used at API/runtime validation boundaries, not as duplicate schema truth
+  - [x] SQLite/filesystem remain valid for local use while PostgreSQL is scoped to service-shaped metadata pressure
+  - [x] tracing hooks exist at runtime/API boundaries without requiring a full observability stack
+  - [x] CLI and API paths share the same contract behavior for execution-like commands
 
 ### GAP-097 Orchestration And Policy Trigger Review
 - Type: HITL
 - Blocked by: GAP-096
 - User stories: 13, 15, 21, 23, 39, 44
-- Status: planned
+- Status: complete on current branch baseline (verified on 2026-04-27)
 - What to build:
   - evaluate `LTP-01 orchestration-depth` and `LTP-02 policy-runtime-separation`
   - use real runtime traces, failure signatures, policy count, waiver count, retry or compensation complexity, and review burden
   - classify each package as `not_triggered`, `watch`, or `triggered`
 - Acceptance criteria:
-  - [ ] orchestration trigger decision is evidence-backed
-  - [ ] policy trigger decision is evidence-backed
-  - [ ] no workflow engine or external policy runtime is started without a selected scope fence
-  - [ ] decision evidence includes rollback and next review trigger
+  - [x] orchestration trigger decision is evidence-backed
+  - [x] policy trigger decision is evidence-backed
+  - [x] no workflow engine or external policy runtime is started without a selected scope fence
+  - [x] decision evidence includes rollback and next review trigger
 
 ### GAP-098 Data Plane And Operations Trigger Review
 - Type: HITL
 - Blocked by: GAP-097
 - User stories: 13, 14, 15, 21, 39, 45
-- Status: planned
+- Status: complete on current branch baseline (verified on 2026-04-27)
 - What to build:
   - evaluate `LTP-03 data-plane-scaling` and `LTP-05 operations-hardening`
   - use event volume, replay retention, artifact size, query latency, evidence recovery, sustained workload, SLO, and failure-remediation signals
   - separate runtime failures from target-repo business failures
 - Acceptance criteria:
-  - [ ] data-plane trigger decision is evidence-backed
-  - [ ] operations-hardening trigger decision is evidence-backed
-  - [ ] no event bus, semantic store, or full observability suite is introduced without trigger evidence
-  - [ ] decision evidence separates runtime failures from target-repo business failures
+  - [x] data-plane trigger decision is evidence-backed
+  - [x] operations-hardening trigger decision is evidence-backed
+  - [x] no event bus, semantic store, or full observability suite is introduced without trigger evidence
+  - [x] decision evidence separates runtime failures from target-repo business failures
 
 ### GAP-099 Multi-Host And Protocol Trigger Review
 - Type: HITL
 - Blocked by: GAP-098
 - User stories: 2, 20, 31, 37, 44, 46
-- Status: planned
+- Status: complete on current branch baseline (verified on 2026-04-27)
 - What to build:
   - evaluate `LTP-04 multi-host-first-class` and protocol boundary depth
   - check Codex and non-Codex conformance parity, adapter evidence, MCP/A2A boundary pressure, and product demand
   - preserve kernel-owned task lifecycle, approval, rollback, and evidence semantics
 - Acceptance criteria:
-  - [ ] multi-host trigger decision is evidence-backed
-  - [ ] protocol-boundary decision is evidence-backed
-  - [ ] MCP/A2A are treated as integration protocols, not runtime governance owners
-  - [ ] selected next steps preserve adapter conformance and fail-closed behavior
+  - [x] multi-host trigger decision is evidence-backed
+  - [x] protocol-boundary decision is evidence-backed
+  - [x] MCP/A2A are treated as integration protocols, not runtime governance owners
+  - [x] selected next steps preserve adapter conformance and fail-closed behavior
 
 ### GAP-100 Selected LTP Scope Fence And Architecture ADR
 - Type: HITL
 - Blocked by: GAP-097, GAP-098, GAP-099
 - User stories: 18, 21, 23, 29, 31, 44
-- Status: planned
+- Status: complete on current branch baseline (verified on 2026-04-27; all `LTP-01..06` deferred)
 - What to build:
   - select exactly one `LTP-01..06` package for implementation, or defer all packages with evidence
   - create an architecture decision, bounded scope, verification floor, rollback plan, and owner/evidence path for any selected package
   - update backlog and issue seeds for the selected package without widening unrelated packages
 - Acceptance criteria:
-  - [ ] exactly one package is selected, or all packages are deferred with reasons
-  - [ ] selected package has a bounded vertical slice and explicit non-goals
-  - [ ] selected package has verification, rollback, compatibility, and evidence requirements
-  - [ ] non-selected packages remain visible as deferred/watch, not silently dropped
+  - [x] exactly one package is selected, or all packages are deferred with reasons
+  - [x] selected package has a bounded vertical slice and explicit non-goals
+  - [x] selected package has verification, rollback, compatibility, and evidence requirements
+  - [x] non-selected packages remain visible as deferred/watch, not silently dropped
 
 ### GAP-101 Selected LTP Implementation Batch 1
 - Type: HITL
 - Blocked by: GAP-100
 - User stories: 8, 10, 13, 14, 15, 31, 44
-- Status: planned
+- Status: complete as deferred-no-implementation on current branch baseline (verified on 2026-04-27)
 - What to build:
   - implement the first vertical slice of the package selected by `GAP-100`
   - cover contract, runtime behavior, operator/evidence surface, tests, and rollback
   - keep all other long-term packages out of scope
 - Acceptance criteria:
-  - [ ] implementation touches only the selected package scope
-  - [ ] contract, runtime, evidence, and operator surfaces agree
-  - [ ] fallback or rollback behavior is explicit and tested
-  - [ ] closeout evidence includes commands, outputs, risks, and compatibility notes
+  - [x] implementation touches only the selected package scope
+  - [x] contract, runtime, evidence, and operator surfaces agree
+  - [x] fallback or rollback behavior is explicit and tested
+  - [x] closeout evidence includes commands, outputs, risks, and compatibility notes
 
 ### GAP-102 Sustained Optimized Hybrid Release Readiness Closeout
 - Type: HITL
 - Blocked by: GAP-101
 - User stories: 13, 14, 18, 21, 29, 37, 44, 45
-- Status: planned
+- Status: complete on current branch baseline (verified on 2026-04-27)
 - What to build:
   - run a sustained evidence window against self-runtime and representative target repos
   - refresh final-state claims, roadmap labels, backlog statuses, issue seeds, and evidence links
   - confirm that containment, provenance, transition-stack boundaries, and any selected LTP implementation remain reproducible
 - Acceptance criteria:
-  - [ ] fresh gates support every visible optimized final-state claim
-  - [ ] target-repo or representative workload evidence is linked
-  - [ ] claim catalog, roadmap, implementation plan, backlog, issue seeds, and evidence agree
-  - [ ] residual risks and next review triggers are explicit
+  - [x] fresh gates support every visible optimized final-state claim
+  - [x] target-repo or representative workload evidence is linked
+  - [x] claim catalog, roadmap, implementation plan, backlog, issue seeds, and evidence agree
+  - [x] residual risks and next review triggers are explicit
 
 ## Vision
 

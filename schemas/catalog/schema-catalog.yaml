@@ -1,4 +1,4 @@
-schema_catalog_version: "1.9"
+schema_catalog_version: "1.10"
 items:
   - name: control-registry
     path: schemas/jsonschema/control-registry.schema.json
@@ -87,3 +87,6 @@ items:
   - name: learning-efficiency-metrics
     path: schemas/jsonschema/learning-efficiency-metrics.schema.json
     source_spec: docs/specs/learning-efficiency-metrics-spec.md
+  - name: transition-stack-convergence
+    path: schemas/jsonschema/transition-stack-convergence.schema.json
+    source_spec: docs/specs/transition-stack-convergence-spec.md

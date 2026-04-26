@@ -36,6 +36,7 @@
   - `docs/specs/verification-gates-spec.md`
   - `docs/specs/eval-and-trace-grading-spec.md`
   - `docs/specs/policy-decision-spec.md`
+  - `docs/specs/transition-stack-convergence-spec.md`
 
 ## Goal
 - 为 `governed-ai-coding-runtime` 提供一份从零开始可落地的终态架构说明。
@@ -71,6 +72,10 @@
 
 ## Stack Staging Rule (2026-04-27)
 本文的技术栈是 staged recommendation，不是一次性采购清单。
+
+The staged recommendation is mechanically guarded by:
+- `docs/architecture/transition-stack-convergence-policy.json`
+- `scripts/verify-transition-stack-convergence.py`
 
 ### Current verified baseline
 - `Python` standard library contracts and runtime primitives

@@ -5,6 +5,7 @@
 - It starts after the completed `GAP-090..092` trigger-audit queue.
 - It does not mark any `LTP` package as already triggered or implemented.
 - It translates the optimized hybrid final state into a dependency-ordered queue: `GAP-093..102`.
+- `GAP-093..102` are complete on the current branch baseline. No `LTP-01..06` package was selected or implemented.
 
 ## Goal
 Move from the current verified hybrid baseline to a sustained optimized hybrid final state without turning every attractive final-state component into mandatory near-term infrastructure.

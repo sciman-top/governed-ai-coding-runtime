@@ -3,7 +3,7 @@
 ## Status
 - Created from the 2026-04-27 optimized hybrid final-state and stack-staging review.
 - Future-facing queue: `GAP-093..102`.
-- Current posture: `GAP-093` planning baseline, `GAP-094` containment contract slice, and `GAP-095` provenance floor are complete. No long-term package is implemented by this document.
+- Current posture: `GAP-093..102` are complete. No long-term package was implemented; `LTP-01..06` remain deferred/watch or not triggered pending fresh scope-fence evidence.
 
 ## Goal
 Provide an implementation-ready plan for the long-term optimized hybrid final state while preserving the current rule that heavyweight components remain trigger-based.
@@ -141,13 +141,14 @@ AFK
 - Add drift checks for API/CLI parity and boundary-owned validation.
 
 ### Acceptance Criteria
-- [ ] `FastAPI` is allowed only for active service API boundaries
-- [ ] `Pydantic v2` is used at API/runtime validation boundaries, not as a duplicate schema truth
-- [ ] SQLite/filesystem remain valid for local use; PostgreSQL is scoped to service-shaped metadata pressure
-- [ ] tracing hooks exist at runtime/API boundaries without requiring a full observability stack
-- [ ] CLI and API paths share the same contract behavior for execution-like commands
+- [x] `FastAPI` is allowed only for active service API boundaries
+- [x] `Pydantic v2` is used at API/runtime validation boundaries, not as a duplicate schema truth
+- [x] SQLite/filesystem remain valid for local use; PostgreSQL is scoped to service-shaped metadata pressure
+- [x] tracing hooks exist at runtime/API boundaries without requiring a full observability stack
+- [x] CLI and API paths share the same contract behavior for execution-like commands
 
 ### Verification
+- `python scripts/verify-transition-stack-convergence.py`
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`
 - targeted API/CLI parity tests for touched surfaces
@@ -176,10 +177,10 @@ HITL
 - Decide `not_triggered`, `watch`, or `triggered` for each package.
 
 ### Acceptance Criteria
-- [ ] orchestration trigger decision is evidence-backed
-- [ ] policy trigger decision is evidence-backed
-- [ ] no workflow engine or external policy runtime is started without a selected scope fence
-- [ ] decision evidence includes rollback and next review trigger
+- [x] orchestration trigger decision is evidence-backed
+- [x] policy trigger decision is evidence-backed
+- [x] no workflow engine or external policy runtime is started without a selected scope fence
+- [x] decision evidence includes rollback and next review trigger
 
 ### Verification
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`
@@ -207,10 +208,10 @@ HITL
 - Use event volume, replay retention, artifact size, query latency, evidence recovery, sustained workload, SLO, and failure-remediation signals.
 
 ### Acceptance Criteria
-- [ ] data-plane trigger decision is evidence-backed
-- [ ] operations-hardening trigger decision is evidence-backed
-- [ ] no event bus, semantic store, or full observability suite is introduced without trigger evidence
-- [ ] decision evidence separates runtime failures from target-repo business failures
+- [x] data-plane trigger decision is evidence-backed
+- [x] operations-hardening trigger decision is evidence-backed
+- [x] no event bus, semantic store, or full observability suite is introduced without trigger evidence
+- [x] decision evidence separates runtime failures from target-repo business failures
 
 ### Verification
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`
@@ -239,10 +240,10 @@ HITL
 - Preserve kernel-owned task lifecycle, approval, rollback, and evidence semantics.
 
 ### Acceptance Criteria
-- [ ] multi-host trigger decision is evidence-backed
-- [ ] protocol-boundary decision is evidence-backed
-- [ ] MCP/A2A are treated as integration protocols, not runtime governance owners
-- [ ] selected next steps preserve adapter conformance and fail-closed behavior
+- [x] multi-host trigger decision is evidence-backed
+- [x] protocol-boundary decision is evidence-backed
+- [x] MCP/A2A are treated as integration protocols, not runtime governance owners
+- [x] selected next steps preserve adapter conformance and fail-closed behavior
 
 ### Verification
 - adapter conformance tests for touched hosts
@@ -274,10 +275,10 @@ HITL
 - Update backlog and issue seeds for the selected package without widening unrelated packages.
 
 ### Acceptance Criteria
-- [ ] exactly one package is selected, or all packages are deferred with reasons
-- [ ] selected package has a bounded vertical slice and explicit non-goals
-- [ ] selected package has verification, rollback, compatibility, and evidence requirements
-- [ ] non-selected packages remain visible as deferred/watch, not silently dropped
+- [x] exactly one package is selected, or all packages are deferred with reasons
+- [x] selected package has a bounded vertical slice and explicit non-goals
+- [x] selected package has verification, rollback, compatibility, and evidence requirements
+- [x] non-selected packages remain visible as deferred/watch, not silently dropped
 
 ### Verification
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/github/create-roadmap-issues.ps1 -ValidateOnly -RenderAll`
@@ -307,10 +308,10 @@ HITL
 - Keep all other long-term packages out of scope.
 
 ### Acceptance Criteria
-- [ ] implementation touches only the selected package scope
-- [ ] contract, runtime, evidence, and operator surfaces agree
-- [ ] fallback or rollback behavior is explicit and tested
-- [ ] closeout evidence includes commands, outputs, risks, and compatibility notes
+- [x] implementation touches only the selected package scope
+- [x] contract, runtime, evidence, and operator surfaces agree
+- [x] fallback or rollback behavior is explicit and tested
+- [x] closeout evidence includes commands, outputs, risks, and compatibility notes
 
 ### Verification
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`
@@ -337,10 +338,10 @@ HITL
 - Confirm that containment, provenance, transition-stack boundaries, and any selected LTP implementation remain reproducible.
 
 ### Acceptance Criteria
-- [ ] fresh gates support every visible optimized final-state claim
-- [ ] target-repo or representative workload evidence is linked
-- [ ] claim catalog, roadmap, implementation plan, backlog, issue seeds, and evidence agree
-- [ ] residual risks and next review triggers are explicit
+- [x] fresh gates support every visible optimized final-state claim
+- [x] target-repo or representative workload evidence is linked
+- [x] claim catalog, roadmap, implementation plan, backlog, issue seeds, and evidence agree
+- [x] residual risks and next review triggers are explicit
 
 ### Verification
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`

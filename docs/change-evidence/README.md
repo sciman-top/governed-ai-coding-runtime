@@ -4,6 +4,20 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260427 GAP-102 Sustained Optimized Hybrid Release Readiness Closeout](./20260427-gap-102-sustained-readiness-closeout.md)
+  - closeout evidence for `GAP-093..102`, including fresh full gates, representative runtime-flow evidence, and explicit deferred LTP posture
+- [20260427 GAP-101 Deferred No Implementation](./20260427-gap-101-deferred-no-implementation.md)
+  - closeout evidence that no selected LTP package exists after `GAP-100`, so the first implementation batch is intentionally deferred
+- [20260427 GAP-100 LTP Scope Fence Decision](./20260427-gap-100-ltp-scope-fence-decision.md)
+  - scope-fence evidence deferring all `LTP-01..06` packages and preventing an untriggered long-term implementation package
+- [20260427 GAP-099 Multi-Host And Protocol Trigger Review](./20260427-gap-099-multi-host-protocol-trigger-review.md)
+  - decision evidence for keeping first-class multi-host productization on watch and protocol-boundary depth not triggered
+- [20260427 GAP-098 Data Plane And Operations Trigger Review](./20260427-gap-098-data-plane-operations-trigger-review.md)
+  - decision evidence for keeping `LTP-03` on watch and `LTP-05` not triggered without introducing data-plane or full operations infrastructure
+- [20260427 GAP-097 Orchestration And Policy Trigger Review](./20260427-gap-097-orchestration-policy-trigger-review.md)
+  - decision evidence for keeping `LTP-01` on watch and `LTP-02` not triggered without starting workflow or policy-runtime packages
+- [20260427 GAP-096 Transition Stack Convergence](./20260427-gap-096-transition-stack-convergence.md)
+  - evidence companion for the transition-stack convergence contract, import drift verifier, and `Contract` gate integration
 - [20260426 Runtime State Symlink Guard Hardening](./20260426-runtime-state-symlink-guard-hardening.md)
   - evidence companion for resolved-path guards on task, artifact, and learning-efficiency metrics state writes
 - [20260426 GAP-092 LTP Start Decision](./20260426-gap-092-ltp-start-decision.md)

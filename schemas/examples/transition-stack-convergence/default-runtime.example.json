@@ -1,0 +1,105 @@
+{
+  "schema_version": "1.0",
+  "policy_id": "default-runtime-transition-stack",
+  "status": "enforced",
+  "components": [
+    {
+      "component_id": "fastapi-control-plane",
+      "module_roots": [
+        "fastapi"
+      ],
+      "adoption_status": "not_present",
+      "owner_boundary": "control-plane API routes",
+      "allowed_when": "A live HTTP route boundary requires request/response handling and API/CLI parity tests prove shared contract behavior.",
+      "implementation_refs": [
+        "apps/control-plane/app.py"
+      ],
+      "evidence_refs": [
+        "docs/change-evidence/20260427-gap-096-transition-stack-convergence.md"
+      ],
+      "rollback_ref": "git revert the FastAPI boundary slice and restore the stdlib control-plane dispatcher"
+    },
+    {
+      "component_id": "pydantic-runtime-validation",
+      "module_roots": [
+        "pydantic"
+      ],
+      "adoption_status": "not_present",
+      "owner_boundary": "API/runtime validation boundary",
+      "allowed_when": "Runtime or API inputs need typed validation that does not duplicate JSON Schema source-of-truth.",
+      "evidence_refs": [
+        "docs/change-evidence/20260427-gap-096-transition-stack-convergence.md"
+      ],
+      "rollback_ref": "remove the typed validation adapter and keep JSON Schema/Python contract validation"
+    },
+    {
+      "component_id": "postgres-service-metadata",
+      "module_roots": [
+        "psycopg",
+        "psycopg2",
+        "asyncpg",
+        "sqlalchemy"
+      ],
+      "adoption_status": "not_present",
+      "owner_boundary": "service-shaped durable metadata",
+      "allowed_when": "Metadata volume, query pressure, or multi-process service operation exceeds filesystem/local primitives.",
+      "implementation_refs": [
+        "packages/agent-runtime/persistence.py",
+        "infra/local-runtime/postgres/init.sql"
+      ],
+      "evidence_refs": [
+        "docs/change-evidence/20260427-gap-096-transition-stack-convergence.md"
+      ],
+      "rollback_ref": "disable the Postgres adapter and fall back to filesystem/local metadata primitives"
+    },
+    {
+      "component_id": "external-opentelemetry",
+      "module_roots": [
+        "opentelemetry"
+      ],
+      "adoption_status": "not_present",
+      "owner_boundary": "runtime/API tracing export",
+      "allowed_when": "The internal RuntimeTracer hook needs external trace export for sustained workload operation.",
+      "implementation_refs": [
+        "packages/observability/runtime_tracing.py"
+      ],
+      "evidence_refs": [
+        "docs/change-evidence/20260427-gap-096-transition-stack-convergence.md"
+      ],
+      "rollback_ref": "remove external exporter wiring and keep structured local trace events"
+    }
+  ],
+  "runtime_guards": {
+    "local_mode": {
+      "filesystem_allowed": true,
+      "sqlite_allowed": true,
+      "notes": "Local single-machine mode remains valid until service metadata pressure is proven."
+    },
+    "postgres_scope": {
+      "requires_service_metadata_pressure": true,
+      "requires_rollback": true,
+      "notes": "PostgreSQL is scoped to service-shaped metadata, not required for local operation."
+    },
+    "json_schema_truth": true,
+    "pydantic_scope": "API/runtime boundary validation only; JSON Schema remains cross-tool source-of-truth.",
+    "cli_api_parity_tests": [
+      "tests/service/test_control_plane_cli.py",
+      "tests/runtime/test_run_governed_task_service_wrapper.py"
+    ],
+    "tracing_hook_refs": [
+      "packages/observability/runtime_tracing.py",
+      "tests/service/test_session_api.py"
+    ],
+    "wrapper_drift_guard": {
+      "path": "scripts/run-governed-task.py",
+      "forbidden_tokens": [
+        "build_session_bridge_command(",
+        "handle_session_bridge_command("
+      ]
+    }
+  },
+  "evidence_refs": [
+    "docs/change-evidence/20260427-gap-096-transition-stack-convergence.md"
+  ],
+  "rollback_ref": "git revert the transition-stack convergence policy, verifier, tests, and evidence file"
+}

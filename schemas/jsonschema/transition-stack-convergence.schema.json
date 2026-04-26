@@ -1,0 +1,205 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/transition-stack-convergence.schema.json",
+  "title": "Transition Stack Convergence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "policy_id",
+    "status",
+    "components",
+    "runtime_guards",
+    "evidence_refs",
+    "rollback_ref"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "policy_id": {
+      "pattern": "^[a-z0-9_.-]+$",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "observe",
+        "enforced",
+        "waived"
+      ],
+      "type": "string"
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "component_id",
+          "module_roots",
+          "adoption_status",
+          "owner_boundary",
+          "allowed_when",
+          "evidence_refs",
+          "rollback_ref"
+        ],
+        "properties": {
+          "component_id": {
+            "pattern": "^[a-z0-9_.-]+$",
+            "type": "string"
+          },
+          "module_roots": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+              "type": "string"
+            }
+          },
+          "adoption_status": {
+            "enum": [
+              "not_present",
+              "local_only",
+              "active_boundary",
+              "watch",
+              "deferred"
+            ],
+            "type": "string"
+          },
+          "owner_boundary": {
+            "type": "string"
+          },
+          "allowed_when": {
+            "type": "string"
+          },
+          "implementation_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "evidence_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "rollback_ref": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "runtime_guards": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "local_mode",
+        "postgres_scope",
+        "json_schema_truth",
+        "pydantic_scope",
+        "cli_api_parity_tests",
+        "tracing_hook_refs",
+        "wrapper_drift_guard"
+      ],
+      "properties": {
+        "local_mode": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "filesystem_allowed",
+            "sqlite_allowed"
+          ],
+          "properties": {
+            "filesystem_allowed": {
+              "type": "boolean"
+            },
+            "sqlite_allowed": {
+              "type": "boolean"
+            },
+            "notes": {
+              "type": "string"
+            }
+          }
+        },
+        "postgres_scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "requires_service_metadata_pressure",
+            "requires_rollback"
+          ],
+          "properties": {
+            "requires_service_metadata_pressure": {
+              "type": "boolean"
+            },
+            "requires_rollback": {
+              "type": "boolean"
+            },
+            "notes": {
+              "type": "string"
+            }
+          }
+        },
+        "json_schema_truth": {
+          "type": "boolean"
+        },
+        "pydantic_scope": {
+          "type": "string"
+        },
+        "cli_api_parity_tests": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "tracing_hook_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "wrapper_drift_guard": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "forbidden_tokens"
+          ],
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "forbidden_tokens": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "rollback_ref": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

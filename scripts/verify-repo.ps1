@@ -545,6 +545,7 @@ function Invoke-ContractChecks {
   Invoke-SchemaExampleValidation
   Invoke-SchemaCatalogPairing
   Invoke-DependencyBaselineChecks
+  Invoke-TransitionStackConvergenceChecks
   Invoke-TargetRepoRolloutContractChecks
   Invoke-TargetRepoGovernanceConsistencyChecks
   Invoke-TargetRepoPowerShellPolicyChecks
@@ -559,6 +560,20 @@ function Invoke-DependencyBaselineChecks {
   }
 
   Write-CheckOk "dependency-baseline"
+}
+
+function Invoke-TransitionStackConvergenceChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-transition-stack-convergence.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Transition stack convergence checks failed"
+    }
+    throw "Transition stack convergence checks failed`n$detail"
+  }
+
+  Write-CheckOk "transition-stack-convergence"
 }
 
 function Invoke-TargetRepoGovernanceConsistencyChecks {
