@@ -22,6 +22,7 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
         coordination = baseline["required_profile_overrides"]["rule_file_coordination_policy"]
         policy = baseline["required_profile_overrides"]["windows_process_environment_policy"]
         managed_files = baseline["required_managed_files"]
+        speed_policy = baseline["target_repo_speed_profile_policy"]
 
         self.assertEqual(interaction["communication_language"], "zh-CN")
         self.assertEqual(interaction["user_facing_output_language"], "zh-CN")
@@ -71,6 +72,13 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
         self.assertIn("python -c", policy["verification_commands"][0])
         self.assertIn("node -e", policy["verification_commands"][1])
         self.assertIn(".governed-ai/verify-powershell-policy.py", [item["path"] for item in managed_files])
+        self.assertTrue(speed_policy["enabled"])
+        self.assertTrue(speed_policy["materialize_quick_gate_commands"])
+        self.assertTrue(speed_policy["materialize_full_gate_commands"])
+        self.assertTrue(speed_policy["preserve_existing_gate_commands"])
+        self.assertTrue(speed_policy["refresh_existing_derived_gate_commands"])
+        self.assertGreaterEqual(speed_policy["quick_gate_timeout_seconds"], 1)
+        self.assertGreaterEqual(speed_policy["full_gate_timeout_seconds"], speed_policy["quick_gate_timeout_seconds"])
 
     def test_apply_target_repo_governance_updates_profile(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -127,6 +135,592 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             self.assertEqual(updated_profile["required_entrypoint_policy"]["current_mode"], "targeted_enforced")
             self.assertEqual(updated_profile["auto_commit_policy"]["enabled"], True)
             self.assertTrue((target_repo / ".governed-ai" / "verify-powershell-policy.py").exists())
+
+    def test_apply_target_repo_governance_materializes_speed_profile_from_existing_gates(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "repo-a"
+            profile_path = target_repo / ".governed-ai" / "repo-profile.json"
+            _write_json(
+                profile_path,
+                {
+                    "repo_id": "repo-a",
+                    "build_commands": [{"id": "build", "command": "python -m compileall src", "required": True}],
+                    "test_commands": [{"id": "test", "command": "python -m unittest discover", "required": True}],
+                    "contract_commands": [
+                        {"id": "contract", "command": "python -m unittest tests.test_contracts", "required": True}
+                    ],
+                    "required_entrypoint_policy": {"current_mode": "advisory"},
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-04-26.6",
+                    "target_repo_speed_profile_policy": {
+                        "enabled": True,
+                        "materialize_quick_gate_commands": True,
+                        "materialize_full_gate_commands": True,
+                        "preserve_existing_gate_commands": True,
+                        "default_gate_timeout_seconds": 90,
+                        "quick_gate_timeout_seconds": 30,
+                        "full_gate_timeout_seconds": 60,
+                    },
+                    "required_profile_overrides": {
+                        "required_entrypoint_policy": {"current_mode": "targeted_enforced"},
+                        "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                    },
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/apply-target-repo-governance.py",
+                    "--target-repo",
+                    str(target_repo),
+                    "--baseline-path",
+                    str(baseline_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["status"], "applied")
+            self.assertEqual(
+                payload["changed_speed_profile_fields"],
+                ["quick_gate_commands", "full_gate_commands", "gate_timeout_seconds"],
+            )
+            updated_profile = json.loads(profile_path.read_text(encoding="utf-8"))
+            self.assertEqual([gate["id"] for gate in updated_profile["quick_gate_commands"]], ["test", "contract"])
+            self.assertEqual([gate["id"] for gate in updated_profile["full_gate_commands"]], ["build", "test", "contract"])
+            self.assertEqual(updated_profile["quick_gate_commands"][0]["timeout_seconds"], 30)
+            self.assertEqual(updated_profile["full_gate_commands"][0]["timeout_seconds"], 60)
+            self.assertEqual(updated_profile["gate_timeout_seconds"], 90)
+
+    def test_apply_target_repo_governance_dedupes_identical_test_and_contract_commands(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "repo-a"
+            profile_path = target_repo / ".governed-ai" / "repo-profile.json"
+            _write_json(
+                profile_path,
+                {
+                    "repo_id": "repo-a",
+                    "build_commands": [{"id": "build", "command": "python -m compileall src", "required": True}],
+                    "test_commands": [{"id": "test", "command": "python -m unittest discover", "required": True}],
+                    "contract_commands": [{"id": "contract", "command": "python -m unittest discover", "required": True}],
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-04-26.7",
+                    "target_repo_speed_profile_policy": {
+                        "enabled": True,
+                        "materialize_quick_gate_commands": True,
+                        "materialize_full_gate_commands": True,
+                        "preserve_existing_gate_commands": True,
+                        "refresh_existing_derived_gate_commands": True,
+                        "default_gate_timeout_seconds": 90,
+                        "quick_gate_timeout_seconds": 30,
+                        "full_gate_timeout_seconds": 60,
+                    },
+                    "required_profile_overrides": {"auto_commit_policy": {"enabled": True}},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/apply-target-repo-governance.py",
+                    "--target-repo",
+                    str(target_repo),
+                    "--baseline-path",
+                    str(baseline_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            updated_profile = json.loads(profile_path.read_text(encoding="utf-8"))
+            self.assertEqual(len(updated_profile["quick_gate_commands"]), 1)
+            self.assertEqual(updated_profile["quick_gate_commands"][0]["satisfies_gate_ids"], ["test", "contract"])
+            self.assertEqual([gate["id"] for gate in updated_profile["full_gate_commands"]], ["build", "test"])
+            self.assertEqual(updated_profile["full_gate_commands"][1]["satisfies_gate_ids"], ["test", "contract"])
+
+    def test_apply_target_repo_governance_uses_target_quick_test_slice(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "repo-a"
+            profile_path = target_repo / ".governed-ai" / "repo-profile.json"
+            _write_json(
+                profile_path,
+                {
+                    "repo_id": "repo-a",
+                    "build_commands": [{"id": "build", "command": "python -m compileall src", "required": True}],
+                    "test_commands": [{"id": "test", "command": "python -m unittest discover", "required": True}],
+                    "contract_commands": [
+                        {"id": "contract", "command": "python -m unittest tests.test_contracts", "required": True}
+                    ],
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-04-26.8",
+                    "target_repo_speed_profile_policy": {
+                        "enabled": True,
+                        "materialize_quick_gate_commands": True,
+                        "materialize_full_gate_commands": True,
+                        "preserve_existing_gate_commands": True,
+                        "default_gate_timeout_seconds": 90,
+                        "quick_gate_timeout_seconds": 30,
+                        "full_gate_timeout_seconds": 60,
+                    },
+                    "required_profile_overrides": {"auto_commit_policy": {"enabled": True}},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/apply-target-repo-governance.py",
+                    "--target-repo",
+                    str(target_repo),
+                    "--baseline-path",
+                    str(baseline_path),
+                    "--quick-test-command",
+                    "python -m unittest tests.test_fast",
+                    "--quick-test-reason",
+                    "Focused fast regression slice.",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            updated_profile = json.loads(profile_path.read_text(encoding="utf-8"))
+            self.assertEqual(updated_profile["quick_gate_commands"][0]["command"], "python -m unittest tests.test_fast")
+            self.assertEqual(updated_profile["quick_gate_commands"][0]["description"], "Focused fast regression slice.")
+            self.assertEqual(updated_profile["quick_gate_commands"][1]["id"], "contract")
+            self.assertEqual(updated_profile["full_gate_commands"][1]["command"], "python -m unittest discover")
+
+    def test_apply_target_repo_governance_refreshes_derived_quick_group_to_target_slice(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "repo-a"
+            profile_path = target_repo / ".governed-ai" / "repo-profile.json"
+            _write_json(
+                profile_path,
+                {
+                    "repo_id": "repo-a",
+                    "build_commands": [{"id": "build", "command": "python -m compileall src", "required": True}],
+                    "test_commands": [{"id": "test", "command": "python -m unittest discover", "required": True}],
+                    "contract_commands": [{"id": "contract", "command": "python -m unittest discover", "required": True}],
+                    "quick_gate_commands": [
+                        {
+                            "id": "test",
+                            "command": "python -m unittest discover",
+                            "required": True,
+                            "timeout_seconds": 30,
+                            "satisfies_gate_ids": ["test", "contract"],
+                        }
+                    ],
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-04-26.8",
+                    "target_repo_speed_profile_policy": {
+                        "enabled": True,
+                        "materialize_quick_gate_commands": True,
+                        "materialize_full_gate_commands": True,
+                        "preserve_existing_gate_commands": True,
+                        "refresh_existing_derived_gate_commands": True,
+                        "default_gate_timeout_seconds": 90,
+                        "quick_gate_timeout_seconds": 30,
+                        "full_gate_timeout_seconds": 60,
+                    },
+                    "required_profile_overrides": {"auto_commit_policy": {"enabled": True}},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/apply-target-repo-governance.py",
+                    "--target-repo",
+                    str(target_repo),
+                    "--baseline-path",
+                    str(baseline_path),
+                    "--quick-test-command",
+                    "python -m unittest tests.test_fast",
+                    "--quick-test-reason",
+                    "Focused fast regression slice.",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            updated_profile = json.loads(profile_path.read_text(encoding="utf-8"))
+            self.assertEqual(len(updated_profile["quick_gate_commands"]), 2)
+            self.assertEqual(updated_profile["quick_gate_commands"][0]["command"], "python -m unittest tests.test_fast")
+            self.assertEqual(updated_profile["quick_gate_commands"][1]["command"], "python -m unittest discover")
+
+    def test_apply_target_repo_governance_uses_outer_ai_recommendation_when_catalog_slice_absent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "repo-a"
+            profile_path = target_repo / ".governed-ai" / "repo-profile.json"
+            _write_json(
+                profile_path,
+                {
+                    "repo_id": "repo-a",
+                    "build_commands": [{"id": "build", "command": "python -m compileall src", "required": True}],
+                    "test_commands": [{"id": "test", "command": "python -m unittest discover", "required": True}],
+                    "contract_commands": [
+                        {"id": "contract", "command": "python -m unittest tests.test_contracts", "required": True}
+                    ],
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+            _write_json(
+                target_repo / ".governed-ai" / "quick-test-slice.recommendation.json",
+                {
+                    "schema_version": "1.0",
+                    "status": "ready",
+                    "quick_test_command": "python -m unittest tests.test_outer_fast",
+                    "quick_test_reason": "Outer AI selected a focused fast slice.",
+                    "quick_test_timeout_seconds": 45,
+                },
+            )
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-04-26.8",
+                    "target_repo_speed_profile_policy": {
+                        "enabled": True,
+                        "materialize_quick_gate_commands": True,
+                        "materialize_full_gate_commands": True,
+                        "preserve_existing_gate_commands": True,
+                        "default_gate_timeout_seconds": 90,
+                        "quick_gate_timeout_seconds": 30,
+                        "full_gate_timeout_seconds": 60,
+                    },
+                    "required_profile_overrides": {"auto_commit_policy": {"enabled": True}},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/apply-target-repo-governance.py",
+                    "--target-repo",
+                    str(target_repo),
+                    "--baseline-path",
+                    str(baseline_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["quick_test_slice_source"], "recommendation_file")
+            updated_profile = json.loads(profile_path.read_text(encoding="utf-8"))
+            self.assertEqual(
+                updated_profile["quick_gate_commands"][0]["command"],
+                "python -m unittest tests.test_outer_fast",
+            )
+            self.assertEqual(updated_profile["quick_gate_commands"][0]["timeout_seconds"], 45)
+            self.assertEqual(updated_profile["full_gate_commands"][1]["command"], "python -m unittest discover")
+
+    def test_apply_target_repo_governance_treats_skip_recommendation_as_complete(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "repo-a"
+            profile_path = target_repo / ".governed-ai" / "repo-profile.json"
+            _write_json(
+                profile_path,
+                {
+                    "repo_id": "repo-a",
+                    "test_commands": [{"id": "test", "command": "python -m unittest discover", "required": True}],
+                    "contract_commands": [
+                        {"id": "contract", "command": "python -m unittest tests.test_contracts", "required": True}
+                    ],
+                },
+            )
+            _write_json(
+                target_repo / ".governed-ai" / "quick-test-slice.recommendation.json",
+                {
+                    "schema_version": "1.0",
+                    "status": "skip",
+                    "quick_test_reason": "No safe target-specific quick test slice found.",
+                },
+            )
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-04-26.8",
+                    "target_repo_speed_profile_policy": {
+                        "enabled": True,
+                        "materialize_quick_gate_commands": True,
+                        "materialize_full_gate_commands": True,
+                        "preserve_existing_gate_commands": True,
+                    },
+                    "required_profile_overrides": {"auto_commit_policy": {"enabled": True}},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/apply-target-repo-governance.py",
+                    "--target-repo",
+                    str(target_repo),
+                    "--baseline-path",
+                    str(baseline_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["quick_test_slice_source"], "recommendation_file_skip")
+            self.assertEqual(payload["outer_ai_action"], "none")
+            self.assertIsNone(payload["quick_test_prompt_path"])
+            self.assertEqual(payload["outer_ai_instruction"], "")
+
+    def test_apply_target_repo_governance_catalog_skip_suppresses_outer_ai_prompt(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "repo-a"
+            profile_path = target_repo / ".governed-ai" / "repo-profile.json"
+            _write_json(
+                profile_path,
+                {
+                    "repo_id": "repo-a",
+                    "test_commands": [{"id": "test", "command": "python -m unittest discover", "required": True}],
+                    "contract_commands": [
+                        {"id": "contract", "command": "python -m unittest tests.test_contracts", "required": True}
+                    ],
+                },
+            )
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-04-26.8",
+                    "target_repo_speed_profile_policy": {
+                        "enabled": True,
+                        "materialize_quick_gate_commands": True,
+                        "materialize_full_gate_commands": True,
+                        "preserve_existing_gate_commands": True,
+                    },
+                    "required_profile_overrides": {"auto_commit_policy": {"enabled": True}},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/apply-target-repo-governance.py",
+                    "--target-repo",
+                    str(target_repo),
+                    "--baseline-path",
+                    str(baseline_path),
+                    "--quick-test-skip-reason",
+                    "Full test command is already minimal.",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["quick_test_slice_source"], "argument_skip")
+            self.assertEqual(payload["quick_test_skip_reason"], "Full test command is already minimal.")
+            self.assertEqual(payload["outer_ai_action"], "none")
+            self.assertIsNone(payload["quick_test_prompt_path"])
+
+    def test_apply_target_repo_governance_catalog_gate_changes_refresh_speed_groups(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "repo-a"
+            profile_path = target_repo / ".governed-ai" / "repo-profile.json"
+            _write_json(
+                profile_path,
+                {
+                    "repo_id": "repo-a",
+                    "build_commands": [{"id": "build", "command": "python --version", "required": True}],
+                    "test_commands": [{"id": "test", "command": "python --version", "required": True}],
+                    "contract_commands": [{"id": "contract", "command": "python --version", "required": True}],
+                    "quick_gate_commands": [
+                        {
+                            "id": "test",
+                            "command": "python --version",
+                            "required": True,
+                            "timeout_seconds": 180,
+                            "satisfies_gate_ids": ["test", "contract"],
+                        }
+                    ],
+                },
+            )
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-04-26.8",
+                    "target_repo_speed_profile_policy": {
+                        "enabled": True,
+                        "materialize_quick_gate_commands": True,
+                        "materialize_full_gate_commands": True,
+                        "preserve_existing_gate_commands": True,
+                        "quick_gate_timeout_seconds": 30,
+                        "full_gate_timeout_seconds": 60,
+                    },
+                    "required_profile_overrides": {"auto_commit_policy": {"enabled": True}},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/apply-target-repo-governance.py",
+                    "--target-repo",
+                    str(target_repo),
+                    "--baseline-path",
+                    str(baseline_path),
+                    "--build-command",
+                    "python -m compileall src",
+                    "--test-command",
+                    "python -m unittest discover",
+                    "--contract-command",
+                    "python -m unittest tests.test_contracts",
+                    "--quick-test-skip-reason",
+                    "No safe smaller slice.",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertIn("test_commands", payload["changed_catalog_fields"])
+            self.assertIn("quick_gate_commands", payload["changed_speed_profile_fields"])
+            updated_profile = json.loads(profile_path.read_text(encoding="utf-8"))
+            self.assertEqual(updated_profile["quick_gate_commands"][0]["command"], "python -m unittest discover")
+            self.assertEqual(updated_profile["quick_gate_commands"][1]["command"], "python -m unittest tests.test_contracts")
+
+    def test_apply_target_repo_governance_preserves_existing_speed_profile(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "repo-a"
+            profile_path = target_repo / ".governed-ai" / "repo-profile.json"
+            _write_json(
+                profile_path,
+                {
+                    "repo_id": "repo-a",
+                    "build_commands": [{"id": "build", "command": "python -m compileall src", "required": True}],
+                    "test_commands": [{"id": "test", "command": "python -m unittest discover", "required": True}],
+                    "contract_commands": [
+                        {"id": "contract", "command": "python -m unittest tests.test_contracts", "required": True}
+                    ],
+                    "quick_gate_commands": [
+                        {"id": "custom-quick", "command": "python -m unittest tests.test_fast", "required": True}
+                    ],
+                    "full_gate_commands": [
+                        {"id": "custom-full", "command": "python -m unittest tests.test_all", "required": True}
+                    ],
+                    "gate_timeout_seconds": 42,
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-04-26.6",
+                    "target_repo_speed_profile_policy": {
+                        "enabled": True,
+                        "preserve_existing_gate_commands": True,
+                        "default_gate_timeout_seconds": 90,
+                    },
+                    "required_profile_overrides": {"auto_commit_policy": {"enabled": True}},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/apply-target-repo-governance.py",
+                    "--target-repo",
+                    str(target_repo),
+                    "--baseline-path",
+                    str(baseline_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            updated_profile = json.loads(profile_path.read_text(encoding="utf-8"))
+            self.assertEqual(updated_profile["quick_gate_commands"][0]["id"], "custom-quick")
+            self.assertEqual(updated_profile["full_gate_commands"][0]["id"], "custom-full")
+            self.assertEqual(updated_profile["gate_timeout_seconds"], 42)
 
     def test_apply_target_repo_governance_check_only_fails_on_managed_file_drift(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -323,6 +917,171 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             self.assertEqual(payload["drift_count"], 1)
             self.assertEqual(payload["drift"][0]["target"], "repo-a")
             self.assertIn("auto_commit_policy", payload["drift"][0]["mismatched_fields"])
+
+    def test_verify_target_repo_governance_consistency_fails_on_catalog_gate_fact_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_root = workspace / "runtime"
+            code_root = workspace / "code"
+            runtime_state_base = repo_root / ".runtime" / "attachments"
+            repo_root.mkdir(parents=True)
+            code_root.mkdir(parents=True)
+
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-04-26.9",
+                    "required_profile_overrides": {
+                        "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                    },
+                },
+            )
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": "${code_root}/repo-a",
+                            "attachment_runtime_state_root": "${runtime_state_base}/repo-a",
+                            "repo_id": "repo-a",
+                            "display_name": "repo-a",
+                            "primary_language": "python",
+                            "build_command": "python -m compileall src",
+                            "test_command": "python -m unittest discover",
+                            "contract_command": "python -m unittest tests.test_contracts",
+                        }
+                    },
+                },
+            )
+            _write_json(
+                code_root / "repo-a" / ".governed-ai" / "repo-profile.json",
+                {
+                    "repo_id": "repo-a",
+                    "display_name": "repo-a",
+                    "primary_language": "python",
+                    "build_commands": [{"id": "build", "command": "python --version", "required": True}],
+                    "test_commands": [{"id": "test", "command": "python --version", "required": True}],
+                    "contract_commands": [{"id": "contract", "command": "python --version", "required": True}],
+                    "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/verify-target-repo-governance-consistency.py",
+                    "--catalog-path",
+                    str(catalog_path),
+                    "--baseline-path",
+                    str(baseline_path),
+                    "--repo-root",
+                    str(repo_root),
+                    "--code-root",
+                    str(code_root),
+                    "--runtime-state-base",
+                    str(runtime_state_base),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertNotEqual(completed.returncode, 0)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["status"], "fail")
+            self.assertEqual(payload["drift"][0]["reason"], "catalog_gate_fact_drift")
+            self.assertIn("build_commands", payload["drift"][0]["mismatched_catalog_fields"])
+            self.assertIn("test_commands", payload["drift"][0]["mismatched_catalog_fields"])
+
+    def test_verify_target_repo_governance_consistency_fails_on_speed_profile_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_root = workspace / "runtime"
+            code_root = workspace / "code"
+            runtime_state_base = repo_root / ".runtime" / "attachments"
+            repo_root.mkdir(parents=True)
+            code_root.mkdir(parents=True)
+
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-04-26.6",
+                    "target_repo_speed_profile_policy": {
+                        "enabled": True,
+                        "default_gate_timeout_seconds": 90,
+                        "quick_gate_timeout_seconds": 30,
+                        "full_gate_timeout_seconds": 60,
+                    },
+                    "required_profile_overrides": {
+                        "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                    },
+                },
+            )
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": "${code_root}/repo-a",
+                            "attachment_runtime_state_root": "${runtime_state_base}/repo-a",
+                        }
+                    },
+                },
+            )
+            _write_json(
+                code_root / "repo-a" / ".governed-ai" / "repo-profile.json",
+                {
+                    "repo_id": "repo-a",
+                    "build_commands": [{"id": "build", "command": "python -m compileall src", "required": True}],
+                    "test_commands": [{"id": "test", "command": "python -m unittest discover", "required": True}],
+                    "contract_commands": [
+                        {"id": "contract", "command": "python -m unittest tests.test_contracts", "required": True}
+                    ],
+                    "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/verify-target-repo-governance-consistency.py",
+                    "--catalog-path",
+                    str(catalog_path),
+                    "--baseline-path",
+                    str(baseline_path),
+                    "--repo-root",
+                    str(repo_root),
+                    "--code-root",
+                    str(code_root),
+                    "--runtime-state-base",
+                    str(runtime_state_base),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertNotEqual(completed.returncode, 0)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["status"], "fail")
+            self.assertEqual(payload["drift"][0]["reason"], "speed_profile_drift")
+            self.assertIn("quick_gate_commands", payload["drift"][0]["mismatched_speed_profile_fields"])
+            self.assertIn("full_gate_commands", payload["drift"][0]["mismatched_speed_profile_fields"])
+            self.assertIn("gate_timeout_seconds", payload["drift"][0]["mismatched_speed_profile_fields"])
 
     def test_verify_target_repo_governance_consistency_fails_on_managed_file_drift(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

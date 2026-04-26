@@ -229,5 +229,56 @@
       "rollback_entrypoint",
       "global_to_repo_mapping"
     ]
-  }
+  },
+  "quick_gate_commands": [
+    {
+      "command": "python -m unittest tests.runtime.test_governance_gate_runner tests.runtime.test_target_repo_governance_consistency tests.runtime.test_runtime_flow_preset.RuntimeFlowPresetScriptTests.test_runtime_flow_preset_apply_governance_baseline_only_bootstraps_blank_target tests.runtime.test_target_repo_rollout_contract tests.runtime.test_target_repo_speed_kpi",
+      "id": "test",
+      "description": "Focused daily Runtime slice for target governance speed-profile changes; full Runtime remains the full gate test command.",
+      "required": true,
+      "timeout_seconds": 180,
+      "satisfies_gate_ids": [
+        "test"
+      ]
+    },
+    {
+      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract",
+      "id": "contract",
+      "required": true,
+      "timeout_seconds": 180,
+      "satisfies_gate_ids": [
+        "contract"
+      ]
+    }
+  ],
+  "full_gate_commands": [
+    {
+      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1",
+      "id": "build",
+      "required": true,
+      "timeout_seconds": 600,
+      "satisfies_gate_ids": [
+        "build"
+      ]
+    },
+    {
+      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime",
+      "id": "test",
+      "required": true,
+      "timeout_seconds": 600,
+      "satisfies_gate_ids": [
+        "test"
+      ]
+    },
+    {
+      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract",
+      "id": "contract",
+      "required": true,
+      "timeout_seconds": 600,
+      "satisfies_gate_ids": [
+        "contract"
+      ]
+    }
+  ],
+  "gate_timeout_seconds": 300
 }

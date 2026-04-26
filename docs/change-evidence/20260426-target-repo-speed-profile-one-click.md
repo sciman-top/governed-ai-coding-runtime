@@ -1,0 +1,178 @@
+# 2026-04-26 Target Repo Speed Profile One-Click
+
+## Goal
+- Improve target-repo coding speed through the existing one-click baseline sync path without weakening the hard gate order.
+- Materialize explicit `quick_gate_commands`, `full_gate_commands`, and `gate_timeout_seconds` in target repo profiles from each repo's existing `build/test/contract` commands.
+
+## Changes
+- Added `target_repo_speed_profile_policy` to `docs/targets/target-repo-governance-baseline.json` with `sync_revision=2026-04-26.7`.
+- Updated `scripts/apply-target-repo-governance.py`:
+  - derives `quick_gate_commands` from `test_commands + contract_commands` or `invariant_commands`;
+  - derives `full_gate_commands` from `build_commands + test_commands + contract_commands`;
+  - deduplicates identical physical commands while preserving logical gate coverage through `satisfies_gate_ids`;
+  - preserves existing target-specific quick/full gate groups;
+  - reports `changed_speed_profile_fields`.
+- Updated `scripts/verify-target-repo-governance-consistency.py` to fail on missing derived speed profile fields.
+- Updated `scripts/runtime-flow-preset.ps1` JSON output to expose `governance_sync_speed_changed`.
+- Updated `scripts/governance/gate-runner-common.ps1` to expand `satisfies_gate_ids` into logical `gate_order`, `required_gate_ids`, `blocking_gate_ids`, and `results`.
+- Updated `schemas/jsonschema/repo-profile.schema.json` to allow `satisfies_gate_ids` in quick/full gate command entries.
+- Updated rollout contract wording so gate speed controls remain runtime-orchestrated while profile speed groups may be derived per target.
+
+## Target Rollout Evidence
+- Command: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\runtime-flow-preset.ps1 -AllTargets -ApplyGovernanceBaselineOnly -Json`
+- Result: `target_count=5`, `failure_count=0`.
+- Targets: `classroomtoolkit`, `github-toolkit`, `self-runtime`, `skills-manager`, `vps-ssh-launcher`.
+- Follow-up command: `python scripts\verify-target-repo-governance-consistency.py`
+- Result: `status=pass`, `target_count=5`, `drift_count=0`.
+- Profile summary after rollout:
+  - each checked target has `quick_gate_commands=2`;
+  - each checked target has `full_gate_commands=3`;
+  - each checked target has `gate_timeout_seconds=300`.
+- Target fast-check smoke after rollout:
+  - `classroomtoolkit`: `exit_code=0`, `gate_order=test,contract`, `duration_ms=36945`.
+  - `github-toolkit`: `exit_code=0`, `gate_order=test,contract`, `duration_ms=2741`.
+  - `self-runtime`: `exit_code=0`, quick profile contains `test,contract`, `duration_ms=175989`.
+  - `skills-manager`: `exit_code=0`, `gate_order=test,contract`, `duration_ms=1633`.
+  - `vps-ssh-launcher`: `exit_code=0`, `gate_order=test,contract`, `duration_ms=3399`.
+- Direct fast-vs-full timing check after rollout:
+  - `classroomtoolkit`: `fast=22554ms`, `full=27431ms`, both `exit_code=0`.
+  - `github-toolkit`: `fast=2523ms`, `full=2859ms`, both `exit_code=0`.
+  - `self-runtime`: `fast=174842ms`, `full=176539ms`, both `exit_code=0`.
+  - `skills-manager`: `fast=1621ms`, `full=1999ms`, both `exit_code=0`.
+  - `vps-ssh-launcher`: `fast=3473ms`, `full=4115ms`, both `exit_code=0`.
+  - Interpretation: this confirms the current speed profile reduces local feedback latency on all active targets in this run; the biggest future gain is target-specific test slicing for repos whose `test` and `contract` commands still overlap heavily.
+- Deduplicated speed-profile rollout:
+  - Command: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\runtime-flow-preset.ps1 -AllTargets -ApplyGovernanceBaselineOnly -Json`
+  - Result: `target_count=5`, `failure_count=0`, each target reported `governance_sync_speed_changed=["quick_gate_commands","full_gate_commands"]`.
+  - Consistency command: `python scripts\verify-target-repo-governance-consistency.py`
+  - Result: `status=pass`, `sync_revision=2026-04-26.7`, `drift_count=0`.
+- Direct fast-vs-full timing after deduplication:
+  - `classroomtoolkit`: `fast=10822ms`, `full=12746ms`, both `exit_code=0`, executed commands `1/2`.
+  - `github-toolkit`: `fast=1531ms`, `full=1940ms`, both `exit_code=0`, executed commands `1/2`.
+  - `self-runtime`: `fast=177189ms`, `full=181743ms`, both process `exit_code=0`; runtime test cost dominates.
+  - `skills-manager`: `fast=1326ms`, `full=1272ms`, both `exit_code=0`, executed commands `1/1`; commands are already equivalent.
+  - `vps-ssh-launcher`: `fast=3723ms`, `full=4020ms`, both `exit_code=0`, executed commands `2/3`.
+  - Interpretation: deduplication materially improves repositories where `test` and `contract` were identical; further gains require target-specific smaller test subsets, especially for `self-runtime`.
+- Self-runtime targeted Runtime quick gate:
+  - Change: `.governed-ai/repo-profile.json` quick `test` command now runs a focused Runtime subset covering gate runner, target governance consistency, runtime-flow-preset, rollout contract, and speed KPI tests.
+  - Focused subset command: `python -m unittest tests.runtime.test_governance_gate_runner tests.runtime.test_target_repo_governance_consistency tests.runtime.test_runtime_flow_preset tests.runtime.test_target_repo_rollout_contract tests.runtime.test_target_repo_speed_kpi`
+  - Focused subset timing: passed, `Ran 37 tests`, `seconds=43.4`.
+  - Self-runtime fast-check after slicing: `exit_code=0`, `gate_order=test,contract`, `test=44004ms`, `contract=13573ms`, total measured wrapper time `seconds=58.3`.
+  - Baseline consistency after slicing: `python scripts\verify-target-repo-governance-consistency.py` -> `status=pass`, `drift_count=0`.
+  - One-click baseline re-apply after slicing: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\runtime-flow-preset.ps1 -AllTargets -ApplyGovernanceBaselineOnly -Json` -> `target_count=5`, `failure_count=0`, all `governance_sync_speed_changed=[]`.
+  - Interpretation: self-runtime daily quick feedback improves from roughly `177s` to roughly `58s` without changing full gate or the repo hard Runtime gate.
+- Target-specific test slicing integration:
+  - External basis checked: Microsoft Test Impact Analysis documents impacted-test selection with fallback to all tests; pytest documents marker-based test selection; Nx documents affected-task selection from Git history plus project graph; Bazel documents test size/timeout classification; GitHub Actions documents dependency cache key and restore behavior.
+  - Durable policy memory: `docs/targets/target-repo-test-slicing-policy.md`.
+  - Change: `docs/targets/target-repos-catalog.json` may now declare `quick_test_command`, `quick_test_reason`, and `quick_test_timeout_seconds` per target.
+  - Change: `scripts/runtime-flow-preset.ps1` passes target-specific quick test slices into the one-click governance baseline sync.
+  - Change: `scripts/apply-target-repo-governance.py` uses `quick_test_command` only for `quick_gate_commands.test`; `test_commands` and `full_gate_commands.test` keep the full test command.
+  - Change: `scripts/verify-target-repo-governance-consistency.py` includes catalog-declared quick slices when checking speed-profile drift.
+  - Self-runtime catalog slice: `quick_test_command` points to the focused Runtime subset while `test_command` remains `verify-repo.ps1 -Check Runtime`.
+  - One-click apply after integration: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\runtime-flow-preset.ps1 -AllTargets -ApplyGovernanceBaselineOnly -Json` -> `target_count=5`, `failure_count=0`.
+  - Self-runtime fast-check after integration: `exit_code=0`, total wrapper `seconds=56.9`, `test=42870ms`, `contract=13336ms`.
+  - Consistency after integration: `python scripts\verify-target-repo-governance-consistency.py` -> `status=pass`, `sync_revision=2026-04-26.8`, `drift_count=0`.
+- Optional outer-AI quick slice handoff:
+  - Change: `scripts/apply-target-repo-governance.py` now detects `<target-repo>/.governed-ai/quick-test-slice.recommendation.json` when no catalog `quick_test_command` was provided.
+  - Change: when no catalog slice or ready recommendation exists, one-click apply writes `<target-repo>/.governed-ai/quick-test-slice.prompt.md` and exposes `governance_sync_outer_ai_action` / `governance_sync_quick_test_prompt_path` in JSON output.
+  - Change: all-target JSON now also includes `outer_ai_recommendation_action=read_prompt_and_write_recommendation` and `outer_ai_recommendation_tasks[]` with `target`, `prompt_path`, `recommendation_path`, and the exact instruction a session AI should follow.
+  - Behavior: `status=ready` applies `quick_test_command` to `quick_gate_commands.test`; missing file or `status=skip` leaves deterministic derived gates unchanged.
+  - Safety: catalog-declared `quick_test_command` wins over recommendation files, malformed recommendation files fail closed, and full `test_command` remains unchanged.
+  - Consistency: `scripts/verify-target-repo-governance-consistency.py` also reads ready recommendation files so profile drift detection matches one-click apply behavior.
+  - One-click apply after adding the handoff: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\runtime-flow-preset.ps1 -AllTargets -ApplyGovernanceBaselineOnly -Json` -> `target_count=5`, `failure_count=0`.
+  - Prompt results after one-click apply: `classroomtoolkit`, `github-toolkit`, `skills-manager`, and `vps-ssh-launcher` reported `governance_sync_outer_ai_action=prompt_written`; `self-runtime` reported `quick_test_slice_source=argument`.
+  - Consistency after apply: `python scripts\verify-target-repo-governance-consistency.py` -> `status=pass`, `drift_count=0`.
+- Runtime test-slicing refinement:
+  - Baseline module timing showed slow Runtime modules: `test_attached_repo_e2e=36.54s`, `test_runtime_flow_preset=30.13s`, `test_runtime_doctor=23.17s`, `test_dependency_baseline=13.41s`, `test_governance_gate_runner=11.50s`.
+  - Updated non-Codex-specific attached repo e2e tests to use `AdapterId=unit-test-adapter`, avoiding unnecessary Codex live handshake while leaving the dedicated Codex fallback test intact.
+  - Reduced fake timeout-flow sleep from `3s` to `1500ms`; it still exceeds the `1s` timeout guard but cuts idle wait.
+  - Narrowed self-runtime `quick_test_command` from the whole `test_runtime_flow_preset` module to the single baseline bootstrap slicing case.
+  - Focused self-runtime quick test subset after narrowing: passed, `Ran 26 tests`, `seconds=14.51`.
+  - Self-runtime fast-check after narrowing: `exit_code=0`, total wrapper `seconds=29.4`, `test=15257ms`, `contract=13379ms`.
+  - One-click apply after narrowing: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\runtime-flow-preset.ps1 -AllTargets -ApplyGovernanceBaselineOnly -Json` -> `target_count=5`, `failure_count=0`, all `governance_sync_speed_changed=[]`.
+- One-click AI recommendation completion:
+  - Created target repo recommendation files:
+    - `D:\CODE\ClassroomToolkit\.governed-ai\quick-test-slice.recommendation.json`: `status=ready`, using the established `ArchitectureDependencyTests|InteropHookLifecycleContractTests|InteropHookEventDispatchContractTests|GlobalHookServiceLifecycleContractTests|CrossPageDisplayLifecycleContractTests` contract slice.
+    - `D:\CODE\github-toolkit\.governed-ai\quick-test-slice.recommendation.json`: `status=skip`; full test is already one deterministic unittest file.
+    - `D:\CODE\skills-manager\.governed-ai\quick-test-slice.recommendation.json`: `status=skip`; current target profile full test is `python --version`, so the gate truth must be corrected before deriving a safe test slice.
+    - `D:\CODE\vps-ssh-launcher\.governed-ai\quick-test-slice.recommendation.json`: `status=skip`; full pytest gate is already small and real SSH integration is skipped by default.
+  - Target validation:
+    - `ClassroomToolkit`: `. .\scripts\env\Initialize-WindowsProcessEnvironment.ps1; dotnet test tests\ClassroomToolkit.Tests\ClassroomToolkit.Tests.csproj -c Debug --no-restore --filter "...contract slice..."` -> passed, `28` tests.
+    - `github-toolkit`: `python -m unittest test_toolkit.py` -> passed, `108` tests.
+    - `vps-ssh-launcher`: `python -m pytest -q` -> passed, `45 passed`, `1 skipped`; candidate subset excluding `test_integration_real_ssh.py` was not materially faster.
+  - Fixed completion semantics: `status=skip` recommendation is now a completed AI decision and no longer causes one-click apply to keep emitting prompt tasks.
+  - One-click apply after recommendation files: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\runtime-flow-preset.ps1 -AllTargets -ApplyGovernanceBaselineOnly -Json` -> `target_count=5`, `failure_count=0`, `outer_ai_recommendation_action=none`, `outer_ai_recommendation_tasks=[]`.
+  - Per-target source after completion:
+    - `classroomtoolkit`: `governance_sync_quick_test_slice_source=recommendation_file`.
+    - `self-runtime`: `governance_sync_quick_test_slice_source=argument`.
+    - `github-toolkit`, `skills-manager`, `vps-ssh-launcher`: `governance_sync_quick_test_slice_source=recommendation_file_skip`.
+- Catalog-backed speed gate hardening:
+  - Promoted known `ready/skip` outcomes into `docs/targets/target-repos-catalog.json`:
+    - `classroomtoolkit`: catalog `quick_test_command` and `contract_command` now use the same PowerShell-safe single-quoted contract filter, allowing quick gate deduplication to one 28-test command.
+    - `github-toolkit`: catalog records `quick_test_skip_reason`; full test remains a single deterministic unittest file.
+    - `skills-manager`: catalog now uses real project gate facts (`./build.ps1`, `./skills.ps1 发现`, `./skills.ps1 doctor --strict --threshold-ms 8000`) instead of `python --version`.
+    - `vps-ssh-launcher`: catalog now matches project AGENTS (`compileall`, `pytest -q`, `unittest -q`) and records `quick_test_skip_reason`.
+  - Added catalog gate-fact sync to one-click governance apply; existing target profiles now refresh `repo_id`, `display_name`, `primary_language`, `build_commands`, `test_commands`, and `contract_commands` from catalog.
+  - Added catalog skip support through `quick_test_skip_reason`; catalog skip suppresses repeated outer-AI prompts with source `argument_skip`.
+  - Added generated speed-group refresh: legacy generated groups with `satisfies_gate_ids` are refreshed so stale commands such as `python --version` do not persist in `quick_gate_commands` or `full_gate_commands`.
+  - Added drift detection for catalog gate facts and generated speed groups to `scripts/verify-target-repo-governance-consistency.py`.
+  - One-click apply after hardening: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\runtime-flow-preset.ps1 -AllTargets -ApplyGovernanceBaselineOnly -Json` -> `target_count=5`, `failure_count=0`, `outer_ai_recommendation_action=none`, `outer_ai_recommendation_tasks=[]`.
+  - Consistency after hardening: `python scripts\verify-target-repo-governance-consistency.py` -> `status=pass`, `drift_count=0`.
+  - Fast-check validation after hardening:
+    - `classroomtoolkit`: `exit_code=0`, deduped quick gate runs one filtered command satisfying `test,contract`, `duration_ms=6973`, `28` tests.
+    - `github-toolkit`: `exit_code=0`, one unittest command satisfies `test,contract`, `duration_ms=967`, `108` tests.
+    - `self-runtime`: `exit_code=0`, `test=14919ms`, `contract=12742ms`.
+    - `skills-manager`: `exit_code=0`, `test=1963ms`, `contract=2935ms`; no `python --version` pseudo-gate remains.
+    - `vps-ssh-launcher`: `exit_code=0`, `pytest=2656ms`, `unittest=1915ms`.
+- Low-risk structure optimization:
+  - Extracted shared target-repo speed policy helpers to `scripts/lib/target_repo_speed_profile.py`.
+  - `scripts/apply-target-repo-governance.py` and `scripts/verify-target-repo-governance-consistency.py` now use the same implementation for speed policy normalization, quick test slice normalization, generated gate group detection, quick/full gate derivation, and generated group refresh decisions.
+  - Kept script-specific responsibilities local: CLI parsing, recommendation file loading, outer-AI prompt writing, catalog field sync, and drift report formatting remain in their owning scripts.
+  - Registered the new repository-local `lib` import root in `docs/dependency-baseline.json` and documented it in `docs/dependency-baseline.md`; no third-party dependency was introduced.
+
+## Verification
+- `python -m unittest tests.runtime.test_target_repo_governance_consistency tests.runtime.test_governance_gate_runner tests.runtime.test_target_repo_rollout_contract tests.runtime.test_runtime_flow_preset` -> passed, `Ran 32 tests`.
+- `python -m unittest tests.runtime.test_runtime_flow_preset` -> passed after JSON array output hardening, `Ran 13 tests`.
+- `python -m unittest tests.runtime.test_runtime_flow_preset tests.runtime.test_target_repo_governance_consistency tests.runtime.test_governance_gate_runner` -> passed after deduplication and logical gate aliasing, `Ran 29 tests`.
+- `python -m unittest tests.runtime.test_governance_gate_runner tests.runtime.test_target_repo_governance_consistency tests.runtime.test_runtime_flow_preset tests.runtime.test_target_repo_rollout_contract tests.runtime.test_target_repo_speed_kpi` -> passed after self-runtime quick slicing, `Ran 37 tests`.
+- `python -m unittest tests.runtime.test_target_repo_governance_consistency tests.runtime.test_runtime_flow_preset` -> passed after catalog-driven quick test slicing integration, `Ran 24 tests`.
+- `python -m unittest tests.runtime.test_attached_repo_e2e` -> passed after non-Codex adapter test optimization, `Ran 5 tests`.
+- `python -m unittest tests.runtime.test_runtime_flow_preset` -> passed after timeout fixture reduction, `Ran 13 tests`.
+- `python -m unittest tests.runtime.test_governance_gate_runner tests.runtime.test_target_repo_governance_consistency tests.runtime.test_runtime_flow_preset.RuntimeFlowPresetScriptTests.test_runtime_flow_preset_apply_governance_baseline_only_bootstraps_blank_target tests.runtime.test_target_repo_rollout_contract tests.runtime.test_target_repo_speed_kpi` -> passed after self-runtime slice narrowing, `Ran 26 tests`.
+- `python -m unittest tests.runtime.test_target_repo_governance_consistency` -> passed after optional outer-AI quick slice handoff, `Ran 12 tests`.
+- `python -m unittest tests.runtime.test_target_repo_governance_consistency tests.runtime.test_runtime_flow_preset` -> passed after one-click outer-AI prompt surfacing, `Ran 25 tests`.
+- `python -m unittest tests.runtime.test_runtime_flow_preset tests.runtime.test_target_repo_governance_consistency` -> passed after top-level all-target AI recommendation task output, `Ran 25 tests`.
+- `python -m unittest tests.runtime.test_target_repo_governance_consistency` -> passed after treating `status=skip` recommendation as complete, `Ran 13 tests`.
+- `python scripts\verify-target-repo-governance-consistency.py` -> passed after target recommendation completion, `drift_count=0`.
+- `python -m unittest tests.runtime.test_runtime_flow_preset tests.runtime.test_target_repo_governance_consistency` -> passed after recommendation completion semantics, `Ran 26 tests`.
+- `python -m unittest tests.runtime.test_target_repo_governance_consistency tests.runtime.test_runtime_flow_preset` -> passed after catalog skip, catalog gate sync, and generated speed-group refresh, `Ran 30 tests`.
+- `python -m py_compile scripts\lib\target_repo_speed_profile.py scripts\apply-target-repo-governance.py scripts\verify-target-repo-governance-consistency.py` -> passed after shared helper extraction.
+- `python scripts\verify-dependency-baseline.py` -> passed after declaring repository-local `lib`.
+- `python scripts\verify-target-repo-governance-consistency.py` -> passed after shared helper extraction, `drift_count=0`.
+- `python -m unittest tests.runtime.test_target_repo_governance_consistency tests.runtime.test_runtime_flow_preset` -> passed after shared helper extraction, `Ran 30 tests`.
+- `python -m unittest tests.runtime.test_dependency_baseline tests.runtime.test_target_repo_governance_consistency tests.runtime.test_runtime_flow_preset` -> passed after dependency baseline update, `Ran 37 tests`.
+- `python -m json.tool docs\targets\target-repo-governance-baseline.json` -> passed.
+- `python -m json.tool docs\targets\target-repos-catalog.json` -> passed.
+- `python -m json.tool docs\targets\target-repo-rollout-contract.json` -> passed.
+- `python -m json.tool schemas\jsonschema\repo-profile.schema.json` -> passed.
+- `python -m json.tool .governed-ai\repo-profile.json` -> passed.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\build-runtime.ps1` -> passed after shared helper extraction and dependency baseline update.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify-repo.ps1 -Check Runtime` -> passed after shared helper extraction and dependency baseline update, `Ran 405 tests` plus `Ran 10 tests`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify-repo.ps1 -Check Contract` -> passed after shared helper extraction and dependency baseline update, including `target-repo-governance-consistency`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\doctor-runtime.ps1` -> passed after shared helper extraction and dependency baseline update.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\runtime-flow-preset.ps1 -AllTargets -ApplyGovernanceBaselineOnly -Json` -> passed after shared helper extraction, `target_count=5`, `failure_count=0`, `outer_ai_recommendation_action=none`.
+
+## Risk
+- Existing target-specific `quick_gate_commands` and `full_gate_commands` are preserved by default; this prevents overwriting hand-tuned fast paths.
+- Repos without usable `build/test/contract` commands cannot derive complete speed groups; consistency verification catches missing derived fields for active targets.
+- This optimizes gate selection and timeout policy; it does not skip release/onboard/full-gate escalation.
+
+## Rollback
+- Runtime repo:
+  - `git checkout -- docs/targets/target-repo-governance-baseline.json docs/targets/target-repo-rollout-contract.json`
+  - `git checkout -- docs/dependency-baseline.json docs/dependency-baseline.md`
+  - `git checkout -- scripts/apply-target-repo-governance.py scripts/runtime-flow-preset.ps1 scripts/verify-target-repo-governance-consistency.py scripts/lib`
+  - `git checkout -- tests/runtime/test_runtime_flow_preset.py tests/runtime/test_target_repo_governance_consistency.py`
+  - `git checkout -- docs/change-evidence/20260426-target-repo-speed-profile-one-click.md`
+- Target repos:
+  - remove the derived `quick_gate_commands`, `full_gate_commands`, and `gate_timeout_seconds` blocks from `.governed-ai/repo-profile.json`, or restore from git history in each target repo.

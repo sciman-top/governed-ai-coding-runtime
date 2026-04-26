@@ -209,6 +209,17 @@ function New-GateCommandRecord {
     $description = [string]$Entry.description
   }
 
+  $satisfiesGateIds = @($gateId)
+  if ((Test-ObjectProperty -Object $Entry -Name "satisfies_gate_ids") -and $null -ne $Entry.satisfies_gate_ids) {
+    $configuredGateIds = @(Convert-ToStringArray -Value $Entry.satisfies_gate_ids)
+    if (@($configuredGateIds).Count -gt 0) {
+      $satisfiesGateIds = $configuredGateIds
+    }
+  }
+  if (-not ($satisfiesGateIds -contains $gateId)) {
+    $satisfiesGateIds = @($gateId) + $satisfiesGateIds
+  }
+
   $timeoutSeconds = 0
   if (Test-ObjectProperty -Object $Entry -Name "timeout_seconds") {
     $timeoutSeconds = Convert-ToNonNegativeSeconds -Value $Entry.timeout_seconds -FieldName "$SourceGroup.$gateId.timeout_seconds"
@@ -222,6 +233,7 @@ function New-GateCommandRecord {
     timeout_seconds = $timeoutSeconds
     source_group    = $SourceGroup
     description     = $description
+    satisfies_gate_ids = $satisfiesGateIds
   }
 }
 
@@ -945,6 +957,7 @@ function Invoke-GateCommand {
     duration_ms  = [int][Math]::Round(($finishedAt - $startedAt).TotalMilliseconds)
     started_at   = $startedAt.ToString("o")
     finished_at  = $finishedAt.ToString("o")
+    satisfies_gate_ids = if ((Test-ObjectProperty -Object $Gate -Name "satisfies_gate_ids") -and $null -ne $Gate.satisfies_gate_ids) { @($Gate.satisfies_gate_ids) } else { @($Gate.gate_id) }
   }
 }
 
@@ -1024,6 +1037,37 @@ function Invoke-RepoProfileGateRun {
   $resultMap = [ordered]@{}
   foreach ($result in $results) {
     $resultMap[$result.gate_id] = $result.status
+    if ((Test-ObjectProperty -Object $result -Name "satisfies_gate_ids") -and $null -ne $result.satisfies_gate_ids) {
+      foreach ($alias in @(Convert-ToStringArray -Value $result.satisfies_gate_ids)) {
+        if (-not [string]::IsNullOrWhiteSpace($alias)) {
+          $resultMap[$alias] = $result.status
+        }
+      }
+    }
+  }
+
+  $expandedGateOrder = @()
+  $expandedRequiredGateIds = @()
+  $expandedBlockingGateIds = @()
+  foreach ($result in $results) {
+    $aliases = @($result.gate_id)
+    if ((Test-ObjectProperty -Object $result -Name "satisfies_gate_ids") -and $null -ne $result.satisfies_gate_ids) {
+      $aliases = @(Convert-ToStringArray -Value $result.satisfies_gate_ids)
+    }
+    foreach ($alias in $aliases) {
+      if ([string]::IsNullOrWhiteSpace($alias)) {
+        continue
+      }
+      if (-not ($expandedGateOrder -contains $alias)) {
+        $expandedGateOrder += $alias
+      }
+      if ($result.required -and -not ($expandedRequiredGateIds -contains $alias)) {
+        $expandedRequiredGateIds += $alias
+      }
+      if ($result.blocking -and -not ($expandedBlockingGateIds -contains $alias)) {
+        $expandedBlockingGateIds += $alias
+      }
+    }
   }
 
   $summary = [ordered]@{
@@ -1034,9 +1078,9 @@ function Invoke-RepoProfileGateRun {
     working_directory = $resolvedWorkingDirectory
     gate_timeout_seconds = $effectiveGateTimeoutSeconds
     max_gate_count    = $MaxGateCount
-    gate_order        = @($results | ForEach-Object { $_.gate_id })
-    required_gate_ids = @($results | Where-Object { $_.required } | ForEach-Object { $_.gate_id })
-    blocking_gate_ids = @($results | Where-Object { $_.blocking } | ForEach-Object { $_.gate_id })
+    gate_order        = $expandedGateOrder
+    required_gate_ids = $expandedRequiredGateIds
+    blocking_gate_ids = $expandedBlockingGateIds
     results           = $resultMap
     detailed          = $results
     auto_commit       = $autoCommitResult

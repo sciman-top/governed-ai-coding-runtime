@@ -124,6 +124,53 @@ class GovernanceGateRunnerTests(unittest.TestCase):
             self.assertEqual(payload["summary"]["detailed"][2]["blocking"], False)
             self.assertNotIn("full-extra-should-skip", completed.stdout)
 
+    def test_gate_runner_expands_satisfied_gate_aliases(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            profile_path = workspace / ".governed-ai" / "repo-profile.json"
+            _write_json(
+                profile_path,
+                {
+                    "repo_id": "alias-satisfied",
+                    "quick_gate_commands": [
+                        {
+                            "id": "test",
+                            "command": "Write-Host 'test-and-contract-ok'",
+                            "required": True,
+                            "satisfies_gate_ids": ["test", "contract"],
+                        }
+                    ],
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "governance" / "fast-check.ps1"),
+                    "-RepoProfilePath",
+                    str(profile_path),
+                    "-WorkingDirectory",
+                    str(workspace),
+                    "-Json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = _extract_json_payload(completed.stdout)
+            self.assertEqual(payload["summary"]["gate_order"], ["test", "contract"])
+            self.assertEqual(payload["summary"]["required_gate_ids"], ["test", "contract"])
+            self.assertEqual(payload["summary"]["results"], {"test": "pass", "contract": "pass"})
+            self.assertEqual(len(payload["summary"]["detailed"]), 1)
+
     def test_gate_entry_timeout_overrides_global_timeout(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)

@@ -147,7 +147,7 @@ def _write_fake_slow_runtime_flow_script(path: Path) -> None:
   [switch]$Json
 )
 
-Start-Sleep -Seconds 3
+Start-Sleep -Milliseconds 1500
 if ($Json) {
   @{ exit_code = 0; overall_status = "pass" } | ConvertTo-Json -Depth 8
 }
@@ -190,6 +190,8 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                             "primary_language": "python",
                             "build_command": "python --version",
                             "test_command": "python --version",
+                            "quick_test_command": "python -m unittest tests.test_fast",
+                            "quick_test_reason": "Focused fast regression slice.",
                             "contract_command": "python --version",
                         },
                         "repo-b": {
@@ -201,6 +203,7 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                             "build_command": "python --version",
                             "test_command": "python --version",
                             "contract_command": "python --version",
+                            "quick_test_skip_reason": "Full test command is already minimal.",
                         },
                     },
                 },
@@ -261,6 +264,11 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             self.assertEqual(payload["all_targets"], True)
             self.assertEqual(payload["failure_count"], 0)
             self.assertEqual(payload["target_count"], 2)
+            self.assertEqual(payload["outer_ai_recommendation_action"], "none")
+            self.assertEqual(payload["outer_ai_recommendation_tasks"], [])
+            sources = {result["target"]: result["governance_sync_quick_test_slice_source"] for result in payload["results"]}
+            self.assertEqual(sources["repo-a"], "argument")
+            self.assertEqual(sources["repo-b"], "argument_skip")
             for result in payload["results"]:
                 self.assertEqual(result["governance_sync_status"], "pass")
 
@@ -297,6 +305,8 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                             "primary_language": "python",
                             "build_command": "python --version",
                             "test_command": "python --version",
+                            "quick_test_command": "python -m unittest tests.test_fast",
+                            "quick_test_reason": "Focused fast regression slice.",
                             "contract_command": "python --version",
                         }
                     },
@@ -362,6 +372,8 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                             "primary_language": "python",
                             "build_command": "python --version",
                             "test_command": "python --version",
+                            "quick_test_command": "python -m unittest tests.test_fast",
+                            "quick_test_reason": "Focused fast regression slice.",
                             "contract_command": "python --version",
                         }
                     },
@@ -432,6 +444,8 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                             "primary_language": "python",
                             "build_command": "python --version",
                             "test_command": "python --version",
+                            "quick_test_command": "python -m unittest tests.test_fast",
+                            "quick_test_reason": "Focused fast regression slice.",
                             "contract_command": "python --version",
                         }
                     },
@@ -444,6 +458,15 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                     "schema_version": "1.0",
                     "baseline_id": "test",
                     "sync_revision": "2026-04-26.1",
+                    "target_repo_speed_profile_policy": {
+                        "enabled": True,
+                        "materialize_quick_gate_commands": True,
+                        "materialize_full_gate_commands": True,
+                        "preserve_existing_gate_commands": True,
+                        "default_gate_timeout_seconds": 90,
+                        "quick_gate_timeout_seconds": 30,
+                        "full_gate_timeout_seconds": 60,
+                    },
                     "required_profile_overrides": {
                         "required_entrypoint_policy": {"current_mode": "targeted_enforced"},
                         "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
@@ -478,6 +501,10 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             self.assertEqual(completed.returncode, 0, completed.stderr)
             payload = json.loads(completed.stdout)
             self.assertEqual(payload["governance_baseline_sync"]["status"], "pass")
+            self.assertEqual(
+                payload["governance_baseline_sync"]["speed_changed"],
+                ["quick_gate_commands", "full_gate_commands", "gate_timeout_seconds"],
+            )
             self.assertEqual(payload["governance_baseline_sync"]["bootstrap"]["status"], "pass")
             self.assertEqual(
                 payload["governance_baseline_sync"]["bootstrap"]["reason"],
@@ -487,6 +514,12 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             self.assertEqual(profile["repo_id"], "repo-a")
             self.assertEqual(profile["required_entrypoint_policy"]["current_mode"], "targeted_enforced")
             self.assertEqual(profile["auto_commit_policy"]["enabled"], True)
+            self.assertEqual([gate["id"] for gate in profile["quick_gate_commands"]], ["test", "contract"])
+            self.assertEqual(profile["quick_gate_commands"][0]["command"], "python -m unittest tests.test_fast")
+            self.assertEqual(profile["quick_gate_commands"][0]["description"], "Focused fast regression slice.")
+            self.assertEqual([gate["id"] for gate in profile["full_gate_commands"]], ["build"])
+            self.assertEqual(profile["full_gate_commands"][0]["satisfies_gate_ids"], ["build", "test", "contract"])
+            self.assertEqual(profile["gate_timeout_seconds"], 90)
 
     def test_runtime_flow_preset_all_targets_apply_feature_baseline_and_milestone_commit(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

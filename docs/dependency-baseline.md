@@ -2,7 +2,7 @@
 
 ## Current baseline
 - Python code under `apps/`, `packages/`, `scripts/`, and `tests/` is currently `stdlib-only`.
-- The only allowed non-stdlib import root is the repository-local package `governed_ai_coding_runtime_contracts`.
+- The allowed non-stdlib import roots are repository-local packages: `governed_ai_coding_runtime_contracts` and `lib`.
 - Declared external Python dependencies: none.
 - Host tools such as `python`, `pwsh`, `git`, and `codex` are operational prerequisites, not Python package dependencies.
 

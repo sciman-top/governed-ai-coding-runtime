@@ -6,9 +6,24 @@ import json
 from pathlib import Path
 from typing import Any
 
+from lib.target_repo_speed_profile import (
+    apply_speed_profile_policy,
+    as_command_list,
+    normalize_speed_profile_policy,
+    normalize_target_test_slice,
+)
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_BASELINE_PATH = ROOT / "docs" / "targets" / "target-repo-governance-baseline.json"
+DEFAULT_QUICK_TEST_RECOMMENDATION_RELATIVE_PATH = ".governed-ai/quick-test-slice.recommendation.json"
+DEFAULT_QUICK_TEST_PROMPT_RELATIVE_PATH = ".governed-ai/quick-test-slice.prompt.md"
+OUTER_AI_QUICK_TEST_INSTRUCTION = (
+    "Read the target repo .governed-ai/quick-test-slice.prompt.md, inspect the test structure, "
+    "and write .governed-ai/quick-test-slice.recommendation.json with status=ready and a safe "
+    "quick_test_command, or status=skip when no safe fast slice exists. Do not modify the full "
+    "test command."
+)
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -44,6 +59,9 @@ def _normalize_baseline(path: Path) -> dict[str, Any]:
             raise ValueError(f"baseline.required_managed_files[{index}].path must be a non-empty string")
         if not isinstance(source_path, str) or not source_path.strip():
             raise ValueError(f"baseline.required_managed_files[{index}].source must be a non-empty string")
+    speed_policy = baseline.get("target_repo_speed_profile_policy")
+    if speed_policy is not None:
+        normalize_speed_profile_policy(speed_policy)
     return baseline
 
 
@@ -58,6 +76,147 @@ def _apply_profile_overrides(
         if updated.get(key) != expected:
             changed_fields.append(key)
         updated[key] = expected
+    return updated, changed_fields
+
+
+def _load_outer_ai_test_slice_recommendation(
+    *,
+    target_repo: Path,
+    recommendation_path_arg: str | None = None,
+) -> tuple[dict[str, Any] | None, str, str | None]:
+    recommendation_path = (
+        Path(recommendation_path_arg).resolve(strict=False)
+        if recommendation_path_arg
+        else target_repo / DEFAULT_QUICK_TEST_RECOMMENDATION_RELATIVE_PATH
+    )
+    if not recommendation_path.exists():
+        return None, "none", str(recommendation_path)
+
+    raw = _load_json(recommendation_path)
+    status = str(raw.get("status") or "").strip().lower()
+    if status and status not in {"ready", "skip"}:
+        raise ValueError("quick test slice recommendation status must be ready or skip")
+    if status == "skip":
+        return None, "recommendation_file_skip", str(recommendation_path)
+
+    slice_config = normalize_target_test_slice(
+        command=raw.get("quick_test_command"),
+        reason=raw.get("quick_test_reason"),
+        timeout_seconds=raw.get("quick_test_timeout_seconds"),
+    )
+    if slice_config is None:
+        raise ValueError("quick test slice recommendation must define quick_test_command when status is ready")
+    return slice_config, "recommendation_file", str(recommendation_path)
+
+
+def _write_outer_ai_test_slice_prompt(
+    *,
+    target_repo: Path,
+    profile: dict[str, Any],
+    prompt_path_arg: str | None = None,
+    check_only: bool,
+) -> tuple[str, str | None]:
+    prompt_path = (
+        Path(prompt_path_arg).resolve(strict=False)
+        if prompt_path_arg
+        else target_repo / DEFAULT_QUICK_TEST_PROMPT_RELATIVE_PATH
+    )
+    test_commands = as_command_list(profile.get("test_commands"))
+    contract_commands = as_command_list(profile.get("contract_commands"))
+    invariant_commands = as_command_list(profile.get("invariant_commands"))
+    full_test = test_commands[0]["command"] if test_commands else ""
+    full_contract = contract_commands[0]["command"] if contract_commands else ""
+    full_invariant = invariant_commands[0]["command"] if invariant_commands else ""
+    prompt = f"""# Quick Test Slice Recommendation Prompt
+
+You are reviewing a target repository for a safe daily fast-test slice.
+
+Target repo: `{target_repo}`
+Repo id: `{profile.get("repo_id", "")}`
+Primary language: `{profile.get("primary_language", "")}`
+Full test command: `{full_test}`
+Full contract command: `{full_contract}`
+Full invariant command: `{full_invariant}`
+
+Task:
+1. Inspect the target repo test structure, markers/categories, and existing fast/smoke scripts.
+2. Recommend a `quick_test_command` only if it is deterministic, materially faster than the full test command, and representative of daily coding risk.
+3. Do not weaken full/release gates. The full test command must remain unchanged.
+4. If no safe slice exists, emit `status=skip`.
+
+Write this JSON to `.governed-ai/quick-test-slice.recommendation.json`:
+
+```json
+{{
+  "schema_version": "1.0",
+  "status": "ready",
+  "quick_test_command": "<command>",
+  "quick_test_reason": "<short reason>",
+  "quick_test_timeout_seconds": 180
+}}
+```
+
+Use this skip form when no safe slice is justified:
+
+```json
+{{
+  "schema_version": "1.0",
+  "status": "skip",
+  "quick_test_reason": "No safe target-specific quick test slice found."
+}}
+```
+"""
+    if check_only:
+        return "prompt_available", str(prompt_path)
+    prompt_path.parent.mkdir(parents=True, exist_ok=True)
+    existing = prompt_path.read_text(encoding="utf-8") if prompt_path.exists() else None
+    if existing != prompt:
+        prompt_path.write_text(prompt, encoding="utf-8")
+    return "prompt_written", str(prompt_path)
+
+
+def _catalog_gate_entry(gate_id: str, command: str) -> dict[str, Any] | None:
+    normalized = " ".join(str(command or "").strip().split())
+    if not normalized:
+        return None
+    return {"id": gate_id, "command": normalized, "required": True}
+
+
+def _apply_catalog_profile_facts(
+    profile: dict[str, Any],
+    *,
+    repo_id: str | None = None,
+    display_name: str | None = None,
+    primary_language: str | None = None,
+    build_command: str | None = None,
+    test_command: str | None = None,
+    contract_command: str | None = None,
+) -> tuple[dict[str, Any], list[str]]:
+    updated = copy.deepcopy(profile)
+    changed_fields: list[str] = []
+    for field_name, value in (
+        ("repo_id", repo_id),
+        ("display_name", display_name),
+        ("primary_language", primary_language),
+    ):
+        normalized = str(value or "").strip()
+        if normalized and updated.get(field_name) != normalized:
+            updated[field_name] = normalized
+            changed_fields.append(field_name)
+
+    for group_name, gate_id, command in (
+        ("build_commands", "build", build_command),
+        ("test_commands", "test", test_command),
+        ("contract_commands", "contract", contract_command),
+    ):
+        entry = _catalog_gate_entry(gate_id, command or "")
+        if entry is None:
+            continue
+        expected_group = [entry]
+        if updated.get(group_name) != expected_group:
+            updated[group_name] = expected_group
+            changed_fields.append(group_name)
+
     return updated, changed_fields
 
 
@@ -130,6 +289,33 @@ def main() -> int:
         action="store_true",
         help="Do not write files; return non-zero when drift is detected.",
     )
+    parser.add_argument("--repo-id", help="Catalog repo id to sync into the target repo profile.")
+    parser.add_argument("--display-name", help="Catalog display name to sync into the target repo profile.")
+    parser.add_argument("--primary-language", help="Catalog primary language to sync into the target repo profile.")
+    parser.add_argument("--build-command", help="Catalog build gate command to sync into build_commands.")
+    parser.add_argument("--test-command", help="Catalog test gate command to sync into test_commands.")
+    parser.add_argument("--contract-command", help="Catalog contract gate command to sync into contract_commands.")
+    parser.add_argument("--quick-test-command", help="Target-specific quick test slice command for fast gates.")
+    parser.add_argument("--quick-test-reason", help="Short reason for the quick test slice command.")
+    parser.add_argument("--quick-test-timeout-seconds", type=int, help="Timeout override for the quick test slice command.")
+    parser.add_argument(
+        "--quick-test-skip-reason",
+        help="Catalog-level reason that no target-specific quick test slice should be generated.",
+    )
+    parser.add_argument(
+        "--quick-test-recommendation-path",
+        help=(
+            "Optional outer-AI recommendation JSON. Defaults to "
+            f"{DEFAULT_QUICK_TEST_RECOMMENDATION_RELATIVE_PATH} when present."
+        ),
+    )
+    parser.add_argument(
+        "--quick-test-prompt-path",
+        help=(
+            "Optional output path for the outer-AI quick-test recommendation prompt. Defaults to "
+            f"{DEFAULT_QUICK_TEST_PROMPT_RELATIVE_PATH}."
+        ),
+    )
     args = parser.parse_args()
 
     target_repo = Path(args.target_repo).resolve(strict=False)
@@ -145,8 +331,52 @@ def main() -> int:
 
     baseline = _normalize_baseline(baseline_path)
     profile = _load_json(profile_path)
+    target_test_slice = normalize_target_test_slice(
+        command=args.quick_test_command,
+        reason=args.quick_test_reason,
+        timeout_seconds=args.quick_test_timeout_seconds,
+    )
+    quick_test_skip_reason = str(args.quick_test_skip_reason or "").strip()
+    if target_test_slice is not None and quick_test_skip_reason:
+        parser.error("--quick-test-command and --quick-test-skip-reason are mutually exclusive")
+
+    quick_test_slice_source = "argument" if target_test_slice is not None else "none"
+    if target_test_slice is None and quick_test_skip_reason:
+        quick_test_slice_source = "argument_skip"
+    recommendation_path = None
+    if quick_test_slice_source == "none":
+        target_test_slice, quick_test_slice_source, recommendation_path = _load_outer_ai_test_slice_recommendation(
+            target_repo=target_repo,
+            recommendation_path_arg=args.quick_test_recommendation_path,
+        )
+    outer_ai_action = "none"
+    quick_test_prompt_path = None
     overrides = baseline["required_profile_overrides"]
-    updated_profile, changed_fields = _apply_profile_overrides(profile=profile, overrides=overrides)
+    updated_profile, changed_catalog_fields = _apply_catalog_profile_facts(
+        profile,
+        repo_id=args.repo_id,
+        display_name=args.display_name,
+        primary_language=args.primary_language,
+        build_command=args.build_command,
+        test_command=args.test_command,
+        contract_command=args.contract_command,
+    )
+    updated_profile, changed_fields = _apply_profile_overrides(profile=updated_profile, overrides=overrides)
+    if quick_test_slice_source == "none":
+        outer_ai_action, quick_test_prompt_path = _write_outer_ai_test_slice_prompt(
+            target_repo=target_repo,
+            profile=updated_profile,
+            prompt_path_arg=args.quick_test_prompt_path,
+            check_only=args.check_only,
+        )
+    if {"build_commands", "test_commands", "contract_commands"}.intersection(changed_catalog_fields):
+        updated_profile.pop("quick_gate_commands", None)
+        updated_profile.pop("full_gate_commands", None)
+    updated_profile, changed_speed_profile_fields = apply_speed_profile_policy(
+        profile=updated_profile,
+        policy=baseline.get("target_repo_speed_profile_policy"),
+        target_test_slice=target_test_slice,
+    )
     changed_managed_files = _sync_managed_files(
         target_repo=target_repo,
         baseline_path=baseline_path,
@@ -155,10 +385,10 @@ def main() -> int:
     )
 
     status = "pass"
-    if changed_fields or changed_managed_files:
+    if changed_catalog_fields or changed_fields or changed_speed_profile_fields or changed_managed_files:
         status = "drift" if args.check_only else "applied"
 
-    if not args.check_only and changed_fields:
+    if not args.check_only and (changed_catalog_fields or changed_fields or changed_speed_profile_fields):
         profile_path.write_text(
             json.dumps(updated_profile, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
@@ -170,13 +400,21 @@ def main() -> int:
         "profile_path": str(profile_path),
         "baseline_path": str(baseline_path),
         "sync_revision": baseline["sync_revision"],
+        "changed_catalog_fields": changed_catalog_fields,
         "changed_fields": changed_fields,
+        "changed_speed_profile_fields": changed_speed_profile_fields,
         "changed_managed_files": changed_managed_files,
+        "quick_test_slice_source": quick_test_slice_source,
+        "quick_test_skip_reason": quick_test_skip_reason if quick_test_slice_source.endswith("_skip") else "",
+        "quick_test_recommendation_path": recommendation_path,
+        "outer_ai_action": outer_ai_action,
+        "quick_test_prompt_path": quick_test_prompt_path,
+        "outer_ai_instruction": OUTER_AI_QUICK_TEST_INSTRUCTION if outer_ai_action in {"prompt_written", "prompt_available"} else "",
         "check_only": args.check_only,
     }
     print(json.dumps(output, ensure_ascii=False, indent=2))
 
-    if args.check_only and (changed_fields or changed_managed_files):
+    if args.check_only and (changed_catalog_fields or changed_fields or changed_speed_profile_fields or changed_managed_files):
         return 1
     return 0
 

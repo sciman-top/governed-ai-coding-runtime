@@ -8,7 +8,8 @@
       "tests"
     ],
     "allowed_local_modules": [
-      "governed_ai_coding_runtime_contracts"
+      "governed_ai_coding_runtime_contracts",
+      "lib"
     ],
     "allowed_external_modules": []
   },

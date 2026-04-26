@@ -10,7 +10,10 @@
       "primary_language": "csharp",
       "build_command": "dotnet build ClassroomToolkit.sln -c Debug --no-restore",
       "test_command": "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug --no-restore",
-      "contract_command": "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug --no-restore"
+      "quick_test_command": ". ./scripts/env/Initialize-WindowsProcessEnvironment.ps1; dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug --no-restore --filter 'FullyQualifiedName~ArchitectureDependencyTests|FullyQualifiedName~InteropHookLifecycleContractTests|FullyQualifiedName~InteropHookEventDispatchContractTests|FullyQualifiedName~GlobalHookServiceLifecycleContractTests|FullyQualifiedName~CrossPageDisplayLifecycleContractTests'",
+      "quick_test_reason": "Established contract/invariant slice for daily feedback; full Debug test remains the full gate test command.",
+      "quick_test_timeout_seconds": 180,
+      "contract_command": ". ./scripts/env/Initialize-WindowsProcessEnvironment.ps1; dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug --no-restore --filter 'FullyQualifiedName~ArchitectureDependencyTests|FullyQualifiedName~InteropHookLifecycleContractTests|FullyQualifiedName~InteropHookEventDispatchContractTests|FullyQualifiedName~GlobalHookServiceLifecycleContractTests|FullyQualifiedName~CrossPageDisplayLifecycleContractTests'"
     },
     "github-toolkit": {
       "attachment_root": "${code_root}/github-toolkit",
@@ -18,9 +21,10 @@
       "repo_id": "github-toolkit",
       "display_name": "github-toolkit",
       "primary_language": "python",
-      "build_command": "python -m py_compile gh_utils.py list-forks.py sync-forks.py test_toolkit.py",
+      "build_command": "python -m py_compile gh_utils.py list-forks.py sync-forks.py test_toolkit.py test_support.py scripts/benchmark_hotpaths.py",
       "test_command": "python -m unittest test_toolkit.py",
-      "contract_command": "python -m unittest test_toolkit.py"
+      "contract_command": "python -m unittest test_toolkit.py",
+      "quick_test_skip_reason": "Full test command is already a single deterministic unittest file; no materially faster representative slice is justified."
     },
     "self-runtime": {
       "attachment_root": "${repo_root}",
@@ -30,6 +34,8 @@
       "primary_language": "python",
       "build_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1",
       "test_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime",
+      "quick_test_command": "python -m unittest tests.runtime.test_governance_gate_runner tests.runtime.test_target_repo_governance_consistency tests.runtime.test_runtime_flow_preset.RuntimeFlowPresetScriptTests.test_runtime_flow_preset_apply_governance_baseline_only_bootstraps_blank_target tests.runtime.test_target_repo_rollout_contract tests.runtime.test_target_repo_speed_kpi",
+      "quick_test_reason": "Focused daily Runtime slice for target governance speed-profile changes; full Runtime remains the full gate test command.",
       "contract_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract"
     },
     "skills-manager": {
@@ -37,10 +43,11 @@
       "attachment_runtime_state_root": "${runtime_state_base}/skills-manager",
       "repo_id": "skills-manager",
       "display_name": "skills-manager",
-      "primary_language": "python",
-      "build_command": "python --version",
-      "test_command": "python --version",
-      "contract_command": "python --version"
+      "primary_language": "powershell",
+      "build_command": "./build.ps1",
+      "test_command": "./skills.ps1 发现",
+      "contract_command": "./skills.ps1 doctor --strict --threshold-ms 8000",
+      "quick_test_skip_reason": "The repo hard test command is already the lightweight discovery gate; use derived test+contract quick gates instead of slicing smaller."
     },
     "vps-ssh-launcher": {
       "attachment_root": "${code_root}/vps-ssh-launcher",
@@ -48,9 +55,10 @@
       "repo_id": "vps-ssh-launcher",
       "display_name": "vps-ssh-launcher",
       "primary_language": "python",
-      "build_command": "python -m py_compile auto_install.py ssh_tool.py test_ssh_tool.py",
-      "test_command": "python -m unittest test_ssh_tool.py",
-      "contract_command": "python -m unittest test_ssh_tool.py"
+      "build_command": "python -m compileall -q ssh_tool.py auto_install.py test_ssh_tool.py test_auto_install.py test_scripts.py test_integration_real_ssh.py",
+      "test_command": "python -m pytest -q",
+      "contract_command": "python -m unittest -q",
+      "quick_test_skip_reason": "Full pytest gate is already small and real SSH integration is skipped by default; no materially faster representative slice is justified."
     }
   }
 }

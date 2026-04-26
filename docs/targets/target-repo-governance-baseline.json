@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "baseline_id": "active-target-governance-baseline",
-  "sync_revision": "2026-04-26.5",
+  "sync_revision": "2026-04-26.8",
   "required_managed_files": [
     {
       "path": ".governed-ai/verify-powershell-policy.py",
@@ -9,6 +9,17 @@
       "description": "Repo-local guard that fails on direct normal-path powershell/powershell.exe invocations and keeps target repos pwsh-first."
     }
   ],
+  "target_repo_speed_profile_policy": {
+    "enabled": true,
+    "materialize_quick_gate_commands": true,
+    "materialize_full_gate_commands": true,
+    "preserve_existing_gate_commands": true,
+    "refresh_existing_derived_gate_commands": true,
+    "default_gate_timeout_seconds": 300,
+    "quick_gate_timeout_seconds": 180,
+    "full_gate_timeout_seconds": 600,
+    "reason": "Materialize explicit quick/full gate groups from each target repo's existing build/test/contract commands, and allow target catalog quick_test_command slices for daily fast feedback while release/onboard paths still escalate to full gates."
+  },
   "required_profile_overrides": {
     "required_entrypoint_policy": {
       "current_mode": "targeted_enforced",

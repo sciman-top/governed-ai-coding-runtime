@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260426 Target Repo Speed Profile One-Click](./20260426-target-repo-speed-profile-one-click.md)
+  - evidence companion for materializing quick/full gate command groups, target-specific test slicing, and timeout defaults through the one-click target-repo baseline sync
 - [20260426 Agent Rule Coordination Language Policy](./20260426-agent-rule-coordination-language-policy.md)
   - evidence companion for Codex/Claude/Gemini global and project-level rule coordination, progressive disclosure, language policy, and official-doc-aligned loading semantics
 - [20260426 Blank Target Governance Bootstrap](./20260426-blank-target-governance-bootstrap.md)

@@ -379,6 +379,49 @@ function Try-ParseJson {
   }
 }
 
+function Get-OptionalStringProperty {
+  param(
+    [Parameter(Mandatory = $true)]
+    [object]$Object,
+    [Parameter(Mandatory = $true)]
+    [string]$Name
+  )
+
+  if ($Object -and ($Object.PSObject.Properties.Name -contains $Name) -and $null -ne $Object.$Name) {
+    return [string]$Object.$Name
+  }
+  return ""
+}
+
+function Get-OptionalIntProperty {
+  param(
+    [Parameter(Mandatory = $true)]
+    [object]$Object,
+    [Parameter(Mandatory = $true)]
+    [string]$Name
+  )
+
+  if ($Object -and ($Object.PSObject.Properties.Name -contains $Name) -and $null -ne $Object.$Name) {
+    return [int]$Object.$Name
+  }
+  return 0
+}
+
+function ConvertTo-JsonArrayValue {
+  param([object]$Value)
+
+  $result = [System.Collections.Generic.List[object]]::new()
+  if ($null -eq $Value) {
+    return ,$result
+  }
+  foreach ($item in @($Value)) {
+    if ($null -ne $item) {
+      [void]$result.Add($item)
+    }
+  }
+  return ,$result
+}
+
 function Invoke-PruneTargetRepoRuns {
   param(
     [Parameter(Mandatory = $true)]
@@ -498,6 +541,10 @@ function Load-TargetConfigMap {
       BuildCommand = [string]$rawConfig.build_command
       TestCommand = [string]$rawConfig.test_command
       ContractCommand = [string]$rawConfig.contract_command
+      QuickTestCommand = Get-OptionalStringProperty -Object $rawConfig -Name "quick_test_command"
+      QuickTestReason = Get-OptionalStringProperty -Object $rawConfig -Name "quick_test_reason"
+      QuickTestTimeoutSeconds = Get-OptionalIntProperty -Object $rawConfig -Name "quick_test_timeout_seconds"
+      QuickTestSkipReason = Get-OptionalStringProperty -Object $rawConfig -Name "quick_test_skip_reason"
     }
   }
 
@@ -607,6 +654,36 @@ function Invoke-GovernanceBaselineSync {
     "--target-repo", $TargetConfig.AttachmentRoot,
     "--baseline-path", $BaselinePath
   )
+  if (-not [string]::IsNullOrWhiteSpace($TargetConfig.RepoId)) {
+    $args += @("--repo-id", $TargetConfig.RepoId)
+  }
+  if (-not [string]::IsNullOrWhiteSpace($TargetConfig.DisplayName)) {
+    $args += @("--display-name", $TargetConfig.DisplayName)
+  }
+  if (-not [string]::IsNullOrWhiteSpace($TargetConfig.PrimaryLanguage)) {
+    $args += @("--primary-language", $TargetConfig.PrimaryLanguage)
+  }
+  if (-not [string]::IsNullOrWhiteSpace($TargetConfig.BuildCommand)) {
+    $args += @("--build-command", $TargetConfig.BuildCommand)
+  }
+  if (-not [string]::IsNullOrWhiteSpace($TargetConfig.TestCommand)) {
+    $args += @("--test-command", $TargetConfig.TestCommand)
+  }
+  if (-not [string]::IsNullOrWhiteSpace($TargetConfig.ContractCommand)) {
+    $args += @("--contract-command", $TargetConfig.ContractCommand)
+  }
+  if (-not [string]::IsNullOrWhiteSpace($TargetConfig.QuickTestCommand)) {
+    $args += @("--quick-test-command", $TargetConfig.QuickTestCommand)
+  }
+  if (-not [string]::IsNullOrWhiteSpace($TargetConfig.QuickTestReason)) {
+    $args += @("--quick-test-reason", $TargetConfig.QuickTestReason)
+  }
+  if ($TargetConfig.QuickTestTimeoutSeconds -gt 0) {
+    $args += @("--quick-test-timeout-seconds", ([string]$TargetConfig.QuickTestTimeoutSeconds))
+  }
+  if (-not [string]::IsNullOrWhiteSpace($TargetConfig.QuickTestSkipReason)) {
+    $args += @("--quick-test-skip-reason", $TargetConfig.QuickTestSkipReason)
+  }
   $result = Invoke-CommandCapture `
     -Executable $PythonCommand `
     -Arguments $args `
@@ -1517,10 +1594,14 @@ foreach ($targetName in $selectedTargets) {
     }
     if ($targetRun.governance_sync_result.status -eq "pass") {
       $changedFields = @()
+      $changedSpeedProfileFields = @()
       if ($targetRun.governance_sync_result.payload -and $targetRun.governance_sync_result.payload.changed_fields) {
-        $changedFields = @($targetRun.governance_sync_result.payload.changed_fields)
+        $changedFields = ConvertTo-JsonArrayValue -Value $targetRun.governance_sync_result.payload.changed_fields
       }
-      Write-Host ("governance_sync: status=pass target={0} changed_fields={1}" -f $targetName, (@($changedFields) -join ","))
+      if ($targetRun.governance_sync_result.payload -and $targetRun.governance_sync_result.payload.changed_speed_profile_fields) {
+        $changedSpeedProfileFields = ConvertTo-JsonArrayValue -Value $targetRun.governance_sync_result.payload.changed_speed_profile_fields
+      }
+      Write-Host ("governance_sync: status=pass target={0} changed_fields={1} changed_speed_profile_fields={2}" -f $targetName, (@($changedFields) -join ","), (@($changedSpeedProfileFields) -join ","))
     }
     elseif ($targetRun.governance_sync_result.status -eq "fail") {
       Write-Host ("governance_sync: status=fail target={0} reason={1}" -f $targetName, $targetRun.governance_sync_result.reason)
@@ -1642,8 +1723,15 @@ if ($Json) {
           status       = $single.governance_sync_result.status
           reason       = $single.governance_sync_result.reason
           exit_code    = $single.governance_sync_result.exit_code
-          changed      = if ($single.governance_sync_result.payload) { @($single.governance_sync_result.payload.changed_fields) } else { @() }
+          catalog_changed = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_catalog_fields } else { @() }
+          changed      = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_fields } else { @() }
+          speed_changed = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_speed_profile_fields } else { @() }
           sync_revision = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.sync_revision } else { $null }
+          quick_test_slice_source = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.quick_test_slice_source } else { "" }
+          outer_ai_action = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.outer_ai_action } else { "" }
+          quick_test_prompt_path = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.quick_test_prompt_path } else { "" }
+          outer_ai_instruction = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.outer_ai_instruction } else { "" }
+          bootstrap    = if ($single.governance_sync_result.PSObject.Properties.Name -contains "bootstrap") { $single.governance_sync_result.bootstrap } else { $null }
         }
         $wrapped["milestone_commit"] = [ordered]@{
           status             = $single.milestone_commit_result.status
@@ -1671,7 +1759,20 @@ if ($Json) {
           exit_code               = $single.exit_code
           flow_exit_code          = $single.flow_result.exit_code
           flow_output             = $single.flow_result.output
-          governance_baseline_sync = $single.governance_sync_result
+          governance_baseline_sync = [ordered]@{
+            status       = $single.governance_sync_result.status
+            reason       = $single.governance_sync_result.reason
+            exit_code    = $single.governance_sync_result.exit_code
+            catalog_changed = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_catalog_fields } else { @() }
+            changed      = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_fields } else { @() }
+            speed_changed = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_speed_profile_fields } else { @() }
+            sync_revision = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.sync_revision } else { $null }
+            quick_test_slice_source = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.quick_test_slice_source } else { "" }
+            outer_ai_action = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.outer_ai_action } else { "" }
+            quick_test_prompt_path = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.quick_test_prompt_path } else { "" }
+            outer_ai_instruction = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.outer_ai_instruction } else { "" }
+            bootstrap    = if ($single.governance_sync_result.PSObject.Properties.Name -contains "bootstrap") { $single.governance_sync_result.bootstrap } else { $null }
+          }
           milestone_commit        = $single.milestone_commit_result
         }
         if ($PruneTargetRepoRuns) {
@@ -1696,7 +1797,13 @@ if ($Json) {
           governance_sync_status   = $_.governance_sync_result.status
           governance_sync_reason   = $_.governance_sync_result.reason
           governance_sync_exit_code = $_.governance_sync_result.exit_code
-          governance_sync_changed  = if ($_.governance_sync_result.payload) { @($_.governance_sync_result.payload.changed_fields) } else { @() }
+          governance_sync_catalog_changed = if ($_.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $_.governance_sync_result.payload.changed_catalog_fields } else { @() }
+          governance_sync_changed  = if ($_.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $_.governance_sync_result.payload.changed_fields } else { @() }
+          governance_sync_speed_changed = if ($_.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $_.governance_sync_result.payload.changed_speed_profile_fields } else { @() }
+          governance_sync_quick_test_slice_source = if ($_.governance_sync_result.payload) { $_.governance_sync_result.payload.quick_test_slice_source } else { "" }
+          governance_sync_outer_ai_action = if ($_.governance_sync_result.payload) { $_.governance_sync_result.payload.outer_ai_action } else { "" }
+          governance_sync_quick_test_prompt_path = if ($_.governance_sync_result.payload) { $_.governance_sync_result.payload.quick_test_prompt_path } else { "" }
+          governance_sync_outer_ai_instruction = if ($_.governance_sync_result.payload) { $_.governance_sync_result.payload.outer_ai_instruction } else { "" }
           milestone_commit_status  = $_.milestone_commit_result.status
           milestone_commit_reason  = $_.milestone_commit_result.reason
           milestone_commit_exit_code = $_.milestone_commit_result.exit_code
@@ -1708,6 +1815,23 @@ if ($Json) {
           auto_commit_reason       = $_.milestone_commit_result.auto_commit_reason
           auto_commit_commit_hash  = $_.milestone_commit_result.commit_hash
           auto_commit_trigger      = $_.milestone_commit_result.trigger
+        }
+      }
+    )
+    $outerAiRecommendationTasks = @(
+      $results | Where-Object {
+        $_.governance_sync_outer_ai_action -in @("prompt_written", "prompt_available")
+      } | ForEach-Object {
+        $recommendationPath = ""
+        if (-not [string]::IsNullOrWhiteSpace([string]$_.governance_sync_quick_test_prompt_path)) {
+          $recommendationPath = ([string]$_.governance_sync_quick_test_prompt_path).Replace("quick-test-slice.prompt.md", "quick-test-slice.recommendation.json")
+        }
+        [ordered]@{
+          target = $_.target
+          action = "read_prompt_and_write_recommendation"
+          prompt_path = $_.governance_sync_quick_test_prompt_path
+          recommendation_path = $recommendationPath
+          instruction = $_.governance_sync_outer_ai_instruction
         }
       }
     )
@@ -1740,6 +1864,8 @@ if ($Json) {
       batch_elapsed_seconds           = if ($BatchTimeoutSeconds -gt 0) { [int][Math]::Floor(((Get-Date) - $batchStartedAt).TotalSeconds) } else { 0 }
       target_count                    = @($targetRuns).Count
       failure_count                   = $failureCount
+      outer_ai_recommendation_action  = if (@($outerAiRecommendationTasks).Count -gt 0) { "read_prompt_and_write_recommendation" } else { "none" }
+      outer_ai_recommendation_tasks   = $outerAiRecommendationTasks
       results                         = $results
     }
     if ($PruneTargetRepoRuns) {

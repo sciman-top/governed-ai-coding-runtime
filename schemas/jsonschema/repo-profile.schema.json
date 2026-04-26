@@ -113,6 +113,12 @@
             "type": "integer",
             "minimum": 0
           },
+          "satisfies_gate_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "not_applicable": {
             "type": "boolean"
           }
@@ -149,6 +155,12 @@
             "type": "integer",
             "minimum": 0
           },
+          "satisfies_gate_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "not_applicable": {
             "type": "boolean"
           }
@@ -182,6 +194,12 @@
           "timeout_seconds": {
             "type": "integer",
             "minimum": 0
+          },
+          "satisfies_gate_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "not_applicable": {
             "type": "boolean"
@@ -218,6 +236,12 @@
             "type": "integer",
             "minimum": 0
           },
+          "satisfies_gate_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "not_applicable": {
             "type": "boolean"
           }
@@ -253,6 +277,12 @@
             "type": "integer",
             "minimum": 0
           },
+          "satisfies_gate_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "not_applicable": {
             "type": "boolean"
           }
@@ -287,6 +317,12 @@
           "timeout_seconds": {
             "type": "integer",
             "minimum": 0
+          },
+          "satisfies_gate_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "not_applicable": {
             "type": "boolean"
@@ -505,6 +541,12 @@
             "type": "integer",
             "minimum": 0
           },
+          "satisfies_gate_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "not_applicable": {
             "type": "boolean"
           }
@@ -539,6 +581,12 @@
           "timeout_seconds": {
             "type": "integer",
             "minimum": 0
+          },
+          "satisfies_gate_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "not_applicable": {
             "type": "boolean"

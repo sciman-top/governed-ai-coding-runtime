@@ -5,10 +5,19 @@ import json
 from pathlib import Path
 from typing import Any
 
+from lib.target_repo_speed_profile import (
+    apply_speed_profile_policy,
+    normalize_command_text,
+    normalize_speed_profile_policy,
+    normalize_target_config_test_slice,
+    select_preferred_command,
+)
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CATALOG_PATH = ROOT / "docs" / "targets" / "target-repos-catalog.json"
 DEFAULT_BASELINE_PATH = ROOT / "docs" / "targets" / "target-repo-governance-baseline.json"
+DEFAULT_QUICK_TEST_RECOMMENDATION_RELATIVE_PATH = ".governed-ai/quick-test-slice.recommendation.json"
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -25,7 +34,7 @@ def _expand_template(value: str, variables: dict[str, str]) -> str:
     return expanded
 
 
-def _validate_baseline(path: Path) -> tuple[str, dict[str, Any], list[dict[str, Any]]]:
+def _validate_baseline(path: Path) -> tuple[str, dict[str, Any], list[dict[str, Any]], dict[str, Any] | None]:
     baseline = _load_json(path)
     sync_revision = baseline.get("sync_revision")
     overrides = baseline.get("required_profile_overrides")
@@ -45,7 +54,67 @@ def _validate_baseline(path: Path) -> tuple[str, dict[str, Any], list[dict[str, 
             raise ValueError(f"baseline.required_managed_files[{index}].path must be a non-empty string")
         if not isinstance(source_path, str) or not source_path.strip():
             raise ValueError(f"baseline.required_managed_files[{index}].source must be a non-empty string")
-    return sync_revision, overrides, managed_files
+    speed_policy = baseline.get("target_repo_speed_profile_policy")
+    if speed_policy is not None:
+        speed_policy = normalize_speed_profile_policy(speed_policy)
+    return sync_revision, overrides, managed_files, speed_policy
+
+
+def _target_quick_test_skip_reason(target_config: dict[str, Any]) -> str:
+    return str(target_config.get("quick_test_skip_reason") or "").strip()
+
+
+def _catalog_gate_fact_drift(profile: dict[str, Any], target_config: dict[str, Any]) -> list[str]:
+    drift: list[str] = []
+    for field_name, catalog_name in (
+        ("repo_id", "repo_id"),
+        ("display_name", "display_name"),
+        ("primary_language", "primary_language"),
+    ):
+        expected = str(target_config.get(catalog_name) or "").strip()
+        if expected and profile.get(field_name) != expected:
+            drift.append(field_name)
+
+    for group_name, catalog_name in (
+        ("build_commands", "build_command"),
+        ("test_commands", "test_command"),
+        ("contract_commands", "contract_command"),
+    ):
+        expected_command = normalize_command_text(target_config.get(catalog_name))
+        if not expected_command:
+            continue
+        actual = select_preferred_command(profile, group_name)
+        actual_command = normalize_command_text(actual.get("command") if actual else "")
+        if actual_command != expected_command:
+            drift.append(group_name)
+
+    return drift
+
+
+def _load_outer_ai_test_slice_recommendation(target_repo: Path) -> dict[str, Any] | None:
+    recommendation_path = target_repo / DEFAULT_QUICK_TEST_RECOMMENDATION_RELATIVE_PATH
+    if not recommendation_path.exists():
+        return None
+
+    raw = _load_json(recommendation_path)
+    status = str(raw.get("status") or "").strip().lower()
+    if status and status not in {"ready", "skip"}:
+        raise ValueError(f"quick test slice recommendation status must be ready or skip: {recommendation_path}")
+    if status == "skip":
+        return None
+
+    slice_config = normalize_target_config_test_slice(
+        {
+            "quick_test_command": raw.get("quick_test_command"),
+            "quick_test_reason": raw.get("quick_test_reason"),
+            "quick_test_timeout_seconds": raw.get("quick_test_timeout_seconds"),
+        }
+    )
+    if slice_config is None:
+        raise ValueError(
+            f"quick test slice recommendation must define quick_test_command when status is ready: {recommendation_path}"
+        )
+    return slice_config
 
 
 def _target_relative_path(target_repo: Path, raw_path: str) -> Path:
@@ -111,7 +180,7 @@ def main() -> int:
     if not baseline_path.exists():
         raise SystemExit(f"baseline file not found: {baseline_path}")
 
-    sync_revision, expected_overrides, managed_files = _validate_baseline(baseline_path)
+    sync_revision, expected_overrides, managed_files, speed_policy = _validate_baseline(baseline_path)
     targets = _load_targets(catalog_path)
     variables = {
         "repo_root": str(repo_root),
@@ -163,6 +232,40 @@ def main() -> int:
                     "target_repo": str(attachment_root),
                     "profile_path": str(profile_path),
                     "mismatched_fields": mismatched_fields,
+                }
+            )
+
+        mismatched_catalog_fields = _catalog_gate_fact_drift(profile, target)
+        if mismatched_catalog_fields:
+            drift.append(
+                {
+                    "target": target_name,
+                    "reason": "catalog_gate_fact_drift",
+                    "target_repo": str(attachment_root),
+                    "profile_path": str(profile_path),
+                    "mismatched_catalog_fields": mismatched_catalog_fields,
+                }
+            )
+
+        target_test_slice = normalize_target_config_test_slice(target)
+        target_test_skip_reason = _target_quick_test_skip_reason(target)
+        if target_test_slice is not None and target_test_skip_reason:
+            raise ValueError(f"target cannot define both quick_test_command and quick_test_skip_reason: {target_name}")
+        if target_test_slice is None and not target_test_skip_reason:
+            target_test_slice = _load_outer_ai_test_slice_recommendation(attachment_root)
+        _, mismatched_speed_profile_fields = apply_speed_profile_policy(
+            profile,
+            speed_policy,
+            target_test_slice=target_test_slice,
+        )
+        if mismatched_speed_profile_fields:
+            drift.append(
+                {
+                    "target": target_name,
+                    "reason": "speed_profile_drift",
+                    "target_repo": str(attachment_root),
+                    "profile_path": str(profile_path),
+                    "mismatched_speed_profile_fields": mismatched_speed_profile_fields,
                 }
             )
 

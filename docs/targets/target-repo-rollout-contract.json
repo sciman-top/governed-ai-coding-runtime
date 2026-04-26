@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "contract_id": "target-repo-rollout-contract",
-  "sync_revision": "2026-04-26.2",
+  "sync_revision": "2026-04-26.3",
   "canonical_one_click_entrypoint": {
     "script": "scripts/runtime-flow-preset.ps1",
     "all_targets_apply_all_features_args": [
@@ -97,7 +97,7 @@
     {
       "capability_id": "target-repo-gate-speed-controls",
       "distribution_scope": "runtime_orchestrated",
-      "reason": "fast/full、auto milestone gate 和 timeout 是一键运行参数及 catalog/profile gate 命令组合，不是需要复制的新目标仓治理字段。"
+      "reason": "fast/full、auto milestone gate 和 timeout 仍由一键运行入口编排；baseline 可从目标仓既有 build/test/contract 命令派生 quick/full gate command groups，但不下发固定跨仓命令覆盖。"
     },
     {
       "capability_id": "source-string-contract-guard",

@@ -11,6 +11,8 @@ CONTRACTS_SRC = ROOT / "packages" / "contracts" / "src"
 if str(CONTRACTS_SRC) not in sys.path:
     sys.path.insert(0, str(CONTRACTS_SRC))
 
+FAST_FALLBACK_ADAPTER_ID = "unit-test-adapter"
+
 
 class AttachedRepoE2ETests(unittest.TestCase):
     def test_runtime_check_executes_attached_write_e2e_with_handoff_and_replay_refs(self) -> None:
@@ -54,6 +56,8 @@ class AttachedRepoE2ETests(unittest.TestCase):
                     "run-attached-e2e",
                     "-CommandId",
                     "cmd-attached-e2e",
+                    "-AdapterId",
+                    FAST_FALLBACK_ADAPTER_ID,
                     "-WriteTargetPath",
                     target_path,
                     "-WriteTier",
@@ -146,6 +150,8 @@ class AttachedRepoE2ETests(unittest.TestCase):
                     "run-attached-default-tool",
                     "-CommandId",
                     "cmd-attached-default-tool",
+                    "-AdapterId",
+                    FAST_FALLBACK_ADAPTER_ID,
                     "-WriteTargetPath",
                     target_path,
                     "-WriteTier",
@@ -294,6 +300,8 @@ class AttachedRepoE2ETests(unittest.TestCase):
                     "run-attached-preflight",
                     "-CommandId",
                     "cmd-attached-preflight",
+                    "-AdapterId",
+                    FAST_FALLBACK_ADAPTER_ID,
                     "-WriteTargetPath",
                     "secrets/prod.env",
                     "-WriteTier",
@@ -371,6 +379,8 @@ class AttachedRepoE2ETests(unittest.TestCase):
                     "run-attached-missing-baseline",
                     "-CommandId",
                     "cmd-attached-missing-baseline",
+                    "-AdapterId",
+                    FAST_FALLBACK_ADAPTER_ID,
                     "-Json",
                 ],
                 check=False,
