@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "contract_id": "target-repo-rollout-contract",
-  "sync_revision": "2026-04-25.4",
+  "sync_revision": "2026-04-26.2",
   "canonical_one_click_entrypoint": {
     "script": "scripts/runtime-flow-preset.ps1",
     "all_targets_apply_all_features_args": [
@@ -66,6 +66,14 @@
       "reason": "交互策略影响目标仓 AI 编码过程，应随目标仓 profile 统一同步。",
       "baseline_fields": [
         "interaction_profile"
+      ]
+    },
+    {
+      "capability_id": "global-project-rule-coordination",
+      "distribution_scope": "profile_baseline",
+      "reason": "全局规则与项目级规则的 1+1>2 协同边界会直接影响 AI 编码执行质量，应随目标仓 profile 统一同步。",
+      "baseline_fields": [
+        "rule_file_coordination_policy"
       ]
     },
     {
@@ -135,6 +143,18 @@
       "feature_id": "low-token-guided-interaction-profile",
       "baseline_fields": [
         "interaction_profile"
+      ],
+      "rollout_modes": [
+        "apply_all_features",
+        "feature_baseline_only",
+        "feature_baseline_and_milestone_commit"
+      ],
+      "milestone_commit_required": false
+    },
+    {
+      "feature_id": "global-project-rule-coordination",
+      "baseline_fields": [
+        "rule_file_coordination_policy"
       ],
       "rollout_modes": [
         "apply_all_features",

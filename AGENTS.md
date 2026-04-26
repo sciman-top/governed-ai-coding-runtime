@@ -1,11 +1,13 @@
 # AGENTS.md — governed-ai-coding-runtime 项目承接规则
-**承接来源**: `GlobalUser/AGENTS.md v9.39`
+**承接来源**: `GlobalUser/AGENTS.md v9.41`
 **适用范围**: `governed-ai-coding-runtime 仓库根目录（repo root）`  
-**最后更新**: `2026-04-22`
+**最后更新**: `2026-04-26`
 
 ## 1. 阅读指引
 - 本文件只写本仓事实、门禁命令、证据位置和回滚入口，不重写全局 `R/E` 语义。
 - 当前仓库处于 `docs-first / contracts-first` 阶段；已落地目录只有 `docs/`、`schemas/`、`scripts/`。
+- 渐进披露边界：本文件必须自包含保留本仓归宿、门禁、阻断、证据和回滚；长 runbook、批量目标仓细节和历史证据可放 `docs/` 子文档，但不得成为执行本文件的前置条件。
+- 精简原则：根文件只写本仓可验证事实、硬门禁、阻断和回滚；长示例、历史背景、排障细节进入 `docs/`。
 - 当前目标归宿：
   - 文档、决策、审查结论：`docs/`
   - 机器可读契约：`schemas/`
@@ -14,6 +16,9 @@
 
 ## A. 项目基线
 - 当前权威输入顺序：根 `README.md` -> `docs/README.md` -> PRD -> Architecture -> Roadmap -> Backlog -> Specs -> Schemas。
+- AI 编码沟通默认中文；计划、审查、证据摘要和提交说明优先中文，代码标识符、命令、日志、报错、schema 字段保留英文原文。
+- 本仓与全局规则的协同方式：全局给风险、语言、N/A 和门禁语义；本文件给本仓目录归宿、真实命令、阻断条件、证据位置和回滚入口。
+- 规则写法优先采用可验证边界：真实命令、禁止绕过项、证据路径和回滚入口；避免在根文件堆叠不可检查的抽象偏好。
 - `docs/specs/*` 定义语义；`schemas/jsonschema/*` 是配套机器可读草案；修改其一必须同步检查另一侧。
 - `scripts/github/create-roadmap-issues.ps1` 只负责 backlog/issue 种子生成，不代表运行时实现已经存在。
 - 当前仓库已存在 `.git`；默认回滚优先使用 git 历史，`docs/change-evidence/snapshots/` 只作为补充留痕或无 git 场景兜底。
@@ -58,6 +63,7 @@
 - 规划、schema、脚本类变更必须新增一条 `docs/change-evidence/*.md`。
 - 历史回滚优先通过 git 提交或差异恢复；当工作区无 `.git` 或需要额外证据快照时，再复制到 `docs/change-evidence/snapshots/<date>-<slug>/`，快照命名需保留原始相对路径信息。
 - 当前真实门禁顺序为 `build -> test -> contract/invariant -> hotspot`；后续服务化阶段只能增强，不得改序。
+- 若新增项目级子文档，只允许承载长清单、runbook、历史背景或示例；根 `AGENTS.md` 仍必须能独立指导一次完整变更。
 
 ## E. 提交信息规范
 - 提交信息以中文为主，但不强制全中文。

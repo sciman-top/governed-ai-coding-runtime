@@ -4,6 +4,12 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260426 Agent Rule Coordination Language Policy](./20260426-agent-rule-coordination-language-policy.md)
+  - evidence companion for Codex/Claude/Gemini global and project-level rule coordination, progressive disclosure, language policy, and official-doc-aligned loading semantics
+- [20260426 Blank Target Governance Bootstrap](./20260426-blank-target-governance-bootstrap.md)
+  - evidence companion for bootstrapping a blank existing target directory through the one-click governance baseline path
+- [20260426 Target Repo Pwsh Local Guard](./20260426-target-repo-pwsh-local-guard.md)
+  - evidence companion for syncing a repo-local PowerShell policy guard through the target-repo one-click governance baseline
 - [20260425 Pwsh-First Target Repo Policy](./20260425-pwsh-first-target-repo-policy.md)
   - evidence companion for promoting PowerShell 7 / pwsh-first execution into target-repo governance baseline, CI/script cleanup, and all-target one-click sync
 - [20260425 One-Click Rollout Hook Enforcement](./20260425-one-click-rollout-hook-enforcement.md)

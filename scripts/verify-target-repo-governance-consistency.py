@@ -25,7 +25,7 @@ def _expand_template(value: str, variables: dict[str, str]) -> str:
     return expanded
 
 
-def _validate_baseline(path: Path) -> tuple[str, dict[str, Any]]:
+def _validate_baseline(path: Path) -> tuple[str, dict[str, Any], list[dict[str, Any]]]:
     baseline = _load_json(path)
     sync_revision = baseline.get("sync_revision")
     overrides = baseline.get("required_profile_overrides")
@@ -33,7 +33,40 @@ def _validate_baseline(path: Path) -> tuple[str, dict[str, Any]]:
         raise ValueError("baseline.sync_revision must be a non-empty string")
     if not isinstance(overrides, dict) or not overrides:
         raise ValueError("baseline.required_profile_overrides must be a non-empty object")
-    return sync_revision, overrides
+    managed_files = baseline.get("required_managed_files", [])
+    if not isinstance(managed_files, list):
+        raise ValueError("baseline.required_managed_files must be a list when present")
+    for index, item in enumerate(managed_files):
+        if not isinstance(item, dict):
+            raise ValueError(f"baseline.required_managed_files[{index}] must be an object")
+        target_path = item.get("path")
+        source_path = item.get("source")
+        if not isinstance(target_path, str) or not target_path.strip():
+            raise ValueError(f"baseline.required_managed_files[{index}].path must be a non-empty string")
+        if not isinstance(source_path, str) or not source_path.strip():
+            raise ValueError(f"baseline.required_managed_files[{index}].source must be a non-empty string")
+    return sync_revision, overrides, managed_files
+
+
+def _target_relative_path(target_repo: Path, raw_path: str) -> Path:
+    relative = Path(raw_path)
+    if relative.is_absolute():
+        raise ValueError(f"managed file path must be repo-relative: {raw_path}")
+    if any(part == ".." for part in relative.parts):
+        raise ValueError(f"managed file path must not contain '..': {raw_path}")
+    resolved = (target_repo / relative).resolve(strict=False)
+    try:
+        resolved.relative_to(target_repo.resolve(strict=False))
+    except ValueError as exc:
+        raise ValueError(f"managed file path escapes target repo: {raw_path}") from exc
+    return resolved
+
+
+def _source_path(raw_path: str) -> Path:
+    source = Path(raw_path)
+    if not source.is_absolute():
+        source = ROOT / source
+    return source.resolve(strict=False)
 
 
 def _load_targets(catalog_path: Path) -> dict[str, dict[str, Any]]:
@@ -78,7 +111,7 @@ def main() -> int:
     if not baseline_path.exists():
         raise SystemExit(f"baseline file not found: {baseline_path}")
 
-    sync_revision, expected_overrides = _validate_baseline(baseline_path)
+    sync_revision, expected_overrides, managed_files = _validate_baseline(baseline_path)
     targets = _load_targets(catalog_path)
     variables = {
         "repo_root": str(repo_root),
@@ -130,6 +163,33 @@ def main() -> int:
                     "target_repo": str(attachment_root),
                     "profile_path": str(profile_path),
                     "mismatched_fields": mismatched_fields,
+                }
+            )
+
+        mismatched_managed_files: list[dict[str, str]] = []
+        for item in managed_files:
+            target_path = _target_relative_path(attachment_root, str(item["path"]))
+            source_path = _source_path(str(item["source"]))
+            if not source_path.exists():
+                raise SystemExit(f"managed file source not found: {source_path}")
+            expected = source_path.read_text(encoding="utf-8")
+            actual = target_path.read_text(encoding="utf-8") if target_path.exists() else None
+            if actual != expected:
+                mismatched_managed_files.append(
+                    {
+                        "path": str(target_path.relative_to(attachment_root)).replace("\\", "/"),
+                        "source": str(source_path),
+                        "reason": "missing" if actual is None else "content_drift",
+                    }
+                )
+        if mismatched_managed_files:
+            drift.append(
+                {
+                    "target": target_name,
+                    "reason": "managed_file_drift",
+                    "target_repo": str(attachment_root),
+                    "profile_path": str(profile_path),
+                    "mismatched_managed_files": mismatched_managed_files,
                 }
             )
 

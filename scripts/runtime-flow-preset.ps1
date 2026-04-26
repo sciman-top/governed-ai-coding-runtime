@@ -524,6 +524,84 @@ function Invoke-GovernanceBaselineSync {
     throw "Missing apply-target-repo-governance.py at $syncScriptPath"
   }
 
+  $bootstrapResult = [pscustomobject]@{
+    status    = "skipped"
+    reason    = "repo_profile_exists"
+    exit_code = 0
+    payload   = $null
+    output    = ""
+  }
+  $repoProfilePath = Join-Path $TargetConfig.AttachmentRoot ".governed-ai\repo-profile.json"
+  if (-not (Test-Path -LiteralPath $repoProfilePath)) {
+    $attachScriptPath = Join-Path $RepoRoot "scripts\attach-target-repo.py"
+    if (-not (Test-Path -LiteralPath $attachScriptPath)) {
+      throw "Missing attach-target-repo.py at $attachScriptPath"
+    }
+
+    $primaryLanguage = if ([string]::IsNullOrWhiteSpace($TargetConfig.PrimaryLanguage)) { "unknown" } else { $TargetConfig.PrimaryLanguage }
+    $attachArgs = @(
+      $attachScriptPath,
+      "--target-repo", $TargetConfig.AttachmentRoot,
+      "--runtime-state-root", $TargetConfig.AttachmentRuntimeStateRoot,
+      "--primary-language", $primaryLanguage
+    )
+    if (-not [string]::IsNullOrWhiteSpace($TargetConfig.RepoId)) {
+      $attachArgs += @("--repo-id", $TargetConfig.RepoId)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($TargetConfig.DisplayName)) {
+      $attachArgs += @("--display-name", $TargetConfig.DisplayName)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($TargetConfig.BuildCommand)) {
+      $attachArgs += @("--build-command", $TargetConfig.BuildCommand)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($TargetConfig.TestCommand)) {
+      $attachArgs += @("--test-command", $TargetConfig.TestCommand)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($TargetConfig.ContractCommand)) {
+      $attachArgs += @("--contract-command", $TargetConfig.ContractCommand)
+    }
+    if ([string]::IsNullOrWhiteSpace($TargetConfig.BuildCommand) -or
+        [string]::IsNullOrWhiteSpace($TargetConfig.TestCommand) -or
+        [string]::IsNullOrWhiteSpace($TargetConfig.ContractCommand)) {
+      $attachArgs += "--infer-gate-defaults"
+    }
+
+    $attachResult = Invoke-CommandCapture `
+      -Executable $PythonCommand `
+      -Arguments $attachArgs `
+      -TimeoutSeconds $CommandTimeoutSeconds `
+      -WorkingDirectory $RepoRoot
+    $attachPayload = Try-ParseJson -Raw $attachResult.output
+    $bootstrapStatus = if ($attachResult.exit_code -eq 0) { "pass" } else { "fail" }
+    $bootstrapReason = if ($bootstrapStatus -eq "pass") {
+      "repo_profile_bootstrapped"
+    }
+    elseif ($attachResult.timed_out) {
+      "attach_timed_out"
+    }
+    else {
+      "attach_failed"
+    }
+    $bootstrapResult = [pscustomobject]@{
+      status    = $bootstrapStatus
+      reason    = $bootstrapReason
+      exit_code = $attachResult.exit_code
+      payload   = $attachPayload
+      output    = $attachResult.output
+    }
+    if ($attachResult.exit_code -ne 0) {
+      return [pscustomobject]@{
+        target    = $TargetName
+        status    = "fail"
+        reason    = $bootstrapReason
+        exit_code = $attachResult.exit_code
+        payload   = $attachPayload
+        output    = $attachResult.output
+        bootstrap = $bootstrapResult
+      }
+    }
+  }
+
   $args = @(
     $syncScriptPath,
     "--target-repo", $TargetConfig.AttachmentRoot,
@@ -553,6 +631,7 @@ function Invoke-GovernanceBaselineSync {
     exit_code = $result.exit_code
     payload   = $payload
     output    = $result.output
+    bootstrap = $bootstrapResult
   }
 }
 

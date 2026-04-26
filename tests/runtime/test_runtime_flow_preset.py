@@ -412,6 +412,82 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             self.assertEqual(profile["required_entrypoint_policy"]["current_mode"], "targeted_enforced")
             self.assertEqual(profile["auto_commit_policy"]["enabled"], True)
 
+    def test_runtime_flow_preset_apply_governance_baseline_only_bootstraps_blank_target(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_a = workspace / "repo-a"
+            repo_a.mkdir()
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": str(repo_a),
+                            "attachment_runtime_state_root": str(workspace / "state" / "repo-a"),
+                            "repo_id": "repo-a",
+                            "display_name": "repo-a",
+                            "primary_language": "python",
+                            "build_command": "python --version",
+                            "test_command": "python --version",
+                            "contract_command": "python --version",
+                        }
+                    },
+                },
+            )
+            baseline_path = workspace / "target-repo-governance-baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-04-26.1",
+                    "required_profile_overrides": {
+                        "required_entrypoint_policy": {"current_mode": "targeted_enforced"},
+                        "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                    },
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "runtime-flow-preset.ps1"),
+                    "-Target",
+                    "repo-a",
+                    "-ApplyGovernanceBaselineOnly",
+                    "-Json",
+                    "-CatalogPath",
+                    str(catalog_path),
+                    "-GovernanceBaselinePath",
+                    str(baseline_path),
+                    "-RuntimeFlowPath",
+                    str(workspace / "missing-runtime-flow.ps1"),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["governance_baseline_sync"]["status"], "pass")
+            self.assertEqual(payload["governance_baseline_sync"]["bootstrap"]["status"], "pass")
+            self.assertEqual(
+                payload["governance_baseline_sync"]["bootstrap"]["reason"],
+                "repo_profile_bootstrapped",
+            )
+            profile = json.loads((repo_a / ".governed-ai" / "repo-profile.json").read_text(encoding="utf-8"))
+            self.assertEqual(profile["repo_id"], "repo-a")
+            self.assertEqual(profile["required_entrypoint_policy"]["current_mode"], "targeted_enforced")
+            self.assertEqual(profile["auto_commit_policy"]["enabled"], True)
+
     def test_runtime_flow_preset_all_targets_apply_feature_baseline_and_milestone_commit(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)
