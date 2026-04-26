@@ -59,6 +59,21 @@ In practical terms that means:
 - host-specific behavior is isolated behind capability-tiered adapters
 - verification, evidence, delivery, replay, and rollback use one shared contract model
 
+## External Benchmark Update (2026-04-27)
+An external review against current official docs and mature community projects keeps the canonical hybrid shape, but tightens the engineering interpretation:
+
+- Repository-local, versioned instructions and executable docs are still the right context surface for coding agents.
+- MCP, A2A, Codex, Claude Code, Copilot, and future host integrations should remain adapter or protocol boundaries, not kernel semantics.
+- Guardrails inside agent SDKs or host products are not sufficient by themselves; runtime-owned policy, approval, sandboxing, and evidence must remain deterministic.
+- Durable execution is a capability requirement, but specific workflow engines should be introduced by trigger, not by platform aesthetics.
+- Sandboxed execution is not an optional future polish item for shell, git, package-manager, browser, or MCP tools; it is part of the transition safety floor once write coverage broadens.
+- Supply-chain provenance should be treated as a final-state evidence class for generated packages, target-repo light packs, and release artifacts.
+
+Decision:
+- Keep the product shape.
+- Strengthen acceptance criteria and roadmap wording around sandbox containment, protocol boundaries, trigger-based component adoption, and provenance-backed claims.
+- Do not start a clean-sheet rewrite or broaden the platform stack before the current runtime-owned loop remains re-verifiable.
+
 ## Current Baseline
 The current branch baseline has already proven and landed:
 - docs-first and contracts-first source-of-truth structure
@@ -153,17 +168,21 @@ Recommended transition stack:
 - Python 3.12+
 - FastAPI for runtime API and session/control surfaces
 - Pydantic v2 for typed runtime contracts
-- PostgreSQL for durable task, approval, and evidence metadata
+- SQLite or filesystem metadata for local single-user runs, PostgreSQL for service-shaped durable task, approval, and evidence metadata
 - local filesystem in dev plus object-store abstraction for artifacts
 - OpenTelemetry for runtime tracing
+- sandbox/process-guard abstraction for executable tool containment
 - existing contract package reused behind service boundaries
 
 Deferred from the direct transition unless justified by real pressure:
+- Temporal-class workflow engine
+- `OPA/Rego`
 - `NATS JetStream`
 - `Redis`
 - `pgvector`
 - `gRPC`
 - A2A gateway
+- full observability stack
 - full multi-service decomposition
 
 ### 3. Final-State Best-Practice Architecture
@@ -376,8 +395,8 @@ The repository should only claim complete hybrid final-state closure when all of
 Claim reference:
 - `docs/change-evidence/20260420-direct-to-hybrid-final-state-closeout.md`
 
-## Optimized Best-State Definition (2026-04-21)
-The repository keeps the existing hybrid final-state shape, but raises the engineering bar with four explicit invariants:
+## Optimized Best-State Definition (2026-04-21, updated 2026-04-27)
+The repository keeps the existing hybrid final-state shape, but raises the engineering bar with six explicit invariants:
 
 1. Runtime execution truth:
 - attach-first governed execution is real for both Codex and at least one non-Codex adapter path
@@ -394,6 +413,14 @@ The repository keeps the existing hybrid final-state shape, but raises the engin
 4. Claim-discipline truth:
 - closure claims are evidence-backed, continuously re-verifiable, and downgraded when drift is detected
 
+5. Execution-containment truth:
+- executable tools run inside declared workspace, permission, timeout, and resource boundaries
+- shell, git, package-manager, browser, and MCP actions emit evidence and rollback metadata through the same governed surface
+
+6. Protocol-boundary truth:
+- MCP exposes tools, resources, prompts, auth, and roots; it does not own governance policy
+- A2A may expose task, message, artifact, streaming, and discovery semantics; it does not replace local task lifecycle, approval, evidence, or rollback rules
+
 ### Quantified Acceptance Targets
 | dimension | target | minimum evidence |
 |---|---|---|
@@ -403,6 +430,8 @@ The repository keeps the existing hybrid final-state shape, but raises the engin
 | service parity | API and CLI parity tests remain green for all execution-like commands | service/runtime parity test suite |
 | recoverability | >= 90% posture failures have guided remediation path and successful retry evidence | doctor/runtime status evidence plus recovery runbook replay |
 | claim freshness | closure evidence regenerated within the declared verification window | latest closeout evidence stamp and gate run outputs |
+| execution containment | 100% governed write/execute tool families have declared scope, approval, timeout, and evidence metadata | sandbox or process-guard tests plus tool-runner evidence snapshots |
+| provenance coverage | release artifacts and target-repo light packs carry reproducible provenance or an explicit waiver | provenance/attestation evidence and release gate output |
 
 ## Gap Horizons From The Optimized Definition
 ### Near-Term Gaps (next 1-2 quarters)
@@ -411,6 +440,8 @@ The repository keeps the existing hybrid final-state shape, but raises the engin
 - converge service-shaped runtime as primary control surface while keeping compatibility wrappers
 - harden operator query completeness and remediation-backed doctor behavior
 - enforce claim-drift detection in CI for roadmap/plan/evidence consistency
+- add an execution-containment floor for broad tool coverage before expanding autonomous write paths
+- add provenance-backed release and light-pack evidence before stronger public final-state claims
 
 ### Long-Term Gaps (2+ quarters, trigger-based)
 - introduce workflow orchestration depth when pause/resume/compensation complexity exceeds local runtime simplicity
@@ -418,20 +449,25 @@ The repository keeps the existing hybrid final-state shape, but raises the engin
 - expand data-plane depth (event stream/object-store/indexed evidence) when scale and retention pressure require it
 - productize multi-host first-class adapters beyond Codex after conformance parity and governance consistency are proven
 - harden production operations (SLO/error-budget/chaos/failover) after transition runtime is stable under real workloads
+- harden supply-chain provenance and artifact promotion after generated light packs, control packs, or releases become externally consumed
 
 ## Canonical Planning Package
-The canonical planning package now consists of three direct companions:
+The canonical planning package now consists of direct closure companions plus the optimized long-term package:
 
 1. direct-to-final-state roadmap
 2. direct-to-final-state implementation plan
-3. aligned backlog and task list
+3. optimized hybrid long-term roadmap
+4. optimized hybrid long-term implementation plan
+5. aligned backlog and task list
 
-Those files are now the active mainline for future completion work.
+Those files are now the active planning chain for future completion and long-term optimization work.
 
 ## Source References
 - `docs/prd/governed-ai-coding-runtime-prd.md`
 - `docs/architecture/governed-ai-coding-runtime-target-architecture.md`
 - `docs/architecture/mvp-stack-vs-target-stack.md`
 - `docs/roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md`
+- `docs/roadmap/optimized-hybrid-final-state-long-term-roadmap.md`
+- `docs/plans/optimized-hybrid-final-state-long-term-implementation-plan.md`
 - `docs/reviews/2026-04-18-hybrid-final-state-and-plan-reconciliation.md`
 - `docs/reviews/2026-04-19-hybrid-final-state-executable-gap-audit.md`

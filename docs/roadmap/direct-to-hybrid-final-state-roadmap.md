@@ -69,6 +69,15 @@ Claim discipline remains explicit:
 5. Incremental re-baseline instead of clean-sheet discard.
 6. Evidence-backed phase completion; no stage claim without executable proof.
 
+## External Benchmarking Adjustments (2026-04-27)
+The roadmap remains directionally sound after comparison with official agent, protocol, observability, policy, and security guidance plus mature coding-agent projects. The main correction is to make several implicit safety assumptions explicit:
+
+- Sandbox containment is a transition requirement for broad executable tool coverage, not only a later production hardening concern.
+- MCP and A2A are integration protocols. They can shape adapter contracts and discovery, but they must not own approval, rollback, task lifecycle, or evidence semantics.
+- Durable execution should be validated as deterministic, idempotent, and replayable before introducing a heavyweight workflow engine.
+- OPA/Rego, A2A gateway, event bus, Redis, pgvector, and full observability stack stay trigger-based additions, not milestone decorations.
+- Provenance for release artifacts and target-repo light packs is part of defensible closure, aligned with supply-chain hardening practices.
+
 ## Phase Dependency Line
 `Phase 0 -> Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 5`
 
@@ -142,12 +151,14 @@ Turn the already-landed session-bridge write or read surface into the first live
 - consolidate the existing session-bridge write, approval, status, evidence, and handoff paths around one stable execution model
 - bind adapter or session or continuation identity into the attached write flow instead of stopping at local-only command ids
 - extend governed execution coverage beyond file writes to shell, git, and selected package-manager actions
+- add explicit workspace scope, timeout, approval, and evidence metadata for every governed executable tool family
 
 ### Required Outputs
 - stable execution identifiers and continuation identifiers across gate, write, approval, evidence, and handoff paths
 - one runtime-owned medium-risk write loop inside an attached repository
 - same task-level linkage across approval, execution, evidence, handoff, and replay
 - end-to-end tests for `attach -> request -> approve -> execute -> verify -> handoff -> replay`
+- execution-containment tests for shell, git, package-manager, browser, and MCP expansion points where present
 
 ### Exit Criteria
 - one attached repository can complete a governed medium-risk write loop entirely through the runtime-owned session surface
@@ -172,11 +183,13 @@ Move adapters from posture declarations and smoke trials to live runtime integra
 - ingest real adapter events instead of deterministic placeholder refs
 - export evidence from live sessions into the runtime-owned task model
 - turn the adapter registry from classification helper into runtime selection and delegation surface
+- document MCP roots/auth and A2A discovery/task concepts as adapter inputs only, preserving kernel-owned policy and evidence semantics
 
 ### Required Outputs
 - at least one live Codex path
 - at least one shared runtime adapter interface covering selection, execution, event capture, and degrade behavior
 - live adapter fixtures or end-to-end tests that prove the evidence timeline is sourced from a real session path
+- protocol-boundary tests or fixtures that prove host/protocol capability changes cannot rewrite approval, verification, rollback, or evidence rules
 
 ### Exit Criteria
 - at least one real Codex path produces task, approval, execution, evidence, and handoff linkage from a live session
@@ -293,6 +306,7 @@ These lanes define the current actionable gap set for reaching an optimized hybr
 | `NT-03` | Phase 3 | Multi-repo onboarding still depends on partial synthetic or profile-driven evidence in some flows. | two or more attached external repos run reproducible trial loops with differentiated runtime-sourced outcomes. |
 | `NT-04` | Phase 4 | Service-shaped runtime is landed but still vulnerable to API/CLI drift over time. | API/CLI parity stays green for execution-like commands and CLI is only a wrapper surface for the same execution bus. |
 | `NT-05` | Phase 5 | Claim discipline is still mostly human-governed and can drift under rapid iteration. | CI enforces claim-to-evidence consistency and fails when roadmap/plan completion labels outrun executable evidence. |
+| `NT-06` | Phase 1 -> Phase 5 | Broad tool execution needs a stronger containment and provenance floor. | governed executable tool families have declared scope/timeout/approval/evidence metadata, and generated release or light-pack artifacts carry provenance or explicit waiver records. |
 
 ## Long-Term Gap Lanes (North-Star Hardening Horizon)
 These lanes are intentionally deferred until near-term lanes are stable.
@@ -304,12 +318,14 @@ These lanes are intentionally deferred until near-term lanes are stable.
 | `LT-03` | event throughput and replay retention pressure exceed current persistence path | data-plane expansion (event stream, indexed evidence, retention tiers) |
 | `LT-04` | non-Codex conformance parity is stable and multi-host demand is product-critical | first-class multi-host adapter productization beyond Codex |
 | `LT-05` | transition runtime is stable under sustained real workloads | production-grade SLO/error-budget/failover and operations hardening stack |
+| `LT-06` | release/light-pack distribution becomes externally consumed or team-shared | SLSA-style provenance verification, signing policy, and artifact promotion workflow |
 
 ## Companion Deliverables
 This roadmap is paired with:
 1. a direct implementation plan
 2. an aligned backlog and task list
 3. backlog or issue-seed synchronization
+4. the optimized hybrid long-term roadmap and implementation plan for post-review `GAP-093..102` sequencing
 
 Those companion deliverables now exist and should continue translating this dependency order into:
 - executable work batches
@@ -321,6 +337,8 @@ Those companion deliverables now exist and should continue translating this depe
 - `docs/architecture/hybrid-final-state-master-outline.md`
 - `docs/reviews/2026-04-19-hybrid-final-state-executable-gap-audit.md`
 - `docs/roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md`
+- `docs/roadmap/optimized-hybrid-final-state-long-term-roadmap.md`
+- `docs/plans/optimized-hybrid-final-state-long-term-implementation-plan.md`
 - `docs/architecture/local-baseline-to-hybrid-final-state-migration-matrix.md`
 - `docs/prd/governed-ai-coding-runtime-prd.md`
 - `docs/architecture/governed-ai-coding-runtime-target-architecture.md`

@@ -69,6 +69,37 @@
 - Agent 产品是可替换的 execution frontend；task、policy、approval、evidence、verification、rollback 是稳定的治理内核。
 - 默认产品模式应是 `repo-local light pack + machine-wide runtime sidecar + attach-first session bridge`。
 
+## Stack Staging Rule (2026-04-27)
+本文的技术栈是 staged recommendation，不是一次性采购清单。
+
+### Current verified baseline
+- `Python` standard library contracts and runtime primitives
+- `PowerShell` operator and verification wrappers
+- filesystem-backed `.runtime/`
+- SQLite/local metadata primitives
+- Markdown + JSON Schema source contracts
+
+### Direct transition stack
+- `Python 3.12+`
+- `FastAPI` for session/control/operator APIs when service boundaries are active
+- `Pydantic v2` at API/runtime validation boundaries, while JSON Schema remains the cross-tool contract surface
+- SQLite/filesystem for local single-user operation; `PostgreSQL` for service-shaped durable metadata
+- local filesystem with object-store abstraction for evidence and artifacts
+- `OpenTelemetry` hooks and structured runtime evidence
+- sandbox/process-guard abstraction for shell, git, package-manager, browser, and MCP tool containment
+- Codex CLI/App first adapter plus generic capability-based adapter contract
+
+### Trigger-based final-state candidates
+- `Temporal`: start when local state-machine code cannot safely handle pause/resume/timeout/retry/compensation complexity.
+- `OPA/Rego`: start when policy cardinality and audit requirements exceed local structured policy decisions.
+- `NATS JetStream` or `Kafka`: start when non-critical async traffic and fan-out pressure justify a message platform.
+- `Redis`: start when cross-worker locks, caching, or rate-limit coordination exceed database/local primitives.
+- `pgvector`: start when repo context retrieval and learning loops need semantic indexing beyond profile/docs search.
+- `gRPC`: start only after internal service boundaries stabilize enough to justify an RPC contract.
+- `A2A gateway`: start after single-agent and non-Codex adapter conformance are stable.
+- `Next.js` console: start after approval/evidence/replay/operator read models are stable enough to avoid a UI-only shell.
+- Full `Prometheus/Grafana/Loki/Tempo` stack: start when sustained workload volume needs production operations rather than local trace evidence.
+
 ## Architecture Overview
 
 ```text
@@ -225,55 +256,33 @@ target repo
 
 ## Recommended Stack
 
-### Backend
-- `Python 3.12+`
-- `FastAPI`
-- `Pydantic v2`
-- `PydanticAI` or equivalent typed agent runtime
-- `Temporal`
+### Direct Transition Default
+- Backend/API: `Python 3.12+`, `FastAPI` where an HTTP surface is active.
+- Validation: JSON Schema for cross-tool contracts, `Pydantic v2` for runtime/API validation where introduced.
+- Metadata: SQLite/filesystem for local mode, `PostgreSQL` for service-shaped durable runtime mode.
+- Artifacts: local filesystem with S3-compatible object-store abstraction.
+- Policy: deterministic local policy decisions and structured inputs.
+- Observability: structured evidence plus `OpenTelemetry` hooks.
+- Execution: sandbox/process guard around executable tool families.
+- Adapter: Codex CLI/App first, generic capability contract for non-Codex hosts.
 
-### Data
-- `PostgreSQL`
-- `pgvector`
-- `Redis`
-- `S3-compatible object storage`
-
-### Policy / Security
-- `OPA/Rego`
-- `Vault` or cloud-native `KMS/Secrets Manager`
-
-### Messaging / Async
-- `NATS JetStream`
-- 若组织已有标准化消息平台，可替换为 `Kafka`
-
-### Observability
-- `OpenTelemetry`
-- `Prometheus`
-- `Grafana`
-- `Loki`
-- `Tempo` or `Jaeger`
-- `Langfuse` or equivalent LLM trace/eval platform
-
-### Frontend
-- `Next.js`
-- `TypeScript`
-- `Tailwind CSS`
-
-### Protocols
-- External APIs: `REST + Webhook`
-- Internal service-to-service: `gRPC`
-- Tool / context integration: `MCP`
-- Cross-agent collaboration: `A2A`
-- Agent frontend integration: capability-based adapter contract, `attach-first` when possible, Codex CLI/App first
+### Final-State Candidates
+- Workflow: `Temporal`-class durable execution.
+- Policy: `OPA/Rego`.
+- Data-plane: `PostgreSQL`, `pgvector`, `Redis`, S3-compatible object storage.
+- Messaging: `NATS JetStream` or organization-standard `Kafka`.
+- Observability: `Prometheus`, `Grafana`, `Loki`, `Tempo` or `Jaeger`, plus LLM trace/eval tooling where justified.
+- Frontend: `Next.js`, `TypeScript`, `Tailwind CSS`.
+- Protocols: REST/Webhook externally, `gRPC` internally after service boundaries stabilize, `MCP` for tools/context, `A2A` for agent-to-agent collaboration after local adapter guarantees are proven.
 
 ## Why This Stack
-- `Python`：AI/runtime/tooling 生态成熟，跨平台友好。
-- `Temporal`：把暂停、恢复、审批、补偿从应用代码中抽出。
-- `PostgreSQL + pgvector`：在一致性、通用性、运维复杂度之间最平衡。
-- `OPA`：让权限和风险判定脱离 prompt 与业务代码。
-- `OpenTelemetry`：统一 trace、metrics、event 字段，降低观测漂移。
-- `Next.js`：管理台、审批页、回放页和审计页的开发效率高。
-- Agent adapter contract：避免把内核绑定到某个上游 agent 产品，同时允许先兼容 Codex CLI/App。
+- `Python` keeps the runtime close to the current contract implementation and AI/tooling ecosystem.
+- `FastAPI` and `Pydantic v2` are good service-boundary tools, but they should land where the runtime API exists, not as decorative scaffolding.
+- SQLite/filesystem local mode preserves the single-machine product shape; `PostgreSQL` is the clean promotion path for durable multi-process metadata.
+- `Temporal`, `OPA`, `NATS/Kafka`, `Redis`, `pgvector`, `gRPC`, and the full observability stack are strong final-state candidates, but each has a trigger and should not be adopted before the trigger is visible.
+- `OpenTelemetry` should start as low-friction hooks and structured traces, then expand only when operational volume justifies a full telemetry stack.
+- `Next.js` is a good console candidate after the operator read model stabilizes; before that, CLI/API surfaces provide faster evidence.
+- Agent adapter contract remains the most important architectural boundary because it prevents Codex, MCP, A2A, Claude, GitHub, or future hosts from rewriting kernel semantics.
 
 ## Minimum Viable Governance Loop
 

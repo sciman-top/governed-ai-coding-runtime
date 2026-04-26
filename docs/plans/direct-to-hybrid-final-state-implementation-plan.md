@@ -6,7 +6,7 @@
 
 **Architecture:** Preserve the current docs-first, contracts-first kernel as the source of truth and extend it in dependency order. Close the governed execution surface first, then close live adapter reality, then make multi-repo and machine-local sidecar reality honest, then extract service-shaped runtime boundaries, and only then harden operator, CI, and remediation surfaces. Keep target repositories light, runtime state machine-local, and all execution, approval, evidence, replay, rollback, and handoff flows on one contract model.
 
-**Tech Stack:** Current baseline: Python 3.x standard library, `packages/contracts/`, filesystem-backed `.runtime/`, PowerShell verification entrypoints, Markdown, JSON Schema draft 2020-12. Transition stack: Python 3.12+, FastAPI, Pydantic v2, PostgreSQL, object-store abstraction, OpenTelemetry. Deferred north-star hardening only after transition slices are real: Temporal, Redis, pgvector, OPA/Rego, `apps/console-web/` promotion.
+**Tech Stack:** Current baseline: Python 3.x standard library, `packages/contracts/`, filesystem-backed `.runtime/`, SQLite/local metadata primitives, PowerShell verification entrypoints, Markdown, JSON Schema draft 2020-12. Transition stack: Python 3.12+, FastAPI when service APIs are needed, Pydantic v2 at API/runtime validation boundaries, SQLite/filesystem for local single-user operation, PostgreSQL for service-shaped durable metadata, object-store abstraction, OpenTelemetry hooks, and sandbox/process-guard containment. Deferred north-star hardening only after transition slices are real: Temporal, Redis, pgvector, OPA/Rego, event bus, full observability stack, and `apps/console-web/` promotion.
 
 ---
 
@@ -19,6 +19,15 @@
   - the future backlog and issue-seed sync
 - `docs/plans/interactive-session-productization-implementation-plan.md` remains important execution history, but it is no longer the future mainline for complete hybrid final-state closure.
 - This plan intentionally converts the executable gap audit into ordered work batches instead of reusing older `GAP-035` through `GAP-044` labels as the only future planning lens.
+
+## External Benchmarking Adjustment (2026-04-27)
+Current official docs and mature agent projects confirm the existing plan's direction: keep target repos light, keep runtime state durable and machine-local, keep host products behind adapters, and keep policy/evidence deterministic. The plan should be interpreted with these added constraints:
+
+- `sandbox containment`: every broadened execute/write tool family must declare workspace roots, permissions, timeout/resource limits, evidence fields, and rollback posture.
+- `protocol boundary`: MCP and A2A may inform adapter capability discovery and event models, but they must not replace runtime-owned approval, verification, evidence, replay, or rollback.
+- `trigger-based components`: Temporal-class workflow engines, OPA/Rego, event buses, A2A gateway, Redis, pgvector, and full observability stacks require explicit trigger evidence before adoption.
+- `provenance floor`: release artifacts, generated control packs, and target-repo light packs should carry reproducible provenance or a documented waiver before stronger distribution claims.
+- `host guardrail independence`: host or SDK guardrails are treated as useful defense-in-depth, not the authoritative enforcement boundary.
 
 ## Current Baseline
 
@@ -627,6 +636,7 @@ These packages should be prioritized next because they close executable truth ga
 | `NTP-03 service-primary-convergence` | keep API-first runtime boundary as primary while retaining compatibility wrappers | API/CLI parity guardrails, wrapper-only CLI contract, drift tests | service parity suite + runtime gate checks |
 | `NTP-04 operator-remediation-depth` | close remaining posture/query/remediation gaps with deterministic recovery | attachment-scoped query coverage, doctor remediation actions, retry evidence | operator query tests + doctor/runtime tests |
 | `NTP-05 claim-drift-guard` | prevent roadmap/plan claims outrunning executable truth | CI guard for claim/evidence alignment, freshness checks for closeout evidence | docs/scripts checks + full gate chain in CI |
+| `NTP-06 sandbox-provenance-floor` | make broad executable tool coverage and distribution claims defensible | workspace-root enforcement, timeout/resource policy, tool evidence metadata, release/light-pack provenance or waiver records | tool-runner governance tests + docs/contract gates + provenance evidence |
 
 ### Long-Term Gap Packages (North-Star Hardening Horizon)
 These packages remain deferred until near-term packages are stable and evidenced.
@@ -638,6 +648,7 @@ These packages remain deferred until near-term packages are stable and evidenced
 | `LTP-03 data-plane-scaling` | retention/replay/query pressure exceeds current persistence model | event-stream/indexed-evidence/object-store tiering |
 | `LTP-04 multi-host-first-class` | non-Codex parity is stable and product demand requires deeper host coverage | first-class adapters beyond Codex with same governance guarantees |
 | `LTP-05 operations-hardening` | transition service runtime is stable under sustained load | production SLO, error-budget, failover, and operational resilience stack |
+| `LTP-06 supply-chain-hardening` | artifacts or light packs become externally consumed beyond local single-user workflows | signing, SLSA-style provenance verification, artifact promotion policy |
 
 ## Risks And Mitigations
 
@@ -649,6 +660,9 @@ These packages remain deferred until near-term packages are stable and evidenced
 | Machine-local root migration breaks current users | Medium | Keep repo-root compatibility mode plus migration and rollback coverage in Task 9. |
 | Docs claim full final-state closure too early | High | Keep claim discipline in the roadmap, master outline, and Task 15 closeout evidence. |
 | Transition-stack dependencies explode too early | Medium | Introduce FastAPI, PostgreSQL, and OpenTelemetry only when the service boundary requires them; keep Temporal and other north-star pieces deferred. |
+| Protocols become hidden kernel forks | High | Treat MCP/A2A/OpenAI/Claude/GitHub behavior as adapter inputs and test that policy, evidence, and rollback remain runtime-owned. |
+| Broad tool execution outruns containment | High | Require workspace roots, timeouts, approval metadata, and evidence snapshots before expanding shell/git/package/browser/MCP execution. |
+| Distribution claims lack supply-chain evidence | Medium | Require provenance or explicit waiver records for release artifacts and target-repo light packs. |
 
 ## Completion Definition
 
@@ -664,3 +678,4 @@ The direct-to-hybrid-final-state implementation is complete only when all of the
 - doctor can report and remediate attachment posture problems
 - the runtime can run through service-shaped boundaries without losing contract parity
 - roadmap, master outline, backlog, issue seeds, evidence, and gate results all agree on what is complete
+- sandbox containment and provenance requirements are met or explicitly waived for every distributed executable/tooling surface

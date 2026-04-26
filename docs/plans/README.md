@@ -4,6 +4,9 @@
 This directory holds executable implementation plans that translate strategy and backlog into ordered work.
 
 ## Current Authoritative Plan
+- [Optimized Hybrid Final-State Long-Term Implementation Plan](./optimized-hybrid-final-state-long-term-implementation-plan.md)
+  - Status: planned long-term implementation queue after the 2026-04-27 optimized final-state and stack-staging review
+  - Scope: `GAP-093` through `GAP-102` covering optimized long-term planning, execution containment, provenance, transition-stack convergence, trigger reviews, selected `LTP` scope fence, first selected-package implementation batch, and sustained release-readiness closeout
 - [Long-Term Gap Trigger Audit Plan](./long-term-gap-trigger-audit-plan.md)
   - Status: completed trigger-audit queue for `GAP-090` through `GAP-092`; all `LTP-01..05` packages remain deferred pending future trigger evidence
   - Scope: final-state claim refresh, sustained real-workload evidence window, and gated decision for whether exactly one `LTP-01..05` package should start
@@ -56,6 +59,7 @@ This directory holds executable implementation plans that translate strategy and
    - [20260418 Governance Runtime Strategy Alignment Closeout](../change-evidence/20260418-governance-runtime-strategy-alignment-closeout.md)
    - [20260418 Governance Runtime Strategy Alignment Plan](../change-evidence/20260418-governance-runtime-strategy-alignment-plan.md)
 3. Use the roadmap and backlog to understand current posture:
+   - use [Optimized Hybrid Final-State Long-Term Implementation Plan](./optimized-hybrid-final-state-long-term-implementation-plan.md) and [Optimized Hybrid Final-State Long-Term Roadmap](../roadmap/optimized-hybrid-final-state-long-term-roadmap.md) as the future-facing `GAP-093..102` queue after the 2026-04-27 stack review
    - use [Long-Term Gap Trigger Audit Plan](./long-term-gap-trigger-audit-plan.md) as the completed `GAP-090..092` trigger-audit record before opening any future long-term package implementation
    - use [Continuous Execution Readiness And Rollout Plan](./continuous-execution-readiness-and-rollout-plan.md) as the active loop-oriented execution baseline
    - the local runtime baseline through `Maintenance Baseline / GAP-034` is complete on the current branch baseline
@@ -64,6 +68,7 @@ This directory holds executable implementation plans that translate strategy and
    - use [Interactive Session Productization Implementation Plan](./interactive-session-productization-implementation-plan.md) as the completed productization execution history
    - use [Governance Runtime Strategy Alignment Plan](./governance-runtime-strategy-alignment-plan.md) as the completed alignment record for `GAP-040` through `GAP-044`
    - use [Direct-To-Hybrid Final-State Roadmap](../roadmap/direct-to-hybrid-final-state-roadmap.md) for phase order and claim discipline
+   - use [Optimized Hybrid Final-State Long-Term Roadmap](../roadmap/optimized-hybrid-final-state-long-term-roadmap.md) for the post-review `GAP-093..102` long-term sequencing and `LTP-01..06` trigger gates
    - use [Governance Optimization Lane Roadmap](../roadmap/governance-optimization-lane-roadmap.md) for the post-`GAP-060` governance optimization queue
    - use [Local Baseline To Hybrid Final-State Migration Matrix](../architecture/local-baseline-to-hybrid-final-state-migration-matrix.md) when comparing completed plans or landed baseline code against the new hybrid final-state target
    - use [Maintenance Implementation Plan](./maintenance-implementation-plan.md) as the latest completed baseline closeout history

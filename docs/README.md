@@ -10,6 +10,8 @@
 - [Hybrid Final-State Master Outline](./architecture/hybrid-final-state-master-outline.md)
 - [Direct-To-Hybrid Final-State Roadmap](./roadmap/direct-to-hybrid-final-state-roadmap.md)
 - [Direct-To-Hybrid Final-State Implementation Plan](./plans/direct-to-hybrid-final-state-implementation-plan.md)
+- [Optimized Hybrid Final-State Long-Term Roadmap](./roadmap/optimized-hybrid-final-state-long-term-roadmap.md)
+- [Optimized Hybrid Final-State Long-Term Implementation Plan](./plans/optimized-hybrid-final-state-long-term-implementation-plan.md)
 - [Long-Term Gap Trigger Audit Plan](./plans/long-term-gap-trigger-audit-plan.md)
 - [Governance Optimization Lane Roadmap](./roadmap/governance-optimization-lane-roadmap.md)
 - [Governance Optimization Lane Implementation Plan](./plans/governance-optimization-lane-implementation-plan.md)
@@ -32,7 +34,7 @@
 
 ## Current Planning Chain
 - Strategy and boundary inputs: [AI Coding PRD](./prd/governed-ai-coding-runtime-prd.md), [Interaction Model](./product/interaction-model.md), [Positioning And Competitive Layering](./strategy/positioning-and-competitive-layering.md), [Runtime Governance Borrowing Matrix](./research/runtime-governance-borrowing-matrix.md), [ADR-0007 Source-Of-Truth And Runtime Contract Bundle](./adrs/0007-source-of-truth-and-runtime-contract-bundle.md), [Generic Target-Repo Attachment Blueprint](./architecture/generic-target-repo-attachment-blueprint.md), [Repo-Native Contract Bundle](./architecture/repo-native-contract-bundle.md), [Local Baseline To Hybrid Final-State Migration Matrix](./architecture/local-baseline-to-hybrid-final-state-migration-matrix.md), [Target Architecture](./architecture/governed-ai-coding-runtime-target-architecture.md), [Minimum Viable Governance Loop](./architecture/minimum-viable-governance-loop.md), and [Governance Runtime Strategy Alignment Plan](./plans/governance-runtime-strategy-alignment-plan.md)
-- Execution ordering: [Hybrid Final-State Master Outline](./architecture/hybrid-final-state-master-outline.md), [Direct-To-Hybrid Final-State Roadmap](./roadmap/direct-to-hybrid-final-state-roadmap.md), [Direct-To-Hybrid Final-State Implementation Plan](./plans/direct-to-hybrid-final-state-implementation-plan.md), [Backlog Index](./backlog/README.md), [Issue-Ready Backlog](./backlog/issue-ready-backlog.md), [Issue Seeds YAML](./backlog/issue-seeds.yaml), and [Plans Index](./plans/README.md)
+- Execution ordering: [Hybrid Final-State Master Outline](./architecture/hybrid-final-state-master-outline.md), [Direct-To-Hybrid Final-State Roadmap](./roadmap/direct-to-hybrid-final-state-roadmap.md), [Direct-To-Hybrid Final-State Implementation Plan](./plans/direct-to-hybrid-final-state-implementation-plan.md), [Optimized Hybrid Final-State Long-Term Roadmap](./roadmap/optimized-hybrid-final-state-long-term-roadmap.md), [Optimized Hybrid Final-State Long-Term Implementation Plan](./plans/optimized-hybrid-final-state-long-term-implementation-plan.md), [Backlog Index](./backlog/README.md), [Issue-Ready Backlog](./backlog/issue-ready-backlog.md), [Issue Seeds YAML](./backlog/issue-seeds.yaml), and [Plans Index](./plans/README.md)
 - Follow-on optimization ordering: [Governance Optimization Lane Roadmap](./roadmap/governance-optimization-lane-roadmap.md), [Governance Optimization Lane Implementation Plan](./plans/governance-optimization-lane-implementation-plan.md), [Backlog Index](./backlog/README.md), [Issue-Ready Backlog](./backlog/issue-ready-backlog.md), and [Issue Seeds YAML](./backlog/issue-seeds.yaml); this lane was the governance-only follow-on after `GAP-060` and is complete on the current branch baseline (verified on 2026-04-20)
 - Current implementation history: [Foundation Runtime Substrate Implementation Plan](./plans/foundation-runtime-substrate-implementation-plan.md), [Full Runtime Implementation Plan](./plans/full-runtime-implementation-plan.md), [Public Usable Release Implementation Plan](./plans/public-usable-release-implementation-plan.md), and [Maintenance Implementation Plan](./plans/maintenance-implementation-plan.md); use the migration matrix when comparing those completed slices with the active hybrid final-state queue.
 
@@ -40,6 +42,7 @@
 - For direct hybrid final-state closure, the canonical planning package now exists end-to-end: master outline, direct roadmap, direct implementation plan, issue-ready backlog, issue seeds, and executable gap audit.
 - For post-closeout governance optimization, the canonical lane package is now execution-closed with evidence: governance lane roadmap, governance lane implementation plan, `GAP-061` through `GAP-068` backlog/seeds, the shared acceptance/rollback template, dedicated epic-rendering support, and closeout evidence linkage.
 - For long-term gap work, `GAP-090` through `GAP-092` define a completed trigger-audit queue that refreshes evidence and selects at most one LTP before implementation starts; all `LTP-01..05` packages remain deferred on the current branch baseline.
+- For optimized long-term implementation, `GAP-093` through `GAP-102` now define the future-facing queue for containment/provenance, transition-stack convergence, trigger reviews, selected `LTP` scope fence, first selected-package implementation, and sustained release-readiness closeout.
 - Historical lifecycle and productization plans remain execution history and rationale, not competing active mainlines.
 
 ## Navigation Aids
@@ -63,7 +66,8 @@
 - `Post-Closeout Optimization Queue / GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20).
 - `Near-Term Gap Horizon Queue / GAP-080` through `GAP-089` are complete on the current branch baseline (`GAP-080` through `GAP-084` verified on 2026-04-21; `GAP-085` through `GAP-089` verified on 2026-04-22).
 - `Long-Term Gap Trigger Audit Queue / GAP-090` through `GAP-092` is complete; all `LTP-01..05` packages remain deferred pending future trigger evidence.
-- New LTP implementation queue items must use ids beyond `GAP-092` and must be selected by `GAP-092`.
+- `Optimized Hybrid Long-Term Implementation Queue / GAP-093` through `GAP-102` is planned from the 2026-04-27 stack review; it includes `LTP-06` as a trigger-based supply-chain-hardening candidate.
+- New LTP implementation queue items beyond this package must use ids beyond `GAP-102` and must be selected by the applicable scope fence.
 - Active verification for this repo remains `build -> test -> contract/invariant -> doctor`, with docs and script checks still included in `verify-repo -Check All`.
 - `docs/change-evidence/` remains historical evidence and planning trace, not the primary user-facing product surface.
 
@@ -230,6 +234,8 @@ Primary reading entrypoints:
 - [Hybrid Final-State Master Outline](./architecture/hybrid-final-state-master-outline.md)
 - [Direct-To-Hybrid Final-State Roadmap](./roadmap/direct-to-hybrid-final-state-roadmap.md)
 - [Direct-To-Hybrid Final-State Implementation Plan](./plans/direct-to-hybrid-final-state-implementation-plan.md)
+- [Optimized Hybrid Final-State Long-Term Roadmap](./roadmap/optimized-hybrid-final-state-long-term-roadmap.md)
+- [Optimized Hybrid Final-State Long-Term Implementation Plan](./plans/optimized-hybrid-final-state-long-term-implementation-plan.md)
 - [90-Day Plan](./roadmap/governed-ai-coding-runtime-90-day-plan.md)
 - [Full Lifecycle Plan](./roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
 - [Interactive Session Productization Implementation Plan](./plans/interactive-session-productization-implementation-plan.md)

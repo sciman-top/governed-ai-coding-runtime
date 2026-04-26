@@ -823,6 +823,7 @@ function Get-TaskLabels {
     '^GAP-0(61|62|63|64|65|66|67|68|69|70|71|72|73|74)$' { return @("task", "phase:governance-optimization", "platform", "docs", "product") }
     '^GAP-08[0-9]$' { return @("task", "phase:near-term-gap-horizon", "platform", "backend", "product") }
     '^GAP-09[0-2]$' { return @("task", "phase:long-term-trigger-audit", "platform", "docs", "product") }
+    '^GAP-09[3-9]$|^GAP-10[0-2]$' { return @("task", "phase:optimized-hybrid-long-term", "platform", "backend", "docs", "product") }
     default { throw "No task label mapping defined for $IssueId" }
   }
 }
@@ -1044,6 +1045,7 @@ $labels = @(
   @{ Name = "phase:governance-optimization"; Color = "C2E0C6"; Description = "Governance optimization follow-on lane" }
   @{ Name = "phase:near-term-gap-horizon"; Color = "BFDADC"; Description = "Near-term optimized best-state execution horizon queue" }
   @{ Name = "phase:long-term-trigger-audit"; Color = "FBCA04"; Description = "Long-term gap trigger audit queue" }
+  @{ Name = "phase:optimized-hybrid-long-term"; Color = "F9D0C4"; Description = "Optimized hybrid long-term implementation queue" }
   @{ Name = "backend"; Color = "0052CC"; Description = "Backend work" }
   @{ Name = "platform"; Color = "6F42C1"; Description = "Platform work" }
   @{ Name = "security"; Color = "B60205"; Description = "Security and policy" }

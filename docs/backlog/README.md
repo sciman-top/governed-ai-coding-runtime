@@ -46,12 +46,15 @@ This directory holds the human and machine planning artifacts that bridge strate
 - `Post-Closeout Optimization Queue / GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20).
 - `Near-Term Gap Horizon Queue / GAP-080` through `GAP-089` are complete on the current branch baseline (`GAP-080` through `GAP-084` verified on 2026-04-21; `GAP-085` through `GAP-089` verified on 2026-04-22).
 - `Long-Term Gap Trigger Audit Queue / GAP-090` through `GAP-092` is complete; all `LTP-01..05` packages remain deferred pending future trigger evidence.
-- Any implementation package after the trigger audit must use ids beyond `GAP-092` and must be selected by `GAP-092`.
+- `Optimized Hybrid Long-Term Implementation Queue / GAP-093` through `GAP-102` is planned from the 2026-04-27 optimized final-state and stack-staging review.
+- Any implementation package after this optimized queue must use ids beyond `GAP-102` and must be selected by the applicable scope fence.
 - Historical `GAP-018` through `GAP-044` remain completion history and dependency context.
 - The active lifecycle is now anchored by:
   - [Hybrid Final-State Master Outline](../architecture/hybrid-final-state-master-outline.md)
   - [Direct-To-Hybrid Final-State Roadmap](../roadmap/direct-to-hybrid-final-state-roadmap.md)
   - [Direct-To-Hybrid Final-State Implementation Plan](../plans/direct-to-hybrid-final-state-implementation-plan.md)
+  - [Optimized Hybrid Final-State Long-Term Roadmap](../roadmap/optimized-hybrid-final-state-long-term-roadmap.md)
+  - [Optimized Hybrid Final-State Long-Term Implementation Plan](../plans/optimized-hybrid-final-state-long-term-implementation-plan.md)
   - [Governance Optimization Lane Roadmap](../roadmap/governance-optimization-lane-roadmap.md)
   - [Governance Optimization Lane Implementation Plan](../plans/governance-optimization-lane-implementation-plan.md)
   - [Long-Term Gap Trigger Audit Plan](../plans/long-term-gap-trigger-audit-plan.md)
