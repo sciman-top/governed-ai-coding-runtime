@@ -16,6 +16,7 @@ class RepoProfile:
     compatibility_signals: list[dict]
     required_entrypoint_policy: dict
     interaction_profile: dict
+    learning_assistance_policy: dict
     raw: dict
 
     @classmethod
@@ -52,8 +53,13 @@ class RepoProfile:
             raw.get("required_entrypoint_policy")
         )
         interaction_profile = _normalize_interaction_profile(raw.get("interaction_profile", {}))
+        learning_assistance_policy = _normalize_learning_assistance_policy(
+            raw.get("learning_assistance_policy", {})
+        )
         normalized_raw = dict(raw)
         normalized_raw["required_entrypoint_policy"] = required_entrypoint_policy
+        normalized_raw["interaction_profile"] = interaction_profile
+        normalized_raw["learning_assistance_policy"] = learning_assistance_policy
         return cls(
             repo_id=repo_id,
             primary_language=primary_language,
@@ -62,6 +68,7 @@ class RepoProfile:
             compatibility_signals=compatibility_signals,
             required_entrypoint_policy=required_entrypoint_policy,
             interaction_profile=interaction_profile,
+            learning_assistance_policy=learning_assistance_policy,
             raw=normalized_raw,
         )
 
@@ -103,6 +110,79 @@ def _normalize_interaction_profile(value: object) -> dict:
     }:
         msg = f"unsupported interaction_profile.compaction_preference: {compaction_preference}"
         raise ValueError(msg)
+    return normalized
+
+
+def _normalize_learning_assistance_policy(value: object) -> dict:
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        msg = "learning_assistance_policy must be an object"
+        raise ValueError(msg)
+    normalized = dict(value)
+    enabled = normalized.get("enabled")
+    if enabled is not None and not isinstance(enabled, bool):
+        msg = "learning_assistance_policy.enabled must be a bool"
+        raise ValueError(msg)
+    boolean_fields = (
+        "observable_signals_only",
+        "require_evidence_refs",
+        "trigger_on_user_correction",
+        "degrade_to_handoff_on_budget_pressure",
+    )
+    for field_name in boolean_fields:
+        value = normalized.get(field_name)
+        if value is not None and not isinstance(value, bool):
+            msg = f"learning_assistance_policy.{field_name} must be a bool"
+            raise ValueError(msg)
+    integer_fields = (
+        "max_terms_per_response",
+        "max_task_restatements_per_stage",
+        "max_observation_items",
+        "max_clarification_questions",
+    )
+    for field_name in integer_fields:
+        value = normalized.get(field_name)
+        if value is None:
+            continue
+        if not isinstance(value, int) or value < 0:
+            msg = f"learning_assistance_policy.{field_name} must be a non-negative int"
+            raise ValueError(msg)
+    if normalized.get("max_clarification_questions", 0) > 3:
+        msg = "learning_assistance_policy.max_clarification_questions must stay within clarification cap 0..3"
+        raise ValueError(msg)
+    if normalized.get("max_terms_per_response", 0) > 2:
+        msg = "learning_assistance_policy.max_terms_per_response must stay within low-token cap 0..2"
+        raise ValueError(msg)
+    for field_name in ("trigger_signals", "restatement_triggers", "bug_observation_checklist"):
+        entries = normalized.get(field_name)
+        if entries is None:
+            continue
+        if not isinstance(entries, list):
+            msg = f"learning_assistance_policy.{field_name} must be a list"
+            raise ValueError(msg)
+        for index, entry in enumerate(entries):
+            if not isinstance(entry, str) or not entry.strip():
+                msg = f"learning_assistance_policy.{field_name}[{index}] must be a non-empty string"
+                raise ValueError(msg)
+    token_policy = normalized.get("token_budget_policy")
+    if token_policy is not None:
+        if not isinstance(token_policy, dict):
+            msg = "learning_assistance_policy.token_budget_policy must be an object"
+            raise ValueError(msg)
+        for field_name in ("default_explanation_budget", "default_clarification_budget"):
+            value = token_policy.get(field_name)
+            if value is not None and (not isinstance(value, int) or value < 0):
+                msg = f"learning_assistance_policy.token_budget_policy.{field_name} must be a non-negative int"
+                raise ValueError(msg)
+        compression_mode = token_policy.get("compression_mode")
+        if compression_mode is not None and compression_mode not in {
+            "stage_summary",
+            "aggressive_compaction",
+            "ref_only",
+        }:
+            msg = f"unsupported learning_assistance_policy.token_budget_policy.compression_mode: {compression_mode}"
+            raise ValueError(msg)
     return normalized
 
 

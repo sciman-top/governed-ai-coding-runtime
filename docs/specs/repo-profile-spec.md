@@ -36,6 +36,7 @@ Define the per-repository configuration inherited by governed sessions.
 - compatibility_signals
 - auto_commit_policy
 - interaction_profile
+- learning_assistance_policy
 
 ## Inheritance Model
 1. platform defaults
@@ -51,6 +52,7 @@ Repo profiles may override:
 - optional eval suites
 - delivery templates
 - bounded interaction defaults
+- bounded learning-assistance policy
 
 Repo profiles may not override:
 - evidence minimum fields
@@ -119,6 +121,29 @@ Supported fields:
 
 These defaults tune how a repo prefers guidance to be phrased, but they do not weaken the shared clarification, budget, or approval boundaries.
 
+## Learning Assistance Policy
+Repos may declare low-token teaching and misunderstanding-detection behavior through `learning_assistance_policy`.
+
+Supported fields:
+- `enabled`
+- `observable_signals_only`
+- `require_evidence_refs`
+- `trigger_on_user_correction`
+- `trigger_signals`
+- `restatement_triggers`
+- `bug_observation_checklist`
+- `max_terms_per_response`
+- `max_task_restatements_per_stage`
+- `max_observation_items`
+- `max_clarification_questions`
+- `teaching_style`
+- `token_budget_policy`
+- `degrade_to_handoff_on_budget_pressure`
+
+The policy must treat confusion as observable interaction evidence, not as psychological inference. Valid signals include user corrections, repeated failures, missing expected/actual/repro facts, symptom/root-cause confusion, term confusion, intent drift, and budget pressure.
+
+Low-token teaching should explain at most one or two terms per response, prefer `definition + task role + common mistake`, and switch to checklist-first bug observation when runtime symptoms are underspecified.
+
 ## Verification
 A repo profile is valid only if:
 - all required commands are present or explicitly marked not applicable
@@ -129,4 +154,5 @@ A repo profile is valid only if:
 - rollout posture uses a supported governance posture name
 - compatibility degrade behavior is explicit whenever support is partial or unsupported
 - interaction defaults stay bounded and do not redefine hard clarification or stop-on-budget behavior
+- learning assistance stays evidence-backed, respects the clarification cap, and degrades to summaries or handoff when budget pressure is high
 - managed workspaces and runtime-local storage roots stay on one machine in the first Full Runtime stage

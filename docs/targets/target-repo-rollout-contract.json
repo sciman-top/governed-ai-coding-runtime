@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "contract_id": "target-repo-rollout-contract",
-  "sync_revision": "2026-04-26.3",
+  "sync_revision": "2026-04-26.4",
   "canonical_one_click_entrypoint": {
     "script": "scripts/runtime-flow-preset.ps1",
     "all_targets_apply_all_features_args": [
@@ -71,6 +71,14 @@
       "reason": "交互策略影响目标仓 AI 编码过程，应随目标仓 profile 统一同步。",
       "baseline_fields": [
         "interaction_profile"
+      ]
+    },
+    {
+      "capability_id": "low-token-learning-assistance-policy",
+      "distribution_scope": "profile_baseline",
+      "reason": "低 token 教学、误解识别、任务重述触发和 bug 观察清单会影响目标仓外层 AI 协作质量，应随目标仓 profile 统一同步。",
+      "baseline_fields": [
+        "learning_assistance_policy"
       ]
     },
     {
@@ -148,6 +156,18 @@
       "feature_id": "low-token-guided-interaction-profile",
       "baseline_fields": [
         "interaction_profile"
+      ],
+      "rollout_modes": [
+        "apply_all_features",
+        "feature_baseline_only",
+        "feature_baseline_and_milestone_commit"
+      ],
+      "milestone_commit_required": false
+    },
+    {
+      "feature_id": "low-token-learning-assistance-policy",
+      "baseline_fields": [
+        "learning_assistance_policy"
       ],
       "rollout_modes": [
         "apply_all_features",

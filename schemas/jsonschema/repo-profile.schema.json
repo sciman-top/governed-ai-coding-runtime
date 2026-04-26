@@ -802,6 +802,93 @@
           "type": "string"
         }
       }
+    },
+    "learning_assistance_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "observable_signals_only": {
+          "type": "boolean"
+        },
+        "require_evidence_refs": {
+          "type": "boolean"
+        },
+        "trigger_on_user_correction": {
+          "type": "boolean"
+        },
+        "degrade_to_handoff_on_budget_pressure": {
+          "type": "boolean"
+        },
+        "trigger_signals": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "restatement_triggers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "bug_observation_checklist": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "max_terms_per_response": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "max_task_restatements_per_stage": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_observation_items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_clarification_questions": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "teaching_style": {
+          "type": "string",
+          "enum": [
+            "definition_task_role_common_mistake",
+            "socratic_brief",
+            "checklist_first"
+          ]
+        },
+        "token_budget_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "default_explanation_budget": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "default_clarification_budget": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "compression_mode": {
+              "type": "string",
+              "enum": [
+                "stage_summary",
+                "aggressive_compaction",
+                "ref_only"
+              ]
+            }
+          }
+        }
+      }
     }
   }
 }

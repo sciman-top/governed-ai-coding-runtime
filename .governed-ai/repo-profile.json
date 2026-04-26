@@ -280,5 +280,54 @@
       ]
     }
   ],
-  "gate_timeout_seconds": 300
+  "gate_timeout_seconds": 300,
+  "learning_assistance_policy": {
+    "enabled": true,
+    "observable_signals_only": true,
+    "require_evidence_refs": true,
+    "trigger_on_user_correction": true,
+    "trigger_signals": [
+      "intent_drift",
+      "goal_scope_mismatch",
+      "expected_actual_missing",
+      "symptom_root_cause_confusion",
+      "term_confusion",
+      "repeated_question_no_progress",
+      "repeated_failure",
+      "observation_gap",
+      "budget_pressure",
+      "verbosity_overrun"
+    ],
+    "restatement_triggers": [
+      "task_start",
+      "before_write",
+      "after_user_correction",
+      "after_repeated_failure",
+      "before_delivery"
+    ],
+    "bug_observation_checklist": [
+      "expected",
+      "actual",
+      "repro_steps",
+      "logs_or_screenshot"
+    ],
+    "max_terms_per_response": 1,
+    "max_task_restatements_per_stage": 1,
+    "max_observation_items": 4,
+    "max_clarification_questions": 3,
+    "teaching_style": "definition_task_role_common_mistake",
+    "token_budget_policy": {
+      "default_explanation_budget": 180,
+      "default_clarification_budget": 120,
+      "compression_mode": "stage_summary"
+    },
+    "degrade_to_handoff_on_budget_pressure": true,
+    "guidance": [
+      "Treat user confusion as observable interaction signals only; do not infer psychology.",
+      "Restate the task only at high-value checkpoints such as task start, before writes, after user correction, after repeated failure, and before delivery.",
+      "Teach with at most one term per response by default: definition, role in the current task, and common mistake.",
+      "For bugs, prefer a short expected/actual/repro/logs checklist before long explanations.",
+      "When budget pressure or verbosity overrun appears, compress to stage summary or handoff refs instead of expanding the lesson."
+    ]
+  }
 }

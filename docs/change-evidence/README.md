@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260426 Learning Assistance Policy Target Baseline](./20260426-learning-assistance-policy-target-baseline.md)
+  - evidence companion for adding low-token teaching and observable misunderstanding detection as a target-repo profile baseline policy
 - [20260426 Target Repo Speed Profile One-Click](./20260426-target-repo-speed-profile-one-click.md)
   - evidence companion for materializing quick/full gate command groups, target-specific test slicing, and timeout defaults through the one-click target-repo baseline sync
 - [20260426 Agent Rule Coordination Language Policy](./20260426-agent-rule-coordination-language-policy.md)

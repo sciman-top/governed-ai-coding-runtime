@@ -19,6 +19,7 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
         baseline_path = ROOT / "docs" / "targets" / "target-repo-governance-baseline.json"
         baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
         interaction = baseline["required_profile_overrides"]["interaction_profile"]
+        learning = baseline["required_profile_overrides"]["learning_assistance_policy"]
         coordination = baseline["required_profile_overrides"]["rule_file_coordination_policy"]
         policy = baseline["required_profile_overrides"]["windows_process_environment_policy"]
         managed_files = baseline["required_managed_files"]
@@ -29,6 +30,19 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
         self.assertEqual(interaction["preserve_technical_tokens_language"], "original")
         self.assertEqual(interaction["commit_message_language"], "zh-CN")
         self.assertIn("Communicate", " ".join(interaction["language_guidance"]))
+        self.assertTrue(learning["enabled"])
+        self.assertTrue(learning["observable_signals_only"])
+        self.assertTrue(learning["require_evidence_refs"])
+        self.assertTrue(learning["trigger_on_user_correction"])
+        self.assertEqual(learning["max_terms_per_response"], 1)
+        self.assertEqual(learning["max_clarification_questions"], 3)
+        self.assertIn("term_confusion", learning["trigger_signals"])
+        self.assertIn("symptom_root_cause_confusion", learning["trigger_signals"])
+        self.assertIn("after_user_correction", learning["restatement_triggers"])
+        self.assertIn("logs_or_screenshot", learning["bug_observation_checklist"])
+        self.assertIn("stage_summary", learning["token_budget_policy"]["compression_mode"])
+        self.assertIn("observable interaction signals", " ".join(learning["guidance"]))
+        self.assertIn("expected/actual/repro/logs", " ".join(learning["guidance"]))
         self.assertTrue(coordination["enabled"])
         self.assertIn("WHAT", coordination["global_rule_scope"])
         self.assertIn("WHERE/HOW", coordination["project_rule_scope"])

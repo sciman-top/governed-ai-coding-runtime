@@ -30,6 +30,10 @@ class RepoProfileContractTests(unittest.TestCase):
         self.assertEqual(profile.primary_language, "python")
         self.assertEqual(profile.rollout_posture["current_mode"], "advisory")
         self.assertEqual(profile.interaction_profile["default_mode"], "guided")
+        self.assertTrue(profile.learning_assistance_policy["enabled"])
+        self.assertTrue(profile.learning_assistance_policy["observable_signals_only"])
+        self.assertEqual(profile.learning_assistance_policy["max_terms_per_response"], 1)
+        self.assertIn("observation_gap", profile.learning_assistance_policy["trigger_signals"])
         self.assertEqual(profile.required_entrypoint_policy["current_mode"], "advisory")
         self.assertIn("runtime-flow", profile.required_entrypoint_policy["canonical_entrypoints"])
         if not hasattr(profile, "command_ids"):
@@ -93,6 +97,28 @@ class RepoProfileContractTests(unittest.TestCase):
             "tool_allowlist": ["shell"],
             "path_policies": {"read_allow": ["src/**"], "write_allow": [], "blocked": []},
             "interaction_profile": {"default_mode": "verbose"},
+        }
+
+        with self.assertRaises(ValueError):
+            module.RepoProfile.from_dict(raw)
+
+    def test_repo_profile_rejects_invalid_learning_assistance_policy(self) -> None:
+        module = importlib.import_module("governed_ai_coding_runtime_contracts.repo_profile")
+        raw = {
+            "repo_id": "bad-repo",
+            "primary_language": "python",
+            "rollout_posture": {"current_mode": "observe", "target_mode": "advisory"},
+            "build_commands": [{"id": "build", "command": "uv build"}],
+            "test_commands": [{"id": "test", "command": "uv run pytest"}],
+            "contract_commands": [{"id": "contract", "command": "uv run pytest tests/contracts"}],
+            "invariant_commands": [],
+            "tool_allowlist": ["shell"],
+            "path_policies": {"read_allow": ["src/**"], "write_allow": [], "blocked": []},
+            "learning_assistance_policy": {
+                "enabled": True,
+                "max_terms_per_response": 3,
+                "max_clarification_questions": 4,
+            },
         }
 
         with self.assertRaises(ValueError):
