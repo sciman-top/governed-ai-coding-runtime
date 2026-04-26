@@ -6,7 +6,7 @@ from pathlib import Path
 import json
 import re
 
-from governed_ai_coding_runtime_contracts.file_guard import atomic_write_text
+from governed_ai_coding_runtime_contracts.file_guard import atomic_write_text, ensure_resolved_under
 
 
 _SLUG = re.compile(r"[^A-Za-z0-9._-]+")
@@ -26,20 +26,20 @@ class ArtifactRef:
 
 class LocalArtifactStore:
     def __init__(self, root: Path) -> None:
-        self._root = root
+        self._root = Path(root).resolve(strict=False)
         self._root.mkdir(parents=True, exist_ok=True)
 
     def write_text(self, *, task_id: str, run_id: str, kind: str, label: str, content: str) -> ArtifactRef:
         relative_path = self._relative_path(task_id=task_id, run_id=run_id, kind=kind, label=label, suffix=".txt")
         path = self._root / relative_path
-        path.parent.mkdir(parents=True, exist_ok=True)
+        self._prepare_store_path(path)
         atomic_write_text(path, content, encoding="utf-8")
         return self._build_ref(task_id=task_id, run_id=run_id, kind=kind, label=label, relative_path=relative_path)
 
     def write_json(self, *, task_id: str, run_id: str, kind: str, label: str, payload: dict) -> ArtifactRef:
         relative_path = self._relative_path(task_id=task_id, run_id=run_id, kind=kind, label=label, suffix=".json")
         path = self._root / relative_path
-        path.parent.mkdir(parents=True, exist_ok=True)
+        self._prepare_store_path(path)
         atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
         return self._build_ref(task_id=task_id, run_id=run_id, kind=kind, label=label, relative_path=relative_path)
 
@@ -65,6 +65,21 @@ class LocalArtifactStore:
                 _clean(kind),
                 f"{_clean(label)}{suffix}",
             ]
+        )
+
+    def _prepare_store_path(self, path: Path) -> None:
+        ensure_resolved_under(
+            path.parent,
+            self._root,
+            field_name="artifact_path",
+            message="artifact path must stay under artifact store root",
+        )
+        path.parent.mkdir(parents=True, exist_ok=True)
+        ensure_resolved_under(
+            path,
+            self._root,
+            field_name="artifact_path",
+            message="artifact path must stay under artifact store root",
         )
 
 

@@ -13,6 +13,7 @@ Seed the function-first full lifecycle of the project so it can evolve from a co
 - `Governance Optimization Lane / GAP-061` through `GAP-068` are complete on the current branch baseline.
 - `Post-Closeout Optimization Queue / GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20).
 - `Near-Term Gap Horizon Queue / GAP-080` through `GAP-089` are complete on the current branch baseline (`GAP-080` through `GAP-084` verified on 2026-04-21; `GAP-085` through `GAP-089` verified on 2026-04-22).
+- `Long-Term Gap Trigger Audit Queue / GAP-090` through `GAP-092` is complete; all `LTP-01..05` packages remain deferred pending future trigger evidence.
 - `GAP-018` through `GAP-068` remain completion history and dependency context for the active queue.
 
 ## Vision
@@ -74,8 +75,9 @@ Seed the function-first full lifecycle of the project so it can evolve from a co
 3. Keep `GAP-069` through `GAP-074` as completed post-closeout optimization history unless verified regressions require reopening.
 4. Treat `GAP-080` through `GAP-084` as completed near-term queue history unless verified regressions require reopening older ranges.
 5. Treat `GAP-085` through `GAP-089` as completed near-term queue history unless verified regressions require reopening.
-6. Introduce any further queue only as new IDs beyond `GAP-089`.
-7. Add new IDs only after acceptance criteria and dependency wiring are explicit in both markdown and seed YAML.
+6. Use `GAP-090` through `GAP-092` for trigger-audit planning and evidence before any LTP implementation starts.
+7. Introduce any LTP implementation queue only as new IDs beyond `GAP-092`.
+8. Add new IDs only after acceptance criteria and dependency wiring are explicit in both markdown and seed YAML.
 
 ## Explicit Non-Goals
 - commercial packaging

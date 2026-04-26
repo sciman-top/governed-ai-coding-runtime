@@ -40,6 +40,7 @@
 - 不应宣称“所有外部仓、所有高风险流程都已被 runtime 全量接管”
 - attach-first 已有 contract 与本地 entrypoint，但还不是“替代上游宿主 UI”的最终交互体验
 - `GAP-045..060` 是直达完整混合终态的主线且已完成；`GAP-061..068` 是 `GAP-060` 之后的治理优化 follow-on lane，现也已完成（2026-04-20），且不回写成终态闭环证明的一部分
+- `GAP-090..092` 远期缺口触发审计队列已完成；当前不启动任何 `LTP-01..05` 长期包，全部延期到未来触发证据再评估
 
 现在能否用于其他项目？
 - 可以，**但边界是“治理 sidecar / attach-first metadata + runtime-managed gate/write flows + explicit degrade semantics”**。

@@ -10,10 +10,10 @@
       "primary_language": "csharp",
       "build_command": "dotnet build ClassroomToolkit.sln -c Debug --no-restore",
       "test_command": "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug --no-restore",
-      "quick_test_command": ". ./scripts/env/Initialize-WindowsProcessEnvironment.ps1; dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug --no-restore --filter 'FullyQualifiedName~ArchitectureDependencyTests|FullyQualifiedName~InteropHookLifecycleContractTests|FullyQualifiedName~InteropHookEventDispatchContractTests|FullyQualifiedName~GlobalHookServiceLifecycleContractTests|FullyQualifiedName~CrossPageDisplayLifecycleContractTests'",
+      "quick_test_command": "pwsh -NoProfile -ExecutionPolicy Bypass -Command \". .\\scripts\\env\\Initialize-WindowsProcessEnvironment.ps1; dotnet test tests\\ClassroomToolkit.Tests\\ClassroomToolkit.Tests.csproj -c Debug --no-restore --filter 'FullyQualifiedName~ArchitectureDependencyTests|FullyQualifiedName~InteropHookLifecycleContractTests|FullyQualifiedName~InteropHookEventDispatchContractTests|FullyQualifiedName~GlobalHookServiceLifecycleContractTests|FullyQualifiedName~CrossPageDisplayLifecycleContractTests'\"",
       "quick_test_reason": "Established contract/invariant slice for daily feedback; full Debug test remains the full gate test command.",
       "quick_test_timeout_seconds": 180,
-      "contract_command": ". ./scripts/env/Initialize-WindowsProcessEnvironment.ps1; dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug --no-restore --filter 'FullyQualifiedName~ArchitectureDependencyTests|FullyQualifiedName~InteropHookLifecycleContractTests|FullyQualifiedName~InteropHookEventDispatchContractTests|FullyQualifiedName~GlobalHookServiceLifecycleContractTests|FullyQualifiedName~CrossPageDisplayLifecycleContractTests'"
+      "contract_command": "pwsh -NoProfile -ExecutionPolicy Bypass -Command \". .\\scripts\\env\\Initialize-WindowsProcessEnvironment.ps1; dotnet test tests\\ClassroomToolkit.Tests\\ClassroomToolkit.Tests.csproj -c Debug --no-restore --filter 'FullyQualifiedName~ArchitectureDependencyTests|FullyQualifiedName~InteropHookLifecycleContractTests|FullyQualifiedName~InteropHookEventDispatchContractTests|FullyQualifiedName~GlobalHookServiceLifecycleContractTests|FullyQualifiedName~CrossPageDisplayLifecycleContractTests'\""
     },
     "github-toolkit": {
       "attachment_root": "${code_root}/github-toolkit",
@@ -44,9 +44,9 @@
       "repo_id": "skills-manager",
       "display_name": "skills-manager",
       "primary_language": "powershell",
-      "build_command": "./build.ps1",
-      "test_command": "./skills.ps1 发现",
-      "contract_command": "./skills.ps1 doctor --strict --threshold-ms 8000",
+      "build_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File build.ps1",
+      "test_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File skills.ps1 发现",
+      "contract_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File skills.ps1 doctor --strict --threshold-ms 8000",
       "quick_test_skip_reason": "The repo hard test command is already the lightweight discovery gate; use derived test+contract quick gates instead of slicing smaller."
     },
     "vps-ssh-launcher": {

@@ -4,6 +4,9 @@
 This directory holds executable implementation plans that translate strategy and backlog into ordered work.
 
 ## Current Authoritative Plan
+- [Long-Term Gap Trigger Audit Plan](./long-term-gap-trigger-audit-plan.md)
+  - Status: completed trigger-audit queue for `GAP-090` through `GAP-092`; all `LTP-01..05` packages remain deferred pending future trigger evidence
+  - Scope: final-state claim refresh, sustained real-workload evidence window, and gated decision for whether exactly one `LTP-01..05` package should start
 - [Continuous Execution Readiness And Rollout Plan](./continuous-execution-readiness-and-rollout-plan.md)
   - Status: active kickoff plan for continuous-execution readiness and rollout (started on `2026-04-23`)
   - Scope: readiness trigger contract, token-efficient teaching envelope, runtime interaction-default enforcement, learning-efficiency guardrails, and two-repo rollout proof
@@ -53,6 +56,7 @@ This directory holds executable implementation plans that translate strategy and
    - [20260418 Governance Runtime Strategy Alignment Closeout](../change-evidence/20260418-governance-runtime-strategy-alignment-closeout.md)
    - [20260418 Governance Runtime Strategy Alignment Plan](../change-evidence/20260418-governance-runtime-strategy-alignment-plan.md)
 3. Use the roadmap and backlog to understand current posture:
+   - use [Long-Term Gap Trigger Audit Plan](./long-term-gap-trigger-audit-plan.md) as the completed `GAP-090..092` trigger-audit record before opening any future long-term package implementation
    - use [Continuous Execution Readiness And Rollout Plan](./continuous-execution-readiness-and-rollout-plan.md) as the active loop-oriented execution baseline
    - the local runtime baseline through `Maintenance Baseline / GAP-034` is complete on the current branch baseline
    - use [Direct-To-Hybrid Final-State Implementation Plan](./direct-to-hybrid-final-state-implementation-plan.md) as the completed closure execution record

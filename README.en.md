@@ -39,6 +39,7 @@ Not available yet:
 - `native_attach` is environment-dependent; degraded posture (`process_bridge` / `manual_handoff`) remains valid when host capability is weaker.
 - Universal full-takeover claims across all external repos and high-risk workflows are still out of scope.
 - `GAP-045..060` is the direct path to full hybrid final-state closure and is complete; `GAP-061..068` is the governance-only follow-on lane after `GAP-060` and is also complete (2026-04-20), without being back-written into the final-state closure proof itself.
+- `GAP-090..092` is complete as the long-term gap trigger-audit queue; no `LTP-01..05` package starts now, and all remain deferred pending future trigger evidence.
 
 ## Can I Use This With Another Repo?
 Yes, with the current boundary.

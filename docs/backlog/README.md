@@ -45,7 +45,8 @@ This directory holds the human and machine planning artifacts that bridge strate
 - `Governance Optimization Lane / GAP-061` through `GAP-068` are complete on the current branch baseline (verified on 2026-04-20).
 - `Post-Closeout Optimization Queue / GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20).
 - `Near-Term Gap Horizon Queue / GAP-080` through `GAP-089` are complete on the current branch baseline (`GAP-080` through `GAP-084` verified on 2026-04-21; `GAP-085` through `GAP-089` verified on 2026-04-22).
-- No additional near-term execution-horizon queue is opened yet; new queue items must use ids beyond `GAP-089`.
+- `Long-Term Gap Trigger Audit Queue / GAP-090` through `GAP-092` is complete; all `LTP-01..05` packages remain deferred pending future trigger evidence.
+- Any implementation package after the trigger audit must use ids beyond `GAP-092` and must be selected by `GAP-092`.
 - Historical `GAP-018` through `GAP-044` remain completion history and dependency context.
 - The active lifecycle is now anchored by:
   - [Hybrid Final-State Master Outline](../architecture/hybrid-final-state-master-outline.md)
@@ -53,6 +54,7 @@ This directory holds the human and machine planning artifacts that bridge strate
   - [Direct-To-Hybrid Final-State Implementation Plan](../plans/direct-to-hybrid-final-state-implementation-plan.md)
   - [Governance Optimization Lane Roadmap](../roadmap/governance-optimization-lane-roadmap.md)
   - [Governance Optimization Lane Implementation Plan](../plans/governance-optimization-lane-implementation-plan.md)
+  - [Long-Term Gap Trigger Audit Plan](../plans/long-term-gap-trigger-audit-plan.md)
   - [Full Lifecycle Plan](../roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
   - [Full Lifecycle Backlog Seeds](./full-lifecycle-backlog-seeds.md)
   - [Issue-Ready Backlog](./issue-ready-backlog.md)

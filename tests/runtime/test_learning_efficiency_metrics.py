@@ -3,6 +3,7 @@ import json
 import sys
 import tempfile
 import unittest
+import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -96,6 +97,34 @@ class LearningEfficiencyMetricsTests(unittest.TestCase):
                     run_id="run-1",
                     record=unsafe_record,
                 )
+
+    def test_persist_learning_efficiency_metrics_rejects_symlinked_output_outside_root(self) -> None:
+        module = importlib.import_module("governed_ai_coding_runtime_contracts.learning_efficiency_metrics")
+        record = module.build_learning_efficiency_metrics(
+            task_id="task-1",
+            run_id="run-1",
+            metrics_source_ref="artifacts/task-1/run-1/evidence/bundle.json",
+            evidence_bundle={"final_outcome": {"status": "completed"}},
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir) / "metrics-root"
+            outside = Path(tmp_dir) / "outside"
+            outside.mkdir()
+            root.mkdir()
+            try:
+                os.symlink(outside, root / "task-1")
+            except (OSError, NotImplementedError):
+                self.skipTest("directory symlinks are not available in this environment")
+
+            with self.assertRaisesRegex(ValueError, "metrics output path"):
+                module.persist_learning_efficiency_metrics(
+                    output_root=root,
+                    run_id="run-1",
+                    record=record,
+                )
+
+            self.assertFalse((outside / "run-1" / "metrics" / "learning-efficiency.json").exists())
 
     def test_summarize_learning_efficiency_metrics_baseline_rates(self) -> None:
         module = importlib.import_module("governed_ai_coding_runtime_contracts.learning_efficiency_metrics")

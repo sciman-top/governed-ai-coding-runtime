@@ -14,6 +14,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - governance-optimization lane `GAP-061` through `GAP-068` was the follow-on queue after `GAP-060` and is now complete on the current branch baseline (verified on 2026-04-20), while older lifecycle `GAP` entries remain completion history
 - post-closeout optimization queue `GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20) and does not reopen hybrid final-state closure
 - optimized best-state near-term gap horizon queue `NTP-01..10` is complete on the current branch baseline (`GAP-080` through `GAP-084`, verified on 2026-04-21; `GAP-085` through `GAP-089`, verified on 2026-04-22)
+- long-term gap trigger audit queue `GAP-090` through `GAP-092` is complete; all `LTP-01..05` packages remain deferred pending future trigger evidence
 
 ## Current Baseline
 - PRD, architecture, ADRs, specs, runtime contract primitives, repo verifier entrypoints, sample repo profiles, and a runtime-consumable control pack already exist.
@@ -30,6 +31,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Governance Optimization Lane / GAP-061` through `GAP-068` are complete on the current branch baseline (verified on 2026-04-20).
 - `Post-Closeout Optimization Queue / GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20).
 - `Near-Term Gap Horizon Queue / GAP-080` through `GAP-089` are complete on the current branch baseline (`GAP-080` through `GAP-084` verified on 2026-04-21; `GAP-085` through `GAP-089` verified on 2026-04-22).
+- `Long-Term Gap Trigger Audit Queue / GAP-090` through `GAP-092` is complete; all `LTP-01..05` packages remain deferred pending future trigger evidence.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -614,6 +616,50 @@ The entries below record the executed queue for complete hybrid final-state and 
   - [x] KPI payload schema and sample records are versioned and documented
   - [x] summary export can produce latest and rolling-window KPI snapshots
   - [x] speed-related claims are tied to measurable evidence snapshots
+
+## Long-Term Gap Trigger Audit Queue
+
+### GAP-090 Final-State Claim Refresh And Trigger Audit
+- Type: AFK
+- Blocked by: GAP-089
+- User stories: 18, 21, 29, 37, 44
+- Status: complete on current branch baseline (verified on 2026-04-26; no LTP implementation started)
+- What to build:
+  - refresh final-state claim evidence, closeout posture, roadmap, backlog, README, and claim-catalog consistency
+  - evaluate `LTP-01..05` trigger signals without starting implementation work
+  - record stale-claim downgrades, not-triggered decisions, watch decisions, and triggered decisions with evidence links
+- Acceptance criteria:
+  - [x] fresh gate output backs any complete final-state claim that remains visible
+  - [x] each `LTP-01..05` trigger is classified as `not_triggered`, `watch`, or `triggered`
+  - [x] stale or over-broad claims are downgraded before any long-term implementation starts
+
+### GAP-091 Sustained Real-Workload Evidence Window
+- Type: HITL
+- Blocked by: GAP-090
+- User stories: 13, 14, 15, 38, 45
+- Status: complete on current branch baseline (verified on 2026-04-26; initial target command drift remediated, final all-target daily green)
+- What to build:
+  - run an all-target or representative multi-target runtime evidence window through existing `runtime-flow-preset` entrypoints
+  - group failures by long-term trigger family: orchestration, policy, data-plane, host-adapter, or operations
+  - link target-run summaries, KPI snapshots, command output, and rollback notes
+- Acceptance criteria:
+  - [x] representative real-workload evidence exists for the current target set or a documented subset
+  - [x] runtime failures are separated from target-repo business gate failures
+  - [x] no LTP is marked triggered without command evidence and rollback notes
+
+### GAP-092 LTP Start Decision And Scope Fence
+- Type: HITL
+- Blocked by: GAP-091
+- User stories: 20, 21, 23, 31, 44
+- Status: complete on current branch baseline (verified on 2026-04-26; all LTP packages deferred)
+- What to build:
+  - decide whether exactly one long-term package should start or all LTPs remain deferred
+  - create a bounded implementation-plan stub only for the selected LTP, if any
+  - keep non-selected LTPs visible as deferred with reasons and next review trigger
+- Acceptance criteria:
+  - [x] exactly one next LTP is selected, or all LTPs remain deferred with explicit reasons
+  - [x] any selected LTP has a bounded scope fence, verification floor, rollback path, and evidence owner
+  - [x] backlog, seeds, issue rendering, evidence, and README posture agree after the decision
 
 ## Vision
 

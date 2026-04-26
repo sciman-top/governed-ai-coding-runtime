@@ -1,6 +1,7 @@
 import sys
 import tempfile
 import unittest
+import os
 from pathlib import Path
 import importlib
 
@@ -87,6 +88,41 @@ class TaskStoreTests(unittest.TestCase):
 
             with self.assertRaisesRegex(ValueError, "task_id"):
                 store.load("../escape")
+
+    def test_rejects_symlinked_task_record_outside_root(self) -> None:
+        task_store = importlib.import_module("governed_ai_coding_runtime_contracts.task_store")
+        task_intake = importlib.import_module("governed_ai_coding_runtime_contracts.task_intake")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir) / "tasks"
+            root.mkdir()
+            outside = Path(tmp_dir) / "outside-task.json"
+            outside.write_text("before", encoding="utf-8")
+            try:
+                os.symlink(outside, root / "task-symlink.json")
+            except (OSError, NotImplementedError):
+                self.skipTest("file symlinks are not available in this environment")
+
+            store = task_store.FileTaskStore(root)
+            record = task_store.TaskRecord(
+                task_id="task-symlink",
+                task=task_intake.TaskIntake(
+                    goal="reject symlinked task records",
+                    scope="task store hardening",
+                    acceptance=["task store does not write outside its root"],
+                    repo="governed-ai-coding-runtime",
+                    budgets={"max_steps": 1, "max_minutes": 1},
+                ),
+                current_state="planned",
+            )
+
+            with self.assertRaisesRegex(ValueError, "task record path"):
+                store.save(record)
+
+            with self.assertRaisesRegex(ValueError, "task record path"):
+                store.load("task-symlink")
+
+            self.assertEqual(outside.read_text(encoding="utf-8"), "before")
 
 
 if __name__ == "__main__":

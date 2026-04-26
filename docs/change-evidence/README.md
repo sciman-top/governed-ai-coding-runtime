@@ -4,6 +4,16 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260426 Runtime State Symlink Guard Hardening](./20260426-runtime-state-symlink-guard-hardening.md)
+  - evidence companion for resolved-path guards on task, artifact, and learning-efficiency metrics state writes
+- [20260426 GAP-092 LTP Start Decision](./20260426-gap-092-ltp-start-decision.md)
+  - decision evidence for deferring all `LTP-01..05` packages after `GAP-090..092`
+- [20260426 GAP-091 Sustained Real-Workload Evidence Window](./20260426-gap-091-sustained-real-workload-evidence-window.md)
+  - all-target daily evidence, target command drift classification, and remediation proof for `GAP-091`
+- [20260426 GAP-090 Final-State Claim Trigger Audit](./20260426-gap-090-final-state-claim-trigger-audit.md)
+  - closeout evidence for `GAP-090`, including claim proof refresh, rolling KPI evidence, and `LTP-01..05` trigger classification
+- [20260426 GAP-090..092 Trigger Audit Planning](./20260426-gap-090-092-trigger-audit-planning.md)
+  - evidence companion for opening the long-term gap trigger-audit queue before any `LTP-01..05` implementation starts
 - [20260426 Learning Assistance Policy Target Baseline](./20260426-learning-assistance-policy-target-baseline.md)
   - evidence companion for adding low-token teaching and observable misunderstanding detection as a target-repo profile baseline policy
 - [20260426 Target Repo Speed Profile One-Click](./20260426-target-repo-speed-profile-one-click.md)

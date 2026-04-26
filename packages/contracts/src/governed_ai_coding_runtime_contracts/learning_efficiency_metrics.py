@@ -7,7 +7,11 @@ from datetime import UTC, datetime
 import json
 from pathlib import Path
 
-from governed_ai_coding_runtime_contracts.file_guard import atomic_write_text, validate_file_component
+from governed_ai_coding_runtime_contracts.file_guard import (
+    atomic_write_text,
+    ensure_resolved_under,
+    validate_file_component,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,12 +119,24 @@ def persist_learning_efficiency_metrics(
     record: LearningEfficiencyMetricsRecord,
     run_id: str | None = None,
 ) -> Path:
-    root = Path(output_root)
+    root = Path(output_root).resolve(strict=False)
     task_segment = validate_file_component(record.task_id, "task_id")
     run_segment = validate_file_component(run_id or record.run_id or "latest", "run_id")
     output_dir = root / task_segment / run_segment / "metrics"
+    ensure_resolved_under(
+        output_dir,
+        root,
+        field_name="output_root",
+        message="metrics output path must stay under output_root",
+    )
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "learning-efficiency.json"
+    ensure_resolved_under(
+        output_path,
+        root,
+        field_name="output_root",
+        message="metrics output path must stay under output_root",
+    )
     atomic_write_text(output_path, json.dumps(record.to_dict(), indent=2, sort_keys=True), encoding="utf-8")
     return output_path
 

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-22T15:04:40.102602+00:00",
+  "generated_at": "2026-04-26T14:58:05.551078+00:00",
   "record_count": 5,
   "records": [
     {
@@ -7,8 +7,16 @@
       "fallback_rate": 0.0,
       "first_pass_latency_seconds": 41,
       "latest_evidence_ref": "artifacts/task-daily-classroomtoolkit-20260422191548/run-daily-classroomtoolkit-20260422191548/verification-output/contract.txt",
+      "latest_problem_evidence_ref": "artifacts/task-classroomtoolkit-daily-20260420225453/run-classroomtoolkit-daily-20260420225453/verification-output/contract.txt",
+      "latest_problem_run_ref": "classroomtoolkit-daily-20260420225453.json",
+      "latest_problem_signature": "summary:fail",
       "medium_risk_loop_success_ratio": null,
       "onboarding_latency_seconds": 41,
+      "problem_recovery_retries": 1,
+      "problem_run_rate": 0.3333,
+      "problem_signature_counts": {
+        "summary:fail": 1
+      },
       "target": "classroomtoolkit",
       "total_daily_runs": 3,
       "window_end_utc": "2026-04-22T19:15:48+00:00",
@@ -19,8 +27,16 @@
       "fallback_rate": 0.0,
       "first_pass_latency_seconds": 6,
       "latest_evidence_ref": "artifacts/task-daily-github-toolkit-20260422191633/run-daily-github-toolkit-20260422191633/verification-output/contract.txt",
+      "latest_problem_evidence_ref": "artifacts/task-github-toolkit-daily-deny-20260420230743/run-github-toolkit-daily-deny-20260420230743/verification-output/contract.txt",
+      "latest_problem_run_ref": "github-toolkit-daily-deny-20260420230743.json",
+      "latest_problem_signature": "summary:fail",
       "medium_risk_loop_success_ratio": null,
       "onboarding_latency_seconds": 6,
+      "problem_recovery_retries": 1,
+      "problem_run_rate": 0.3333,
+      "problem_signature_counts": {
+        "summary:fail": 1
+      },
       "target": "github-toolkit",
       "total_daily_runs": 3,
       "window_end_utc": "2026-04-22T19:16:33+00:00",
@@ -31,8 +47,16 @@
       "fallback_rate": 0.0,
       "first_pass_latency_seconds": 139,
       "latest_evidence_ref": "artifacts/task-daily-self-runtime-20260422191858/run-daily-self-runtime-20260422191858/verification-output/contract.txt",
+      "latest_problem_evidence_ref": "artifacts/task-self-runtime-daily-20260420225616/run-self-runtime-daily-20260420225616/verification-output/contract.txt",
+      "latest_problem_run_ref": "self-runtime-daily-20260420225616.json",
+      "latest_problem_signature": "summary:fail",
       "medium_risk_loop_success_ratio": null,
       "onboarding_latency_seconds": 139,
+      "problem_recovery_retries": 1,
+      "problem_run_rate": 0.3333,
+      "problem_signature_counts": {
+        "summary:fail": 1
+      },
       "target": "self-runtime",
       "total_daily_runs": 3,
       "window_end_utc": "2026-04-22T19:18:58+00:00",
@@ -43,8 +67,16 @@
       "fallback_rate": 0.0,
       "first_pass_latency_seconds": 6,
       "latest_evidence_ref": "artifacts/task-daily-skills-manager-20260422192117/run-daily-skills-manager-20260422192117/verification-output/contract.txt",
+      "latest_problem_evidence_ref": "artifacts/task-skills-manager-daily-20260420225937/run-skills-manager-daily-20260420225937/verification-output/contract.txt",
+      "latest_problem_run_ref": "skills-manager-daily-20260420225937.json",
+      "latest_problem_signature": "summary:fail",
       "medium_risk_loop_success_ratio": null,
       "onboarding_latency_seconds": 6,
+      "problem_recovery_retries": 1,
+      "problem_run_rate": 0.3333,
+      "problem_signature_counts": {
+        "summary:fail": 1
+      },
       "target": "skills-manager",
       "total_daily_runs": 3,
       "window_end_utc": "2026-04-22T19:21:17+00:00",
@@ -55,8 +87,16 @@
       "fallback_rate": 0.0,
       "first_pass_latency_seconds": 7,
       "latest_evidence_ref": "artifacts/task-daily-vps-ssh-launcher-20260422192129/run-daily-vps-ssh-launcher-20260422192129/verification-output/contract.txt",
+      "latest_problem_evidence_ref": "artifacts/task-vps-ssh-launcher-daily-deny-20260420230759/run-vps-ssh-launcher-daily-deny-20260420230759/verification-output/contract.txt",
+      "latest_problem_run_ref": "vps-ssh-launcher-daily-deny-20260420230759.json",
+      "latest_problem_signature": "summary:fail",
       "medium_risk_loop_success_ratio": null,
       "onboarding_latency_seconds": 7,
+      "problem_recovery_retries": 1,
+      "problem_run_rate": 0.3333,
+      "problem_signature_counts": {
+        "summary:fail": 1
+      },
       "target": "vps-ssh-launcher",
       "total_daily_runs": 3,
       "window_end_utc": "2026-04-22T19:21:29+00:00",

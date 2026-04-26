@@ -5,7 +5,11 @@ from datetime import UTC, datetime
 import json
 from pathlib import Path
 
-from governed_ai_coding_runtime_contracts.file_guard import atomic_write_text, validate_file_component
+from governed_ai_coding_runtime_contracts.file_guard import (
+    atomic_write_text,
+    ensure_resolved_under,
+    validate_file_component,
+)
 from governed_ai_coding_runtime_contracts.task_intake import TaskIntake
 
 
@@ -92,7 +96,7 @@ class TaskRecord:
 
 class FileTaskStore:
     def __init__(self, root: Path) -> None:
-        self._root = root
+        self._root = Path(root).resolve(strict=False)
         self._root.mkdir(parents=True, exist_ok=True)
 
     @property
@@ -101,11 +105,24 @@ class FileTaskStore:
 
     def save(self, record: TaskRecord) -> Path:
         path = self._path_for(record.task_id)
+        ensure_resolved_under(
+            path,
+            self._root,
+            field_name="task_id",
+            message="task record path must stay under task store root",
+        )
         atomic_write_text(path, json.dumps(record.to_dict(), indent=2, sort_keys=True), encoding="utf-8")
         return path
 
     def load(self, task_id: str) -> TaskRecord:
-        raw = json.loads(self._path_for(task_id).read_text(encoding="utf-8"))
+        path = self._path_for(task_id)
+        ensure_resolved_under(
+            path,
+            self._root,
+            field_name="task_id",
+            message="task record path must stay under task store root",
+        )
+        raw = json.loads(path.read_text(encoding="utf-8"))
         return TaskRecord.from_dict(raw)
 
     def append_transition(

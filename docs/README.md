@@ -10,6 +10,7 @@
 - [Hybrid Final-State Master Outline](./architecture/hybrid-final-state-master-outline.md)
 - [Direct-To-Hybrid Final-State Roadmap](./roadmap/direct-to-hybrid-final-state-roadmap.md)
 - [Direct-To-Hybrid Final-State Implementation Plan](./plans/direct-to-hybrid-final-state-implementation-plan.md)
+- [Long-Term Gap Trigger Audit Plan](./plans/long-term-gap-trigger-audit-plan.md)
 - [Governance Optimization Lane Roadmap](./roadmap/governance-optimization-lane-roadmap.md)
 - [Governance Optimization Lane Implementation Plan](./plans/governance-optimization-lane-implementation-plan.md)
 - [Full Lifecycle Plan](./roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md) (history/current posture)
@@ -38,6 +39,7 @@
 ## Planning Completeness
 - For direct hybrid final-state closure, the canonical planning package now exists end-to-end: master outline, direct roadmap, direct implementation plan, issue-ready backlog, issue seeds, and executable gap audit.
 - For post-closeout governance optimization, the canonical lane package is now execution-closed with evidence: governance lane roadmap, governance lane implementation plan, `GAP-061` through `GAP-068` backlog/seeds, the shared acceptance/rollback template, dedicated epic-rendering support, and closeout evidence linkage.
+- For long-term gap work, `GAP-090` through `GAP-092` define a completed trigger-audit queue that refreshes evidence and selects at most one LTP before implementation starts; all `LTP-01..05` packages remain deferred on the current branch baseline.
 - Historical lifecycle and productization plans remain execution history and rationale, not competing active mainlines.
 
 ## Navigation Aids
@@ -60,7 +62,8 @@
 - `Governance Optimization Lane / GAP-061` through `GAP-068` are complete on the current branch baseline (verified on 2026-04-20).
 - `Post-Closeout Optimization Queue / GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20).
 - `Near-Term Gap Horizon Queue / GAP-080` through `GAP-089` are complete on the current branch baseline (`GAP-080` through `GAP-084` verified on 2026-04-21; `GAP-085` through `GAP-089` verified on 2026-04-22).
-- New execution-horizon queue items must use ids beyond `GAP-089`.
+- `Long-Term Gap Trigger Audit Queue / GAP-090` through `GAP-092` is complete; all `LTP-01..05` packages remain deferred pending future trigger evidence.
+- New LTP implementation queue items must use ids beyond `GAP-092` and must be selected by `GAP-092`.
 - Active verification for this repo remains `build -> test -> contract/invariant -> doctor`, with docs and script checks still included in `verify-repo -Check All`.
 - `docs/change-evidence/` remains historical evidence and planning trace, not the primary user-facing product surface.
 
