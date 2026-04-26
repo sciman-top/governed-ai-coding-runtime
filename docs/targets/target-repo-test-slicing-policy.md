@@ -11,6 +11,7 @@ This policy is persisted through the target catalog and one-click governance bas
 - Apply implementation: `scripts/apply-target-repo-governance.py`.
 - Drift check: `scripts/verify-target-repo-governance-consistency.py`.
 - Execution: `scripts/governance/fast-check.ps1` reads `quick_gate_commands`; `full-check.ps1` reads `full_gate_commands`.
+- No-op speed guard: `scripts/runtime-flow-preset.ps1 -ApplyAllFeatures -AutoMilestoneGateMode` may skip the milestone gate only when auto mode selected `fast`, governance sync changed nothing, the target is a git repository, and `git status --porcelain` is empty.
 
 The target catalog is also the source of truth for base gate facts (`build_command`, `test_command`, and
 `contract_command`). One-click apply syncs those into target `repo-profile.json` before deriving speed groups.
@@ -92,6 +93,9 @@ If these criteria are not met for a known target, declare `quick_test_skip_reaso
 - One-click apply preserves hand-tuned `quick_gate_commands` unless they match a previously derived baseline group.
 - Generated speed groups with `satisfies_gate_ids` are refreshable; stale generated groups must not preserve obsolete catalog commands.
 - Consistency verification must fail on catalog/profile drift.
+- Clean milestone gate skip is a no-op optimization, not a gate waiver. It is disabled for `full` milestone gates, release candidates, onboard flows, high-risk/write execution paths, and any target with pending git changes or baseline sync changes.
+- Operators can force the no-op skip with `-SkipCleanMilestoneGate` or turn off auto clean skipping with `-DisableCleanMilestoneGateSkip`.
+- JSON evidence must expose `clean_milestone_gate_skip_enabled`, `clean_milestone_gate_skip_source`, `milestone_gate_skipped`, and `milestone_gate_skip_reason` when `ApplyAllFeatures` or baseline+milestone mode is used.
 
 ## Self-Runtime Current Slice
 `self-runtime` currently uses a focused Runtime slice covering:

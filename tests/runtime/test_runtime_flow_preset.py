@@ -142,6 +142,42 @@ exit 0
     path.write_text(script, encoding="utf-8")
 
 
+def _write_fake_fast_check_marker_script(path: Path, marker_path: Path, exit_code: int) -> None:
+    marker = str(marker_path).replace("'", "''")
+    script = f"""param(
+  [string]$RepoProfilePath = "",
+  [string]$WorkingDirectory = "",
+  [string]$MilestoneTag = "",
+  [int]$GateTimeoutSeconds = 0,
+  [switch]$ContinueOnError,
+  [switch]$Json
+)
+
+Set-Content -LiteralPath '{marker}' -Value 'ran' -Encoding UTF8
+if ($Json) {{
+  [ordered]@{{
+    exit_code = {exit_code}
+    summary = [ordered]@{{
+      mode = "fast"
+      repo_profile_path = $RepoProfilePath
+      working_directory = $WorkingDirectory
+      gate_timeout_seconds = $GateTimeoutSeconds
+      auto_commit = [ordered]@{{
+        status = "committed"
+        reason = "ok"
+        commit_hash = "fake-fast-commit-hash"
+        commit_message = ("自动提交：fake-repo 快速里程碑 {{0}} 门禁通过 2026-04-24 00:00:00 +08:00" -f $MilestoneTag)
+        trigger = "milestone"
+        milestone_tag = $MilestoneTag
+      }}
+    }}
+  }} | ConvertTo-Json -Depth 20
+}}
+exit {exit_code}
+"""
+    path.write_text(script, encoding="utf-8")
+
+
 def _write_fake_slow_runtime_flow_script(path: Path) -> None:
     script = """param(
   [switch]$Json
@@ -157,6 +193,27 @@ else {
 exit 0
 """
     path.write_text(script, encoding="utf-8")
+
+
+def _init_clean_git_repo(repo: Path) -> None:
+    subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True, text=True)
+    subprocess.run(["git", "add", "-A"], cwd=repo, check=True, capture_output=True, text=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=Runtime Test",
+            "-c",
+            "user.email=runtime-test@example.invalid",
+            "commit",
+            "-m",
+            "init",
+        ],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
 
 
 class RuntimeFlowPresetScriptTests(unittest.TestCase):
@@ -979,6 +1036,211 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                 self.assertEqual(result["milestone_gate_mode_source"], "auto")
                 self.assertEqual(result["milestone_gate_mode_reason"], "daily_low_to_medium_risk")
                 self.assertEqual(result["auto_commit_commit_hash"], "fake-fast-commit-hash")
+
+    def test_runtime_flow_preset_auto_fast_skips_clean_milestone_gate(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_a = workspace / "repo-a"
+            _write_json(
+                repo_a / ".governed-ai" / "repo-profile.json",
+                {
+                    "repo_id": "repo-a",
+                    "display_name": "repo-a",
+                    "primary_language": "python",
+                    "build_commands": [{"id": "build", "command": "python --version", "required": True}],
+                    "test_commands": [{"id": "test", "command": "python --version", "required": True}],
+                    "contract_commands": [{"id": "contract", "command": "python --version", "required": True}],
+                    "required_entrypoint_policy": {"current_mode": "targeted_enforced"},
+                    "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                },
+            )
+            _init_clean_git_repo(repo_a)
+
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": str(repo_a),
+                            "attachment_runtime_state_root": str(workspace / "state" / "repo-a"),
+                            "repo_id": "repo-a",
+                            "display_name": "repo-a",
+                            "primary_language": "python",
+                            "build_command": "python --version",
+                            "test_command": "python --version",
+                            "contract_command": "python --version",
+                            "quick_test_skip_reason": "Full test command is already tiny.",
+                        }
+                    },
+                },
+            )
+            baseline_path = workspace / "target-repo-governance-baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-04-26.9",
+                    "required_profile_overrides": {
+                        "required_entrypoint_policy": {"current_mode": "targeted_enforced"},
+                        "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                    },
+                },
+            )
+
+            fake_runtime_flow_path = workspace / "fake-runtime-flow.ps1"
+            _write_fake_runtime_flow_script(fake_runtime_flow_path)
+            marker_path = workspace / "fast-gate-ran.txt"
+            fake_fast_check_path = workspace / "fake-fast-check.ps1"
+            _write_fake_fast_check_marker_script(fake_fast_check_path, marker_path, exit_code=9)
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "runtime-flow-preset.ps1"),
+                    "-AllTargets",
+                    "-ApplyAllFeatures",
+                    "-FlowMode",
+                    "daily",
+                    "-AutoMilestoneGateMode",
+                    "-MilestoneTag",
+                    "milestone",
+                    "-Json",
+                    "-CatalogPath",
+                    str(catalog_path),
+                    "-GovernanceBaselinePath",
+                    str(baseline_path),
+                    "-RuntimeFlowPath",
+                    str(fake_runtime_flow_path),
+                    "-GovernanceFastCheckPath",
+                    str(fake_fast_check_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["milestone_gate_mode"], "fast")
+            self.assertEqual(payload["clean_milestone_gate_skip_enabled"], True)
+            self.assertEqual(payload["clean_milestone_gate_skip_source"], "auto")
+            self.assertEqual(payload["failure_count"], 0)
+            self.assertFalse(marker_path.exists(), completed.stdout)
+            result = payload["results"][0]
+            self.assertEqual(result["milestone_commit_status"], "skipped")
+            self.assertEqual(result["milestone_commit_reason"], "clean_target_no_pending_changes")
+            self.assertEqual(result["milestone_gate_skipped"], True)
+            self.assertEqual(result["auto_commit_reason"], "no_pending_changes")
+
+    def test_runtime_flow_preset_auto_fast_runs_gate_when_sync_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_a = workspace / "repo-a"
+            _write_json(
+                repo_a / ".governed-ai" / "repo-profile.json",
+                {
+                    "repo_id": "repo-a",
+                    "display_name": "repo-a",
+                    "primary_language": "python",
+                    "build_commands": [{"id": "build", "command": "python --version", "required": True}],
+                    "test_commands": [{"id": "test", "command": "python --version", "required": True}],
+                    "contract_commands": [{"id": "contract", "command": "python --version", "required": True}],
+                    "required_entrypoint_policy": {"current_mode": "advisory"},
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+            _init_clean_git_repo(repo_a)
+
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": str(repo_a),
+                            "attachment_runtime_state_root": str(workspace / "state" / "repo-a"),
+                            "repo_id": "repo-a",
+                            "display_name": "repo-a",
+                            "primary_language": "python",
+                            "build_command": "python --version",
+                            "test_command": "python --version",
+                            "contract_command": "python --version",
+                            "quick_test_skip_reason": "Full test command is already tiny.",
+                        }
+                    },
+                },
+            )
+            baseline_path = workspace / "target-repo-governance-baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-04-26.9",
+                    "required_profile_overrides": {
+                        "required_entrypoint_policy": {"current_mode": "targeted_enforced"},
+                        "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                    },
+                },
+            )
+
+            fake_runtime_flow_path = workspace / "fake-runtime-flow.ps1"
+            _write_fake_runtime_flow_script(fake_runtime_flow_path)
+            marker_path = workspace / "fast-gate-ran.txt"
+            fake_fast_check_path = workspace / "fake-fast-check.ps1"
+            _write_fake_fast_check_marker_script(fake_fast_check_path, marker_path, exit_code=0)
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "runtime-flow-preset.ps1"),
+                    "-AllTargets",
+                    "-ApplyAllFeatures",
+                    "-FlowMode",
+                    "daily",
+                    "-AutoMilestoneGateMode",
+                    "-MilestoneTag",
+                    "milestone",
+                    "-Json",
+                    "-CatalogPath",
+                    str(catalog_path),
+                    "-GovernanceBaselinePath",
+                    str(baseline_path),
+                    "-RuntimeFlowPath",
+                    str(fake_runtime_flow_path),
+                    "-GovernanceFastCheckPath",
+                    str(fake_fast_check_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["failure_count"], 0)
+            self.assertTrue(marker_path.exists(), completed.stdout)
+            result = payload["results"][0]
+            self.assertEqual(result["governance_sync_changed"], ["required_entrypoint_policy", "auto_commit_policy"])
+            self.assertEqual(result["milestone_commit_status"], "pass")
+            self.assertEqual(result["milestone_gate_skipped"], False)
+            self.assertEqual(result["auto_commit_commit_hash"], "fake-fast-commit-hash")
 
     def test_runtime_flow_preset_auto_milestone_gate_mode_selects_full_for_release_candidate(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

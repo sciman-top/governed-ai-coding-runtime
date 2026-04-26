@@ -129,8 +129,29 @@
   - `scripts/apply-target-repo-governance.py` and `scripts/verify-target-repo-governance-consistency.py` now use the same implementation for speed policy normalization, quick test slice normalization, generated gate group detection, quick/full gate derivation, and generated group refresh decisions.
   - Kept script-specific responsibilities local: CLI parsing, recommendation file loading, outer-AI prompt writing, catalog field sync, and drift report formatting remain in their owning scripts.
   - Registered the new repository-local `lib` import root in `docs/dependency-baseline.json` and documented it in `docs/dependency-baseline.md`; no third-party dependency was introduced.
+- Clean no-op milestone gate skip:
+  - Added `runtime-flow-preset.ps1` support for skipping expensive milestone gates only when the target is provably unchanged.
+  - Auto enablement is limited to `-ApplyAllFeatures -AutoMilestoneGateMode` when auto strategy selects `fast` for a daily low/medium-risk path.
+  - Explicit controls: `-SkipCleanMilestoneGate` forces the clean no-op skip policy for eligible `fast` milestone gates, and `-DisableCleanMilestoneGateSkip` disables the auto clean skip.
+  - Skip preconditions are fail-closed: governance baseline sync must report no changed catalog/profile/speed/managed-file fields, missing sync change fields are treated as changed, the target must be a git repository, and `git status --porcelain` must be empty.
+  - Non-skippable cases still run the configured milestone gate: full/release/onboard/high-risk/write-flow paths, baseline sync changes, non-git targets, git status failures, and any pending target worktree changes.
+  - JSON telemetry now exposes `clean_milestone_gate_skip_enabled`, `clean_milestone_gate_skip_source`, `milestone_gate_skipped`, and `milestone_gate_skip_reason`.
 
 ## Verification
+- `Measure-Command { pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\runtime-flow-preset.ps1 -AllTargets -ApplyGovernanceBaselineOnly -Json | Out-Null }` -> baseline no-op sync `TotalSeconds=1.43`.
+- `python -m unittest tests.runtime.test_runtime_flow_preset.RuntimeFlowPresetScriptTests.test_runtime_flow_preset_auto_fast_skips_clean_milestone_gate tests.runtime.test_runtime_flow_preset.RuntimeFlowPresetScriptTests.test_runtime_flow_preset_auto_fast_runs_gate_when_sync_changes` -> passed, `Ran 2 tests`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -Command '$errors=$null; $tokens=$null; $null = [System.Management.Automation.Language.Parser]::ParseFile("scripts/runtime-flow-preset.ps1", [ref]$tokens, [ref]$errors); if ($errors.Count -gt 0) { $errors | ForEach-Object { $_.Message }; exit 1 }; "parse-ok"'` -> `parse-ok`.
+- `python -m unittest tests.runtime.test_runtime_flow_preset` -> passed, `Ran 15 tests`.
+- `python -m unittest tests.runtime.test_runtime_flow_preset tests.runtime.test_target_repo_governance_consistency tests.runtime.test_governance_gate_runner tests.runtime.test_target_repo_speed_kpi` -> passed, `Ran 41 tests`.
+- `python -m json.tool docs\targets\target-repo-governance-baseline.json` -> passed.
+- `python -m json.tool docs\targets\target-repos-catalog.json` -> passed.
+- `python scripts\verify-target-repo-governance-consistency.py` -> passed, `target_count=5`, `drift_count=0`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\build-runtime.ps1` -> passed, `OK python-bytecode`, `OK python-import`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify-repo.ps1 -Check Runtime` -> passed, `Ran 407 tests`, `skipped=2`, plus `Ran 10 tests`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify-repo.ps1 -Check Contract` -> passed, including `dependency-baseline`, `target-repo-rollout-contract`, `target-repo-governance-consistency`, `target-repo-powershell-policy`, and `agent-rule-sync`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\doctor-runtime.ps1` -> passed.
+- After the final script changes, the hard gate chain was rerun in order and passed again: `build-runtime.ps1` -> `verify-repo.ps1 -Check Runtime` (`Ran 407 tests`, `skipped=2`, plus `Ran 10 tests`) -> `verify-repo.ps1 -Check Contract` -> `doctor-runtime.ps1`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\runtime-flow-preset.ps1 -AllTargets -ApplyGovernanceBaselineOnly -Json` -> passed, `target_count=5`, `failure_count=0`, all `governance_sync_changed=[]`, all `governance_sync_speed_changed=[]`.
 - `python -m unittest tests.runtime.test_target_repo_governance_consistency tests.runtime.test_governance_gate_runner tests.runtime.test_target_repo_rollout_contract tests.runtime.test_runtime_flow_preset` -> passed, `Ran 32 tests`.
 - `python -m unittest tests.runtime.test_runtime_flow_preset` -> passed after JSON array output hardening, `Ran 13 tests`.
 - `python -m unittest tests.runtime.test_runtime_flow_preset tests.runtime.test_target_repo_governance_consistency tests.runtime.test_governance_gate_runner` -> passed after deduplication and logical gate aliasing, `Ran 29 tests`.

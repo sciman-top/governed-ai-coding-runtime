@@ -49,6 +49,8 @@ param(
   [int]$RuntimeFlowTimeoutSeconds = 0,
   [int]$GovernanceSyncTimeoutSeconds = 0,
   [int]$BatchTimeoutSeconds = 0,
+  [switch]$SkipCleanMilestoneGate,
+  [switch]$DisableCleanMilestoneGateSkip,
   [string]$CatalogPath = "",
   [string]$GovernanceBaselinePath = "",
   [string]$RuntimeFlowPath = "",
@@ -420,6 +422,161 @@ function ConvertTo-JsonArrayValue {
     }
   }
   return ,$result
+}
+
+function Test-GovernanceSyncHasChanges {
+  param([object]$SyncResult)
+
+  if ($null -eq $SyncResult -or $null -eq $SyncResult.payload) {
+    return $true
+  }
+
+  foreach ($fieldName in @("changed_catalog_fields", "changed_fields", "changed_speed_profile_fields", "changed_managed_files")) {
+    if (-not ($SyncResult.payload.PSObject.Properties.Name -contains $fieldName)) {
+      return $true
+    }
+    $items = ConvertTo-JsonArrayValue -Value $SyncResult.payload.$fieldName
+    if (@($items).Count -gt 0) {
+      return $true
+    }
+  }
+  return $false
+}
+
+function Get-TargetGitChangeState {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$WorkingDirectory
+  )
+
+  $gitCommand = Get-Command git -ErrorAction SilentlyContinue
+  if (-not $gitCommand) {
+    return [pscustomobject]@{
+      can_skip            = $false
+      is_git_repository   = $false
+      has_pending_changes = $true
+      reason              = "git_not_found"
+      status_text         = ""
+    }
+  }
+
+  $insideOutput = & git -C $WorkingDirectory rev-parse --is-inside-work-tree 2>$null
+  if ($LASTEXITCODE -ne 0) {
+    return [pscustomobject]@{
+      can_skip            = $false
+      is_git_repository   = $false
+      has_pending_changes = $true
+      reason              = "git_repository_not_detected"
+      status_text         = ""
+    }
+  }
+  $insideText = (($insideOutput | Select-Object -First 1) -as [string]).Trim().ToLowerInvariant()
+  if ($insideText -ne "true") {
+    return [pscustomobject]@{
+      can_skip            = $false
+      is_git_repository   = $false
+      has_pending_changes = $true
+      reason              = "git_repository_not_detected"
+      status_text         = ""
+    }
+  }
+
+  $statusOutput = & git -C $WorkingDirectory status --porcelain 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    return [pscustomobject]@{
+      can_skip            = $false
+      is_git_repository   = $true
+      has_pending_changes = $true
+      reason              = "git_status_failed"
+      status_text         = (($statusOutput | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    }
+  }
+
+  $statusText = (($statusOutput | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+  $hasPendingChanges = -not [string]::IsNullOrWhiteSpace($statusText)
+  return [pscustomobject]@{
+    can_skip            = -not $hasPendingChanges
+    is_git_repository   = $true
+    has_pending_changes = $hasPendingChanges
+    reason              = if ($hasPendingChanges) { "pending_changes" } else { "no_pending_changes" }
+    status_text         = $statusText
+  }
+}
+
+function Test-CleanMilestoneGateSkip {
+  param(
+    [Parameter(Mandatory = $true)]
+    [bool]$Enabled,
+    [Parameter(Mandatory = $true)]
+    [hashtable]$TargetConfig,
+    [Parameter(Mandatory = $true)]
+    [object]$SyncResult,
+    [Parameter(Mandatory = $true)]
+    [ValidateSet("full", "fast")]
+    [string]$GateMode
+  )
+
+  if (-not $Enabled) {
+    return [pscustomobject]@{ should_skip = $false; reason = "disabled"; git_state = $null }
+  }
+  if ($GateMode -ne "fast") {
+    return [pscustomobject]@{ should_skip = $false; reason = "gate_mode_not_fast"; git_state = $null }
+  }
+  if (Test-GovernanceSyncHasChanges -SyncResult $SyncResult) {
+    return [pscustomobject]@{ should_skip = $false; reason = "governance_sync_changed"; git_state = $null }
+  }
+
+  $gitState = Get-TargetGitChangeState -WorkingDirectory $TargetConfig.AttachmentRoot
+  if (-not [bool]$gitState.can_skip) {
+    return [pscustomobject]@{ should_skip = $false; reason = [string]$gitState.reason; git_state = $gitState }
+  }
+  return [pscustomobject]@{ should_skip = $true; reason = "clean_target_no_pending_changes"; git_state = $gitState }
+}
+
+function New-CleanMilestoneGateSkippedResult {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$TargetName,
+    [Parameter(Mandatory = $true)]
+    [string]$MilestoneTagValue,
+    [Parameter(Mandatory = $true)]
+    [ValidateSet("full", "fast")]
+    [string]$MilestoneGateModeValue,
+    [Parameter(Mandatory = $true)]
+    [object]$SkipDecision
+  )
+
+  return [pscustomobject]@{
+    target                  = $TargetName
+    status                  = "skipped"
+    reason                  = [string]$SkipDecision.reason
+    exit_code               = 0
+    payload                 = $null
+    output                  = ""
+    auto_commit_status      = "skipped"
+    auto_commit_reason      = "no_pending_changes"
+    commit_hash             = ""
+    commit_message          = ""
+    trigger                 = "milestone"
+    milestone_tag           = $MilestoneTagValue
+    gate_mode               = $MilestoneGateModeValue
+    command_timeout_seconds = 0
+    gate_skipped            = $true
+    gate_skip_reason        = [string]$SkipDecision.reason
+    git_state               = $SkipDecision.git_state
+  }
+}
+
+function Test-MilestoneResultAccepted {
+  param([object]$MilestoneResult)
+
+  if ($null -eq $MilestoneResult) {
+    return $false
+  }
+  if ([string]$MilestoneResult.status -eq "pass") {
+    return $true
+  }
+  return ([string]$MilestoneResult.reason -eq "clean_target_no_pending_changes" -and [int]$MilestoneResult.exit_code -eq 0)
 }
 
 function Invoke-PruneTargetRepoRuns {
@@ -1087,6 +1244,7 @@ function Invoke-TargetFeatureBaselineAndMilestoneCommit {
     [string]$MilestoneGateModeValue,
     [int]$MilestoneCommandTimeoutSeconds = 0,
     [int]$GovernanceSyncCommandTimeoutSeconds = 0,
+    [bool]$CleanMilestoneGateSkipEnabled = $false,
     [bool]$EmitProgress = $false
   )
 
@@ -1124,6 +1282,25 @@ function Invoke-TargetFeatureBaselineAndMilestoneCommit {
     command_timeout_seconds = $(if ($MilestoneCommandTimeoutSeconds -gt 0) { $MilestoneCommandTimeoutSeconds } elseif ($MilestoneGateTimeoutSeconds -gt 0) { $MilestoneGateTimeoutSeconds + 120 } else { 0 })
   }
   if ($syncResult.status -eq "pass") {
+    $skipDecision = Test-CleanMilestoneGateSkip `
+      -Enabled $CleanMilestoneGateSkipEnabled `
+      -TargetConfig $TargetConfig `
+      -SyncResult $syncResult `
+      -GateMode $MilestoneGateModeValue
+    if ($skipDecision.should_skip) {
+      $milestoneResult = New-CleanMilestoneGateSkippedResult `
+        -TargetName $TargetName `
+        -MilestoneTagValue $MilestoneTagValue `
+        -MilestoneGateModeValue $MilestoneGateModeValue `
+        -SkipDecision $skipDecision
+      Write-BatchProgressLine `
+        -Enabled $EmitProgress `
+        -TargetName $TargetName `
+        -Stage "milestone_commit" `
+        -Status "skipped" `
+        -Detail ("reason={0}" -f $milestoneResult.reason)
+    }
+    else {
     Write-BatchProgressLine `
       -Enabled $EmitProgress `
       -TargetName $TargetName `
@@ -1146,6 +1323,7 @@ function Invoke-TargetFeatureBaselineAndMilestoneCommit {
       -Stage "milestone_commit" `
       -Status ([string]$milestoneResult.status) `
       -Detail ("duration_ms={0} exit_code={1} auto_commit_status={2}" -f $milestoneDurationMs, $milestoneResult.exit_code, $milestoneResult.auto_commit_status)
+    }
   }
   else {
     Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "milestone_commit" -Status "skipped" -Detail "reason=baseline_sync_failed"
@@ -1155,7 +1333,7 @@ function Invoke-TargetFeatureBaselineAndMilestoneCommit {
   if ($syncResult.status -ne "pass") {
     $exitCode = 1
   }
-  elseif ($milestoneResult.status -ne "pass") {
+  elseif (-not (Test-MilestoneResultAccepted -MilestoneResult $milestoneResult)) {
     $exitCode = 1
   }
 
@@ -1199,6 +1377,7 @@ function Invoke-TargetAllFeatures {
     [int]$MilestoneCommandTimeoutSeconds = 0,
     [int]$RuntimeFlowCommandTimeoutSeconds = 0,
     [int]$GovernanceSyncCommandTimeoutSeconds = 0,
+    [bool]$CleanMilestoneGateSkipEnabled = $false,
     [bool]$EmitProgress = $false
   )
 
@@ -1259,6 +1438,25 @@ function Invoke-TargetAllFeatures {
   }
   if ($flowResultEnvelope.flow_result.exit_code -eq 0) {
     if ($syncResult.status -eq "pass") {
+      $skipDecision = Test-CleanMilestoneGateSkip `
+        -Enabled $CleanMilestoneGateSkipEnabled `
+        -TargetConfig $TargetConfig `
+        -SyncResult $syncResult `
+        -GateMode $MilestoneGateModeValue
+      if ($skipDecision.should_skip) {
+        $milestoneResult = New-CleanMilestoneGateSkippedResult `
+          -TargetName $TargetName `
+          -MilestoneTagValue $MilestoneTagValue `
+          -MilestoneGateModeValue $MilestoneGateModeValue `
+          -SkipDecision $skipDecision
+        Write-BatchProgressLine `
+          -Enabled $EmitProgress `
+          -TargetName $TargetName `
+          -Stage "milestone_commit" `
+          -Status "skipped" `
+          -Detail ("reason={0}" -f $milestoneResult.reason)
+      }
+      else {
       Write-BatchProgressLine `
         -Enabled $EmitProgress `
         -TargetName $TargetName `
@@ -1281,6 +1479,7 @@ function Invoke-TargetAllFeatures {
         -Stage "milestone_commit" `
         -Status ([string]$milestoneResult.status) `
         -Detail ("duration_ms={0} exit_code={1} auto_commit_status={2}" -f $milestoneDurationMs, $milestoneResult.exit_code, $milestoneResult.auto_commit_status)
+      }
     }
     else {
       $milestoneResult = [pscustomobject]@{
@@ -1313,7 +1512,7 @@ function Invoke-TargetAllFeatures {
   elseif ($syncResult.status -ne "pass") {
     $exitCode = 1
   }
-  elseif ($milestoneResult.status -ne "pass") {
+  elseif (-not (Test-MilestoneResultAccepted -MilestoneResult $milestoneResult)) {
     $exitCode = 1
   }
 
@@ -1398,6 +1597,9 @@ if ($GovernanceSyncTimeoutSeconds -lt 0) {
 if ($BatchTimeoutSeconds -lt 0) {
   throw "-BatchTimeoutSeconds must be >= 0."
 }
+if ($SkipCleanMilestoneGate.IsPresent -and $DisableCleanMilestoneGateSkip.IsPresent) {
+  throw "-SkipCleanMilestoneGate and -DisableCleanMilestoneGateSkip are mutually exclusive."
+}
 $milestoneGateStrategy = Resolve-MilestoneGateStrategy `
   -AutoEnabled $AutoMilestoneGateMode.IsPresent `
   -RequestedMode $MilestoneGateMode `
@@ -1411,6 +1613,31 @@ $milestoneGateStrategy = Resolve-MilestoneGateStrategy `
 $effectiveMilestoneGateMode = [string]$milestoneGateStrategy.mode
 $milestoneGateModeSource = [string]$milestoneGateStrategy.source
 $milestoneGateModeReason = [string]$milestoneGateStrategy.reason
+$autoCleanMilestoneGateSkipEnabled = (
+  $AutoMilestoneGateMode.IsPresent -and
+  $effectiveMilestoneGateMode -eq "fast" -and
+  $FlowMode -eq "daily" -and
+  $PolicyStatus -eq "allow" -and
+  $WriteTier -ne "high" -and
+  -not $ExecuteWriteFlow.IsPresent -and
+  -not $ReleaseCandidate.IsPresent
+)
+$cleanMilestoneGateSkipEnabled = (
+  -not $DisableCleanMilestoneGateSkip.IsPresent -and
+  ($SkipCleanMilestoneGate.IsPresent -or $autoCleanMilestoneGateSkipEnabled)
+)
+$cleanMilestoneGateSkipSource = if ($DisableCleanMilestoneGateSkip.IsPresent) {
+  "disabled"
+}
+elseif ($SkipCleanMilestoneGate.IsPresent) {
+  "manual"
+}
+elseif ($autoCleanMilestoneGateSkipEnabled) {
+  "auto"
+}
+else {
+  "off"
+}
 $milestoneGateCheckPathResolved = if ($effectiveMilestoneGateMode -eq "fast") {
   $governanceFastCheckPathResolved
 }
@@ -1537,6 +1764,7 @@ foreach ($targetName in $selectedTargets) {
       -MilestoneCommandTimeoutSeconds $MilestoneCommandTimeoutSeconds `
       -RuntimeFlowCommandTimeoutSeconds $RuntimeFlowTimeoutSeconds `
       -GovernanceSyncCommandTimeoutSeconds $GovernanceSyncTimeoutSeconds `
+      -CleanMilestoneGateSkipEnabled $cleanMilestoneGateSkipEnabled `
       -EmitProgress $progressEnabled
   }
   elseif ($applyFeatureBaselineAndMilestoneCommit) {
@@ -1552,6 +1780,7 @@ foreach ($targetName in $selectedTargets) {
       -MilestoneGateModeValue $effectiveMilestoneGateMode `
       -MilestoneCommandTimeoutSeconds $MilestoneCommandTimeoutSeconds `
       -GovernanceSyncCommandTimeoutSeconds $GovernanceSyncTimeoutSeconds `
+      -CleanMilestoneGateSkipEnabled $cleanMilestoneGateSkipEnabled `
       -EmitProgress $progressEnabled
   }
   elseif ($applyFeatureBaselineOnly) {
@@ -1617,6 +1846,9 @@ foreach ($targetName in $selectedTargets) {
           $targetRun.milestone_commit_result.auto_commit_reason,
           $targetRun.milestone_commit_result.commit_hash
       )
+    }
+    elseif ($targetRun.milestone_commit_result.status -eq "skipped") {
+      Write-Host ("milestone_commit: status=skipped target={0} reason={1}" -f $targetName, $targetRun.milestone_commit_result.reason)
     }
     elseif ($targetRun.milestone_commit_result.status -eq "fail") {
       Write-Host ("milestone_commit: status=fail target={0} reason={1}" -f $targetName, $targetRun.milestone_commit_result.reason)
@@ -1741,12 +1973,18 @@ if ($Json) {
           gate_mode_source   = $milestoneGateModeSource
           gate_mode_reason   = $milestoneGateModeReason
           command_timeout_seconds = if ($single.milestone_commit_result.PSObject.Properties.Name -contains "command_timeout_seconds") { $single.milestone_commit_result.command_timeout_seconds } else { 0 }
+          gate_skipped       = if ($single.milestone_commit_result.PSObject.Properties.Name -contains "gate_skipped") { [bool]$single.milestone_commit_result.gate_skipped } else { $false }
+          gate_skip_reason   = if ($single.milestone_commit_result.PSObject.Properties.Name -contains "gate_skip_reason") { $single.milestone_commit_result.gate_skip_reason } else { "" }
           auto_commit_status = $single.milestone_commit_result.auto_commit_status
           auto_commit_reason = $single.milestone_commit_result.auto_commit_reason
           commit_hash        = $single.milestone_commit_result.commit_hash
           commit_message     = $single.milestone_commit_result.commit_message
           trigger            = $single.milestone_commit_result.trigger
           milestone_tag      = $single.milestone_commit_result.milestone_tag
+        }
+        if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) {
+          $wrapped["clean_milestone_gate_skip_enabled"] = [bool]$cleanMilestoneGateSkipEnabled
+          $wrapped["clean_milestone_gate_skip_source"] = $cleanMilestoneGateSkipSource
         }
         if ($PruneTargetRepoRuns) {
           $wrapped["prune_target_repo_runs"] = $pruneForJson
@@ -1774,6 +2012,10 @@ if ($Json) {
             bootstrap    = if ($single.governance_sync_result.PSObject.Properties.Name -contains "bootstrap") { $single.governance_sync_result.bootstrap } else { $null }
           }
           milestone_commit        = $single.milestone_commit_result
+        }
+        if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) {
+          $fallback["clean_milestone_gate_skip_enabled"] = [bool]$cleanMilestoneGateSkipEnabled
+          $fallback["clean_milestone_gate_skip_source"] = $cleanMilestoneGateSkipSource
         }
         if ($PruneTargetRepoRuns) {
           $fallback["prune_target_repo_runs"] = $pruneForJson
@@ -1811,6 +2053,8 @@ if ($Json) {
           milestone_gate_mode_source = $milestoneGateModeSource
           milestone_gate_mode_reason = $milestoneGateModeReason
           milestone_command_timeout_seconds = if ($_.milestone_commit_result.PSObject.Properties.Name -contains "command_timeout_seconds") { $_.milestone_commit_result.command_timeout_seconds } else { 0 }
+          milestone_gate_skipped = if ($_.milestone_commit_result.PSObject.Properties.Name -contains "gate_skipped") { [bool]$_.milestone_commit_result.gate_skipped } else { $false }
+          milestone_gate_skip_reason = if ($_.milestone_commit_result.PSObject.Properties.Name -contains "gate_skip_reason") { $_.milestone_commit_result.gate_skip_reason } else { "" }
           auto_commit_status       = $_.milestone_commit_result.auto_commit_status
           auto_commit_reason       = $_.milestone_commit_result.auto_commit_reason
           auto_commit_commit_hash  = $_.milestone_commit_result.commit_hash
@@ -1855,6 +2099,8 @@ if ($Json) {
       milestone_gate_timeout_seconds  = if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) { $MilestoneGateTimeoutSeconds } else { 0 }
       milestone_command_timeout_seconds = if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) { $MilestoneCommandTimeoutSeconds } else { 0 }
       auto_milestone_gate_mode        = [bool]$AutoMilestoneGateMode
+      clean_milestone_gate_skip_enabled = if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) { [bool]$cleanMilestoneGateSkipEnabled } else { $false }
+      clean_milestone_gate_skip_source = if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) { $cleanMilestoneGateSkipSource } else { "off" }
       task_type                       = $TaskType
       release_candidate               = [bool]$ReleaseCandidate
       runtime_flow_timeout_seconds    = $RuntimeFlowTimeoutSeconds
