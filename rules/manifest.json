@@ -1,0 +1,173 @@
+{
+  "schema_version": "1.0",
+  "manifest_id": "agent-rule-source-manifest",
+  "sync_revision": "2026-04-26.2",
+  "default_version": "9.43",
+  "backup_policy": {
+    "enabled": true,
+    "root": "docs/change-evidence/rule-sync-backups"
+  },
+  "entries": [
+    {
+      "id": "global-codex-agents",
+      "scope": "global",
+      "tool": "codex",
+      "version": "9.43",
+      "source": "rules/global/codex/AGENTS.md",
+      "target_path": "${user_profile}/.codex/AGENTS.md"
+    },
+    {
+      "id": "global-claude-claude",
+      "scope": "global",
+      "tool": "claude",
+      "version": "9.43",
+      "source": "rules/global/claude/CLAUDE.md",
+      "target_path": "${user_profile}/.claude/CLAUDE.md"
+    },
+    {
+      "id": "global-gemini-gemini",
+      "scope": "global",
+      "tool": "gemini",
+      "version": "9.43",
+      "source": "rules/global/gemini/GEMINI.md",
+      "target_path": "${user_profile}/.gemini/GEMINI.md"
+    },
+    {
+      "id": "self-runtime-codex-agents",
+      "scope": "project",
+      "target_repo_id": "self-runtime",
+      "tool": "codex",
+      "version": "9.43",
+      "source": "rules/projects/governed-ai-coding-runtime/codex/AGENTS.md",
+      "target_path": "AGENTS.md"
+    },
+    {
+      "id": "self-runtime-claude-claude",
+      "scope": "project",
+      "target_repo_id": "self-runtime",
+      "tool": "claude",
+      "version": "9.43",
+      "source": "rules/projects/governed-ai-coding-runtime/claude/CLAUDE.md",
+      "target_path": "CLAUDE.md"
+    },
+    {
+      "id": "self-runtime-gemini-gemini",
+      "scope": "project",
+      "target_repo_id": "self-runtime",
+      "tool": "gemini",
+      "version": "9.43",
+      "source": "rules/projects/governed-ai-coding-runtime/gemini/GEMINI.md",
+      "target_path": "GEMINI.md"
+    },
+    {
+      "id": "classroomtoolkit-codex-agents",
+      "scope": "project",
+      "target_repo_id": "classroomtoolkit",
+      "tool": "codex",
+      "version": "9.43",
+      "source": "rules/projects/classroomtoolkit/codex/AGENTS.md",
+      "target_path": "AGENTS.md"
+    },
+    {
+      "id": "classroomtoolkit-claude-claude",
+      "scope": "project",
+      "target_repo_id": "classroomtoolkit",
+      "tool": "claude",
+      "version": "9.43",
+      "source": "rules/projects/classroomtoolkit/claude/CLAUDE.md",
+      "target_path": "CLAUDE.md"
+    },
+    {
+      "id": "classroomtoolkit-gemini-gemini",
+      "scope": "project",
+      "target_repo_id": "classroomtoolkit",
+      "tool": "gemini",
+      "version": "9.43",
+      "source": "rules/projects/classroomtoolkit/gemini/GEMINI.md",
+      "target_path": "GEMINI.md"
+    },
+    {
+      "id": "skills-manager-codex-agents",
+      "scope": "project",
+      "target_repo_id": "skills-manager",
+      "tool": "codex",
+      "version": "9.43",
+      "source": "rules/projects/skills-manager/codex/AGENTS.md",
+      "target_path": "AGENTS.md"
+    },
+    {
+      "id": "skills-manager-claude-claude",
+      "scope": "project",
+      "target_repo_id": "skills-manager",
+      "tool": "claude",
+      "version": "9.43",
+      "source": "rules/projects/skills-manager/claude/CLAUDE.md",
+      "target_path": "CLAUDE.md"
+    },
+    {
+      "id": "skills-manager-gemini-gemini",
+      "scope": "project",
+      "target_repo_id": "skills-manager",
+      "tool": "gemini",
+      "version": "9.43",
+      "source": "rules/projects/skills-manager/gemini/GEMINI.md",
+      "target_path": "GEMINI.md"
+    },
+    {
+      "id": "github-toolkit-codex-agents",
+      "scope": "project",
+      "target_repo_id": "github-toolkit",
+      "tool": "codex",
+      "version": "9.43",
+      "source": "rules/projects/github-toolkit/codex/AGENTS.md",
+      "target_path": "AGENTS.md"
+    },
+    {
+      "id": "github-toolkit-claude-claude",
+      "scope": "project",
+      "target_repo_id": "github-toolkit",
+      "tool": "claude",
+      "version": "9.43",
+      "source": "rules/projects/github-toolkit/claude/CLAUDE.md",
+      "target_path": "CLAUDE.md"
+    },
+    {
+      "id": "github-toolkit-gemini-gemini",
+      "scope": "project",
+      "target_repo_id": "github-toolkit",
+      "tool": "gemini",
+      "version": "9.43",
+      "source": "rules/projects/github-toolkit/gemini/GEMINI.md",
+      "target_path": "GEMINI.md"
+    },
+    {
+      "id": "vps-ssh-launcher-codex-agents",
+      "scope": "project",
+      "target_repo_id": "vps-ssh-launcher",
+      "tool": "codex",
+      "version": "9.43",
+      "source": "rules/projects/vps-ssh-launcher/codex/AGENTS.md",
+      "target_path": "AGENTS.md"
+    },
+    {
+      "id": "vps-ssh-launcher-claude-claude",
+      "scope": "project",
+      "target_repo_id": "vps-ssh-launcher",
+      "tool": "claude",
+      "version": "9.43",
+      "source": "rules/projects/vps-ssh-launcher/claude/CLAUDE.md",
+      "target_path": "CLAUDE.md"
+    },
+    {
+      "id": "vps-ssh-launcher-gemini-gemini",
+      "scope": "project",
+      "target_repo_id": "vps-ssh-launcher",
+      "tool": "gemini",
+      "version": "9.43",
+      "source": "rules/projects/vps-ssh-launcher/gemini/GEMINI.md",
+      "target_path": "GEMINI.md"
+    }
+  ]
+}
+
+

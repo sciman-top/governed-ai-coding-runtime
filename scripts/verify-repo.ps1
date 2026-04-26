@@ -548,6 +548,7 @@ function Invoke-ContractChecks {
   Invoke-TargetRepoRolloutContractChecks
   Invoke-TargetRepoGovernanceConsistencyChecks
   Invoke-TargetRepoPowerShellPolicyChecks
+  Invoke-AgentRuleSyncChecks
 }
 
 function Invoke-DependencyBaselineChecks {
@@ -600,6 +601,20 @@ function Invoke-TargetRepoPowerShellPolicyChecks {
   }
 
   Write-CheckOk "target-repo-powershell-policy"
+}
+
+function Invoke-AgentRuleSyncChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/sync-agent-rules.py" --scope All --fail-on-change 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = ($output | Out-String).Trim()
+    if (-not $detail) {
+      throw "Agent rule sync checks failed"
+    }
+    throw "Agent rule sync checks failed`n$detail"
+  }
+
+  Write-CheckOk "agent-rule-sync"
 }
 
 function Invoke-BuildChecks {

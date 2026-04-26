@@ -1,0 +1,19 @@
+# Generated caches and local runtime state
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.runtime/
+
+# Large runtime evidence stores; keep curated markdown evidence readable
+docs/change-evidence/target-repo-runs/
+docs/change-evidence/snapshots/
+docs/runtime-*.txt
+docs/runtime-probe-*.txt
+docs/runtime-auto-write-*.txt
+
+# Local secrets and logs
+.env
+*.log
