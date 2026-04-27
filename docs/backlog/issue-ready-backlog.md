@@ -17,6 +17,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - long-term gap trigger audit queue `GAP-090` through `GAP-092` is complete; all `LTP-01..05` packages remain deferred pending future trigger evidence
   - optimized hybrid long-term implementation queue `GAP-093` through `GAP-103` is complete on the current branch baseline; `LTP-01..06` remain trigger-based until fresh scope-fence evidence exists
   - post-certification promotion queue `GAP-113` keeps autonomous `LTP-01..06` promotion evidence-triggered and one-package-at-a-time
+  - post-certification selection queue `GAP-114` turns the promotion fence into the next autonomous work selector
 
 ## Current Baseline
 - PRD, architecture, ADRs, specs, runtime contract primitives, repo verifier entrypoints, sample repo profiles, and a runtime-consumable control pack already exist.
@@ -38,6 +39,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Complete Hybrid Final-State Realization Queue / GAP-104` through `GAP-111` is complete on the current branch baseline. It legitimately turns the optimized target into complete final-state closure because every acceptance criterion is implemented and verified.
 - `Post-Certification Guard Queue / GAP-112` is complete on the current branch baseline. It mechanizes current-source compatibility so external host/protocol/security docs cannot silently strengthen final-state claims.
 - `Post-Certification Promotion Queue / GAP-113` is complete on the current branch baseline. It mechanizes how to decide whether, why, and when an `LTP-01..06` heavy package may be autonomously promoted.
+- `Post-Certification Selection Queue / GAP-114` is complete on the current branch baseline. It mechanizes what autonomous work should happen next when `GAP-113` defers heavy LTP promotion.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -974,6 +976,20 @@ The entries below record the executed queue for complete hybrid final-state and 
   - [x] policy answers how, when, whether, and why not to advance from the certified hybrid final state
   - [x] evaluator reports `defer_all` now but supports exactly one `auto_selected` package when scope-fenced with fresh trigger evidence
   - [x] Docs gate, runtime tests, issue rendering, claim catalog, and evidence include the promotion fence
+
+### GAP-114 Autonomous Next-Work Selector
+- Type: AFK
+- Blocked by: GAP-113
+- User stories: 13, 18, 21, 23, 29, 31, 44
+- Status: complete on current branch baseline (autonomous next-work policy and Docs gate validated on 2026-04-27)
+- What to build:
+  - turn `GAP-113` promotion output into a deterministic next-work action
+  - prioritize gate repair, source/evidence refresh, exactly-one LTP promotion, owner-directed scope, and default defer posture
+  - wire the selector into `verify-repo.ps1 -Check Docs` so future autonomous continuation has a machine-readable answer
+- Acceptance criteria:
+  - [x] current selector output is `defer_ltp_and_refresh_evidence`, not heavy LTP implementation
+  - [x] selector can output `repair_gate_first`, `refresh_evidence_first`, `promote_ltp`, and `owner_directed_scope_required` under the right conditions
+  - [x] Docs gate, runtime tests, issue rendering, claim catalog, and evidence include the next-work selector
 
 ## Vision
 

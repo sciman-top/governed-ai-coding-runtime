@@ -2,9 +2,9 @@
 
 ## Status
 - Created from the 2026-04-27 optimized hybrid final-state and stack-staging review.
-- Future-facing queue: `GAP-093..113`.
+- Future-facing queue: `GAP-093..114`.
 - Current posture: `GAP-093..103` are complete. No long-term package was implemented; `LTP-01..06` remain deferred/watch or not triggered pending fresh scope-fence evidence.
-- Certified realization queue: `GAP-104..111` is complete on the current branch baseline and defines the evidence-backed complete hybrid final-state closure point. `GAP-112` mechanizes current-source compatibility after that closure. `GAP-113` mechanizes whether, why, and how autonomous `LTP-01..06` promotion can proceed after certification.
+- Certified realization queue: `GAP-104..111` is complete on the current branch baseline and defines the evidence-backed complete hybrid final-state closure point. `GAP-112` mechanizes current-source compatibility after that closure. `GAP-113` mechanizes whether, why, and how autonomous `LTP-01..06` promotion can proceed after certification. `GAP-114` mechanizes the next autonomous work action after that promotion decision.
 
 ## Goal
 Provide an implementation-ready plan for the long-term optimized hybrid final state while preserving the current rule that heavyweight components remain trigger-based.
@@ -18,7 +18,7 @@ Provide an implementation-ready plan for the long-term optimized hybrid final st
 
 ## Task Graph
 
-`GAP-092 -> GAP-093 -> GAP-094 -> GAP-095 -> GAP-096 -> GAP-097 -> GAP-098 -> GAP-099 -> GAP-100 -> GAP-101 -> GAP-102 -> GAP-103 -> GAP-104 -> GAP-105 -> GAP-106 -> GAP-107 -> GAP-108 -> GAP-109 -> GAP-110 -> GAP-111 -> GAP-112 -> GAP-113`
+`GAP-092 -> GAP-093 -> GAP-094 -> GAP-095 -> GAP-096 -> GAP-097 -> GAP-098 -> GAP-099 -> GAP-100 -> GAP-101 -> GAP-102 -> GAP-103 -> GAP-104 -> GAP-105 -> GAP-106 -> GAP-107 -> GAP-108 -> GAP-109 -> GAP-110 -> GAP-111 -> GAP-112 -> GAP-113 -> GAP-114`
 
 ## GAP-093 Optimized Hybrid Long-Term Planning Baseline
 
@@ -778,6 +778,49 @@ Complete on current branch baseline. The correct current answer is `defer_all`: 
 ### Rollback
 Revert the LTP promotion policy, ADR, evaluator, tests, gate wiring, planning updates, claim-catalog entry, and evidence file; then keep `LTP-01..06` in defer/watch posture until a replacement promotion policy is accepted.
 
+## GAP-114 Autonomous Next-Work Selector
+
+### Type
+AFK
+
+### Dependencies
+- `GAP-113`
+
+### Scope
+- Convert the `GAP-113` LTP promotion result into a deterministic next-work action.
+- Add a selector that prioritizes gate repair, source/evidence refresh, exactly-one LTP promotion, owner-directed scope, and default defer posture.
+- Wire the selector into `verify-repo.ps1 -Check Docs` so autonomous continuation has a machine-readable answer.
+
+### Status
+Complete on current branch baseline. The current next action is `defer_ltp_and_refresh_evidence`: do not start heavy LTP implementation; keep the certified final state fresh through gates, evidence, and source compatibility.
+
+### Acceptance Criteria
+- [x] selector consumes the LTP promotion evaluator instead of reinterpreting LTP packages directly
+- [x] current output is `defer_ltp_and_refresh_evidence` when the LTP policy returns `defer_all`
+- [x] gate failure and stale source/evidence states outrank LTP promotion
+- [x] exactly-one LTP auto-selection becomes `promote_ltp`
+- [x] Docs gate, runtime tests, backlog, seeds, issue rendering, claim catalog, and evidence agree on `GAP-114`
+
+### Verification
+- `python scripts/select-next-work.py --as-of 2026-04-27`
+- `python -m unittest tests.runtime.test_autonomous_next_work_selection`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/github/create-roadmap-issues.ps1 -ValidateOnly -RenderAll`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`
+
+### Likely Files
+- `docs/architecture/autonomous-next-work-selection-policy.json`
+- `scripts/select-next-work.py`
+- `tests/runtime/test_autonomous_next_work_selection.py`
+- `scripts/verify-repo.ps1`
+- `docs/backlog/issue-ready-backlog.md`
+- `docs/backlog/issue-seeds.yaml`
+- `docs/product/claim-catalog.json`
+- `docs/change-evidence/*.md`
+
+### Rollback
+Revert the next-work selection policy, selector, tests, gate wiring, planning updates, claim-catalog entry, and evidence file; then fall back to the `GAP-113` promotion evaluator as the only autonomous continuation decision.
+
 ## Checkpoints
 
 | checkpoint | after | required decision |
@@ -795,6 +838,7 @@ Revert the LTP promotion policy, ADR, evaluator, tests, gate wiring, planning up
 | certification checkpoint | `GAP-111` | complete final-state claim is either evidence-certified or downgraded |
 | current-source checkpoint | `GAP-112` | host/protocol/security/source assumptions are machine-checked before they can strengthen claims |
 | promotion checkpoint | `GAP-113` | autonomous promotion either selects exactly one package with evidence or defers all packages |
+| next-work checkpoint | `GAP-114` | autonomous continuation produces one next action without converting defer_all into LTP implementation |
 
 ## Evidence Requirements
 Each gap must add or update `docs/change-evidence/*.md` with:

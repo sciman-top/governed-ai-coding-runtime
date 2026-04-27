@@ -4,11 +4,12 @@
 - This is the long-term roadmap created after the 2026-04-27 external benchmark and stack-staging review.
 - It starts after the completed `GAP-090..092` trigger-audit queue.
 - It does not mark any `LTP` package as already triggered or implemented.
-- It translates the optimized hybrid final state into a dependency-ordered queue: `GAP-093..113`.
+- It translates the optimized hybrid final state into a dependency-ordered queue: `GAP-093..114`.
 - `GAP-093..103` are complete on the current branch baseline. No `LTP-01..06` package was selected or implemented.
 - `GAP-104..111` are the post-`GAP-103` realization queue and are complete on the current branch baseline. `GAP-111` is the certification point for complete hybrid final-state closure.
 - `GAP-112` is the first post-certification guard and is complete on the current branch baseline. It mechanizes current-source compatibility after certification.
 - `GAP-113` is complete on the current branch baseline. It mechanizes whether, why, and how autonomous `LTP-01..06` promotion can proceed after certification.
+- `GAP-114` is complete on the current branch baseline. It turns the promotion result into a deterministic autonomous next-work action.
 
 ## Goal
 Move from the current verified hybrid baseline to a sustained optimized hybrid final state without turning every attractive final-state component into mandatory near-term infrastructure.
@@ -53,6 +54,7 @@ The corrected implementation posture is:
 | `H7 complete realization queue` | `GAP-104..111` | implement the service, adapter, execution, data/provenance, operations, and certification slices required for truthful complete closure | every final-state acceptance target has fresh runtime evidence or the claim is downgraded |
 | `H8 post-certification source guard` | `GAP-112` | mechanize external-source compatibility after certification | A2A/MCP/Codex sandbox, host guardrail, and provenance assumptions are policy-checked in Docs gate |
 | `H9 autonomous promotion fence` | `GAP-113` | mechanize whether, why, and how `LTP-01..06` can advance after certification | evaluator returns `defer_all` or exactly one scope-fenced `auto_selected` package |
+| `H10 autonomous next-work selection` | `GAP-114` | mechanize the next autonomous action after LTP promotion evaluation | selector returns gate repair, evidence refresh, LTP promotion, owner-directed scope, or defer-and-refresh |
 
 ## Track Ownership
 
@@ -93,6 +95,7 @@ The corrected implementation posture is:
 14. `GAP-111` is allowed to claim complete hybrid final-state closure only if all previous realization gates are fresh and reproducible.
 15. Post-`GAP-111` protocol adoption must include a current-source compatibility review. A2A, MCP, Codex sandbox, host guardrails, and supply-chain provenance may strengthen adapter behavior, but they cannot replace kernel-owned approval, containment, verification, rollback, or evidence.
 16. Post-`GAP-112` autonomous LTP promotion must pass the promotion policy: exactly one package, fresh trigger evidence, scope fence, full gate reference, rollback, and one vertical slice. Without that, the correct autonomous decision is `defer_all`.
+17. Post-`GAP-113` autonomous continuation must use the next-work selector. Gate repair and source/evidence freshness outrank implementation; `defer_all` cannot be converted into heavy LTP work.
 
 ## Post-GAP-103 Realization Queue
 
@@ -108,8 +111,9 @@ The corrected implementation posture is:
 | `GAP-111` | certify or downgrade complete hybrid final-state closure | every final-state target has fresh evidence or visible downgrade |
 | `GAP-112` | enforce current-source compatibility after certification | external protocol/host/security assumptions are machine-checked before they can strengthen claims |
 | `GAP-113` | enforce autonomous LTP promotion scope fencing after certification | promotion is either exactly one evidence-triggered package or a fail-closed `defer_all` decision |
+| `GAP-114` | choose the next autonomous work action after promotion evaluation | selector returns one action and preserves gate/evidence priority |
 
-Current realization status on the 2026-04-27 branch baseline: `GAP-104` through `GAP-111` are complete. Complete hybrid final-state closure is certified by the `GAP-111` evidence batch and remains subject to claim-drift gates. `GAP-112` is complete as a post-certification guard that keeps external-source assumptions machine-checkable. `GAP-113` is complete as the autonomous promotion guard that keeps heavy `LTP` adoption evidence-triggered and one-package-at-a-time.
+Current realization status on the 2026-04-27 branch baseline: `GAP-104` through `GAP-111` are complete. Complete hybrid final-state closure is certified by the `GAP-111` evidence batch and remains subject to claim-drift gates. `GAP-112` is complete as a post-certification guard that keeps external-source assumptions machine-checkable. `GAP-113` is complete as the autonomous promotion guard that keeps heavy `LTP` adoption evidence-triggered and one-package-at-a-time. `GAP-114` is complete as the next-work selector that answers what autonomous work should happen when LTP promotion is deferred.
 
 ## Does Executing This Plan Truly Realize The Final State?
 Executing only `GAP-093..103` does not realize the complete hybrid final state. It proves optimized planning, containment/provenance floors, transition-stack discipline, trigger reviews, and fresh target-repo health.
@@ -129,6 +133,7 @@ Executing `GAP-104..111` has realized the complete hybrid final state on the cur
 | closure certification | `GAP-111` | every quantified final-state target has fresh evidence or visible downgrade | narrative-only evidence is used for complete closure |
 | current-source compatibility | post-`GAP-111` scope fence | external host/protocol/security docs still match adapter and claim boundaries, or affected claims are downgraded | outdated protocol assumptions are used to justify stronger claims |
 | autonomous LTP promotion | post-`GAP-112` scope fence | evaluator returns `defer_all` or exactly one scope-fenced `auto_selected` package | multiple packages advance or owner-directed work is mislabeled as evidence-triggered |
+| autonomous next-work selection | post-`GAP-113` selector | selector returns one next action from gate, freshness, promotion, owner-directed, or defer paths | `defer_all` is treated as permission to implement heavy LTP work |
 
 ## Verification Floor
 Every gap in this roadmap must preserve the repository gate order:
@@ -149,6 +154,7 @@ Implementation gaps must additionally run the relevant runtime, contract, doctor
 - `docs/change-evidence/20260427-optimized-hybrid-long-term-plan.md`
 - `docs/change-evidence/20260427-gap-104-111-realization-planning.md`
 - `docs/change-evidence/20260427-gap-113-autonomous-ltp-promotion-scope-fence.md`
+- `docs/change-evidence/20260427-gap-114-autonomous-next-work-selector.md`
 
 ## Source References
 - `docs/architecture/hybrid-final-state-master-outline.md`
@@ -159,3 +165,4 @@ Implementation gaps must additionally run the relevant runtime, contract, doctor
 - `docs/research/2026-04-27-hybrid-final-state-external-benchmark-review.md`
 - `docs/change-evidence/20260427-hybrid-final-state-current-source-refresh.md`
 - `docs/change-evidence/20260427-gap-113-autonomous-ltp-promotion-scope-fence.md`
+- `docs/change-evidence/20260427-gap-114-autonomous-next-work-selector.md`

@@ -568,6 +568,20 @@ function Invoke-LtpAutonomousPromotionChecks {
   Write-CheckOk "ltp-autonomous-promotion"
 }
 
+function Invoke-AutonomousNextWorkSelectionChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/select-next-work.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Autonomous next-work selection checks failed"
+    }
+    throw "Autonomous next-work selection checks failed`n$detail"
+  }
+
+  Write-CheckOk "autonomous-next-work-selection"
+}
+
 function Invoke-ContractChecks {
   Invoke-SchemaJsonParse
   Invoke-SchemaExampleValidation
@@ -676,6 +690,7 @@ function Invoke-DocsChecks {
   Invoke-HostReplacementClaimBoundaryScan
   Invoke-CurrentSourceCompatibilityChecks
   Invoke-LtpAutonomousPromotionChecks
+  Invoke-AutonomousNextWorkSelectionChecks
   Invoke-GapEvidenceSloCheck
   Invoke-ClaimDriftSentinelCheck
   Invoke-ClaimExceptionPathCheck

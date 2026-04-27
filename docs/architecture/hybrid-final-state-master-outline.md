@@ -96,6 +96,8 @@ Complete realization is now certified on the current branch baseline by the post
 
 Post-`GAP-112`, the correct way to decide whether to keep pushing toward a heavier long-term stack is `scripts/evaluate-ltp-promotion.py`. The current policy answer is `defer_all`: do not directly force Temporal, OPA/Rego, event bus, object store, A2A gateway, full observability, or external signing without package-specific trigger evidence. Autonomous promotion is allowed when the policy selects exactly one `LTP-01..06` package with a scope fence, full gate reference, rollback, and one vertical slice; owner-directed heavy-stack work must be labeled separately.
 
+Post-`GAP-113`, the correct way to decide what to do next is `scripts/select-next-work.py`. The current selector answer is `defer_ltp_and_refresh_evidence`: do not convert `defer_all` into hidden LTP implementation; keep gates, evidence, and source compatibility fresh until a higher-priority repair, refresh, selected LTP, or owner-directed scope appears.
+
 ## Current Baseline
 The current branch baseline has already proven and landed:
 - docs-first and contracts-first source-of-truth structure

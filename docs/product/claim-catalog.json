@@ -128,6 +128,22 @@
           "contains": "defer_without_trigger_evidence"
         }
       ]
+    },
+    {
+      "claim_id": "CLM-009",
+      "claim_text": "Autonomous continuation after the LTP promotion fence is selected by a next-work policy that prioritizes gate repair and evidence freshness before any LTP implementation.",
+      "proof_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs",
+      "evidence_link": "docs/change-evidence/20260427-gap-114-autonomous-next-work-selector.md",
+      "source_refs": [
+        {
+          "path": "docs/architecture/autonomous-next-work-selection-policy.json",
+          "contains": "defer_ltp_and_refresh_evidence"
+        },
+        {
+          "path": "docs/architecture/hybrid-final-state-master-outline.md",
+          "contains": "Post-`GAP-113`, the correct way to decide what to do next is `scripts/select-next-work.py`."
+        }
+      ]
     }
   ]
 }

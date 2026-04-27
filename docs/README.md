@@ -48,6 +48,7 @@
 - For complete hybrid final-state realization, `GAP-104` through `GAP-111` are complete on the current branch baseline. `GAP-111` certifies complete hybrid final-state closure with fresh evidence across service boundary, live Codex continuity, non-Codex parity, governed executable coverage, data/provenance release paths, operations recovery, all-target workload, and claim-drift gates.
 - For post-certification guard work, `GAP-112` is complete on the current branch baseline. It adds a machine-readable current-source compatibility guard for A2A/MCP/Codex sandbox, host guardrails, and provenance assumptions.
 - For post-certification promotion work, `GAP-113` is complete on the current branch baseline. It adds a machine-readable autonomous `LTP-01..06` promotion fence that currently returns `defer_all` unless exactly one package has fresh trigger evidence and scope.
+- For post-certification next-work selection, `GAP-114` is complete on the current branch baseline. It turns `GAP-113` output into a deterministic autonomous next action.
 - Historical lifecycle and productization plans remain execution history and rationale, not competing active mainlines.
 
 ## Navigation Aids
@@ -75,7 +76,8 @@
 - `Complete Hybrid Final-State Realization Queue / GAP-104` through `GAP-111` is complete and remains evidence-certified by the `GAP-111` evidence batch.
 - `Post-Certification Guard Queue / GAP-112` is complete and enforced through `verify-repo.ps1 -Check Docs`.
 - `Post-Certification Promotion Queue / GAP-113` is complete and enforced through `verify-repo.ps1 -Check Docs`.
-- New LTP implementation queue items beyond `GAP-113` must use later ids and must pass the autonomous or owner-directed promotion scope fence.
+- `Post-Certification Selection Queue / GAP-114` is complete and enforced through `verify-repo.ps1 -Check Docs`.
+- New LTP implementation queue items beyond `GAP-114` must use later ids and must pass the autonomous or owner-directed promotion scope fence.
 - Active verification for this repo remains `build -> test -> contract/invariant -> doctor`, with docs and script checks still included in `verify-repo -Check All`.
 - `docs/change-evidence/` remains historical evidence and planning trace, not the primary user-facing product surface.
 

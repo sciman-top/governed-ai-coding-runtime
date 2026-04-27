@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260427 GAP-114 Autonomous Next-Work Selector](./20260427-gap-114-autonomous-next-work-selector.md)
+  - closeout evidence for mechanizing the next autonomous work action after `GAP-113` LTP promotion evaluation
 - [20260427 GAP-113 Autonomous LTP Promotion Scope Fence](./20260427-gap-113-autonomous-ltp-promotion-scope-fence.md)
   - closeout evidence for mechanizing whether, why, and how `LTP-01..06` packages can be autonomously promoted after certification
 - [20260427 GAP-112 Current Source Compatibility Guard](./20260427-gap-112-current-source-compatibility-guard.md)
