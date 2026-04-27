@@ -1,7 +1,7 @@
 # AGENTS.md — governed-ai-coding-runtime 项目承接规则
-**承接来源**: `GlobalUser/AGENTS.md v9.43`
+**承接来源**: `GlobalUser/AGENTS.md v9.44`
 **适用范围**: `governed-ai-coding-runtime 仓库根目录（repo root）`  
-**最后更新**: `2026-04-26`
+**最后更新**: `2026-04-27`
 
 ## 1. 阅读指引
 - 本文件只写本仓事实、门禁命令、证据位置和回滚入口，不重写全局 `R/E` 语义。
@@ -18,6 +18,8 @@
 - 当前权威输入顺序：根 `README.md` -> `docs/README.md` -> PRD -> Architecture -> Roadmap -> Backlog -> Specs -> Schemas。
 - AI 编码沟通默认中文；计划、审查、证据摘要和提交说明优先中文，代码标识符、命令、日志、报错、schema 字段保留英文原文。
 - 本仓与全局规则的协同方式：全局给风险、语言、N/A 和门禁语义；本文件给本仓目录归宿、真实命令、阻断条件、证据位置和回滚入口。
+- Codex 行为上下文由 `AGENTS.md` 承接；若要确定性约束命令审批、沙箱外执行或 allowlist，优先落到 `.codex/rules/*.rules`、本仓门禁或 CI。
+- 项目规则只保留本仓不可由代码/CI自动推断且会改变执行、风险或验收的事实；长流程下沉到子文档或工具专属规则。
 - 规则写法优先采用可验证边界：真实命令、禁止绕过项、证据路径和回滚入口；避免在根文件堆叠不可检查的抽象偏好。
 - `docs/specs/*` 定义语义；`schemas/jsonschema/*` 是配套机器可读草案；修改其一必须同步检查另一侧。
 - `scripts/github/create-roadmap-issues.ps1` 只负责 backlog/issue 种子生成，不代表运行时实现已经存在。
@@ -40,6 +42,16 @@
   - `scripts/github/create-roadmap-issues.ps1` 与当前 roadmap/backlog 基线不一致时阻断。
 
 ## C. 承接映射
+- `R6 硬门禁`：`active`
+  - `reason`: B 节四段命令表是本仓固定门禁顺序；quick/fast 只作为目标仓日常反馈切片，不改变最终验收顺序
+  - `alternative_verification`: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`
+  - `evidence_link`: `docs/change-evidence/*.md`
+  - `expires_at`: `n/a`
+- `R8 可追溯`：`active`
+  - `reason`: D 节证据目录和回滚入口是本仓最小留痕合同
+  - `alternative_verification`: git diff/history plus `docs/change-evidence/*.md`
+  - `evidence_link`: `docs/change-evidence/*.md`
+  - `expires_at`: `n/a`
 - `E4 健康指标联动`：`active`
   - `reason`: 当前以 Foundation doctor 入口替代未来服务级 health 指标栈
   - `alternative_verification`: `scripts/verify-repo.ps1 -Check Doctor`

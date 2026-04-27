@@ -929,7 +929,15 @@ def _write_replay_case(reference) -> str:
         ),
         encoding="utf-8",
     )
-    return path.relative_to(ROOT).as_posix()
+    return _runtime_ref_for_path(path)
+
+
+def _runtime_ref_for_path(path: Path) -> str:
+    resolved = Path(path).resolve(strict=False)
+    try:
+        return resolved.relative_to(ROOT).as_posix()
+    except ValueError:
+        return resolved.relative_to(RUNTIME_ROOT).as_posix()
 
 
 def _configure_runtime_roots(*, runtime_root: str | None, compat_runtime_root: bool) -> None:

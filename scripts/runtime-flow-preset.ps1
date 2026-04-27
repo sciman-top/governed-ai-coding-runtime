@@ -50,6 +50,7 @@ param(
   [int]$RuntimeFlowTimeoutSeconds = 0,
   [int]$GovernanceSyncTimeoutSeconds = 0,
   [int]$BatchTimeoutSeconds = 0,
+  [int]$TargetParallelism = 1,
   [switch]$SkipCleanMilestoneGate,
   [switch]$DisableCleanMilestoneGateSkip,
   [string]$CatalogPath = "",
@@ -1599,6 +1600,9 @@ if ($GovernanceSyncTimeoutSeconds -lt 0) {
 if ($BatchTimeoutSeconds -lt 0) {
   throw "-BatchTimeoutSeconds must be >= 0."
 }
+if ($TargetParallelism -lt 1) {
+  throw "-TargetParallelism must be >= 1."
+}
 if ($SkipCleanMilestoneGate.IsPresent -and $DisableCleanMilestoneGateSkip.IsPresent) {
   throw "-SkipCleanMilestoneGate and -DisableCleanMilestoneGateSkip are mutually exclusive."
 }
@@ -1700,6 +1704,191 @@ $batchStartedAt = Get-Date
 $batchTimedOut = $false
 $batchElapsedSeconds = 0
 $targetIndex = 0
+
+$parallelBatchEligible = (
+  $AllTargets.IsPresent -and
+  $Json.IsPresent -and
+  $TargetParallelism -gt 1 -and
+  -not $FailFast.IsPresent -and
+  -not $applyAllFeatures -and
+  -not $applyFeatureBaselineOnly -and
+  -not $applyFeatureBaselineAndMilestoneCommit -and
+  -not $PruneTargetRepoRuns.IsPresent
+)
+
+if ($parallelBatchEligible) {
+  $parallelArgsBase = @(
+    "-NoProfile",
+    "-ExecutionPolicy", "Bypass",
+    "-File", $PSCommandPath,
+    "-FlowMode", $FlowMode,
+    "-Mode", $Mode,
+    "-PolicyStatus", $PolicyStatus,
+    "-TaskId", $TaskId,
+    "-RunId", $RunId,
+    "-CommandId", $CommandId,
+    "-AdapterId", $AdapterId,
+    "-AdapterPreference", $AdapterPreference,
+    "-WriteTier", $WriteTier,
+    "-WriteToolName", $WriteToolName,
+    "-WriteContent", $WriteContent,
+    "-CatalogPath", $catalogPath,
+    "-GovernanceBaselinePath", $governanceBaselinePathResolved,
+    "-RuntimeFlowPath", $runtimeFlowPath,
+    "-GovernanceFullCheckPath", $governanceFullCheckPathResolved,
+    "-GovernanceFastCheckPath", $governanceFastCheckPathResolved,
+    "-RuntimeFlowTimeoutSeconds", ([string]$RuntimeFlowTimeoutSeconds),
+    "-GovernanceSyncTimeoutSeconds", ([string]$GovernanceSyncTimeoutSeconds),
+    "-Json"
+  )
+  if ($SkipVerifyAttachment.IsPresent) { $parallelArgsBase += "-SkipVerifyAttachment" }
+  if ($Overwrite.IsPresent) { $parallelArgsBase += "-Overwrite" }
+  if ($SkipGovernanceBaselineSync.IsPresent) { $parallelArgsBase += "-SkipGovernanceBaselineSync" }
+  if ($ExecuteWriteFlow.IsPresent) { $parallelArgsBase += "-ExecuteWriteFlow" }
+  if (-not [string]::IsNullOrWhiteSpace($RepoBindingId)) { $parallelArgsBase += @("-RepoBindingId", $RepoBindingId) }
+  if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) { $parallelArgsBase += @("-WriteTargetPath", $WriteTargetPath) }
+  if (-not [string]::IsNullOrWhiteSpace($WriteToolCommand)) { $parallelArgsBase += @("-WriteToolCommand", $WriteToolCommand) }
+  if (-not [string]::IsNullOrWhiteSpace($RollbackReference)) { $parallelArgsBase += @("-RollbackReference", $RollbackReference) }
+
+  function New-ParallelTargetRun {
+    param(
+      [Parameter(Mandatory = $true)]
+      [string]$TargetName,
+      [Parameter(Mandatory = $true)]
+      [int]$ExitCode,
+      [Parameter(Mandatory = $true)]
+      [string]$OutputText,
+      [Parameter(Mandatory = $true)]
+      [bool]$TimedOut
+    )
+
+    $flowPayload = Try-ParseJson -Raw $OutputText
+    if ($flowPayload -and ($flowPayload.PSObject.Properties.Name -contains "exit_code")) {
+      $ExitCode = [int]$flowPayload.exit_code
+    }
+
+    return [pscustomobject]@{
+      target = $TargetName
+      exit_code = $ExitCode
+      flow_result = [pscustomobject]@{
+        exit_code = $ExitCode
+        output = $OutputText
+        timed_out = $TimedOut
+      }
+      flow_payload = $flowPayload
+      governance_sync_result = [pscustomobject]@{
+        status = "skipped"
+        reason = if ($FlowMode -eq "onboard" -and -not $SkipGovernanceBaselineSync.IsPresent) { "single_target_worker_owned" } else { "flow_mode_not_onboard" }
+        exit_code = 0
+        payload = $null
+        output = ""
+      }
+      milestone_commit_result = [pscustomobject]@{
+        status = "skipped"
+        reason = "not_requested"
+        exit_code = 0
+        auto_commit_status = ""
+        auto_commit_reason = ""
+        commit_hash = ""
+        commit_message = ""
+        trigger = ""
+        milestone_tag = ""
+      }
+    }
+  }
+
+  $pendingTargets = [System.Collections.Queue]::new()
+  foreach ($targetName in $selectedTargets) {
+    $pendingTargets.Enqueue($targetName)
+  }
+  $activeProcesses = @()
+  while ($pendingTargets.Count -gt 0 -or @($activeProcesses).Count -gt 0) {
+    while ($pendingTargets.Count -gt 0 -and @($activeProcesses).Count -lt $TargetParallelism) {
+      $targetName = [string]$pendingTargets.Dequeue()
+      $targetArgs = @($parallelArgsBase + @("-Target", $targetName))
+      $stdoutPath = [System.IO.Path]::GetTempFileName()
+      $stderrPath = [System.IO.Path]::GetTempFileName()
+      $process = Start-Process `
+        -FilePath "pwsh" `
+        -ArgumentList (ConvertTo-ProcessArgumentString -ArgumentList $targetArgs) `
+        -WorkingDirectory $repoRoot `
+        -NoNewWindow `
+        -PassThru `
+        -RedirectStandardOutput $stdoutPath `
+        -RedirectStandardError $stderrPath
+      $activeProcesses += [pscustomobject]@{
+        target = $targetName
+        process = $process
+        stdout_path = $stdoutPath
+        stderr_path = $stderrPath
+        started_at = Get-Date
+      }
+    }
+
+    if ($BatchTimeoutSeconds -gt 0) {
+      $batchElapsedSeconds = [int][Math]::Floor(((Get-Date) - $batchStartedAt).TotalSeconds)
+      if ($batchElapsedSeconds -ge $BatchTimeoutSeconds) {
+        $batchTimedOut = $true
+        break
+      }
+    }
+
+    $completedEntries = @($activeProcesses | Where-Object { $_.process.HasExited })
+    if (@($completedEntries).Count -eq 0) {
+      Start-Sleep -Milliseconds 200
+      continue
+    }
+
+    foreach ($entry in $completedEntries) {
+      $stdoutText = Get-Content -LiteralPath $entry.stdout_path -Raw -ErrorAction SilentlyContinue
+      $stderrText = Get-Content -LiteralPath $entry.stderr_path -Raw -ErrorAction SilentlyContinue
+      $segments = @()
+      if (-not [string]::IsNullOrWhiteSpace($stdoutText)) {
+        $segments += $stdoutText.TrimEnd()
+      }
+      if (-not [string]::IsNullOrWhiteSpace($stderrText)) {
+        $segments += $stderrText.TrimEnd()
+      }
+      $targetRuns += New-ParallelTargetRun `
+        -TargetName ([string]$entry.target) `
+        -ExitCode ([int]$entry.process.ExitCode) `
+        -OutputText (($segments -join [Environment]::NewLine).TrimEnd()) `
+        -TimedOut $false
+      Remove-Item -LiteralPath $entry.stdout_path -ErrorAction SilentlyContinue
+      Remove-Item -LiteralPath $entry.stderr_path -ErrorAction SilentlyContinue
+    }
+    $completedIds = @($completedEntries | ForEach-Object { $_.process.Id })
+    $activeProcesses = @($activeProcesses | Where-Object { $completedIds -notcontains $_.process.Id })
+  }
+
+  if ($batchTimedOut) {
+    foreach ($entry in $activeProcesses) {
+      try {
+        Stop-Process -Id $entry.process.Id -Force -ErrorAction Stop
+      }
+      catch {
+      }
+      $stdoutText = Get-Content -LiteralPath $entry.stdout_path -Raw -ErrorAction SilentlyContinue
+      $stderrText = Get-Content -LiteralPath $entry.stderr_path -Raw -ErrorAction SilentlyContinue
+      $segments = @()
+      if (-not [string]::IsNullOrWhiteSpace($stdoutText)) {
+        $segments += $stdoutText.TrimEnd()
+      }
+      if (-not [string]::IsNullOrWhiteSpace($stderrText)) {
+        $segments += $stderrText.TrimEnd()
+      }
+      $segments += ("target parallel worker timed out because batch timeout {0}s was exceeded" -f $BatchTimeoutSeconds)
+      $targetRuns += New-ParallelTargetRun `
+        -TargetName ([string]$entry.target) `
+        -ExitCode 124 `
+        -OutputText (($segments -join [Environment]::NewLine).TrimEnd()) `
+        -TimedOut $true
+      Remove-Item -LiteralPath $entry.stdout_path -ErrorAction SilentlyContinue
+      Remove-Item -LiteralPath $entry.stderr_path -ErrorAction SilentlyContinue
+    }
+  }
+}
+else {
 foreach ($targetName in $selectedTargets) {
   if ($BatchTimeoutSeconds -gt 0) {
     $batchElapsedSeconds = [int][Math]::Floor(((Get-Date) - $batchStartedAt).TotalSeconds)
@@ -1866,6 +2055,7 @@ foreach ($targetName in $selectedTargets) {
   if ($FailFast -and $targetRun.exit_code -ne 0) {
     break
   }
+}
 }
 
 $failureCount = @($targetRuns | Where-Object { $_.exit_code -ne 0 }).Count

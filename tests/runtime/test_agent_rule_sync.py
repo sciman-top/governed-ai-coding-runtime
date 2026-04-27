@@ -31,7 +31,7 @@ class AgentRuleSyncTests(unittest.TestCase):
         self.assertIn("self-runtime", {entry["target_repo_id"] for entry in project_entries})
         self.assertIn("vps-ssh-launcher", {entry["target_repo_id"] for entry in project_entries})
         for entry in entries:
-            self.assertEqual(entry["version"], "9.43")
+            self.assertEqual(entry["version"], "9.44")
             self.assertTrue((ROOT / entry["source"]).exists(), entry["source"])
 
     def test_global_sync_skips_when_hashes_match(self) -> None:
@@ -130,7 +130,7 @@ class AgentRuleSyncTests(unittest.TestCase):
             manifest_path = workspace / "manifest.json"
             _write_json(manifest_path, manifest)
             existing = target_repo / "AGENTS.md"
-            old_text = "# AGENTS.md\n**承接来源**: `GlobalUser/AGENTS.md v9.41`\nold\n"
+            old_text = "# AGENTS.md\n**承接来源**: `GlobalUser/AGENTS.md v9.43`\nold\n"
             existing.write_text(old_text, encoding="utf-8")
 
             completed = subprocess.run(
@@ -160,7 +160,7 @@ class AgentRuleSyncTests(unittest.TestCase):
             self.assertEqual(payload["status"], "applied")
             self.assertTrue((target_repo / "CLAUDE.md").exists())
             self.assertTrue((target_repo / "GEMINI.md").exists())
-            self.assertIn("GlobalUser/AGENTS.md v9.43", existing.read_text(encoding="utf-8"))
+            self.assertIn("GlobalUser/AGENTS.md v9.44", existing.read_text(encoding="utf-8"))
             updated = [item for item in payload["results"] if item["id"] == "classroomtoolkit-codex-agents"][0]
             self.assertEqual(updated["status"], "updated")
             backup_path = Path(updated["backup_path"])

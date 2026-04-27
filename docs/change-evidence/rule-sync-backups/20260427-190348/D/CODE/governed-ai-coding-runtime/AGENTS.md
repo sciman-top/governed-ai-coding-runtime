@@ -1,0 +1,83 @@
+# AGENTS.md — governed-ai-coding-runtime 项目承接规则
+**承接来源**: `GlobalUser/AGENTS.md v9.43`
+**适用范围**: `governed-ai-coding-runtime 仓库根目录（repo root）`  
+**最后更新**: `2026-04-26`
+
+## 1. 阅读指引
+- 本文件只写本仓事实、门禁命令、证据位置和回滚入口，不重写全局 `R/E` 语义。
+- 当前仓库处于 `docs-first / contracts-first` 阶段；已落地目录只有 `docs/`、`schemas/`、`scripts/`。
+- 渐进披露边界：本文件必须自包含保留本仓归宿、门禁、阻断、证据和回滚；长 runbook、批量目标仓细节和历史证据可放 `docs/` 子文档，但不得成为执行本文件的前置条件。
+- 精简原则：根文件只写本仓可验证事实、硬门禁、阻断和回滚；长示例、历史背景、排障细节进入 `docs/`。
+- 当前目标归宿：
+  - 文档、决策、审查结论：`docs/`
+  - 机器可读契约：`schemas/`
+  - GitHub / 规划辅助脚本：`scripts/`
+  - 后续实现骨架：`apps/`、`packages/`、`infra/`、`tests/`（规划中，尚未落地）
+
+## A. 项目基线
+- 当前权威输入顺序：根 `README.md` -> `docs/README.md` -> PRD -> Architecture -> Roadmap -> Backlog -> Specs -> Schemas。
+- AI 编码沟通默认中文；计划、审查、证据摘要和提交说明优先中文，代码标识符、命令、日志、报错、schema 字段保留英文原文。
+- 本仓与全局规则的协同方式：全局给风险、语言、N/A 和门禁语义；本文件给本仓目录归宿、真实命令、阻断条件、证据位置和回滚入口。
+- 规则写法优先采用可验证边界：真实命令、禁止绕过项、证据路径和回滚入口；避免在根文件堆叠不可检查的抽象偏好。
+- `docs/specs/*` 定义语义；`schemas/jsonschema/*` 是配套机器可读草案；修改其一必须同步检查另一侧。
+- `scripts/github/create-roadmap-issues.ps1` 只负责 backlog/issue 种子生成，不代表运行时实现已经存在。
+- 当前仓库已存在 `.git`；默认回滚优先使用 git 历史，`docs/change-evidence/snapshots/` 只作为补充留痕或无 git 场景兜底。
+- 当前证据统一落在 `docs/change-evidence/`。
+- 面向操作者的使用说明/指南/教程类文档必须保持中英双语可用；最低覆盖范围包括 `README*`、`docs/quickstart/*`、`docs/product/*guide*`、`docs/product/*flow*`、`docs/product/*commands*`、`docs/product/*trial*`、`docs/product/*pilot*`、`docs/product/*console*`、`docs/product/*criteria*`、以及其他直接描述运行步骤或操作路径的文档。
+- 纯策略、研究、架构、规划、ADR、spec/schema 配套说明默认不强制逐篇双语，但只要文档直接承担操作者使用入口，就应补齐对应中英版本或明确链接到可替代的双语入口。
+
+## B. 仓库门禁与阻断
+| gate | status | command | reason | alternative_verification | evidence_link | expires_at |
+|---|---|---|---|---|---|---|
+| build | `active` | `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1` | Foundation 阶段的 build 语义是验证 Python runtime substrate 可字节编译且可导入 | `python -m compileall packages/contracts/src scripts/run-readonly-trial.py` | `docs/change-evidence/*.md` | `n/a` |
+| test | `active` | `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime` | Phase 1 已落地 Python runtime contract unit tests | `python -m unittest discover -s tests/runtime -p "test_*.py"` | `docs/change-evidence/*.md` | `n/a` |
+| contract/invariant | `active` | `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract` | 当前仓库最硬的机器约束是 schema、example、catalog 与 spec 配对完整性 | 同步检查 `schemas/catalog/schema-catalog.yaml`、`docs/specs/*`、`schemas/examples/*` 配对完整性 | `docs/change-evidence/*.md` | `n/a` |
+| hotspot | `active` | `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1` | Foundation 阶段的 hotspot/doctor 语义是验证 runtime prerequisites、schema/catalog 可见性与活跃 gate 命令存在 | `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Doctor` | `docs/change-evidence/*.md` | `n/a` |
+
+- 阻断条件：
+  - `docs/specs/*` 与 `schemas/jsonschema/*` 只改一侧时阻断。
+  - 根 `README.md`、`docs/README.md`、`docs/roadmap/*`、`docs/backlog/*` 叙述不一致时阻断。
+  - `scripts/github/create-roadmap-issues.ps1` 与当前 roadmap/backlog 基线不一致时阻断。
+
+## C. 承接映射
+- `E4 健康指标联动`：`active`
+  - `reason`: 当前以 Foundation doctor 入口替代未来服务级 health 指标栈
+  - `alternative_verification`: `scripts/verify-repo.ps1 -Check Doctor`
+  - `evidence_link`: `docs/change-evidence/*.md`
+  - `expires_at`: `n/a`
+- `E5 供应链门禁`：`active`
+  - `reason`: 当前以 `docs/dependency-baseline.*` + `scripts/verify-dependency-baseline.py` 强制执行 stdlib-only Python 依赖基线，并显式阻断未声明的第三方导入
+  - `alternative_verification`: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Dependency`
+  - `evidence_link`: `docs/change-evidence/*.md`
+  - `expires_at`: `n/a`
+- `E6 数据结构变更`：`active`
+  - 触发范围：`docs/specs/*`、`schemas/jsonschema/*`、`schemas/catalog/schema-catalog.yaml`
+  - 必做动作：同步更新配套文档/Schema/Catalog，并在证据中记录兼容性和回滚说明
+- 失败分流：
+  - doc link drift -> 先修文档入口与引用
+  - schema parse fail -> 先修 schema/spec 配对
+  - roadmap/script drift -> roadmap、backlog、issue script 同步修复
+
+## D. 维护清单
+- 保持根 `README.md`、`docs/README.md`、roadmap、backlog、issue seeding script 同步。
+- 规划、schema、脚本类变更必须新增一条 `docs/change-evidence/*.md`。
+- 历史回滚优先通过 git 提交或差异恢复；当工作区无 `.git` 或需要额外证据快照时，再复制到 `docs/change-evidence/snapshots/<date>-<slug>/`，快照命名需保留原始相对路径信息。
+- 当前真实门禁顺序为 `build -> test -> contract/invariant -> hotspot`；后续服务化阶段只能增强，不得改序。
+- 若新增项目级子文档，只允许承载长清单、runbook、历史背景或示例；根 `AGENTS.md` 仍必须能独立指导一次完整变更。
+
+## E. 提交信息规范
+- 提交信息以中文为主，但不强制全中文。
+- `subject` 需要短、具体、可检索，优先表达本次变更的事实，不写口号。
+- 技术名词、文件名、协议名、ADR 编号可以保留英文或中英混合，以保证跨工具检索和历史追溯。
+- 若变更面向外部共享历史、跨团队协作或后续回滚定位，优先保证语义清晰，其次再考虑语言纯度。
+
+## F. 跨仓迁移最小模板（可选增强）
+- 目标仓 `repo-profile` 字段草案入口：`schemas/examples/repo-profile/target-repo-fast-full-template.example.json`。
+- 脚本骨架入口：
+  - `scripts/governance/fast-check.ps1`（本地快速反馈，优先读取 `quick_gate_commands`）。
+  - `scripts/governance/full-check.ps1`（交付前全量检查，优先读取 `full_gate_commands`）。
+  - `scripts/governance/gate-runner-common.ps1`（公共执行逻辑，避免 fast/full 漂移）。
+- 若目标仓未声明 `quick_gate_commands/full_gate_commands`，骨架回退到基础命令组：
+  - `fast`: `test + contract(or invariant)`
+  - `full`: `build + test + contract(or invariant)`
+- 该增强只提供“迁移落地入口”，不改变本仓硬门禁顺序与语义；最终验收仍以 `build -> test -> contract/invariant -> hotspot` 为准。

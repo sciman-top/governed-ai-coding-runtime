@@ -720,18 +720,12 @@ function Invoke-ScriptChecks {
 function Invoke-RuntimeChecks {
   $python = Resolve-PythonCommand
 
-  & $python.Source -m unittest discover -s tests/runtime -p "test_*.py"
+  & $python.Source "scripts/run-runtime-tests.py" --suite "runtime=tests/runtime" --suite "service=tests/service"
   if ($LASTEXITCODE -ne 0) {
-    throw "Runtime unit tests failed"
+    throw "Runtime/service unit tests failed"
   }
 
   Write-CheckOk "runtime-unittest"
-
-  & $python.Source -m unittest discover -s tests/service -p "test_*.py"
-  if ($LASTEXITCODE -ne 0) {
-    throw "Service tests failed"
-  }
-
   Write-CheckOk "runtime-service-parity"
 
   $wrapperPath = "scripts/run-governed-task.py"

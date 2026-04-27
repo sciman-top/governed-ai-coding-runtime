@@ -407,6 +407,27 @@ class RunGovernedTaskServiceWrapperTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "task_id"):
                 module._write_replay_case(reference)
 
+    def test_write_replay_case_returns_runtime_relative_ref_for_external_runtime_root(self) -> None:
+        module = _load_run_governed_task_module()
+        replay = importlib.import_module("governed_ai_coding_runtime_contracts.replay")
+
+        reference = replay.build_replay_reference(
+            task_id="task-external-runtime",
+            run_id="run-external-runtime",
+            failure_reason="verification failed",
+            artifact_refs=["artifacts/task/run/evidence.json"],
+            verification_artifact_refs=[],
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            runtime_root = Path(tmp_dir) / "runtime"
+            replay_root = runtime_root / "replay"
+            with patch.object(module, "RUNTIME_ROOT", runtime_root), patch.object(module, "REPLAY_ROOT", replay_root):
+                replay_ref = module._write_replay_case(reference)
+
+            self.assertEqual(replay_ref, "replay/task-external-runtime-run-external-runtime.json")
+            self.assertTrue((runtime_root / replay_ref).exists())
+
 
 if __name__ == "__main__":
     unittest.main()
