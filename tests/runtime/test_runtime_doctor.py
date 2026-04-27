@@ -121,6 +121,7 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             ROOT / "scripts" / "runtime-flow.ps1",
             ROOT / "scripts" / "runtime-flow-classroomtoolkit.ps1",
             ROOT / "scripts" / "runtime-flow-preset.ps1",
+            ROOT / "scripts" / "operator.ps1",
             ROOT / "scripts" / "verify-repo.ps1",
         ]
 

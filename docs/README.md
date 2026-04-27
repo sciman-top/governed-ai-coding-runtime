@@ -91,6 +91,11 @@
 - [Project AGENTS](../AGENTS.md)
 
 ## Main Entrypoints
+- Operator aggregate entrypoint: `scripts/operator.ps1`
+  - source of truth: existing runtime, rule-sync, target-flow, and operator UI scripts
+  - typical uses: `-Action Help`, `-Action Readiness`, `-Action RulesDryRun`, `-Action DailyAll`, `-Action OperatorUi -OpenUi`
+  - UI default language: `zh-CN`; use `-UiLanguage en` for English
+  - UI purpose: localhost interactive control console for allowlisted operator actions, runtime summary, maintenance policy refs, attachment posture, task/run evidence refs, and evidence file preview
 - Target-repo daily/batch entrypoint: `scripts/runtime-flow-preset.ps1`
   - source of truth: `docs/targets/target-repos-catalog.json`
   - typical uses: `-ListTargets`, `-Target <id> -FlowMode daily`, `-AllTargets -ApplyGovernanceBaselineOnly`, `-AllTargets -ApplyAllFeatures`
@@ -174,8 +179,26 @@ python scripts/run-multi-repo-trial.py
 Operator and packaging helpers:
 
 ```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Help
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en
+```
+
+```powershell
 python scripts/serve-operator-ui.py
 ```
+
+```powershell
+python scripts/serve-operator-ui.py --serve --open
+```
+
+The interactive UI supports all-target or single-target execution, dry-run, browser-local execution history, and bounded repo-local evidence/artifact/verification file preview.
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/package-runtime.ps1

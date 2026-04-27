@@ -6,6 +6,7 @@
 ## 推荐使用模式
 
 ### 总入口速记
+- 操作者聚合入口：`scripts/operator.ps1`
 - 目标仓日常运行/批量一键应用：`scripts/runtime-flow-preset.ps1`
 - 全局/项目级 AI 规则同步：`scripts/sync-agent-rules.ps1`
 - 本仓完整自检：`scripts/verify-repo.ps1 -Check All`
@@ -13,6 +14,14 @@
 常用一键命令：
 
 ```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Help
+
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Readiness
+
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi
+
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en
+
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
 
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
@@ -29,6 +38,21 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
 
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply
 ```
+
+### Operator UI
+默认中文打开交互控制台：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi
+```
+
+英文版打开交互控制台：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en
+```
+
+这个 UI 在 `127.0.0.1` 上运行本地交互服务，可点击执行 allowlist 内的 readiness、目标仓列表、规则漂移检查、规则同步、治理基线下发、daily 和全部功能应用；可选择全部目标仓或单个目标仓，也可调整语言、验证模式、并发、fail-fast、只预演与里程碑标签；执行结果会写入输出区和本地浏览器执行历史，并可点击 evidence/artifact/verification refs 查看文件内容。终端按 `Ctrl+C` 停止服务。若只想生成只读快照，去掉 `-OpenUi`，输出位于 `.runtime/artifacts/operator-ui/index.html`。
 
 ### 模式 A：治理侧车（阻力最低）
 继续按原方式使用宿主工具，把本运行时用于 readiness、verification 和证据留痕。

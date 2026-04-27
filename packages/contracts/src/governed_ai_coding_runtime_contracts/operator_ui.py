@@ -7,89 +7,743 @@ from governed_ai_coding_runtime_contracts.file_guard import atomic_write_text
 from governed_ai_coding_runtime_contracts.runtime_status import RuntimeSnapshot
 
 
-def render_runtime_snapshot_html(snapshot: RuntimeSnapshot) -> str:
-    maintenance = "\n".join(
+_TRANSLATIONS = {
+    "zh-CN": {
+        "html_lang": "zh-CN",
+        "title": "Governed Runtime 操作者面板",
+        "runtime_root": "Runtime 根目录",
+        "persistence": "持久化",
+        "summary_aria": "Runtime 摘要",
+        "tasks": "任务",
+        "tasks_caption": "runtime task 记录",
+        "approvals": "审批",
+        "approvals_caption": "关联 approval refs",
+        "verification": "验证",
+        "verification_caption": "verification refs",
+        "attachments": "接入仓",
+        "fail_closed_caption": "fail-closed",
+        "maintenance": "维护策略",
+        "stage": "阶段",
+        "compatibility": "兼容性",
+        "upgrade": "升级",
+        "triage": "分流",
+        "deprecation": "弃用",
+        "retirement": "退役",
+        "no_tasks": "暂无 governed task 记录。",
+        "no_attachments": "暂无已接入目标仓记录。",
+        "task": "任务",
+        "state": "状态",
+        "goal": "目标",
+        "outputs": "输出",
+        "run": "运行",
+        "workspace": "工作区",
+        "interaction": "交互",
+        "rollback": "回滚",
+        "repo": "仓库",
+        "adapter": "适配器",
+        "diagnostics": "诊断",
+        "binding": "绑定",
+        "light_pack": "Light pack",
+        "fail_closed": "Fail closed",
+        "preference": "偏好",
+        "gate_profile": "门禁 profile",
+        "reason": "原因",
+        "remediation": "修复建议",
+        "missing": "缺失",
+        "none": "无",
+        "not_recorded": "未记录",
+        "unknown_repo": "未知仓库",
+        "actions": "操作",
+        "settings": "设置",
+        "language": "语言",
+        "target": "目标仓",
+        "all_targets": "全部目标仓",
+        "mode": "验证模式",
+        "parallelism": "目标并发",
+        "fail_fast": "失败即停",
+        "dry_run": "只预演",
+        "milestone": "里程碑标签",
+        "refresh": "刷新状态",
+        "run": "执行",
+        "command_output": "命令输出",
+        "history": "执行历史",
+        "no_history": "暂无执行历史。",
+        "clear_history": "清空历史",
+        "ready": "就绪",
+        "running": "执行中",
+        "static_snapshot": "静态快照",
+        "targets_action": "列出目标仓",
+        "readiness_action": "本仓 Readiness",
+        "rules_dry_run_action": "规则漂移检查",
+        "rules_apply_action": "同步规则文件",
+        "governance_baseline_action": "下发治理基线",
+        "daily_all_action": "运行 Daily",
+        "apply_all_action": "全部功能应用",
+        "view_ref": "查看",
+        "confirm_mutating": "该操作可能修改规则文件、目标仓治理基线或运行证据。继续执行？",
+        "interactive_required": "当前是静态快照；启动本地服务后可执行操作。",
+    },
+    "en": {
+        "html_lang": "en",
+        "title": "Governed Runtime Operator Surface",
+        "runtime_root": "Runtime root",
+        "persistence": "Persistence",
+        "summary_aria": "Runtime Summary",
+        "tasks": "Tasks",
+        "tasks_caption": "runtime task records",
+        "approvals": "Approvals",
+        "approvals_caption": "linked approval refs",
+        "verification": "Verification",
+        "verification_caption": "verification refs",
+        "attachments": "Attachments",
+        "fail_closed_caption": "fail-closed",
+        "maintenance": "Maintenance Policy Surface",
+        "stage": "Stage",
+        "compatibility": "Compatibility",
+        "upgrade": "Upgrade",
+        "triage": "Triage",
+        "deprecation": "Deprecation",
+        "retirement": "Retirement",
+        "no_tasks": "No governed tasks recorded.",
+        "no_attachments": "No attached target repos recorded.",
+        "task": "Task",
+        "state": "State",
+        "goal": "Goal",
+        "outputs": "Outputs",
+        "run": "Run",
+        "workspace": "Workspace",
+        "interaction": "Interaction",
+        "rollback": "Rollback",
+        "repo": "Repo",
+        "adapter": "Adapter",
+        "diagnostics": "Diagnostics",
+        "binding": "Binding",
+        "light_pack": "Light pack",
+        "fail_closed": "Fail closed",
+        "preference": "Preference",
+        "gate_profile": "Gate profile",
+        "reason": "Reason",
+        "remediation": "Remediation",
+        "missing": "missing",
+        "none": "none",
+        "not_recorded": "not recorded",
+        "unknown_repo": "unknown repo",
+        "actions": "Actions",
+        "settings": "Settings",
+        "language": "Language",
+        "target": "Target repo",
+        "all_targets": "All targets",
+        "mode": "Mode",
+        "parallelism": "Target parallelism",
+        "fail_fast": "Fail fast",
+        "dry_run": "Dry run",
+        "milestone": "Milestone tag",
+        "refresh": "Refresh status",
+        "run": "Run",
+        "command_output": "Command output",
+        "history": "Run history",
+        "no_history": "No run history.",
+        "clear_history": "Clear history",
+        "ready": "Ready",
+        "running": "Running",
+        "static_snapshot": "Static snapshot",
+        "targets_action": "List targets",
+        "readiness_action": "Repo readiness",
+        "rules_dry_run_action": "Rule drift check",
+        "rules_apply_action": "Sync rules",
+        "governance_baseline_action": "Apply governance baseline",
+        "daily_all_action": "Run Daily",
+        "apply_all_action": "Apply all features",
+        "view_ref": "View",
+        "confirm_mutating": "This action may modify rule files, target governance baseline, or runtime evidence. Continue?",
+        "interactive_required": "This is a static snapshot; start the local service to run actions.",
+    },
+}
+
+
+def render_runtime_snapshot_html(
+    snapshot: RuntimeSnapshot,
+    language: str = "zh-CN",
+    interactive: bool = False,
+    target_options: list[str] | None = None,
+) -> str:
+    text = _ui_text(language)
+    approval_count = sum(len(task.approval_ids) for task in snapshot.tasks)
+    verification_count = sum(len(task.verification_refs) for task in snapshot.tasks)
+    fail_closed_count = sum(1 for attachment in snapshot.attachments if attachment.fail_closed)
+    summary = "\n".join(
         [
-            "<section class='policy-card'>",
-            "<h2>Maintenance Policy Surface</h2>",
-            f"<p><strong>Stage:</strong> {escape(snapshot.maintenance.stage)}</p>",
-            _render_ref("Compatibility", snapshot.maintenance.compatibility_policy_ref),
-            _render_ref("Upgrade", snapshot.maintenance.upgrade_policy_ref),
-            _render_ref("Triage", snapshot.maintenance.triage_policy_ref),
-            _render_ref("Deprecation", snapshot.maintenance.deprecation_policy_ref),
-            _render_ref("Retirement", snapshot.maintenance.retirement_policy_ref),
+            f"<section class='summary-grid' aria-label='{escape(text['summary_aria'])}'>",
+            _render_metric(text["tasks"], str(snapshot.total_tasks), text["tasks_caption"]),
+            _render_metric(text["approvals"], str(approval_count), text["approvals_caption"]),
+            _render_metric(text["verification"], str(verification_count), text["verification_caption"]),
+            _render_metric(text["attachments"], str(len(snapshot.attachments)), f"{fail_closed_count} {text['fail_closed_caption']}"),
             "</section>",
         ]
     )
-    if not snapshot.tasks:
-        body = "<p>No governed tasks recorded.</p>"
-    else:
-        cards = []
-        for task in snapshot.tasks:
-            cards.append(
-                "\n".join(
-                    [
-                        "<article class='task-card'>",
-                        f"<h2>{escape(task.task_id)}</h2>",
-                        f"<p><strong>State:</strong> {escape(task.current_state)}</p>",
-                        f"<p><strong>Goal:</strong> {escape(task.goal)}</p>",
-                        f"<p><strong>Run:</strong> {escape(task.active_run_id or '')}</p>",
-                        f"<p><strong>Workspace:</strong> {escape(task.workspace_root or '')}</p>",
-                        _render_list("Artifacts", task.artifact_refs),
-                        _render_list("Evidence", task.evidence_refs),
-                        _render_list("Verification", task.verification_refs),
-                        "</article>",
-                    ]
-                )
-            )
-        body = "\n".join(cards)
+    maintenance = _render_maintenance(snapshot, text)
+    tasks = _render_tasks(snapshot, text, interactive=interactive)
+    attachments = _render_attachments(snapshot, text, interactive=interactive)
+    actions = _render_actions(text, language=language, interactive=interactive, target_options=target_options or [])
+    script = _render_interactive_script(text, language=language) if interactive else ""
+    runtime_root = snapshot.runtime_root or text["missing"]
     return f"""<!doctype html>
-<html lang="en">
+<html lang="{escape(text['html_lang'])}">
 <head>
   <meta charset="utf-8">
-  <title>Governed Runtime Operator Surface</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>{escape(text['title'])}</title>
   <style>
     :root {{
       color-scheme: light;
-      --bg: #f6f1e8;
-      --card: #fffdf8;
-      --ink: #1f2933;
-      --line: #d8c9ad;
-      --accent: #0f766e;
+      --bg: #f7f9fb;
+      --surface: #ffffff;
+      --surface-muted: #eef3f7;
+      --ink: #17202a;
+      --muted: #5f6b7a;
+      --line: #d7dde5;
+      --accent: #0b6f6a;
+      --warning: #a15c00;
+      --danger: #b42318;
     }}
-    body {{ margin: 0; font-family: Georgia, 'Times New Roman', serif; background: radial-gradient(circle at top, #fff7e8, var(--bg)); color: var(--ink); }}
-    main {{ max-width: 980px; margin: 0 auto; padding: 40px 24px 80px; }}
-    h1 {{ font-size: 2.4rem; margin-bottom: 0.3rem; }}
-    .summary {{ color: #5b6470; margin-bottom: 24px; }}
-    .task-card, .policy-card {{ background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px; margin-bottom: 16px; box-shadow: 0 10px 30px rgba(15, 118, 110, 0.08); }}
-    h2 {{ margin-top: 0; color: var(--accent); }}
-    ul {{ padding-left: 20px; }}
-    code {{ font-family: Consolas, monospace; font-size: 0.92rem; }}
+    * {{ box-sizing: border-box; }}
+    body {{ margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: var(--bg); color: var(--ink); }}
+    main {{ width: 100%; margin: 0; padding: 22px; }}
+    header {{ border-bottom: 1px solid var(--line); padding-bottom: 18px; margin-bottom: 20px; }}
+    h1 {{ font-size: 1.75rem; line-height: 1.2; margin: 0 0 10px; }}
+    h2 {{ font-size: 1rem; line-height: 1.3; margin: 0 0 12px; color: var(--ink); }}
+    .meta-row {{ display: flex; flex-wrap: wrap; gap: 10px 18px; color: var(--muted); font-size: 0.92rem; }}
+    .console-layout {{ display: grid; grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: 18px; align-items: start; }}
+    .sidebar {{ position: sticky; top: 16px; display: grid; gap: 14px; }}
+    .dashboard {{ min-width: 0; display: grid; gap: 18px; }}
+    .summary-grid {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }}
+    .metric {{ background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px; padding: 14px; min-width: 0; }}
+    .metric span {{ display: block; color: var(--muted); font-size: 0.78rem; text-transform: uppercase; }}
+    .metric strong {{ display: block; font-size: 1.55rem; margin: 4px 0; }}
+    .metric small {{ display: block; color: var(--muted); overflow-wrap: anywhere; }}
+    .section {{ min-width: 0; }}
+    .table-wrap {{ background: var(--surface); border: 1px solid var(--line); border-radius: 6px; overflow-x: auto; }}
+    table {{ width: 100%; border-collapse: collapse; min-width: 720px; }}
+    th, td {{ padding: 11px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }}
+    th {{ background: var(--surface-muted); color: #314253; font-size: 0.78rem; text-transform: uppercase; }}
+    tr:last-child td {{ border-bottom: 0; }}
+    .task-id {{ font-weight: 700; }}
+    .state {{ font-weight: 700; color: var(--accent); }}
+    .state.warn {{ color: var(--warning); }}
+    .state.danger {{ color: var(--danger); }}
+    .meta {{ color: var(--muted); font-size: 0.86rem; margin-top: 4px; overflow-wrap: anywhere; }}
+    .empty-state {{ background: var(--surface); border: 1px dashed var(--line); border-radius: 6px; padding: 18px; color: var(--muted); }}
+    .refs {{ display: grid; gap: 8px; }}
+    .ref-title {{ display: block; color: var(--muted); font-size: 0.78rem; text-transform: uppercase; margin-bottom: 4px; }}
+    ul {{ margin: 0; padding-left: 18px; }}
+    li + li {{ margin-top: 4px; }}
+    code {{ font-family: Consolas, "Liberation Mono", monospace; font-size: 0.9rem; overflow-wrap: anywhere; }}
+    .policy-grid {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }}
+    .policy-item {{ background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px; min-width: 0; }}
+    .policy-label {{ display: block; color: var(--muted); font-size: 0.78rem; text-transform: uppercase; margin-bottom: 4px; }}
+    .panel {{ background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px; }}
+    .action-list {{ display: grid; gap: 8px; }}
+    button, select, input {{ font: inherit; }}
+    button {{ border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 6px; padding: 8px 10px; cursor: pointer; text-align: left; }}
+    button:hover {{ border-color: var(--accent); }}
+    button.primary {{ background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }}
+    button.danger {{ border-color: #f2b8b5; color: var(--danger); }}
+    button:disabled {{ cursor: not-allowed; opacity: 0.55; }}
+    .setting-grid {{ display: grid; gap: 10px; }}
+    label {{ display: grid; gap: 4px; color: var(--muted); font-size: 0.82rem; min-width: 0; }}
+    select, input[type="number"], input[type="text"] {{ width: 100%; min-width: 0; max-width: 100%; border: 1px solid var(--line); border-radius: 6px; padding: 8px; color: var(--ink); background: #fff; }}
+    .checkbox-row {{ display: flex; align-items: center; gap: 8px; color: var(--ink); }}
+    .status-line {{ color: var(--muted); font-size: 0.86rem; min-height: 1.2rem; }}
+    .output {{ min-height: 180px; max-height: 420px; overflow: auto; white-space: pre-wrap; background: #0f1720; color: #d9e2ec; border-radius: 6px; padding: 12px; }}
+    .history-list {{ display: grid; gap: 8px; }}
+    .history-item {{ width: 100%; min-width: 0; display: grid; gap: 2px; }}
+    .history-item small {{ color: var(--muted); overflow-wrap: anywhere; }}
+    .ref-button {{ display: inline; padding: 0; border: 0; background: transparent; color: #0b5cad; text-align: left; font-family: Consolas, "Liberation Mono", monospace; font-size: 0.9rem; overflow-wrap: anywhere; }}
+    .ref-button:hover {{ text-decoration: underline; }}
+    @media (max-width: 820px) {{
+      main {{ padding: 20px 14px 40px; }}
+      .console-layout, .summary-grid, .policy-grid {{ grid-template-columns: 1fr; }}
+      .sidebar {{ position: static; }}
+      .table-wrap {{ overflow-x: visible; }}
+      table, thead, tbody, tr, th, td {{ display: block; min-width: 0; width: 100%; }}
+      thead {{ position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }}
+      tr {{ border-bottom: 1px solid var(--line); }}
+      tr:last-child {{ border-bottom: 0; }}
+      td {{ display: grid; grid-template-columns: 94px minmax(0, 1fr); gap: 10px; border-bottom: 1px solid var(--line); }}
+      td:last-child {{ border-bottom: 0; }}
+      td::before {{ content: attr(data-label); color: var(--muted); font-size: 0.76rem; text-transform: uppercase; }}
+    }}
   </style>
 </head>
 <body>
   <main>
-    <h1>Governed Runtime Operator Surface</h1>
-    <p class="summary">Total tasks: {snapshot.total_tasks}</p>
-    {maintenance}
-    {body}
+    <header>
+      <h1>{escape(text['title'])}</h1>
+      <div class="meta-row">
+        <span>{escape(text['runtime_root'])}: <code>{escape(runtime_root)}</code></span>
+        <span>{escape(text['persistence'])}: <code>{escape(snapshot.persistence_backend)}</code></span>
+      </div>
+    </header>
+    <div class="console-layout">
+      {actions}
+      <div class="dashboard">
+        {summary}
+        {maintenance}
+        {attachments}
+        {tasks}
+      </div>
+    </div>
   </main>
+  {script}
 </body>
 </html>"""
 
 
-def write_runtime_snapshot_html(snapshot: RuntimeSnapshot, output_path: Path) -> Path:
+def write_runtime_snapshot_html(
+    snapshot: RuntimeSnapshot,
+    output_path: Path,
+    language: str = "zh-CN",
+    interactive: bool = False,
+    target_options: list[str] | None = None,
+) -> Path:
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    atomic_write_text(output_path, render_runtime_snapshot_html(snapshot), encoding="utf-8")
+    atomic_write_text(
+        output_path,
+        render_runtime_snapshot_html(snapshot, language=language, interactive=interactive, target_options=target_options),
+        encoding="utf-8",
+    )
     return output_path
 
 
-def _render_list(title: str, values: list[str]) -> str:
+def _render_metric(title: str, value: str, caption: str) -> str:
+    return "\n".join(
+        [
+            "<div class='metric'>",
+            f"<span>{escape(title)}</span>",
+            f"<strong>{escape(value)}</strong>",
+            f"<small>{escape(caption)}</small>",
+            "</div>",
+        ]
+    )
+
+
+def _render_maintenance(snapshot: RuntimeSnapshot, text: dict[str, str]) -> str:
+    return "\n".join(
+        [
+            "<section class='section'>",
+            f"<h2>{escape(text['maintenance'])}</h2>",
+            "<div class='policy-grid'>",
+            _render_policy_item(text["stage"], snapshot.maintenance.stage, text),
+            _render_policy_item(text["compatibility"], snapshot.maintenance.compatibility_policy_ref, text),
+            _render_policy_item(text["upgrade"], snapshot.maintenance.upgrade_policy_ref, text),
+            _render_policy_item(text["triage"], snapshot.maintenance.triage_policy_ref, text),
+            _render_policy_item(text["deprecation"], snapshot.maintenance.deprecation_policy_ref, text),
+            _render_policy_item(text["retirement"], snapshot.maintenance.retirement_policy_ref, text),
+            "</div>",
+            "</section>",
+        ]
+    )
+
+
+def _render_tasks(snapshot: RuntimeSnapshot, text: dict[str, str], *, interactive: bool) -> str:
+    if not snapshot.tasks:
+        return "\n".join(
+            [
+                "<section class='section'>",
+                f"<h2>{escape(text['tasks'])}</h2>",
+                f"<div class='empty-state'>{escape(text['no_tasks'])}</div>",
+                "</section>",
+            ]
+        )
+
+    rows = "\n".join(_render_task_row(task, text, interactive=interactive) for task in snapshot.tasks)
+    return "\n".join(
+        [
+            "<section class='section'>",
+            f"<h2>{escape(text['tasks'])}</h2>",
+            "<div class='table-wrap'>",
+            "<table>",
+            (
+                "<thead><tr>"
+                f"<th>{escape(text['task'])}</th>"
+                f"<th>{escape(text['state'])}</th>"
+                f"<th>{escape(text['goal'])}</th>"
+                f"<th>{escape(text['outputs'])}</th>"
+                "</tr></thead>"
+            ),
+            f"<tbody>{rows}</tbody>",
+            "</table>",
+            "</div>",
+            "</section>",
+        ]
+    )
+
+
+def _render_task_row(task, text: dict[str, str], *, interactive: bool) -> str:
+    interaction = task.interaction_posture or text["not_recorded"]
+    state_class = _state_class(task.current_state)
+    return "\n".join(
+        [
+            "<tr>",
+            f"<td data-label='{escape(text['task'])}'>",
+            f"<div class='task-id'>{escape(task.task_id)}</div>",
+            f"<div class='meta'>{escape(text['run'])}: <code>{escape(task.active_run_id or text['missing'])}</code></div>",
+            f"<div class='meta'>{escape(text['workspace'])}: <code>{escape(task.workspace_root or text['missing'])}</code></div>",
+            "</td>",
+            f"<td data-label='{escape(text['state'])}'>",
+            f"<div class='state {state_class}'>{escape(task.current_state)}</div>",
+            f"<div class='meta'>{escape(text['interaction'])}: {escape(interaction)}</div>",
+            f"<div class='meta'>{escape(text['rollback'])}: <code>{escape(task.rollback_ref or text['missing'])}</code></div>",
+            "</td>",
+            f"<td data-label='{escape(text['goal'])}'>{escape(task.goal)}</td>",
+            f"<td data-label='{escape(text['outputs'])}'><div class='refs'>",
+            _render_list(text["approvals"], task.approval_ids, text, interactive=interactive),
+            _render_list("Artifacts", task.artifact_refs, text, interactive=interactive),
+            _render_list("Evidence", task.evidence_refs, text, interactive=interactive),
+            _render_list(text["verification"], task.verification_refs, text, interactive=interactive),
+            "</div></td>",
+            "</tr>",
+        ]
+    )
+
+
+def _render_attachments(snapshot: RuntimeSnapshot, text: dict[str, str], *, interactive: bool) -> str:
+    if not snapshot.attachments:
+        return "\n".join(
+            [
+                "<section class='section'>",
+                f"<h2>{escape(text['attachments'])}</h2>",
+                f"<div class='empty-state'>{escape(text['no_attachments'])}</div>",
+                "</section>",
+            ]
+        )
+
+    rows = "\n".join(_render_attachment_row(attachment, text, interactive=interactive) for attachment in snapshot.attachments)
+    return "\n".join(
+        [
+            "<section class='section'>",
+            f"<h2>{escape(text['attachments'])}</h2>",
+            "<div class='table-wrap'>",
+            "<table>",
+            (
+                "<thead><tr>"
+                f"<th>{escape(text['repo'])}</th>"
+                f"<th>{escape(text['state'])}</th>"
+                f"<th>{escape(text['adapter'])}</th>"
+                f"<th>{escape(text['diagnostics'])}</th>"
+                "</tr></thead>"
+            ),
+            f"<tbody>{rows}</tbody>",
+            "</table>",
+            "</div>",
+            "</section>",
+        ]
+    )
+
+
+def _render_attachment_row(attachment, text: dict[str, str], *, interactive: bool) -> str:
+    state_class = "danger" if attachment.fail_closed else _state_class(attachment.binding_state)
+    return "\n".join(
+        [
+            "<tr>",
+            f"<td data-label='{escape(text['repo'])}'>",
+            f"<div class='task-id'>{escape(attachment.repo_id or text['unknown_repo'])}</div>",
+            f"<div class='meta'>{escape(text['binding'])}: <code>{escape(attachment.binding_id or text['missing'])}</code></div>",
+            f"<div class='meta'>{escape(text['light_pack'])}: {_render_ref_value(attachment.light_pack_path, interactive=interactive)}</div>",
+            "</td>",
+            f"<td data-label='{escape(text['state'])}'>",
+            f"<div class='state {state_class}'>{escape(attachment.binding_state)}</div>",
+            f"<div class='meta'>{escape(text['fail_closed'])}: {str(attachment.fail_closed).lower()}</div>",
+            "</td>",
+            f"<td data-label='{escape(text['adapter'])}'>",
+            f"<div>{escape(text['preference'])}: <code>{escape(attachment.adapter_preference or text['missing'])}</code></div>",
+            f"<div class='meta'>{escape(text['gate_profile'])}: <code>{escape(attachment.gate_profile or text['missing'])}</code></div>",
+            "</td>",
+            f"<td data-label='{escape(text['diagnostics'])}'>",
+            f"<div>{escape(text['reason'])}: {escape(attachment.reason or text['none'])}</div>",
+            f"<div class='meta'>{escape(text['remediation'])}: {escape(attachment.remediation or text['none'])}</div>",
+            "</td>",
+            "</tr>",
+        ]
+    )
+
+
+def _render_list(title: str, values: list[str], text: dict[str, str], *, interactive: bool) -> str:
     if not values:
-        return f"<p><strong>{escape(title)}:</strong> none</p>"
-    items = "".join(f"<li><code>{escape(value)}</code></li>" for value in values)
-    return f"<div><strong>{escape(title)}:</strong><ul>{items}</ul></div>"
+        return f"<div><span class='ref-title'>{escape(title)}</span><span class='meta'>{escape(text['none'])}</span></div>"
+    items = "".join(f"<li>{_render_ref_value(value, interactive=interactive)}</li>" for value in values)
+    return f"<div><span class='ref-title'>{escape(title)}</span><ul>{items}</ul></div>"
 
 
-def _render_ref(title: str, value: str | None) -> str:
-    return f"<p><strong>{escape(title)}:</strong> <code>{escape(value or 'missing')}</code></p>"
+def _render_ref_value(value: str, *, interactive: bool) -> str:
+    if not interactive or not _is_viewable_ref(value):
+        return f"<code>{escape(value)}</code>"
+    return (
+        "<button type='button' class='ref-button' data-ref='"
+        + escape(value, quote=True)
+        + "'>"
+        + escape(value)
+        + "</button>"
+    )
+
+
+def _is_viewable_ref(value: str) -> bool:
+    return "/" in value or "\\" in value
+
+
+def _render_policy_item(title: str, value: str | None, text: dict[str, str]) -> str:
+    return "\n".join(
+        [
+            "<div class='policy-item'>",
+            f"<span class='policy-label'>{escape(title)}</span>",
+            f"<code>{escape(value or text['missing'])}</code>",
+            "</div>",
+        ]
+    )
+
+
+def _render_actions(text: dict[str, str], *, language: str, interactive: bool, target_options: list[str]) -> str:
+    if not interactive:
+        return "\n".join(
+            [
+                "<aside class='sidebar'>",
+                "<section class='panel'>",
+                f"<h2>{escape(text['static_snapshot'])}</h2>",
+                f"<p class='meta'>{escape(text['interactive_required'])}</p>",
+                "</section>",
+                "</aside>",
+            ]
+        )
+
+    action_items = [
+        ("targets", text["targets_action"], "primary", ""),
+        ("readiness", text["readiness_action"], "primary", ""),
+        ("rules_dry_run", text["rules_dry_run_action"], "", ""),
+        ("rules_apply", text["rules_apply_action"], "danger", text["confirm_mutating"]),
+        ("governance_baseline_all", text["governance_baseline_action"], "danger", text["confirm_mutating"]),
+        ("daily_all", text["daily_all_action"], "", ""),
+        ("apply_all_features", text["apply_all_action"], "danger", text["confirm_mutating"]),
+    ]
+    buttons = []
+    for action_id, label, class_name, confirm in action_items:
+        class_attr = f" class='{class_name}'" if class_name else ""
+        confirm_attr = f" data-confirm='{escape(confirm, quote=True)}'" if confirm else ""
+        buttons.append(
+            f"<button type='button'{class_attr} data-action='{escape(action_id)}'{confirm_attr}>{escape(label)}</button>"
+        )
+    target_choices = [("__all__", text["all_targets"])] + [(target, target) for target in target_options]
+    target_select_options = "".join(
+        f"<option value='{escape(value, quote=True)}'>{escape(label)}</option>"
+        for value, label in target_choices
+    )
+
+    return "\n".join(
+        [
+            "<aside class='sidebar'>",
+            "<section class='panel'>",
+            f"<h2>{escape(text['actions'])}</h2>",
+            "<div class='action-list'>",
+            f"<button type='button' data-refresh='1'>{escape(text['refresh'])}</button>",
+            *buttons,
+            "</div>",
+            "</section>",
+            "<section class='panel'>",
+            f"<h2>{escape(text['command_output'])}</h2>",
+            f"<div id='ui-status' class='status-line'>{escape(text['ready'])}</div>",
+            "<pre id='ui-output' class='output'></pre>",
+            "</section>",
+            "<section class='panel'>",
+            f"<h2>{escape(text['history'])}</h2>",
+            f"<div id='ui-history' class='history-list'><p class='meta'>{escape(text['no_history'])}</p></div>",
+            f"<button type='button' data-clear-history='1'>{escape(text['clear_history'])}</button>",
+            "</section>",
+            "<section class='panel'>",
+            f"<h2>{escape(text['settings'])}</h2>",
+            "<div class='setting-grid'>",
+            f"<label>{escape(text['language'])}<select id='ui-language'><option value='zh-CN' {'selected' if language == 'zh-CN' else ''}>中文</option><option value='en' {'selected' if language == 'en' else ''}>English</option></select></label>",
+            f"<label>{escape(text['target'])}<select id='ui-target'>{target_select_options}</select></label>",
+            f"<label>{escape(text['mode'])}<select id='ui-mode'><option value='quick'>quick</option><option value='full'>full</option><option value='l1'>l1</option><option value='l2'>l2</option><option value='l3'>l3</option></select></label>",
+            f"<label>{escape(text['parallelism'])}<input id='ui-parallelism' type='number' min='1' max='16' value='1'></label>",
+            f"<label>{escape(text['milestone'])}<input id='ui-milestone' type='text' value='milestone'></label>",
+            f"<label class='checkbox-row'><input id='ui-fail-fast' type='checkbox'> {escape(text['fail_fast'])}</label>",
+            f"<label class='checkbox-row'><input id='ui-dry-run' type='checkbox'> {escape(text['dry_run'])}</label>",
+            "</div>",
+            "</section>",
+            "</aside>",
+        ]
+    )
+
+
+def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
+    return f"""
+<script>
+(() => {{
+  const output = document.getElementById('ui-output');
+  const status = document.getElementById('ui-status');
+  const outputPanel = output.closest('.panel');
+  const languageSelect = document.getElementById('ui-language');
+  const target = document.getElementById('ui-target');
+  const mode = document.getElementById('ui-mode');
+  const parallelism = document.getElementById('ui-parallelism');
+  const milestone = document.getElementById('ui-milestone');
+  const failFast = document.getElementById('ui-fail-fast');
+  const dryRun = document.getElementById('ui-dry-run');
+  const historyList = document.getElementById('ui-history');
+  const historyKey = 'governed-runtime-operator-history';
+
+  function readHistory() {{
+    try {{
+      const value = JSON.parse(window.localStorage.getItem(historyKey) || '[]');
+      return Array.isArray(value) ? value : [];
+    }} catch (error) {{
+      return [];
+    }}
+  }}
+
+  function writeHistory(items) {{
+    window.localStorage.setItem(historyKey, JSON.stringify(items.slice(0, 12)));
+  }}
+
+  function renderHistory() {{
+    const items = readHistory();
+    if (!items.length) {{
+      historyList.innerHTML = `<p class="meta">{text['no_history']}</p>`;
+      return;
+    }}
+    historyList.innerHTML = '';
+    items.forEach((item, index) => {{
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'history-item';
+      button.dataset.historyIndex = String(index);
+      const title = document.createElement('span');
+      title.textContent = `${{item.action}} · exit_code=${{item.exit_code}}`;
+      const detail = document.createElement('small');
+      detail.textContent = `${{item.target}} · ${{item.elapsed_seconds}}s · ${{item.at}}`;
+      button.append(title, detail);
+      historyList.appendChild(button);
+    }});
+  }}
+
+  function addHistory(item) {{
+    writeHistory([item, ...readHistory()]);
+    renderHistory();
+  }}
+
+  function setOutput(text) {{
+    output.textContent = text || '';
+    outputPanel.scrollIntoView({{ block: 'nearest', behavior: 'smooth' }});
+  }}
+
+  function setBusy(isBusy) {{
+    status.textContent = isBusy ? {text['running']!r} : {text['ready']!r};
+    document.querySelectorAll('button[data-action]').forEach((button) => button.disabled = isBusy);
+  }}
+
+  async function runAction(action, button) {{
+    const confirmMessage = button.getAttribute('data-confirm');
+    if (confirmMessage && !window.confirm(confirmMessage)) {{
+      return;
+    }}
+    setBusy(true);
+    setOutput('');
+    try {{
+      const response = await fetch('/api/run', {{
+        method: 'POST',
+        headers: {{ 'content-type': 'application/json' }},
+        body: JSON.stringify({{
+          action,
+          language: languageSelect.value,
+          target: target.value,
+          mode: mode.value,
+          target_parallelism: Number(parallelism.value || 1),
+          milestone_tag: milestone.value || 'milestone',
+          fail_fast: failFast.checked,
+          dry_run: dryRun.checked
+        }})
+      }});
+      const payload = await response.json();
+      const rendered = [
+        `action: ${{payload.action || action}}`,
+        `exit_code: ${{payload.exit_code}}`,
+        `elapsed_seconds: ${{payload.elapsed_seconds}}`,
+        '',
+        payload.output || ''
+      ].join('\\n');
+      setOutput(rendered);
+      addHistory({{
+        action: payload.action || action,
+        target: target.value,
+        exit_code: payload.exit_code,
+        elapsed_seconds: payload.elapsed_seconds,
+        at: new Date().toLocaleString(),
+        output: rendered
+      }});
+    }} catch (error) {{
+      setOutput(String(error));
+    }} finally {{
+      setBusy(false);
+    }}
+  }}
+
+  async function viewRef(path) {{
+    setBusy(true);
+    try {{
+      const response = await fetch('/api/file?path=' + encodeURIComponent(path));
+      const payload = await response.json();
+      if (!response.ok) {{
+        setOutput(payload.error || response.statusText);
+      }} else {{
+        setOutput(`path: ${{payload.path}}\\n\\n${{payload.content}}`);
+      }}
+    }} catch (error) {{
+      setOutput(String(error));
+    }} finally {{
+      setBusy(false);
+    }}
+  }}
+
+  document.querySelectorAll('button[data-action]').forEach((button) => {{
+    button.addEventListener('click', () => runAction(button.getAttribute('data-action'), button));
+  }});
+  document.querySelectorAll('button[data-ref]').forEach((button) => {{
+    button.addEventListener('click', () => viewRef(button.getAttribute('data-ref')));
+  }});
+  historyList.addEventListener('click', (event) => {{
+    const button = event.target.closest('button[data-history-index]');
+    if (!button) {{
+      return;
+    }}
+    const item = readHistory()[Number(button.dataset.historyIndex)];
+    if (item) {{
+      setOutput(item.output || '');
+    }}
+  }});
+  document.querySelector('[data-clear-history]').addEventListener('click', () => {{
+    writeHistory([]);
+    renderHistory();
+  }});
+  document.querySelector('[data-refresh]').addEventListener('click', () => window.location.reload());
+  languageSelect.addEventListener('change', () => {{
+    const next = new URL(window.location.href);
+    next.searchParams.set('lang', languageSelect.value);
+    window.location.href = next.toString();
+  }});
+  renderHistory();
+}})();
+</script>"""
+
+
+def _state_class(value: str) -> str:
+    normalized = value.lower()
+    if normalized in {"failed", "blocked", "rejected", "missing", "denied"}:
+        return "danger"
+    if normalized in {"pending", "escalated", "warning", "warn", "advisory"}:
+        return "warn"
+    return ""
+
+
+def _ui_text(language: str) -> dict[str, str]:
+    normalized = "en" if language.lower().startswith("en") else "zh-CN"
+    return _TRANSLATIONS[normalized]

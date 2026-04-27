@@ -47,11 +47,36 @@
 - 仍不能宣称“Codex CLI 在所有外部仓、所有环境下已经被本项目完整接管用于真实高风险编码写入”。
 
 当前总入口与一键应用：
+- 操作者聚合入口：`scripts/operator.ps1`。它把 readiness、自检、规则漂移/同步、目标仓批量流和 operator UI 生成收成同一个入口；默认 `-Action Help`，适合日常少记长命令。
 - 目标仓日常运行/批量下发总入口：`scripts/runtime-flow-preset.ps1`。它读取 `docs/targets/target-repos-catalog.json`，可以对单个 target 或所有 active targets 执行 attach、daily gate、治理基线同步、特性基线同步和里程碑提交。
 - AI 规则文件同步入口：`scripts/sync-agent-rules.ps1`。它读取 `rules/manifest.json`，把全局与项目级 `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` 同步到用户目录和目标仓；默认同 hash 跳过，内容漂移按脚本策略阻断或要求 `-Force`。
 - 本仓自检入口：`scripts/verify-repo.ps1 -Check All`。它用于验证当前 runtime、文档、schema、catalog、脚本和目标仓一致性门禁。
 
 常用一键命令：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Help
+```
+
+AI 推荐的本仓日常 readiness：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Readiness
+```
+
+打开本地交互 operator UI（默认中文，会启动 localhost 服务）：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi
+```
+
+打开英文版交互 UI：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en
+```
+
+UI 使用方式：`-OpenUi` 会启动 `127.0.0.1` 本地交互控制台并打开浏览器；在终端按 `Ctrl+C` 停止服务。页面可执行 allowlist 内的本仓 readiness、目标仓列表、规则漂移检查、规则同步、治理基线下发、daily 和全部功能应用；可选择全部目标仓或单个目标仓，可调整语言、验证模式、并发、fail-fast、只预演与里程碑标签；执行结果会写入输出区和本地浏览器执行历史；可点击 evidence/artifact/verification refs 查看文件内容。若不加 `-OpenUi`，脚本只生成只读快照 `.runtime/artifacts/operator-ui/index.html` 并在 JSON 输出里给出 `file_url`。
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
@@ -235,11 +260,36 @@ How to use quickly (recommended paths):
 - Path C (risky writes): run `govern-attachment-write -> decide-attachment-write -> execute-attachment-write` for medium/high-risk mutations.
 
 Current main entrypoints and one-command apply:
+- Operator aggregate entrypoint: `scripts/operator.ps1`. It collects readiness checks, rule drift/sync, target-repo batch flows, and operator UI rendering behind one action-oriented entrypoint; default `-Action Help`.
 - Target-repo daily/batch entrypoint: `scripts/runtime-flow-preset.ps1`. It reads `docs/targets/target-repos-catalog.json` and can run attach, daily gates, governance baseline sync, feature baseline sync, and milestone commits for one target or all active targets.
 - Agent-rule sync entrypoint: `scripts/sync-agent-rules.ps1`. It reads `rules/manifest.json` and syncs global/project `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` files to user directories and target repos.
 - Self-repo verification entrypoint: `scripts/verify-repo.ps1 -Check All`.
 
 Common one-command flows:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Help
+```
+
+AI recommended local readiness:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Readiness
+```
+
+Open the interactive local operator UI. It defaults to Chinese and starts a localhost service:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi
+```
+
+Open the English interactive UI:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en
+```
+
+How to use the UI: `-OpenUi` starts a `127.0.0.1` interactive control console and opens the browser; stop it with `Ctrl+C` in the terminal. The page can run allowlisted actions for repo readiness, target listing, rule drift checks, rule sync, governance baseline rollout, daily, and all-feature apply. It can target all repos or one selected target repo, exposes settings for language, mode, parallelism, fail-fast, dry-run, and milestone tag, records results in the output panel and local browser history, and refs can be clicked to preview evidence/artifact/verification files. Without `-OpenUi`, the script only writes a read-only `.runtime/artifacts/operator-ui/index.html` snapshot and prints a JSON `file_url`.
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets

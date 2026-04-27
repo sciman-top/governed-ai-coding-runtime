@@ -61,9 +61,36 @@
 - 路径 C（中高风险写入）：用 `govern-attachment-write -> decide-attachment-write -> execute-attachment-write` 走审批与回滚引用闭环。
 
 ## 当前总入口与一键应用
+- 操作者聚合入口：`scripts/operator.ps1`。它把 readiness、自检、规则漂移/同步、目标仓批量流和 operator UI 生成收成同一个入口；默认 `-Action Help`。
 - 目标仓日常运行/批量下发总入口：`scripts/runtime-flow-preset.ps1`。它读取 `docs/targets/target-repos-catalog.json`，支持单 target 或所有 active targets。
 - AI 规则文件同步入口：`scripts/sync-agent-rules.ps1`。它读取 `rules/manifest.json`，同步全局与项目级 `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`。
 - 本仓自检入口：`scripts/verify-repo.ps1 -Check All`。它验证 runtime、docs、schema、catalog、脚本和目标仓一致性门禁。
+
+先看操作者入口和 AI 推荐路径：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Help
+```
+
+AI 推荐的本仓日常 readiness：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Readiness
+```
+
+打开本地交互 operator UI（默认中文，会启动 localhost 服务）：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi
+```
+
+打开英文版交互 UI：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en
+```
+
+UI 使用方式：`-OpenUi` 会启动 `127.0.0.1` 本地交互控制台并打开浏览器；在终端按 `Ctrl+C` 停止服务。页面可执行 allowlist 内的本仓 readiness、目标仓列表、规则漂移检查、规则同步、治理基线下发、daily 和全部功能应用；可选择全部目标仓或单个目标仓，可调整语言、验证模式、并发、fail-fast、只预演与里程碑标签；执行结果会写入输出区和本地浏览器执行历史；可点击 evidence/artifact/verification refs 查看文件内容。若不加 `-OpenUi`，脚本只生成只读快照 `.runtime/artifacts/operator-ui/index.html` 并在 JSON 输出里给出 `file_url`。
 
 先查看当前可用 target：
 

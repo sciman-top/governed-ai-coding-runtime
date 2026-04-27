@@ -6,6 +6,7 @@ Show how to use this runtime with Codex/Claude Code style host workflows and wha
 ## Recommended Modes
 
 ### Entrypoint Cheat Sheet
+- Operator aggregate entrypoint: `scripts/operator.ps1`
 - Target-repo daily runs and batch one-command apply: `scripts/runtime-flow-preset.ps1`
 - Global/project AI rule sync: `scripts/sync-agent-rules.ps1`
 - Self-repo full verification: `scripts/verify-repo.ps1 -Check All`
@@ -13,6 +14,14 @@ Show how to use this runtime with Codex/Claude Code style host workflows and wha
 Common one-command flows:
 
 ```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Help
+
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Readiness
+
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi
+
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en
+
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
 
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
@@ -29,6 +38,21 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
 
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply
 ```
+
+### Operator UI
+Open the default Chinese interactive console:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi
+```
+
+Open the English interactive console:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en
+```
+
+This UI runs a local `127.0.0.1` interactive service. It can run allowlisted actions for readiness, target listing, rule drift checks, rule sync, governance baseline rollout, daily, and all-feature apply. It can target all repos or one selected target repo, exposes settings for language, mode, parallelism, fail-fast, dry-run, and milestone tag, records results in the output panel and local browser history, and refs can be clicked to preview evidence/artifact/verification files. Stop the service with `Ctrl+C` in the terminal. Remove `-OpenUi` when you only want to generate a read-only `.runtime/artifacts/operator-ui/index.html` snapshot.
 
 ### Mode A: Governance Sidecar (lowest friction)
 Use your host tool normally, and run this runtime for readiness, verification, and traceability.

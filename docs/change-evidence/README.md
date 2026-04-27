@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260428 Operator Workflow UX And Local UI Refresh](./20260428-operator-workflow-ux.md)
+  - evidence companion for adding the operator aggregate entrypoint, improving local operator HTML scanability, and refreshing user-facing entrypoint guidance
 - [20260427 Claude Code Native Attach Tier Parity](./20260427-claude-code-native-attach-tier-parity.md)
   - follow-up evidence upgrading Claude Code from process-bridge-only posture to current live `native_attach` tier parity with Codex, while keeping host APIs and future drift explicit
 - [20260427 Claude Code First-Class Entrypoint Planning](./20260427-claude-code-first-class-entrypoint-planning.md)

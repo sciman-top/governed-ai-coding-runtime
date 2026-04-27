@@ -61,9 +61,36 @@ What you should **not** claim yet:
 - Path C (risky writes): run `govern-attachment-write -> decide-attachment-write -> execute-attachment-write` for medium/high-risk mutations.
 
 ## Current Main Entrypoints And One-Command Apply
+- Operator aggregate entrypoint: `scripts/operator.ps1`. It collects readiness checks, rule drift/sync, target-repo batch flows, and operator UI rendering behind one action-oriented entrypoint; default `-Action Help`.
 - Target-repo daily/batch entrypoint: `scripts/runtime-flow-preset.ps1`. It reads `docs/targets/target-repos-catalog.json` and supports one target or all active targets.
 - Agent-rule sync entrypoint: `scripts/sync-agent-rules.ps1`. It reads `rules/manifest.json` and syncs global/project `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md`.
 - Self-repo verification entrypoint: `scripts/verify-repo.ps1 -Check All`.
+
+Inspect the operator entrypoint and recommended paths:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Help
+```
+
+AI recommended local readiness:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Readiness
+```
+
+Open the interactive local operator UI. It defaults to Chinese and starts a localhost service:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi
+```
+
+Open the English interactive UI:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en
+```
+
+How to use the UI: `-OpenUi` starts a `127.0.0.1` interactive control console and opens the browser; stop it with `Ctrl+C` in the terminal. The page can run allowlisted actions for repo readiness, target listing, rule drift checks, rule sync, governance baseline rollout, daily, and all-feature apply. It can target all repos or one selected target repo, exposes settings for language, mode, parallelism, fail-fast, dry-run, and milestone tag, records results in the output panel and local browser history, and refs can be clicked to preview evidence/artifact/verification files. Without `-OpenUi`, the script only writes a read-only `.runtime/artifacts/operator-ui/index.html` snapshot and prints a JSON `file_url`.
 
 List available targets first:
 
