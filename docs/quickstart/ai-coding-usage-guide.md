@@ -5,6 +5,31 @@ Show how to use this runtime with Codex/Claude Code style host workflows and wha
 
 ## Recommended Modes
 
+### Entrypoint Cheat Sheet
+- Target-repo daily runs and batch one-command apply: `scripts/runtime-flow-preset.ps1`
+- Global/project AI rule sync: `scripts/sync-agent-rules.ps1`
+- Self-repo full verification: `scripts/verify-repo.ps1 -Check All`
+
+Common one-command flows:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
+
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -ApplyGovernanceBaselineOnly `
+  -Json
+
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -ApplyAllFeatures `
+  -FlowMode "daily" `
+  -MilestoneTag "milestone" `
+  -Json
+
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply
+```
+
 ### Mode A: Governance Sidecar (lowest friction)
 Use your host tool normally, and run this runtime for readiness, verification, and traceability.
 
@@ -87,6 +112,8 @@ python scripts/run-governed-task.py execute-attachment-write `
 |---|---|---|
 | Session readiness | Codex capability probe/readiness and adapter-tier visibility in `status`/`doctor` | detect degrade posture early before execution |
 | Repo onboarding | attach-first light-pack generation/validation | consistent repo policy/gate metadata for host sessions |
+| Rule sync | `sync-agent-rules.ps1` distributes `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` from the manifest | reduce multi-host and multi-repo rule drift |
+| Repeated-issue prevention | governance baseline distributes Windows process environment, canonical entrypoint, low-token, and fast/full gate policies | turn recurring fixes into target-repo state instead of reminders |
 | Verification | runtime-managed gate flow (`build -> test -> contract/invariant -> hotspot`) | stable acceptance checks and reproducible gate artifacts |
 | Risky writes | policy + approval + fail-closed behavior for medium/high tiers | prevents silent high-risk mutations |
 | Delivery evidence | evidence/handoff/replay refs linked to task/run | auditable handoff and rollback trail |

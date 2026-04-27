@@ -87,6 +87,16 @@
 - [English README](../README.en.md)
 - [Project AGENTS](../AGENTS.md)
 
+## Main Entrypoints
+- Target-repo daily/batch entrypoint: `scripts/runtime-flow-preset.ps1`
+  - source of truth: `docs/targets/target-repos-catalog.json`
+  - typical uses: `-ListTargets`, `-Target <id> -FlowMode daily`, `-AllTargets -ApplyGovernanceBaselineOnly`, `-AllTargets -ApplyAllFeatures`
+- Agent-rule sync entrypoint: `scripts/sync-agent-rules.ps1`
+  - source of truth: `rules/manifest.json`
+  - typical uses: `-Scope All -FailOnChange` for drift check, `-Scope All -Apply` for one-command sync
+- Self-repo verification entrypoint: `scripts/verify-repo.ps1 -Check All`
+  - validates runtime code, docs, schemas, catalog, scripts, and target-repo consistency gates
+
 ## Bilingual Coverage
 - Mandatory bilingual coverage applies to operator-facing usage docs.
 - At minimum, the following document classes must be available in both Chinese and English:

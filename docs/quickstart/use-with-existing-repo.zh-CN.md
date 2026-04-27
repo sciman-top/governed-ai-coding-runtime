@@ -3,6 +3,22 @@
 ## 简短结论
 可以，但要按当前产品边界理解。
 
+日常和批量目标仓操作的总入口是：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1
+```
+
+它从 `docs/targets/target-repos-catalog.json` 读取 active targets。先用 `-ListTargets` 看清单；单仓用 `-Target "<id>" -FlowMode "daily"`；多仓一键治理基线用 `-AllTargets -ApplyGovernanceBaselineOnly`；多仓全部当前功能用 `-AllTargets -ApplyAllFeatures -FlowMode "daily"`。
+
+规则文件的一键应用入口是：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply
+```
+
+它从 `rules/manifest.json` 同步 Codex/Claude/Gemini 的全局和项目级规则文件。
+
 你现在可以把一个现有仓库，例如 `..\ClassroomToolkit`，作为 machine-local governance sidecar 的 target repo 接入：
 - 在目标仓生成或校验 `.governed-ai/` 轻量接入包
 - 将可变 runtime state 保持在机器本地目录
@@ -14,6 +30,8 @@
 
 ## 对 AI 编码的具体辅助作用（在已接入目标仓）
 - 执行前能力可见：`status`/`doctor` 先给出 adapter 姿态，减少运行中降级惊讶
+- 规则一致性：`sync-agent-rules.ps1` 把同一套 `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` 下发到用户目录和目标仓
+- 反复问题固化：治理基线把 Windows 进程环境、统一入口、low-token、fast/full gate 等策略写入目标仓
 - 统一 gate 执行面：通过 bridge 跑标准验证链，避免“只跑了部分检查”
 - 风险写入治理：medium/high 写入触发审批或 fail-closed，降低越权写入
 - 证据化交付：执行后产出 approval/evidence/handoff/replay refs，方便交接与回滚

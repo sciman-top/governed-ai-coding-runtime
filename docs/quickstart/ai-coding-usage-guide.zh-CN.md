@@ -5,6 +5,31 @@
 
 ## 推荐使用模式
 
+### 总入口速记
+- 目标仓日常运行/批量一键应用：`scripts/runtime-flow-preset.ps1`
+- 全局/项目级 AI 规则同步：`scripts/sync-agent-rules.ps1`
+- 本仓完整自检：`scripts/verify-repo.ps1 -Check All`
+
+常用一键命令：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
+
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -ApplyGovernanceBaselineOnly `
+  -Json
+
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -ApplyAllFeatures `
+  -FlowMode "daily" `
+  -MilestoneTag "milestone" `
+  -Json
+
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply
+```
+
 ### 模式 A：治理侧车（阻力最低）
 继续按原方式使用宿主工具，把本运行时用于 readiness、verification 和证据留痕。
 
@@ -87,6 +112,8 @@ python scripts/run-governed-task.py execute-attachment-write `
 |---|---|---|
 | 会话就绪检查 | `status`/`doctor` 暴露 Codex capability readiness 与 adapter tier | 在执行前提前发现降级姿态，避免误判能力 |
 | 仓库接入 | attach-first light-pack 生成/校验 | 给宿主会话提供一致的仓库策略与 gate 元数据 |
+| 规则同步 | `sync-agent-rules.ps1` 按 manifest 下发 `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` | 降低多宿主、多仓规则漂移 |
+| 重复故障预防 | governance baseline 下发 Windows 进程环境、统一入口、low-token、fast/full gate 等策略 | 把反复问题固化到目标仓，而不是依赖提示 |
 | 验证执行 | runtime-managed gate 流（`build -> test -> contract/invariant -> hotspot`） | 验收链稳定且可复现 |
 | 高风险写入 | medium/high 风险策略、审批、fail-closed | 防止越权或无审批高风险改动 |
 | 交付与审计 | evidence/handoff/replay refs 与 task/run 绑定 | 交付可追溯、回滚路径清晰 |

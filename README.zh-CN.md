@@ -60,8 +60,52 @@
 - 路径 B（外部仓 attach-first，推荐）：先 `attach-target-repo`，再跑 `runtime-flow.ps1 -FlowMode daily` 作为日常治理链。
 - 路径 C（中高风险写入）：用 `govern-attachment-write -> decide-attachment-write -> execute-attachment-write` 走审批与回滚引用闭环。
 
+## 当前总入口与一键应用
+- 目标仓日常运行/批量下发总入口：`scripts/runtime-flow-preset.ps1`。它读取 `docs/targets/target-repos-catalog.json`，支持单 target 或所有 active targets。
+- AI 规则文件同步入口：`scripts/sync-agent-rules.ps1`。它读取 `rules/manifest.json`，同步全局与项目级 `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`。
+- 本仓自检入口：`scripts/verify-repo.ps1 -Check All`。它验证 runtime、docs、schema、catalog、脚本和目标仓一致性门禁。
+
+先查看当前可用 target：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
+```
+
+只同步目标仓治理基线（低噪音的一键应用）：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -ApplyGovernanceBaselineOnly `
+  -Json
+```
+
+一键执行全部当前目标仓功能（daily flow + 特性基线 + 里程碑提交）：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -ApplyAllFeatures `
+  -FlowMode "daily" `
+  -MilestoneTag "milestone" `
+  -Json
+```
+
+同步 Codex/Claude/Gemini 全局与项目规则：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply
+```
+
+只检查规则漂移、不落盘：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -FailOnChange
+```
+
 ## 统一入口建议
-- 如果你要“一键日常使用”，优先走 `runtime-flow.ps1` 或 `runtime-flow-preset.ps1`
+- 如果你要“一键日常使用”或“批量应用到目标仓”，优先走 `runtime-flow-preset.ps1`
+- 如果你只操作一个临时外部仓、还不想写入 target catalog，可走 `runtime-flow.ps1`
 - 如果你要先观察绕过统一入口的情况，把 `required_entrypoint_policy.current_mode` 设为 `advisory`
 - 如果你要拦截 direct gate/write 入口、但保留只读状态查询，把它设为 `targeted_enforced`
 - 如果你要在仓级范围强制 canonical entrypoint，把它设为 `repo_wide_enforced`
@@ -72,6 +116,8 @@
 ## 对 AI 编码的具体辅助作用
 - 会话前能力可见：在执行前就能看到 `adapter_tier`、`flow_kind`、`degrade_reason`，避免运行中才发现能力降级。
 - 验收链统一执行：`build -> test -> contract/invariant -> hotspot` 由 runtime-managed gate 流统一执行，降低漏检。
+- 规则稳定下发：用 `rules/manifest.json` 管理全局/项目级 agent 规则，减少 Codex、Claude、Gemini 在不同仓读到不同规则。
+- 反复问题前置防护：把 Windows 进程环境、canonical entrypoint、low-token 交互、里程碑提交、fast/full gate 等策略同步到目标仓，而不是只靠聊天提醒。
 - 高风险写入防护：medium/high 写入会触发审批或 fail-closed，避免无审批直写。
 - 交付可追溯：approval/evidence/handoff/replay refs 与 task/run 绑定，方便审计、交接和回滚。
 - 多仓复用：通过 `.governed-ai` light-pack 与 preset flow，把同一治理协议复用到多个目标仓。

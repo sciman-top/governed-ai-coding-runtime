@@ -60,9 +60,54 @@ What you should **not** claim yet:
 - Path B (attach-first for external repos): run `attach-target-repo`, then use `runtime-flow.ps1 -FlowMode daily` as your daily governance chain.
 - Path C (risky writes): run `govern-attachment-write -> decide-attachment-write -> execute-attachment-write` for medium/high-risk mutations.
 
+## Current Main Entrypoints And One-Command Apply
+- Target-repo daily/batch entrypoint: `scripts/runtime-flow-preset.ps1`. It reads `docs/targets/target-repos-catalog.json` and supports one target or all active targets.
+- Agent-rule sync entrypoint: `scripts/sync-agent-rules.ps1`. It reads `rules/manifest.json` and syncs global/project `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md`.
+- Self-repo verification entrypoint: `scripts/verify-repo.ps1 -Check All`.
+
+List available targets first:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
+```
+
+Force-sync governance baseline only:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -ApplyGovernanceBaselineOnly `
+  -Json
+```
+
+Apply all current target-repo features:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -ApplyAllFeatures `
+  -FlowMode "daily" `
+  -MilestoneTag "milestone" `
+  -Json
+```
+
+Sync Codex/Claude/Gemini global and project rules:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply
+```
+
+Check rule drift without writing:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -FailOnChange
+```
+
 ## Concrete AI-Coding Assistance
 - Capability visibility before execution: see `adapter_tier`, `flow_kind`, and degrade reasons early.
 - Canonical acceptance chain: runtime-managed `build -> test -> contract/invariant -> hotspot`.
+- Stable rule distribution: manage global/project agent rules through `rules/manifest.json` so Codex, Claude, and Gemini read consistent repo rules.
+- Repeated-issue prevention: sync Windows process environment, canonical entrypoint, low-token interaction, milestone commit, and fast/full gate policies into target repos instead of relying on chat reminders.
 - Risky write safeguards: policy + approval + fail-closed behavior for medium/high tiers.
 - Traceable delivery: approval/evidence/handoff/replay refs are linked to task/run identity.
 - Multi-repo reuse: apply the same governance contract via `.governed-ai` light packs and preset flows.

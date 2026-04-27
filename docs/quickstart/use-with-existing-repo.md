@@ -3,6 +3,22 @@
 ## Short Answer
 Yes, but with the current product boundary.
 
+The main entrypoint for daily and batch target-repo operations is:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1
+```
+
+It reads active targets from `docs/targets/target-repos-catalog.json`. Use `-ListTargets` first; use `-Target "<id>" -FlowMode "daily"` for one repo; use `-AllTargets -ApplyGovernanceBaselineOnly` for governance-baseline sync; use `-AllTargets -ApplyAllFeatures -FlowMode "daily"` for all current target-repo features.
+
+The one-command apply entrypoint for rule files is:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply
+```
+
+It reads `rules/manifest.json` and syncs Codex/Claude/Gemini global and project rule files.
+
 Today you can use this runtime against an existing repository such as `..\ClassroomToolkit` as a machine-local governance sidecar:
 - generate or validate a repo-local light pack under `.governed-ai/`
 - keep mutable runtime state machine-local
@@ -14,6 +30,8 @@ What you do **not** have yet is a universal full-takeover claim across all hosts
 
 ## Concrete Assistance For AI Coding In Attached Repos
 - pre-execution capability visibility: `status`/`doctor` show adapter posture before risky operations
+- rule consistency: `sync-agent-rules.ps1` distributes the same `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` set to user directories and target repos
+- repeated-issue hardening: governance baseline writes Windows process environment, canonical entrypoint, low-token, and fast/full gate policies into target repos
 - runtime-managed gate execution: run canonical verification chain with one bridge surface
 - policy and approval for risky writes: medium/high tiers require escalation/approval or fail-closed
 - evidence-linked delivery: executed flows emit approval/evidence/handoff/replay refs

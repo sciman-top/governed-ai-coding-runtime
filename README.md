@@ -46,6 +46,37 @@
 - 对 `..\ClassroomToolkit` 这类仓库，已经可以生成或校验 `.governed-ai`、挂到 machine-local runtime state、跑 status/doctor、执行 gate 流、执行受治理写流并保留证据链。
 - 仍不能宣称“Codex CLI 在所有外部仓、所有环境下已经被本项目完整接管用于真实高风险编码写入”。
 
+当前总入口与一键应用：
+- 目标仓日常运行/批量下发总入口：`scripts/runtime-flow-preset.ps1`。它读取 `docs/targets/target-repos-catalog.json`，可以对单个 target 或所有 active targets 执行 attach、daily gate、治理基线同步、特性基线同步和里程碑提交。
+- AI 规则文件同步入口：`scripts/sync-agent-rules.ps1`。它读取 `rules/manifest.json`，把全局与项目级 `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` 同步到用户目录和目标仓；默认同 hash 跳过，内容漂移按脚本策略阻断或要求 `-Force`。
+- 本仓自检入口：`scripts/verify-repo.ps1 -Check All`。它用于验证当前 runtime、文档、schema、catalog、脚本和目标仓一致性门禁。
+
+常用一键命令：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -ApplyGovernanceBaselineOnly `
+  -Json
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -ApplyAllFeatures `
+  -FlowMode "daily" `
+  -MilestoneTag "milestone" `
+  -Json
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply
+```
+
 如何快速使用（推荐三条路径）：
 - 路径 A（治理侧车，阻力最低）：继续在 Codex/Claude Code 编码，同时运行 `bootstrap + doctor + verify-repo -Check All + status` 做 readiness、门禁和证据检查。
 - 路径 B（外部仓 attach-first，推荐）：先 `attach-target-repo`，再运行 `runtime-flow.ps1 -FlowMode daily`，让目标仓按统一治理链执行。
@@ -54,6 +85,8 @@
 对 AI 编码的具体辅助作用：
 - 会话前能力探测：在执行前显示 adapter tier、flow kind、degrade reason，减少“以为可执行、实际降级”的误判。
 - 统一验收链：把 `build -> test -> contract/invariant -> hotspot` 固化到 runtime-managed gate 流，降低“只跑了部分检查”的漏检风险。
+- 规则与提示词稳定下发：把全局/项目级 agent 规则作为 manifest 管理，减少 Codex、Claude、Gemini 在不同仓里读到不一致规则的概率。
+- 目标仓防反复问题：把 PowerShell 环境、统一入口、低 token 交互、里程碑提交、fast/full gate 等策略同步进目标仓 profile 和受管文件，不靠聊天提醒。
 - 高风险写入拦截：对 medium/high 请求触发审批或 fail-closed，避免无审批直写。
 - 证据与交付留痕：每次治理执行可关联 approval/evidence/handoff/replay refs，便于交接、审计和回滚。
 - 多仓复用：通过 `.governed-ai` light-pack 和 preset flow，在不同仓库复用同一治理协议。
@@ -201,8 +234,40 @@ How to use quickly (recommended paths):
 - Path B (attach-first for external repos): run `attach-target-repo` once, then use `runtime-flow.ps1 -FlowMode daily` as the daily governance chain.
 - Path C (risky writes): run `govern-attachment-write -> decide-attachment-write -> execute-attachment-write` for medium/high-risk mutations.
 
+Current main entrypoints and one-command apply:
+- Target-repo daily/batch entrypoint: `scripts/runtime-flow-preset.ps1`. It reads `docs/targets/target-repos-catalog.json` and can run attach, daily gates, governance baseline sync, feature baseline sync, and milestone commits for one target or all active targets.
+- Agent-rule sync entrypoint: `scripts/sync-agent-rules.ps1`. It reads `rules/manifest.json` and syncs global/project `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` files to user directories and target repos.
+- Self-repo verification entrypoint: `scripts/verify-repo.ps1 -Check All`.
+
+Common one-command flows:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -ApplyGovernanceBaselineOnly `
+  -Json
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
+  -AllTargets `
+  -ApplyAllFeatures `
+  -FlowMode "daily" `
+  -MilestoneTag "milestone" `
+  -Json
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply
+```
+
 Canonical entrypoint recommendation:
-- if you want one-command daily use, prefer `runtime-flow.ps1` or `runtime-flow-preset.ps1`
+- if you want one-command daily use or batch apply to target repos, prefer `runtime-flow-preset.ps1`
+- if you are working with one temporary external repo that is not in the target catalog, use `runtime-flow.ps1`
 - if you want to observe drift first, set `required_entrypoint_policy.current_mode` to `advisory`
 - if you want to block direct gate/write entrypoints but keep read-only inspection open, set it to `targeted_enforced`
 - if you want repo-wide canonical-entrypoint enforcement, set it to `repo_wide_enforced`
@@ -211,6 +276,8 @@ Canonical entrypoint recommendation:
 Concrete assistance for AI coding:
 - pre-execution capability visibility (tier/flow/degrade) to avoid hidden posture mismatch
 - canonical gate chain execution to reduce partial-check drift
+- manifest-backed agent rule distribution across Codex, Claude, and Gemini contexts
+- target-repo prevention for repeated Windows process environment, canonical-entrypoint, low-token interaction, milestone commit, and fast/full gate drift
 - policy and approval enforcement for risky writes
 - evidence/handoff/replay linkage for traceable delivery and rollback
 - reusable multi-repo governance via light packs and preset flows
