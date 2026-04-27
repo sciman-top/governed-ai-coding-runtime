@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260427 GAP-106 Live Codex Continuity Batch](./20260427-gap-106-live-codex-continuity-batch.md)
+  - evidence companion for canonical `runtime-flow` live Codex continuity, medium-risk approval/write execution, and runtime-check strict-mode hardening
 - [20260427 GAP-105 Service-Primary Runtime Boundary Batch 1](./20260427-gap-105-service-primary-runtime-boundary.md)
   - closeout evidence for preserving service-boundary metadata through execution-like CLI wrapper payloads
 - [20260427 GAP-104 Complete Hybrid Final-State Realization Rebaseline Closeout](./20260427-gap-104-realization-rebaseline-closeout.md)

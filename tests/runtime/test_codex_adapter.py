@@ -527,6 +527,40 @@ class CodexAdapterTests(unittest.TestCase):
         self.assertIn(result.flow_kind, {"live_attach", "process_bridge", "manual_handoff"})
         self.assertTrue(result.continuation_id.startswith("task-codex-trial:"))
 
+    def test_codex_adapter_trial_can_use_live_probe_as_source(self) -> None:
+        module = self._module()
+        probe = module.CodexSurfaceProbe(
+            codex_cli_available=True,
+            version="codex-cli 0.test",
+            native_attach_available=True,
+            process_bridge_available=True,
+            structured_events_available=True,
+            evidence_export_available=True,
+            resume_available=True,
+            live_session_id="live-session-1",
+            live_resume_id="live-resume-1",
+            reason="live probe test fixture",
+            probe_commands=[],
+        )
+
+        result = module.build_codex_adapter_trial_result(
+            repo_id="python-service",
+            task_id="task-codex-live-trial",
+            binding_id="binding-python-service",
+            native_attach_available=False,
+            process_bridge_available=False,
+            structured_events_available=False,
+            evidence_export_available=False,
+            resume_available=False,
+            probe=probe,
+        )
+
+        self.assertEqual(result.probe_source, "live_probe")
+        self.assertEqual(result.adapter_tier, "native_attach")
+        self.assertEqual(result.flow_kind, "live_attach")
+        self.assertEqual(result.session_id, "live-session-1")
+        self.assertEqual(result.resume_id, "live-resume-1")
+
     def test_codex_adapter_trial_script_emits_json_summary(self) -> None:
         script = ROOT / "scripts" / "run-codex-adapter-trial.py"
 

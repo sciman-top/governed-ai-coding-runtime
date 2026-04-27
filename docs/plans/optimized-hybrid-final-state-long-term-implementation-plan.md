@@ -471,6 +471,9 @@ Revert service-primary routing changes and preserve compatibility wrappers only 
 ### Type
 HITL
 
+### Status
+Complete on current branch baseline (canonical `runtime-flow` medium-risk live loop validated on 2026-04-27).
+
 ### Dependencies
 - `GAP-105`
 
@@ -480,9 +483,9 @@ HITL
 - Run at least one real target-repo medium-risk loop through the live Codex path.
 
 ### Acceptance Criteria
-- [ ] live Codex evidence links request through handoff in one runtime-owned chain
-- [ ] continuity id preservation meets the declared target or claims are downgraded
-- [ ] host limitation, adapter defect, and runtime policy denial are separately classified
+- [x] live Codex evidence links request through handoff in one runtime-owned chain
+- [x] continuity id preservation meets the declared target or claims are downgraded
+- [x] host limitation, adapter defect, and runtime policy denial are separately classified
 
 ### Verification
 - adapter conformance tests for Codex path

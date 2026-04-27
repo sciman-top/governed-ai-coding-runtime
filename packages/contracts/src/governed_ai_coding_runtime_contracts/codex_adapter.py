@@ -419,8 +419,22 @@ def build_codex_adapter_trial_result(
     resume_available: bool,
     mode: str = "safe",
     run_id: str = "codex-trial-safe",
+    probe: CodexSurfaceProbe | None = None,
 ) -> CodexAdapterTrialResult:
-    profile = build_codex_adapter_profile(
+    active_probe = probe or CodexSurfaceProbe(
+        codex_cli_available=True,
+        version=None,
+        native_attach_available=native_attach_available,
+        process_bridge_available=process_bridge_available,
+        structured_events_available=structured_events_available,
+        evidence_export_available=evidence_export_available,
+        resume_available=resume_available,
+        live_session_id=None,
+        live_resume_id=None,
+        reason="declared trial flags",
+        probe_commands=[],
+    )
+    profile = build_codex_adapter_profile_from_probe(active_probe) if probe else build_codex_adapter_profile(
         native_attach_available=native_attach_available,
         process_bridge_available=process_bridge_available,
         structured_events_available=structured_events_available,
@@ -434,19 +448,7 @@ def build_codex_adapter_trial_result(
         task_id=normalized_task_id,
         command_id=normalized_run_id,
         continuation_id=f"{normalized_task_id}:{normalized_run_id}",
-        probe=CodexSurfaceProbe(
-            codex_cli_available=True,
-            version=None,
-            native_attach_available=native_attach_available,
-            process_bridge_available=process_bridge_available,
-            structured_events_available=structured_events_available,
-            evidence_export_available=evidence_export_available,
-            resume_available=resume_available,
-            live_session_id=None,
-            live_resume_id=None,
-            reason="declared trial flags",
-            probe_commands=[],
-        ),
+        probe=active_probe,
     )
     base_ref = f"artifacts/{normalized_task_id}/{normalized_run_id}"
     evidence_refs = [

@@ -70,6 +70,7 @@ def main() -> int:
         resume_available=resume_available,
         mode=args.mode,
         run_id=args.run_id,
+        probe=live_probe,
     )
     payload = codex_adapter_trial_to_dict(result)
     if live_probe is not None:

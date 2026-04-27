@@ -154,10 +154,27 @@ function Get-OptionalField {
   if ($null -eq $Payload) {
     return ""
   }
-  if ($Payload.PSObject.Properties.Name -contains $FieldName -and $null -ne $Payload.$FieldName) {
-    return [string]$Payload.$FieldName
+  $property = @($Payload.PSObject.Properties | Where-Object { $_.Name -eq $FieldName } | Select-Object -First 1)
+  if ($property.Count -gt 0 -and $null -ne $property[0].Value) {
+    return [string]$property[0].Value
   }
   return ""
+}
+
+function Get-OptionalPropertyValue {
+  param(
+    [object]$Payload,
+    [Parameter(Mandatory = $true)]
+    [string]$FieldName
+  )
+  if ($null -eq $Payload) {
+    return $null
+  }
+  $property = @($Payload.PSObject.Properties | Where-Object { $_.Name -eq $FieldName } | Select-Object -First 1)
+  if ($property.Count -eq 0) {
+    return $null
+  }
+  return $property[0].Value
 }
 
 function Get-IdentityField {
@@ -169,15 +186,17 @@ function Get-IdentityField {
   if ($null -eq $Payload) {
     return ""
   }
-  if (-not ($Payload.PSObject.Properties.Name -contains "session_identity")) {
+  $sessionIdentityProperty = @($Payload.PSObject.Properties | Where-Object { $_.Name -eq "session_identity" } | Select-Object -First 1)
+  if ($sessionIdentityProperty.Count -eq 0 -or $null -eq $sessionIdentityProperty[0].Value) {
     return ""
   }
-  $identity = $Payload.session_identity
+  $identity = $sessionIdentityProperty[0].Value
   if ($null -eq $identity) {
     return ""
   }
-  if ($identity.PSObject.Properties.Name -contains $FieldName -and $null -ne $identity.$FieldName) {
-    return [string]$identity.$FieldName
+  $identityProperty = @($identity.PSObject.Properties | Where-Object { $_.Name -eq $FieldName } | Select-Object -First 1)
+  if ($identityProperty.Count -gt 0 -and $null -ne $identityProperty[0].Value) {
+    return [string]$identityProperty[0].Value
   }
   return ""
 }
@@ -308,30 +327,32 @@ if (-not $SkipVerifyAttachment) {
     $hasFailure = $true
   }
   else {
-    $verifyOutcome = ""
-    if ($verifyPayload.PSObject.Properties.Name -contains "outcome") {
-      $verifyOutcome = [string]$verifyPayload.outcome
-    }
+    $verifyOutcome = Get-OptionalField -Payload $verifyPayload -FieldName "outcome"
     if (-not [string]::IsNullOrWhiteSpace($verifyOutcome)) {
       if ($verifyOutcome -ne "pass") {
         $hasFailure = $true
       }
     }
-    elseif ($verifyPayload.results) {
-      $blockingGateIds = @()
-      if ($verifyPayload.PSObject.Properties.Name -contains "blocking_gate_ids" -and $verifyPayload.blocking_gate_ids) {
-        $blockingGateIds = @($verifyPayload.blocking_gate_ids | ForEach-Object { [string]$_ })
-      }
-      if (@($blockingGateIds).Count -eq 0) {
-        $blockingGateIds = @($verifyPayload.results.PSObject.Properties.Name)
-      }
-      foreach ($gate in $blockingGateIds) {
-        if (-not ($verifyPayload.results.PSObject.Properties.Name -contains $gate)) {
-          $hasFailure = $true
-          continue
+    else {
+      $verifyResults = Get-OptionalPropertyValue -Payload $verifyPayload -FieldName "results"
+      if ($verifyResults) {
+        $blockingGateIds = @()
+        $blockingIds = Get-OptionalPropertyValue -Payload $verifyPayload -FieldName "blocking_gate_ids"
+        if ($blockingIds) {
+          $blockingGateIds = @($blockingIds | ForEach-Object { [string]$_ })
         }
-        if ([string]$verifyPayload.results.$gate -ne "pass") {
-          $hasFailure = $true
+        if (@($blockingGateIds).Count -eq 0) {
+          $blockingGateIds = @($verifyResults.PSObject.Properties.Name)
+        }
+        foreach ($gate in $blockingGateIds) {
+          $gateResult = Get-OptionalField -Payload $verifyResults -FieldName $gate
+          if ([string]::IsNullOrWhiteSpace($gateResult)) {
+            $hasFailure = $true
+            continue
+          }
+          if ($gateResult -ne "pass") {
+            $hasFailure = $true
+          }
         }
       }
     }
@@ -389,10 +410,10 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
     if ($preflightBlocked) {
       $writePreflight = @{
         blocked = $true
-        reason = $(if ($writeGovernancePayload.reason) { [string]$writeGovernancePayload.reason } else { "" })
-        remediation_hint = $(if ($writeGovernancePayload.remediation_hint) { [string]$writeGovernancePayload.remediation_hint } else { "" })
-        suggested_target_path = $(if ($writeGovernancePayload.suggested_target_path) { [string]$writeGovernancePayload.suggested_target_path } else { "" })
-        retry_command = $(if ($writeGovernancePayload.retry_command) { [string]$writeGovernancePayload.retry_command } else { "" })
+        reason = (Get-OptionalField -Payload $writeGovernancePayload -FieldName "reason")
+        remediation_hint = (Get-OptionalField -Payload $writeGovernancePayload -FieldName "remediation_hint")
+        suggested_target_path = (Get-OptionalField -Payload $writeGovernancePayload -FieldName "suggested_target_path")
+        retry_command = (Get-OptionalField -Payload $writeGovernancePayload -FieldName "retry_command")
       }
       if (-not [string]::IsNullOrWhiteSpace([string]$writePreflight.retry_command)) {
         $nextActions.Add("retry within allowed scope: $([string]$writePreflight.retry_command)") | Out-Null
@@ -402,9 +423,8 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
 
   $skipExecuteOnPreflight = ($null -ne $writePreflight -and $writePreflight.blocked -eq $true)
   if ($ExecuteWriteFlow -and $writeGovernancePayload -and -not $skipExecuteOnPreflight) {
-    $resolvedApprovalId = ""
-    if ($writeGovernancePayload.approval_id) {
-      $resolvedApprovalId = [string]$writeGovernancePayload.approval_id
+    $resolvedApprovalId = Get-OptionalField -Payload $writeGovernancePayload -FieldName "approval_id"
+    if (-not [string]::IsNullOrWhiteSpace($resolvedApprovalId)) {
       $approveStep = Invoke-CommandCapture -Label "decide-attachment-write" -Command {
         & $python "scripts/run-governed-task.py" "decide-attachment-write" "--attachment-runtime-state-root" $resolvedAttachmentRuntimeStateRoot "--approval-id" $resolvedApprovalId "--decision" "approve" "--decided-by" "runtime-check" "--task-id" $TaskId "--adapter-id" $AdapterId "--session-id" $resolvedSessionId "--resume-id" $resolvedResumeId "--continuation-id" $resolvedContinuationId "--json"
       }
@@ -453,13 +473,14 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
     if (-not $writeExecutePayload) {
       $hasFailure = $true
     }
-    elseif ($writeExecutePayload.execution_status -ne "executed") {
+    elseif ((Get-OptionalField -Payload $writeExecutePayload -FieldName "execution_status") -ne "executed") {
       $hasFailure = $true
     }
 
     $resolvedWriteApprovalId = ""
-    if ($writeExecutePayload -and $writeExecutePayload.approval_id) {
-      $resolvedWriteApprovalId = [string]$writeExecutePayload.approval_id
+    $executeApprovalId = Get-OptionalField -Payload $writeExecutePayload -FieldName "approval_id"
+    if (-not [string]::IsNullOrWhiteSpace($executeApprovalId)) {
+      $resolvedWriteApprovalId = $executeApprovalId
     }
     elseif (-not [string]::IsNullOrWhiteSpace($resolvedApprovalId)) {
       $resolvedWriteApprovalId = $resolvedApprovalId
@@ -494,7 +515,7 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
     if (-not $writeStatusPayload) {
       $hasFailure = $true
     }
-    elseif ($writeStatusPayload.payload) {
+    elseif ($writeStatusPayload.PSObject.Properties.Name -contains "payload" -and $writeStatusPayload.payload) {
       $writeStatusPayload = $writeStatusPayload.payload
     }
 
@@ -509,7 +530,7 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
     if (-not $inspectEvidencePayload) {
       $hasFailure = $true
     }
-    elseif ($inspectEvidencePayload.payload) {
+    elseif ($inspectEvidencePayload.PSObject.Properties.Name -contains "payload" -and $inspectEvidencePayload.payload) {
       $inspectEvidencePayload = $inspectEvidencePayload.payload
     }
 
@@ -528,8 +549,9 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
         "--resume-id", $resolvedResumeId,
         "--continuation-id", $resolvedContinuationId
       )
-      if ($writeExecutePayload -and $writeExecutePayload.handoff_ref) {
-        $handoffArgs += @("--handoff-ref", [string]$writeExecutePayload.handoff_ref)
+      $executeHandoffRef = Get-OptionalField -Payload $writeExecutePayload -FieldName "handoff_ref"
+      if (-not [string]::IsNullOrWhiteSpace($executeHandoffRef)) {
+        $handoffArgs += @("--handoff-ref", $executeHandoffRef)
       }
       & $python @handoffArgs
     }
@@ -541,7 +563,7 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
     if (-not $inspectHandoffPayload) {
       $hasFailure = $true
     }
-    elseif ($inspectHandoffPayload.payload) {
+    elseif ($inspectHandoffPayload.PSObject.Properties.Name -contains "payload" -and $inspectHandoffPayload.payload) {
       $inspectHandoffPayload = $inspectHandoffPayload.payload
     }
   }
@@ -577,8 +599,11 @@ if (-not $SkipSourceStringContractGuard) {
 }
 
 $requestGateCommandPayload = $null
-if ($requestGatePayload -and $requestGatePayload.payload) {
-  $requestGateCommandPayload = $requestGatePayload.payload
+if ($requestGatePayload) {
+  $requestPayload = Get-OptionalPropertyValue -Payload $requestGatePayload -FieldName "payload"
+  if ($requestPayload) {
+    $requestGateCommandPayload = $requestPayload
+  }
 }
 
 $payloadsForContinuity = @()
@@ -640,8 +665,9 @@ $runtimeRefs = New-Object System.Collections.Generic.List[string]
 if ($requestGateCommandPayload) {
   Add-Ref -Refs $runtimeRefs -Value (Get-OptionalField -Payload $requestGateCommandPayload -FieldName "adapter_event_ref")
   Add-Ref -Refs $runtimeRefs -Value (Get-OptionalField -Payload $requestGateCommandPayload -FieldName "evidence_link")
-  if ($requestGateCommandPayload.result_artifact_refs) {
-    foreach ($property in $requestGateCommandPayload.result_artifact_refs.PSObject.Properties) {
+  $requestGateArtifactRefs = Get-OptionalPropertyValue -Payload $requestGateCommandPayload -FieldName "result_artifact_refs"
+  if ($requestGateArtifactRefs) {
+    foreach ($property in $requestGateArtifactRefs.PSObject.Properties) {
       if ($property -and $property.Value) {
         Add-Ref -Refs $runtimeRefs -Value ([string]$property.Value)
       }
@@ -654,25 +680,29 @@ if ($writeExecutePayload) {
   Add-Ref -Refs $runtimeRefs -Value (Get-OptionalField -Payload $writeExecutePayload -FieldName "handoff_ref")
   Add-Ref -Refs $runtimeRefs -Value (Get-OptionalField -Payload $writeExecutePayload -FieldName "replay_ref")
 }
-if ($inspectEvidencePayload -and $inspectEvidencePayload.evidence_refs) {
-  foreach ($ref in $inspectEvidencePayload.evidence_refs) {
+if ($inspectEvidencePayload) {
+  $evidenceRefs = Get-OptionalPropertyValue -Payload $inspectEvidencePayload -FieldName "evidence_refs"
+  foreach ($ref in @($evidenceRefs)) {
     Add-Ref -Refs $runtimeRefs -Value ([string]$ref)
   }
 }
-if ($inspectHandoffPayload -and $inspectHandoffPayload.handoff_refs) {
-  foreach ($ref in $inspectHandoffPayload.handoff_refs) {
+if ($inspectHandoffPayload) {
+  $handoffRefs = Get-OptionalPropertyValue -Payload $inspectHandoffPayload -FieldName "handoff_refs"
+  foreach ($ref in @($handoffRefs)) {
     Add-Ref -Refs $runtimeRefs -Value ([string]$ref)
   }
 }
-if ($inspectHandoffPayload -and $inspectHandoffPayload.replay_refs) {
-  foreach ($ref in $inspectHandoffPayload.replay_refs) {
+if ($inspectHandoffPayload) {
+  $replayRefs = Get-OptionalPropertyValue -Payload $inspectHandoffPayload -FieldName "replay_refs"
+  foreach ($ref in @($replayRefs)) {
     Add-Ref -Refs $runtimeRefs -Value ([string]$ref)
   }
 }
 
 $verificationLinked = $false
-if ($requestGateCommandPayload -and $requestGateCommandPayload.result_artifact_refs) {
-  $verificationLinked = (@($requestGateCommandPayload.result_artifact_refs.PSObject.Properties).Count -gt 0)
+if ($requestGateCommandPayload) {
+  $requestGateArtifactRefs = Get-OptionalPropertyValue -Payload $requestGateCommandPayload -FieldName "result_artifact_refs"
+  $verificationLinked = ($null -ne $requestGateArtifactRefs -and @($requestGateArtifactRefs.PSObject.Properties).Count -gt 0)
 }
 $writeLinked = $false
 if ($writeExecutePayload) {
@@ -725,10 +755,13 @@ $summary = @{
   overall_status = $(if ($hasFailure) { "fail" } else { "pass" })
 }
 
-if ($requestGateCommandPayload -and $requestGateCommandPayload.entrypoint_policy) {
-  $summary.entrypoint_policy_mode = [string]$requestGateCommandPayload.entrypoint_policy.current_mode
-  $summary.entrypoint_drift = [bool]$requestGateCommandPayload.entrypoint_policy.drift_detected
-  $summary.entrypoint_blocked = [bool]$requestGateCommandPayload.entrypoint_policy.blocked
+if ($requestGateCommandPayload) {
+  $entrypointPolicy = Get-OptionalPropertyValue -Payload $requestGateCommandPayload -FieldName "entrypoint_policy"
+  if ($entrypointPolicy) {
+    $summary.entrypoint_policy_mode = Get-OptionalField -Payload $entrypointPolicy -FieldName "current_mode"
+    $summary.entrypoint_drift = [bool](Get-OptionalPropertyValue -Payload $entrypointPolicy -FieldName "drift_detected")
+    $summary.entrypoint_blocked = [bool](Get-OptionalPropertyValue -Payload $entrypointPolicy -FieldName "blocked")
+  }
 }
 
 $failedStepLabels = New-Object System.Collections.Generic.List[string]
@@ -739,47 +772,46 @@ foreach ($step in $steps) {
 }
 
 $gateFailureIds = New-Object System.Collections.Generic.List[string]
-if ($verifyPayload -and $verifyPayload.results) {
-  foreach ($gateName in $verifyPayload.results.PSObject.Properties.Name) {
-    if ([string]$verifyPayload.results.$gateName -ne "pass") {
-      Add-Ref -Refs $gateFailureIds -Value ([string]$gateName)
+if ($verifyPayload) {
+  $verifyResults = Get-OptionalPropertyValue -Payload $verifyPayload -FieldName "results"
+  if ($verifyResults) {
+    foreach ($gateName in @($verifyResults.PSObject.Properties.Name)) {
+      $gateValue = Get-OptionalField -Payload $verifyResults -FieldName $gateName
+      if ($gateValue -ne "pass") {
+        Add-Ref -Refs $gateFailureIds -Value ([string]$gateName)
+      }
     }
   }
 }
-if ($requestGateCommandPayload -and $requestGateCommandPayload.results) {
-  foreach ($gateName in $requestGateCommandPayload.results.PSObject.Properties.Name) {
-    if ([string]$requestGateCommandPayload.results.$gateName -ne "pass") {
-      Add-Ref -Refs $gateFailureIds -Value ("request_gate:" + [string]$gateName)
+if ($requestGateCommandPayload) {
+  $requestGateResults = Get-OptionalPropertyValue -Payload $requestGateCommandPayload -FieldName "results"
+  if ($requestGateResults) {
+    foreach ($gateName in @($requestGateResults.PSObject.Properties.Name)) {
+      $gateValue = Get-OptionalField -Payload $requestGateResults -FieldName $gateName
+      if ($gateValue -ne "pass") {
+        Add-Ref -Refs $gateFailureIds -Value ("request_gate:" + [string]$gateName)
+      }
     }
   }
 }
 
 $requestGateOutcome = ""
-if ($requestGateCommandPayload -and $requestGateCommandPayload.PSObject.Properties.Name -contains "outcome") {
-  $requestGateOutcome = [string]$requestGateCommandPayload.outcome
+if ($requestGateCommandPayload) {
+  $requestGateOutcome = Get-OptionalField -Payload $requestGateCommandPayload -FieldName "outcome"
 }
 
-$writeGovernanceStatus = ""
-if ($writeGovernancePayload -and $writeGovernancePayload.PSObject.Properties.Name -contains "governance_status") {
-  $writeGovernanceStatus = [string]$writeGovernancePayload.governance_status
-}
-$writePolicyStatus = ""
-if ($writeGovernancePayload -and $writeGovernancePayload.PSObject.Properties.Name -contains "policy_status") {
-  $writePolicyStatus = [string]$writeGovernancePayload.policy_status
-}
-$writeExecutionStatus = ""
-if ($writeExecutePayload -and $writeExecutePayload.PSObject.Properties.Name -contains "execution_status") {
-  $writeExecutionStatus = [string]$writeExecutePayload.execution_status
-}
+$writeGovernanceStatus = Get-OptionalField -Payload $writeGovernancePayload -FieldName "governance_status"
+$writePolicyStatus = Get-OptionalField -Payload $writeGovernancePayload -FieldName "policy_status"
+$writeExecutionStatus = Get-OptionalField -Payload $writeExecutePayload -FieldName "execution_status"
 $writeFailureReason = ""
 if ($writePreflight -and $writePreflight.reason) {
   $writeFailureReason = [string]$writePreflight.reason
 }
-elseif ($writeExecutePayload -and $writeExecutePayload.reason) {
-  $writeFailureReason = [string]$writeExecutePayload.reason
+elseif (-not [string]::IsNullOrWhiteSpace((Get-OptionalField -Payload $writeExecutePayload -FieldName "reason"))) {
+  $writeFailureReason = Get-OptionalField -Payload $writeExecutePayload -FieldName "reason"
 }
-elseif ($writeGovernancePayload -and $writeGovernancePayload.reason) {
-  $writeFailureReason = [string]$writeGovernancePayload.reason
+elseif (-not [string]::IsNullOrWhiteSpace((Get-OptionalField -Payload $writeGovernancePayload -FieldName "reason"))) {
+  $writeFailureReason = Get-OptionalField -Payload $writeGovernancePayload -FieldName "reason"
 }
 $writeRetryCommand = ""
 if ($writePreflight -and $writePreflight.retry_command) {
@@ -904,8 +936,8 @@ $problemEvidenceRefs = New-Object System.Collections.Generic.List[string]
 foreach ($ref in $runtimeRefs) {
   Add-Ref -Refs $problemEvidenceRefs -Value ([string]$ref)
 }
-if ($verifyPayload -and $verifyPayload.evidence_link) {
-  Add-Ref -Refs $problemEvidenceRefs -Value ([string]$verifyPayload.evidence_link)
+if ($verifyPayload) {
+  Add-Ref -Refs $problemEvidenceRefs -Value (Get-OptionalField -Payload $verifyPayload -FieldName "evidence_link")
 }
 if ($requestGateCommandPayload) {
   Add-Ref -Refs $problemEvidenceRefs -Value (Get-OptionalField -Payload $requestGateCommandPayload -FieldName "evidence_link")

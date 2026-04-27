@@ -864,15 +864,15 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: HITL
 - Blocked by: GAP-105
 - User stories: 2, 13, 20, 31, 37, 44
-- Status: planned active queue item
+- Status: complete on current branch baseline (canonical `runtime-flow` medium-risk live loop validated on 2026-04-27)
 - What to build:
   - replace posture-only Codex evidence with a live attach or launch handshake that records session identity, continuation identity, event ingestion, task linkage, and handoff linkage
   - make Codex host capability drift visible through adapter conformance evidence and downgrade rules
   - run at least one real target-repo medium-risk loop through the live Codex path
 - Acceptance criteria:
-  - [ ] live Codex evidence links request, approval, execution, verification, evidence, replay, rollback, and handoff ids
-  - [ ] continuity id preservation meets the declared target or downgrades final-state claims
-  - [ ] failures classify host limitation, adapter defect, and runtime policy denial separately
+  - [x] live Codex evidence links request, approval, execution, verification, evidence, replay, rollback, and handoff ids
+  - [x] continuity id preservation meets the declared target or downgrades final-state claims
+  - [x] failures classify host limitation, adapter defect, and runtime policy denial separately
 
 ### GAP-107 Non-Codex Adapter Parity Batch 1
 - Type: HITL
