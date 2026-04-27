@@ -836,15 +836,15 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: AFK
 - Blocked by: GAP-103
 - User stories: 1, 13, 23, 29, 31, 44
-- Status: planned active queue item
+- Status: complete on current branch baseline (validated on 2026-04-27)
 - What to build:
   - convert the post-`GAP-103` conclusion into a complete realization baseline that separates `healthy optimized baseline`, `transition implementation`, and `complete final-state closure`
   - freeze the realization acceptance matrix for service boundary, live Codex continuity, non-Codex parity, governed tool coverage, data/provenance release flow, operations recovery, and final claim certification
   - keep `LTP-01..06` trigger-based, but map each package to the first concrete implementation batch that would satisfy its trigger if evidence later justifies it
 - Acceptance criteria:
-  - [ ] roadmap, implementation plan, backlog, issue seeds, and evidence all list `GAP-104..111` with matching dependencies
-  - [ ] final-state wording states that `GAP-093..103` did not implement heavy `LTP` packages
-  - [ ] complete closure criteria are objective enough to fail if live-host, adapter, execution, data, recovery, or provenance evidence is missing
+  - [x] roadmap, implementation plan, backlog, issue seeds, and evidence all list `GAP-104..111` with matching dependencies
+  - [x] final-state wording states that `GAP-093..103` did not implement heavy `LTP` packages
+  - [x] complete closure criteria are objective enough to fail if live-host, adapter, execution, data, recovery, or provenance evidence is missing
 
 ### GAP-105 Service-Primary Runtime Boundary Batch 1
 - Type: AFK

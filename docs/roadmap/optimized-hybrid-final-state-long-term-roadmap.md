@@ -106,6 +106,18 @@ Executing only `GAP-093..103` does not realize the complete hybrid final state. 
 
 Executing `GAP-104..111` can legitimately realize the complete hybrid final state if all acceptance criteria pass and no host capability, workload, or supply-chain evidence invalidates the claims. The certification condition is evidence-based, not schedule-based: if any live-host, adapter, execution, data, operations, or provenance target fails, `GAP-111` must downgrade the claim instead of marking the final state complete.
 
+## Complete Realization Acceptance Matrix
+
+| dimension | first implementation gap | certification evidence required at `GAP-111` | fail condition |
+|---|---|---|---|
+| service-primary runtime boundary | `GAP-105` | execution-like CLI, facade, and API paths share one contract-backed behavior and parity gate | wrapper-only behavior bypasses the service/control boundary |
+| live Codex continuity | `GAP-106` | one real Codex path links request, approval, execution, verification, evidence, replay, rollback, and handoff ids | posture-only or smoke-only evidence is used as live attach evidence |
+| non-Codex parity | `GAP-107` | at least one non-Codex path passes the same conformance family and exposes honest degraded posture | host limitations silently pass as full parity |
+| governed executable coverage | `GAP-108` | shell, git, package-manager, browser, and MCP-like execution emit containment, approval, evidence, and rollback metadata | any supported executable family is unclassified or fail-open |
+| data and provenance release path | `GAP-109` | task, evidence, artifact, replay, and provenance stores have migration, retention, replay, rollback, and release-adjacent provenance tests | release or generated-artifact claims lack provenance or waiver evidence |
+| operations recovery | `GAP-110` | sustained multi-target workload and guided remediation evidence support claim freshness | recovery failures leave final-state claims unchanged |
+| closure certification | `GAP-111` | every quantified final-state target has fresh evidence or visible downgrade | narrative-only evidence is used for complete closure |
+
 ## Verification Floor
 Every gap in this roadmap must preserve the repository gate order:
 

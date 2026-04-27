@@ -413,9 +413,9 @@ AFK
 - Map every `LTP-01..06` package to its first valid implementation trigger without starting untriggered infrastructure.
 
 ### Acceptance Criteria
-- [ ] roadmap, implementation plan, backlog, issue seeds, and evidence agree on `GAP-104..111`
-- [ ] final-state wording distinguishes optimized health from complete realization
-- [ ] closure criteria can fail when live-host, adapter, execution, data, operations, or provenance evidence is missing
+- [x] roadmap, implementation plan, backlog, issue seeds, and evidence agree on `GAP-104..111`
+- [x] final-state wording distinguishes optimized health from complete realization
+- [x] closure criteria can fail when live-host, adapter, execution, data, operations, or provenance evidence is missing
 
 ### Verification
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/github/create-roadmap-issues.ps1 -ValidateOnly -RenderAll`
