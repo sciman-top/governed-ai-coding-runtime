@@ -13,7 +13,7 @@
         },
         {
           "path": "README.zh-CN.md",
-          "contains": "不应声称本项目已经在所有环境下完全替代 Codex 宿主执行"
+          "contains": "不应声称本项目已经在所有环境下完全接管 Codex 宿主执行"
         }
       ]
     },
@@ -78,6 +78,22 @@
         {
           "path": "docs/product/multi-repo-trial-loop.zh-CN.md",
           "contains": "speed 相关对外表述必须引用 `kpi-latest.json` 或 `kpi-rolling.json` 的 measured window，不能使用 anecdotal 体感描述"
+        }
+      ]
+    },
+    {
+      "claim_id": "CLM-006",
+      "claim_text": "Complete hybrid final-state closure is certified on the current branch baseline by GAP-111 evidence and remains subject to claim-drift gates.",
+      "proof_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All",
+      "evidence_link": "docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md",
+      "source_refs": [
+        {
+          "path": "README.md",
+          "contains": "`GAP-104..111` 已在当前分支基线上完成，完整混合终态闭环由 `docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md` 记录。"
+        },
+        {
+          "path": "docs/architecture/hybrid-final-state-master-outline.md",
+          "contains": "Complete realization is now certified on the current branch baseline by the post-`GAP-103` queue `GAP-104..111`."
         }
       ]
     }

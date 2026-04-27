@@ -30,16 +30,13 @@
 - 可以运行 CLI-first governed runtime smoke task，得到本地 artifact、verification、evidence、handoff 与 runtime status。
 - 可以直接查看 compatibility/upgrade/deprecation/retirement policy，并在 runtime status 与 operator UI 中看到维护状态。
 
-还不能作为完整产品直接部署：
+完整混合终态认证口径：
 
-- 没有数据库或多机 durable workflow worker。
-- 当前 package bundle 是本地分发目录，不是外部发布渠道。
-- 当前 operator UI 是本地 HTML surface，不是长期运行的 Web 服务。
-- 当前尚未实现“替代上游 Codex 宿主 UI”的全托管运行形态。
-- `native_attach` 受宿主环境影响，运行时可能降级到 `process_bridge` / `manual_handoff`。
-- 仍不能宣称“所有外部仓、所有高风险流程都已被 runtime 全量接管”。
-- `GAP-045..060` 是直达完整混合终态的主线且已完成；`GAP-061..068` 是 `GAP-060` 之后的治理优化 follow-on lane，现也已完成（2026-04-20），但不回写成终态闭环证明的一部分。
-- `GAP-090..092` 远期缺口触发审计队列已完成；`GAP-093` 长期规划基线、`GAP-094` 执行 containment contract 切片、`GAP-095` provenance floor 已完成；当前不启动任何 `LTP-01..06` 长期包，全部延期到未来触发证据再评估。
+- `GAP-104..111` 已在当前分支基线上完成；完整混合终态闭环由 `docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md` 记录。
+- 认证含义是 repo-local contract bundle、machine-local durable governance kernel、attach-first host adapters、same-contract verification/delivery plane 已由当前 runtime、docs、tests、all-target workload 和 evidence gate 共同证明。
+- 这不表示本项目接管上游 Codex 宿主 UI；上游认证仍保持 user-owned，`native_attach` 仍会按宿主能力显式降级到 `process_bridge` / `manual_handoff`。
+- 不宣称所有未来外部仓、所有未来高风险流程都已被无条件接管；新增 LTP implementation queue 必须使用 `GAP-111` 之后的新 id，并由 scope fence 重新选择。
+- `LTP-01..06` 仍是触发式候选：当前 certification 将部分能力用 transition-stack 方式落地或覆盖，但未引入 Temporal/OPA/event bus/object store/full ops/signing 等重型包。
 
 ## 现在能否用于其他项目
 可以，但要按当前边界理解。
@@ -55,7 +52,7 @@
 
 你现在还不能把它表述成：
 
-- 不应声称本项目已经在所有环境下完全替代 Codex 宿主执行
+- 不应声称本项目已经在所有环境下完全接管 Codex 宿主执行
 - 所有外部仓和所有高风险流程都已统一实现 runtime-owned 全闭环
 
 ## 快速使用路径（推荐）

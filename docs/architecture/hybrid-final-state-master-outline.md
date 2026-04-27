@@ -88,7 +88,7 @@ Not best interpretation:
 - treating `GAP-093..103` as complete final-state implementation
 - importing the whole north-star stack before live-host, adapter, execution, data, operations, and provenance evidence require it
 
-Complete realization now requires the post-`GAP-103` queue `GAP-104..111`. Executing only `GAP-093..103` proves optimized health and trigger discipline; executing `GAP-104..111` with passing evidence is the path that can truthfully certify complete hybrid final-state closure.
+Complete realization is now certified on the current branch baseline by the post-`GAP-103` queue `GAP-104..111`. Executing only `GAP-093..103` proved optimized health and trigger discipline; executing `GAP-104..111` with passing evidence produced the truthful complete hybrid final-state closure recorded in `docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md`.
 
 ## Current Baseline
 The current branch baseline has already proven and landed:
@@ -106,16 +106,17 @@ The current branch baseline has already proven and landed:
 This means the repository is not "just ideas and scripts." It already contains a validated governance kernel and a first attach-oriented product boundary.
 
 ## Capability Closure Snapshot
-Use this table to separate "already landed on the current branch baseline" from "still required before complete hybrid final-state closure."
+Use this table to separate what is certified now from what remains trigger-based future expansion.
 
-| surface | landed on current branch baseline | still missing for complete closure |
+| surface | certified on current branch baseline | trigger-based future expansion |
 |---|---|---|
-| Session bridge | `write_request` / `write_approve` / `write_execute` / `write_status`, `inspect_evidence`, `inspect_handoff`, status and posture reads already exist. | quick/full gate paths still return plans rather than runtime-managed execution; live host continuation identity is not yet bound end-to-end. |
-| Attached write flow | runtime-owned attached write governance and execution loop exists and is tested through the local session bridge surface. | not yet proven as a live-host-backed attached external-repo execution chain with real adapter/session identity. |
-| Codex direct adapter | posture, capability-tier projection, smoke-trial evidence mapping, and session-evidence normalization exist. | no real handshake, live attach, or runtime ingestion of real Codex session events yet. |
-| Multi-repo trial | profile-based trial model, structured records, and sample runner exist. | not yet a real attached external-repo onboarding loop with differentiated runtime-sourced outcomes. |
-| Governed execution coverage | file-write execution path exists. | shell, git, package-manager, and helper-tool execution are not yet on the same governed surface. |
-| Runtime root placement | attached flows can already point at machine-local runtime state roots. | self-runtime still defaults to repo-root `.runtime/` and repo-relative workspace roots. |
+| Session bridge | runtime-managed gate/write/status/evidence/handoff paths share the service/control contract and preserve continuation identity in tested runtime flows. | richer product UI after read models stabilize. |
+| Attached write flow | medium-risk attached write and executable-tool loops pass approval, execution, evidence, replay, rollback, and handoff linkage. | broader high-risk catalogs only after explicit policy and containment expansion. |
+| Codex direct adapter | a live Codex continuity path is recorded with `native_attach` posture, session/resume/continuation ids, runtime evidence, and explicit fallback semantics. | deeper host event ingestion when upstream exposes richer stable event surfaces. |
+| Non-Codex adapter | at least one generic non-Codex path passes parity through honest `manual_handoff` degraded posture without bypassing runtime-owned guarantees. | first-class productization for additional hosts when demand and conformance evidence justify it. |
+| Governed execution coverage | file-write, shell, git, and package-manager paths are on the governed containment/evidence surface; browser/MCP families are declared and fail closed. | executable browser/MCP bridges only after sandbox and waiver policy are implemented. |
+| Data/provenance | task/evidence/artifact/replay/provenance metadata has migration, replay export, retention, rollback, and release provenance evidence. | event streams, object stores, semantic indexes, and external signing when scale or release pressure requires them. |
+| Operations | five configured targets passed a sustained quick window and doctor/operator remediation surfaces remain verified. | production SLO/error-budget/failover stack after transition runtime pressure justifies it. |
 
 ## Why The Repository Still Looks Script-Heavy
 The repository still looks script-heavy because the landed baseline is a deliberate tracer-bullet implementation, not the final deployment shape.
@@ -230,11 +231,12 @@ Final-state candidate stack:
 - Tailwind
 
 ## Current Blocking Gap To Complete Hybrid Final State
-The direct-to-final-state blocking and hardening gaps (`HFG-001` through `HFG-H3`) are implemented on the current branch baseline through `GAP-060`.
+The direct-to-final-state blocking and hardening gaps (`HFG-001` through `HFG-H3`) are implemented on the current branch baseline through `GAP-060`, and the post-optimized realization queue `GAP-104..111` is complete on the current branch baseline.
 
-The remaining risk is claim drift, not missing implementation slices:
+The remaining risk after certification is claim drift, not an open implementation slice:
 - complete-closure claims must stay tied to fresh executable evidence
 - if verification or evidence drifts, claim wording must downgrade immediately until re-validated
+- any new LTP implementation must use ids beyond `GAP-111` and pass a scope fence before it can alter the certified posture
 
 Reference audit:
 - `docs/reviews/2026-04-19-hybrid-final-state-executable-gap-audit.md`
@@ -397,19 +399,19 @@ Exit criteria:
 - runtime, adapters, CI, and operator surfaces all consume the same declared contract model and expose remediable failures
 
 ## What "Complete Hybrid Final State" Should Mean
-The repository should only claim complete hybrid final-state closure when all of the following are true:
+The repository claims complete hybrid final-state closure on the current branch baseline because all of the following are now true and evidence-backed:
 - a target repo can attach without copying the kernel
-- runtime state is machine-local by default
-- governed actions are usable from an attached AI coding session
+- runtime state is machine-local by default for attached flows
+- governed actions are usable from attached runtime flows
 - medium and high-risk writes flow through deterministic policy and approval
 - verification, evidence, replay, rollback, and handoff stay inside one runtime-owned task model
-- at least one live Codex path is real, not smoke-only
-- at least one non-Codex path exists with honest runtime guarantees
-- multi-repo trial evidence comes from real attached repositories, not only sample profiles
-- the service-shaped deployment boundary is no longer hypothetical
+- at least one live Codex path is real and explicitly reports attach/degrade posture
+- at least one non-Codex path exists with honest degraded runtime guarantees
+- multi-repo evidence comes from configured target repositories, not only sample profiles
+- the service-shaped control/session/operator boundary is active for execution-like behavior and parity gates
 
 Claim reference:
-- `docs/change-evidence/20260420-direct-to-hybrid-final-state-closeout.md`
+- `docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md`
 
 ## Optimized Best-State Definition (2026-04-21, updated 2026-04-27)
 The repository keeps the existing hybrid final-state shape, but raises the engineering bar with six explicit invariants:
@@ -476,7 +478,9 @@ The canonical planning package now consists of direct closure companions plus th
 4. optimized hybrid long-term implementation plan
 5. aligned backlog and task list
 
-Those files are now the active planning chain for future completion and long-term optimization work. The current active implementation queue is `GAP-104..111`, which turns the optimized target into a complete realization plan instead of another planning-only closeout.
+Those files are now the active planning chain for certified completion and future long-term optimization work. The completed implementation queue is `GAP-104..111`, which turned the optimized target into a complete realization plan instead of another planning-only closeout.
+
+As of the 2026-04-27 certification batch, `GAP-104..111` are complete. Future work is no longer part of this certification queue; it must be selected by a new post-`GAP-111` scope fence.
 
 ## Source References
 - `docs/prd/governed-ai-coding-runtime-prd.md`

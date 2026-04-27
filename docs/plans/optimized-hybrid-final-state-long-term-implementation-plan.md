@@ -4,7 +4,7 @@
 - Created from the 2026-04-27 optimized hybrid final-state and stack-staging review.
 - Future-facing queue: `GAP-093..111`.
 - Current posture: `GAP-093..103` are complete. No long-term package was implemented; `LTP-01..06` remain deferred/watch or not triggered pending fresh scope-fence evidence.
-- Active next queue: `GAP-104..111` define the complete realization path that must be implemented before the repository can truthfully claim full hybrid final-state closure.
+- Certified realization queue: `GAP-104..111` is complete on the current branch baseline and defines the evidence-backed complete hybrid final-state closure point.
 
 ## Goal
 Provide an implementation-ready plan for the long-term optimized hybrid final state while preserving the current rule that heavyweight components remain trigger-based.
@@ -667,10 +667,13 @@ HITL
 - Reconcile master outline, roadmap, implementation plan, claim catalog, backlog, issue seeds, product docs, and evidence indexes.
 - Classify every `LTP-01..06` package as implemented, partially implemented, deferred, or superseded by transition-stack work.
 
+### Status
+Complete on current branch baseline. `GAP-111` certifies complete hybrid final-state closure with fresh evidence across the master outline acceptance targets, realization batches, all-target workload, repository gates, claim catalog, and evidence index.
+
 ### Acceptance Criteria
-- [ ] every quantified final-state target in the master outline has fresh evidence or an explicit downgrade
-- [ ] live Codex, non-Codex parity, governed execution coverage, data/provenance, and operations recovery all pass their gates
-- [ ] complete hybrid final-state closure can be claimed without narrative-only evidence
+- [x] every quantified final-state target in the master outline has fresh evidence or an explicit downgrade
+- [x] live Codex, non-Codex parity, governed execution coverage, data/provenance, and operations recovery all pass their gates
+- [x] complete hybrid final-state closure can be claimed without narrative-only evidence
 
 ### Verification
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/github/create-roadmap-issues.ps1 -ValidateOnly -RenderAll`

@@ -34,13 +34,12 @@
 - 运行 CLI-first runtime smoke path：创建任务、执行本地 worker、跑 `build -> test -> contract -> doctor`、写 evidence/handoff/replay、查询 runtime status
 - 在 Python 中复用 `packages/contracts` 下的任务、repo profile、审批、执行运行时、artifact/replay、验证、handoff、eval/trace 等契约原语
 
-当前仍在实现中的终态能力：
-- 仍未实现“替代上游宿主 UI”的全托管 Codex 运行形态（上游认证保持 user-owned）
-- `native_attach` 不是所有环境都可用，运行时会按能力面显式降级到 `process_bridge` / `manual_handoff`
-- 不应宣称“所有外部仓、所有高风险流程都已被 runtime 全量接管”
-- attach-first 已有 contract 与本地 entrypoint，但还不是“替代上游宿主 UI”的最终交互体验
-- `GAP-045..060` 是直达完整混合终态的主线且已完成；`GAP-061..068` 是 `GAP-060` 之后的治理优化 follow-on lane，现也已完成（2026-04-20），且不回写成终态闭环证明的一部分
-- `GAP-090..092` 远期缺口触发审计队列已完成；`GAP-093` 长期规划基线、`GAP-094` 执行 containment contract 切片、`GAP-095` provenance floor 已完成；当前不启动任何 `LTP-01..06` 长期包，全部延期到未来触发证据再评估
+当前完整混合终态认证口径：
+- `GAP-104..111` 已在当前分支基线上完成，完整混合终态闭环由 `docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md` 记录。
+- 认证含义是：repo-local contract bundle、machine-local durable governance kernel、attach-first host adapters、same-contract verification/delivery plane 已由当前仓库的 runtime、docs、tests、all-target workload 和 evidence gate 共同证明。
+- 这不表示本项目接管上游宿主 UI；上游认证仍保持 user-owned，`native_attach` 仍按宿主能力显式降级到 `process_bridge` / `manual_handoff`。
+- 不宣称所有未来外部仓、所有未来高风险流程都已被无条件接管；新增 LTP implementation queue 必须使用 `GAP-111` 之后的新 id，并由 scope fence 重新选择。
+- `LTP-01..06` 仍是触发式候选：当前 certification 将部分能力用 transition-stack 方式落地或覆盖，但未引入 Temporal/OPA/event bus/object store/full ops/signing 等重型包。
 
 现在能否用于其他项目？
 - 可以，**但边界是“治理 sidecar / attach-first metadata + runtime-managed gate/write flows + explicit degrade semantics”**。
@@ -171,13 +170,12 @@ Available now:
 - A CLI-first governed runtime smoke path with persisted evidence, handoff, replay, and runtime status
 - Python contract primitives under `packages/contracts`
 
-Still in progress as the true end-state:
-- full runtime-owned replacement of upstream Codex host UX
-- environment-independent native-attach availability across all host surfaces
-- universal real-write takeover claims across all external repos and high-risk workflows
-- fuller attach-first user experience beyond the current local bridge and trial surfaces
-- `GAP-045..060` is the direct path to full hybrid final-state closure and is complete; `GAP-061..068` is the governance-only follow-on lane after `GAP-060` and is also complete (2026-04-20), without being back-written into the final-state closure proof itself
-- `GAP-093`, the `GAP-094` execution-containment contract slice, and the `GAP-095` provenance floor are complete; `GAP-096..102` remain planned, and `LTP-01..06` remain trigger-based rather than started implementation
+Current complete hybrid final-state certification posture:
+- `GAP-104..111` are complete on the current branch baseline; the certification evidence is `docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md`.
+- Certification means the repo-local contract bundle, machine-local durable governance kernel, attach-first host adapters, and same-contract verification/delivery plane are backed by current runtime code, docs, tests, all-target workload evidence, and claim-drift gates.
+- It does not mean this project takes over upstream host UI ownership. Upstream authentication remains user-owned, and `native_attach` still degrades explicitly to `process_bridge` / `manual_handoff` when host capability is absent.
+- It does not claim unconditional takeover of every future external repo or every future high-risk workflow. New LTP implementation queues must use ids beyond `GAP-111` and pass a scope fence.
+- `LTP-01..06` remain trigger-based candidates: this certification lands or covers the required transition-stack capabilities without introducing Temporal, OPA, event bus, object store, full operations stack, or external signing as mandatory packages.
 
 Primary docs:
 - [Single-Machine Runtime Quickstart](docs/quickstart/single-machine-runtime-quickstart.md)

@@ -34,7 +34,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Near-Term Gap Horizon Queue / GAP-080` through `GAP-089` are complete on the current branch baseline (`GAP-080` through `GAP-084` verified on 2026-04-21; `GAP-085` through `GAP-089` verified on 2026-04-22).
 - `Long-Term Gap Trigger Audit Queue / GAP-090` through `GAP-092` is complete; all `LTP-01..05` packages remain deferred pending future trigger evidence.
 - `Optimized Hybrid Long-Term Implementation Queue / GAP-093` through `GAP-103` is complete on the current branch baseline; no `LTP-01..06` implementation package was selected.
-- `Complete Hybrid Final-State Realization Queue / GAP-104` through `GAP-111` is the active post-`GAP-103` implementation queue. It is the first queue that can legitimately turn the optimized target into complete final-state closure if every acceptance criterion is implemented and verified.
+- `Complete Hybrid Final-State Realization Queue / GAP-104` through `GAP-111` is complete on the current branch baseline. It legitimately turns the optimized target into complete final-state closure because every acceptance criterion is implemented and verified.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -934,15 +934,15 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: HITL
 - Blocked by: GAP-110
 - User stories: 13, 14, 18, 21, 29, 37, 44, 45
-- Status: planned active queue item
+- Status: complete on current branch baseline (complete hybrid final-state certification recorded on 2026-04-27)
 - What to build:
   - certify complete hybrid final-state closure only after `GAP-104..110` produce fresh, reproducible evidence
   - reconcile master outline, roadmap, implementation plan, claim catalog, backlog, issue seeds, product docs, and evidence indexes
   - decide whether any `LTP-01..06` package can be marked implemented, partially implemented, deferred, or superseded by transition-stack work
 - Acceptance criteria:
-  - [ ] every quantified final-state target in the master outline has fresh evidence or an explicit downgrade
-  - [ ] live Codex, non-Codex parity, governed execution coverage, data/provenance, and operations recovery all pass their gates
-  - [ ] the repository can truthfully claim complete hybrid final-state closure without relying on narrative-only evidence
+  - [x] every quantified final-state target in the master outline has fresh evidence or an explicit downgrade
+  - [x] live Codex, non-Codex parity, governed execution coverage, data/provenance, and operations recovery all pass their gates
+  - [x] the repository can truthfully claim complete hybrid final-state closure without relying on narrative-only evidence
 
 ## Vision
 

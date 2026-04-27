@@ -6,7 +6,7 @@
 - It does not mark any `LTP` package as already triggered or implemented.
 - It translates the optimized hybrid final state into a dependency-ordered queue: `GAP-093..111`.
 - `GAP-093..103` are complete on the current branch baseline. No `LTP-01..06` package was selected or implemented.
-- `GAP-104..111` are the post-`GAP-103` realization queue. They are the first queue that can convert the optimized target into complete hybrid final-state closure if the implementation evidence passes.
+- `GAP-104..111` are the post-`GAP-103` realization queue and are complete on the current branch baseline. `GAP-111` is the certification point for complete hybrid final-state closure.
 
 ## Goal
 Move from the current verified hybrid baseline to a sustained optimized hybrid final state without turning every attractive final-state component into mandatory near-term infrastructure.
@@ -101,12 +101,12 @@ The corrected implementation posture is:
 | `GAP-110` | run sustained operations and recovery evidence after the realization batches | multi-target workload and remediation evidence supports claim freshness |
 | `GAP-111` | certify or downgrade complete hybrid final-state closure | every final-state target has fresh evidence or visible downgrade |
 
-Current realization status on the 2026-04-27 branch baseline: `GAP-104` through `GAP-110` are complete; `GAP-111` remains active and must pass before any complete final-state certification claim.
+Current realization status on the 2026-04-27 branch baseline: `GAP-104` through `GAP-111` are complete. Complete hybrid final-state closure is certified by the `GAP-111` evidence batch and remains subject to claim-drift gates.
 
 ## Does Executing This Plan Truly Realize The Final State?
 Executing only `GAP-093..103` does not realize the complete hybrid final state. It proves optimized planning, containment/provenance floors, transition-stack discipline, trigger reviews, and fresh target-repo health.
 
-Executing `GAP-104..111` can legitimately realize the complete hybrid final state if all acceptance criteria pass and no host capability, workload, or supply-chain evidence invalidates the claims. The certification condition is evidence-based, not schedule-based: if any live-host, adapter, execution, data, operations, or provenance target fails, `GAP-111` must downgrade the claim instead of marking the final state complete.
+Executing `GAP-104..111` has realized the complete hybrid final state on the current branch baseline because all acceptance criteria passed and no host capability, workload, or supply-chain evidence invalidated the claims. The certification condition remains evidence-based, not schedule-based: if any live-host, adapter, execution, data, operations, or provenance target later fails, claim-drift gates must downgrade the claim until fresh recovery evidence exists.
 
 ## Complete Realization Acceptance Matrix
 

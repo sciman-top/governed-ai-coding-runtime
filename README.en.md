@@ -30,16 +30,13 @@ Available now:
 - A CLI-first governed runtime smoke path with persisted artifacts, verification outputs, evidence bundles, handoff packages, replay references, and runtime status.
 - Python contract primitives for task intake, repo profiles, approvals, write governance, execution runtime, artifact/replay persistence, verification, delivery handoff, eval/trace, second-repo pilot checks, and a minimal control-console facade.
 
-Not available yet:
+Complete hybrid final-state certification posture:
 
-- No database or multi-machine workflow worker.
-- The package bundle is a local distribution directory, not an installer or published channel.
-- The richer operator UI is a local HTML surface, not a long-running web service.
-- Full runtime-owned replacement of upstream Codex host UX is not implemented.
-- `native_attach` is environment-dependent; degraded posture (`process_bridge` / `manual_handoff`) remains valid when host capability is weaker.
-- Universal full-takeover claims across all external repos and high-risk workflows are still out of scope.
-- `GAP-045..060` is the direct path to full hybrid final-state closure and is complete; `GAP-061..068` is the governance-only follow-on lane after `GAP-060` and is also complete (2026-04-20), without being back-written into the final-state closure proof itself.
-- `GAP-090..092` is complete as the long-term gap trigger-audit queue; `GAP-093`, the `GAP-094` execution-containment contract slice, and the `GAP-095` provenance floor are complete; no `LTP-01..06` package starts now, and all remain deferred pending future trigger evidence.
+- `GAP-104..111` are complete on the current branch baseline; the certification evidence is `docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md`.
+- Certification means the repo-local contract bundle, machine-local durable governance kernel, attach-first host adapters, and same-contract verification/delivery plane are backed by current runtime code, docs, tests, all-target workload evidence, and claim-drift gates.
+- This does not mean this project takes over upstream Codex host UI ownership. Upstream authentication remains user-owned, and `native_attach` still degrades explicitly to `process_bridge` / `manual_handoff` when host capability is absent.
+- It does not claim unconditional takeover of every future external repo or every future high-risk workflow. New LTP implementation queues must use ids beyond `GAP-111` and pass a scope fence.
+- `LTP-01..06` remain trigger-based candidates: this certification lands or covers the required transition-stack capabilities without introducing Temporal, OPA, event bus, object store, full operations stack, or external signing as mandatory packages.
 
 ## Can I Use This With Another Repo?
 Yes, with the current boundary.
