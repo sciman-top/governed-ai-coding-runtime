@@ -7,6 +7,9 @@ This directory holds executable implementation plans that translate strategy and
 - [Optimized Hybrid Final-State Long-Term Implementation Plan](./optimized-hybrid-final-state-long-term-implementation-plan.md)
   - Status: active post-`GAP-103` realization queue after the 2026-04-27 optimized final-state and stack-staging review
   - Scope: `GAP-093` through `GAP-111`; `GAP-093..103` are complete optimized health/trigger-discipline work and `GAP-104..111` are complete realization/certification work. `GAP-111` is the current complete hybrid final-state certification point; future LTP implementation must use post-`GAP-111` ids and a new scope fence.
+- [Claude Code First-Class Entrypoint Plan](./claude-code-first-class-entrypoint-plan.md)
+  - Status: active owner-directed bounded queue after `GAP-114`
+  - Scope: `GAP-115` through `GAP-119` promoting Claude Code to first-class supported host parity with Codex in governance outcome, without claiming identical adapter tier or starting the full `LTP-04` heavy package by default
 - [Long-Term Gap Trigger Audit Plan](./long-term-gap-trigger-audit-plan.md)
   - Status: completed trigger-audit queue for `GAP-090` through `GAP-092`; all `LTP-01..05` packages remain deferred pending future trigger evidence
   - Scope: final-state claim refresh, sustained real-workload evidence window, and gated decision for whether exactly one `LTP-01..05` package should start
@@ -59,7 +62,8 @@ This directory holds executable implementation plans that translate strategy and
    - [20260418 Governance Runtime Strategy Alignment Closeout](../change-evidence/20260418-governance-runtime-strategy-alignment-closeout.md)
    - [20260418 Governance Runtime Strategy Alignment Plan](../change-evidence/20260418-governance-runtime-strategy-alignment-plan.md)
 3. Use the roadmap and backlog to understand current posture:
-   - use [Optimized Hybrid Final-State Long-Term Implementation Plan](./optimized-hybrid-final-state-long-term-implementation-plan.md) and [Optimized Hybrid Final-State Long-Term Roadmap](../roadmap/optimized-hybrid-final-state-long-term-roadmap.md) as the active `GAP-093..111` chain after the 2026-04-27 stack review; `GAP-104..111` are the complete realization queue
+   - use [Optimized Hybrid Final-State Long-Term Implementation Plan](./optimized-hybrid-final-state-long-term-implementation-plan.md) and [Optimized Hybrid Final-State Long-Term Roadmap](../roadmap/optimized-hybrid-final-state-long-term-roadmap.md) as the active `GAP-093..114` chain after the 2026-04-27 stack review; `GAP-104..111` are the complete realization queue and `GAP-112..114` are post-certification guards
+   - use [Claude Code First-Class Entrypoint Plan](./claude-code-first-class-entrypoint-plan.md) as the active owner-directed `GAP-115..119` queue for Codex plus Claude Code dual first-class host entrypoints
    - use [Long-Term Gap Trigger Audit Plan](./long-term-gap-trigger-audit-plan.md) as the completed `GAP-090..092` trigger-audit record before opening any future long-term package implementation
    - use [Continuous Execution Readiness And Rollout Plan](./continuous-execution-readiness-and-rollout-plan.md) as the active loop-oriented execution baseline
    - the local runtime baseline through `Maintenance Baseline / GAP-034` is complete on the current branch baseline

@@ -40,6 +40,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Post-Certification Guard Queue / GAP-112` is complete on the current branch baseline. It mechanizes current-source compatibility so external host/protocol/security docs cannot silently strengthen final-state claims.
 - `Post-Certification Promotion Queue / GAP-113` is complete on the current branch baseline. It mechanizes how to decide whether, why, and when an `LTP-01..06` heavy package may be autonomously promoted.
 - `Post-Certification Selection Queue / GAP-114` is complete on the current branch baseline. It mechanizes what autonomous work should happen next when `GAP-113` defers heavy LTP promotion.
+- `Dual First-Class Host Entrypoint Queue / GAP-115` through `GAP-119` is active as owner-directed bounded scope. It promotes Claude Code from generic degraded compatibility to first-class supported host parity with Codex in governance outcome, while keeping host-specific adapter tiers honest.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -990,6 +991,78 @@ The entries below record the executed queue for complete hybrid final-state and 
   - [x] current selector output is `defer_ltp_and_refresh_evidence`, not heavy LTP implementation
   - [x] selector can output `repair_gate_first`, `refresh_evidence_first`, `promote_ltp`, and `owner_directed_scope_required` under the right conditions
   - [x] Docs gate, runtime tests, issue rendering, claim catalog, and evidence include the next-work selector
+
+## Post-Certification Dual First-Class Host Entrypoint Queue
+
+### GAP-115 Dual First-Class Host Scope Boundary
+- Type: HITL
+- Blocked by: GAP-114
+- User stories: 2, 18, 20, 31, 37, 44
+- Status: complete; closed by `docs/change-evidence/20260427-claude-code-first-class-entrypoint-planning.md`
+- What to build:
+  - define Codex and Claude Code as equally important first-class supported hosts for day-to-day AI coding work
+  - distinguish governance-result parity from unverified adapter-tier parity so Claude Code can be first-class without pretending `native_attach` support exists
+  - record why this bounded slice does not automatically start the full `LTP-04 multi-host-first-class` heavy package
+- Acceptance criteria:
+  - [x] roadmap, plan, backlog, claim catalog, and evidence use "Codex + Claude Code dual first-class entrypoint" wording consistently
+  - [x] first-class means equal governance requirements for rules, gates, evidence, rollback, and claim drift
+  - [x] host-specific limitations remain visible through adapter tier, `degrade_reason`, and `platform_na` where needed
+
+### GAP-116 Claude Code Settings And Hooks Governance Template
+- Type: AFK
+- Blocked by: GAP-115
+- User stories: 7, 8, 11, 20, 31, 44
+- Status: complete; closed by `docs/change-evidence/20260427-claude-code-settings-hooks-template.md`
+- What to build:
+  - add a repo-governed Claude Code settings/hooks template surface that complements `CLAUDE.md`
+  - map Claude Code permissions, hooks, and local settings into runtime-owned approval, containment, verification, rollback, and evidence semantics
+  - keep the template generated or synchronized through the existing manifest/governance baseline path instead of hand-maintained per target repo drift
+- Acceptance criteria:
+  - [x] Claude Code first-class support must use `CLAUDE.md` for context and settings/hooks for enforceable controls
+  - [x] template docs and examples fail closed for missing or unsupported Claude Code permission/hook surfaces
+  - [x] target-repo sync detects drift without overwriting unrelated local Claude configuration
+
+### GAP-117 Claude Code Adapter Probe And Conformance Parity
+- Type: HITL
+- Blocked by: GAP-116
+- User stories: 2, 13, 20, 31, 37, 44
+- Status: complete; closed by `docs/change-evidence/20260427-claude-code-adapter-certification.md`
+- What to build:
+  - add a Claude Code-specific adapter probe payload instead of relying only on generic non-Codex fixtures
+  - preserve session identity, process boundary, hook evidence, verification refs, handoff refs, replay refs, and explicit degraded posture
+  - keep Codex and Claude Code on the same conformance gate family while allowing different host capability mechanisms
+- Acceptance criteria:
+  - [x] `claude-code` has first-class adapter contract and probe coverage with explicit tier selection
+  - [x] conformance tests prove Claude Code path uses the same runtime-owned evidence and verification linkage as Codex
+  - [x] missing Claude Code CLI, hooks, or permission support produces `platform_na` or degraded posture rather than silent parity
+
+### GAP-118 All-Target Claude Code Rule And Config Sync
+- Type: AFK
+- Blocked by: GAP-116, GAP-117
+- User stories: 11, 14, 21, 31, 38, 44
+- Status: complete; closed by `docs/change-evidence/20260427-claude-code-adapter-certification.md`
+- What to build:
+  - extend all-target governance sync to cover Claude Code first-class rule/config surfaces where supported
+  - verify `CLAUDE.md`, settings/hooks templates, and managed-file drift across every active target repo
+  - keep same-hash skip, backup, `-Force`, and drift behavior aligned with the existing agent-rule sync contract
+- Acceptance criteria:
+  - [x] `sync-agent-rules.ps1 -Scope All -FailOnChange` proves all Claude Code rule files are synchronized
+  - [x] target-repo governance consistency covers Claude Code managed surfaces without touching unrelated user-local files
+  - [x] all five configured target repos either pass Claude Code sync checks or record structured `platform_na`
+
+### GAP-119 Dual First-Class Host Certification
+- Type: HITL
+- Blocked by: GAP-117, GAP-118
+- User stories: 13, 14, 18, 21, 29, 37, 44, 45
+- Status: complete; closed by `docs/change-evidence/20260427-claude-code-adapter-certification.md`
+- What to build:
+  - certify Codex plus Claude Code first-class host parity only after fresh rules, config, adapter, target sync, and conformance evidence exist
+  - update adapter parity matrix, README/status docs, claim catalog, and change evidence with the final certified posture
+  - decide whether any residual Claude Code limitation should stay as degraded first-class support or trigger a later `LTP-04` scope fence
+- Acceptance criteria:
+  - [x] one Codex path and one Claude Code path pass the same runtime-owned governance-result chain
+  - [x] certification evidence names exact commands, target repos, adapter tiers, degraded capabilities, and rollback path
+  - [x] final wording says governance result is equal while adapter tiers remain host-specific and evidence-bound
 
 ## Vision
 

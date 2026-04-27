@@ -98,6 +98,8 @@ Post-`GAP-112`, the correct way to decide whether to keep pushing toward a heavi
 
 Post-`GAP-113`, the correct way to decide what to do next is `scripts/select-next-work.py`. The current selector answer is `defer_ltp_and_refresh_evidence`: do not convert `defer_all` into hidden LTP implementation; keep gates, evidence, and source compatibility fresh until a higher-priority repair, refresh, selected LTP, or owner-directed scope appears.
 
+The user has now explicitly made Claude Code a frequent day-to-day host. That created an owner-directed bounded scope after `GAP-114`: Codex and Claude Code should be dual first-class entrypoints in governance outcome. The bounded queue `GAP-115..119` is complete. It promotes Claude Code from generic non-Codex compatibility to first-class supported host status without claiming identical `native_attach` tier or starting the full `LTP-04 multi-host-first-class` package by default.
+
 ## Current Baseline
 The current branch baseline has already proven and landed:
 - docs-first and contracts-first source-of-truth structure
@@ -454,6 +456,7 @@ The repository keeps the existing hybrid final-state shape, but raises the engin
 | governed execution closure | >= 95% successful medium-risk loops over last 30 attached runs | attached-repo loop evidence + replay/handoff refs |
 | live-host continuity | >= 95% continuity id preservation from request to handoff | session-bridge runtime tests + runtime evidence snapshots |
 | non-Codex parity | >= 1 non-Codex path passes the same conformance gate set as Codex path | adapter parity test report and trial evidence |
+| dual first-class host parity | Codex and Claude Code are equally supported in governance outcome | dual-host rule/config sync, adapter conformance, target-repo evidence, and bounded claim catalog entry |
 | service parity | API and CLI parity tests remain green for all execution-like commands | service/runtime parity test suite |
 | recoverability | >= 90% posture failures have guided remediation path and successful retry evidence | doctor/runtime status evidence plus recovery runbook replay |
 | claim freshness | closure evidence regenerated within the declared verification window | latest closeout evidence stamp and gate run outputs |

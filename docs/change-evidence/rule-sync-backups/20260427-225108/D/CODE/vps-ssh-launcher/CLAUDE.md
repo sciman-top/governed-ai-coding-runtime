@@ -1,6 +1,6 @@
-# GEMINI.md — vps-ssh-launcher（Gemini 项目级）
+# CLAUDE.md — vps-ssh-launcher（Claude 项目级）
 **项目**: vps-ssh-launcher
-**承接来源**: `GlobalUser/GEMINI.md v9.44`
+**承接来源**: `GlobalUser/CLAUDE.md v9.44`
 **适用范围**: 项目级（仓库根）
 **最后更新**: 2026-04-27
 
@@ -9,7 +9,7 @@
 - 固定结构：`1 / A / B / C / D`。
 - 裁决链：`运行事实/代码 > 项目级文件 > 全局文件 > 临时上下文`。
 - 自包含约束：执行规则以本文件正文为准，不依赖外部子文档或治理脚本作为前置条件。
-- 渐进披露边界：根文件保留本仓边界、门禁、阻断、证据和回滚；长主机排障、真实 SSH runbook 和历史证据放入 `docs/` 或按需 imports。
+- 渐进披露边界：根文件保留本仓边界、门禁、阻断、证据和回滚；长主机排障、真实 SSH runbook 和历史证据放入 `docs/` 或 `.claude/rules/`。
 
 ## A. 项目基线
 ### A.1 事实边界
@@ -37,14 +37,14 @@
 - 一次最多 3 个澄清问题；确认后恢复 `direct_fix` 并清零失败计数。
 - 留痕字段：`issue_id`、`attempt_count`、`clarification_mode`、`clarification_questions`、`clarification_answers`。
 
-## B. Gemini 平台差异
-- 用户规则：`~/.gemini/GEMINI.md`；项目/工作区规则按 Gemini CLI 层级加载和按需发现执行。
-- 启用 Trusted Folders 时，未受信目录可能进入 safe mode；遇到项目配置、环境变量、自动记忆或工具自动批准未生效，先记录 trust 状态或替代证据。
-- 可用 `@file.md` imports 组织长内容；只有本机 `settings.json` 明确配置 `context.fileName` 时，才把其他文件名视为 Gemini 上下文文件。
-- 用 `.geminiignore` 排除 `.venv/`、缓存、日志、本机 `target.json` 和敏感主机材料；修改后用 `/memory show` 核查完整上下文；来源与刷新命令先看当前 `/memory` help，支持则用 `/memory list` / `/memory refresh`，否则记录版本并用 `/memory reload` 兜底。
-- 不假定 `GEMINI.override.md` 存在；诊断优先执行 `gemini --version`、`gemini --help`。
-- 交互场景用 `/memory show` 查完整上下文；来源与刷新命令先看当前 `/memory` help，支持则用 `/memory list` / `/memory refresh`，否则记录版本并用 `/memory reload` 兜底；非交互不可用时按 `platform_na` 记录。
-- `GEMINI.md` 是上下文规则；确定性验证、安全拦截和回滚能力应落到本仓门禁、MCP/扩展、checkpoint/restore 或 CI。
+## B. Claude 平台差异
+- 用户规则：`~/.claude/CLAUDE.md`；项目规则：仓库根 `CLAUDE.md` 或 `.claude/CLAUDE.md`。
+- 个人项目偏好用 gitignored `CLAUDE.local.md` 或 `@~/.claude/...` import；多 worktree 共享偏好时优先 import；路径级差异用 `.claude/rules/`，不要假定 `CLAUDE.override.md` 存在。
+- 临时排障规则必须记录清理点，结论后删除或恢复并复测。
+- 诊断优先执行 `claude --version`、`claude --help`；交互场景可用 `/memory` 查加载链，非交互不可用时按 `platform_na` 记录。
+- auto memory / local memory 只作辅助上下文；与代码、项目规则或证据冲突时以仓库事实为准。
+- Claude 权限/安全或重复验证要求应固化到 `.claude/settings*.json` permissions、hooks、CI 或本仓门禁；不要只依赖自然语言规则。
+- 需要禁止读取敏感文件、限制工具或固定沙箱时，优先用 `.claude/settings*.json` 的 `permissions.deny` / `sandbox`；不要把硬安全边界只写成提醒。
 - 替代命令仅用于补证据，不得改变本仓门禁顺序与阻断语义。
 
 ## C. 项目差异（领域与技术）
@@ -70,7 +70,6 @@
 - contract/invariant 失败：高风险阻断，禁止发布或修改连接行为。
 - hotspot/full 失败：阻断；如因缺少隔离 Python/dev 依赖失败，先按 README 建 `.venv`，无法执行时按 `gate_na` 落证。
 - 真实 SSH 失败必须先区分：仓库逻辑、凭据/配置、远端主机状态、宿主 Windows 网络/进程环境。
-- 代理内核更新、`vasma` 菜单驱动、`xray`/`sing-box` stop-start、月度维护实跑等会影响联网能力的高风险行为，必须逐台执行；完成一台后先复验服务、配置和端口，并暂停等待用户确认正常后，才能执行第二台。禁止并行触发两台 VPS 的代理内核更新或重启类动作。
 
 ### C.4 证据与回滚
 - 证据目录：`docs/change-evidence/`（不存在则创建）。
@@ -81,7 +80,6 @@
 - 用户入口以 `run.cmd` / `connect.cmd` 为准。
 - 本地完整门禁以 `scripts/run_gates.ps1` 为准；`pip check` / `pip-audit` 需要隔离 `.venv` 或显式 `VPS_SSH_LAUNCHER_PYTHON`。
 - Windows 环境异常先检查 `ComSpec`、`SystemRoot`、`WINDIR`、`APPDATA`、`LOCALAPPDATA`、`PROGRAMDATA`，不要先把 `WinError 10106` 归因到仓库逻辑。
-- 手动触发 `/etc/v2ray-agent/auto_update_xray.sh` 或 `/etc/v2ray-agent/auto_update_singbox.sh` 时，远端命令必须只执行 wrapper 本身；后续 `xray` / `sing-box` 配置检查必须另开第二条 SSH 命令，避免被 `vasma` 内部 `pgrep -f` 误匹配为残留进程。
 
 ### C.6 Git 提交与推送边界
 - `整理提交全部` 的“全部”仅指：`本次任务相关 + 应被版本管理 + 通过 .gitignore 的文件`。

@@ -91,6 +91,8 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
         self.assertIn("python -c", policy["verification_commands"][0])
         self.assertIn("node -e", policy["verification_commands"][1])
         self.assertIn(".governed-ai/verify-powershell-policy.py", [item["path"] for item in managed_files])
+        self.assertIn(".claude/settings.json", [item["path"] for item in managed_files])
+        self.assertIn(".claude/hooks/governed-pre-tool-use.py", [item["path"] for item in managed_files])
         self.assertTrue(speed_policy["enabled"])
         self.assertTrue(speed_policy["materialize_quick_gate_commands"])
         self.assertTrue(speed_policy["materialize_full_gate_commands"])

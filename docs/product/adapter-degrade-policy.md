@@ -24,6 +24,8 @@ Make adapter compatibility posture explicit, especially when upstream capability
 
 ## Current Public Usable Release Posture
 - Codex-first compatibility is explicit.
+- Codex and Claude Code are dual first-class entrypoints in governance result.
+- Current live probe evidence classifies Codex as `native_attach` / supported and Claude Code as `process_bridge` / degraded only for `native_attach`.
 - Structured upstream event visibility is still partial.
 - The local runtime compensates with artifact-backed status, verification, evidence, and replay outputs.
 

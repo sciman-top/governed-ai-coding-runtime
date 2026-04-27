@@ -25,7 +25,32 @@ def evaluate_codex_trial_conformance(payload: dict) -> AdapterConformanceResult:
 
 
 def evaluate_claude_trial_conformance(payload: dict) -> AdapterConformanceResult:
-    return _evaluate_live_trial_conformance(payload, host_family="claude_code")
+    result = _evaluate_live_trial_conformance(payload, host_family="claude_code")
+    extra_checks: list[str] = []
+    hook_evidence_refs = _required_string_list(payload.get("hook_evidence_refs"), "hook_evidence_refs")
+    replay_ref = _required_string(payload.get("replay_ref"), "replay_ref")
+    if not hook_evidence_refs:
+        extra_checks.append("missing_hook_evidence_refs")
+    if not replay_ref:
+        extra_checks.append("missing_replay_ref")
+    if not extra_checks:
+        return AdapterConformanceResult(
+            adapter_id=result.adapter_id,
+            host_family=result.host_family,
+            status=result.status,
+            failed_checks=result.failed_checks,
+            parity_status=result.parity_status,
+            linkage_refs=result.linkage_refs + hook_evidence_refs + [replay_ref],
+        )
+    failed_checks = result.failed_checks + extra_checks
+    return AdapterConformanceResult(
+        adapter_id=result.adapter_id,
+        host_family=result.host_family,
+        status="fail",
+        failed_checks=failed_checks,
+        parity_status="blocked",
+        linkage_refs=result.linkage_refs + hook_evidence_refs + ([replay_ref] if replay_ref else []),
+    )
 
 
 def _evaluate_live_trial_conformance(payload: dict, *, host_family: str) -> AdapterConformanceResult:

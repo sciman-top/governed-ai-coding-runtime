@@ -1,12 +1,22 @@
 {
   "schema_version": "1.0",
   "baseline_id": "active-target-governance-baseline",
-  "sync_revision": "2026-04-27.1",
+  "sync_revision": "2026-04-27.2",
   "required_managed_files": [
     {
       "path": ".governed-ai/verify-powershell-policy.py",
       "source": "docs/targets/templates/verify-powershell-policy.py",
       "description": "Repo-local guard that fails on direct normal-path powershell/powershell.exe invocations and keeps target repos pwsh-first."
+    },
+    {
+      "path": ".claude/settings.json",
+      "source": "docs/targets/templates/claude-code/settings.json",
+      "description": "Managed Claude Code project settings that bind shared permissions and hooks to runtime-owned governance semantics without touching local-only settings."
+    },
+    {
+      "path": ".claude/hooks/governed-pre-tool-use.py",
+      "source": "docs/targets/templates/claude-code/governed-pre-tool-use.py",
+      "description": "Claude Code PreToolUse guard that fail-closes direct Windows PowerShell usage and sensitive local file reads with exit code 2."
     }
   ],
   "target_repo_speed_profile_policy": {

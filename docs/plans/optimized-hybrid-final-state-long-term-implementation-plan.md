@@ -2,9 +2,9 @@
 
 ## Status
 - Created from the 2026-04-27 optimized hybrid final-state and stack-staging review.
-- Future-facing queue: `GAP-093..114`.
+- Future-facing queue: `GAP-093..119`.
 - Current posture: `GAP-093..103` are complete. No long-term package was implemented; `LTP-01..06` remain deferred/watch or not triggered pending fresh scope-fence evidence.
-- Certified realization queue: `GAP-104..111` is complete on the current branch baseline and defines the evidence-backed complete hybrid final-state closure point. `GAP-112` mechanizes current-source compatibility after that closure. `GAP-113` mechanizes whether, why, and how autonomous `LTP-01..06` promotion can proceed after certification. `GAP-114` mechanizes the next autonomous work action after that promotion decision.
+- Certified realization queue: `GAP-104..111` is complete on the current branch baseline and defines the evidence-backed complete hybrid final-state closure point. `GAP-112` mechanizes current-source compatibility after that closure. `GAP-113` mechanizes whether, why, and how autonomous `LTP-01..06` promotion can proceed after certification. `GAP-114` mechanizes the next autonomous work action after that promotion decision. `GAP-115..119` are active as owner-directed bounded scope for Codex plus Claude Code dual first-class host entrypoints.
 
 ## Goal
 Provide an implementation-ready plan for the long-term optimized hybrid final state while preserving the current rule that heavyweight components remain trigger-based.
@@ -18,7 +18,7 @@ Provide an implementation-ready plan for the long-term optimized hybrid final st
 
 ## Task Graph
 
-`GAP-092 -> GAP-093 -> GAP-094 -> GAP-095 -> GAP-096 -> GAP-097 -> GAP-098 -> GAP-099 -> GAP-100 -> GAP-101 -> GAP-102 -> GAP-103 -> GAP-104 -> GAP-105 -> GAP-106 -> GAP-107 -> GAP-108 -> GAP-109 -> GAP-110 -> GAP-111 -> GAP-112 -> GAP-113 -> GAP-114`
+`GAP-092 -> GAP-093 -> GAP-094 -> GAP-095 -> GAP-096 -> GAP-097 -> GAP-098 -> GAP-099 -> GAP-100 -> GAP-101 -> GAP-102 -> GAP-103 -> GAP-104 -> GAP-105 -> GAP-106 -> GAP-107 -> GAP-108 -> GAP-109 -> GAP-110 -> GAP-111 -> GAP-112 -> GAP-113 -> GAP-114 -> GAP-115 -> GAP-116 -> GAP-117 -> GAP-118 -> GAP-119`
 
 ## GAP-093 Optimized Hybrid Long-Term Planning Baseline
 
@@ -821,6 +821,186 @@ Complete on current branch baseline. The current next action is `defer_ltp_and_r
 ### Rollback
 Revert the next-work selection policy, selector, tests, gate wiring, planning updates, claim-catalog entry, and evidence file; then fall back to the `GAP-113` promotion evaluator as the only autonomous continuation decision.
 
+## GAP-115 Dual First-Class Host Scope Boundary
+
+### Type
+HITL
+
+### Dependencies
+- `GAP-114`
+
+### Scope
+- Promote Codex and Claude Code to equally important first-class supported host entrypoints in governance outcome.
+- Define first-class as equal rules, gates, evidence, rollback, risk classification, and claim-drift obligations.
+- Keep adapter tier claims host-specific and evidence-bound; do not claim unverified Claude Code `native_attach` parity.
+
+### Status
+Active owner-directed bounded scope.
+
+### Acceptance Criteria
+- [ ] roadmap, implementation plan, backlog, issue seeds, claim catalog, and evidence agree on `GAP-115..119`
+- [ ] docs distinguish governance-result parity from identical host capability
+- [ ] the queue is bounded and does not start full `LTP-04` infrastructure by default
+
+### Verification
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/github/create-roadmap-issues.ps1 -ValidateOnly -RenderAll`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`
+
+### Likely Files
+- `docs/plans/claude-code-first-class-entrypoint-plan.md`
+- `docs/roadmap/optimized-hybrid-final-state-long-term-roadmap.md`
+- `docs/backlog/issue-ready-backlog.md`
+- `docs/backlog/issue-seeds.yaml`
+- `docs/product/claim-catalog.json`
+- `docs/change-evidence/*.md`
+
+### Rollback
+Revert the dual first-class host planning slice and downgrade Claude Code wording back to generic non-Codex compatibility.
+
+## GAP-116 Claude Code Settings And Hooks Governance Template
+
+### Type
+AFK
+
+### Dependencies
+- `GAP-115`
+
+### Scope
+- Add a managed Claude Code settings/hooks template surface that complements `CLAUDE.md`.
+- Map permissions and hooks into runtime-owned approval, containment, verification, rollback, and evidence semantics.
+- Keep target-repo local user settings outside managed overwrite scope.
+
+### Status
+Complete. Closed by `docs/change-evidence/20260427-claude-code-settings-hooks-template.md`.
+
+### Acceptance Criteria
+- [x] Claude Code context and enforceable controls are separated
+- [x] unsupported settings/hooks produce `platform_na` or fail-closed posture
+- [x] managed template sync is backed by drift checks and backups
+
+### Verification
+- targeted template validation tests
+- `python scripts/verify-target-repo-governance-consistency.py`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`
+
+### Likely Files
+- `rules/manifest.json`
+- `docs/targets/target-repo-governance-baseline.json`
+- `scripts/apply-target-repo-governance.py`
+- `tests/runtime/*`
+- `docs/change-evidence/*.md`
+
+### Rollback
+Remove managed Claude Code settings/hooks surfaces and leave `CLAUDE.md` rule sync as the only Claude Code project surface.
+
+## GAP-117 Claude Code Adapter Probe And Conformance Parity
+
+### Type
+HITL
+
+### Dependencies
+- `GAP-116`
+
+### Scope
+- Add Claude Code-specific adapter probe metadata and conformance tests.
+- Preserve identity, process/hook boundary, verification refs, evidence refs, handoff refs, and replay refs.
+- Keep missing CLI or hook support explicit through `platform_na` or degraded posture.
+
+### Status
+Complete. Closed by `docs/change-evidence/20260427-claude-code-adapter-certification.md`.
+
+### Acceptance Criteria
+- [x] `claude-code` probe reports adapter tier, degrade reason, and unsupported capabilities
+- [x] Claude Code conformance uses the same gate family as Codex
+- [x] representative evidence distinguishes live support, process bridge, and manual handoff
+
+### Verification
+- `python -m unittest tests.runtime.test_adapter_registry tests.runtime.test_adapter_conformance`
+- representative `runtime-flow` evidence for `adapter_id=claude-code`
+
+### Likely Files
+- `packages/contracts/src/governed_ai_coding_runtime_contracts/adapter_registry.py`
+- `packages/contracts/src/governed_ai_coding_runtime_contracts/adapter_conformance.py`
+- `tests/runtime/test_adapter_registry.py`
+- `tests/runtime/test_adapter_conformance.py`
+- `docs/product/adapter-conformance-parity-matrix.md`
+
+### Rollback
+Revert Claude Code probe changes and keep generic non-Codex conformance as the fallback surface.
+
+## GAP-118 All-Target Claude Code Rule And Config Sync
+
+### Type
+AFK
+
+### Dependencies
+- `GAP-116`
+- `GAP-117`
+
+### Scope
+- Extend target-repo sync and consistency checks to cover Claude Code first-class managed surfaces.
+- Preserve same-hash skip, backup, force, and drift behavior.
+- Record explicit `platform_na` where a target or host cannot support Claude Code settings/hooks.
+
+### Status
+Complete. Closed by `docs/change-evidence/20260427-claude-code-adapter-certification.md`.
+
+### Acceptance Criteria
+- [x] all configured target repos pass Claude Code rule/config sync or record structured N/A
+- [x] target-repo governance consistency covers managed Claude Code surfaces
+- [x] unrelated local Claude settings remain untouched
+
+### Verification
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -FailOnChange`
+- `python scripts/verify-target-repo-governance-consistency.py`
+- all-target governance baseline sync as needed
+
+### Likely Files
+- `rules/manifest.json`
+- `docs/targets/target-repo-governance-baseline.json`
+- `scripts/sync-agent-rules.py`
+- `scripts/apply-target-repo-governance.py`
+- `tests/runtime/test_agent_rule_sync.py`
+
+### Rollback
+Revert managed Claude Code target sync surfaces and restore the previous rule-file-only sync contract.
+
+## GAP-119 Dual First-Class Host Certification
+
+### Type
+HITL
+
+### Dependencies
+- `GAP-117`
+- `GAP-118`
+
+### Scope
+- Certify Codex and Claude Code as dual first-class entrypoints only after fresh evidence.
+- Update adapter parity matrix, claim catalog, README/status docs, and evidence with the final posture.
+- Decide whether residual Claude Code limitations remain as degraded first-class support or trigger a later `LTP-04` scope fence.
+
+### Status
+Complete. Closed by `docs/change-evidence/20260427-claude-code-adapter-certification.md`.
+
+### Acceptance Criteria
+- [x] one Codex path and one Claude Code path pass equal governance-result requirements
+- [x] final evidence records adapter tiers, degraded capabilities, commands, target repos, and rollback
+- [x] claim wording remains bounded to evidence and does not imply identical host APIs
+
+### Verification
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`
+- representative Codex and Claude Code runtime-flow evidence
+- all-target rule/config sync and governance consistency checks
+
+### Likely Files
+- `README.md`
+- `docs/product/adapter-conformance-parity-matrix.md`
+- `docs/product/claim-catalog.json`
+- `docs/change-evidence/*.md`
+
+### Rollback
+Downgrade dual first-class wording and keep Claude Code as a supported but not yet certified first-class host until evidence is regenerated.
+
 ## Checkpoints
 
 | checkpoint | after | required decision |
@@ -839,6 +1019,7 @@ Revert the next-work selection policy, selector, tests, gate wiring, planning up
 | current-source checkpoint | `GAP-112` | host/protocol/security/source assumptions are machine-checked before they can strengthen claims |
 | promotion checkpoint | `GAP-113` | autonomous promotion either selects exactly one package with evidence or defers all packages |
 | next-work checkpoint | `GAP-114` | autonomous continuation produces one next action without converting defer_all into LTP implementation |
+| dual-host checkpoint | `GAP-119` | Codex and Claude Code first-class governance-result parity is either certified or downgraded |
 
 ## Evidence Requirements
 Each gap must add or update `docs/change-evidence/*.md` with:

@@ -12,6 +12,7 @@
 - [Direct-To-Hybrid Final-State Implementation Plan](./plans/direct-to-hybrid-final-state-implementation-plan.md)
 - [Optimized Hybrid Final-State Long-Term Roadmap](./roadmap/optimized-hybrid-final-state-long-term-roadmap.md)
 - [Optimized Hybrid Final-State Long-Term Implementation Plan](./plans/optimized-hybrid-final-state-long-term-implementation-plan.md)
+- [Claude Code First-Class Entrypoint Plan](./plans/claude-code-first-class-entrypoint-plan.md)
 - [Long-Term Gap Trigger Audit Plan](./plans/long-term-gap-trigger-audit-plan.md)
 - [Governance Optimization Lane Roadmap](./roadmap/governance-optimization-lane-roadmap.md)
 - [Governance Optimization Lane Implementation Plan](./plans/governance-optimization-lane-implementation-plan.md)
@@ -36,7 +37,7 @@
 
 ## Current Planning Chain
 - Strategy and boundary inputs: [AI Coding PRD](./prd/governed-ai-coding-runtime-prd.md), [Interaction Model](./product/interaction-model.md), [Positioning And Competitive Layering](./strategy/positioning-and-competitive-layering.md), [Runtime Governance Borrowing Matrix](./research/runtime-governance-borrowing-matrix.md), [Hybrid Final-State External Benchmark Review](./research/2026-04-27-hybrid-final-state-external-benchmark-review.md), [ADR-0007 Source-Of-Truth And Runtime Contract Bundle](./adrs/0007-source-of-truth-and-runtime-contract-bundle.md), [ADR-0008 Autonomous LTP Promotion Scope Fence](./adrs/0008-autonomous-ltp-promotion-scope-fence.md), [Generic Target-Repo Attachment Blueprint](./architecture/generic-target-repo-attachment-blueprint.md), [Repo-Native Contract Bundle](./architecture/repo-native-contract-bundle.md), [Local Baseline To Hybrid Final-State Migration Matrix](./architecture/local-baseline-to-hybrid-final-state-migration-matrix.md), [Target Architecture](./architecture/governed-ai-coding-runtime-target-architecture.md), [Minimum Viable Governance Loop](./architecture/minimum-viable-governance-loop.md), and [Governance Runtime Strategy Alignment Plan](./plans/governance-runtime-strategy-alignment-plan.md)
-- Execution ordering: [Hybrid Final-State Master Outline](./architecture/hybrid-final-state-master-outline.md), [Direct-To-Hybrid Final-State Roadmap](./roadmap/direct-to-hybrid-final-state-roadmap.md), [Direct-To-Hybrid Final-State Implementation Plan](./plans/direct-to-hybrid-final-state-implementation-plan.md), [Optimized Hybrid Final-State Long-Term Roadmap](./roadmap/optimized-hybrid-final-state-long-term-roadmap.md), [Optimized Hybrid Final-State Long-Term Implementation Plan](./plans/optimized-hybrid-final-state-long-term-implementation-plan.md), [Backlog Index](./backlog/README.md), [Issue-Ready Backlog](./backlog/issue-ready-backlog.md), [Issue Seeds YAML](./backlog/issue-seeds.yaml), and [Plans Index](./plans/README.md)
+- Execution ordering: [Hybrid Final-State Master Outline](./architecture/hybrid-final-state-master-outline.md), [Direct-To-Hybrid Final-State Roadmap](./roadmap/direct-to-hybrid-final-state-roadmap.md), [Direct-To-Hybrid Final-State Implementation Plan](./plans/direct-to-hybrid-final-state-implementation-plan.md), [Optimized Hybrid Final-State Long-Term Roadmap](./roadmap/optimized-hybrid-final-state-long-term-roadmap.md), [Optimized Hybrid Final-State Long-Term Implementation Plan](./plans/optimized-hybrid-final-state-long-term-implementation-plan.md), [Claude Code First-Class Entrypoint Plan](./plans/claude-code-first-class-entrypoint-plan.md), [Backlog Index](./backlog/README.md), [Issue-Ready Backlog](./backlog/issue-ready-backlog.md), [Issue Seeds YAML](./backlog/issue-seeds.yaml), and [Plans Index](./plans/README.md)
 - Follow-on optimization ordering: [Governance Optimization Lane Roadmap](./roadmap/governance-optimization-lane-roadmap.md), [Governance Optimization Lane Implementation Plan](./plans/governance-optimization-lane-implementation-plan.md), [Backlog Index](./backlog/README.md), [Issue-Ready Backlog](./backlog/issue-ready-backlog.md), and [Issue Seeds YAML](./backlog/issue-seeds.yaml); this lane was the governance-only follow-on after `GAP-060` and is complete on the current branch baseline (verified on 2026-04-20)
 - Current implementation history: [Foundation Runtime Substrate Implementation Plan](./plans/foundation-runtime-substrate-implementation-plan.md), [Full Runtime Implementation Plan](./plans/full-runtime-implementation-plan.md), [Public Usable Release Implementation Plan](./plans/public-usable-release-implementation-plan.md), and [Maintenance Implementation Plan](./plans/maintenance-implementation-plan.md); use the migration matrix when comparing those completed slices with the active hybrid final-state queue.
 
@@ -49,6 +50,7 @@
 - For post-certification guard work, `GAP-112` is complete on the current branch baseline. It adds a machine-readable current-source compatibility guard for A2A/MCP/Codex sandbox, host guardrails, and provenance assumptions.
 - For post-certification promotion work, `GAP-113` is complete on the current branch baseline. It adds a machine-readable autonomous `LTP-01..06` promotion fence that currently returns `defer_all` unless exactly one package has fresh trigger evidence and scope.
 - For post-certification next-work selection, `GAP-114` is complete on the current branch baseline. It turns `GAP-113` output into a deterministic autonomous next action.
+- For dual first-class host support, `GAP-115` through `GAP-119` are complete. Claude Code is first-class in governance outcome beside Codex, while current adapter evidence keeps Codex at `native_attach` / supported and Claude Code at `process_bridge` / degraded only for `native_attach`.
 - Historical lifecycle and productization plans remain execution history and rationale, not competing active mainlines.
 
 ## Navigation Aids
@@ -77,7 +79,8 @@
 - `Post-Certification Guard Queue / GAP-112` is complete and enforced through `verify-repo.ps1 -Check Docs`.
 - `Post-Certification Promotion Queue / GAP-113` is complete and enforced through `verify-repo.ps1 -Check Docs`.
 - `Post-Certification Selection Queue / GAP-114` is complete and enforced through `verify-repo.ps1 -Check Docs`.
-- New LTP implementation queue items beyond `GAP-114` must use later ids and must pass the autonomous or owner-directed promotion scope fence.
+- `Dual First-Class Host Entrypoint Queue / GAP-115` through `GAP-119` is complete as owner-directed bounded scope for Codex plus Claude Code; certification evidence is in `docs/change-evidence/20260427-claude-code-adapter-certification.md`.
+- New LTP implementation queue items beyond this bounded host-support queue must use later ids and must pass the autonomous or owner-directed promotion scope fence.
 - Active verification for this repo remains `build -> test -> contract/invariant -> doctor`, with docs and script checks still included in `verify-repo -Check All`.
 - `docs/change-evidence/` remains historical evidence and planning trace, not the primary user-facing product surface.
 
@@ -256,6 +259,7 @@ Primary reading entrypoints:
 - [Direct-To-Hybrid Final-State Implementation Plan](./plans/direct-to-hybrid-final-state-implementation-plan.md)
 - [Optimized Hybrid Final-State Long-Term Roadmap](./roadmap/optimized-hybrid-final-state-long-term-roadmap.md)
 - [Optimized Hybrid Final-State Long-Term Implementation Plan](./plans/optimized-hybrid-final-state-long-term-implementation-plan.md)
+- [Claude Code First-Class Entrypoint Plan](./plans/claude-code-first-class-entrypoint-plan.md)
 - [90-Day Plan](./roadmap/governed-ai-coding-runtime-90-day-plan.md)
 - [Full Lifecycle Plan](./roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
 - [Interactive Session Productization Implementation Plan](./plans/interactive-session-productization-implementation-plan.md)

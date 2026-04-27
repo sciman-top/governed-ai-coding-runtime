@@ -4,12 +4,13 @@
 - This is the long-term roadmap created after the 2026-04-27 external benchmark and stack-staging review.
 - It starts after the completed `GAP-090..092` trigger-audit queue.
 - It does not mark any `LTP` package as already triggered or implemented.
-- It translates the optimized hybrid final state into a dependency-ordered queue: `GAP-093..114`.
+- It translates the optimized hybrid final state into a dependency-ordered queue: `GAP-093..119`.
 - `GAP-093..103` are complete on the current branch baseline. No `LTP-01..06` package was selected or implemented.
 - `GAP-104..111` are the post-`GAP-103` realization queue and are complete on the current branch baseline. `GAP-111` is the certification point for complete hybrid final-state closure.
 - `GAP-112` is the first post-certification guard and is complete on the current branch baseline. It mechanizes current-source compatibility after certification.
 - `GAP-113` is complete on the current branch baseline. It mechanizes whether, why, and how autonomous `LTP-01..06` promotion can proceed after certification.
 - `GAP-114` is complete on the current branch baseline. It turns the promotion result into a deterministic autonomous next-work action.
+- `GAP-115..119` are complete as owner-directed bounded scope for Codex plus Claude Code dual first-class host entrypoints.
 
 ## Goal
 Move from the current verified hybrid baseline to a sustained optimized hybrid final state without turning every attractive final-state component into mandatory near-term infrastructure.
@@ -55,6 +56,7 @@ The corrected implementation posture is:
 | `H8 post-certification source guard` | `GAP-112` | mechanize external-source compatibility after certification | A2A/MCP/Codex sandbox, host guardrail, and provenance assumptions are policy-checked in Docs gate |
 | `H9 autonomous promotion fence` | `GAP-113` | mechanize whether, why, and how `LTP-01..06` can advance after certification | evaluator returns `defer_all` or exactly one scope-fenced `auto_selected` package |
 | `H10 autonomous next-work selection` | `GAP-114` | mechanize the next autonomous action after LTP promotion evaluation | selector returns gate repair, evidence refresh, LTP promotion, owner-directed scope, or defer-and-refresh |
+| `H11 dual first-class host support` | `GAP-115..119` | promote Claude Code to first-class supported host parity with Codex in governance outcome | Claude Code has context, settings/hooks, adapter probe, target sync, and certification evidence without overstating adapter tier |
 
 ## Track Ownership
 
@@ -96,6 +98,7 @@ The corrected implementation posture is:
 15. Post-`GAP-111` protocol adoption must include a current-source compatibility review. A2A, MCP, Codex sandbox, host guardrails, and supply-chain provenance may strengthen adapter behavior, but they cannot replace kernel-owned approval, containment, verification, rollback, or evidence.
 16. Post-`GAP-112` autonomous LTP promotion must pass the promotion policy: exactly one package, fresh trigger evidence, scope fence, full gate reference, rollback, and one vertical slice. Without that, the correct autonomous decision is `defer_all`.
 17. Post-`GAP-113` autonomous continuation must use the next-work selector. Gate repair and source/evidence freshness outrank implementation; `defer_all` cannot be converted into heavy LTP work.
+18. `GAP-115..119` are allowed as owner-directed bounded host-support work. They can make Claude Code first-class in governance outcome, but they cannot claim identical `native_attach` tier or start full `LTP-04` infrastructure without a separate scope fence.
 
 ## Post-GAP-103 Realization Queue
 
@@ -112,8 +115,13 @@ The corrected implementation posture is:
 | `GAP-112` | enforce current-source compatibility after certification | external protocol/host/security assumptions are machine-checked before they can strengthen claims |
 | `GAP-113` | enforce autonomous LTP promotion scope fencing after certification | promotion is either exactly one evidence-triggered package or a fail-closed `defer_all` decision |
 | `GAP-114` | choose the next autonomous work action after promotion evaluation | selector returns one action and preserves gate/evidence priority |
+| `GAP-115` | define the dual first-class host boundary | Codex and Claude Code are equally important first-class supported hosts in governance outcome |
+| `GAP-116` | add Claude Code settings/hooks governance template | Claude Code context and enforceable controls are separated and synchronizable |
+| `GAP-117` | add Claude Code adapter probe and conformance parity | `claude-code` has first-class probe/conformance evidence or explicit degraded posture |
+| `GAP-118` | sync Claude Code rule/config surfaces across targets | all configured target repos have synchronized or explicitly N/A Claude Code managed surfaces |
+| `GAP-119` | certify dual first-class host support | Codex and Claude Code governance-result parity is evidence-backed or visibly downgraded |
 
-Current realization status on the 2026-04-27 branch baseline: `GAP-104` through `GAP-111` are complete. Complete hybrid final-state closure is certified by the `GAP-111` evidence batch and remains subject to claim-drift gates. `GAP-112` is complete as a post-certification guard that keeps external-source assumptions machine-checkable. `GAP-113` is complete as the autonomous promotion guard that keeps heavy `LTP` adoption evidence-triggered and one-package-at-a-time. `GAP-114` is complete as the next-work selector that answers what autonomous work should happen when LTP promotion is deferred.
+Current realization status on the 2026-04-27 branch baseline: `GAP-104` through `GAP-111` are complete. Complete hybrid final-state closure is certified by the `GAP-111` evidence batch and remains subject to claim-drift gates. `GAP-112` is complete as a post-certification guard that keeps external-source assumptions machine-checkable. `GAP-113` is complete as the autonomous promotion guard that keeps heavy `LTP` adoption evidence-triggered and one-package-at-a-time. `GAP-114` is complete as the next-work selector that answers what autonomous work should happen when LTP promotion is deferred. `GAP-115..119` are complete as bounded support for the user's frequent Claude Code workflow.
 
 ## Does Executing This Plan Truly Realize The Final State?
 Executing only `GAP-093..103` does not realize the complete hybrid final state. It proves optimized planning, containment/provenance floors, transition-stack discipline, trigger reviews, and fresh target-repo health.
@@ -134,6 +142,7 @@ Executing `GAP-104..111` has realized the complete hybrid final state on the cur
 | current-source compatibility | post-`GAP-111` scope fence | external host/protocol/security docs still match adapter and claim boundaries, or affected claims are downgraded | outdated protocol assumptions are used to justify stronger claims |
 | autonomous LTP promotion | post-`GAP-112` scope fence | evaluator returns `defer_all` or exactly one scope-fenced `auto_selected` package | multiple packages advance or owner-directed work is mislabeled as evidence-triggered |
 | autonomous next-work selection | post-`GAP-113` selector | selector returns one next action from gate, freshness, promotion, owner-directed, or defer paths | `defer_all` is treated as permission to implement heavy LTP work |
+| dual first-class host support | `GAP-115..119` | Codex and Claude Code pass equal governance-result requirements with host-specific adapter tiers | Claude Code is treated as generic degraded support or as unverified `native_attach` parity |
 
 ## Verification Floor
 Every gap in this roadmap must preserve the repository gate order:
@@ -155,6 +164,8 @@ Implementation gaps must additionally run the relevant runtime, contract, doctor
 - `docs/change-evidence/20260427-gap-104-111-realization-planning.md`
 - `docs/change-evidence/20260427-gap-113-autonomous-ltp-promotion-scope-fence.md`
 - `docs/change-evidence/20260427-gap-114-autonomous-next-work-selector.md`
+- `docs/plans/claude-code-first-class-entrypoint-plan.md`
+- `docs/change-evidence/20260427-claude-code-first-class-entrypoint-planning.md`
 
 ## Source References
 - `docs/architecture/hybrid-final-state-master-outline.md`

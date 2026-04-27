@@ -46,6 +46,36 @@
       ]
     },
     {
+      "source_id": "anthropic-claude-code-memory",
+      "url": "https://code.claude.com/docs/en/memory",
+      "source_kind": "host_instructions",
+      "reviewed_version": "2026-04-27 snapshot",
+      "boundary_assertions": [
+        "CLAUDE.md is a context and memory surface",
+        "context rules do not replace runtime-owned verification or evidence"
+      ]
+    },
+    {
+      "source_id": "anthropic-claude-code-settings",
+      "url": "https://code.claude.com/docs/en/settings",
+      "source_kind": "host_settings",
+      "reviewed_version": "2026-04-27 snapshot",
+      "boundary_assertions": [
+        "settings and permissions are host-control surfaces",
+        "managed settings must be mapped to runtime-owned approval and containment semantics"
+      ]
+    },
+    {
+      "source_id": "anthropic-claude-code-hooks",
+      "url": "https://code.claude.com/docs/en/hooks",
+      "source_kind": "host_hooks",
+      "reviewed_version": "2026-04-27 snapshot",
+      "boundary_assertions": [
+        "hooks can automate host lifecycle checks",
+        "hooks complement but do not replace runtime-owned rollback and evidence"
+      ]
+    },
+    {
       "source_id": "mcp-roots",
       "url": "https://modelcontextprotocol.io/specification/2025-06-18/client/roots",
       "source_kind": "protocol",
@@ -125,6 +155,23 @@
       ]
     },
     {
+      "protocol_id": "claude_code_settings_hooks",
+      "integration_owner": "host_boundary",
+      "required_mapping": "Use Claude Code settings, permissions, and hooks as host-control inputs while preserving runtime-owned approval, containment, verification, rollback, evidence, and claim-drift semantics.",
+      "kernel_owned_semantics": [
+        "approval",
+        "containment",
+        "verification",
+        "rollback",
+        "evidence",
+        "claim_drift"
+      ],
+      "forbidden_claims": [
+        "CLAUDE.md alone is sufficient enforcement",
+        "Claude Code hooks replace runtime rollback or evidence semantics"
+      ]
+    },
+    {
       "protocol_id": "slsa_provenance",
       "integration_owner": "release_plane",
       "required_mapping": "Require provenance or explicit waiver evidence for generated runtime packages, control packs, and target-repo light packs that support release claims.",
@@ -154,6 +201,10 @@
     {
       "path": "docs/product/claim-catalog.json",
       "contains": "CLM-007"
+    },
+    {
+      "path": "docs/plans/claude-code-first-class-entrypoint-plan.md",
+      "contains": "Claude Code settings, permissions, and hooks are the enforceable host-control surfaces"
     },
     {
       "path": "docs/change-evidence/20260427-gap-112-current-source-compatibility-guard.md",
@@ -197,7 +248,10 @@
   ],
   "evidence_refs": [
     "docs/change-evidence/20260427-hybrid-final-state-current-source-refresh.md",
-    "docs/change-evidence/20260427-gap-112-current-source-compatibility-guard.md"
+    "docs/change-evidence/20260427-gap-112-current-source-compatibility-guard.md",
+    "docs/change-evidence/20260427-claude-code-first-class-entrypoint-planning.md",
+    "docs/change-evidence/20260427-claude-code-settings-hooks-template.md",
+    "docs/change-evidence/20260427-claude-code-adapter-certification.md"
   ],
   "rollback_ref": "git revert the current-source compatibility policy, verifier, tests, docs, backlog, seeds, and evidence"
 }

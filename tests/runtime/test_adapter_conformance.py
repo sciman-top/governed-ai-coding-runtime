@@ -105,7 +105,9 @@ class AdapterConformanceTests(unittest.TestCase):
             "unsupported_capability_behavior": "degrade_to_process_bridge",
             "evidence_refs": ["artifacts/task-claude/evidence/claude-session.json"],
             "verification_refs": ["artifacts/task-claude/verification/runtime.txt"],
+            "hook_evidence_refs": ["artifacts/task-claude/evidence/claude-hooks.json"],
             "handoff_ref": "artifacts/task-claude/handoff/package.json",
+            "replay_ref": "artifacts/task-claude/replay/adapter-flow.json",
         }
 
         result = conformance.evaluate_claude_trial_conformance(payload)
@@ -113,7 +115,7 @@ class AdapterConformanceTests(unittest.TestCase):
         self.assertEqual(result.status, "pass")
         self.assertEqual(result.host_family, "claude_code")
         self.assertEqual(result.parity_status, "degraded")
-        self.assertGreaterEqual(len(result.linkage_refs), 3)
+        self.assertGreaterEqual(len(result.linkage_refs), 5)
 
 
 if __name__ == "__main__":

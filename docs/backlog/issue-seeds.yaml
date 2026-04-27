@@ -1,4 +1,4 @@
-issue_seed_version: "4.7"
+issue_seed_version: "4.8"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment
@@ -460,3 +460,28 @@ issues:
     type: AFK
     blocked_by: [GAP-113]
     user_stories: [13, 18, 21, 23, 29, 31, 44]
+  - id: GAP-115
+    title: Dual First-Class Host Scope Boundary
+    type: HITL
+    blocked_by: [GAP-114]
+    user_stories: [2, 18, 20, 31, 37, 44]
+  - id: GAP-116
+    title: Claude Code Settings And Hooks Governance Template
+    type: AFK
+    blocked_by: [GAP-115]
+    user_stories: [7, 8, 11, 20, 31, 44]
+  - id: GAP-117
+    title: Claude Code Adapter Probe And Conformance Parity
+    type: HITL
+    blocked_by: [GAP-116]
+    user_stories: [2, 13, 20, 31, 37, 44]
+  - id: GAP-118
+    title: All-Target Claude Code Rule And Config Sync
+    type: AFK
+    blocked_by: [GAP-116, GAP-117]
+    user_stories: [11, 14, 21, 31, 38, 44]
+  - id: GAP-119
+    title: Dual First-Class Host Certification
+    type: HITL
+    blocked_by: [GAP-117, GAP-118]
+    user_stories: [13, 14, 18, 21, 29, 37, 44, 45]
