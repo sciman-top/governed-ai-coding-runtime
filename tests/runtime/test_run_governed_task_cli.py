@@ -24,6 +24,39 @@ class RunGovernedTaskCliTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         self.assertIn("Execute declared verification gates", completed.stdout)
 
+    def test_run_default_profile_executes_repo_local_quick_gate(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/run-governed-task.py",
+                    "--runtime-root",
+                    str(Path(tmp_dir) / "runtime"),
+                    "run",
+                    "--mode",
+                    "quick",
+                    "--task-id",
+                    "task-cli-default-profile",
+                    "--goal",
+                    "CLI default profile smoke",
+                    "--scope",
+                    "runtime cli",
+                    "--repo",
+                    "governed-ai-coding-runtime",
+                    "--json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["total_tasks"], 1)
+            self.assertEqual(payload["tasks"][0]["task_id"], "task-cli-default-profile")
+            self.assertEqual(payload["tasks"][0]["state"], "delivered")
+
     def test_verify_attachment_executes_declared_target_repo_gates(self) -> None:
         from governed_ai_coding_runtime_contracts.repo_attachment import attach_target_repo
 

@@ -36,7 +36,7 @@ from governed_ai_coding_runtime_contracts.subprocess_guard import parse_optional
 from governed_ai_coding_runtime_contracts.task_intake import TaskIntake, apply_interaction_profile_defaults
 from governed_ai_coding_runtime_contracts.task_store import FileTaskStore, TaskRecord, TaskRunRecord
 from governed_ai_coding_runtime_contracts.verification_runner import (
-    build_verification_plan,
+    build_repo_profile_verification_plan,
     run_verification_plan,
     verification_overall_outcome,
 )
@@ -71,7 +71,10 @@ def main() -> int:
     run_parser.add_argument("--goal", default="Run governed runtime smoke task")
     run_parser.add_argument("--scope", default="runtime smoke")
     run_parser.add_argument("--repo", default="governed-ai-coding-runtime")
-    run_parser.add_argument("--profile", default=str(ROOT / "schemas" / "examples" / "repo-profile" / "python-service.example.json"))
+    run_parser.add_argument(
+        "--profile",
+        default=str(ROOT / "schemas" / "examples" / "repo-profile" / "governed-ai-coding-runtime.example.json"),
+    )
     run_parser.add_argument("--mode", choices=VERIFICATION_MODE_CHOICES, default="full")
     run_parser.add_argument("--json", action="store_true")
 
@@ -273,13 +276,26 @@ def create_task(
 def run_task(*, task_id: str | None, goal: str, scope: str, repo: str, profile_path: str, mode: str) -> dict:
     store = FileTaskStore(TASK_ROOT)
     profile = load_repo_profile(profile_path)
-    identifier = task_id or create_task(
-        task_id=None,
-        goal=goal,
-        scope=scope,
-        repo=repo,
-        interaction_defaults=_interaction_defaults_from_profile(profile),
-    )["task_id"]
+    if task_id:
+        identifier = task_id
+        try:
+            store.load(identifier)
+        except FileNotFoundError:
+            create_task(
+                task_id=identifier,
+                goal=goal,
+                scope=scope,
+                repo=repo,
+                interaction_defaults=_interaction_defaults_from_profile(profile),
+            )
+    else:
+        identifier = create_task(
+            task_id=None,
+            goal=goal,
+            scope=scope,
+            repo=repo,
+            interaction_defaults=_interaction_defaults_from_profile(profile),
+        )["task_id"]
     _apply_profile_interaction_defaults_to_record(store, identifier, profile)
     runtime = ExecutionRuntime(store=store, runtime_workspaces_root=WORKSPACES_ROOT.as_posix())
     artifact_store = LocalArtifactStore(ARTIFACT_ROOT)
@@ -302,7 +318,12 @@ def run_task(*, task_id: str | None, goal: str, scope: str, repo: str, profile_p
     record = runtime.execute_task(identifier, profile, SynchronousLocalWorker(worker_id="local-worker", handler=handler))
     run = _active_run(record)
     verification_artifact = run_verification_plan(
-        build_verification_plan(mode, task_id=record.task_id, run_id=run.run_id),
+        build_repo_profile_verification_plan(
+            mode,
+            profile_raw=profile.raw,
+            task_id=record.task_id,
+            run_id=run.run_id,
+        ),
         artifact_store=artifact_store,
         execute_gate=_execute_gate,
     )

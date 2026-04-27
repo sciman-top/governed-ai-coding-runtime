@@ -91,6 +91,56 @@ class RunGovernedTaskServiceWrapperTests(unittest.TestCase):
             self.assertEqual(metrics["metrics_source_ref"], evidence_files[0].relative_to(workspace / "artifacts").as_posix())
             self.assertEqual(metrics["issue_resolution_without_repeated_question"], 1)
 
+    def test_run_task_with_new_explicit_task_id_creates_task_before_execution(self) -> None:
+        module = _load_run_governed_task_module()
+        task_store = importlib.import_module("governed_ai_coding_runtime_contracts.task_store")
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            observed_gate_commands = []
+
+            def fake_run_verification_plan(plan, *, artifact_store, execute_gate):
+                observed_gate_commands.extend(gate.command for gate in plan.gates)
+                return verification_runner.build_verification_artifact(
+                    plan,
+                    "artifacts/task/run/verification-output/test.txt",
+                    {gate.gate_id: "pass" for gate in plan.gates},
+                    {gate.gate_id: f"artifacts/task/run/verification-output/{gate.gate_id}.txt" for gate in plan.gates},
+                )
+
+            with patch.object(module, "TASK_ROOT", workspace / "tasks"), patch.object(
+                module, "ARTIFACT_ROOT", workspace / "artifacts"
+            ), patch.object(module, "WORKSPACES_ROOT", workspace / "workspaces"), patch.object(
+                module, "run_verification_plan", side_effect=fake_run_verification_plan
+            ), patch.object(
+                module,
+                "_dispatch_session_command",
+                return_value={"payload": {"total_tasks": 0, "tasks": [], "attachments": []}},
+            ), patch.object(
+                module, "summarize_codex_capability_readiness", return_value={"status": "ready"}
+            ), patch.object(module, "codex_capability_readiness_to_dict", return_value={"status": "ready"}):
+                module.run_task(
+                    task_id="task-explicit-new",
+                    goal="explicit id run creates the task",
+                    scope="cli smoke",
+                    repo="governed-ai-coding-runtime",
+                    profile_path=str(ROOT / "schemas" / "examples" / "repo-profile" / "python-service.example.json"),
+                    mode="quick",
+                )
+
+            store = task_store.FileTaskStore(workspace / "tasks")
+            record = store.load("task-explicit-new")
+            self.assertEqual(record.task.goal, "explicit id run creates the task")
+            self.assertEqual(record.current_state, "delivered")
+            self.assertEqual(
+                observed_gate_commands,
+                [
+                    "uv run ruff check src tests",
+                    "uv run pytest tests/contracts -q",
+                ],
+            )
+
     def test_snapshot_payload_uses_service_dispatch(self) -> None:
         module = _load_run_governed_task_module()
         fake_app = _FakeApp(
