@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260427 GAP-110 Operations Recovery And Sustained Soak Batch](./20260427-gap-110-operations-recovery-sustained-soak.md)
+  - evidence companion for the fresh five-target sustained quick window plus doctor/operator remediation coverage
 - [20260427 GAP-109 Data Plane And Provenance Release Batch](./20260427-gap-109-data-plane-provenance-release.md)
   - evidence companion for service-shaped metadata migration/replay/retention, release-adjacent artifact provenance guard, and package-runtime release provenance
 - [20260427 GAP-108 Governed Executable Tool Coverage Batch](./20260427-gap-108-governed-executable-tool-coverage.md)

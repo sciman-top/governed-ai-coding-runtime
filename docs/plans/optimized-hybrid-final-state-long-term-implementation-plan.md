@@ -629,10 +629,13 @@ HITL
 - Prove doctor/operator remediation for posture, policy, dependency, persistence, and adapter failures.
 - Record success, recovery, timeout, and claim-freshness metrics without introducing a full operations stack prematurely.
 
+### Status
+Complete on current branch baseline. A fresh all-target quick workload covered five configured targets with zero failures and no batch timeout, while doctor/operator tests covered healthy and failed posture remediation evidence paths.
+
 ### Acceptance Criteria
-- [ ] sustained workload evidence covers multiple targets and more than one execution class
-- [ ] at least 90% of classified posture failures have guided remediation and retry evidence or explicit waiver
-- [ ] operational failures downgrade claims until recovery evidence is regenerated
+- [x] sustained workload evidence covers multiple targets and more than one execution class
+- [x] at least 90% of classified posture failures have guided remediation and retry evidence or explicit waiver
+- [x] operational failures downgrade claims until recovery evidence is regenerated
 
 ### Verification
 - all-target runtime-flow sustained window

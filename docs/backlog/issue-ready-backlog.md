@@ -920,15 +920,15 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: HITL
 - Blocked by: GAP-106, GAP-107, GAP-108, GAP-109
 - User stories: 13, 14, 15, 21, 39, 45
-- Status: planned active queue item
+- Status: complete on current branch baseline (5-target sustained quick window plus doctor/operator remediation coverage validated on 2026-04-27)
 - What to build:
   - run a sustained workload window across self-runtime and all configured target repos after the service, adapter, execution, and data-plane batches
   - prove doctor/operator remediation for representative posture, policy, dependency, persistence, and adapter failures
   - record SLO-like success, recovery, timeout, and claim-freshness metrics without introducing a full operations stack prematurely
 - Acceptance criteria:
-  - [ ] sustained workload evidence covers multiple targets and more than one execution class
-  - [ ] at least 90% of classified posture failures have guided remediation and retry evidence or explicit waiver
-  - [ ] operational failures trigger claim downgrade until recovery evidence is regenerated
+  - [x] sustained workload evidence covers multiple targets and more than one execution class
+  - [x] at least 90% of classified posture failures have guided remediation and retry evidence or explicit waiver
+  - [x] operational failures trigger claim downgrade until recovery evidence is regenerated
 
 ### GAP-111 Complete Hybrid Final-State Certification
 - Type: HITL
