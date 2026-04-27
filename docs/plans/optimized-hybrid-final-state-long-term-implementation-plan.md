@@ -507,6 +507,9 @@ Downgrade Codex live attach claims and revert adapter/runtime linkage changes if
 ### Type
 HITL
 
+### Status
+Complete on current branch baseline (generic non-Codex canonical `runtime-flow` degraded loop validated on 2026-04-27).
+
 ### Dependencies
 - `GAP-106`
 
@@ -516,9 +519,9 @@ HITL
 - Document degraded posture honestly when attach, continuation, or evidence export is unsupported.
 
 ### Acceptance Criteria
-- [ ] one non-Codex path passes adapter conformance, governed execution, and evidence linkage gates
-- [ ] missing host capabilities produce explicit degraded posture rather than silent success
-- [ ] runtime-owned approval, verification, rollback, and evidence semantics remain host-neutral
+- [x] one non-Codex path passes adapter conformance, governed execution, and evidence linkage gates
+- [x] missing host capabilities produce explicit degraded posture rather than silent success
+- [x] runtime-owned approval, verification, rollback, and evidence semantics remain host-neutral
 
 ### Verification
 - non-Codex adapter conformance tests

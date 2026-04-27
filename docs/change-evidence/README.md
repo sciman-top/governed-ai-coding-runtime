@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260427 GAP-107 Non-Codex Adapter Parity Batch](./20260427-gap-107-non-codex-adapter-parity-batch.md)
+  - evidence companion for generic non-Codex degraded runtime-flow parity with approval, verification, evidence, replay, and handoff linkage
 - [20260427 GAP-106 Live Codex Continuity Batch](./20260427-gap-106-live-codex-continuity-batch.md)
   - evidence companion for canonical `runtime-flow` live Codex continuity, medium-risk approval/write execution, and runtime-check strict-mode hardening
 - [20260427 GAP-105 Service-Primary Runtime Boundary Batch 1](./20260427-gap-105-service-primary-runtime-boundary.md)

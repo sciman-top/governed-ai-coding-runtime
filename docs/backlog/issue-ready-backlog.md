@@ -878,15 +878,15 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: HITL
 - Blocked by: GAP-106
 - User stories: 2, 20, 31, 37, 44, 46
-- Status: planned active queue item
+- Status: complete on current branch baseline (generic non-Codex canonical `runtime-flow` degraded loop validated on 2026-04-27)
 - What to build:
   - select one non-Codex adapter path and make it pass the same conformance gate family as the Codex path
   - keep host-specific features behind capability-tiered adapter contracts rather than branching kernel semantics
   - record honest degraded-mode behavior where the host cannot support attach, continuation, or evidence export
 - Acceptance criteria:
-  - [ ] at least one non-Codex path passes adapter conformance, governed execution, and evidence linkage gates
-  - [ ] missing host capabilities are explicit degraded posture, not silent success
-  - [ ] no adapter can bypass runtime-owned approval, verification, rollback, or evidence semantics
+  - [x] at least one non-Codex path passes adapter conformance, governed execution, and evidence linkage gates
+  - [x] missing host capabilities are explicit degraded posture, not silent success
+  - [x] no adapter can bypass runtime-owned approval, verification, rollback, or evidence semantics
 
 ### GAP-108 Governed Execution Tool Coverage Batch 1
 - Type: AFK
