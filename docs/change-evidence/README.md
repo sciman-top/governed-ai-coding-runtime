@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260427 GAP-108 Governed Executable Tool Coverage Batch](./20260427-gap-108-governed-executable-tool-coverage.md)
+  - evidence companion for shell/git/package governed executable runtime-flow coverage plus browser/MCP fail-closed containment behavior
 - [20260427 GAP-107 Non-Codex Adapter Parity Batch](./20260427-gap-107-non-codex-adapter-parity-batch.md)
   - evidence companion for generic non-Codex degraded runtime-flow parity with approval, verification, evidence, replay, and handoff linkage
 - [20260427 GAP-106 Live Codex Continuity Batch](./20260427-gap-106-live-codex-continuity-batch.md)

@@ -892,15 +892,15 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: AFK
 - Blocked by: GAP-105
 - User stories: 8, 10, 13, 14, 15, 31, 44
-- Status: planned active queue item
+- Status: complete on current branch baseline (shell/git/package canonical `runtime-flow` loops plus browser/MCP fail-closed coverage validated on 2026-04-27)
 - What to build:
   - move shell, git, package-manager, browser automation, and MCP/tool-bridge execution onto the same governed containment and evidence surface as file-write execution
   - enforce workspace roots, allowed path roots, environment policy, network posture, timeout, approval class, rollback refs, and evidence refs for every supported executable family
   - fail closed for unsupported executable tool families unless an explicit waiver exists
 - Acceptance criteria:
-  - [ ] every supported executable family has contract, schema, runtime, and test coverage for containment metadata
-  - [ ] unsupported or unclassified executable families fail closed
-  - [ ] evidence snapshots include command class, containment profile, approval decision, verification result, and rollback posture
+  - [x] every supported executable family has contract, schema, runtime, and test coverage for containment metadata
+  - [x] unsupported or unclassified executable families fail closed
+  - [x] evidence snapshots include command class, containment profile, approval decision, verification result, and rollback posture
 
 ### GAP-109 Data Plane And Provenance Release Batch 1
 - Type: AFK

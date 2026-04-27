@@ -37,7 +37,12 @@ from governed_ai_coding_runtime_contracts.subprocess_guard import (
     run_subprocess,
 )
 from governed_ai_coding_runtime_contracts.task_store import FileTaskStore
-from governed_ai_coding_runtime_contracts.tool_runner import execute_governed_command, govern_execution_request
+from governed_ai_coding_runtime_contracts.tool_runner import (
+    build_containment_profile,
+    execute_governed_command,
+    govern_contained_execution_request,
+    resolve_execution_tool_family,
+)
 from governed_ai_coding_runtime_contracts.verification_runner import (
     VerificationPlan,
     build_repo_profile_verification_plan,
@@ -99,7 +104,25 @@ COMMAND_TYPES = {
 EXECUTION_COMMAND_TYPES = {"run_quick_gate", "run_full_gate", "write_execute"}
 RISK_TIERS = {"low", "medium", "high"}
 EXECUTION_MODES = {"read_only", "execute", "requires_approval"}
-GOVERNED_TOOL_TYPES = {"shell", "git", "package"}
+GOVERNED_TOOL_TYPES = {
+    "shell",
+    "powershell",
+    "pwsh",
+    "cmd",
+    "bash",
+    "git",
+    "package",
+    "package_manager",
+    "pip",
+    "uv",
+    "npm",
+    "browser",
+    "playwright",
+    "browser_automation",
+    "mcp",
+    "mcp_tool",
+    "mcp_tool_bridge",
+}
 _RUNTIME_PREFS_FILE = Path(".governed-ai") / "repo-profile.json"
 _RUNTIME_PREFS_KEY = "runtime_preferences"
 _RUNTIME_PREF_LAUNCH_SNAPSHOT_MODE = "launch_snapshot_mode"
@@ -387,13 +410,24 @@ def handle_session_bridge_command(
         if tool_name in GOVERNED_TOOL_TYPES:
             command_text = _payload_required_string(command.payload, "command")
             rollback_reference = _payload_required_string(command.payload, "rollback_reference")
-            governance = govern_execution_request(
+            execution_id = _execution_id(command)
+            policy_ref = f"artifacts/{command.task_id}/policy/tool-request.json"
+            verification_cwd = _verification_cwd(repo_root=Path(repo_root), attachment_root=attachment_root)
+            containment_profile = _build_tool_containment_profile(
+                tool_name=tool_name,
+                workspace_root=verification_cwd,
+                tier=command.risk_tier,
+                rollback_reference=rollback_reference,
+                evidence_refs=[policy_ref],
+                timeout_seconds=None,
+            )
+            governance = govern_contained_execution_request(
                 tool_name=tool_name,
                 command=command_text,
                 tier=command.risk_tier,
                 rollback_reference=rollback_reference,
+                containment_profile=containment_profile,
             )
-            execution_id = _execution_id(command)
             continuation_id = _continuation_id(command, execution_id=execution_id)
             session_identity = _session_identity(command, continuation_id=continuation_id)
             approval_id = None
@@ -442,6 +476,8 @@ def handle_session_bridge_command(
                     "session_identity": session_identity,
                     "task_id": command.task_id,
                     "tool_name": tool_name,
+                    "command_class": resolve_execution_tool_family(tool_name),
+                    "containment_profile": asdict(containment_profile) if containment_profile is not None else None,
                     "command": command_text,
                     "write_tier": command.risk_tier,
                     "governance_status": governance.status,
@@ -733,6 +769,57 @@ def handle_session_bridge_command(
                     command_payload=command.payload,
                     explicit_timeout_exempt=False,
                 )
+                containment_profile = _build_tool_containment_profile(
+                    tool_name=tool_name,
+                    workspace_root=verification_cwd,
+                    tier=command.risk_tier,
+                    rollback_reference=rollback_reference,
+                    evidence_refs=[command.policy_decision_ref or f"artifacts/{command.task_id}/policy/tool-execute.json"],
+                    timeout_seconds=execution_timeout,
+                )
+                containment_decision = govern_contained_execution_request(
+                    tool_name=tool_name,
+                    command=command_text,
+                    tier=command.risk_tier,
+                    rollback_reference=rollback_reference,
+                    containment_profile=containment_profile,
+                )
+                if containment_decision.status == "deny":
+                    return SessionBridgeResult(
+                        command_id=command.command_id,
+                        command_type=command.command_type,
+                        status="denied",
+                        payload={
+                            "execution_id": execution_id,
+                            "continuation_id": continuation_id,
+                            "adapter_id": command.adapter_id,
+                            "session_identity": session_identity,
+                            "task_id": command.task_id,
+                            "tool_name": tool_name,
+                            "command_class": resolve_execution_tool_family(tool_name),
+                            "containment_profile": asdict(containment_profile) if containment_profile is not None else None,
+                            "command": command_text,
+                            "execution_status": "denied",
+                            "timed_out": False,
+                            "timeout_seconds": execution_timeout,
+                            "timeout_exempt": execution_timeout_exempt,
+                            "artifact_ref": None,
+                            "artifact_refs": [],
+                            "approval_id": approval_id,
+                            "approval_ref": _approval_record_ref(
+                                attachment_runtime_state_root=attachment_runtime_state_root,
+                                approval_id=approval_id,
+                            ),
+                            "approval_status": approval_status,
+                            "handoff_ref": None,
+                            "replay_ref": None,
+                            "bytes_written": None,
+                            "reason": containment_decision.reason,
+                            "rollback_reference": rollback_reference,
+                            "entrypoint_policy": entrypoint_policy,
+                        },
+                        policy_decision_ref=command.policy_decision_ref,
+                    )
                 try:
                     execution = execute_governed_command(
                         command=command_text,
@@ -792,6 +879,12 @@ def handle_session_bridge_command(
                     label=tool_name,
                     payload={
                         "command": command_text,
+                        "command_class": resolve_execution_tool_family(tool_name),
+                        "containment_profile": asdict(containment_profile) if containment_profile is not None else None,
+                        "approval_decision": {
+                            "approval_id": approval_id,
+                            "approval_status": "approved" if approval_id else None,
+                        },
                         "exit_code": execution.exit_code,
                         "output": execution.output,
                         "tier": command.risk_tier,
@@ -812,8 +905,11 @@ def handle_session_bridge_command(
                         "adapter_id": command.adapter_id,
                         "task_id": command.task_id,
                         "tool_name": tool_name,
+                        "command_class": resolve_execution_tool_family(tool_name),
+                        "containment_profile": asdict(containment_profile) if containment_profile is not None else None,
                         "command": command_text,
                         "execution_status": execution_status,
+                        "verification_result": execution_status,
                         "timed_out": execution.timed_out,
                         "timeout_seconds": execution.timeout_seconds,
                         "timeout_exempt": execution.timeout_exempt,
@@ -865,8 +961,11 @@ def handle_session_bridge_command(
                         "session_identity": session_identity,
                         "task_id": command.task_id,
                         "tool_name": tool_name,
+                        "command_class": resolve_execution_tool_family(tool_name),
+                        "containment_profile": asdict(containment_profile) if containment_profile is not None else None,
                         "command": command_text,
                         "execution_status": execution_status,
+                        "verification_result": execution_status,
                         "timed_out": execution.timed_out,
                         "timeout_seconds": execution.timeout_seconds,
                         "timeout_exempt": execution.timeout_exempt,
@@ -1581,6 +1680,32 @@ def _run_id_from_payload(payload: dict) -> str:
     return "session-bridge-request"
 
 
+def _build_tool_containment_profile(
+    *,
+    tool_name: str,
+    workspace_root: Path,
+    tier: str,
+    rollback_reference: str,
+    evidence_refs: list[str],
+    timeout_seconds: object,
+):
+    tool_family = resolve_execution_tool_family(tool_name)
+    if tool_family is None:
+        return None
+    approval_class = "explicit_user_approval" if tier in {"medium", "high"} else "auto_if_reversible"
+    return build_containment_profile(
+        tool_family=tool_family,
+        workspace_root=str(workspace_root),
+        allowed_path_roots=["."],
+        environment_policy="sanitized_inherited",
+        network_posture="read_only",
+        timeout_seconds=timeout_seconds,
+        approval_class=approval_class,
+        evidence_refs=evidence_refs,
+        rollback_refs=[rollback_reference],
+    )
+
+
 def _verification_mode_for_command(command: SessionBridgeCommand) -> str:
     requested_level = _payload_optional_string(command.payload, "gate_level")
     if command.command_type == "run_quick_gate":
@@ -1655,6 +1780,12 @@ def _persist_tool_approval_request(
     approvals_root.mkdir(parents=True, exist_ok=True)
     normalized_approval_id = validate_file_component(approval_id, "approval_id")
     record_path = approvals_root / f"{normalized_approval_id}.json"
+    existing_payload = None
+    if record_path.exists():
+        try:
+            existing_payload = json.loads(record_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            existing_payload = None
     payload = {
         "approval_id": normalized_approval_id,
         "task_id": task_id,
@@ -1667,6 +1798,14 @@ def _persist_tool_approval_request(
         "requested_at": "now",
         "rollback_reference": rollback_reference,
     }
+    if isinstance(existing_payload, dict):
+        existing_status = existing_payload.get("status")
+        if isinstance(existing_status, str) and existing_status.strip().lower() in {"approved", "rejected"}:
+            payload["status"] = existing_status.strip().lower()
+            payload["decided_by"] = existing_payload.get("decided_by")
+            payload["reason"] = existing_payload.get("reason") or payload["reason"]
+        if existing_payload.get("decided_at") is not None:
+            payload["decided_at"] = existing_payload.get("decided_at")
     if session_identity is not None:
         payload["session_identity"] = dict(session_identity)
         for field_name in ("session_id", "resume_id", "continuation_id"):

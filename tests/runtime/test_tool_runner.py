@@ -213,6 +213,21 @@ class ReadOnlyToolRunnerTests(unittest.TestCase):
         self.assertEqual(decision.containment_profile.tool_family, "git")
         self.assertEqual(decision.rollback_refs, ["git diff"])
 
+    def test_declared_but_unimplemented_executable_families_fail_closed(self) -> None:
+        tool_runner = importlib.import_module("governed_ai_coding_runtime_contracts.tool_runner")
+        for tool_name, family in [("browser", "browser_automation"), ("mcp", "mcp_tool_bridge")]:
+            with self.subTest(tool_name=tool_name):
+                decision = tool_runner.govern_contained_execution_request(
+                    tool_name=tool_name,
+                    command=f"{tool_name} run",
+                    tier="low",
+                    rollback_reference="rollback unavailable",
+                    containment_profile=self._containment_profile(tool_runner, family),
+                )
+
+                self.assertEqual(decision.status, "deny")
+                self.assertIn("declared but not currently executable", decision.reason)
+
     @staticmethod
     def _containment_profile(tool_runner, tool_family: str):
         return tool_runner.build_containment_profile(

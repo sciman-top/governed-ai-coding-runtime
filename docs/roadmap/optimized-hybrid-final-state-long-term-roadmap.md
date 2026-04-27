@@ -101,7 +101,7 @@ The corrected implementation posture is:
 | `GAP-110` | run sustained operations and recovery evidence after the realization batches | multi-target workload and remediation evidence supports claim freshness |
 | `GAP-111` | certify or downgrade complete hybrid final-state closure | every final-state target has fresh evidence or visible downgrade |
 
-Current realization status on the 2026-04-27 branch baseline: `GAP-104` through `GAP-107` are complete; `GAP-108` through `GAP-111` remain active and must pass before any complete final-state certification claim.
+Current realization status on the 2026-04-27 branch baseline: `GAP-104` through `GAP-108` are complete; `GAP-109` through `GAP-111` remain active and must pass before any complete final-state certification claim.
 
 ## Does Executing This Plan Truly Realize The Final State?
 Executing only `GAP-093..103` does not realize the complete hybrid final state. It proves optimized planning, containment/provenance floors, transition-stack discipline, trigger reviews, and fresh target-repo health.

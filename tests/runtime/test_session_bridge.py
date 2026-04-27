@@ -677,6 +677,132 @@ class SessionBridgeCommandTests(unittest.TestCase):
             self.assertTrue(execute_result.payload["replay_ref"])
             self.assertTrue(execute_result.payload["adapter_event_ref"])
             self.assertGreaterEqual(execute_result.payload["adapter_event_summary"]["tool_call_count"], 1)
+            self.assertEqual(execute_result.payload["command_class"], "package_manager")
+            self.assertEqual(execute_result.payload["containment_profile"]["tool_family"], "package_manager")
+            tool_artifact_payload = json.loads(
+                (workspace / ".runtime" / "artifacts" / execute_result.payload["artifact_ref"]).read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(tool_artifact_payload["command_class"], "package_manager")
+            self.assertEqual(tool_artifact_payload["containment_profile"]["network_posture"], "read_only")
+            self.assertEqual(tool_artifact_payload["approval_decision"]["approval_status"], None)
+
+    def test_medium_tool_execution_preserves_approval_and_records_containment(self) -> None:
+        module = self._module()
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            runtime_state_root = workspace / ".runtime-state"
+            self._seed_task(workspace, task_id="task-tool-approval-flow")
+
+            request_command = module.build_session_bridge_command(
+                command_id="cmd-tool-approval-request",
+                command_type="write_request",
+                task_id="task-tool-approval-flow",
+                repo_binding_id="binding-local",
+                adapter_id="codex-cli",
+                risk_tier="medium",
+                payload={
+                    "tool_name": "package",
+                    "command": f"{sys.executable} -m pip list --disable-pip-version-check",
+                    "rollback_reference": "pip uninstall <pkg>",
+                },
+            )
+            request_result = module.handle_session_bridge_command(
+                request_command,
+                task_root=workspace / ".runtime" / "tasks",
+                repo_root=workspace,
+                attachment_runtime_state_root=runtime_state_root,
+            )
+
+            self.assertEqual(request_result.status, "approval_required")
+            approval_id = request_result.payload["approval_id"]
+
+            approve_command = module.build_session_bridge_command(
+                command_id="cmd-tool-approval-approve",
+                command_type="write_approve",
+                task_id="task-tool-approval-flow",
+                repo_binding_id="binding-local",
+                adapter_id="codex-cli",
+                risk_tier="medium",
+                payload={
+                    "approval_id": approval_id,
+                    "decision": "approve",
+                    "decided_by": "operator",
+                },
+            )
+            approve_result = module.handle_session_bridge_command(
+                approve_command,
+                task_root=workspace / ".runtime" / "tasks",
+                repo_root=workspace,
+                attachment_runtime_state_root=runtime_state_root,
+            )
+            self.assertEqual(approve_result.payload["approval_status"], "approved")
+
+            execute_command = module.build_session_bridge_command(
+                command_id="cmd-tool-approval-execute",
+                command_type="write_execute",
+                task_id="task-tool-approval-flow",
+                repo_binding_id="binding-local",
+                adapter_id="codex-cli",
+                risk_tier="medium",
+                payload={
+                    "tool_name": "package",
+                    "command": f"{sys.executable} -m pip list --disable-pip-version-check",
+                    "rollback_reference": "pip uninstall <pkg>",
+                    "approval_id": approval_id,
+                    "execution_id": request_result.payload["execution_id"],
+                    "continuation_id": request_result.payload["continuation_id"],
+                },
+                policy_decision_ref=request_result.payload["policy_decision_ref"],
+            )
+            execute_result = module.handle_session_bridge_command(
+                execute_command,
+                task_root=workspace / ".runtime" / "tasks",
+                repo_root=workspace,
+                attachment_runtime_state_root=runtime_state_root,
+            )
+
+            self.assertEqual(execute_result.status, "write_executed")
+            self.assertEqual(execute_result.payload["approval_status"], "approved")
+            self.assertEqual(execute_result.payload["command_class"], "package_manager")
+            self.assertEqual(execute_result.payload["containment_profile"]["approval_class"], "explicit_user_approval")
+            approval_record = json.loads((runtime_state_root / "approvals" / f"{approval_id}.json").read_text())
+            self.assertEqual(approval_record["status"], "approved")
+            tool_artifact_payload = json.loads(
+                (runtime_state_root / execute_result.payload["artifact_ref"]).read_text(encoding="utf-8")
+            )
+            self.assertEqual(tool_artifact_payload["containment_profile"]["tool_family"], "package_manager")
+            self.assertEqual(tool_artifact_payload["approval_decision"]["approval_status"], "approved")
+
+    def test_unsupported_executable_tool_family_fails_closed_in_session_bridge(self) -> None:
+        module = self._module()
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            self._seed_task(workspace, task_id="task-browser-tool-flow")
+
+            request_command = module.build_session_bridge_command(
+                command_id="cmd-browser-tool-request",
+                command_type="write_request",
+                task_id="task-browser-tool-flow",
+                repo_binding_id="binding-local",
+                adapter_id="codex-cli",
+                risk_tier="low",
+                payload={
+                    "tool_name": "browser",
+                    "command": "browser screenshot",
+                    "rollback_reference": "n/a",
+                },
+            )
+            request_result = module.handle_session_bridge_command(
+                request_command,
+                task_root=workspace / ".runtime" / "tasks",
+                repo_root=workspace,
+            )
+
+            self.assertEqual(request_result.status, "denied")
+            self.assertEqual(request_result.payload["command_class"], "browser_automation")
+            self.assertIn("declared but not currently executable", request_result.payload["reason"])
 
     def test_write_governance_results_normalize_to_policy_decision(self) -> None:
         write_tool_runner = importlib.import_module("governed_ai_coding_runtime_contracts.write_tool_runner")

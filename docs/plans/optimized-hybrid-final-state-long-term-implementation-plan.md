@@ -18,7 +18,7 @@ Provide an implementation-ready plan for the long-term optimized hybrid final st
 
 ## Task Graph
 
-`GAP-092 -> GAP-093 -> GAP-094 -> GAP-095 -> GAP-096 -> GAP-097 -> GAP-098 -> GAP-099 -> GAP-100 -> GAP-101 -> GAP-102 -> GAP-103 -> GAP-104 -> GAP-105 -> (GAP-106 + GAP-108) -> GAP-107 -> GAP-109 -> GAP-110 -> GAP-111`
+`GAP-092 -> GAP-093 -> GAP-094 -> GAP-095 -> GAP-096 -> GAP-097 -> GAP-098 -> GAP-099 -> GAP-100 -> GAP-101 -> GAP-102 -> GAP-103 -> GAP-104 -> GAP-105 -> GAP-106 -> GAP-107 -> GAP-108 -> GAP-109 -> GAP-110 -> GAP-111`
 
 ## GAP-093 Optimized Hybrid Long-Term Planning Baseline
 
@@ -551,10 +551,13 @@ AFK
 - Enforce workspace roots, allowed path roots, environment policy, network posture, timeout, approval class, rollback refs, and evidence refs.
 - Fail closed for unsupported executable tool families unless an explicit waiver exists.
 
+### Status
+Complete on current branch baseline. Shell, git, and package-manager execution now use the same runtime-owned approval, containment, evidence, handoff, and replay path; browser automation and MCP/tool-bridge families are declared but fail closed until explicitly implemented or waived.
+
 ### Acceptance Criteria
-- [ ] supported executable families have contract, schema, runtime, and test coverage for containment metadata
-- [ ] unsupported or unclassified executable families fail closed
-- [ ] evidence snapshots include command class, containment profile, approval decision, verification result, and rollback posture
+- [x] supported executable families have contract, schema, runtime, and test coverage for containment metadata
+- [x] unsupported or unclassified executable families fail closed
+- [x] evidence snapshots include command class, containment profile, approval decision, verification result, and rollback posture
 
 ### Verification
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`
