@@ -4,6 +4,10 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260427 GAP-112 Current Source Compatibility Guard](./20260427-gap-112-current-source-compatibility-guard.md)
+  - closeout evidence for mechanizing current-source compatibility after `GAP-111` through policy, verifier, tests, Docs gate wiring, backlog/seeds, and claim catalog linkage
+- [20260427 Hybrid Final-State Current Source Refresh](./20260427-hybrid-final-state-current-source-refresh.md)
+  - evidence companion for refreshing official/community source references after `GAP-111`, confirming no architecture pivot, and adding protocol/sandbox/provenance compatibility boundaries
 - [20260427 GAP-111 Complete Hybrid Final-State Certification](./20260427-gap-111-complete-hybrid-final-state-certification.md)
   - final certification evidence for complete hybrid final-state closure after `GAP-104..110`, including LTP classification and claim catalog linkage
 - [20260427 GAP-110 Operations Recovery And Sustained Soak Batch](./20260427-gap-110-operations-recovery-sustained-soak.md)

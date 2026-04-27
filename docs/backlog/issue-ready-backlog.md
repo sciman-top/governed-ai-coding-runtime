@@ -35,6 +35,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Long-Term Gap Trigger Audit Queue / GAP-090` through `GAP-092` is complete; all `LTP-01..05` packages remain deferred pending future trigger evidence.
 - `Optimized Hybrid Long-Term Implementation Queue / GAP-093` through `GAP-103` is complete on the current branch baseline; no `LTP-01..06` implementation package was selected.
 - `Complete Hybrid Final-State Realization Queue / GAP-104` through `GAP-111` is complete on the current branch baseline. It legitimately turns the optimized target into complete final-state closure because every acceptance criterion is implemented and verified.
+- `Post-Certification Guard Queue / GAP-112` is complete on the current branch baseline. It mechanizes current-source compatibility so external host/protocol/security docs cannot silently strengthen final-state claims.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -943,6 +944,20 @@ The entries below record the executed queue for complete hybrid final-state and 
   - [x] every quantified final-state target in the master outline has fresh evidence or an explicit downgrade
   - [x] live Codex, non-Codex parity, governed execution coverage, data/provenance, and operations recovery all pass their gates
   - [x] the repository can truthfully claim complete hybrid final-state closure without relying on narrative-only evidence
+
+### GAP-112 Current Source Compatibility Guard
+- Type: AFK
+- Blocked by: GAP-111
+- User stories: 13, 18, 21, 29, 31, 44
+- Status: complete on current branch baseline (current-source compatibility policy and Docs gate validated on 2026-04-27)
+- What to build:
+  - turn the post-`GAP-111` current-source compatibility review into a machine-readable policy and verifier
+  - fail closed when A2A, MCP, Codex sandbox, host guardrail, or supply-chain provenance assumptions are stale or missing required claim-boundary text
+  - wire the verifier into `verify-repo.ps1 -Check Docs` so future final-state claims cannot rely on outdated protocol assumptions
+- Acceptance criteria:
+  - [x] a current-source compatibility policy records reviewed sources, expiry, protocol boundaries, kernel-owned semantics, evidence refs, and rollback
+  - [x] Docs gate fails if required boundary text or evidence refs drift
+  - [x] issue rendering, docs verification, and full repo verification include the new guard
 
 ## Vision
 

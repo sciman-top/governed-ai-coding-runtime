@@ -1,0 +1,203 @@
+{
+  "schema_version": "1.0",
+  "policy_id": "default-current-source-compatibility",
+  "status": "enforced",
+  "reviewed_on": "2026-04-27",
+  "review_expires_at": "2026-07-26",
+  "compatibility_claim": "Post-GAP-111 external host, protocol, guardrail, sandbox, and provenance sources may strengthen adapter behavior, but cannot replace runtime-owned task lifecycle, approval, containment, verification, rollback, evidence, or claim-drift semantics.",
+  "kernel_owned_semantics": [
+    "task_lifecycle",
+    "approval",
+    "containment",
+    "verification",
+    "rollback",
+    "evidence",
+    "claim_drift"
+  ],
+  "sources": [
+    {
+      "source_id": "openai-codex-agents-md",
+      "url": "https://developers.openai.com/codex/guides/agents-md",
+      "source_kind": "host_instructions",
+      "reviewed_version": "2026-04-27 snapshot",
+      "boundary_assertions": [
+        "repository-local instructions remain a context surface",
+        "rule changes require a fresh run or session validation"
+      ]
+    },
+    {
+      "source_id": "openai-agents-sandbox",
+      "url": "https://developers.openai.com/api/docs/guides/agents/sandboxes",
+      "source_kind": "sandbox",
+      "reviewed_version": "2026-04-27 snapshot",
+      "boundary_assertions": [
+        "harness state is separate from sandbox execution state",
+        "sandbox execution does not replace runtime-owned control evidence"
+      ]
+    },
+    {
+      "source_id": "openai-agents-guardrails",
+      "url": "https://openai.github.io/openai-agents-python/guardrails/",
+      "source_kind": "guardrails",
+      "reviewed_version": "2026-04-27 snapshot",
+      "boundary_assertions": [
+        "host guardrails are defense in depth",
+        "built-in or hosted execution tools cannot replace runtime-owned approval and evidence"
+      ]
+    },
+    {
+      "source_id": "mcp-roots",
+      "url": "https://modelcontextprotocol.io/specification/2025-06-18/client/roots",
+      "source_kind": "protocol",
+      "reviewed_version": "2025-06-18",
+      "boundary_assertions": [
+        "roots are declared scope inputs",
+        "runtime must revalidate paths and containment before execution"
+      ]
+    },
+    {
+      "source_id": "a2a-latest",
+      "url": "https://a2a-protocol.org/latest/specification/",
+      "source_kind": "protocol",
+      "reviewed_version": "1.0.0",
+      "boundary_assertions": [
+        "version negotiation and authorization metadata belong in adapter conformance",
+        "in-task authorization maps into existing runtime approval semantics"
+      ]
+    },
+    {
+      "source_id": "slsa-provenance",
+      "url": "https://slsa.dev/spec/v1.2/provenance",
+      "source_kind": "supply_chain",
+      "reviewed_version": "1.2",
+      "boundary_assertions": [
+        "external signing and promotion remain trigger-based",
+        "generated release-adjacent artifacts require provenance or waiver evidence"
+      ]
+    }
+  ],
+  "protocol_boundaries": [
+    {
+      "protocol_id": "mcp_roots",
+      "integration_owner": "adapter",
+      "required_mapping": "Treat roots as declared scope inputs and revalidate final resolved paths through runtime containment before execution.",
+      "kernel_owned_semantics": [
+        "containment",
+        "verification",
+        "rollback",
+        "evidence"
+      ],
+      "forbidden_claims": [
+        "MCP roots alone are sufficient enforcement",
+        "MCP server behavior can own runtime rollback or evidence semantics"
+      ]
+    },
+    {
+      "protocol_id": "a2a_1_0_0",
+      "integration_owner": "adapter",
+      "required_mapping": "Map version negotiation, AgentCard security metadata, and in-task authorization into adapter conformance and runtime approval decisions.",
+      "kernel_owned_semantics": [
+        "task_lifecycle",
+        "approval",
+        "verification",
+        "rollback",
+        "evidence"
+      ],
+      "forbidden_claims": [
+        "A2A task state replaces runtime task lifecycle",
+        "A2A authorization replaces runtime approval or rollback semantics"
+      ]
+    },
+    {
+      "protocol_id": "codex_sandbox_and_guardrails",
+      "integration_owner": "host_boundary",
+      "required_mapping": "Use sandbox and guardrail capabilities as defense-in-depth inputs while preserving runtime-owned approval, containment, evidence, and rollback.",
+      "kernel_owned_semantics": [
+        "approval",
+        "containment",
+        "rollback",
+        "evidence",
+        "claim_drift"
+      ],
+      "forbidden_claims": [
+        "host guardrails are the system of record",
+        "sandbox execution removes the need for runtime evidence"
+      ]
+    },
+    {
+      "protocol_id": "slsa_provenance",
+      "integration_owner": "release_plane",
+      "required_mapping": "Require provenance or explicit waiver evidence for generated runtime packages, control packs, and target-repo light packs that support release claims.",
+      "kernel_owned_semantics": [
+        "evidence",
+        "claim_drift"
+      ],
+      "forbidden_claims": [
+        "release artifacts are externally consumable without provenance or waiver",
+        "supply-chain claims can rely on narrative-only evidence"
+      ]
+    }
+  ],
+  "required_doc_refs": [
+    {
+      "path": "docs/research/2026-04-27-hybrid-final-state-external-benchmark-review.md",
+      "contains": "A2A has moved to a 1.0.0 latest release"
+    },
+    {
+      "path": "docs/architecture/hybrid-final-state-master-outline.md",
+      "contains": "Keep `GAP-111` certification valid only while current-source compatibility checks and claim-drift gates continue to pass."
+    },
+    {
+      "path": "docs/roadmap/optimized-hybrid-final-state-long-term-roadmap.md",
+      "contains": "Post-`GAP-111` protocol adoption must include a current-source compatibility review."
+    },
+    {
+      "path": "docs/product/claim-catalog.json",
+      "contains": "CLM-007"
+    },
+    {
+      "path": "docs/change-evidence/20260427-gap-112-current-source-compatibility-guard.md",
+      "contains": "current-source compatibility guard"
+    }
+  ],
+  "forbidden_active_patterns": [
+    {
+      "pattern": "a2a-protocol.org/v0.2.6/specification",
+      "scan_roots": [
+        "README.md",
+        "docs/architecture",
+        "docs/roadmap",
+        "docs/plans",
+        "docs/research",
+        "docs/product"
+      ]
+    },
+    {
+      "pattern": "MCP roots alone are sufficient enforcement",
+      "scan_roots": [
+        "README.md",
+        "docs/architecture",
+        "docs/roadmap",
+        "docs/plans",
+        "docs/research",
+        "docs/product"
+      ]
+    },
+    {
+      "pattern": "host guardrails are the system of record",
+      "scan_roots": [
+        "README.md",
+        "docs/architecture",
+        "docs/roadmap",
+        "docs/plans",
+        "docs/research",
+        "docs/product"
+      ]
+    }
+  ],
+  "evidence_refs": [
+    "docs/change-evidence/20260427-hybrid-final-state-current-source-refresh.md",
+    "docs/change-evidence/20260427-gap-112-current-source-compatibility-guard.md"
+  ],
+  "rollback_ref": "git revert the current-source compatibility policy, verifier, tests, docs, backlog, seeds, and evidence"
+}

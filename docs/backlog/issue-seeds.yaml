@@ -1,4 +1,4 @@
-issue_seed_version: "4.4"
+issue_seed_version: "4.5"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment
@@ -445,3 +445,8 @@ issues:
     type: HITL
     blocked_by: [GAP-110]
     user_stories: [13, 14, 18, 21, 29, 37, 44, 45]
+  - id: GAP-112
+    title: Current Source Compatibility Guard
+    type: AFK
+    blocked_by: [GAP-111]
+    user_stories: [13, 18, 21, 29, 31, 44]

@@ -540,6 +540,20 @@ function Invoke-ClaimExceptionPathCheck {
   Write-CheckOk "claim-exception-paths"
 }
 
+function Invoke-CurrentSourceCompatibilityChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-current-source-compatibility.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Current source compatibility checks failed"
+    }
+    throw "Current source compatibility checks failed`n$detail"
+  }
+
+  Write-CheckOk "current-source-compatibility"
+}
+
 function Invoke-ContractChecks {
   Invoke-SchemaJsonParse
   Invoke-SchemaExampleValidation
@@ -646,6 +660,7 @@ function Invoke-DocsChecks {
   Invoke-BacklogYamlIdCheck
   Invoke-OldProjectNameScan
   Invoke-HostReplacementClaimBoundaryScan
+  Invoke-CurrentSourceCompatibilityChecks
   Invoke-GapEvidenceSloCheck
   Invoke-ClaimDriftSentinelCheck
   Invoke-ClaimExceptionPathCheck

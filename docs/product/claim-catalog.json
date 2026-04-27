@@ -96,6 +96,22 @@
           "contains": "Complete realization is now certified on the current branch baseline by the post-`GAP-103` queue `GAP-104..111`."
         }
       ]
+    },
+    {
+      "claim_id": "CLM-007",
+      "claim_text": "Post-GAP-111 external source assumptions are machine-checked before they can strengthen final-state claims.",
+      "proof_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs",
+      "evidence_link": "docs/change-evidence/20260427-gap-112-current-source-compatibility-guard.md",
+      "source_refs": [
+        {
+          "path": "docs/architecture/hybrid-final-state-master-outline.md",
+          "contains": "Keep `GAP-111` certification valid only while current-source compatibility checks and claim-drift gates continue to pass."
+        },
+        {
+          "path": "docs/roadmap/optimized-hybrid-final-state-long-term-roadmap.md",
+          "contains": "Post-`GAP-111` protocol adoption must include a current-source compatibility review."
+        }
+      ]
     }
   ]
 }

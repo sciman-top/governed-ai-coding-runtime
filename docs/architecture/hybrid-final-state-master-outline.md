@@ -68,10 +68,14 @@ An external review against current official docs and mature community projects k
 - Durable execution is a capability requirement, but specific workflow engines should be introduced by trigger, not by platform aesthetics.
 - Sandboxed execution is not an optional future polish item for shell, git, package-manager, browser, or MCP tools; it is part of the transition safety floor once write coverage broadens.
 - Supply-chain provenance should be treated as a final-state evidence class for generated packages, target-repo light packs, and release artifacts.
+- Current OpenAI sandbox guidance reinforces separating harness/control state from sandbox execution state; this matches the machine-local governance kernel plus bounded execution-workspace model.
+- Current OpenAI Agents SDK guardrail guidance leaves hosted and built-in execution tools outside the function-tool guardrail pipeline, so runtime-owned approval, containment, evidence, and rollback remain mandatory.
+- MCP roots and A2A 1.0.0 are protocol inputs to adapter conformance. MCP roots must be revalidated by the runtime, and any future A2A work must map versioning, authorization scoping, and in-task authorization onto existing kernel-owned semantics.
 
 Decision:
 - Keep the product shape.
 - Strengthen acceptance criteria and roadmap wording around sandbox containment, protocol boundaries, trigger-based component adoption, and provenance-backed claims.
+- Keep `GAP-111` certification valid only while current-source compatibility checks and claim-drift gates continue to pass.
 - Do not start a clean-sheet rewrite or broaden the platform stack before the current runtime-owned loop remains re-verifiable.
 
 ## Current Best-State Answer (2026-04-27 Refresh)
@@ -237,6 +241,7 @@ The remaining risk after certification is claim drift, not an open implementatio
 - complete-closure claims must stay tied to fresh executable evidence
 - if verification or evidence drifts, claim wording must downgrade immediately until re-validated
 - any new LTP implementation must use ids beyond `GAP-111` and pass a scope fence before it can alter the certified posture
+- if external protocol or host semantics change, the adapter/conformance layer must be refreshed before the change can strengthen final-state claims
 
 Reference audit:
 - `docs/reviews/2026-04-19-hybrid-final-state-executable-gap-audit.md`

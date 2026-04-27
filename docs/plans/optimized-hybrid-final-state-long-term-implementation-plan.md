@@ -2,9 +2,9 @@
 
 ## Status
 - Created from the 2026-04-27 optimized hybrid final-state and stack-staging review.
-- Future-facing queue: `GAP-093..111`.
+- Future-facing queue: `GAP-093..112`.
 - Current posture: `GAP-093..103` are complete. No long-term package was implemented; `LTP-01..06` remain deferred/watch or not triggered pending fresh scope-fence evidence.
-- Certified realization queue: `GAP-104..111` is complete on the current branch baseline and defines the evidence-backed complete hybrid final-state closure point.
+- Certified realization queue: `GAP-104..111` is complete on the current branch baseline and defines the evidence-backed complete hybrid final-state closure point. `GAP-112` is the first post-certification guard that mechanizes current-source compatibility after that closure.
 
 ## Goal
 Provide an implementation-ready plan for the long-term optimized hybrid final state while preserving the current rule that heavyweight components remain trigger-based.
@@ -18,7 +18,7 @@ Provide an implementation-ready plan for the long-term optimized hybrid final st
 
 ## Task Graph
 
-`GAP-092 -> GAP-093 -> GAP-094 -> GAP-095 -> GAP-096 -> GAP-097 -> GAP-098 -> GAP-099 -> GAP-100 -> GAP-101 -> GAP-102 -> GAP-103 -> GAP-104 -> GAP-105 -> GAP-106 -> GAP-107 -> GAP-108 -> GAP-109 -> GAP-110 -> GAP-111`
+`GAP-092 -> GAP-093 -> GAP-094 -> GAP-095 -> GAP-096 -> GAP-097 -> GAP-098 -> GAP-099 -> GAP-100 -> GAP-101 -> GAP-102 -> GAP-103 -> GAP-104 -> GAP-105 -> GAP-106 -> GAP-107 -> GAP-108 -> GAP-109 -> GAP-110 -> GAP-111 -> GAP-112`
 
 ## GAP-093 Optimized Hybrid Long-Term Planning Baseline
 
@@ -694,6 +694,47 @@ Complete on current branch baseline. `GAP-111` certifies complete hybrid final-s
 ### Rollback
 Downgrade final-state closure wording and revert certification changes if any required evidence cannot be reproduced.
 
+## GAP-112 Current Source Compatibility Guard
+
+### Type
+AFK
+
+### Dependencies
+- `GAP-111`
+
+### Scope
+- Convert the post-`GAP-111` external source refresh into a machine-readable current-source compatibility policy.
+- Add a verifier that checks review expiry, reviewed source metadata, protocol-boundary mappings, required doc text, evidence refs, and forbidden active-doc patterns.
+- Wire the verifier into `verify-repo.ps1 -Check Docs` so final-state claims downgrade if external protocol/host/security assumptions drift.
+
+### Status
+Complete on current branch baseline. The current-source compatibility guard now covers A2A/MCP/Codex sandbox, host guardrails, and supply-chain provenance assumptions without importing untriggered heavy infrastructure.
+
+### Acceptance Criteria
+- [x] current-source policy records reviewed sources, expiry, protocol boundaries, kernel-owned semantics, evidence refs, and rollback
+- [x] Docs gate runs the current-source verifier and fails closed on missing boundary text, missing evidence, stale review, or forbidden active-doc assumptions
+- [x] backlog, seeds, issue rendering, claim catalog, docs index, and evidence agree on `GAP-112`
+
+### Verification
+- `python scripts/verify-current-source-compatibility.py --as-of 2026-04-27`
+- `python -m unittest tests.runtime.test_current_source_compatibility`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/github/create-roadmap-issues.ps1 -ValidateOnly -RenderAll`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`
+
+### Likely Files
+- `docs/architecture/current-source-compatibility-policy.json`
+- `scripts/verify-current-source-compatibility.py`
+- `tests/runtime/test_current_source_compatibility.py`
+- `scripts/verify-repo.ps1`
+- `docs/backlog/issue-ready-backlog.md`
+- `docs/backlog/issue-seeds.yaml`
+- `docs/product/claim-catalog.json`
+- `docs/change-evidence/*.md`
+
+### Rollback
+Revert the current-source compatibility policy, verifier, tests, gate wiring, planning updates, claim-catalog entry, and evidence file; then downgrade any final-state claim that depends on the guard.
+
 ## Checkpoints
 
 | checkpoint | after | required decision |
@@ -709,6 +750,7 @@ Downgrade final-state closure wording and revert certification changes if any re
 | adapter checkpoint | `GAP-107` | Codex and at least one non-Codex path have honest conformance evidence |
 | execution/data checkpoint | `GAP-109` | governed tools and data/provenance paths are reproducible and rollback-aware |
 | certification checkpoint | `GAP-111` | complete final-state claim is either evidence-certified or downgraded |
+| current-source checkpoint | `GAP-112` | host/protocol/security/source assumptions are machine-checked before they can strengthen claims |
 
 ## Evidence Requirements
 Each gap must add or update `docs/change-evidence/*.md` with:
