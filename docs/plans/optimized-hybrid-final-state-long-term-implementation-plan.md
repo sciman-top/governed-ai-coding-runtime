@@ -588,10 +588,13 @@ AFK
 - Implement release-adjacent provenance for generated light packs, control packs, and packaged runtime artifacts.
 - Keep event bus, semantic store, object-store promotion, and signing workflows trigger-based until retention, query, size, or external-consumption evidence requires them.
 
+### Status
+Complete on current branch baseline. The service-shaped metadata store now records migrations, exports replay bundles, prunes retained namespaces with rollback records, and restores pruned records. Release-adjacent artifact writes require provenance or an explicit waiver ref, and `scripts/package-runtime.ps1` emits local release provenance for the public usable release bundle.
+
 ### Acceptance Criteria
-- [ ] data-plane read/write paths have migration, replay, retention, and rollback tests
-- [ ] generated release-adjacent artifacts carry provenance or explicit waiver evidence
-- [ ] scale components remain deferred unless measured pressure justifies them
+- [x] data-plane read/write paths have migration, replay, retention, and rollback tests
+- [x] generated release-adjacent artifacts carry provenance or explicit waiver evidence
+- [x] scale components remain deferred unless measured pressure justifies them
 
 ### Verification
 - persistence and artifact-store tests

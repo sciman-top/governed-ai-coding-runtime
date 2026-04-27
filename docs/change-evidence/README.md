@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260427 GAP-109 Data Plane And Provenance Release Batch](./20260427-gap-109-data-plane-provenance-release.md)
+  - evidence companion for service-shaped metadata migration/replay/retention, release-adjacent artifact provenance guard, and package-runtime release provenance
 - [20260427 GAP-108 Governed Executable Tool Coverage Batch](./20260427-gap-108-governed-executable-tool-coverage.md)
   - evidence companion for shell/git/package governed executable runtime-flow coverage plus browser/MCP fail-closed containment behavior
 - [20260427 GAP-107 Non-Codex Adapter Parity Batch](./20260427-gap-107-non-codex-adapter-parity-batch.md)

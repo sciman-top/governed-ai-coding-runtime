@@ -47,6 +47,56 @@ class ArtifactStoreTests(unittest.TestCase):
             self.assertTrue(artifact.risky)
             self.assertEqual(artifact.risk_classification, "release_adjacent")
 
+    def test_release_adjacent_json_requires_provenance_or_waiver(self) -> None:
+        artifact_store = importlib.import_module("governed_ai_coding_runtime_contracts.artifact_store")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            store = artifact_store.LocalArtifactStore(Path(tmp_dir))
+
+            with self.assertRaisesRegex(ValueError, "provenance or waiver_ref"):
+                store.write_release_json(
+                    task_id="task-release",
+                    run_id="run-release",
+                    kind="release-output",
+                    label="package-manifest",
+                    payload={"status": "ready"},
+                )
+
+    def test_release_adjacent_json_writes_provenance_reference(self) -> None:
+        artifact_store = importlib.import_module("governed_ai_coding_runtime_contracts.artifact_store")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            store = artifact_store.LocalArtifactStore(Path(tmp_dir))
+            artifact = store.write_release_json(
+                task_id="task-release",
+                run_id="run-release",
+                kind="release-output",
+                label="package-manifest",
+                payload={"status": "ready"},
+                provenance={"attestation_id": "attestation-1", "verification_status": "verified"},
+            )
+
+            self.assertTrue(artifact.risky)
+            self.assertTrue(artifact.provenance_ref)
+            self.assertTrue((Path(tmp_dir) / artifact.provenance_ref).exists())
+
+    def test_release_adjacent_json_accepts_explicit_waiver_reference(self) -> None:
+        artifact_store = importlib.import_module("governed_ai_coding_runtime_contracts.artifact_store")
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            store = artifact_store.LocalArtifactStore(Path(tmp_dir))
+            artifact = store.write_release_json(
+                task_id="task-release",
+                run_id="run-release",
+                kind="release-output",
+                label="package-manifest",
+                payload={"status": "ready"},
+                waiver_ref="docs/waivers/release-provenance.md",
+            )
+
+            self.assertEqual(artifact.waiver_ref, "docs/waivers/release-provenance.md")
+            self.assertIsNone(artifact.provenance_ref)
+
     def test_artifact_store_rejects_symlinked_artifact_path_outside_root(self) -> None:
         artifact_store = importlib.import_module("governed_ai_coding_runtime_contracts.artifact_store")
 

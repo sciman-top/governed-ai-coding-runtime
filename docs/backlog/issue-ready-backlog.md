@@ -906,15 +906,15 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: AFK
 - Blocked by: GAP-105, GAP-108
 - User stories: 14, 18, 21, 31, 38, 44
-- Status: planned active queue item
+- Status: complete on current branch baseline (service-shaped metadata migration/replay/retention, release-adjacent provenance guard, and package-runtime provenance validated on 2026-04-27)
 - What to build:
   - promote durable task, evidence, artifact, replay, and provenance records from local proof shape into service-shaped persistence boundaries
   - implement release-adjacent provenance for generated light packs, control packs, and packaged runtime artifacts
   - add retention and query checks before considering event bus, semantic store, or object-store promotion
 - Acceptance criteria:
-  - [ ] data-plane read/write paths have migration, replay, retention, and rollback tests
-  - [ ] generated release-adjacent artifacts have provenance or explicit waiver evidence
-  - [ ] scale components remain trigger-based unless query, retention, artifact-size, or release-promotion evidence justifies them
+  - [x] data-plane read/write paths have migration, replay, retention, and rollback tests
+  - [x] generated release-adjacent artifacts have provenance or explicit waiver evidence
+  - [x] scale components remain trigger-based unless query, retention, artifact-size, or release-promotion evidence justifies them
 
 ### GAP-110 Operations Recovery And Sustained Soak Batch 1
 - Type: HITL

@@ -22,6 +22,8 @@ class ArtifactRef:
     created_at: str
     risky: bool
     risk_classification: str | None = None
+    provenance_ref: str | None = None
+    waiver_ref: str | None = None
 
 
 class LocalArtifactStore:
@@ -43,6 +45,24 @@ class LocalArtifactStore:
         atomic_write_text(path, json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
         return self._build_ref(task_id=task_id, run_id=run_id, kind=kind, label=label, relative_path=relative_path)
 
+    def write_release_json(
+        self,
+        *,
+        task_id: str,
+        run_id: str,
+        kind: str,
+        label: str,
+        payload: dict,
+        provenance: dict | None = None,
+        waiver_ref: str | None = None,
+    ) -> ArtifactRef:
+        artifact = self.write_json(task_id=task_id, run_id=run_id, kind=kind, label=label, payload=payload)
+        return self._attach_release_provenance(
+            artifact=artifact,
+            provenance=provenance,
+            waiver_ref=waiver_ref,
+        )
+
     def _build_ref(self, *, task_id: str, run_id: str, kind: str, label: str, relative_path: str) -> ArtifactRef:
         risk_classification = classify_artifact(kind=kind, label=label)
         return ArtifactRef(
@@ -54,6 +74,43 @@ class LocalArtifactStore:
             created_at=datetime.now(UTC).isoformat(),
             risky=risk_classification is not None,
             risk_classification=risk_classification,
+        )
+
+    def _attach_release_provenance(
+        self,
+        *,
+        artifact: ArtifactRef,
+        provenance: dict | None,
+        waiver_ref: str | None,
+    ) -> ArtifactRef:
+        if not artifact.risky:
+            return artifact
+        normalized_waiver_ref = waiver_ref.strip() if isinstance(waiver_ref, str) and waiver_ref.strip() else None
+        if provenance is None and normalized_waiver_ref is None:
+            raise ValueError("release-adjacent artifacts require provenance or waiver_ref")
+        provenance_ref = None
+        if provenance is not None:
+            provenance_ref = self._relative_path(
+                task_id=artifact.task_id,
+                run_id=artifact.run_id,
+                kind="provenance",
+                label=artifact.label,
+                suffix=".json",
+            )
+            path = self._root / provenance_ref
+            self._prepare_store_path(path)
+            atomic_write_text(path, json.dumps(provenance, indent=2, sort_keys=True), encoding="utf-8")
+        return ArtifactRef(
+            task_id=artifact.task_id,
+            run_id=artifact.run_id,
+            kind=artifact.kind,
+            label=artifact.label,
+            relative_path=artifact.relative_path,
+            created_at=artifact.created_at,
+            risky=artifact.risky,
+            risk_classification=artifact.risk_classification,
+            provenance_ref=provenance_ref,
+            waiver_ref=normalized_waiver_ref,
         )
 
     def _relative_path(self, *, task_id: str, run_id: str, kind: str, label: str, suffix: str) -> str:
