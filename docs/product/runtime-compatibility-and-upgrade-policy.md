@@ -13,8 +13,8 @@
 ## Upgrade Scope
 
 ### Adapters
-- Codex remains the first-class baseline adapter.
-- non-Codex adapters must declare partial support or unsupported capability signals rather than pretending feature parity.
+- Codex and Claude Code are the current dual first-class baseline adapters.
+- adapters must declare partial support or unsupported capability signals rather than pretending feature parity after host capability drift.
 - unsupported capabilities must either declare an explicit `degrade_to` posture or fail closed to `blocked`.
 
 ### Repo Profiles

@@ -90,11 +90,17 @@ class AdapterRegistryTests(unittest.TestCase):
         adapter_registry = importlib.import_module("governed_ai_coding_runtime_contracts.adapter_registry")
 
         contract = adapter_registry.build_claude_code_contract(adapter_tier="process_bridge")
+        native_contract = adapter_registry.build_claude_code_contract(adapter_tier="native_attach")
 
         self.assertEqual(contract.adapter_id, "claude-code")
         self.assertEqual(contract.product_family, "claude_code")
         self.assertEqual(contract.adapter_tier, "process_bridge")
         self.assertIn("session_bridge", contract.minimum_required_runtime_controls)
+        self.assertEqual(native_contract.adapter_tier, "native_attach")
+        self.assertEqual(native_contract.event_visibility, "structured_jsonl")
+        self.assertEqual(native_contract.continuation_model, "resume_id")
+        self.assertEqual(native_contract.evidence_model, "structured_trace")
+        self.assertEqual(native_contract.unsupported_capability_behavior, "none")
 
     def test_agent_adapter_examples_cover_process_bridge_and_manual_handoff(self) -> None:
         manual_path = ROOT / "schemas" / "examples" / "agent-adapter-contract" / "manual-handoff.example.json"

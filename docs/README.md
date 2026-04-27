@@ -50,7 +50,7 @@
 - For post-certification guard work, `GAP-112` is complete on the current branch baseline. It adds a machine-readable current-source compatibility guard for A2A/MCP/Codex sandbox, host guardrails, and provenance assumptions.
 - For post-certification promotion work, `GAP-113` is complete on the current branch baseline. It adds a machine-readable autonomous `LTP-01..06` promotion fence that currently returns `defer_all` unless exactly one package has fresh trigger evidence and scope.
 - For post-certification next-work selection, `GAP-114` is complete on the current branch baseline. It turns `GAP-113` output into a deterministic autonomous next action.
-- For dual first-class host support, `GAP-115` through `GAP-119` are complete. Claude Code is first-class in governance outcome beside Codex, while current adapter evidence keeps Codex at `native_attach` / supported and Claude Code at `process_bridge` / degraded only for `native_attach`.
+- For dual first-class host support, `GAP-115` through `GAP-119` are complete. Current live probe and conformance evidence keep both Codex and Claude Code at `native_attach` / supported when the host exposes the required session, resume, structured-output, and managed hook surfaces.
 - Historical lifecycle and productization plans remain execution history and rationale, not competing active mainlines.
 
 ## Navigation Aids
@@ -79,7 +79,7 @@
 - `Post-Certification Guard Queue / GAP-112` is complete and enforced through `verify-repo.ps1 -Check Docs`.
 - `Post-Certification Promotion Queue / GAP-113` is complete and enforced through `verify-repo.ps1 -Check Docs`.
 - `Post-Certification Selection Queue / GAP-114` is complete and enforced through `verify-repo.ps1 -Check Docs`.
-- `Dual First-Class Host Entrypoint Queue / GAP-115` through `GAP-119` is complete as owner-directed bounded scope for Codex plus Claude Code; certification evidence is in `docs/change-evidence/20260427-claude-code-adapter-certification.md`.
+- `Dual First-Class Host Entrypoint Queue / GAP-115` through `GAP-119` is complete as owner-directed bounded scope for Codex plus Claude Code; latest native tier parity evidence is in `docs/change-evidence/20260427-claude-code-native-attach-tier-parity.md`.
 - New LTP implementation queue items beyond this bounded host-support queue must use later ids and must pass the autonomous or owner-directed promotion scope fence.
 - Active verification for this repo remains `build -> test -> contract/invariant -> doctor`, with docs and script checks still included in `verify-repo -Check All`.
 - `docs/change-evidence/` remains historical evidence and planning trace, not the primary user-facing product surface.

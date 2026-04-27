@@ -35,6 +35,7 @@ class ClaudeCodeAdapterProfile:
     process_bridge_available: bool
     settings_available: bool
     hooks_available: bool
+    session_id_available: bool
     probe_source: str
     posture_reason: str
 
@@ -55,6 +56,7 @@ class ClaudeCodeSurfaceProbe:
     process_bridge_available: bool
     settings_available: bool
     hooks_available: bool
+    session_id_available: bool
     structured_events_available: bool
     evidence_export_available: bool
     resume_available: bool
@@ -73,6 +75,7 @@ class ClaudeCodeCapabilityReadiness:
     flow_kind: str
     settings_available: bool
     hooks_available: bool
+    session_id_available: bool
     unsupported_capabilities: list[str]
     failure_stage: str | None
     remediation_hint: str | None
@@ -105,6 +108,7 @@ def build_claude_code_adapter_profile(
     process_bridge_available: bool,
     settings_available: bool,
     hooks_available: bool,
+    session_id_available: bool,
     structured_events_available: bool,
     evidence_export_available: bool,
     resume_available: bool,
@@ -112,16 +116,26 @@ def build_claude_code_adapter_profile(
     probe_source: str = "declared_flags",
     posture_reason: str = "",
 ) -> ClaudeCodeAdapterProfile:
+    effective_native_attach_available = bool(
+        native_attach_available
+        and settings_available
+        and hooks_available
+        and session_id_available
+        and structured_events_available
+        and evidence_export_available
+        and resume_available
+    )
     capability = resolve_launch_fallback(
         adapter_id="claude-code",
-        native_attach_available=native_attach_available,
+        native_attach_available=effective_native_attach_available,
         process_bridge_available=process_bridge_available,
     )
     unsupported_capabilities = _unsupported_capabilities(
-        native_attach_available=native_attach_available,
+        native_attach_available=effective_native_attach_available,
         process_bridge_available=process_bridge_available,
         settings_available=settings_available,
         hooks_available=hooks_available,
+        session_id_available=session_id_available,
         structured_events_available=structured_events_available,
         evidence_export_available=evidence_export_available,
         resume_available=resume_available,
@@ -130,17 +144,18 @@ def build_claude_code_adapter_profile(
         adapter_id="claude-code",
         auth_ownership="user_owned_upstream_auth",
         workspace_control="external_workspace",
-        tool_visibility="logs_or_transcript_only",
+        tool_visibility="structured_events" if structured_events_available else "logs_or_transcript_only",
         mutation_model="direct_workspace_write",
-        resume_behavior="manual",
-        evidence_export_capability="command_log",
+        resume_behavior="resume_id" if resume_available else "manual",
+        evidence_export_capability="structured_trace" if evidence_export_available else "command_log",
         adapter_tier=capability.tier,
         unsupported_capabilities=unsupported_capabilities,
         unsupported_capability_behavior=capability.unsupported_capability_behavior,
-        native_attach_available=native_attach_available,
+        native_attach_available=effective_native_attach_available,
         process_bridge_available=process_bridge_available,
         settings_available=settings_available,
         hooks_available=hooks_available,
+        session_id_available=session_id_available,
         probe_source=_required_string(probe_source, "probe_source"),
         posture_reason=_optional_non_empty_string(posture_reason) or capability.reason,
     )
@@ -152,6 +167,7 @@ def build_claude_code_adapter_profile_from_probe(probe: ClaudeCodeSurfaceProbe) 
         process_bridge_available=probe.process_bridge_available,
         settings_available=probe.settings_available,
         hooks_available=probe.hooks_available,
+        session_id_available=probe.session_id_available,
         structured_events_available=probe.structured_events_available,
         evidence_export_available=probe.evidence_export_available,
         resume_available=probe.resume_available,
@@ -207,6 +223,7 @@ def probe_claude_code_surface(
             process_bridge_available=False,
             settings_available=False,
             hooks_available=False,
+            session_id_available=False,
             structured_events_available=False,
             evidence_export_available=False,
             resume_available=False,
@@ -229,11 +246,25 @@ def probe_claude_code_surface(
     settings_available = (project_root / ".claude" / "settings.json").exists()
     hooks_available = (project_root / ".claude" / "hooks" / "governed-pre-tool-use.py").exists()
     process_bridge_available = True
-    structured_events_available = "--output-format" in help_lower and "json" in help_lower
-    evidence_export_available = structured_events_available or "--json" in help_lower
-    resume_available = "resume" in help_lower
+    session_id_available = "--session-id" in help_lower
+    hook_events_available = "--include-hook-events" in help_lower
+    structured_events_available = (
+        "--output-format" in help_lower
+        and "stream-json" in help_lower
+        and hook_events_available
+    )
+    evidence_export_available = structured_events_available or "--output-format" in help_lower and "json" in help_lower
+    resume_available = "--resume" in help_lower or " resume" in help_lower
+    native_attach_available = (
+        settings_available
+        and hooks_available
+        and session_id_available
+        and structured_events_available
+        and evidence_export_available
+        and resume_available
+    )
 
-    reason = "Claude Code CLI and managed settings/hooks are available"
+    reason = "Claude Code CLI exposes resume/session-id, stream-json hook events, and managed settings/hooks"
     failure_stage = None
     remediation_hint = None
     if not settings_available or not hooks_available:
@@ -245,15 +276,29 @@ def probe_claude_code_surface(
         reason = "Claude Code CLI is available but managed settings/hooks are incomplete: " + ", ".join(missing)
         failure_stage = "claude_managed_settings_hooks_missing"
         remediation_hint = "Run governance baseline sync to materialize managed Claude Code settings/hooks."
+    elif not native_attach_available:
+        missing = []
+        if not session_id_available:
+            missing.append("--session-id")
+        if not resume_available:
+            missing.append("--resume")
+        if not structured_events_available:
+            missing.append("--output-format=stream-json plus --include-hook-events")
+        if not evidence_export_available:
+            missing.append("--output-format=json or stream-json")
+        reason = "Claude Code CLI is available but native attach capability is incomplete: " + ", ".join(missing)
+        failure_stage = "claude_native_attach_capability_incomplete"
+        remediation_hint = "Upgrade Claude Code or use process bridge until resume/session and structured hook-event output are available."
 
     version = _safe_ascii(version_output).splitlines()[0].strip() if version_output.strip() else None
     return ClaudeCodeSurfaceProbe(
         claude_cli_available=True,
         version=version,
-        native_attach_available=False,
+        native_attach_available=native_attach_available,
         process_bridge_available=process_bridge_available,
         settings_available=settings_available,
         hooks_available=hooks_available,
+        session_id_available=session_id_available,
         structured_events_available=structured_events_available,
         evidence_export_available=evidence_export_available,
         resume_available=resume_available,
@@ -284,6 +329,7 @@ def summarize_claude_code_capability_readiness(
         flow_kind=_flow_kind_from_tier(tier),
         settings_available=active_probe.settings_available,
         hooks_available=active_probe.hooks_available,
+        session_id_available=active_probe.session_id_available,
         unsupported_capabilities=list(profile.unsupported_capabilities),
         failure_stage=active_probe.failure_stage,
         remediation_hint=active_probe.remediation_hint,
@@ -298,9 +344,11 @@ def build_claude_code_adapter_trial_result(
     process_bridge_available: bool,
     settings_available: bool,
     hooks_available: bool,
+    session_id_available: bool,
     structured_events_available: bool,
     evidence_export_available: bool,
     resume_available: bool,
+    native_attach_available: bool = False,
     mode: str = "safe",
     run_id: str = "claude-code-trial-safe",
     probe: ClaudeCodeSurfaceProbe | None = None,
@@ -312,6 +360,7 @@ def build_claude_code_adapter_trial_result(
         process_bridge_available=process_bridge_available,
         settings_available=settings_available,
         hooks_available=hooks_available,
+        session_id_available=session_id_available,
         structured_events_available=structured_events_available,
         evidence_export_available=evidence_export_available,
         resume_available=resume_available,
@@ -324,9 +373,11 @@ def build_claude_code_adapter_trial_result(
         process_bridge_available=process_bridge_available,
         settings_available=settings_available,
         hooks_available=hooks_available,
+        session_id_available=session_id_available,
         structured_events_available=structured_events_available,
         evidence_export_available=evidence_export_available,
         resume_available=resume_available,
+        native_attach_available=native_attach_available,
     )
     normalized_task_id = _required_string(task_id, "task_id")
     normalized_run_id = _required_string(run_id, "run_id")
@@ -446,6 +497,7 @@ def _unsupported_capabilities(
     process_bridge_available: bool,
     settings_available: bool,
     hooks_available: bool,
+    session_id_available: bool,
     structured_events_available: bool,
     evidence_export_available: bool,
     resume_available: bool,
@@ -459,6 +511,8 @@ def _unsupported_capabilities(
         unsupported.append("managed_settings")
     if not hooks_available:
         unsupported.append("managed_hooks")
+    if not session_id_available:
+        unsupported.append("session_id")
     if not structured_events_available:
         unsupported.append("structured_events")
     if not evidence_export_available:

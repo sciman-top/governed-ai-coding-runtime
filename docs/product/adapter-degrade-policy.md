@@ -23,14 +23,15 @@ Make adapter compatibility posture explicit, especially when upstream capability
 - `doctor-runtime.ps1` must report that adapter posture is visible
 
 ## Current Public Usable Release Posture
-- Codex-first compatibility is explicit.
 - Codex and Claude Code are dual first-class entrypoints in governance result.
-- Current live probe evidence classifies Codex as `native_attach` / supported and Claude Code as `process_bridge` / degraded only for `native_attach`.
-- Structured upstream event visibility is still partial.
+- Current live probe evidence classifies both Codex and Claude Code as `native_attach` / supported.
+- Claude Code `native_attach` is evidence-backed by session/resume identity, `stream-json` output, hook-event visibility, and managed settings/hooks; it is not a claim that Claude Code exposes the same host API as Codex.
+- Structured upstream event visibility remains host-specific and must be re-probed after host upgrades.
 - The local runtime compensates with artifact-backed status, verification, evidence, and replay outputs.
 
 ## Launch-Second Fallback
 - Native attach remains the preferred posture when available.
+- If either Codex or Claude Code loses required live attach evidence, runtime selection must degrade explicitly to `process_bridge` or `manual_handoff`.
 - Process bridge launch mode is explicit and must not be described as native attach.
 - Process bridge results must capture process output, exit code, changed-file discovery, and verification references.
 - When process bridge is unavailable, the runtime degrades to manual handoff instead of pretending execution is governed through a stronger adapter tier.

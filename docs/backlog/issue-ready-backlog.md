@@ -40,7 +40,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Post-Certification Guard Queue / GAP-112` is complete on the current branch baseline. It mechanizes current-source compatibility so external host/protocol/security docs cannot silently strengthen final-state claims.
 - `Post-Certification Promotion Queue / GAP-113` is complete on the current branch baseline. It mechanizes how to decide whether, why, and when an `LTP-01..06` heavy package may be autonomously promoted.
 - `Post-Certification Selection Queue / GAP-114` is complete on the current branch baseline. It mechanizes what autonomous work should happen next when `GAP-113` defers heavy LTP promotion.
-- `Dual First-Class Host Entrypoint Queue / GAP-115` through `GAP-119` is active as owner-directed bounded scope. It promotes Claude Code from generic degraded compatibility to first-class supported host parity with Codex in governance outcome, while keeping host-specific adapter tiers honest.
+- `Dual First-Class Host Entrypoint Queue / GAP-115` through `GAP-119` is active as owner-directed bounded scope. It promotes Claude Code from generic degraded compatibility to first-class supported host parity with Codex in governance outcome and, on current live evidence, to the same `native_attach` tier while keeping host APIs and future drift explicit.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -1058,11 +1058,11 @@ The entries below record the executed queue for complete hybrid final-state and 
 - What to build:
   - certify Codex plus Claude Code first-class host parity only after fresh rules, config, adapter, target sync, and conformance evidence exist
   - update adapter parity matrix, README/status docs, claim catalog, and change evidence with the final certified posture
-  - decide whether any residual Claude Code limitation should stay as degraded first-class support or trigger a later `LTP-04` scope fence
+  - decide whether any residual Claude Code limitation should stay as explicit future-drift downgrade evidence or trigger a later `LTP-04` scope fence
 - Acceptance criteria:
   - [x] one Codex path and one Claude Code path pass the same runtime-owned governance-result chain
   - [x] certification evidence names exact commands, target repos, adapter tiers, degraded capabilities, and rollback path
-  - [x] final wording says governance result is equal while adapter tiers remain host-specific and evidence-bound
+  - [x] final wording says governance result and current `native_attach` tier are equal while host APIs remain distinct and evidence-bound
 
 ## Vision
 

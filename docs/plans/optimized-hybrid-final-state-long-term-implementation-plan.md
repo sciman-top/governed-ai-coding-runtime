@@ -975,9 +975,9 @@ HITL
 - `GAP-118`
 
 ### Scope
-- Certify Codex and Claude Code as dual first-class entrypoints only after fresh evidence.
+- Certify Codex and Claude Code as dual first-class entrypoints, including current `native_attach` tier parity, only after fresh evidence.
 - Update adapter parity matrix, claim catalog, README/status docs, and evidence with the final posture.
-- Decide whether residual Claude Code limitations remain as degraded first-class support or trigger a later `LTP-04` scope fence.
+- Decide whether any future Claude Code capability drift remains as explicit downgrade evidence or triggers a later `LTP-04` scope fence.
 
 ### Status
 Complete. Closed by `docs/change-evidence/20260427-claude-code-adapter-certification.md`.

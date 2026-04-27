@@ -13,7 +13,7 @@ Both hosts are checked against the same minimum linkage gates:
 | host | adapter_id | conformance_status | parity_status | notes |
 |---|---|---|---|---|
 | Codex canonical runtime-flow | `codex-cli` | `pass` | `supported` | `flow_kind=live_attach`, `closure_state=live_closure_ready`, runtime-owned evidence/handoff/replay refs persisted |
-| Claude Code baseline | `claude-code` | `pass` | `degraded` | first-class adapter contract exists; shared conformance gate family validates identity+linkage under non-live baseline |
+| Claude Code live native attach | `claude-code` | `pass` | `supported` | `flow_kind=live_attach`, session/resume/continuation ids and hook/evidence/replay refs satisfy the same conformance gate family |
 | Generic process fallback | `generic.process.cli` | `pass` | `degraded` | canonical runtime-flow fallback explicit (`flow_kind=manual_handoff`, `closure_state=fallback_explicit`), approval+verification+adapter-event+handoff+replay linkage preserved |
 | Broken fixture (test-only) | `broken.adapter` | `fail` | `blocked` | missing required identity/linkage fields fails gate family |
 
@@ -27,6 +27,11 @@ Both hosts are checked against the same minimum linkage gates:
   - `artifacts/gap-107-non-codex-loop/session-bridge-request/verification-output/contract.txt`
   - `artifacts/gap-107-non-codex-loop/gap-107-non-codex-loop-approval-approval-e8f2e06c784948aabaacae0dec2a7821/handoff/write-flow.json`
   - `artifacts/gap-107-non-codex-loop/gap-107-non-codex-loop-approval-approval-e8f2e06c784948aabaacae0dec2a7821/replay/write-flow.json`
+- Claude Code native attach trial:
+  - `docs/change-evidence/20260427-claude-code-native-attach-tier-parity.md`
+  - `artifacts/task-gap-native-claude/claude-code-trial-safe/evidence/claude-code-probe.json`
+  - `artifacts/task-gap-native-claude/claude-code-trial-safe/evidence/claude-code-hooks.json`
+  - `artifacts/task-gap-native-claude/claude-code-trial-safe/replay/adapter-flow.json`
 
 ## Implementation Hooks
 - shared gate module: `packages/contracts/src/governed_ai_coding_runtime_contracts/adapter_conformance.py`

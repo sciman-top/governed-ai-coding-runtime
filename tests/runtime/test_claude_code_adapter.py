@@ -27,6 +27,7 @@ class ClaudeCodeAdapterTests(unittest.TestCase):
             process_bridge_available=True,
             settings_available=True,
             hooks_available=True,
+            session_id_available=False,
             structured_events_available=False,
             evidence_export_available=False,
             resume_available=False,
@@ -36,6 +37,26 @@ class ClaudeCodeAdapterTests(unittest.TestCase):
         self.assertEqual(profile.adapter_tier, "process_bridge")
         self.assertIn("native_attach", profile.unsupported_capabilities)
         self.assertEqual(profile.unsupported_capability_behavior, "degrade_to_process_bridge")
+
+    def test_claude_code_profile_supports_native_attach_when_required_surfaces_exist(self) -> None:
+        module = self._module()
+
+        profile = module.build_claude_code_adapter_profile(
+            process_bridge_available=True,
+            settings_available=True,
+            hooks_available=True,
+            session_id_available=True,
+            structured_events_available=True,
+            evidence_export_available=True,
+            resume_available=True,
+            native_attach_available=True,
+        )
+
+        self.assertEqual(profile.adapter_tier, "native_attach")
+        self.assertEqual(profile.unsupported_capabilities, [])
+        self.assertEqual(profile.unsupported_capability_behavior, "none")
+        self.assertEqual(profile.resume_behavior, "resume_id")
+        self.assertEqual(profile.evidence_export_capability, "structured_trace")
 
     def test_claude_code_probe_blocks_to_manual_when_cli_missing(self) -> None:
         module = self._module()
@@ -53,7 +74,7 @@ class ClaudeCodeAdapterTests(unittest.TestCase):
         self.assertEqual(probe.failure_stage, "claude_command_unavailable")
         self.assertIn("command not found", probe.reason)
 
-    def test_claude_code_probe_detects_managed_settings_and_hooks(self) -> None:
+    def test_claude_code_probe_detects_native_attach_when_session_hooks_and_stream_output_exist(self) -> None:
         module = self._module()
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
@@ -65,7 +86,15 @@ class ClaudeCodeAdapterTests(unittest.TestCase):
                 if argv == ["claude", "--version"]:
                     return 0, "2.1.114 (Claude Code)\n", ""
                 if argv == ["claude", "--help"]:
-                    return 0, "Options:\n  --output-format json\nCommands:\n  resume\n", ""
+                    return (
+                        0,
+                        "Options:\n"
+                        "  --session-id <uuid>\n"
+                        "  --resume [value]\n"
+                        "  --output-format text|json|stream-json\n"
+                        "  --include-hook-events\n",
+                        "",
+                    )
                 return 1, "", "unsupported"
 
             probe = module.probe_claude_code_surface(cwd=root, command_runner=ready_runner)
@@ -74,9 +103,36 @@ class ClaudeCodeAdapterTests(unittest.TestCase):
         self.assertTrue(probe.claude_cli_available)
         self.assertTrue(probe.settings_available)
         self.assertTrue(probe.hooks_available)
+        self.assertTrue(probe.session_id_available)
+        self.assertTrue(probe.native_attach_available)
+        self.assertEqual(readiness.status, "ready")
+        self.assertEqual(readiness.adapter_tier, "native_attach")
+        self.assertEqual(readiness.unsupported_capabilities, [])
+
+    def test_claude_code_probe_degrades_when_cli_lacks_native_attach_surface(self) -> None:
+        module = self._module()
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            (root / ".claude" / "hooks").mkdir(parents=True)
+            (root / ".claude" / "settings.json").write_text("{}\n", encoding="utf-8")
+            (root / ".claude" / "hooks" / "governed-pre-tool-use.py").write_text("print('ok')\n", encoding="utf-8")
+
+            def degraded_runner(argv, _cwd):
+                if argv == ["claude", "--version"]:
+                    return 0, "2.1.114 (Claude Code)\n", ""
+                if argv == ["claude", "--help"]:
+                    return 0, "Options:\n  --output-format json\nCommands:\n  resume\n", ""
+                return 1, "", "unsupported"
+
+            probe = module.probe_claude_code_surface(cwd=root, command_runner=degraded_runner)
+            readiness = module.summarize_claude_code_capability_readiness(probe)
+
+        self.assertFalse(probe.native_attach_available)
         self.assertEqual(readiness.status, "degraded")
         self.assertEqual(readiness.adapter_tier, "process_bridge")
-        self.assertIn("native_attach", readiness.unsupported_capabilities)
+        self.assertIn("session_id", readiness.unsupported_capabilities)
+        self.assertIn("structured_events", readiness.unsupported_capabilities)
+        self.assertEqual(probe.failure_stage, "claude_native_attach_capability_incomplete")
 
     def test_claude_code_trial_conforms_with_hook_and_replay_refs(self) -> None:
         module = self._module()
@@ -89,6 +145,7 @@ class ClaudeCodeAdapterTests(unittest.TestCase):
             process_bridge_available=True,
             settings_available=True,
             hooks_available=True,
+            session_id_available=False,
             structured_events_available=False,
             evidence_export_available=False,
             resume_available=False,
@@ -101,6 +158,33 @@ class ClaudeCodeAdapterTests(unittest.TestCase):
         self.assertIn("native_attach", payload["unsupported_capabilities"])
         self.assertTrue(payload["hook_evidence_refs"])
         self.assertTrue(payload["replay_ref"])
+
+    def test_claude_code_trial_conforms_as_supported_with_native_attach_refs(self) -> None:
+        module = self._module()
+        conformance = importlib.import_module("governed_ai_coding_runtime_contracts.adapter_conformance")
+
+        result = module.build_claude_code_adapter_trial_result(
+            repo_id="python-service",
+            task_id="task-claude-native-trial",
+            binding_id="binding-python-service",
+            process_bridge_available=True,
+            settings_available=True,
+            hooks_available=True,
+            session_id_available=True,
+            structured_events_available=True,
+            evidence_export_available=True,
+            resume_available=True,
+            native_attach_available=True,
+        )
+        payload = module.claude_code_adapter_trial_to_dict(result)
+        conformance_result = conformance.evaluate_claude_trial_conformance(payload)
+
+        self.assertEqual(payload["adapter_tier"], "native_attach")
+        self.assertEqual(payload["flow_kind"], "live_attach")
+        self.assertEqual(payload["unsupported_capabilities"], [])
+        self.assertEqual(payload["unsupported_capability_behavior"], "none")
+        self.assertEqual(conformance_result.status, "pass")
+        self.assertEqual(conformance_result.parity_status, "supported")
 
     def test_claude_code_trial_script_emits_json_summary(self) -> None:
         script = ROOT / "scripts" / "run-claude-code-adapter-trial.py"
@@ -130,6 +214,39 @@ class ClaudeCodeAdapterTests(unittest.TestCase):
         self.assertEqual(payload["adapter_tier"], "process_bridge")
         self.assertIn("hook_evidence_refs", payload)
         self.assertIn("replay_ref", payload)
+
+    def test_claude_code_trial_script_can_emit_native_attach_summary(self) -> None:
+        script = ROOT / "scripts" / "run-claude-code-adapter-trial.py"
+
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(script),
+                "--repo-id",
+                "python-service",
+                "--task-id",
+                "task-claude-native-trial",
+                "--binding-id",
+                "binding-python-service",
+                "--native-attach",
+                "--settings",
+                "--hooks",
+                "--session-id",
+                "--structured-events",
+                "--evidence-export",
+                "--resume",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=str(ROOT),
+            check=False,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        payload = json.loads(completed.stdout)
+        self.assertEqual(payload["adapter_id"], "claude-code")
+        self.assertEqual(payload["adapter_tier"], "native_attach")
+        self.assertEqual(payload["unsupported_capabilities"], [])
 
     def test_claude_code_adapter_exports_from_package_root(self) -> None:
         package = importlib.import_module("governed_ai_coding_runtime_contracts")

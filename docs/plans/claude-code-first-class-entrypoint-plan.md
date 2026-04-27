@@ -12,10 +12,11 @@ Promote Claude Code from generic non-Codex compatibility to a first-class suppor
 First-class means:
 - equal governance requirements for rules, gates, evidence, rollback, risk classification, and claim drift
 - equal all-target rollout expectations where the host surface exists
+- equal `native_attach` adapter tier when live host evidence proves session/resume identity, structured output, hook events, and managed settings/hooks
 - explicit `platform_na` or degraded posture when a Claude Code capability is unavailable
 
 First-class does not mean:
-- pretending Claude Code has the same `native_attach` capability as Codex without fresh evidence
+- pretending Claude Code has the same host API as Codex, or that `native_attach` remains available after host capability drift
 - replacing runtime-owned approval, containment, verification, rollback, evidence, or claim drift with host-local settings
 - starting A2A gateway, full multi-host orchestration, or other `LTP-04` heavy infrastructure by default
 
@@ -23,7 +24,7 @@ First-class does not mean:
 - `CLAUDE.md` remains the Claude Code context rule surface.
 - Claude Code settings, permissions, and hooks are the enforceable host-control surfaces and must complement, not replace, runtime gates.
 - Adapter parity is measured by governance-result linkage, not by identical host APIs.
-- Codex and Claude Code can have different adapter tiers while still being first-class if both preserve the same runtime-owned evidence chain.
+- Codex and Claude Code now share the `native_attach` tier on current evidence. If a future host build loses required session/resume, structured-output, or hook surfaces, the adapter must explicitly degrade while preserving the same runtime-owned evidence chain.
 
 ## Task List
 
@@ -32,7 +33,7 @@ Define the claim boundary and update planning sources so Codex and Claude Code a
 
 Acceptance criteria:
 - [x] docs use "Codex + Claude Code dual first-class entrypoint" consistently
-- [x] first-class means equal governance result, not identical adapter tier
+- [x] first-class means equal governance result and current evidence-backed `native_attach` tier, not identical host APIs
 - [x] the plan records why full `LTP-04` remains trigger-based
 
 Verification:
@@ -90,7 +91,7 @@ Certify the dual first-class entrypoint claim only after fresh Codex and Claude 
 
 Acceptance criteria:
 - [x] Codex and Claude Code each pass the same governance-result acceptance chain
-- [x] final evidence names adapter tiers, degraded capabilities, target repos, commands, and rollback
+- [x] final evidence names adapter tiers, unsupported/degraded capabilities if any, target repos, commands, and rollback
 - [x] claim catalog and adapter parity matrix are updated without overstating `native_attach`
 
 Verification:
@@ -110,7 +111,7 @@ Dependencies: `GAP-117`, `GAP-118`
 
 ## Checkpoints
 - After `GAP-115`: docs and issue rendering agree on the claim boundary.
-- After `GAP-117`: Claude Code has real probe/conformance evidence or an explicit degraded posture.
+- After `GAP-117`: Claude Code has real probe/conformance evidence, with degraded posture only when required host surfaces are missing.
 - After `GAP-119`: dual first-class certification is either evidence-backed or downgraded.
 
 ## Rollback

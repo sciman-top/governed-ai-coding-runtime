@@ -9,7 +9,7 @@ This directory holds executable implementation plans that translate strategy and
   - Scope: `GAP-093` through `GAP-111`; `GAP-093..103` are complete optimized health/trigger-discipline work and `GAP-104..111` are complete realization/certification work. `GAP-111` is the current complete hybrid final-state certification point; future LTP implementation must use post-`GAP-111` ids and a new scope fence.
 - [Claude Code First-Class Entrypoint Plan](./claude-code-first-class-entrypoint-plan.md)
   - Status: active owner-directed bounded queue after `GAP-114`
-  - Scope: `GAP-115` through `GAP-119` promoting Claude Code to first-class supported host parity with Codex in governance outcome, without claiming identical adapter tier or starting the full `LTP-04` heavy package by default
+  - Scope: `GAP-115` through `GAP-119` promoting Claude Code to first-class supported host parity with Codex in governance outcome and current evidence-backed `native_attach` tier parity, without claiming identical host APIs or starting the full `LTP-04` heavy package by default
 - [Long-Term Gap Trigger Audit Plan](./long-term-gap-trigger-audit-plan.md)
   - Status: completed trigger-audit queue for `GAP-090` through `GAP-092`; all `LTP-01..05` packages remain deferred pending future trigger evidence
   - Scope: final-state claim refresh, sustained real-workload evidence window, and gated decision for whether exactly one `LTP-01..05` package should start

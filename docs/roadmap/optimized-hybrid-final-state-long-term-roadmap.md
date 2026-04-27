@@ -56,7 +56,7 @@ The corrected implementation posture is:
 | `H8 post-certification source guard` | `GAP-112` | mechanize external-source compatibility after certification | A2A/MCP/Codex sandbox, host guardrail, and provenance assumptions are policy-checked in Docs gate |
 | `H9 autonomous promotion fence` | `GAP-113` | mechanize whether, why, and how `LTP-01..06` can advance after certification | evaluator returns `defer_all` or exactly one scope-fenced `auto_selected` package |
 | `H10 autonomous next-work selection` | `GAP-114` | mechanize the next autonomous action after LTP promotion evaluation | selector returns gate repair, evidence refresh, LTP promotion, owner-directed scope, or defer-and-refresh |
-| `H11 dual first-class host support` | `GAP-115..119` | promote Claude Code to first-class supported host parity with Codex in governance outcome | Claude Code has context, settings/hooks, adapter probe, target sync, and certification evidence without overstating adapter tier |
+| `H11 dual first-class host support` | `GAP-115..119` | promote Claude Code to first-class supported host parity with Codex in governance outcome and current `native_attach` tier | Claude Code has context, settings/hooks, adapter probe, target sync, and certification evidence without overstating host API identity |
 
 ## Track Ownership
 
@@ -98,7 +98,7 @@ The corrected implementation posture is:
 15. Post-`GAP-111` protocol adoption must include a current-source compatibility review. A2A, MCP, Codex sandbox, host guardrails, and supply-chain provenance may strengthen adapter behavior, but they cannot replace kernel-owned approval, containment, verification, rollback, or evidence.
 16. Post-`GAP-112` autonomous LTP promotion must pass the promotion policy: exactly one package, fresh trigger evidence, scope fence, full gate reference, rollback, and one vertical slice. Without that, the correct autonomous decision is `defer_all`.
 17. Post-`GAP-113` autonomous continuation must use the next-work selector. Gate repair and source/evidence freshness outrank implementation; `defer_all` cannot be converted into heavy LTP work.
-18. `GAP-115..119` are allowed as owner-directed bounded host-support work. They can make Claude Code first-class in governance outcome, but they cannot claim identical `native_attach` tier or start full `LTP-04` infrastructure without a separate scope fence.
+18. `GAP-115..119` are allowed as owner-directed bounded host-support work. They can make Claude Code first-class in governance outcome and, when live evidence proves the required host surfaces, certify the same `native_attach` tier as Codex. They cannot claim identical host APIs or start full `LTP-04` infrastructure without a separate scope fence.
 
 ## Post-GAP-103 Realization Queue
 
@@ -142,7 +142,7 @@ Executing `GAP-104..111` has realized the complete hybrid final state on the cur
 | current-source compatibility | post-`GAP-111` scope fence | external host/protocol/security docs still match adapter and claim boundaries, or affected claims are downgraded | outdated protocol assumptions are used to justify stronger claims |
 | autonomous LTP promotion | post-`GAP-112` scope fence | evaluator returns `defer_all` or exactly one scope-fenced `auto_selected` package | multiple packages advance or owner-directed work is mislabeled as evidence-triggered |
 | autonomous next-work selection | post-`GAP-113` selector | selector returns one next action from gate, freshness, promotion, owner-directed, or defer paths | `defer_all` is treated as permission to implement heavy LTP work |
-| dual first-class host support | `GAP-115..119` | Codex and Claude Code pass equal governance-result requirements with host-specific adapter tiers | Claude Code is treated as generic degraded support or as unverified `native_attach` parity |
+| dual first-class host support | `GAP-115..119` | Codex and Claude Code pass equal governance-result requirements with evidence-backed `native_attach` tier parity | Claude Code is treated as generic degraded support or as unverified host-API parity |
 
 ## Verification Floor
 Every gap in this roadmap must preserve the repository gate order:

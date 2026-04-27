@@ -66,6 +66,16 @@
       ]
     },
     {
+      "source_id": "anthropic-claude-code-cli",
+      "url": "https://code.claude.com/docs/en/cli-reference",
+      "source_kind": "host_cli",
+      "reviewed_version": "2026-04-27 snapshot",
+      "boundary_assertions": [
+        "resume, session id, structured output, and hook-event flags are host capability inputs",
+        "CLI capability flags can justify adapter tier only when runtime-owned verification and evidence remain intact"
+      ]
+    },
+    {
       "source_id": "anthropic-claude-code-hooks",
       "url": "https://code.claude.com/docs/en/hooks",
       "source_kind": "host_hooks",
@@ -157,7 +167,7 @@
     {
       "protocol_id": "claude_code_settings_hooks",
       "integration_owner": "host_boundary",
-      "required_mapping": "Use Claude Code settings, permissions, and hooks as host-control inputs while preserving runtime-owned approval, containment, verification, rollback, evidence, and claim-drift semantics.",
+      "required_mapping": "Use Claude Code CLI session/resume, structured output, settings, permissions, and hooks as host-control inputs while preserving runtime-owned approval, containment, verification, rollback, evidence, and claim-drift semantics.",
       "kernel_owned_semantics": [
         "approval",
         "containment",
@@ -251,7 +261,8 @@
     "docs/change-evidence/20260427-gap-112-current-source-compatibility-guard.md",
     "docs/change-evidence/20260427-claude-code-first-class-entrypoint-planning.md",
     "docs/change-evidence/20260427-claude-code-settings-hooks-template.md",
-    "docs/change-evidence/20260427-claude-code-adapter-certification.md"
+    "docs/change-evidence/20260427-claude-code-adapter-certification.md",
+    "docs/change-evidence/20260427-claude-code-native-attach-tier-parity.md"
   ],
   "rollback_ref": "git revert the current-source compatibility policy, verifier, tests, docs, backlog, seeds, and evidence"
 }

@@ -147,17 +147,17 @@
     },
     {
       "claim_id": "CLM-010",
-      "claim_text": "Claude Code is an owner-directed first-class supported host alongside Codex in governance outcome, while adapter tiers remain host-specific and evidence-bound.",
+      "claim_text": "Claude Code is an owner-directed first-class supported host alongside Codex in governance outcome, and current live evidence certifies both at native_attach tier while host APIs remain distinct and evidence-bound.",
       "proof_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs",
-      "evidence_link": "docs/change-evidence/20260427-claude-code-adapter-certification.md",
+      "evidence_link": "docs/change-evidence/20260427-claude-code-native-attach-tier-parity.md",
       "source_refs": [
         {
           "path": "docs/plans/claude-code-first-class-entrypoint-plan.md",
-          "contains": "Promote Claude Code from generic non-Codex compatibility to a first-class supported host alongside Codex."
+          "contains": "equal `native_attach` adapter tier when live host evidence proves session/resume identity, structured output, hook events, and managed settings/hooks"
         },
         {
           "path": "docs/backlog/issue-ready-backlog.md",
-          "contains": "define Codex and Claude Code as equally important first-class supported hosts for day-to-day AI coding work"
+          "contains": "current `native_attach` tier are equal while host APIs remain distinct and evidence-bound"
         }
       ]
     }

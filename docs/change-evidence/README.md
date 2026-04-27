@@ -4,12 +4,14 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260427 Claude Code Native Attach Tier Parity](./20260427-claude-code-native-attach-tier-parity.md)
+  - follow-up evidence upgrading Claude Code from process-bridge-only posture to current live `native_attach` tier parity with Codex, while keeping host APIs and future drift explicit
 - [20260427 Claude Code First-Class Entrypoint Planning](./20260427-claude-code-first-class-entrypoint-planning.md)
   - planning evidence for owner-directed `GAP-115..119`, promoting Claude Code to first-class supported host parity with Codex in governance outcome while keeping adapter tiers evidence-bound
 - [20260427 Claude Code Settings Hooks Template](./20260427-claude-code-settings-hooks-template.md)
   - implementation evidence for `GAP-116`, adding managed Claude Code `.claude/settings.json` and PreToolUse hook templates across active target repos
 - [20260427 Claude Code Adapter Certification](./20260427-claude-code-adapter-certification.md)
-  - closeout evidence for `GAP-117..119`, certifying Codex plus Claude Code as dual first-class entrypoints in governance result with host-specific adapter tiers
+  - initial closeout evidence for `GAP-117..119`, certifying Codex plus Claude Code as dual first-class entrypoints in governance result before the follow-up native tier parity proof
 - [20260427 GAP-114 Autonomous Next-Work Selector](./20260427-gap-114-autonomous-next-work-selector.md)
   - closeout evidence for mechanizing the next autonomous work action after `GAP-113` LTP promotion evaluation
 - [20260427 GAP-113 Autonomous LTP Promotion Scope Fence](./20260427-gap-113-autonomous-ltp-promotion-scope-fence.md)

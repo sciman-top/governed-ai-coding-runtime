@@ -51,7 +51,7 @@ This directory holds the human and machine planning artifacts that bridge strate
 - `Post-Certification Guard Queue / GAP-112` is complete. It adds a machine-readable current-source compatibility guard for A2A/MCP/Codex sandbox, host guardrails, and supply-chain provenance assumptions.
 - `Post-Certification Promotion Queue / GAP-113` is complete. It adds the autonomous `LTP-01..06` promotion scope fence that answers whether, why, and how to advance after certification.
 - `Post-Certification Selection Queue / GAP-114` is complete. It turns the promotion fence into the autonomous next-work selector.
-- `Dual First-Class Host Entrypoint Queue / GAP-115` through `GAP-119` is complete as owner-directed bounded scope. Codex and Claude Code are dual first-class entrypoints in governance result, while adapter tiers remain host-specific and evidence-bound.
+- `Dual First-Class Host Entrypoint Queue / GAP-115` through `GAP-119` is complete as owner-directed bounded scope. Codex and Claude Code are dual first-class entrypoints with current evidence-backed `native_attach` tier parity; host APIs remain different and future drift must degrade explicitly.
 - Any heavy LTP implementation package after this selector must use ids beyond the bounded host-support queue and must pass the autonomous or owner-directed scope fence.
 - Historical `GAP-018` through `GAP-044` remain completion history and dependency context.
 - The active lifecycle is now anchored by:

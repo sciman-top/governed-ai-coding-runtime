@@ -21,7 +21,7 @@
       "repo_id": "github-toolkit",
       "display_name": "github-toolkit",
       "primary_language": "python",
-      "build_command": "python -m py_compile gh_utils.py list-forks.py sync-forks.py test_toolkit.py test_support.py scripts/benchmark_hotpaths.py",
+      "build_command": "python -m py_compile gh_utils.py list-forks.py sync-forks.py test_toolkit.py test_support.py scripts/benchmark_hotpaths.py .claude/hooks/governed-pre-tool-use.py",
       "test_command": "python -m unittest test_toolkit.py",
       "contract_command": "python -m unittest test_toolkit.py",
       "quick_test_skip_reason": "Full test command is already a single deterministic unittest file; no materially faster representative slice is justified."

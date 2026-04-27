@@ -25,9 +25,11 @@ def main() -> int:
     parser.add_argument("--binding-id", required=True)
     parser.add_argument("--mode", default="safe")
     parser.add_argument("--run-id", default="claude-code-trial-safe")
+    parser.add_argument("--native-attach", action="store_true")
     parser.add_argument("--no-process-bridge", action="store_true")
     parser.add_argument("--settings", action="store_true")
     parser.add_argument("--hooks", action="store_true")
+    parser.add_argument("--session-id", action="store_true")
     parser.add_argument("--structured-events", action="store_true")
     parser.add_argument("--evidence-export", action="store_true")
     parser.add_argument("--resume", action="store_true")
@@ -51,9 +53,11 @@ def main() -> int:
         process_bridge_available=live_probe.process_bridge_available if live_probe else not args.no_process_bridge,
         settings_available=live_probe.settings_available if live_probe else args.settings,
         hooks_available=live_probe.hooks_available if live_probe else args.hooks,
+        session_id_available=live_probe.session_id_available if live_probe else args.session_id,
         structured_events_available=live_probe.structured_events_available if live_probe else args.structured_events,
         evidence_export_available=live_probe.evidence_export_available if live_probe else args.evidence_export,
         resume_available=live_probe.resume_available if live_probe else args.resume,
+        native_attach_available=live_probe.native_attach_available if live_probe else args.native_attach,
         mode=args.mode,
         run_id=args.run_id,
         probe=live_probe,
