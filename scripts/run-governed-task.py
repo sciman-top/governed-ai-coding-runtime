@@ -582,6 +582,7 @@ def run_attachment_verification(
             "outcome",
             "fail" if any(result != "pass" for result in payload["results"].values()) else "pass",
         ),
+        "service_boundary": payload.get("service_boundary"),
         "result_artifact_refs": payload["result_artifact_refs"],
         "evidence_link": payload["evidence_link"],
     }
@@ -987,6 +988,10 @@ def _response_payload(response: dict) -> dict:
     if not isinstance(payload, dict):
         msg = "invalid control-plane response payload"
         raise RuntimeError(msg)
+    payload = dict(payload)
+    service_boundary = response.get("service_boundary")
+    if isinstance(service_boundary, str) and service_boundary and "service_boundary" not in payload:
+        payload["service_boundary"] = service_boundary
     return payload
 
 

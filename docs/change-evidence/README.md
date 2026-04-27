@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260427 GAP-105 Service-Primary Runtime Boundary Batch 1](./20260427-gap-105-service-primary-runtime-boundary.md)
+  - closeout evidence for preserving service-boundary metadata through execution-like CLI wrapper payloads
 - [20260427 GAP-104 Complete Hybrid Final-State Realization Rebaseline Closeout](./20260427-gap-104-realization-rebaseline-closeout.md)
   - closeout evidence for making `GAP-104` the completed rebaseline before implementation continues into `GAP-105`
 - [20260427 GAP-104..111 Complete Hybrid Final-State Realization Planning](./20260427-gap-104-111-realization-planning.md)

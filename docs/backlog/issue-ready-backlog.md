@@ -850,15 +850,15 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: AFK
 - Blocked by: GAP-104
 - User stories: 1, 11, 13, 17, 39, 44
-- Status: planned active queue item
+- Status: complete on current branch baseline (wrapper service-boundary evidence validated on 2026-04-27)
 - What to build:
   - make the control/session/operator API boundary the primary execution path for execution-like commands while keeping CLI and PowerShell wrappers as compatibility entrypoints
   - introduce or expand `FastAPI`, `Pydantic v2`, PostgreSQL, and tracing only where the service boundary owns real runtime behavior
   - add parity tests proving CLI, service facade, and API routes share the same contract behavior
 - Acceptance criteria:
-  - [ ] execution-like CLI paths dispatch through the service/control boundary or fail a drift guard
-  - [ ] service metadata persistence has local fallback and PostgreSQL-backed test coverage where enabled
-  - [ ] API/CLI parity tests are part of the runtime gate for touched surfaces
+  - [x] execution-like CLI paths dispatch through the service/control boundary or fail a drift guard
+  - [x] service metadata persistence has local fallback and PostgreSQL-backed test coverage where enabled
+  - [x] API/CLI parity tests are part of the runtime gate for touched surfaces
 
 ### GAP-106 Live Codex Attach Continuity Batch 1
 - Type: HITL

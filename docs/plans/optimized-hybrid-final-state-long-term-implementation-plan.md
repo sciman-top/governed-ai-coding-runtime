@@ -446,9 +446,9 @@ AFK
 - Introduce or expand `FastAPI`, `Pydantic v2`, PostgreSQL, and tracing only at active runtime boundaries.
 
 ### Acceptance Criteria
-- [ ] execution-like wrappers dispatch through the service/control boundary or fail drift checks
-- [ ] service metadata persistence has local fallback and PostgreSQL-backed tests where enabled
-- [ ] API/CLI parity tests run in the runtime gate for touched surfaces
+- [x] execution-like wrappers dispatch through the service/control boundary or fail drift checks
+- [x] service metadata persistence has local fallback and PostgreSQL-backed tests where enabled
+- [x] API/CLI parity tests run in the runtime gate for touched surfaces
 
 ### Verification
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`

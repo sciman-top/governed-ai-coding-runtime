@@ -140,7 +140,14 @@ class RunGovernedTaskServiceWrapperTests(unittest.TestCase):
 
     def test_govern_attachment_write_uses_service_dispatch(self) -> None:
         module = _load_run_governed_task_module()
-        fake_app = _FakeApp([{"payload": {"execution_status": "blocked", "approval_id": "approval-1"}}])
+        fake_app = _FakeApp(
+            [
+                {
+                    "service_boundary": "control-plane",
+                    "payload": {"execution_status": "blocked", "approval_id": "approval-1"},
+                }
+            ]
+        )
 
         with patch.object(module, "_build_control_plane_app", return_value=fake_app):
             payload = module.govern_attachment_write(
@@ -156,6 +163,7 @@ class RunGovernedTaskServiceWrapperTests(unittest.TestCase):
             )
 
         self.assertEqual(payload["execution_status"], "blocked")
+        self.assertEqual(payload["service_boundary"], "control-plane")
         self.assertEqual(fake_app.calls[0]["payload"]["command_type"], "write_request")
 
     def test_decide_attachment_write_uses_service_dispatch(self) -> None:
@@ -216,6 +224,7 @@ class RunGovernedTaskServiceWrapperTests(unittest.TestCase):
         fake_app = _FakeApp(
             [
                 {
+                    "service_boundary": "control-plane",
                     "payload": {
                         "mode": "quick",
                         "run_id": "run-1",
@@ -246,6 +255,7 @@ class RunGovernedTaskServiceWrapperTests(unittest.TestCase):
 
         self.assertEqual(payload["repo_id"], "target-repo")
         self.assertEqual(payload["binding_id"], "binding-1")
+        self.assertEqual(payload["service_boundary"], "control-plane")
         self.assertEqual(payload["results"], {"test": "pass", "contract": "pass"})
         self.assertEqual(fake_app.calls[0]["payload"]["command_type"], "run_quick_gate")
 

@@ -43,7 +43,7 @@
 - For post-closeout governance optimization, the canonical lane package is now execution-closed with evidence: governance lane roadmap, governance lane implementation plan, `GAP-061` through `GAP-068` backlog/seeds, the shared acceptance/rollback template, dedicated epic-rendering support, and closeout evidence linkage.
 - For long-term gap work, `GAP-090` through `GAP-092` define a completed trigger-audit queue that refreshes evidence and selects at most one LTP before implementation starts; all `LTP-01..05` packages remain deferred on the current branch baseline.
 - For optimized long-term implementation, `GAP-093` through `GAP-103` define the completed queue for containment/provenance, transition-stack convergence, trigger reviews, selected `LTP` scope fence, first selected-package implementation, sustained release-readiness closeout, and fresh all-target workload evidence.
-- For complete hybrid final-state realization, `GAP-104` through `GAP-111` now define the active post-`GAP-103` implementation queue. `GAP-104` is complete as the realization rebaseline; `GAP-105..111` remain the implementation and certification path required before the repository can truthfully claim complete hybrid final-state closure.
+- For complete hybrid final-state realization, `GAP-104` through `GAP-111` now define the active post-`GAP-103` implementation queue. `GAP-104` is complete as the realization rebaseline, `GAP-105` is complete as the service-primary runtime boundary batch, and `GAP-106..111` remain the implementation and certification path required before the repository can truthfully claim complete hybrid final-state closure.
 - Historical lifecycle and productization plans remain execution history and rationale, not competing active mainlines.
 
 ## Navigation Aids
@@ -68,7 +68,7 @@
 - `Near-Term Gap Horizon Queue / GAP-080` through `GAP-089` are complete on the current branch baseline (`GAP-080` through `GAP-084` verified on 2026-04-21; `GAP-085` through `GAP-089` verified on 2026-04-22).
 - `Long-Term Gap Trigger Audit Queue / GAP-090` through `GAP-092` is complete; all `LTP-01..05` packages remain deferred pending future trigger evidence.
 - `Optimized Hybrid Long-Term Implementation Queue / GAP-093` through `GAP-103` is complete on the current branch baseline. No `LTP-01..06` package was selected or implemented; each remains trigger-based until fresh scope-fence evidence exists.
-- `Complete Hybrid Final-State Realization Queue / GAP-104` through `GAP-111` is active. `GAP-104` is complete as planning rebaseline; `GAP-105..111` cover service-primary runtime boundaries, live Codex continuity, non-Codex parity, governed executable tool coverage, data/provenance release paths, operations recovery, and final certification.
+- `Complete Hybrid Final-State Realization Queue / GAP-104` through `GAP-111` is active. `GAP-104` is complete as planning rebaseline; `GAP-105` is complete as the service-primary runtime boundary batch; `GAP-106..111` cover live Codex continuity, non-Codex parity, governed executable tool coverage, data/provenance release paths, operations recovery, and final certification.
 - New LTP implementation queue items beyond this package must use ids beyond `GAP-111` and must be selected by the applicable scope fence.
 - Active verification for this repo remains `build -> test -> contract/invariant -> doctor`, with docs and script checks still included in `verify-repo -Check All`.
 - `docs/change-evidence/` remains historical evidence and planning trace, not the primary user-facing product surface.
