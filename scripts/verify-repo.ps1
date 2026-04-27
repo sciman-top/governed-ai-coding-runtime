@@ -592,6 +592,7 @@ function Invoke-ContractChecks {
   Invoke-TargetRepoGovernanceConsistencyChecks
   Invoke-TargetRepoPowerShellPolicyChecks
   Invoke-AgentRuleSyncChecks
+  Invoke-PreChangeReviewChecks
   Invoke-FunctionalEffectivenessChecks
 }
 
@@ -673,6 +674,20 @@ function Invoke-AgentRuleSyncChecks {
   }
 
   Write-CheckOk "agent-rule-sync"
+}
+
+function Invoke-PreChangeReviewChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-pre-change-review.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Pre-change review checks failed"
+    }
+    throw "Pre-change review checks failed`n$detail"
+  }
+
+  Write-CheckOk "pre-change-review"
 }
 
 function Invoke-FunctionalEffectivenessChecks {
