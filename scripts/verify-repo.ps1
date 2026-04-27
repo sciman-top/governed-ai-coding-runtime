@@ -592,6 +592,7 @@ function Invoke-ContractChecks {
   Invoke-TargetRepoGovernanceConsistencyChecks
   Invoke-TargetRepoPowerShellPolicyChecks
   Invoke-AgentRuleSyncChecks
+  Invoke-FunctionalEffectivenessChecks
 }
 
 function Invoke-DependencyBaselineChecks {
@@ -672,6 +673,20 @@ function Invoke-AgentRuleSyncChecks {
   }
 
   Write-CheckOk "agent-rule-sync"
+}
+
+function Invoke-FunctionalEffectivenessChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-functional-effectiveness.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Functional effectiveness evidence checks failed"
+    }
+    throw "Functional effectiveness evidence checks failed`n$detail"
+  }
+
+  Write-CheckOk "functional-effectiveness"
 }
 
 function Invoke-BuildChecks {
