@@ -1,4 +1,4 @@
-issue_seed_version: "4.3"
+issue_seed_version: "4.4"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment
@@ -405,3 +405,43 @@ issues:
     type: HITL
     blocked_by: [GAP-102]
     user_stories: [13, 14, 15, 38, 45]
+  - id: GAP-104
+    title: Full Hybrid Final-State Realization Rebaseline
+    type: AFK
+    blocked_by: [GAP-103]
+    user_stories: [1, 13, 23, 29, 31, 44]
+  - id: GAP-105
+    title: Service-Primary Runtime Boundary Batch 1
+    type: AFK
+    blocked_by: [GAP-104]
+    user_stories: [1, 11, 13, 17, 39, 44]
+  - id: GAP-106
+    title: Live Codex Attach Continuity Batch 1
+    type: HITL
+    blocked_by: [GAP-105]
+    user_stories: [2, 13, 20, 31, 37, 44]
+  - id: GAP-107
+    title: Non-Codex Adapter Parity Batch 1
+    type: HITL
+    blocked_by: [GAP-106]
+    user_stories: [2, 20, 31, 37, 44, 46]
+  - id: GAP-108
+    title: Governed Execution Tool Coverage Batch 1
+    type: AFK
+    blocked_by: [GAP-105]
+    user_stories: [8, 10, 13, 14, 15, 31, 44]
+  - id: GAP-109
+    title: Data Plane And Provenance Release Batch 1
+    type: AFK
+    blocked_by: [GAP-105, GAP-108]
+    user_stories: [14, 18, 21, 31, 38, 44]
+  - id: GAP-110
+    title: Operations Recovery And Sustained Soak Batch 1
+    type: HITL
+    blocked_by: [GAP-106, GAP-107, GAP-108, GAP-109]
+    user_stories: [13, 14, 15, 21, 39, 45]
+  - id: GAP-111
+    title: Complete Hybrid Final-State Certification
+    type: HITL
+    blocked_by: [GAP-110]
+    user_stories: [13, 14, 18, 21, 29, 37, 44, 45]

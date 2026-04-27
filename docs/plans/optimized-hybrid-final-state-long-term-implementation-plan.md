@@ -2,8 +2,9 @@
 
 ## Status
 - Created from the 2026-04-27 optimized hybrid final-state and stack-staging review.
-- Future-facing queue: `GAP-093..103`.
+- Future-facing queue: `GAP-093..111`.
 - Current posture: `GAP-093..103` are complete. No long-term package was implemented; `LTP-01..06` remain deferred/watch or not triggered pending fresh scope-fence evidence.
+- Active next queue: `GAP-104..111` define the complete realization path that must be implemented before the repository can truthfully claim full hybrid final-state closure.
 
 ## Goal
 Provide an implementation-ready plan for the long-term optimized hybrid final state while preserving the current rule that heavyweight components remain trigger-based.
@@ -17,7 +18,7 @@ Provide an implementation-ready plan for the long-term optimized hybrid final st
 
 ## Task Graph
 
-`GAP-092 -> GAP-093 -> GAP-094 -> GAP-095 -> GAP-096 -> GAP-097 -> GAP-098 -> GAP-099 -> GAP-100 -> GAP-101 -> GAP-102 -> GAP-103`
+`GAP-092 -> GAP-093 -> GAP-094 -> GAP-095 -> GAP-096 -> GAP-097 -> GAP-098 -> GAP-099 -> GAP-100 -> GAP-101 -> GAP-102 -> GAP-103 -> GAP-104 -> GAP-105 -> (GAP-106 + GAP-108) -> GAP-107 -> GAP-109 -> GAP-110 -> GAP-111`
 
 ## GAP-093 Optimized Hybrid Long-Term Planning Baseline
 
@@ -398,6 +399,283 @@ HITL
 ### Rollback
 Revert `GAP-103` planning/status entries and evidence if the fresh all-target window cannot be reproduced.
 
+## GAP-104 Full Hybrid Final-State Realization Rebaseline
+
+### Type
+AFK
+
+### Dependencies
+- `GAP-103`
+
+### Scope
+- Rebaseline the post-`GAP-103` realization queue and make clear that `GAP-093..103` did not implement heavy `LTP` packages.
+- Define objective complete-closure criteria for service boundary, live Codex continuity, non-Codex parity, governed tool coverage, data/provenance, operations recovery, and claim certification.
+- Map every `LTP-01..06` package to its first valid implementation trigger without starting untriggered infrastructure.
+
+### Acceptance Criteria
+- [ ] roadmap, implementation plan, backlog, issue seeds, and evidence agree on `GAP-104..111`
+- [ ] final-state wording distinguishes optimized health from complete realization
+- [ ] closure criteria can fail when live-host, adapter, execution, data, operations, or provenance evidence is missing
+
+### Verification
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/github/create-roadmap-issues.ps1 -ValidateOnly -RenderAll`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`
+
+### Likely Files
+- `docs/architecture/hybrid-final-state-master-outline.md`
+- `docs/roadmap/optimized-hybrid-final-state-long-term-roadmap.md`
+- `docs/plans/optimized-hybrid-final-state-long-term-implementation-plan.md`
+- `docs/backlog/issue-ready-backlog.md`
+- `docs/backlog/issue-seeds.yaml`
+- `docs/change-evidence/*.md`
+
+### Rollback
+Revert the `GAP-104..111` planning additions and restore issue seed version and label mapping.
+
+## GAP-105 Service-Primary Runtime Boundary Batch 1
+
+### Type
+AFK
+
+### Dependencies
+- `GAP-104`
+
+### Scope
+- Make control/session/operator APIs the primary runtime path for execution-like commands.
+- Keep CLI and PowerShell entrypoints as compatibility wrappers over the same contract behavior.
+- Introduce or expand `FastAPI`, `Pydantic v2`, PostgreSQL, and tracing only at active runtime boundaries.
+
+### Acceptance Criteria
+- [ ] execution-like wrappers dispatch through the service/control boundary or fail drift checks
+- [ ] service metadata persistence has local fallback and PostgreSQL-backed tests where enabled
+- [ ] API/CLI parity tests run in the runtime gate for touched surfaces
+
+### Verification
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`
+- targeted service/API/CLI parity tests
+- `python scripts/verify-transition-stack-convergence.py`
+
+### Likely Files
+- `apps/control-plane/*`
+- `packages/agent-runtime/*`
+- `packages/contracts/src/*`
+- `tests/service/*`
+- `tests/runtime/*`
+- `infra/local-runtime/*`
+
+### Rollback
+Revert service-primary routing changes and preserve compatibility wrappers only if parity gates stay green.
+
+## GAP-106 Live Codex Attach Continuity Batch 1
+
+### Type
+HITL
+
+### Dependencies
+- `GAP-105`
+
+### Scope
+- Replace posture-only Codex evidence with live attach or launch handshake evidence.
+- Link session identity, continuation identity, event ingestion, runtime task, approval, execution, evidence, replay, rollback, and handoff.
+- Run at least one real target-repo medium-risk loop through the live Codex path.
+
+### Acceptance Criteria
+- [ ] live Codex evidence links request through handoff in one runtime-owned chain
+- [ ] continuity id preservation meets the declared target or claims are downgraded
+- [ ] host limitation, adapter defect, and runtime policy denial are separately classified
+
+### Verification
+- adapter conformance tests for Codex path
+- representative live target-repo runtime-flow evidence
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`
+
+### Likely Files
+- `packages/contracts/src/*codex*`
+- `packages/agent-runtime/*`
+- `scripts/runtime-flow*.ps1`
+- `docs/product/codex-direct-adapter*`
+- `tests/runtime/*codex*`
+
+### Rollback
+Downgrade Codex live attach claims and revert adapter/runtime linkage changes if live evidence cannot be reproduced.
+
+## GAP-107 Non-Codex Adapter Parity Batch 1
+
+### Type
+HITL
+
+### Dependencies
+- `GAP-106`
+
+### Scope
+- Select one non-Codex adapter path and make it pass the same conformance family as Codex.
+- Keep host-specific behavior behind capability-tiered adapters.
+- Document degraded posture honestly when attach, continuation, or evidence export is unsupported.
+
+### Acceptance Criteria
+- [ ] one non-Codex path passes adapter conformance, governed execution, and evidence linkage gates
+- [ ] missing host capabilities produce explicit degraded posture rather than silent success
+- [ ] runtime-owned approval, verification, rollback, and evidence semantics remain host-neutral
+
+### Verification
+- non-Codex adapter conformance tests
+- representative target-repo runtime-flow evidence for selected adapter
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`
+
+### Likely Files
+- `docs/product/adapter-*`
+- `docs/specs/agent-adapter-contract-spec.md`
+- `schemas/jsonschema/agent-adapter-contract.schema.json`
+- `packages/contracts/src/*adapter*`
+- `tests/runtime/test_adapter_*`
+
+### Rollback
+Revert selected adapter changes or mark the path degraded if conformance cannot be sustained.
+
+## GAP-108 Governed Execution Tool Coverage Batch 1
+
+### Type
+AFK
+
+### Dependencies
+- `GAP-105`
+
+### Scope
+- Move shell, git, package-manager, browser automation, and MCP/tool-bridge execution onto the common governed containment surface.
+- Enforce workspace roots, allowed path roots, environment policy, network posture, timeout, approval class, rollback refs, and evidence refs.
+- Fail closed for unsupported executable tool families unless an explicit waiver exists.
+
+### Acceptance Criteria
+- [ ] supported executable families have contract, schema, runtime, and test coverage for containment metadata
+- [ ] unsupported or unclassified executable families fail closed
+- [ ] evidence snapshots include command class, containment profile, approval decision, verification result, and rollback posture
+
+### Verification
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`
+- targeted tool-runner containment tests
+
+### Likely Files
+- `packages/contracts/src/*tool*`
+- `schemas/jsonschema/tool-contract.schema.json`
+- `docs/specs/tool-contract-spec.md`
+- `tests/runtime/test_tool_runner*.py`
+- `tests/runtime/test_*governance*.py`
+
+### Rollback
+Revert new executable-family support and keep fail-closed behavior for unsupported families.
+
+## GAP-109 Data Plane And Provenance Release Batch 1
+
+### Type
+AFK
+
+### Dependencies
+- `GAP-105`
+- `GAP-108`
+
+### Scope
+- Promote task, evidence, artifact, replay, and provenance records into service-shaped persistence boundaries.
+- Implement release-adjacent provenance for generated light packs, control packs, and packaged runtime artifacts.
+- Keep event bus, semantic store, object-store promotion, and signing workflows trigger-based until retention, query, size, or external-consumption evidence requires them.
+
+### Acceptance Criteria
+- [ ] data-plane read/write paths have migration, replay, retention, and rollback tests
+- [ ] generated release-adjacent artifacts carry provenance or explicit waiver evidence
+- [ ] scale components remain deferred unless measured pressure justifies them
+
+### Verification
+- persistence and artifact-store tests
+- provenance/attestation contract tests
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/package-runtime.ps1`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`
+
+### Likely Files
+- `packages/agent-runtime/persistence.py`
+- `packages/agent-runtime/artifact_store.py`
+- `schemas/jsonschema/provenance-and-attestation.schema.json`
+- `docs/specs/provenance-and-attestation-spec.md`
+- `scripts/package-runtime.ps1`
+- `tests/runtime/test_*persistence*.py`
+
+### Rollback
+Revert data-plane migrations and provenance release wiring, then downgrade release-readiness claims.
+
+## GAP-110 Operations Recovery And Sustained Soak Batch 1
+
+### Type
+HITL
+
+### Dependencies
+- `GAP-106`
+- `GAP-107`
+- `GAP-108`
+- `GAP-109`
+
+### Scope
+- Run a sustained workload window across self-runtime and all configured target repos after realization batches.
+- Prove doctor/operator remediation for posture, policy, dependency, persistence, and adapter failures.
+- Record success, recovery, timeout, and claim-freshness metrics without introducing a full operations stack prematurely.
+
+### Acceptance Criteria
+- [ ] sustained workload evidence covers multiple targets and more than one execution class
+- [ ] at least 90% of classified posture failures have guided remediation and retry evidence or explicit waiver
+- [ ] operational failures downgrade claims until recovery evidence is regenerated
+
+### Verification
+- all-target runtime-flow sustained window
+- doctor/operator remediation tests
+- target-repo governance consistency checks
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`
+
+### Likely Files
+- `scripts/runtime-flow-preset.ps1`
+- `scripts/doctor-runtime.ps1`
+- `docs/runbooks/*`
+- `docs/change-evidence/target-repo-runs/*`
+- `tests/runtime/test_operator_*`
+- `tests/runtime/test_runtime_doctor.py`
+
+### Rollback
+Downgrade operational and final-state claims, revert automation changes, and retain failure evidence for remediation.
+
+## GAP-111 Complete Hybrid Final-State Certification
+
+### Type
+HITL
+
+### Dependencies
+- `GAP-110`
+
+### Scope
+- Certify complete hybrid final-state closure only after `GAP-104..110` produce fresh, reproducible evidence.
+- Reconcile master outline, roadmap, implementation plan, claim catalog, backlog, issue seeds, product docs, and evidence indexes.
+- Classify every `LTP-01..06` package as implemented, partially implemented, deferred, or superseded by transition-stack work.
+
+### Acceptance Criteria
+- [ ] every quantified final-state target in the master outline has fresh evidence or an explicit downgrade
+- [ ] live Codex, non-Codex parity, governed execution coverage, data/provenance, and operations recovery all pass their gates
+- [ ] complete hybrid final-state closure can be claimed without narrative-only evidence
+
+### Verification
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/github/create-roadmap-issues.ps1 -ValidateOnly -RenderAll`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`
+- final all-target runtime-flow sustained window
+- `git diff --check`
+
+### Likely Files
+- `docs/architecture/hybrid-final-state-master-outline.md`
+- `docs/roadmap/optimized-hybrid-final-state-long-term-roadmap.md`
+- `docs/plans/optimized-hybrid-final-state-long-term-implementation-plan.md`
+- `docs/backlog/issue-ready-backlog.md`
+- `docs/backlog/issue-seeds.yaml`
+- `docs/change-evidence/*.md`
+- `docs/product/claim-catalog.json`
+- `docs/product/claim-exceptions.json`
+
+### Rollback
+Downgrade final-state closure wording and revert certification changes if any required evidence cannot be reproduced.
+
 ## Checkpoints
 
 | checkpoint | after | required decision |
@@ -408,6 +686,11 @@ Revert `GAP-103` planning/status entries and evidence if the fresh all-target wi
 | LTP decision checkpoint | `GAP-100` | exactly one package selected or all packages deferred |
 | release-readiness checkpoint | `GAP-102` | claims, gates, and workload evidence agree |
 | fresh all-target checkpoint | `GAP-103` | all configured target repos still pass the daily flow after closeout |
+| realization rebaseline checkpoint | `GAP-104` | complete realization queue is canonical and evidence-bound |
+| service boundary checkpoint | `GAP-105` | API/CLI/service behavior is one contract-backed execution model |
+| adapter checkpoint | `GAP-107` | Codex and at least one non-Codex path have honest conformance evidence |
+| execution/data checkpoint | `GAP-109` | governed tools and data/provenance paths are reproducible and rollback-aware |
+| certification checkpoint | `GAP-111` | complete final-state claim is either evidence-certified or downgraded |
 
 ## Evidence Requirements
 Each gap must add or update `docs/change-evidence/*.md` with:

@@ -4,8 +4,9 @@
 - This is the long-term roadmap created after the 2026-04-27 external benchmark and stack-staging review.
 - It starts after the completed `GAP-090..092` trigger-audit queue.
 - It does not mark any `LTP` package as already triggered or implemented.
-- It translates the optimized hybrid final state into a dependency-ordered queue: `GAP-093..103`.
+- It translates the optimized hybrid final state into a dependency-ordered queue: `GAP-093..111`.
 - `GAP-093..103` are complete on the current branch baseline. No `LTP-01..06` package was selected or implemented.
+- `GAP-104..111` are the post-`GAP-103` realization queue. They are the first queue that can convert the optimized target into complete hybrid final-state closure if the implementation evidence passes.
 
 ## Goal
 Move from the current verified hybrid baseline to a sustained optimized hybrid final state without turning every attractive final-state component into mandatory near-term infrastructure.
@@ -47,6 +48,7 @@ The corrected implementation posture is:
 | `H4 selected package implementation` | `GAP-100..101` | start at most one long-term package and implement one vertical slice | one selected package has contract, runtime, evidence, tests, and rollback |
 | `H5 sustained release readiness` | `GAP-102` | refresh closeout claims against real workload and rollout evidence | final-state wording, evidence, gates, and target-repo posture agree |
 | `H6 fresh all-target workload window` | `GAP-103` | rerun the configured target-repo daily workload after optimized closeout | all configured target repos pass daily flow with no runtime-flow timeout |
+| `H7 complete realization queue` | `GAP-104..111` | implement the service, adapter, execution, data/provenance, operations, and certification slices required for truthful complete closure | every final-state acceptance target has fresh runtime evidence or the claim is downgraded |
 
 ## Track Ownership
 
@@ -78,6 +80,31 @@ The corrected implementation posture is:
 5. `GAP-101` implements only the selected package's first vertical slice.
 6. `GAP-102` may strengthen final-state claims only when fresh gates and workload evidence remain reproducible.
 7. `GAP-103` refreshes all-target daily evidence; it is not permission to claim heavy `LTP` implementation.
+8. `GAP-104` rebaselines the realization queue before any new complete-closure claim.
+9. `GAP-105` must establish the service-primary boundary before live-host, execution breadth, or data-plane implementation claims.
+10. `GAP-106` and `GAP-107` must prove Codex and at least one non-Codex path through the same runtime-owned evidence chain.
+11. `GAP-108` must close executable tool-family containment before broader autonomous write or release claims.
+12. `GAP-109` must make data/provenance release paths reproducible before public or external consumption claims.
+13. `GAP-110` must produce a sustained workload and remediation window before `GAP-111` can certify closure.
+14. `GAP-111` is allowed to claim complete hybrid final-state closure only if all previous realization gates are fresh and reproducible.
+
+## Post-GAP-103 Realization Queue
+
+| gap id | purpose | completion signal |
+|---|---|---|
+| `GAP-104` | rebaseline the complete realization queue after the optimized review packages | `GAP-104..111` are aligned across roadmap, plan, backlog, seeds, and evidence |
+| `GAP-105` | make service/API boundaries primary for execution-like runtime behavior | CLI, facade, and API paths share one contract-backed behavior and parity gate |
+| `GAP-106` | prove live Codex attach continuity with real session identity and event linkage | one real Codex path links request, approval, execution, evidence, replay, rollback, and handoff |
+| `GAP-107` | prove at least one non-Codex adapter path under the same conformance family | non-Codex degraded and successful postures are honest and fail closed |
+| `GAP-108` | broaden governed executable tool coverage under declared containment | shell/git/package/browser/MCP-like execution emits containment, approval, evidence, and rollback metadata |
+| `GAP-109` | make data-plane and provenance release paths service-shaped and reproducible | task/evidence/artifact/replay/provenance stores have migration, retention, replay, and rollback tests |
+| `GAP-110` | run sustained operations and recovery evidence after the realization batches | multi-target workload and remediation evidence supports claim freshness |
+| `GAP-111` | certify or downgrade complete hybrid final-state closure | every final-state target has fresh evidence or visible downgrade |
+
+## Does Executing This Plan Truly Realize The Final State?
+Executing only `GAP-093..103` does not realize the complete hybrid final state. It proves optimized planning, containment/provenance floors, transition-stack discipline, trigger reviews, and fresh target-repo health.
+
+Executing `GAP-104..111` can legitimately realize the complete hybrid final state if all acceptance criteria pass and no host capability, workload, or supply-chain evidence invalidates the claims. The certification condition is evidence-based, not schedule-based: if any live-host, adapter, execution, data, operations, or provenance target fails, `GAP-111` must downgrade the claim instead of marking the final state complete.
 
 ## Verification Floor
 Every gap in this roadmap must preserve the repository gate order:
@@ -96,6 +123,7 @@ Implementation gaps must additionally run the relevant runtime, contract, doctor
 - `docs/backlog/issue-ready-backlog.md`
 - `docs/backlog/issue-seeds.yaml`
 - `docs/change-evidence/20260427-optimized-hybrid-long-term-plan.md`
+- `docs/change-evidence/20260427-gap-104-111-realization-planning.md`
 
 ## Source References
 - `docs/architecture/hybrid-final-state-master-outline.md`

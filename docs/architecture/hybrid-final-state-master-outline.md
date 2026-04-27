@@ -74,6 +74,22 @@ Decision:
 - Strengthen acceptance criteria and roadmap wording around sandbox containment, protocol boundaries, trigger-based component adoption, and provenance-backed claims.
 - Do not start a clean-sheet rewrite or broaden the platform stack before the current runtime-owned loop remains re-verifiable.
 
+## Current Best-State Answer (2026-04-27 Refresh)
+The optimized hybrid target is the best current engineering direction for this repository, but it is not best if read as a one-shot platform stack.
+
+Best interpretation:
+- keep the product shape: `repo-local contract bundle + machine-local durable governance kernel + attach-first host adapters + same-contract verification/delivery plane`
+- keep the current Python/PowerShell/filesystem baseline as the verified local proof surface
+- promote to the direct transition stack only where the runtime has an active service, persistence, tracing, containment, or release boundary
+- keep Temporal-class orchestration, `OPA/Rego`, event buses, semantic stores, A2A gateway, full observability suites, and rich web console work trigger-based
+
+Not best interpretation:
+- treating the current script-heavy baseline as the final architecture
+- treating `GAP-093..103` as complete final-state implementation
+- importing the whole north-star stack before live-host, adapter, execution, data, operations, and provenance evidence require it
+
+Complete realization now requires the post-`GAP-103` queue `GAP-104..111`. Executing only `GAP-093..103` proves optimized health and trigger discipline; executing `GAP-104..111` with passing evidence is the path that can truthfully certify complete hybrid final-state closure.
+
 ## Current Baseline
 The current branch baseline has already proven and landed:
 - docs-first and contracts-first source-of-truth structure
@@ -460,7 +476,7 @@ The canonical planning package now consists of direct closure companions plus th
 4. optimized hybrid long-term implementation plan
 5. aligned backlog and task list
 
-Those files are now the active planning chain for future completion and long-term optimization work.
+Those files are now the active planning chain for future completion and long-term optimization work. The current active implementation queue is `GAP-104..111`, which turns the optimized target into a complete realization plan instead of another planning-only closeout.
 
 ## Source References
 - `docs/prd/governed-ai-coding-runtime-prd.md`

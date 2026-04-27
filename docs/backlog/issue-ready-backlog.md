@@ -34,6 +34,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Near-Term Gap Horizon Queue / GAP-080` through `GAP-089` are complete on the current branch baseline (`GAP-080` through `GAP-084` verified on 2026-04-21; `GAP-085` through `GAP-089` verified on 2026-04-22).
 - `Long-Term Gap Trigger Audit Queue / GAP-090` through `GAP-092` is complete; all `LTP-01..05` packages remain deferred pending future trigger evidence.
 - `Optimized Hybrid Long-Term Implementation Queue / GAP-093` through `GAP-103` is complete on the current branch baseline; no `LTP-01..06` implementation package was selected.
+- `Complete Hybrid Final-State Realization Queue / GAP-104` through `GAP-111` is the active post-`GAP-103` implementation queue. It is the first queue that can legitimately turn the optimized target into complete final-state closure if every acceptance criterion is implemented and verified.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -830,6 +831,118 @@ The entries below record the executed queue for complete hybrid final-state and 
   - [x] evidence records command, timing, timeout controls, and per-target exit posture
   - [x] final-state wording distinguishes fresh all-target evidence from heavy LTP implementation
   - [x] issue rendering, docs/scripts gates, and repo gates agree after the new queue item
+
+### GAP-104 Full Hybrid Final-State Realization Rebaseline
+- Type: AFK
+- Blocked by: GAP-103
+- User stories: 1, 13, 23, 29, 31, 44
+- Status: planned active queue item
+- What to build:
+  - convert the post-`GAP-103` conclusion into a complete realization baseline that separates `healthy optimized baseline`, `transition implementation`, and `complete final-state closure`
+  - freeze the realization acceptance matrix for service boundary, live Codex continuity, non-Codex parity, governed tool coverage, data/provenance release flow, operations recovery, and final claim certification
+  - keep `LTP-01..06` trigger-based, but map each package to the first concrete implementation batch that would satisfy its trigger if evidence later justifies it
+- Acceptance criteria:
+  - [ ] roadmap, implementation plan, backlog, issue seeds, and evidence all list `GAP-104..111` with matching dependencies
+  - [ ] final-state wording states that `GAP-093..103` did not implement heavy `LTP` packages
+  - [ ] complete closure criteria are objective enough to fail if live-host, adapter, execution, data, recovery, or provenance evidence is missing
+
+### GAP-105 Service-Primary Runtime Boundary Batch 1
+- Type: AFK
+- Blocked by: GAP-104
+- User stories: 1, 11, 13, 17, 39, 44
+- Status: planned active queue item
+- What to build:
+  - make the control/session/operator API boundary the primary execution path for execution-like commands while keeping CLI and PowerShell wrappers as compatibility entrypoints
+  - introduce or expand `FastAPI`, `Pydantic v2`, PostgreSQL, and tracing only where the service boundary owns real runtime behavior
+  - add parity tests proving CLI, service facade, and API routes share the same contract behavior
+- Acceptance criteria:
+  - [ ] execution-like CLI paths dispatch through the service/control boundary or fail a drift guard
+  - [ ] service metadata persistence has local fallback and PostgreSQL-backed test coverage where enabled
+  - [ ] API/CLI parity tests are part of the runtime gate for touched surfaces
+
+### GAP-106 Live Codex Attach Continuity Batch 1
+- Type: HITL
+- Blocked by: GAP-105
+- User stories: 2, 13, 20, 31, 37, 44
+- Status: planned active queue item
+- What to build:
+  - replace posture-only Codex evidence with a live attach or launch handshake that records session identity, continuation identity, event ingestion, task linkage, and handoff linkage
+  - make Codex host capability drift visible through adapter conformance evidence and downgrade rules
+  - run at least one real target-repo medium-risk loop through the live Codex path
+- Acceptance criteria:
+  - [ ] live Codex evidence links request, approval, execution, verification, evidence, replay, rollback, and handoff ids
+  - [ ] continuity id preservation meets the declared target or downgrades final-state claims
+  - [ ] failures classify host limitation, adapter defect, and runtime policy denial separately
+
+### GAP-107 Non-Codex Adapter Parity Batch 1
+- Type: HITL
+- Blocked by: GAP-106
+- User stories: 2, 20, 31, 37, 44, 46
+- Status: planned active queue item
+- What to build:
+  - select one non-Codex adapter path and make it pass the same conformance gate family as the Codex path
+  - keep host-specific features behind capability-tiered adapter contracts rather than branching kernel semantics
+  - record honest degraded-mode behavior where the host cannot support attach, continuation, or evidence export
+- Acceptance criteria:
+  - [ ] at least one non-Codex path passes adapter conformance, governed execution, and evidence linkage gates
+  - [ ] missing host capabilities are explicit degraded posture, not silent success
+  - [ ] no adapter can bypass runtime-owned approval, verification, rollback, or evidence semantics
+
+### GAP-108 Governed Execution Tool Coverage Batch 1
+- Type: AFK
+- Blocked by: GAP-105
+- User stories: 8, 10, 13, 14, 15, 31, 44
+- Status: planned active queue item
+- What to build:
+  - move shell, git, package-manager, browser automation, and MCP/tool-bridge execution onto the same governed containment and evidence surface as file-write execution
+  - enforce workspace roots, allowed path roots, environment policy, network posture, timeout, approval class, rollback refs, and evidence refs for every supported executable family
+  - fail closed for unsupported executable tool families unless an explicit waiver exists
+- Acceptance criteria:
+  - [ ] every supported executable family has contract, schema, runtime, and test coverage for containment metadata
+  - [ ] unsupported or unclassified executable families fail closed
+  - [ ] evidence snapshots include command class, containment profile, approval decision, verification result, and rollback posture
+
+### GAP-109 Data Plane And Provenance Release Batch 1
+- Type: AFK
+- Blocked by: GAP-105, GAP-108
+- User stories: 14, 18, 21, 31, 38, 44
+- Status: planned active queue item
+- What to build:
+  - promote durable task, evidence, artifact, replay, and provenance records from local proof shape into service-shaped persistence boundaries
+  - implement release-adjacent provenance for generated light packs, control packs, and packaged runtime artifacts
+  - add retention and query checks before considering event bus, semantic store, or object-store promotion
+- Acceptance criteria:
+  - [ ] data-plane read/write paths have migration, replay, retention, and rollback tests
+  - [ ] generated release-adjacent artifacts have provenance or explicit waiver evidence
+  - [ ] scale components remain trigger-based unless query, retention, artifact-size, or release-promotion evidence justifies them
+
+### GAP-110 Operations Recovery And Sustained Soak Batch 1
+- Type: HITL
+- Blocked by: GAP-106, GAP-107, GAP-108, GAP-109
+- User stories: 13, 14, 15, 21, 39, 45
+- Status: planned active queue item
+- What to build:
+  - run a sustained workload window across self-runtime and all configured target repos after the service, adapter, execution, and data-plane batches
+  - prove doctor/operator remediation for representative posture, policy, dependency, persistence, and adapter failures
+  - record SLO-like success, recovery, timeout, and claim-freshness metrics without introducing a full operations stack prematurely
+- Acceptance criteria:
+  - [ ] sustained workload evidence covers multiple targets and more than one execution class
+  - [ ] at least 90% of classified posture failures have guided remediation and retry evidence or explicit waiver
+  - [ ] operational failures trigger claim downgrade until recovery evidence is regenerated
+
+### GAP-111 Complete Hybrid Final-State Certification
+- Type: HITL
+- Blocked by: GAP-110
+- User stories: 13, 14, 18, 21, 29, 37, 44, 45
+- Status: planned active queue item
+- What to build:
+  - certify complete hybrid final-state closure only after `GAP-104..110` produce fresh, reproducible evidence
+  - reconcile master outline, roadmap, implementation plan, claim catalog, backlog, issue seeds, product docs, and evidence indexes
+  - decide whether any `LTP-01..06` package can be marked implemented, partially implemented, deferred, or superseded by transition-stack work
+- Acceptance criteria:
+  - [ ] every quantified final-state target in the master outline has fresh evidence or an explicit downgrade
+  - [ ] live Codex, non-Codex parity, governed execution coverage, data/provenance, and operations recovery all pass their gates
+  - [ ] the repository can truthfully claim complete hybrid final-state closure without relying on narrative-only evidence
 
 ## Vision
 

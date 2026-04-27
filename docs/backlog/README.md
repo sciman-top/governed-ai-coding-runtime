@@ -47,7 +47,8 @@ This directory holds the human and machine planning artifacts that bridge strate
 - `Near-Term Gap Horizon Queue / GAP-080` through `GAP-089` are complete on the current branch baseline (`GAP-080` through `GAP-084` verified on 2026-04-21; `GAP-085` through `GAP-089` verified on 2026-04-22).
 - `Long-Term Gap Trigger Audit Queue / GAP-090` through `GAP-092` is complete; all `LTP-01..05` packages remain deferred pending future trigger evidence.
 - `Optimized Hybrid Long-Term Implementation Queue / GAP-093` through `GAP-103` is complete on the current branch baseline. No `LTP-01..06` package was selected or implemented; `GAP-103` refreshes all-target daily workload evidence after the `GAP-102` closeout.
-- Any implementation package after this optimized queue must use ids beyond `GAP-103` and must be selected by the applicable scope fence.
+- `Complete Hybrid Final-State Realization Queue / GAP-104` through `GAP-111` is active and planned. It is the first queue that can certify full hybrid final-state closure if every implementation and evidence gate passes.
+- Any implementation package after this realization queue must use ids beyond `GAP-111` and must be selected by the applicable scope fence.
 - Historical `GAP-018` through `GAP-044` remain completion history and dependency context.
 - The active lifecycle is now anchored by:
   - [Hybrid Final-State Master Outline](../architecture/hybrid-final-state-master-outline.md)
