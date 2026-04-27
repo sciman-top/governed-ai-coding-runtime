@@ -15,7 +15,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - post-closeout optimization queue `GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20) and does not reopen hybrid final-state closure
 - optimized best-state near-term gap horizon queue `NTP-01..10` is complete on the current branch baseline (`GAP-080` through `GAP-084`, verified on 2026-04-21; `GAP-085` through `GAP-089`, verified on 2026-04-22)
 - long-term gap trigger audit queue `GAP-090` through `GAP-092` is complete; all `LTP-01..05` packages remain deferred pending future trigger evidence
-  - optimized hybrid long-term implementation queue `GAP-093` through `GAP-102` is complete on the current branch baseline; `LTP-01..06` remain trigger-based until fresh scope-fence evidence exists
+  - optimized hybrid long-term implementation queue `GAP-093` through `GAP-103` is complete on the current branch baseline; `LTP-01..06` remain trigger-based until fresh scope-fence evidence exists
 
 ## Current Baseline
 - PRD, architecture, ADRs, specs, runtime contract primitives, repo verifier entrypoints, sample repo profiles, and a runtime-consumable control pack already exist.
@@ -33,7 +33,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Post-Closeout Optimization Queue / GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20).
 - `Near-Term Gap Horizon Queue / GAP-080` through `GAP-089` are complete on the current branch baseline (`GAP-080` through `GAP-084` verified on 2026-04-21; `GAP-085` through `GAP-089` verified on 2026-04-22).
 - `Long-Term Gap Trigger Audit Queue / GAP-090` through `GAP-092` is complete; all `LTP-01..05` packages remain deferred pending future trigger evidence.
-- `Optimized Hybrid Long-Term Implementation Queue / GAP-093` through `GAP-102` is complete on the current branch baseline; no `LTP-01..06` implementation package was selected.
+- `Optimized Hybrid Long-Term Implementation Queue / GAP-093` through `GAP-103` is complete on the current branch baseline; no `LTP-01..06` implementation package was selected.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -815,6 +815,21 @@ The entries below record the executed queue for complete hybrid final-state and 
   - [x] target-repo or representative workload evidence is linked
   - [x] claim catalog, roadmap, implementation plan, backlog, issue seeds, and evidence agree
   - [x] residual risks and next review triggers are explicit
+
+### GAP-103 Fresh All-Target Sustained Workload Window
+- Type: HITL
+- Blocked by: GAP-102
+- User stories: 13, 14, 15, 38, 45
+- Status: complete on current branch baseline (verified on 2026-04-27)
+- What to build:
+  - rerun the all-target daily runtime-flow window after the optimized long-term queue closeout
+  - record target count, failure count, timeout posture, governance sync posture, and per-target flow exit codes
+  - keep `LTP-01..06` deferred unless the fresh window produces trigger evidence
+- Acceptance criteria:
+  - [x] all configured target repos run through the daily preset with `failure_count=0`
+  - [x] evidence records command, timing, timeout controls, and per-target exit posture
+  - [x] final-state wording distinguishes fresh all-target evidence from heavy LTP implementation
+  - [x] issue rendering, docs/scripts gates, and repo gates agree after the new queue item
 
 ## Vision
 

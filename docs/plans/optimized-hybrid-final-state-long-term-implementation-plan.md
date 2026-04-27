@@ -2,8 +2,8 @@
 
 ## Status
 - Created from the 2026-04-27 optimized hybrid final-state and stack-staging review.
-- Future-facing queue: `GAP-093..102`.
-- Current posture: `GAP-093..102` are complete. No long-term package was implemented; `LTP-01..06` remain deferred/watch or not triggered pending fresh scope-fence evidence.
+- Future-facing queue: `GAP-093..103`.
+- Current posture: `GAP-093..103` are complete. No long-term package was implemented; `LTP-01..06` remain deferred/watch or not triggered pending fresh scope-fence evidence.
 
 ## Goal
 Provide an implementation-ready plan for the long-term optimized hybrid final state while preserving the current rule that heavyweight components remain trigger-based.
@@ -17,7 +17,7 @@ Provide an implementation-ready plan for the long-term optimized hybrid final st
 
 ## Task Graph
 
-`GAP-092 -> GAP-093 -> GAP-094 -> GAP-095 -> GAP-096 -> GAP-097 -> GAP-098 -> GAP-099 -> GAP-100 -> GAP-101 -> GAP-102`
+`GAP-092 -> GAP-093 -> GAP-094 -> GAP-095 -> GAP-096 -> GAP-097 -> GAP-098 -> GAP-099 -> GAP-100 -> GAP-101 -> GAP-102 -> GAP-103`
 
 ## GAP-093 Optimized Hybrid Long-Term Planning Baseline
 
@@ -360,6 +360,44 @@ HITL
 ### Rollback
 Downgrade final-state claims and revert status labels if fresh evidence cannot reproduce the claimed posture.
 
+## GAP-103 Fresh All-Target Sustained Workload Window
+
+### Type
+HITL
+
+### Dependencies
+- `GAP-102`
+
+### Scope
+- Rerun the all-target daily runtime-flow window after the optimized long-term queue closeout.
+- Record target count, failure count, timeout posture, governance sync posture, and per-target flow exit codes.
+- Keep `LTP-01..06` deferred unless the fresh window produces trigger evidence.
+
+### Acceptance Criteria
+- [x] all configured target repos run through the daily preset with `failure_count=0`
+- [x] evidence records command, timing, timeout controls, and per-target exit posture
+- [x] final-state wording distinguishes fresh all-target evidence from heavy LTP implementation
+- [x] issue rendering, docs/scripts gates, and repo gates agree after the new queue item
+
+### Verification
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -AllTargets -FlowMode daily -Json -BatchTimeoutSeconds 1200 -RuntimeFlowTimeoutSeconds 300`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/github/create-roadmap-issues.ps1 -ValidateOnly -RenderAll`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`
+- `git diff --check`
+
+### Likely Files
+- `docs/change-evidence/20260427-gap-103-fresh-all-target-workload-window.md`
+- `docs/README.md`
+- `docs/roadmap/optimized-hybrid-final-state-long-term-roadmap.md`
+- `docs/plans/optimized-hybrid-final-state-long-term-implementation-plan.md`
+- `docs/backlog/README.md`
+- `docs/backlog/issue-ready-backlog.md`
+- `docs/backlog/issue-seeds.yaml`
+- `scripts/github/create-roadmap-issues.ps1`
+
+### Rollback
+Revert `GAP-103` planning/status entries and evidence if the fresh all-target window cannot be reproduced.
+
 ## Checkpoints
 
 | checkpoint | after | required decision |
@@ -369,6 +407,7 @@ Downgrade final-state claims and revert status labels if fresh evidence cannot r
 | transition-stack checkpoint | `GAP-096` | dependencies are justified by active boundaries |
 | LTP decision checkpoint | `GAP-100` | exactly one package selected or all packages deferred |
 | release-readiness checkpoint | `GAP-102` | claims, gates, and workload evidence agree |
+| fresh all-target checkpoint | `GAP-103` | all configured target repos still pass the daily flow after closeout |
 
 ## Evidence Requirements
 Each gap must add or update `docs/change-evidence/*.md` with:

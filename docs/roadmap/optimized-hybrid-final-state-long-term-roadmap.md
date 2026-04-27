@@ -4,8 +4,8 @@
 - This is the long-term roadmap created after the 2026-04-27 external benchmark and stack-staging review.
 - It starts after the completed `GAP-090..092` trigger-audit queue.
 - It does not mark any `LTP` package as already triggered or implemented.
-- It translates the optimized hybrid final state into a dependency-ordered queue: `GAP-093..102`.
-- `GAP-093..102` are complete on the current branch baseline. No `LTP-01..06` package was selected or implemented.
+- It translates the optimized hybrid final state into a dependency-ordered queue: `GAP-093..103`.
+- `GAP-093..103` are complete on the current branch baseline. No `LTP-01..06` package was selected or implemented.
 
 ## Goal
 Move from the current verified hybrid baseline to a sustained optimized hybrid final state without turning every attractive final-state component into mandatory near-term infrastructure.
@@ -46,6 +46,7 @@ The corrected implementation posture is:
 | `H3 trigger-review batches` | `GAP-097..099` | decide whether orchestration, policy, data, operations, multi-host, or protocol depth is now justified | each `LTP-01..06` is `not_triggered`, `watch`, or `triggered` with evidence |
 | `H4 selected package implementation` | `GAP-100..101` | start at most one long-term package and implement one vertical slice | one selected package has contract, runtime, evidence, tests, and rollback |
 | `H5 sustained release readiness` | `GAP-102` | refresh closeout claims against real workload and rollout evidence | final-state wording, evidence, gates, and target-repo posture agree |
+| `H6 fresh all-target workload window` | `GAP-103` | rerun the configured target-repo daily workload after optimized closeout | all configured target repos pass daily flow with no runtime-flow timeout |
 
 ## Track Ownership
 
@@ -76,6 +77,7 @@ The corrected implementation posture is:
 4. `GAP-100` may select exactly one `LTP` package or defer all packages with evidence.
 5. `GAP-101` implements only the selected package's first vertical slice.
 6. `GAP-102` may strengthen final-state claims only when fresh gates and workload evidence remain reproducible.
+7. `GAP-103` refreshes all-target daily evidence; it is not permission to claim heavy `LTP` implementation.
 
 ## Verification Floor
 Every gap in this roadmap must preserve the repository gate order:

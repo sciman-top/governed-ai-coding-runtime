@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260427 GAP-103 Fresh All-Target Workload Window](./20260427-gap-103-fresh-all-target-workload-window.md)
+  - fresh all-target daily runtime-flow evidence after the optimized long-term queue closeout; all five configured targets passed and no LTP package was triggered
 - [20260427 GAP-102 Sustained Optimized Hybrid Release Readiness Closeout](./20260427-gap-102-sustained-readiness-closeout.md)
   - closeout evidence for `GAP-093..102`, including fresh full gates, representative runtime-flow evidence, and explicit deferred LTP posture
 - [20260427 GAP-101 Deferred No Implementation](./20260427-gap-101-deferred-no-implementation.md)

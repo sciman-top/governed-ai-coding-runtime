@@ -1,4 +1,4 @@
-issue_seed_version: "4.2"
+issue_seed_version: "4.3"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment
@@ -400,3 +400,8 @@ issues:
     type: HITL
     blocked_by: [GAP-101]
     user_stories: [13, 14, 18, 21, 29, 37, 44, 45]
+  - id: GAP-103
+    title: Fresh All-Target Sustained Workload Window
+    type: HITL
+    blocked_by: [GAP-102]
+    user_stories: [13, 14, 15, 38, 45]
