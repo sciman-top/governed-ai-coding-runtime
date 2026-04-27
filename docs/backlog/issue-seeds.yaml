@@ -1,4 +1,4 @@
-issue_seed_version: "4.5"
+issue_seed_version: "4.6"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment
@@ -450,3 +450,8 @@ issues:
     type: AFK
     blocked_by: [GAP-111]
     user_stories: [13, 18, 21, 29, 31, 44]
+  - id: GAP-113
+    title: Autonomous LTP Promotion Scope Fence
+    type: AFK
+    blocked_by: [GAP-112]
+    user_stories: [13, 18, 21, 23, 29, 31, 44]

@@ -94,6 +94,8 @@ Not best interpretation:
 
 Complete realization is now certified on the current branch baseline by the post-`GAP-103` queue `GAP-104..111`. Executing only `GAP-093..103` proved optimized health and trigger discipline; executing `GAP-104..111` with passing evidence produced the truthful complete hybrid final-state closure recorded in `docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md`.
 
+Post-`GAP-112`, the correct way to decide whether to keep pushing toward a heavier long-term stack is `scripts/evaluate-ltp-promotion.py`. The current policy answer is `defer_all`: do not directly force Temporal, OPA/Rego, event bus, object store, A2A gateway, full observability, or external signing without package-specific trigger evidence. Autonomous promotion is allowed when the policy selects exactly one `LTP-01..06` package with a scope fence, full gate reference, rollback, and one vertical slice; owner-directed heavy-stack work must be labeled separately.
+
 ## Current Baseline
 The current branch baseline has already proven and landed:
 - docs-first and contracts-first source-of-truth structure

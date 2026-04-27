@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260427 GAP-113 Autonomous LTP Promotion Scope Fence](./20260427-gap-113-autonomous-ltp-promotion-scope-fence.md)
+  - closeout evidence for mechanizing whether, why, and how `LTP-01..06` packages can be autonomously promoted after certification
 - [20260427 GAP-112 Current Source Compatibility Guard](./20260427-gap-112-current-source-compatibility-guard.md)
   - closeout evidence for mechanizing current-source compatibility after `GAP-111` through policy, verifier, tests, Docs gate wiring, backlog/seeds, and claim catalog linkage
 - [20260427 Hybrid Final-State Current Source Refresh](./20260427-hybrid-final-state-current-source-refresh.md)

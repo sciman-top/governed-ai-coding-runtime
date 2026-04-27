@@ -2,9 +2,9 @@
 
 ## Status
 - Created from the 2026-04-27 optimized hybrid final-state and stack-staging review.
-- Future-facing queue: `GAP-093..112`.
+- Future-facing queue: `GAP-093..113`.
 - Current posture: `GAP-093..103` are complete. No long-term package was implemented; `LTP-01..06` remain deferred/watch or not triggered pending fresh scope-fence evidence.
-- Certified realization queue: `GAP-104..111` is complete on the current branch baseline and defines the evidence-backed complete hybrid final-state closure point. `GAP-112` is the first post-certification guard that mechanizes current-source compatibility after that closure.
+- Certified realization queue: `GAP-104..111` is complete on the current branch baseline and defines the evidence-backed complete hybrid final-state closure point. `GAP-112` mechanizes current-source compatibility after that closure. `GAP-113` mechanizes whether, why, and how autonomous `LTP-01..06` promotion can proceed after certification.
 
 ## Goal
 Provide an implementation-ready plan for the long-term optimized hybrid final state while preserving the current rule that heavyweight components remain trigger-based.
@@ -18,7 +18,7 @@ Provide an implementation-ready plan for the long-term optimized hybrid final st
 
 ## Task Graph
 
-`GAP-092 -> GAP-093 -> GAP-094 -> GAP-095 -> GAP-096 -> GAP-097 -> GAP-098 -> GAP-099 -> GAP-100 -> GAP-101 -> GAP-102 -> GAP-103 -> GAP-104 -> GAP-105 -> GAP-106 -> GAP-107 -> GAP-108 -> GAP-109 -> GAP-110 -> GAP-111 -> GAP-112`
+`GAP-092 -> GAP-093 -> GAP-094 -> GAP-095 -> GAP-096 -> GAP-097 -> GAP-098 -> GAP-099 -> GAP-100 -> GAP-101 -> GAP-102 -> GAP-103 -> GAP-104 -> GAP-105 -> GAP-106 -> GAP-107 -> GAP-108 -> GAP-109 -> GAP-110 -> GAP-111 -> GAP-112 -> GAP-113`
 
 ## GAP-093 Optimized Hybrid Long-Term Planning Baseline
 
@@ -735,6 +735,49 @@ Complete on current branch baseline. The current-source compatibility guard now 
 ### Rollback
 Revert the current-source compatibility policy, verifier, tests, gate wiring, planning updates, claim-catalog entry, and evidence file; then downgrade any final-state claim that depends on the guard.
 
+## GAP-113 Autonomous LTP Promotion Scope Fence
+
+### Type
+AFK
+
+### Dependencies
+- `GAP-112`
+
+### Scope
+- Convert the post-certification question "should we advance to the heavy stack now, how, and why" into a machine-readable `LTP-01..06` promotion policy.
+- Add a deterministic evaluator that returns `defer_all` by default, or exactly one `auto_selected` package only when fresh trigger evidence, scope fence, full gate reference, rollback, and one vertical slice are present.
+- Distinguish evidence-triggered autonomous promotion from owner-directed heavy-stack work so direct user orders remain possible without being mislabeled as trigger evidence.
+- Wire the evaluator into `verify-repo.ps1 -Check Docs`.
+
+### Status
+Complete on current branch baseline. The correct current answer is `defer_all`: the certified hybrid final state should keep running with the current transition stack until one package has trigger evidence. Autonomous promotion is possible, but only as a one-package scope-fenced action.
+
+### Acceptance Criteria
+- [x] policy answers how to advance, whether to advance, why to advance, and why not to advance now
+- [x] evaluator fails closed on stale review, missing refs, missing required doc text, multiple autonomous packages, or missing scope/full-gate refs
+- [x] Docs gate, runtime tests, backlog, seeds, issue rendering, claim catalog, and evidence agree on `GAP-113`
+
+### Verification
+- `python scripts/evaluate-ltp-promotion.py --as-of 2026-04-27`
+- `python -m unittest tests.runtime.test_ltp_autonomous_promotion`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/github/create-roadmap-issues.ps1 -ValidateOnly -RenderAll`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`
+
+### Likely Files
+- `docs/architecture/ltp-autonomous-promotion-policy.json`
+- `docs/adrs/0008-autonomous-ltp-promotion-scope-fence.md`
+- `scripts/evaluate-ltp-promotion.py`
+- `tests/runtime/test_ltp_autonomous_promotion.py`
+- `scripts/verify-repo.ps1`
+- `docs/backlog/issue-ready-backlog.md`
+- `docs/backlog/issue-seeds.yaml`
+- `docs/product/claim-catalog.json`
+- `docs/change-evidence/*.md`
+
+### Rollback
+Revert the LTP promotion policy, ADR, evaluator, tests, gate wiring, planning updates, claim-catalog entry, and evidence file; then keep `LTP-01..06` in defer/watch posture until a replacement promotion policy is accepted.
+
 ## Checkpoints
 
 | checkpoint | after | required decision |
@@ -751,6 +794,7 @@ Revert the current-source compatibility policy, verifier, tests, gate wiring, pl
 | execution/data checkpoint | `GAP-109` | governed tools and data/provenance paths are reproducible and rollback-aware |
 | certification checkpoint | `GAP-111` | complete final-state claim is either evidence-certified or downgraded |
 | current-source checkpoint | `GAP-112` | host/protocol/security/source assumptions are machine-checked before they can strengthen claims |
+| promotion checkpoint | `GAP-113` | autonomous promotion either selects exactly one package with evidence or defers all packages |
 
 ## Evidence Requirements
 Each gap must add or update `docs/change-evidence/*.md` with:

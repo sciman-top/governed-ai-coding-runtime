@@ -16,6 +16,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - optimized best-state near-term gap horizon queue `NTP-01..10` is complete on the current branch baseline (`GAP-080` through `GAP-084`, verified on 2026-04-21; `GAP-085` through `GAP-089`, verified on 2026-04-22)
 - long-term gap trigger audit queue `GAP-090` through `GAP-092` is complete; all `LTP-01..05` packages remain deferred pending future trigger evidence
   - optimized hybrid long-term implementation queue `GAP-093` through `GAP-103` is complete on the current branch baseline; `LTP-01..06` remain trigger-based until fresh scope-fence evidence exists
+  - post-certification promotion queue `GAP-113` keeps autonomous `LTP-01..06` promotion evidence-triggered and one-package-at-a-time
 
 ## Current Baseline
 - PRD, architecture, ADRs, specs, runtime contract primitives, repo verifier entrypoints, sample repo profiles, and a runtime-consumable control pack already exist.
@@ -36,6 +37,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Optimized Hybrid Long-Term Implementation Queue / GAP-093` through `GAP-103` is complete on the current branch baseline; no `LTP-01..06` implementation package was selected.
 - `Complete Hybrid Final-State Realization Queue / GAP-104` through `GAP-111` is complete on the current branch baseline. It legitimately turns the optimized target into complete final-state closure because every acceptance criterion is implemented and verified.
 - `Post-Certification Guard Queue / GAP-112` is complete on the current branch baseline. It mechanizes current-source compatibility so external host/protocol/security docs cannot silently strengthen final-state claims.
+- `Post-Certification Promotion Queue / GAP-113` is complete on the current branch baseline. It mechanizes how to decide whether, why, and when an `LTP-01..06` heavy package may be autonomously promoted.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -958,6 +960,20 @@ The entries below record the executed queue for complete hybrid final-state and 
   - [x] a current-source compatibility policy records reviewed sources, expiry, protocol boundaries, kernel-owned semantics, evidence refs, and rollback
   - [x] Docs gate fails if required boundary text or evidence refs drift
   - [x] issue rendering, docs verification, and full repo verification include the new guard
+
+### GAP-113 Autonomous LTP Promotion Scope Fence
+- Type: AFK
+- Blocked by: GAP-112
+- User stories: 13, 18, 21, 23, 29, 31, 44
+- Status: complete on current branch baseline (autonomous promotion policy and Docs gate validated on 2026-04-27)
+- What to build:
+  - turn "should we advance, how, and why" into a machine-readable `LTP-01..06` promotion policy and evaluator
+  - distinguish evidence-triggered autonomous promotion from owner-directed heavy-stack implementation
+  - wire the evaluator into `verify-repo.ps1 -Check Docs` so future promotion can auto-select exactly one package only when conditions pass
+- Acceptance criteria:
+  - [x] policy answers how, when, whether, and why not to advance from the certified hybrid final state
+  - [x] evaluator reports `defer_all` now but supports exactly one `auto_selected` package when scope-fenced with fresh trigger evidence
+  - [x] Docs gate, runtime tests, issue rendering, claim catalog, and evidence include the promotion fence
 
 ## Vision
 

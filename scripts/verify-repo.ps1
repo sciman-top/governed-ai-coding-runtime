@@ -554,6 +554,20 @@ function Invoke-CurrentSourceCompatibilityChecks {
   Write-CheckOk "current-source-compatibility"
 }
 
+function Invoke-LtpAutonomousPromotionChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/evaluate-ltp-promotion.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "LTP autonomous promotion checks failed"
+    }
+    throw "LTP autonomous promotion checks failed`n$detail"
+  }
+
+  Write-CheckOk "ltp-autonomous-promotion"
+}
+
 function Invoke-ContractChecks {
   Invoke-SchemaJsonParse
   Invoke-SchemaExampleValidation
@@ -661,6 +675,7 @@ function Invoke-DocsChecks {
   Invoke-OldProjectNameScan
   Invoke-HostReplacementClaimBoundaryScan
   Invoke-CurrentSourceCompatibilityChecks
+  Invoke-LtpAutonomousPromotionChecks
   Invoke-GapEvidenceSloCheck
   Invoke-ClaimDriftSentinelCheck
   Invoke-ClaimExceptionPathCheck

@@ -49,7 +49,8 @@ This directory holds the human and machine planning artifacts that bridge strate
 - `Optimized Hybrid Long-Term Implementation Queue / GAP-093` through `GAP-103` is complete on the current branch baseline. No `LTP-01..06` package was selected or implemented; `GAP-103` refreshes all-target daily workload evidence after the `GAP-102` closeout.
 - `Complete Hybrid Final-State Realization Queue / GAP-104` through `GAP-111` is complete. `GAP-111` certifies full hybrid final-state closure on the current branch baseline with fresh service, adapter, execution, data/provenance, operations, all-target, and claim-drift evidence.
 - `Post-Certification Guard Queue / GAP-112` is complete. It adds a machine-readable current-source compatibility guard for A2A/MCP/Codex sandbox, host guardrails, and supply-chain provenance assumptions.
-- Any implementation package after this realization queue must use ids beyond `GAP-111` and must be selected by the applicable scope fence.
+- `Post-Certification Promotion Queue / GAP-113` is complete. It adds the autonomous `LTP-01..06` promotion scope fence that answers whether, why, and how to advance after certification.
+- Any implementation package after this promotion fence must use ids beyond `GAP-113` and must pass the autonomous or owner-directed scope fence.
 - Historical `GAP-018` through `GAP-044` remain completion history and dependency context.
 - The active lifecycle is now anchored by:
   - [Hybrid Final-State Master Outline](../architecture/hybrid-final-state-master-outline.md)

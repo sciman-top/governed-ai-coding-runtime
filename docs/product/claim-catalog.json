@@ -112,6 +112,22 @@
           "contains": "Post-`GAP-111` protocol adoption must include a current-source compatibility review."
         }
       ]
+    },
+    {
+      "claim_id": "CLM-008",
+      "claim_text": "LTP heavy-stack promotion is autonomous only when the promotion policy selects exactly one evidence-triggered package; otherwise it defers all packages or requires owner-directed labeling.",
+      "proof_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs",
+      "evidence_link": "docs/change-evidence/20260427-gap-113-autonomous-ltp-promotion-scope-fence.md",
+      "source_refs": [
+        {
+          "path": "docs/adrs/0008-autonomous-ltp-promotion-scope-fence.md",
+          "contains": "Do not directly force the full heavy stack as the default route."
+        },
+        {
+          "path": "docs/architecture/ltp-autonomous-promotion-policy.json",
+          "contains": "defer_without_trigger_evidence"
+        }
+      ]
     }
   ]
 }

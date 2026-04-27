@@ -1,0 +1,219 @@
+{
+  "schema_version": "1.0",
+  "policy_id": "default-ltp-autonomous-promotion",
+  "status": "enforced",
+  "reviewed_on": "2026-04-27",
+  "review_expires_at": "2026-07-26",
+  "decision_claim": "Long-term package promotion is allowed only when trigger evidence proves the current transition stack is insufficient, or when owner-directed implementation is explicitly labeled and scoped. Autonomous promotion must select at most one package and must preserve build -> test -> contract/invariant -> hotspot verification.",
+  "autonomous_mode": {
+    "enabled": true,
+    "max_auto_selected_packages": 1,
+    "requires_scope_fence_ref": true,
+    "requires_full_gate_ref": true,
+    "requires_current_source_guard": true,
+    "owner_directed_allowed": true,
+    "owner_directed_requires_ref": true,
+    "safe_default": "defer_without_trigger_evidence"
+  },
+  "global_required_refs": [
+    "docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md",
+    "docs/change-evidence/20260427-gap-112-current-source-compatibility-guard.md",
+    "docs/adrs/0008-autonomous-ltp-promotion-scope-fence.md"
+  ],
+  "decision_invariants": [
+    "Do not equate watch with permission to implement.",
+    "Do not start more than one heavy LTP package in the same autonomous batch.",
+    "Do not classify owner-directed implementation as evidence-triggered implementation.",
+    "Do not weaken runtime-owned approval, containment, verification, rollback, evidence, or claim-drift semantics.",
+    "Do not introduce Temporal, OPA/Rego, event bus, object store, full observability, A2A gateway, or external signing without a selected LTP scope fence."
+  ],
+  "packages": [
+    {
+      "package_id": "LTP-01",
+      "name": "orchestration-depth",
+      "target_stack": [
+        "Temporal-class workflow engine"
+      ],
+      "current_decision": "watch",
+      "autonomous_decision": "not_selected",
+      "why_not_now": "Current deterministic runtime flows, replay, timeout, and recovery are still maintainable without a workflow engine.",
+      "trigger_evidence_required": [
+        "pause/resume/timeout/retry/compensation graph repeatedly exceeds local state-machine maintainability",
+        "workflow recovery defects repeat across sustained workload windows",
+        "full gate evidence shows local orchestration is the blocking risk"
+      ],
+      "current_evidence_refs": [
+        "docs/change-evidence/20260427-gap-097-orchestration-policy-trigger-review.md",
+        "docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md"
+      ],
+      "promotion_requirements": [
+        "scope_fence_ref",
+        "full_gate_ref",
+        "rollback_plan",
+        "one_vertical_slice"
+      ]
+    },
+    {
+      "package_id": "LTP-02",
+      "name": "policy-runtime-separation",
+      "target_stack": [
+        "OPA/Rego-class policy runtime"
+      ],
+      "current_decision": "defer",
+      "autonomous_decision": "not_selected",
+      "why_not_now": "Local PolicyDecision, approval, and evidence surfaces remain sufficient; policy cardinality and audit pressure have not exceeded local maintainability.",
+      "trigger_evidence_required": [
+        "policy count or ownership boundaries exceed local PolicyDecision maintainability",
+        "audit requirements need separately versioned policy evaluation",
+        "policy review burden becomes the primary delivery blocker"
+      ],
+      "current_evidence_refs": [
+        "docs/change-evidence/20260427-gap-097-orchestration-policy-trigger-review.md",
+        "docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md"
+      ],
+      "promotion_requirements": [
+        "scope_fence_ref",
+        "full_gate_ref",
+        "rollback_plan",
+        "one_vertical_slice"
+      ]
+    },
+    {
+      "package_id": "LTP-03",
+      "name": "data-plane-scaling",
+      "target_stack": [
+        "event stream",
+        "object-store promotion",
+        "semantic index"
+      ],
+      "current_decision": "watch",
+      "autonomous_decision": "not_selected",
+      "why_not_now": "SQLite/filesystem metadata, replay export, retention, rollback, and provenance cover the current pressure.",
+      "trigger_evidence_required": [
+        "event throughput, replay retention, query latency, or artifact size exceeds current persistence path",
+        "multi-process service operation makes filesystem or SQLite metadata the blocking risk",
+        "release promotion requires object-store semantics beyond local artifacts"
+      ],
+      "current_evidence_refs": [
+        "docs/change-evidence/20260427-gap-098-data-plane-operations-trigger-review.md",
+        "docs/change-evidence/20260427-gap-109-data-plane-provenance-release.md",
+        "docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md"
+      ],
+      "promotion_requirements": [
+        "scope_fence_ref",
+        "full_gate_ref",
+        "rollback_plan",
+        "one_vertical_slice"
+      ]
+    },
+    {
+      "package_id": "LTP-04",
+      "name": "multi-host-first-class",
+      "target_stack": [
+        "A2A gateway",
+        "deeper non-Codex host productization"
+      ],
+      "current_decision": "watch",
+      "autonomous_decision": "not_selected",
+      "why_not_now": "Codex live continuity and one non-Codex degraded path are certified; broader first-class host productization remains demand-triggered.",
+      "trigger_evidence_required": [
+        "non-Codex conformance parity is stable across real workloads",
+        "product demand requires deeper host-to-host collaboration",
+        "protocol boundary pressure cannot be handled by adapter conformance alone"
+      ],
+      "current_evidence_refs": [
+        "docs/change-evidence/20260427-gap-099-multi-host-protocol-trigger-review.md",
+        "docs/change-evidence/20260427-gap-107-non-codex-adapter-parity-batch.md",
+        "docs/change-evidence/20260427-gap-112-current-source-compatibility-guard.md"
+      ],
+      "promotion_requirements": [
+        "scope_fence_ref",
+        "full_gate_ref",
+        "rollback_plan",
+        "one_vertical_slice"
+      ]
+    },
+    {
+      "package_id": "LTP-05",
+      "name": "operations-hardening",
+      "target_stack": [
+        "full observability stack",
+        "SLO/error-budget/failover stack"
+      ],
+      "current_decision": "defer",
+      "autonomous_decision": "not_selected",
+      "why_not_now": "Sustained quick window and remediation evidence pass; full operations stack is not the primary risk yet.",
+      "trigger_evidence_required": [
+        "sustained workload failures make recovery, SLO, alerting, or failure attribution the primary risk",
+        "doctor/operator remediation repeatedly cannot close posture failures",
+        "full gate evidence shows operational visibility is the blocking risk"
+      ],
+      "current_evidence_refs": [
+        "docs/change-evidence/20260427-gap-098-data-plane-operations-trigger-review.md",
+        "docs/change-evidence/20260427-gap-110-operations-recovery-sustained-soak.md",
+        "docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md"
+      ],
+      "promotion_requirements": [
+        "scope_fence_ref",
+        "full_gate_ref",
+        "rollback_plan",
+        "one_vertical_slice"
+      ]
+    },
+    {
+      "package_id": "LTP-06",
+      "name": "supply-chain-hardening",
+      "target_stack": [
+        "external signing",
+        "SLSA-style artifact promotion"
+      ],
+      "current_decision": "defer",
+      "autonomous_decision": "not_selected",
+      "why_not_now": "Release/light-pack provenance floor is certified; external signing is not triggered until artifacts are externally consumed or team-shared.",
+      "trigger_evidence_required": [
+        "runtime packages, control packs, or light packs are externally consumed",
+        "team-shared distribution requires signing or promotion policy",
+        "release claim evidence lacks sufficient provenance without external attestation"
+      ],
+      "current_evidence_refs": [
+        "docs/change-evidence/20260427-gap-093-094-containment-contract-closeout.md",
+        "docs/change-evidence/20260427-gap-109-data-plane-provenance-release.md",
+        "docs/change-evidence/20260427-gap-112-current-source-compatibility-guard.md"
+      ],
+      "promotion_requirements": [
+        "scope_fence_ref",
+        "full_gate_ref",
+        "rollback_plan",
+        "one_vertical_slice"
+      ]
+    }
+  ],
+  "required_doc_refs": [
+    {
+      "path": "docs/adrs/0008-autonomous-ltp-promotion-scope-fence.md",
+      "contains": "Do not directly force the full heavy stack as the default route."
+    },
+    {
+      "path": "docs/roadmap/optimized-hybrid-final-state-long-term-roadmap.md",
+      "contains": "GAP-113"
+    },
+    {
+      "path": "docs/plans/optimized-hybrid-final-state-long-term-implementation-plan.md",
+      "contains": "GAP-113"
+    },
+    {
+      "path": "docs/product/claim-catalog.json",
+      "contains": "CLM-008"
+    },
+    {
+      "path": "docs/change-evidence/20260427-gap-113-autonomous-ltp-promotion-scope-fence.md",
+      "contains": "autonomous LTP promotion scope fence"
+    }
+  ],
+  "evidence_refs": [
+    "docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md",
+    "docs/change-evidence/20260427-gap-112-current-source-compatibility-guard.md",
+    "docs/change-evidence/20260427-gap-113-autonomous-ltp-promotion-scope-fence.md"
+  ],
+  "rollback_ref": "git revert the autonomous LTP promotion policy, evaluator, tests, ADR, planning docs, backlog, seeds, claim-catalog entry, and evidence"
+}
