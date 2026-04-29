@@ -21,6 +21,7 @@ if str(SCRIPTS_SRC) not in sys.path:
 
 from governed_ai_coding_runtime_contracts.operator_ui import render_runtime_snapshot_html, write_runtime_snapshot_html
 from governed_ai_coding_runtime_contracts.runtime_status import RuntimeStatusStore, runtime_snapshot_to_dict
+from lib.claude_local import claude_status, switch_provider
 from lib.codex_local import codex_status, switch_auth_profile
 
 
@@ -118,6 +119,11 @@ def _build_handler(*, default_language: str):
                 status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.INTERNAL_SERVER_ERROR
                 self._send_json(result, status=status)
                 return
+            if parsed.path == "/api/claude/status":
+                result = load_claude_status()
+                status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.INTERNAL_SERVER_ERROR
+                self._send_json(result, status=status)
+                return
             if parsed.path == "/api/file":
                 params = parse_qs(parsed.query)
                 requested = params.get("path", [""])[0]
@@ -132,6 +138,11 @@ def _build_handler(*, default_language: str):
             if parsed.path != "/api/run":
                 if parsed.path == "/api/codex/switch":
                     result = run_codex_switch(self._read_json_body())
+                    status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
+                    self._send_json(result, status=status)
+                    return
+                if parsed.path == "/api/claude/switch":
+                    result = run_claude_switch(self._read_json_body())
                     status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
                     self._send_json(result, status=status)
                     return
@@ -189,6 +200,15 @@ def load_codex_status() -> dict:
     return payload
 
 
+def load_claude_status() -> dict:
+    try:
+        payload = claude_status()
+    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
+        return {"status": "error", "error": str(exc)}
+    payload["status"] = "ok"
+    return payload
+
+
 def run_codex_switch(payload: dict) -> dict:
     if "_json_error" in payload:
         return {"status": "error", "error": payload["_json_error"]}
@@ -196,6 +216,17 @@ def run_codex_switch(payload: dict) -> dict:
     dry_run = bool(payload.get("dry_run", False))
     try:
         return switch_auth_profile(name, dry_run=dry_run)
+    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
+        return {"status": "error", "error": str(exc)}
+
+
+def run_claude_switch(payload: dict) -> dict:
+    if "_json_error" in payload:
+        return {"status": "error", "error": payload["_json_error"]}
+    name = _string(payload.get("name"), "")
+    dry_run = bool(payload.get("dry_run", False))
+    try:
+        return switch_provider(name, dry_run=dry_run)
     except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
         return {"status": "error", "error": str(exc)}
 

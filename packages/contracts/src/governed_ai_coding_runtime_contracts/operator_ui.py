@@ -77,11 +77,24 @@ _TRANSLATIONS = {
         "codex_unknown_usage": "未知；官方未提供稳定本地 API",
         "codex_config": "配置健康",
         "codex_login": "登录状态",
+        "claude_console": "Claude Provider 与配置",
+        "claude_provider": "Provider",
+        "claude_active": "当前",
+        "claude_switch": "切换",
+        "claude_refresh": "刷新 Claude 状态",
+        "claude_config": "配置健康",
+        "claude_command": "CLI 状态",
+        "claude_mcp": "MCP 状态",
+        "claude_settings": "本机设置",
+        "claude_credential": "凭据",
+        "claude_usage": "额度",
+        "claude_unknown_usage": "第三方 provider 暂无稳定本地额度 API",
         "history": "执行历史",
         "no_history": "暂无执行历史。",
         "clear_history": "清空历史",
         "runtime_view": "Runtime",
         "codex_view": "Codex",
+        "claude_view": "Claude",
         "ready": "就绪",
         "running": "执行中",
         "static_snapshot": "静态快照",
@@ -165,11 +178,24 @@ _TRANSLATIONS = {
         "codex_unknown_usage": "Unknown; no stable local public API",
         "codex_config": "Config health",
         "codex_login": "Login status",
+        "claude_console": "Claude Provider and Config",
+        "claude_provider": "Provider",
+        "claude_active": "Active",
+        "claude_switch": "Switch",
+        "claude_refresh": "Refresh Claude",
+        "claude_config": "Config health",
+        "claude_command": "CLI status",
+        "claude_mcp": "MCP status",
+        "claude_settings": "Local settings",
+        "claude_credential": "Credential",
+        "claude_usage": "Usage",
+        "claude_unknown_usage": "No stable local usage API for third-party providers",
         "history": "Run history",
         "no_history": "No run history.",
         "clear_history": "Clear history",
         "runtime_view": "Runtime",
         "codex_view": "Codex",
+        "claude_view": "Claude",
         "ready": "Ready",
         "running": "Running",
         "static_snapshot": "Static snapshot",
@@ -213,6 +239,7 @@ def render_runtime_snapshot_html(
     actions = _render_actions(text, language=language, interactive=interactive, target_options=target_options or [])
     feedback = _render_feedback(text, interactive=interactive)
     codex_panel = _render_codex_panel(text, interactive=interactive)
+    claude_panel = _render_claude_panel(text, interactive=interactive)
     script = _render_interactive_script(text, language=language) if interactive else ""
     runtime_root = snapshot.runtime_root or text["missing"]
     tabs = _render_view_tabs(text)
@@ -343,6 +370,9 @@ def render_runtime_snapshot_html(
         <div data-view-panel="codex" hidden>
           {codex_panel}
         </div>
+        <div data-view-panel="claude" hidden>
+          {claude_panel}
+        </div>
       </div>
     </div>
   </main>
@@ -385,6 +415,7 @@ def _render_view_tabs(text: dict[str, str]) -> str:
             "<div class='view-tabs' role='tablist' aria-label='Operator view'>",
             f"<button type='button' class='view-tab' role='tab' aria-selected='true' data-view-tab='runtime'>{escape(text['runtime_view'])}</button>",
             f"<button type='button' class='view-tab' role='tab' aria-selected='false' data-view-tab='codex'>{escape(text['codex_view'])}</button>",
+            f"<button type='button' class='view-tab' role='tab' aria-selected='false' data-view-tab='claude'>{escape(text['claude_view'])}</button>",
             "</div>",
         ]
     )
@@ -683,6 +714,42 @@ def _render_codex_panel(text: dict[str, str], *, interactive: bool) -> str:
     )
 
 
+def _render_claude_panel(text: dict[str, str], *, interactive: bool) -> str:
+    if not interactive:
+        return "\n".join(
+            [
+                "<section class='panel'>",
+                f"<h2>{escape(text['claude_console'])}</h2>",
+                f"<p class='meta'>{escape(text['interactive_required'])}</p>",
+                "</section>",
+            ]
+        )
+    return "\n".join(
+        [
+            "<section class='panel'>",
+            f"<h2>{escape(text['claude_console'])}</h2>",
+            "<div class='codex-toolbar'>",
+            f"<button type='button' data-claude-refresh='1'>{escape(text['claude_refresh'])}</button>",
+            "<select id='claude-provider-select' aria-label='Claude provider'></select>",
+            f"<button type='button' data-claude-switch='1'>{escape(text['claude_switch'])}</button>",
+            "</div>",
+            "<div class='codex-grid'>",
+            "<div>",
+            f"<div class='status-line' id='claude-command'>{escape(text['claude_command'])}: {escape(text['not_recorded'])}</div>",
+            "<div id='claude-providers' class='codex-list'></div>",
+            "</div>",
+            "<div>",
+            f"<div class='policy-item'><span class='policy-label'>{escape(text['claude_settings'])}</span><div id='claude-settings' class='meta'>{escape(text['not_recorded'])}</div></div>",
+            f"<div class='policy-item' style='margin-top: 10px;'><span class='policy-label'>{escape(text['claude_config'])}</span><div id='claude-config' class='meta'>{escape(text['not_recorded'])}</div></div>",
+            f"<div class='policy-item' style='margin-top: 10px;'><span class='policy-label'>{escape(text['claude_mcp'])}</span><div id='claude-mcp' class='meta'>{escape(text['not_recorded'])}</div></div>",
+            f"<div class='policy-item' style='margin-top: 10px;'><span class='policy-label'>{escape(text['claude_usage'])}</span><code id='claude-usage'>{escape(text['claude_unknown_usage'])}</code></div>",
+            "</div>",
+            "</div>",
+            "</section>",
+        ]
+    )
+
+
 def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     return f"""
 <script>
@@ -704,8 +771,16 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   const codexUsage = document.getElementById('codex-usage');
   const codexUsageNote = document.getElementById('codex-usage-note');
   const codexConfig = document.getElementById('codex-config');
+  const claudeProviders = document.getElementById('claude-providers');
+  const claudeProviderSelect = document.getElementById('claude-provider-select');
+  const claudeCommand = document.getElementById('claude-command');
+  const claudeSettings = document.getElementById('claude-settings');
+  const claudeConfig = document.getElementById('claude-config');
+  const claudeMcp = document.getElementById('claude-mcp');
+  const claudeUsage = document.getElementById('claude-usage');
   const historyKey = 'governed-runtime-operator-history';
   let codexLoaded = false;
+  let claudeLoaded = false;
 
   function readHistory() {{
     try {{
@@ -903,6 +978,95 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     }}
   }}
 
+  function renderClaudeStatus(payload) {{
+    const providers = Array.isArray(payload.providers) ? payload.providers : [];
+    claudeProviderSelect.innerHTML = '';
+    claudeProviders.innerHTML = '';
+    providers.forEach((provider) => {{
+      const option = document.createElement('option');
+      option.value = provider.name;
+      option.textContent = `${{provider.active ? '* ' : ''}}${{provider.label || provider.name}}`;
+      option.selected = Boolean(provider.active);
+      claudeProviderSelect.appendChild(option);
+
+      const row = document.createElement('div');
+      row.className = 'codex-account';
+      const body = document.createElement('div');
+      const name = document.createElement('strong');
+      name.textContent = provider.label || provider.name;
+      const meta = document.createElement('small');
+      meta.className = 'meta';
+      const models = provider.models || {{}};
+      const credential = provider.credential_present ? `{text['claude_credential']}: ok (${{provider.credential_source || 'unknown'}})` : `{text['claude_credential']}: missing ${{provider.auth_env || ''}}`;
+      meta.textContent = `${{provider.base_url || 'no base_url'}} · opus=${{models.opus || 'unknown'}} · sonnet=${{models.sonnet || 'unknown'}} · ${{credential}}`;
+      body.append(name, meta);
+      row.appendChild(body);
+      if (provider.active) {{
+        const badge = document.createElement('span');
+        badge.className = 'codex-badge';
+        badge.textContent = {text['claude_active']!r};
+        row.appendChild(badge);
+      }}
+      claudeProviders.appendChild(row);
+    }});
+    if (!providers.length) {{
+      claudeProviders.innerHTML = `<p class="meta">{text['not_recorded']}</p>`;
+    }}
+
+    const command = payload.command || {{}};
+    claudeCommand.textContent = `{text['claude_command']}: ${{command.summary || command.exit_code || 'unknown'}}`;
+    const settings = payload.settings || {{}};
+    const permissions = settings.permissions || {{}};
+    claudeSettings.textContent = `model=${{settings.model || 'unknown'}} · mode=${{permissions.defaultMode || 'unknown'}} · cleanup=${{settings.cleanupPeriodDays || 'unknown'}}d`;
+    const config = payload.config || {{}};
+    const failedChecks = Array.isArray(config.checks) ? config.checks.filter((check) => !check.ok).map((check) => check.key) : [];
+    claudeConfig.textContent = failedChecks.length ? `attention: ${{failedChecks.join(', ')}}` : (config.status || 'ok');
+    const mcp = payload.mcp || {{}};
+    claudeMcp.textContent = mcp.summary || `exit_code=${{mcp.exit_code ?? 'unknown'}}`;
+    const usage = payload.usage || {{}};
+    claudeUsage.textContent = usage.note || {text['claude_unknown_usage']!r};
+  }}
+
+  async function refreshClaudeStatus() {{
+    if (!claudeProviders) {{
+      return;
+    }}
+    try {{
+      const response = await fetch('/api/claude/status');
+      const payload = await response.json();
+      if (!response.ok) {{
+        claudeProviders.innerHTML = `<p class="meta">${{payload.error || response.statusText}}</p>`;
+        return;
+      }}
+      renderClaudeStatus(payload);
+      claudeLoaded = true;
+    }} catch (error) {{
+      claudeProviders.innerHTML = `<p class="meta">${{String(error)}}</p>`;
+    }}
+  }}
+
+  async function switchClaudeProvider() {{
+    const name = claudeProviderSelect.value;
+    if (!name) {{
+      return;
+    }}
+    setBusy(true);
+    try {{
+      const response = await fetch('/api/claude/switch', {{
+        method: 'POST',
+        headers: {{ 'content-type': 'application/json' }},
+        body: JSON.stringify({{ name }})
+      }});
+      const payload = await response.json();
+      setOutput(JSON.stringify(payload, null, 2));
+      await refreshClaudeStatus();
+    }} catch (error) {{
+      setOutput(String(error));
+    }} finally {{
+      setBusy(false);
+    }}
+  }}
+
   document.querySelectorAll('button[data-action]').forEach((button) => {{
     button.addEventListener('click', () => runAction(button.getAttribute('data-action'), button));
   }});
@@ -927,6 +1091,8 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   document.querySelector('[data-codex-refresh]').addEventListener('click', () => refreshCodexStatus());
   document.querySelector('[data-codex-switch]').addEventListener('click', () => switchCodexAccount());
   document.querySelector('[data-codex-usage]').addEventListener('click', () => window.open('https://chatgpt.com/codex/settings/usage', '_blank', 'noopener'));
+  document.querySelector('[data-claude-refresh]').addEventListener('click', () => refreshClaudeStatus());
+  document.querySelector('[data-claude-switch]').addEventListener('click', () => switchClaudeProvider());
   document.querySelectorAll('[data-view-tab]').forEach((button) => {{
     button.addEventListener('click', () => {{
       const selected = button.getAttribute('data-view-tab');
@@ -938,6 +1104,9 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
       }});
       if (selected === 'codex' && !codexLoaded) {{
         refreshCodexStatus();
+      }}
+      if (selected === 'claude' && !claudeLoaded) {{
+        refreshClaudeStatus();
       }}
     }});
   }});

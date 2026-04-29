@@ -37,6 +37,7 @@ class OperatorUiTests(unittest.TestCase):
         self.assertIn("暂无 governed task 记录", html)
         self.assertIn("维护策略", html)
         self.assertIn("Runtime 摘要", html)
+        self.assertIn("Claude Provider 与配置", html)
 
     def test_operator_ui_renders_non_empty_snapshot(self) -> None:
         maintenance_policy = importlib.import_module("governed_ai_coding_runtime_contracts.maintenance_policy")
@@ -126,6 +127,7 @@ class OperatorUiTests(unittest.TestCase):
         self.assertIn("Governed Runtime Operator Surface", html)
         self.assertIn("No governed tasks recorded", html)
         self.assertIn("Maintenance Policy Surface", html)
+        self.assertIn("Claude Provider and Config", html)
 
     def test_operator_ui_renders_attachment_table(self) -> None:
         maintenance_policy = importlib.import_module("governed_ai_coding_runtime_contracts.maintenance_policy")
@@ -212,6 +214,8 @@ class OperatorUiTests(unittest.TestCase):
         self.assertIn("id='ui-history'", html)
         self.assertIn("class='feedback-grid'", html)
         self.assertIn("class=\"details-grid\"", html)
+        self.assertIn("data-view-tab='claude'", html)
+        self.assertIn("fetch('/api/claude/status'", html)
         self.assertIn("localStorage", html)
         self.assertIn("class='ref-button' data-ref='docs/README.md'", html)
         self.assertNotIn("data-ref='approval-123'", html)
