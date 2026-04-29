@@ -95,7 +95,11 @@
   - source of truth: existing runtime, rule-sync, target-flow, and operator UI scripts
   - typical uses: `-Action Help`, `-Action Readiness`, `-Action RulesDryRun`, `-Action DailyAll`, `-Action OperatorUi -OpenUi`
   - UI default language: `zh-CN`; use `-UiLanguage en` for English
-  - UI purpose: localhost interactive control console for allowlisted operator actions, runtime summary, maintenance policy refs, attachment posture, task/run evidence refs, and evidence file preview
+  - UI purpose: localhost interactive control console for allowlisted operator actions, runtime summary, maintenance policy refs, attachment posture, task/run evidence refs, evidence file preview, and local Codex account/config status
+- Codex local optimizer: `scripts/Optimize-CodexLocal.ps1`
+  - default mode is dry-run; use `-Apply` to write recommended user-level Codex config and install `codex-account`
+  - account switching preserves user-owned ChatGPT auth files and never prints tokens
+  - usage limits are surfaced as `unknown` unless a stable official local source is available
 - Target-repo daily/batch entrypoint: `scripts/runtime-flow-preset.ps1`
   - source of truth: `docs/targets/target-repos-catalog.json`
   - typical uses: `-ListTargets`, `-Target <id> -FlowMode daily`, `-AllTargets -ApplyGovernanceBaselineOnly`, `-AllTargets -ApplyAllFeatures`

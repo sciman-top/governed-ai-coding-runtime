@@ -66,9 +66,22 @@ _TRANSLATIONS = {
         "refresh": "刷新状态",
         "run": "执行",
         "command_output": "命令输出",
+        "codex_console": "Codex 账号与配置",
+        "codex_account": "账号",
+        "codex_active": "当前",
+        "codex_usage": "额度",
+        "codex_usage_note": "额度数据源",
+        "codex_switch": "切换",
+        "codex_open_usage": "打开官方 Usage",
+        "codex_refresh": "刷新 Codex 状态",
+        "codex_unknown_usage": "未知；官方未提供稳定本地 API",
+        "codex_config": "配置健康",
+        "codex_login": "登录状态",
         "history": "执行历史",
         "no_history": "暂无执行历史。",
         "clear_history": "清空历史",
+        "runtime_view": "Runtime",
+        "codex_view": "Codex",
         "ready": "就绪",
         "running": "执行中",
         "static_snapshot": "静态快照",
@@ -141,9 +154,22 @@ _TRANSLATIONS = {
         "refresh": "Refresh status",
         "run": "Run",
         "command_output": "Command output",
+        "codex_console": "Codex Account and Config",
+        "codex_account": "Account",
+        "codex_active": "Active",
+        "codex_usage": "Usage",
+        "codex_usage_note": "Usage source",
+        "codex_switch": "Switch",
+        "codex_open_usage": "Open Usage",
+        "codex_refresh": "Refresh Codex",
+        "codex_unknown_usage": "Unknown; no stable local public API",
+        "codex_config": "Config health",
+        "codex_login": "Login status",
         "history": "Run history",
         "no_history": "No run history.",
         "clear_history": "Clear history",
+        "runtime_view": "Runtime",
+        "codex_view": "Codex",
         "ready": "Ready",
         "running": "Running",
         "static_snapshot": "Static snapshot",
@@ -186,8 +212,10 @@ def render_runtime_snapshot_html(
     attachments = _render_attachments(snapshot, text, interactive=interactive)
     actions = _render_actions(text, language=language, interactive=interactive, target_options=target_options or [])
     feedback = _render_feedback(text, interactive=interactive)
+    codex_panel = _render_codex_panel(text, interactive=interactive)
     script = _render_interactive_script(text, language=language) if interactive else ""
     runtime_root = snapshot.runtime_root or text["missing"]
+    tabs = _render_view_tabs(text)
     return f"""<!doctype html>
 <html lang="{escape(text['html_lang'])}">
 <head>
@@ -246,6 +274,9 @@ def render_runtime_snapshot_html(
     .policy-item {{ background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px; min-width: 0; }}
     .policy-label {{ display: block; color: var(--muted); font-size: 0.78rem; text-transform: uppercase; margin-bottom: 4px; }}
     .panel {{ background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px; min-width: 0; }}
+    .view-tabs {{ display: inline-flex; gap: 4px; background: var(--surface-muted); border: 1px solid var(--line); border-radius: 6px; padding: 4px; width: fit-content; max-width: 100%; }}
+    .view-tab {{ border: 0; background: transparent; border-radius: 4px; padding: 7px 12px; }}
+    .view-tab[aria-selected="true"] {{ background: var(--surface); color: var(--accent); box-shadow: 0 0 0 1px var(--line); font-weight: 700; }}
     .action-list {{ display: grid; gap: 8px; }}
     button, select, input {{ font: inherit; }}
     button {{ border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 6px; padding: 8px 10px; cursor: pointer; text-align: left; }}
@@ -262,11 +293,18 @@ def render_runtime_snapshot_html(
     .history-list {{ display: grid; gap: 8px; }}
     .history-item {{ width: 100%; min-width: 0; display: grid; gap: 2px; }}
     .history-item small {{ color: var(--muted); overflow-wrap: anywhere; }}
+    .codex-toolbar {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }}
+    .codex-toolbar select {{ width: min(100%, 260px); }}
+    .codex-grid {{ display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 0.8fr); gap: 12px; align-items: start; }}
+    .codex-list {{ display: grid; gap: 8px; }}
+    .codex-account {{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; border: 1px solid var(--line); border-radius: 6px; padding: 10px; }}
+    .codex-account strong, .codex-account small {{ display: block; overflow-wrap: anywhere; }}
+    .codex-badge {{ display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; color: var(--accent); font-size: 0.78rem; }}
     .ref-button {{ display: inline; padding: 0; border: 0; background: transparent; color: #0b5cad; text-align: left; font-family: Consolas, "Liberation Mono", monospace; font-size: 0.9rem; overflow-wrap: anywhere; }}
     .ref-button:hover {{ text-decoration: underline; }}
     @media (max-width: 820px) {{
       main {{ padding: 14px 12px 32px; }}
-      .console-layout, .summary-grid, .policy-grid, .feedback-grid, .details-grid {{ grid-template-columns: 1fr; }}
+      .console-layout, .summary-grid, .policy-grid, .feedback-grid, .details-grid, .codex-grid, .codex-account {{ grid-template-columns: 1fr; }}
       .sidebar {{ position: static; }}
       .output {{ min-height: 220px; }}
       .table-wrap {{ overflow-x: visible; }}
@@ -292,13 +330,19 @@ def render_runtime_snapshot_html(
     <div class="console-layout">
       {actions}
       <div class="dashboard">
-        {summary}
-        {feedback}
-        <div class="details-grid">
-          {maintenance}
-          {attachments}
+        {tabs}
+        <div data-view-panel="runtime">
+          {summary}
+          {feedback}
+          <div class="details-grid">
+            {maintenance}
+            {attachments}
+          </div>
+          {tasks}
         </div>
-        {tasks}
+        <div data-view-panel="codex" hidden>
+          {codex_panel}
+        </div>
       </div>
     </div>
   </main>
@@ -330,6 +374,17 @@ def _render_metric(title: str, value: str, caption: str) -> str:
             f"<span>{escape(title)}</span>",
             f"<strong>{escape(value)}</strong>",
             f"<small>{escape(caption)}</small>",
+            "</div>",
+        ]
+    )
+
+
+def _render_view_tabs(text: dict[str, str]) -> str:
+    return "\n".join(
+        [
+            "<div class='view-tabs' role='tablist' aria-label='Operator view'>",
+            f"<button type='button' class='view-tab' role='tab' aria-selected='true' data-view-tab='runtime'>{escape(text['runtime_view'])}</button>",
+            f"<button type='button' class='view-tab' role='tab' aria-selected='false' data-view-tab='codex'>{escape(text['codex_view'])}</button>",
             "</div>",
         ]
     )
@@ -593,6 +648,41 @@ def _render_feedback(text: dict[str, str], *, interactive: bool) -> str:
     )
 
 
+def _render_codex_panel(text: dict[str, str], *, interactive: bool) -> str:
+    if not interactive:
+        return "\n".join(
+            [
+                "<section class='panel'>",
+                f"<h2>{escape(text['codex_console'])}</h2>",
+                f"<p class='meta'>{escape(text['interactive_required'])}</p>",
+                "</section>",
+            ]
+        )
+    return "\n".join(
+        [
+            "<section class='panel'>",
+            f"<h2>{escape(text['codex_console'])}</h2>",
+            "<div class='codex-toolbar'>",
+            f"<button type='button' data-codex-refresh='1'>{escape(text['codex_refresh'])}</button>",
+            "<select id='codex-account-select' aria-label='Codex account'></select>",
+            f"<button type='button' data-codex-switch='1'>{escape(text['codex_switch'])}</button>",
+            f"<button type='button' data-codex-usage='1'>{escape(text['codex_open_usage'])}</button>",
+            "</div>",
+            "<div class='codex-grid'>",
+            "<div>",
+            f"<div class='status-line' id='codex-login'>{escape(text['codex_login'])}: {escape(text['not_recorded'])}</div>",
+            "<div id='codex-accounts' class='codex-list'></div>",
+            "</div>",
+            "<div>",
+            f"<div class='policy-item'><span class='policy-label'>{escape(text['codex_usage'])}</span><code id='codex-usage'>{escape(text['codex_unknown_usage'])}</code><div class='meta' id='codex-usage-note'>{escape(text['codex_usage_note'])}: unknown</div></div>",
+            f"<div class='policy-item' style='margin-top: 10px;'><span class='policy-label'>{escape(text['codex_config'])}</span><div id='codex-config' class='meta'>{escape(text['not_recorded'])}</div></div>",
+            "</div>",
+            "</div>",
+            "</section>",
+        ]
+    )
+
+
 def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     return f"""
 <script>
@@ -608,7 +698,14 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   const failFast = document.getElementById('ui-fail-fast');
   const dryRun = document.getElementById('ui-dry-run');
   const historyList = document.getElementById('ui-history');
+  const codexAccounts = document.getElementById('codex-accounts');
+  const codexAccountSelect = document.getElementById('codex-account-select');
+  const codexLogin = document.getElementById('codex-login');
+  const codexUsage = document.getElementById('codex-usage');
+  const codexUsageNote = document.getElementById('codex-usage-note');
+  const codexConfig = document.getElementById('codex-config');
   const historyKey = 'governed-runtime-operator-history';
+  let codexLoaded = false;
 
   function readHistory() {{
     try {{
@@ -722,6 +819,90 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     }}
   }}
 
+  function renderCodexStatus(payload) {{
+    const accounts = Array.isArray(payload.accounts) ? payload.accounts : [];
+    codexAccountSelect.innerHTML = '';
+    codexAccounts.innerHTML = '';
+    accounts.forEach((account) => {{
+      const option = document.createElement('option');
+      option.value = account.name;
+      option.textContent = `${{account.active ? '* ' : ''}}${{account.name}} · ${{account.account_hash || 'unknown'}}`;
+      option.selected = Boolean(account.active);
+      codexAccountSelect.appendChild(option);
+
+      const row = document.createElement('div');
+      row.className = 'codex-account';
+      const body = document.createElement('div');
+      const name = document.createElement('strong');
+      name.textContent = account.name;
+      const meta = document.createElement('small');
+      meta.className = 'meta';
+      meta.textContent = `${{account.auth_mode || 'unknown'}} · ${{account.last_refresh || 'no refresh'}} · ${{account.account_hash || 'no account hash'}}`;
+      body.append(name, meta);
+      row.appendChild(body);
+      if (account.active) {{
+        const badge = document.createElement('span');
+        badge.className = 'codex-badge';
+        badge.textContent = {text['codex_active']!r};
+        row.appendChild(badge);
+      }}
+      codexAccounts.appendChild(row);
+    }});
+    if (!accounts.length) {{
+      codexAccounts.innerHTML = `<p class="meta">{text['not_recorded']}</p>`;
+    }}
+
+    const login = payload.login_status || {{}};
+    codexLogin.textContent = `{text['codex_login']}: ${{login.summary || login.exit_code || 'unknown'}}`;
+    const usage = payload.usage || {{}};
+    const windows = Array.isArray(usage.windows) ? usage.windows.map((item) => `${{item.window}}=${{item.remaining ?? 'unknown'}}`).join(' · ') : {text['codex_unknown_usage']!r};
+    codexUsage.textContent = windows || {text['codex_unknown_usage']!r};
+    codexUsageNote.textContent = `{text['codex_usage_note']}: ${{usage.source || 'unknown'}}`;
+    const config = payload.config || {{}};
+    const failedChecks = Array.isArray(config.checks) ? config.checks.filter((check) => !check.ok).map((check) => check.key) : [];
+    codexConfig.textContent = failedChecks.length ? `attention: ${{failedChecks.join(', ')}}` : (config.status || 'ok');
+  }}
+
+  async function refreshCodexStatus() {{
+    if (!codexAccounts) {{
+      return;
+    }}
+    try {{
+      const response = await fetch('/api/codex/status');
+      const payload = await response.json();
+      if (!response.ok) {{
+        codexAccounts.innerHTML = `<p class="meta">${{payload.error || response.statusText}}</p>`;
+        return;
+      }}
+      renderCodexStatus(payload);
+      codexLoaded = true;
+    }} catch (error) {{
+      codexAccounts.innerHTML = `<p class="meta">${{String(error)}}</p>`;
+    }}
+  }}
+
+  async function switchCodexAccount() {{
+    const name = codexAccountSelect.value;
+    if (!name) {{
+      return;
+    }}
+    setBusy(true);
+    try {{
+      const response = await fetch('/api/codex/switch', {{
+        method: 'POST',
+        headers: {{ 'content-type': 'application/json' }},
+        body: JSON.stringify({{ name }})
+      }});
+      const payload = await response.json();
+      setOutput(JSON.stringify(payload, null, 2));
+      await refreshCodexStatus();
+    }} catch (error) {{
+      setOutput(String(error));
+    }} finally {{
+      setBusy(false);
+    }}
+  }}
+
   document.querySelectorAll('button[data-action]').forEach((button) => {{
     button.addEventListener('click', () => runAction(button.getAttribute('data-action'), button));
   }});
@@ -743,6 +924,23 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     renderHistory();
   }});
   document.querySelector('[data-refresh]').addEventListener('click', () => window.location.reload());
+  document.querySelector('[data-codex-refresh]').addEventListener('click', () => refreshCodexStatus());
+  document.querySelector('[data-codex-switch]').addEventListener('click', () => switchCodexAccount());
+  document.querySelector('[data-codex-usage]').addEventListener('click', () => window.open('https://chatgpt.com/codex/settings/usage', '_blank', 'noopener'));
+  document.querySelectorAll('[data-view-tab]').forEach((button) => {{
+    button.addEventListener('click', () => {{
+      const selected = button.getAttribute('data-view-tab');
+      document.querySelectorAll('[data-view-tab]').forEach((tab) => {{
+        tab.setAttribute('aria-selected', String(tab === button));
+      }});
+      document.querySelectorAll('[data-view-panel]').forEach((panel) => {{
+        panel.hidden = panel.getAttribute('data-view-panel') !== selected;
+      }});
+      if (selected === 'codex' && !codexLoaded) {{
+        refreshCodexStatus();
+      }}
+    }});
+  }});
   languageSelect.addEventListener('change', () => {{
     const next = new URL(window.location.href);
     next.searchParams.set('lang', languageSelect.value);

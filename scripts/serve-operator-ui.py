@@ -13,11 +13,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACTS_SRC = ROOT / "packages" / "contracts" / "src"
+SCRIPTS_SRC = ROOT / "scripts"
 if str(CONTRACTS_SRC) not in sys.path:
     sys.path.insert(0, str(CONTRACTS_SRC))
+if str(SCRIPTS_SRC) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_SRC))
 
 from governed_ai_coding_runtime_contracts.operator_ui import render_runtime_snapshot_html, write_runtime_snapshot_html
 from governed_ai_coding_runtime_contracts.runtime_status import RuntimeStatusStore, runtime_snapshot_to_dict
+from lib.codex_local import codex_status, switch_auth_profile
 
 
 ALLOWED_ACTIONS = {
@@ -109,6 +113,11 @@ def _build_handler(*, default_language: str):
             if parsed.path == "/api/targets":
                 self._send_json({"targets": load_target_ids()})
                 return
+            if parsed.path == "/api/codex/status":
+                result = load_codex_status()
+                status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.INTERNAL_SERVER_ERROR
+                self._send_json(result, status=status)
+                return
             if parsed.path == "/api/file":
                 params = parse_qs(parsed.query)
                 requested = params.get("path", [""])[0]
@@ -121,14 +130,16 @@ def _build_handler(*, default_language: str):
         def do_POST(self) -> None:
             parsed = urlparse(self.path)
             if parsed.path != "/api/run":
+                if parsed.path == "/api/codex/switch":
+                    result = run_codex_switch(self._read_json_body())
+                    status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
+                    self._send_json(result, status=status)
+                    return
                 self._send_json({"error": "not found"}, status=HTTPStatus.NOT_FOUND)
                 return
-            length = int(self.headers.get("content-length", "0") or "0")
-            raw = self.rfile.read(length).decode("utf-8") if length else "{}"
-            try:
-                payload = json.loads(raw)
-            except json.JSONDecodeError as exc:
-                self._send_json({"error": f"invalid JSON: {exc}"}, status=HTTPStatus.BAD_REQUEST)
+            payload = self._read_json_body()
+            if "_json_error" in payload:
+                self._send_json({"error": payload["_json_error"]}, status=HTTPStatus.BAD_REQUEST)
                 return
             result = run_operator_action(payload)
             if result.get("exit_code") == 0:
@@ -138,6 +149,15 @@ def _build_handler(*, default_language: str):
             else:
                 status = HTTPStatus.INTERNAL_SERVER_ERROR
             self._send_json(result, status=status)
+
+        def _read_json_body(self) -> dict:
+            length = int(self.headers.get("content-length", "0") or "0")
+            raw = self.rfile.read(length).decode("utf-8") if length else "{}"
+            try:
+                payload = json.loads(raw)
+            except json.JSONDecodeError as exc:
+                return {"_json_error": f"invalid JSON: {exc}"}
+            return payload
 
         def log_message(self, format: str, *args: object) -> None:
             return
@@ -158,6 +178,26 @@ def _build_handler(*, default_language: str):
             )
 
     return OperatorUiHandler
+
+
+def load_codex_status() -> dict:
+    try:
+        payload = codex_status()
+    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
+        return {"status": "error", "error": str(exc)}
+    payload["status"] = "ok"
+    return payload
+
+
+def run_codex_switch(payload: dict) -> dict:
+    if "_json_error" in payload:
+        return {"status": "error", "error": payload["_json_error"]}
+    name = _string(payload.get("name"), "")
+    dry_run = bool(payload.get("dry_run", False))
+    try:
+        return switch_auth_profile(name, dry_run=dry_run)
+    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
+        return {"status": "error", "error": str(exc)}
 
 
 def run_operator_action(payload: dict) -> dict:

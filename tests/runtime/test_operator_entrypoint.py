@@ -75,7 +75,9 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertEqual(".runtime/artifacts/operator-ui/index.html", payload["output_path"])
         self.assertEqual("zh-CN", payload["language"])
         self.assertTrue(output.exists())
-        self.assertIn("Runtime 摘要", output.read_text(encoding="utf-8"))
+        html = output.read_text(encoding="utf-8")
+        self.assertIn("Runtime 摘要", html)
+        self.assertIn("Codex 账号与配置", html)
 
     def test_operator_ui_action_generates_english_html(self) -> None:
         completed = subprocess.run(
@@ -106,7 +108,9 @@ class OperatorEntrypointTests(unittest.TestCase):
 
         self.assertEqual("en", payload["language"])
         self.assertTrue(output.exists())
-        self.assertIn("Runtime Summary", output.read_text(encoding="utf-8"))
+        html = output.read_text(encoding="utf-8")
+        self.assertIn("Runtime Summary", html)
+        self.assertIn("Codex Account and Config", html)
 
     def test_operator_ui_server_helpers_are_bounded_to_repo_actions_and_files(self) -> None:
         module = _load_serve_operator_ui_module()
@@ -120,6 +124,8 @@ class OperatorEntrypointTests(unittest.TestCase):
         )
         self.assertIn("Governed AI Coding Runtime", module.read_repo_file("README.md")["content"])
         self.assertIn("escapes repository root", module.read_repo_file("../outside.txt")["error"])
+        self.assertIn(module.load_codex_status()["status"], {"ok", "error"})
+        self.assertEqual("error", module.run_codex_switch({"name": ""})["status"])
 
     def test_operator_ui_server_dry_run_supports_single_target(self) -> None:
         module = _load_serve_operator_ui_module()

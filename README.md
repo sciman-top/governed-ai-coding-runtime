@@ -48,6 +48,7 @@
 
 当前总入口与一键应用：
 - 操作者聚合入口：`scripts/operator.ps1`。它把 readiness、自检、规则漂移/同步、目标仓批量流和 operator UI 生成收成同一个入口；默认 `-Action Help`，适合日常少记长命令。
+- Codex 本机优化入口：`scripts/Optimize-CodexLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入推荐 Codex 默认配置、安装 `codex-account` 账号切换入口，并把当前仓加入 trusted project。
 - 目标仓日常运行/批量下发总入口：`scripts/runtime-flow-preset.ps1`。它读取 `docs/targets/target-repos-catalog.json`，可以对单个 target 或所有 active targets 执行 attach、daily gate、治理基线同步、特性基线同步和里程碑提交。
 - AI 规则文件同步入口：`scripts/sync-agent-rules.ps1`。它读取 `rules/manifest.json`，把全局与项目级 `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` 同步到用户目录和目标仓；默认同 hash 跳过，内容漂移按脚本策略阻断或要求 `-Force`。
 - 本仓自检入口：`scripts/verify-repo.ps1 -Check All`。它用于验证当前 runtime、文档、schema、catalog、脚本和目标仓一致性门禁。
@@ -77,6 +78,15 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Opera
 ```
 
 UI 使用方式：`-OpenUi` 会启动 `127.0.0.1` 本地常驻交互控制台并打开浏览器；后续可直接访问 `http://127.0.0.1:8770/?lang=zh-CN`。状态/停止/重启使用 `scripts/operator-ui-service.ps1 -Action Status|Stop|Restart`；登录自动启动可用 `-Action EnableAutoStart|DisableAutoStart|AutoStartStatus` 管理。页面可执行 allowlist 内的本仓 readiness、目标仓列表、规则漂移检查、规则同步、治理基线下发、daily 和全部功能应用；可选择全部目标仓或单个目标仓，可调整语言、验证模式、并发、fail-fast、只预演与里程碑标签；执行结果会写入输出区和本地浏览器执行历史；可点击 evidence/artifact/verification refs 查看文件内容。若不加 `-OpenUi`，脚本只生成只读快照 `.runtime/artifacts/operator-ui/index.html` 并在 JSON 输出里给出 `file_url`。
+Codex 面板会显示本机 ChatGPT auth profiles、当前登录状态、推荐配置健康、官方 usage dashboard 入口和账号切换按钮；5h/7d 额度在缺少稳定官方本地 API 时标为 `unknown`，不伪造估算值。
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/Optimize-CodexLocal.ps1
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/Optimize-CodexLocal.ps1 -Apply
+```
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
