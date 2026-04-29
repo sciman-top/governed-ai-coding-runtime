@@ -52,7 +52,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Opera
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en
 ```
 
-这个 UI 在 `127.0.0.1` 上运行本地交互服务，可点击执行 allowlist 内的 readiness、目标仓列表、规则漂移检查、规则同步、治理基线下发、daily 和全部功能应用；可选择全部目标仓或单个目标仓，也可调整语言、验证模式、并发、fail-fast、只预演与里程碑标签；执行结果会写入输出区和本地浏览器执行历史，并可点击 evidence/artifact/verification refs 查看文件内容。终端按 `Ctrl+C` 停止服务。若只想生成只读快照，去掉 `-OpenUi`，输出位于 `.runtime/artifacts/operator-ui/index.html`。
+这个 UI 在 `127.0.0.1` 上运行本地常驻交互服务，后续可直接访问 `http://127.0.0.1:8770/?lang=zh-CN`；状态/停止/重启使用 `scripts/operator-ui-service.ps1 -Action Status|Stop|Restart`。可点击执行 allowlist 内的 readiness、目标仓列表、规则漂移检查、规则同步、治理基线下发、daily 和全部功能应用；可选择全部目标仓或单个目标仓，也可调整语言、验证模式、并发、fail-fast、只预演与里程碑标签；执行结果会写入输出区和本地浏览器执行历史，并可点击 evidence/artifact/verification refs 查看文件内容。若只想生成只读快照，去掉 `-OpenUi`，输出位于 `.runtime/artifacts/operator-ui/index.html`。
 
 ### 模式 A：治理侧车（阻力最低）
 继续按原方式使用宿主工具，把本运行时用于 readiness、verification 和证据留痕。

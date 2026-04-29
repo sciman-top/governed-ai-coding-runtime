@@ -210,10 +210,13 @@ class OperatorUiTests(unittest.TestCase):
         self.assertIn("<option value='classroomtoolkit'>classroomtoolkit</option>", html)
         self.assertIn("id='ui-dry-run'", html)
         self.assertIn("id='ui-history'", html)
+        self.assertIn("class='feedback-grid'", html)
+        self.assertIn("class=\"details-grid\"", html)
         self.assertIn("localStorage", html)
         self.assertIn("class='ref-button' data-ref='docs/README.md'", html)
         self.assertNotIn("data-ref='approval-123'", html)
-        self.assertLess(html.index("id='ui-output'"), html.index("id='ui-language'"))
+        self.assertLess(html.index("id='ui-language'"), html.index("id='ui-output'"))
+        self.assertLess(html.index("id='ui-output'"), html.index("<section class='section'>\n<h2>维护策略</h2>"))
 
 
 if __name__ == "__main__":

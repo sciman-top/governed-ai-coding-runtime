@@ -158,7 +158,9 @@ UI:
   默认中文: -UiLanguage zh-CN
   English: -UiLanguage en
   输出文件: .runtime/artifacts/operator-ui/index.html
-  直接打开: pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi
+  常驻打开: pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi
+  服务状态: pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator-ui-service.ps1 -Action Status
+  开机自启: pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator-ui-service.ps1 -Action EnableAutoStart
 
 便捷参数:
   -DryRun                只打印将执行的命令，不执行。
@@ -172,11 +174,12 @@ UI:
 }
 
 function Invoke-OperatorUi {
-  $arguments = @("--lang", $UiLanguage)
   if ($OpenUi) {
-    $arguments += "--serve"
-    $arguments += "--open"
+    Invoke-PwshScript -Name "operator-ui-service" -ScriptPath "scripts/operator-ui-service.ps1" -ScriptArguments @("-Action", "Start", "-UiLanguage", $UiLanguage, "-OpenUi")
+    return
   }
+
+  $arguments = @("--lang", $UiLanguage)
   Invoke-PythonScript -Name "operator-ui" -ScriptPath "scripts/serve-operator-ui.py" -ScriptArguments $arguments
 }
 

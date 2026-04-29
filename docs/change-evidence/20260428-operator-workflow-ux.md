@@ -18,12 +18,16 @@
 - `docs/README.md`
 - `docs/quickstart/ai-coding-usage-guide.md`
 - `docs/quickstart/ai-coding-usage-guide.zh-CN.md`
+- `docs/design/operator-ui-v2-design.md`
+- `docs/change-evidence/operator-ui-v2-workbench.png`
 
 ## Operator Contract
 - `scripts/operator.ps1 -Action Help` is the low-risk discovery entrypoint.
 - `scripts/operator.ps1 -Action Readiness` runs the local hard-gate order: `build -> test -> contract/invariant -> hotspot`, then renders the operator UI.
 - Target-repo apply actions remain explicit: `GovernanceBaselineAll`, `DailyAll`, and `ApplyAllFeatures`; they default to all targets and accept `-Target <target-id>` for single-target operation.
-- `scripts/operator.ps1 -Action OperatorUi -OpenUi` starts the localhost interactive console and opens the browser.
+- `scripts/operator.ps1 -Action OperatorUi -OpenUi` starts the persistent localhost interactive console and opens the browser.
+- `scripts/operator-ui-service.ps1 -Action Start|Stop|Restart|Status` manages the persistent service, PID file, and log under `.runtime/operator-ui/`.
+- The persistent service is process-backed, not OS-login autostart; after reboot or manual stop, run `scripts/operator-ui-service.ps1 -Action Start` or `scripts/operator.ps1 -Action OperatorUi -OpenUi`.
 - `scripts/serve-operator-ui.py --serve --open` is the direct Python interactive server entrypoint.
 - Without `-OpenUi` / `--serve`, the UI path remains a static snapshot generator.
 - Operator UI defaults to `zh-CN`; English is explicit via `scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en` or `python scripts/serve-operator-ui.py --serve --lang en --open`.
@@ -36,6 +40,8 @@
 - Evidence/artifact/verification refs can be clicked for bounded repo-local file preview.
 - The layout now prioritizes scan-friendly full-width operation, summary metrics, maintenance policy refs, attachment posture, and task output refs.
 - The command output panel is placed directly below the action buttons and action completion scrolls it into view, so button clicks produce visible feedback without requiring manual search.
+- The operator layout now uses a bounded workbench width, a left control rail, and a right main work area; command output and run history moved out of the narrow sidebar so logs remain readable.
+- The V2 design note is recorded in `docs/design/operator-ui-v2-design.md`; the current high-fidelity UI image is `docs/change-evidence/operator-ui-v2-workbench.png`.
 - The UI has Chinese and English label sets; raw runtime states, paths, refs, and protocol values remain unmodified.
 - The UI does not allow arbitrary shell commands or arbitrary filesystem reads from the browser page.
 - Local Playwright checks covered a 1366px desktop viewport and a 390px mobile viewport; the mobile layout uses field rows instead of clipped horizontal tables.
@@ -56,11 +62,14 @@
 - `python scripts/serve-operator-ui.py --serve --lang zh-CN` -> pass; served default Chinese interactive console.
 - UI action smoke via HTTP POST `/api/run` with `action=targets` -> pass; returned active targets: `classroomtoolkit`, `github-toolkit`, `self-runtime`, `skills-manager`, `vps-ssh-launcher`.
 - UI dry-run smoke via `run_operator_action({"action":"daily_all","target":"classroomtoolkit","dry_run":true})` -> pass; command included `-Target classroomtoolkit` and `-DryRun`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator-ui-service.ps1 -Action Status` -> pass; reports `status`, `url`, `pid`, `pid_path`, `log_path`, and `ready`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator-ui-service.ps1 -Action Start -UiLanguage zh-CN` -> pass; status reported `running`, `ready=true`, PID file `.runtime/operator-ui/operator-ui.pid`, stdout log `.runtime/operator-ui/operator-ui.log`, stderr log `.runtime/operator-ui/operator-ui.err.log`.
 - `python scripts/serve-operator-ui.py --lang en --output .runtime/artifacts/operator-ui/index.en.html` -> pass; generated English UI.
 - Playwright render checks:
   - `http://127.0.0.1:8770/?lang=zh-CN` at `1366x900` -> pass, title `Governed Runtime 操作者面板`, layout width `1307`, sidebar width `320`, dashboard width `969`, action buttons `7`, ref buttons `6`, approval ids not clickable.
   - clicked `列出目标仓` in the browser -> pass, output panel showed `exit_code: 0` and the target catalog list; after the feedback fix, output panel top was visible at `578px` in the `900px` viewport.
   - selected `classroomtoolkit`, checked `只预演`, and clicked `运行 Daily` in the browser -> pass; output included `-Target classroomtoolkit`, `-FlowMode daily`, `-Mode quick`, and `DRY-RUN daily-all-targets`; execution history recorded `daily_all · exit_code=0`.
+  - refreshed layout at `2048x1152` -> pass; main width `1560`, dashboard width `1210`, command output width `781`, history width `363`, no page-level horizontal overflow.
   - `http://127.0.0.1:8770/?lang=zh-CN` at `390x800` -> pass, layout width `347`, target select width `317`, history width `317`, action buttons `7`, no horizontal overflow.
 - `git diff --check` -> pass; only repo-normal LF/CRLF warnings were emitted.
 

@@ -45,6 +45,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("Readiness", completed.stdout)
         self.assertIn("OperatorUi", completed.stdout)
         self.assertIn("-UiLanguage <zh-CN|en>", completed.stdout)
+        self.assertIn("EnableAutoStart", completed.stdout)
 
     def test_operator_ui_action_generates_html(self) -> None:
         completed = subprocess.run(
@@ -138,6 +139,56 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("classroomtoolkit", result["command"])
         self.assertIn("-DryRun", result["command"])
         self.assertIn("DRY-RUN daily-all-targets", result["output"])
+
+    def test_operator_ui_service_status_succeeds(self) -> None:
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "operator-ui-service.ps1"),
+                "-Action",
+                "Status",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+        )
+
+        payload = json.loads(completed.stdout)
+        self.assertIn(payload["status"], {"running", "stopped"})
+        self.assertIn("operator-ui.pid", payload["pid_path"])
+        self.assertIn("operator-ui.log", payload["log_path"])
+
+    def test_operator_ui_service_autostart_status_succeeds(self) -> None:
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "operator-ui-service.ps1"),
+                "-Action",
+                "AutoStartStatus",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+        )
+
+        payload = json.loads(completed.stdout)
+        self.assertEqual("AutoStartStatus", payload["action"])
+        self.assertIn("GovernedRuntimeOperatorUi-", payload["task_name"])
+        self.assertIn("enabled", payload["autostart"])
 
 
 if __name__ == "__main__":

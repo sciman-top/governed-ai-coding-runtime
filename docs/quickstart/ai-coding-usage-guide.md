@@ -52,7 +52,7 @@ Open the English interactive console:
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en
 ```
 
-This UI runs a local `127.0.0.1` interactive service. It can run allowlisted actions for readiness, target listing, rule drift checks, rule sync, governance baseline rollout, daily, and all-feature apply. It can target all repos or one selected target repo, exposes settings for language, mode, parallelism, fail-fast, dry-run, and milestone tag, records results in the output panel and local browser history, and refs can be clicked to preview evidence/artifact/verification files. Stop the service with `Ctrl+C` in the terminal. Remove `-OpenUi` when you only want to generate a read-only `.runtime/artifacts/operator-ui/index.html` snapshot.
+This UI runs a persistent local `127.0.0.1` interactive service. Later visits can use `http://127.0.0.1:8770/?lang=en` directly; use `scripts/operator-ui-service.ps1 -Action Status|Stop|Restart` to inspect or control the service. It can run allowlisted actions for readiness, target listing, rule drift checks, rule sync, governance baseline rollout, daily, and all-feature apply. It can target all repos or one selected target repo, exposes settings for language, mode, parallelism, fail-fast, dry-run, and milestone tag, records results in the output panel and local browser history, and refs can be clicked to preview evidence/artifact/verification files. Remove `-OpenUi` when you only want to generate a read-only `.runtime/artifacts/operator-ui/index.html` snapshot.
 
 ### Mode A: Governance Sidecar (lowest friction)
 Use your host tool normally, and run this runtime for readiness, verification, and traceability.

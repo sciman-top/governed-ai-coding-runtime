@@ -76,7 +76,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Opera
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en
 ```
 
-UI 使用方式：`-OpenUi` 会启动 `127.0.0.1` 本地交互控制台并打开浏览器；在终端按 `Ctrl+C` 停止服务。页面可执行 allowlist 内的本仓 readiness、目标仓列表、规则漂移检查、规则同步、治理基线下发、daily 和全部功能应用；可选择全部目标仓或单个目标仓，可调整语言、验证模式、并发、fail-fast、只预演与里程碑标签；执行结果会写入输出区和本地浏览器执行历史；可点击 evidence/artifact/verification refs 查看文件内容。若不加 `-OpenUi`，脚本只生成只读快照 `.runtime/artifacts/operator-ui/index.html` 并在 JSON 输出里给出 `file_url`。
+UI 使用方式：`-OpenUi` 会启动 `127.0.0.1` 本地常驻交互控制台并打开浏览器；后续可直接访问 `http://127.0.0.1:8770/?lang=zh-CN`。状态/停止/重启使用 `scripts/operator-ui-service.ps1 -Action Status|Stop|Restart`；登录自动启动可用 `-Action EnableAutoStart|DisableAutoStart|AutoStartStatus` 管理。页面可执行 allowlist 内的本仓 readiness、目标仓列表、规则漂移检查、规则同步、治理基线下发、daily 和全部功能应用；可选择全部目标仓或单个目标仓，可调整语言、验证模式、并发、fail-fast、只预演与里程碑标签；执行结果会写入输出区和本地浏览器执行历史；可点击 evidence/artifact/verification refs 查看文件内容。若不加 `-OpenUi`，脚本只生成只读快照 `.runtime/artifacts/operator-ui/index.html` 并在 JSON 输出里给出 `file_url`。
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
@@ -289,7 +289,7 @@ Open the English interactive UI:
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en
 ```
 
-How to use the UI: `-OpenUi` starts a `127.0.0.1` interactive control console and opens the browser; stop it with `Ctrl+C` in the terminal. The page can run allowlisted actions for repo readiness, target listing, rule drift checks, rule sync, governance baseline rollout, daily, and all-feature apply. It can target all repos or one selected target repo, exposes settings for language, mode, parallelism, fail-fast, dry-run, and milestone tag, records results in the output panel and local browser history, and refs can be clicked to preview evidence/artifact/verification files. Without `-OpenUi`, the script only writes a read-only `.runtime/artifacts/operator-ui/index.html` snapshot and prints a JSON `file_url`.
+How to use the UI: `-OpenUi` starts a persistent local `127.0.0.1` interactive control console and opens the browser; later visits can use `http://127.0.0.1:8770/?lang=en` directly. Use `scripts/operator-ui-service.ps1 -Action Status|Stop|Restart` to inspect or control the service, and `-Action EnableAutoStart|DisableAutoStart|AutoStartStatus` to manage logon autostart. The page can run allowlisted actions for repo readiness, target listing, rule drift checks, rule sync, governance baseline rollout, daily, and all-feature apply. It can target all repos or one selected target repo, exposes settings for language, mode, parallelism, fail-fast, dry-run, and milestone tag, records results in the output panel and local browser history, and refs can be clicked to preview evidence/artifact/verification files. Without `-OpenUi`, the script only writes a read-only `.runtime/artifacts/operator-ui/index.html` snapshot and prints a JSON `file_url`.
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets

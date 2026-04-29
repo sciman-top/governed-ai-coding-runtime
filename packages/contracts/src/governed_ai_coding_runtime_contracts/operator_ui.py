@@ -185,6 +185,7 @@ def render_runtime_snapshot_html(
     tasks = _render_tasks(snapshot, text, interactive=interactive)
     attachments = _render_attachments(snapshot, text, interactive=interactive)
     actions = _render_actions(text, language=language, interactive=interactive, target_options=target_options or [])
+    feedback = _render_feedback(text, interactive=interactive)
     script = _render_interactive_script(text, language=language) if interactive else ""
     runtime_root = snapshot.runtime_root or text["missing"]
     return f"""<!doctype html>
@@ -208,24 +209,26 @@ def render_runtime_snapshot_html(
       --danger: #b42318;
     }}
     * {{ box-sizing: border-box; }}
-    body {{ margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: var(--bg); color: var(--ink); }}
-    main {{ width: 100%; margin: 0; padding: 22px; }}
-    header {{ border-bottom: 1px solid var(--line); padding-bottom: 18px; margin-bottom: 20px; }}
-    h1 {{ font-size: 1.75rem; line-height: 1.2; margin: 0 0 10px; }}
-    h2 {{ font-size: 1rem; line-height: 1.3; margin: 0 0 12px; color: var(--ink); }}
+    body {{ margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: var(--bg); color: var(--ink); font-size: 14px; }}
+    main {{ width: 100%; max-width: 1560px; margin: 0 auto; padding: 16px 18px 32px; }}
+    header {{ border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 14px; }}
+    h1 {{ font-size: 1.5rem; line-height: 1.2; margin: 0 0 8px; }}
+    h2 {{ font-size: 0.96rem; line-height: 1.3; margin: 0 0 10px; color: var(--ink); }}
     .meta-row {{ display: flex; flex-wrap: wrap; gap: 10px 18px; color: var(--muted); font-size: 0.92rem; }}
-    .console-layout {{ display: grid; grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: 18px; align-items: start; }}
-    .sidebar {{ position: sticky; top: 16px; display: grid; gap: 14px; }}
-    .dashboard {{ min-width: 0; display: grid; gap: 18px; }}
-    .summary-grid {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }}
-    .metric {{ background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px; padding: 14px; min-width: 0; }}
+    .console-layout {{ display: grid; grid-template-columns: minmax(260px, 300px) minmax(0, 1fr); gap: 14px; align-items: start; }}
+    .sidebar {{ position: sticky; top: 12px; display: grid; gap: 12px; align-self: start; }}
+    .dashboard {{ min-width: 0; display: grid; gap: 14px; }}
+    .summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }}
+    .feedback-grid {{ display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr); gap: 14px; align-items: start; }}
+    .details-grid {{ display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr); gap: 14px; align-items: start; }}
+    .metric {{ background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px; padding: 12px; min-width: 0; }}
     .metric span {{ display: block; color: var(--muted); font-size: 0.78rem; text-transform: uppercase; }}
-    .metric strong {{ display: block; font-size: 1.55rem; margin: 4px 0; }}
+    .metric strong {{ display: block; font-size: 1.32rem; margin: 3px 0; }}
     .metric small {{ display: block; color: var(--muted); overflow-wrap: anywhere; }}
     .section {{ min-width: 0; }}
     .table-wrap {{ background: var(--surface); border: 1px solid var(--line); border-radius: 6px; overflow-x: auto; }}
     table {{ width: 100%; border-collapse: collapse; min-width: 720px; }}
-    th, td {{ padding: 11px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }}
+    th, td {{ padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }}
     th {{ background: var(--surface-muted); color: #314253; font-size: 0.78rem; text-transform: uppercase; }}
     tr:last-child td {{ border-bottom: 0; }}
     .task-id {{ font-weight: 700; }}
@@ -239,10 +242,10 @@ def render_runtime_snapshot_html(
     ul {{ margin: 0; padding-left: 18px; }}
     li + li {{ margin-top: 4px; }}
     code {{ font-family: Consolas, "Liberation Mono", monospace; font-size: 0.9rem; overflow-wrap: anywhere; }}
-    .policy-grid {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }}
-    .policy-item {{ background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px; min-width: 0; }}
+    .policy-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }}
+    .policy-item {{ background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px; min-width: 0; }}
     .policy-label {{ display: block; color: var(--muted); font-size: 0.78rem; text-transform: uppercase; margin-bottom: 4px; }}
-    .panel {{ background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px; }}
+    .panel {{ background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px; min-width: 0; }}
     .action-list {{ display: grid; gap: 8px; }}
     button, select, input {{ font: inherit; }}
     button {{ border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 6px; padding: 8px 10px; cursor: pointer; text-align: left; }}
@@ -255,16 +258,17 @@ def render_runtime_snapshot_html(
     select, input[type="number"], input[type="text"] {{ width: 100%; min-width: 0; max-width: 100%; border: 1px solid var(--line); border-radius: 6px; padding: 8px; color: var(--ink); background: #fff; }}
     .checkbox-row {{ display: flex; align-items: center; gap: 8px; color: var(--ink); }}
     .status-line {{ color: var(--muted); font-size: 0.86rem; min-height: 1.2rem; }}
-    .output {{ min-height: 180px; max-height: 420px; overflow: auto; white-space: pre-wrap; background: #0f1720; color: #d9e2ec; border-radius: 6px; padding: 12px; }}
+    .output {{ min-height: 260px; max-height: 460px; overflow: auto; white-space: pre-wrap; background: #0f1720; color: #d9e2ec; border-radius: 6px; padding: 12px; }}
     .history-list {{ display: grid; gap: 8px; }}
     .history-item {{ width: 100%; min-width: 0; display: grid; gap: 2px; }}
     .history-item small {{ color: var(--muted); overflow-wrap: anywhere; }}
     .ref-button {{ display: inline; padding: 0; border: 0; background: transparent; color: #0b5cad; text-align: left; font-family: Consolas, "Liberation Mono", monospace; font-size: 0.9rem; overflow-wrap: anywhere; }}
     .ref-button:hover {{ text-decoration: underline; }}
     @media (max-width: 820px) {{
-      main {{ padding: 20px 14px 40px; }}
-      .console-layout, .summary-grid, .policy-grid {{ grid-template-columns: 1fr; }}
+      main {{ padding: 14px 12px 32px; }}
+      .console-layout, .summary-grid, .policy-grid, .feedback-grid, .details-grid {{ grid-template-columns: 1fr; }}
       .sidebar {{ position: static; }}
+      .output {{ min-height: 220px; }}
       .table-wrap {{ overflow-x: visible; }}
       table, thead, tbody, tr, th, td {{ display: block; min-width: 0; width: 100%; }}
       thead {{ position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }}
@@ -289,8 +293,11 @@ def render_runtime_snapshot_html(
       {actions}
       <div class="dashboard">
         {summary}
-        {maintenance}
-        {attachments}
+        {feedback}
+        <div class="details-grid">
+          {maintenance}
+          {attachments}
+        </div>
         {tasks}
       </div>
     </div>
@@ -549,16 +556,6 @@ def _render_actions(text: dict[str, str], *, language: str, interactive: bool, t
             "</div>",
             "</section>",
             "<section class='panel'>",
-            f"<h2>{escape(text['command_output'])}</h2>",
-            f"<div id='ui-status' class='status-line'>{escape(text['ready'])}</div>",
-            "<pre id='ui-output' class='output'></pre>",
-            "</section>",
-            "<section class='panel'>",
-            f"<h2>{escape(text['history'])}</h2>",
-            f"<div id='ui-history' class='history-list'><p class='meta'>{escape(text['no_history'])}</p></div>",
-            f"<button type='button' data-clear-history='1'>{escape(text['clear_history'])}</button>",
-            "</section>",
-            "<section class='panel'>",
             f"<h2>{escape(text['settings'])}</h2>",
             "<div class='setting-grid'>",
             f"<label>{escape(text['language'])}<select id='ui-language'><option value='zh-CN' {'selected' if language == 'zh-CN' else ''}>中文</option><option value='en' {'selected' if language == 'en' else ''}>English</option></select></label>",
@@ -571,6 +568,27 @@ def _render_actions(text: dict[str, str], *, language: str, interactive: bool, t
             "</div>",
             "</section>",
             "</aside>",
+        ]
+    )
+
+
+def _render_feedback(text: dict[str, str], *, interactive: bool) -> str:
+    if not interactive:
+        return ""
+    return "\n".join(
+        [
+            "<section class='feedback-grid'>",
+            "<div class='panel'>",
+            f"<h2>{escape(text['command_output'])}</h2>",
+            f"<div id='ui-status' class='status-line'>{escape(text['ready'])}</div>",
+            "<pre id='ui-output' class='output'></pre>",
+            "</div>",
+            "<div class='panel'>",
+            f"<h2>{escape(text['history'])}</h2>",
+            f"<div id='ui-history' class='history-list'><p class='meta'>{escape(text['no_history'])}</p></div>",
+            f"<button type='button' data-clear-history='1'>{escape(text['clear_history'])}</button>",
+            "</div>",
+            "</section>",
         ]
     )
 
