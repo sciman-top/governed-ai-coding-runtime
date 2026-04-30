@@ -58,6 +58,18 @@
       "build_command": "python -m compileall -q ssh_tool.py auto_install.py test_ssh_tool.py test_auto_install.py test_scripts.py test_integration_real_ssh.py",
       "test_command": "python -m pytest -q",
       "contract_command": "python -m unittest -q",
+      "contract_commands": [
+        {
+          "id": "contract:powershell-policy",
+          "command": "python .governed-ai/verify-powershell-policy.py",
+          "required": true
+        },
+        {
+          "id": "contract",
+          "command": "python -m unittest -q",
+          "required": true
+        }
+      ],
       "quick_test_skip_reason": "Full pytest gate is already small and real SSH integration is skipped by default; no materially faster representative slice is justified."
     }
   }

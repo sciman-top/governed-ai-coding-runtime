@@ -650,8 +650,6 @@ def _probe_codex_surface(
 
     resume_surface_available = "resume" in help_commands or "resume" in exec_help_lower
     native_attach_available = status_command_available and status_exit == 0
-    if not status_command_available and resume_surface_available:
-        native_attach_available = True
     process_bridge_available = True
     structured_events_available = _detect_structured_events(
         help_lower=help_lower,
@@ -674,12 +672,13 @@ def _probe_codex_surface(
     failure_stage: str | None = None
     remediation_hint: str | None = None
     if not status_command_available:
-        if native_attach_available:
-            reason = "codex status command is unavailable; native attach is inferred from resume command surface"
+        if resume_surface_available:
+            reason = "codex status command is unavailable; keep process bridge and treat resume command surface as supporting evidence only"
             remediation_hint = (
-                f"Validate native attach via `{effective_executable} exec resume --help` "
-                "and a controlled `exec resume --last --json` probe when needed."
+                f"Treat `{effective_executable} exec resume --help` as supporting evidence only. "
+                "Native attach requires a build that exposes a status handshake command."
             )
+            failure_stage = "live_attach_probe_unsupported_status_command_missing"
         else:
             reason = "codex CLI does not expose a status command; native live attach probe is unavailable in this build"
             failure_stage = "live_attach_probe_unsupported_status_command_missing"

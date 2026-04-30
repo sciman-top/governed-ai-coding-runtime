@@ -212,9 +212,11 @@ class CodexAdapterTests(unittest.TestCase):
                     return 127, "", "codex: command not found"
                 return 0, "codex-cli 0.121.0\n", ""
             if argv == ["codex", "--help"]:
-                return 0, "Commands:\n  exec\n  resume\n", ""
+                return 0, "Commands:\n  exec\n  resume\n  status\n", ""
             if argv == ["codex", "exec", "--help"]:
                 return 0, "Options:\n  --json\n  --output-last-message\n", ""
+            if argv == ["codex", "status"]:
+                return 0, "session_id=session-live-001 resume_id=resume-live-001\n", ""
             return 1, "", "unsupported"
 
         probe = module.probe_codex_surface(
@@ -248,14 +250,14 @@ class CodexAdapterTests(unittest.TestCase):
         capability = module.classify_codex_adapter(profile)
 
         self.assertTrue(probe.codex_cli_available)
-        self.assertTrue(probe.native_attach_available)
+        self.assertFalse(probe.native_attach_available)
         self.assertTrue(probe.process_bridge_available)
         self.assertTrue(probe.structured_events_available)
         self.assertTrue(probe.evidence_export_available)
         self.assertTrue(probe.resume_available)
-        self.assertEqual(capability.tier, "native_attach")
-        self.assertIsNone(probe.failure_stage)
-        self.assertIn("inferred from resume command surface", probe.reason)
+        self.assertEqual(capability.tier, "process_bridge")
+        self.assertEqual(probe.failure_stage, "live_attach_probe_unsupported_status_command_missing")
+        self.assertIn("supporting evidence only", probe.reason)
         self.assertIsNotNone(probe.remediation_hint)
 
     def test_codex_live_probe_keeps_process_bridge_when_status_and_resume_are_missing(self) -> None:

@@ -79,7 +79,11 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             env=env,
         )
 
-        self.assertIn("OK codex-capability-ready", completed.stdout)
+        self.assertTrue(
+            ("OK codex-capability-ready" in completed.stdout)
+            or ("WARN codex-capability-degraded" in completed.stdout),
+            completed.stdout,
+        )
         self.assertIn("OK windows-process-environment-normalized", completed.stdout)
         self.assertIn("OK python-asyncio", completed.stdout)
         self.assertNotIn("WARN codex-capability-blocked", completed.stdout)

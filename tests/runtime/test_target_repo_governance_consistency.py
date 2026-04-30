@@ -254,6 +254,85 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             self.assertEqual(updated_profile["full_gate_commands"][0]["timeout_seconds"], 60)
             self.assertEqual(updated_profile["gate_timeout_seconds"], 90)
 
+    def test_apply_target_repo_governance_accepts_catalog_contract_command_array(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "repo-a"
+            profile_path = target_repo / ".governed-ai" / "repo-profile.json"
+            _write_json(
+                profile_path,
+                {
+                    "repo_id": "repo-a",
+                    "build_commands": [{"id": "build", "command": "python --version", "required": True}],
+                    "test_commands": [{"id": "test", "command": "python --version", "required": True}],
+                    "contract_commands": [{"id": "contract", "command": "python --version", "required": True}],
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-05-01.1",
+                    "target_repo_speed_profile_policy": {
+                        "enabled": True,
+                        "materialize_quick_gate_commands": True,
+                        "materialize_full_gate_commands": True,
+                        "preserve_existing_gate_commands": True,
+                        "refresh_existing_derived_gate_commands": True,
+                        "default_gate_timeout_seconds": 90,
+                        "quick_gate_timeout_seconds": 30,
+                        "full_gate_timeout_seconds": 60,
+                    },
+                    "required_profile_overrides": {"auto_commit_policy": {"enabled": True}},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/apply-target-repo-governance.py",
+                    "--target-repo",
+                    str(target_repo),
+                    "--baseline-path",
+                    str(baseline_path),
+                    "--contract-commands-json",
+                    json.dumps(
+                        [
+                            {
+                                "id": "contract:powershell-policy",
+                                "command": "python .governed-ai/verify-powershell-policy.py",
+                                "required": True,
+                            },
+                            {"id": "contract", "command": "python -m unittest -q", "required": True},
+                        ]
+                    ),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertIn("contract_commands", payload["changed_catalog_fields"])
+            updated_profile = json.loads(profile_path.read_text(encoding="utf-8"))
+            self.assertEqual(
+                [gate["id"] for gate in updated_profile["contract_commands"]],
+                ["contract:powershell-policy", "contract"],
+            )
+            self.assertIn(
+                "contract:powershell-policy",
+                {gate["id"] for gate in updated_profile["quick_gate_commands"]},
+            )
+            self.assertIn(
+                "contract:powershell-policy",
+                {gate["id"] for gate in updated_profile["full_gate_commands"]},
+            )
+
     def test_apply_target_repo_governance_dedupes_identical_test_and_contract_commands(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)
@@ -1047,6 +1126,90 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             self.assertEqual(payload["drift"][0]["reason"], "catalog_gate_fact_drift")
             self.assertIn("build_commands", payload["drift"][0]["mismatched_catalog_fields"])
             self.assertIn("test_commands", payload["drift"][0]["mismatched_catalog_fields"])
+
+    def test_verify_target_repo_governance_consistency_accepts_catalog_contract_command_array(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_root = workspace / "runtime"
+            code_root = workspace / "code"
+            runtime_state_base = repo_root / ".runtime" / "attachments"
+            repo_root.mkdir(parents=True)
+            code_root.mkdir(parents=True)
+
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-05-01.2",
+                    "required_profile_overrides": {
+                        "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                    },
+                },
+            )
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": "${code_root}/repo-a",
+                            "attachment_runtime_state_root": "${runtime_state_base}/repo-a",
+                            "contract_commands": [
+                                {
+                                    "id": "contract:powershell-policy",
+                                    "command": "python .governed-ai/verify-powershell-policy.py",
+                                    "required": True,
+                                },
+                                {"id": "contract", "command": "python -m unittest -q", "required": True},
+                            ],
+                        }
+                    },
+                },
+            )
+            _write_json(
+                code_root / "repo-a" / ".governed-ai" / "repo-profile.json",
+                {
+                    "repo_id": "repo-a",
+                    "contract_commands": [
+                        {
+                            "id": "contract:powershell-policy",
+                            "command": "python .governed-ai/verify-powershell-policy.py",
+                            "required": True,
+                        },
+                        {"id": "contract", "command": "python -m unittest -q", "required": True},
+                    ],
+                    "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/verify-target-repo-governance-consistency.py",
+                    "--catalog-path",
+                    str(catalog_path),
+                    "--baseline-path",
+                    str(baseline_path),
+                    "--repo-root",
+                    str(repo_root),
+                    "--code-root",
+                    str(code_root),
+                    "--runtime-state-base",
+                    str(runtime_state_base),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["status"], "pass")
 
     def test_verify_target_repo_governance_consistency_fails_on_speed_profile_drift(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

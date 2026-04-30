@@ -182,6 +182,38 @@ def _catalog_gate_entry(gate_id: str, command: str) -> dict[str, Any] | None:
     return {"id": gate_id, "command": normalized, "required": True}
 
 
+def _catalog_gate_entries(
+    *,
+    default_gate_id: str,
+    command: str | None = None,
+    commands_json: str | None = None,
+) -> list[dict[str, Any]]:
+    raw_json = str(commands_json or "").strip()
+    if not raw_json:
+        entry = _catalog_gate_entry(default_gate_id, command or "")
+        return [entry] if entry is not None else []
+
+    parsed = json.loads(raw_json)
+    if not isinstance(parsed, list):
+        raise ValueError("--contract-commands-json must be a JSON array")
+
+    entries: list[dict[str, Any]] = []
+    for index, raw_entry in enumerate(parsed):
+        if not isinstance(raw_entry, dict):
+            raise ValueError(f"--contract-commands-json[{index}] must be an object")
+        gate_id = str(raw_entry.get("id") or f"{default_gate_id}:{index + 1}").strip()
+        entry = _catalog_gate_entry(gate_id, str(raw_entry.get("command") or ""))
+        if entry is None:
+            raise ValueError(f"--contract-commands-json[{index}].command must be a non-empty string")
+        merged = copy.deepcopy(raw_entry)
+        merged["id"] = entry["id"]
+        merged["command"] = entry["command"]
+        if "required" not in merged:
+            merged["required"] = True
+        entries.append(merged)
+    return entries
+
+
 def _apply_catalog_profile_facts(
     profile: dict[str, Any],
     *,
@@ -191,6 +223,7 @@ def _apply_catalog_profile_facts(
     build_command: str | None = None,
     test_command: str | None = None,
     contract_command: str | None = None,
+    contract_commands_json: str | None = None,
 ) -> tuple[dict[str, Any], list[str]]:
     updated = copy.deepcopy(profile)
     changed_fields: list[str] = []
@@ -207,7 +240,6 @@ def _apply_catalog_profile_facts(
     for group_name, gate_id, command in (
         ("build_commands", "build", build_command),
         ("test_commands", "test", test_command),
-        ("contract_commands", "contract", contract_command),
     ):
         entry = _catalog_gate_entry(gate_id, command or "")
         if entry is None:
@@ -216,6 +248,15 @@ def _apply_catalog_profile_facts(
         if updated.get(group_name) != expected_group:
             updated[group_name] = expected_group
             changed_fields.append(group_name)
+
+    expected_contract_commands = _catalog_gate_entries(
+        default_gate_id="contract",
+        command=contract_command,
+        commands_json=contract_commands_json,
+    )
+    if expected_contract_commands and updated.get("contract_commands") != expected_contract_commands:
+        updated["contract_commands"] = expected_contract_commands
+        changed_fields.append("contract_commands")
 
     return updated, changed_fields
 
@@ -295,6 +336,7 @@ def main() -> int:
     parser.add_argument("--build-command", help="Catalog build gate command to sync into build_commands.")
     parser.add_argument("--test-command", help="Catalog test gate command to sync into test_commands.")
     parser.add_argument("--contract-command", help="Catalog contract gate command to sync into contract_commands.")
+    parser.add_argument("--contract-commands-json", help="Catalog contract gate command array to sync into contract_commands.")
     parser.add_argument("--quick-test-command", help="Target-specific quick test slice command for fast gates.")
     parser.add_argument("--quick-test-reason", help="Short reason for the quick test slice command.")
     parser.add_argument("--quick-test-timeout-seconds", type=int, help="Timeout override for the quick test slice command.")
@@ -360,6 +402,7 @@ def main() -> int:
         build_command=args.build_command,
         test_command=args.test_command,
         contract_command=args.contract_command,
+        contract_commands_json=args.contract_commands_json,
     )
     updated_profile, changed_fields = _apply_profile_overrides(profile=updated_profile, overrides=overrides)
     if quick_test_slice_source == "none":

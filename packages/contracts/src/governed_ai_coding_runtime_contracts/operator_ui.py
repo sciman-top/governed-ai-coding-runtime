@@ -996,11 +996,6 @@ def _render_codex_panel(text: dict[str, str], *, interactive: bool) -> str:
             "</div>",
             "<div class='codex-grid'>",
             "<div>",
-            f"<div class='status-line' id='codex-login'>{escape(text['codex_login'])}: {escape(text['not_recorded'])}</div>",
-            f"<div class='status-line' id='codex-cache-state'>{escape(text['panel_cache_state'])}: {escape(text['panel_cache_cold'])}</div>",
-            f"<div class='status-line' id='codex-token-note'>{escape(text['codex_subscription_note'])} {escape(text['codex_token_note'])}</div>",
-            f"<p class='meta' id='codex-recommended-note'>{escape(text['codex_recommended_note'])}</p>",
-            "<div id='codex-summary' class='claude-summary-grid'></div>",
             "<div id='codex-accounts' class='codex-list'></div>",
             "</div>",
             "</div>",
@@ -1030,9 +1025,6 @@ def _render_claude_panel(text: dict[str, str], *, interactive: bool) -> str:
             "</div>",
             "<div class='claude-console-grid'>",
             "<div class='claude-side-panel'>",
-            f"<div class='status-line' id='claude-command'>{escape(text['claude_command'])}: {escape(text['not_recorded'])}</div>",
-            f"<div class='status-line' id='claude-cache-state'>{escape(text['panel_cache_state'])}: {escape(text['panel_cache_cold'])}</div>",
-            "<div id='claude-summary' class='claude-summary-grid'></div>",
             "<div id='claude-providers' class='claude-provider-list'></div>",
             "</div>",
             "<div class='claude-side-panel'>",
@@ -1125,13 +1117,7 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   const dryRun = document.getElementById('ui-dry-run');
   const historyList = document.getElementById('ui-history');
   const codexAccounts = document.getElementById('codex-accounts');
-  const codexLogin = document.getElementById('codex-login');
-  const codexCacheState = document.getElementById('codex-cache-state');
-  const codexSummary = document.getElementById('codex-summary');
   const claudeProviders = document.getElementById('claude-providers');
-  const claudeCommand = document.getElementById('claude-command');
-  const claudeCacheState = document.getElementById('claude-cache-state');
-  const claudeSummary = document.getElementById('claude-summary');
   const feedbackStatus = document.getElementById('feedback-status');
   const feedbackCacheState = document.getElementById('feedback-cache-state');
   const feedbackGeneratedAt = document.getElementById('feedback-generated-at');
@@ -1195,9 +1181,7 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   }}
 
   function setPanelCacheState(kind, state, cachedAt) {{
-    const target = kind === 'codex'
-      ? codexCacheState
-      : (kind === 'claude' ? claudeCacheState : feedbackCacheState);
+    const target = kind === 'feedback' ? feedbackCacheState : null;
     if (!target) {{
       return;
     }}
@@ -1427,54 +1411,6 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
       minute: '2-digit',
       hour12: false
     }}).format(date);
-  }}
-
-  function formatLoginSummary(login) {{
-    const summary = String((login && login.summary) || '').trim();
-    if (!summary) {{
-      return currentUiLanguage() === 'zh-CN' ? '未获取到登录状态' : 'login status unavailable';
-    }}
-    const lower = summary.toLowerCase();
-    if (currentUiLanguage() === 'zh-CN') {{
-      if (lower.includes('logged in using chatgpt')) {{
-        return '已登录，可使用 ChatGPT 认证';
-      }}
-      if (lower.includes('not logged in')) {{
-        return '未登录';
-      }}
-    }}
-    return summary;
-  }}
-
-  function formatCodexAuthPointer(auth) {{
-    const activeProfile = auth && auth.active_profile ? auth.active_profile : null;
-    if (!activeProfile) {{
-      return '';
-    }}
-    const profileName = String(activeProfile.name || activeProfile.file || '').trim();
-    const label = String(activeProfile.account_label || activeProfile.email || activeProfile.display_name || '').trim();
-    if (currentUiLanguage() === 'zh-CN') {{
-      if (profileName && label) {{
-        return `本机 auth.json -> ${{profileName}} (${{label}})`;
-      }}
-      if (profileName) {{
-        return `本机 auth.json -> ${{profileName}}`;
-      }}
-      if (label) {{
-        return `本机 auth.json -> ${{label}}`;
-      }}
-      return '本机 auth.json 已加载';
-    }}
-    if (profileName && label) {{
-      return `local auth.json -> ${{profileName}} (${{label}})`;
-    }}
-    if (profileName) {{
-      return `local auth.json -> ${{profileName}}`;
-    }}
-    if (label) {{
-      return `local auth.json -> ${{label}}`;
-    }}
-    return 'local auth.json loaded';
   }}
 
   function currentUiLanguage() {{
@@ -1875,51 +1811,6 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     ].filter(Boolean).join(' · ');
   }}
 
-  function renderClaudeSummary(payload) {{
-    if (!claudeSummary) {{
-      return;
-    }}
-    claudeSummary.innerHTML = '';
-    const provider = payload && payload.active_provider ? payload.active_provider : null;
-    const settings = payload && payload.settings ? payload.settings : {{}};
-    const env = settings.env && Array.isArray(settings.env) ? settings.env : [];
-    const subagent = env.find((item) => item && item.name === 'CLAUDE_CODE_SUBAGENT_MODEL');
-    const cards = [
-      {{
-        label: {text['claude_active_provider']!r},
-        value: provider ? (provider.label || provider.name || {text['claude_no_active_provider']!r}) : {text['claude_no_active_provider']!r},
-        detail: provider ? summarizeClaudeContext(provider) : ''
-      }},
-      {{
-        label: {text['claude_active_summary']!r},
-        value: provider ? summarizeClaudeModels(provider) : (currentUiLanguage() === 'zh-CN' ? '未记录' : 'not recorded'),
-        detail: provider && provider.base_url ? provider.base_url : ''
-      }},
-      {{
-        label: {text['claude_subagent']!r},
-        value: subagent && subagent.value ? String(subagent.value) : (currentUiLanguage() === 'zh-CN' ? '未设置' : 'not set'),
-        detail: provider ? summarizeClaudeTimeout(provider) : ''
-      }},
-      {{
-        label: {text['claude_note']!r},
-        value: provider && provider.note ? provider.note : (currentUiLanguage() === 'zh-CN' ? '暂无建议' : 'no recommendation'),
-        detail: ''
-      }},
-    ];
-    cards.forEach((card) => {{
-      const section = document.createElement('section');
-      section.className = 'claude-summary-card';
-      section.appendChild(createInfoLine(card.label, card.value));
-      if (card.detail) {{
-        const meta = document.createElement('p');
-        meta.className = 'meta';
-        meta.textContent = card.detail;
-        section.appendChild(meta);
-      }}
-      claudeSummary.appendChild(section);
-    }});
-  }}
-
   function configCheckLabel(key) {{
     const labels = currentUiLanguage() === 'zh-CN'
       ? {{
@@ -1972,78 +1863,8 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     return prefix + issues.join('、');
   }}
 
-  function renderCodexSummary(payload) {{
-    if (!codexSummary) {{
-      return;
-    }}
-    const defaults = payload && payload.recommended_defaults && typeof payload.recommended_defaults === 'object'
-      ? payload.recommended_defaults
-      : null;
-    const config = payload && payload.config && typeof payload.config === 'object'
-      ? payload.config
-      : null;
-    codexSummary.innerHTML = '';
-    if (!defaults) {{
-      return;
-    }}
-    const principles = Array.isArray(defaults.strategy_principles)
-      ? defaults.strategy_principles.map((item) => String(item || '').trim()).filter(Boolean)
-      : [];
-    const cards = [
-      {{
-        label: {text['codex_recommended']!r},
-        value: String(defaults.strategy_label || defaults.strategy || 'efficiency_first'),
-        detail: principles.length
-          ? principles.join(currentUiLanguage() === 'zh-CN' ? ' / ' : ' / ')
-          : (currentUiLanguage() === 'zh-CN'
-              ? '少打扰 / 自动连续执行 / 节省 token / 成本 / 高效率'
-              : 'low interruption / continuous execution / lower token and cost burn / high throughput')
-      }},
-      {{
-        label: {text['codex_current_choice']!r},
-        value: String(defaults.current_combo || 'gpt-5.4 + medium + never'),
-        detail: [
-          currentUiLanguage() === 'zh-CN'
-            ? '当前暂行实现'
-            : 'current temporary choice',
-          formatConfigHealth(config)
-        ].filter(Boolean).join(' · ')
-      }},
-      {{
-        label: {text['codex_compact_policy']!r},
-        value: String(defaults.compact_policy || '220000 on a 272000 window'),
-        detail: defaults.compact_ratio
-          ? (currentUiLanguage() === 'zh-CN'
-              ? `约占上下文窗口 ${{defaults.compact_ratio}}，优先压缩旧对话而不是吃满窗口。`
-              : `About ${{defaults.compact_ratio}} of the context window, compacting before the window gets crowded.`)
-          : ''
-      }},
-      {{
-        label: {text['codex_manual_upgrade']!r},
-        value: currentUiLanguage() === 'zh-CN' ? '必要时手动升档' : 'manual escalation when needed',
-        detail: [
-          defaults.manual_upgrade ? String(defaults.manual_upgrade) : '',
-          defaults.change_rule ? String(defaults.change_rule) : ''
-        ].filter(Boolean).join(' ')
-      }},
-    ];
-    cards.forEach((card) => {{
-      const section = document.createElement('section');
-      section.className = 'claude-summary-card';
-      section.appendChild(createInfoLine(card.label, card.value));
-      if (card.detail) {{
-        const meta = document.createElement('p');
-        meta.className = 'meta';
-        meta.textContent = card.detail;
-        section.appendChild(meta);
-      }}
-      codexSummary.appendChild(section);
-    }});
-  }}
-
   function renderCodexStatus(payload) {{
     const accounts = Array.isArray(payload.accounts) ? payload.accounts : [];
-    renderCodexSummary(payload);
     codexAccounts.innerHTML = '';
     accounts.forEach((account) => {{
       const label = codexAccountLabel(account);
@@ -2133,12 +1954,6 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
       codexAccounts.innerHTML = `<p class="meta">{text['not_recorded']}</p>`;
     }}
 
-    const login = payload.login_status || {{}};
-    const authPointer = formatCodexAuthPointer(payload.auth || {{}});
-    const loginSummary = formatLoginSummary(login) || login.exit_code || 'unknown';
-    codexLogin.textContent = authPointer
-      ? `${text['codex_login']}: ${{loginSummary}} · ${{authPointer}}`
-      : `${text['codex_login']}: ${{loginSummary}}`;
   }}
 
   async function refreshCodexStatus() {{
@@ -2217,7 +2032,6 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
 
   function renderClaudeStatus(payload) {{
     lastClaudePayload = payload;
-    renderClaudeSummary(payload);
     const providers = Array.isArray(payload.providers) ? payload.providers : [];
     claudeProviders.innerHTML = '';
     const settings = payload.settings || {{}};
@@ -2329,8 +2143,6 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
       claudeProviders.innerHTML = `<p class="meta">{text['not_recorded']}</p>`;
     }}
 
-    const command = payload.command || {{}};
-    claudeCommand.textContent = `{text['claude_command']}: ${{formatLoginSummary(command) || command.exit_code || 'unknown'}}`;
   }}
 
   async function refreshClaudeStatus() {{

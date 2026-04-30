@@ -283,6 +283,7 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
 
             fake_runtime_flow_path = workspace / "fake-runtime-flow.ps1"
             _write_fake_runtime_flow_script(fake_runtime_flow_path)
+            runs_root = workspace / "target-repo-runs"
 
             completed = subprocess.run(
                 [
@@ -305,6 +306,9 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                     "run-test",
                     "-CommandId",
                     "cmd-test",
+                    "-ExportTargetRepoRuns",
+                    "-PruneRunsRoot",
+                    str(runs_root),
                     "-CatalogPath",
                     str(catalog_path),
                     "-GovernanceBaselinePath",
@@ -322,6 +326,7 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             self.assertEqual(payload["all_targets"], True)
             self.assertEqual(payload["failure_count"], 0)
             self.assertEqual(payload["target_count"], 2)
+            self.assertEqual(len(payload["exported_target_repo_runs"]), 2)
             self.assertEqual(payload["outer_ai_recommendation_action"], "none")
             self.assertEqual(payload["outer_ai_recommendation_tasks"], [])
             sources = {result["target"]: result["governance_sync_quick_test_slice_source"] for result in payload["results"]}
@@ -334,6 +339,7 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                 profile = json.loads((repo / ".governed-ai" / "repo-profile.json").read_text(encoding="utf-8"))
                 self.assertEqual(profile["required_entrypoint_policy"]["current_mode"], "targeted_enforced")
                 self.assertEqual(profile["auto_commit_policy"]["enabled"], True)
+            self.assertEqual(len(list(runs_root.glob("*-onboard-*.json"))), 2)
 
     def test_runtime_flow_preset_single_target_json_keeps_runtime_payload_when_sync_skipped(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -366,6 +372,14 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                             "quick_test_command": "python -m unittest tests.test_fast",
                             "quick_test_reason": "Focused fast regression slice.",
                             "contract_command": "python --version",
+                            "contract_commands": [
+                                {
+                                    "id": "contract:powershell-policy",
+                                    "command": "python .governed-ai/verify-powershell-policy.py",
+                                    "required": True,
+                                },
+                                {"id": "contract", "command": "python --version", "required": True},
+                            ],
                         }
                     },
                 },
@@ -433,6 +447,14 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                             "quick_test_command": "python -m unittest tests.test_fast",
                             "quick_test_reason": "Focused fast regression slice.",
                             "contract_command": "python --version",
+                            "contract_commands": [
+                                {
+                                    "id": "contract:powershell-policy",
+                                    "command": "python .governed-ai/verify-powershell-policy.py",
+                                    "required": True,
+                                },
+                                {"id": "contract", "command": "python --version", "required": True},
+                            ],
                         }
                     },
                 },
@@ -481,6 +503,10 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             profile = json.loads((repo_a / ".governed-ai" / "repo-profile.json").read_text(encoding="utf-8"))
             self.assertEqual(profile["required_entrypoint_policy"]["current_mode"], "targeted_enforced")
             self.assertEqual(profile["auto_commit_policy"]["enabled"], True)
+            self.assertEqual(
+                [gate["id"] for gate in profile["contract_commands"]],
+                ["contract:powershell-policy", "contract"],
+            )
 
     def test_runtime_flow_preset_apply_coding_speed_profile_alias_uses_baseline_sync(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

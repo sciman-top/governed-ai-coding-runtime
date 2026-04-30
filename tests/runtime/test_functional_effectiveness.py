@@ -57,6 +57,25 @@ class FunctionalEffectivenessTests(unittest.TestCase):
                     as_of=dt.date(2026, 4, 27),
                 )
 
+    def test_functional_effectiveness_rejects_missing_claude_parity_evidence(self) -> None:
+        module = _load_functional_effectiveness_script()
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            evidence_path = self._write_complete_evidence(repo_root)
+            text = evidence_path.read_text(encoding="utf-8").replace(
+                "claude-code-native-attach-tier-parity.md",
+                "missing-claude-parity.md",
+            )
+            evidence_path.write_text(text, encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "trial_and_adapter_surfaces"):
+                module.assert_functional_effectiveness(
+                    repo_root=repo_root,
+                    evidence_path=evidence_path,
+                    as_of=dt.date(2026, 4, 27),
+                )
+
     def test_functional_effectiveness_rejects_stale_evidence(self) -> None:
         module = _load_functional_effectiveness_script()
 
@@ -122,7 +141,9 @@ class FunctionalEffectivenessTests(unittest.TestCase):
 - Temporary target attach/write smoke -> pass; wrote `docs/write-smoke.txt` and produced `live_closure_ready`.
 - `python scripts/run-readonly-trial.py` -> pass.
 - `python scripts/run-codex-adapter-trial.py` -> pass.
+- `python scripts/run-claude-code-adapter-trial.py` -> pass.
 - `python scripts/run-multi-repo-trial.py` -> pass; 2 repo profiles, 0 gate failures.
+- `docs/change-evidence/20260427-claude-code-native-attach-tier-parity.md` -> referenced as the Claude parity evidence anchor.
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/package-runtime.ps1` -> pass; provenance verification status `verified`.
 - `python scripts/serve-operator-ui.py` -> pass.
 - `python scripts/sync-agent-rules.py --scope All --fail-on-change` -> pass.

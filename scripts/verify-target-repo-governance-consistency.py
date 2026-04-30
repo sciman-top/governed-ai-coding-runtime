@@ -7,6 +7,7 @@ from typing import Any
 
 from lib.target_repo_speed_profile import (
     apply_speed_profile_policy,
+    as_command_list,
     normalize_command_text,
     normalize_speed_profile_policy,
     normalize_target_config_test_slice,
@@ -64,6 +65,30 @@ def _target_quick_test_skip_reason(target_config: dict[str, Any]) -> str:
     return str(target_config.get("quick_test_skip_reason") or "").strip()
 
 
+def _catalog_command_entries(target_config: dict[str, Any], group_name: str, command_name: str) -> list[dict[str, Any]]:
+    raw_entries = target_config.get(group_name)
+    if isinstance(raw_entries, list):
+        entries: list[dict[str, Any]] = []
+        for item in raw_entries:
+            if not isinstance(item, dict):
+                continue
+            command = normalize_command_text(item.get("command"))
+            if not command:
+                continue
+            entries.append(
+                {
+                    "id": str(item.get("id") or "").strip(),
+                    "command": command,
+                }
+            )
+        return entries
+
+    command = normalize_command_text(target_config.get(command_name))
+    if not command:
+        return []
+    return [{"id": "", "command": command}]
+
+
 def _catalog_gate_fact_drift(profile: dict[str, Any], target_config: dict[str, Any]) -> list[str]:
     drift: list[str] = []
     for field_name, catalog_name in (
@@ -75,17 +100,32 @@ def _catalog_gate_fact_drift(profile: dict[str, Any], target_config: dict[str, A
         if expected and profile.get(field_name) != expected:
             drift.append(field_name)
 
-    for group_name, catalog_name in (
-        ("build_commands", "build_command"),
-        ("test_commands", "test_command"),
-        ("contract_commands", "contract_command"),
+    for group_name, catalog_group_name, catalog_name in (
+        ("build_commands", "build_commands", "build_command"),
+        ("test_commands", "test_commands", "test_command"),
+        ("contract_commands", "contract_commands", "contract_command"),
     ):
-        expected_command = normalize_command_text(target_config.get(catalog_name))
-        if not expected_command:
+        expected_entries = _catalog_command_entries(target_config, catalog_group_name, catalog_name)
+        if not expected_entries:
             continue
-        actual = select_preferred_command(profile, group_name)
-        actual_command = normalize_command_text(actual.get("command") if actual else "")
-        if actual_command != expected_command:
+        actual_entries = as_command_list(profile.get(group_name))
+        actual_by_id = {str(item.get("id") or "").strip(): normalize_command_text(item.get("command")) for item in actual_entries}
+        actual_commands = {normalize_command_text(item.get("command")) for item in actual_entries}
+        has_drift = False
+        for expected in expected_entries:
+            expected_id = expected["id"]
+            expected_command = expected["command"]
+            if expected_id:
+                if actual_by_id.get(expected_id) != expected_command:
+                    has_drift = True
+                    break
+            elif expected_command not in actual_commands:
+                actual = select_preferred_command(profile, group_name)
+                actual_command = normalize_command_text(actual.get("command") if actual else "")
+                if actual_command != expected_command:
+                    has_drift = True
+                    break
+        if has_drift:
             drift.append(group_name)
 
     return drift

@@ -24,7 +24,7 @@ Make adapter compatibility posture explicit, especially when upstream capability
 
 ## Current Public Usable Release Posture
 - Codex and Claude Code are dual first-class entrypoints in governance result.
-- Current live probe evidence classifies both Codex and Claude Code as `native_attach` / supported.
+- Current live probe posture is host-dependent and must be re-probed; do not classify Codex as `native_attach` from resume/help surface alone when no status handshake exists.
 - Claude Code `native_attach` is evidence-backed by session/resume identity, `stream-json` output, hook-event visibility, and managed settings/hooks; it is not a claim that Claude Code exposes the same host API as Codex.
 - Structured upstream event visibility remains host-specific and must be re-probed after host upgrades.
 - The local runtime compensates with artifact-backed status, verification, evidence, and replay outputs.

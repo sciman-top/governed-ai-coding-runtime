@@ -1,0 +1,155 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - heading "Governed Runtime 操作者面板" [level=1] [ref=e4]
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - text: "Runtime 根目录:"
+        - code [ref=e7]: D:/CODE/governed-ai-coding-runtime/.runtime
+      - generic [ref=e8]:
+        - text: "持久化:"
+        - code [ref=e9]: filesystem
+  - generic [ref=e10]:
+    - complementary [ref=e11]:
+      - generic [ref=e12]:
+        - heading "操作" [level=2] [ref=e13]
+        - generic [ref=e14]:
+          - button "刷新状态" [ref=e15] [cursor=pointer]
+          - button "列出目标仓" [ref=e16] [cursor=pointer]
+          - button "本仓 Readiness" [ref=e17] [cursor=pointer]
+          - button "规则漂移检查" [ref=e18] [cursor=pointer]
+          - button "同步规则文件" [ref=e19] [cursor=pointer]
+          - button "下发治理基线" [ref=e20] [cursor=pointer]
+          - button "运行 Daily" [ref=e21] [cursor=pointer]
+          - button "全部功能应用" [ref=e22] [cursor=pointer]
+          - button "功能反馈汇总" [ref=e23] [cursor=pointer]
+      - generic [ref=e24]:
+        - heading "设置" [level=2] [ref=e25]
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - text: 语言
+            - combobox "语言" [ref=e28]:
+              - option "中文" [selected]
+              - option "English"
+          - generic [ref=e29]:
+            - text: 目标仓
+            - combobox "目标仓" [ref=e30]:
+              - option "全部目标仓" [selected]
+              - option "classroomtoolkit"
+              - option "github-toolkit"
+              - option "self-runtime"
+              - option "skills-manager"
+              - option "vps-ssh-launcher"
+          - generic [ref=e31]:
+            - text: 验证模式
+            - combobox "验证模式" [ref=e32]:
+              - option "quick" [selected]
+              - option "full"
+              - option "l1"
+              - option "l2"
+              - option "l3"
+          - generic [ref=e33]:
+            - text: 目标并发
+            - spinbutton "目标并发" [ref=e34]: "1"
+          - generic [ref=e35]:
+            - text: 里程碑标签
+            - textbox "里程碑标签" [ref=e36]: milestone
+          - generic [ref=e37]:
+            - checkbox "失败即停" [ref=e38]
+            - text: 失败即停
+          - generic [ref=e39]:
+            - checkbox "只预演" [ref=e40]
+            - text: 只预演
+    - generic [ref=e41]:
+      - tablist "Operator view" [ref=e42]:
+        - tab "Runtime" [ref=e43] [cursor=pointer]
+        - tab "Codex" [ref=e44] [cursor=pointer]
+        - tab "Claude" [active] [selected] [ref=e45] [cursor=pointer]
+        - tab "反馈" [ref=e46] [cursor=pointer]
+      - generic [ref=e338]:
+        - heading "Claude Provider 与配置" [level=2] [ref=e339]
+        - generic [ref=e340]:
+          - button "刷新 Claude 状态" [ref=e341] [cursor=pointer]
+          - button "预演推荐配置" [ref=e342] [cursor=pointer]
+          - button "应用推荐配置" [ref=e343] [cursor=pointer]
+        - generic [ref=e344]:
+          - generic [ref=e345]:
+            - generic [ref=e346]: "CLI 状态: 2.1.114 (Claude Code)"
+            - generic [ref=e347]: "数据状态: 已刷新 · 00:24:28"
+            - generic [ref=e348]:
+              - generic [ref=e349]:
+                - generic [ref=e350]:
+                  - generic [ref=e351]: 当前 Provider
+                  - generic [ref=e352]: 智谱 GLM
+                - paragraph [ref=e353]: 窗口 100000 · 触发 70%
+              - generic [ref=e354]:
+                - generic [ref=e355]:
+                  - generic [ref=e356]: 当前映射
+                  - generic [ref=e357]: Opus glm-5.1 · Sonnet glm-5-turbo · Haiku glm-4.5-air
+                - paragraph [ref=e358]: https://open.bigmodel.cn/api/anthropic
+              - generic [ref=e359]:
+                - generic [ref=e360]:
+                  - generic [ref=e361]: 子代理
+                  - generic [ref=e362]: glm-4.5-air
+                - paragraph [ref=e363]: 50 分钟
+              - generic [ref=e365]:
+                - generic [ref=e366]: 建议
+                - generic [ref=e367]: "Recommended GLM profile for this machine: keep effective coding context around 80k-120k and compact early instead of pushing the full 200k window."
+            - generic [ref=e368]:
+              - generic [ref=e369]:
+                - generic [ref=e370]:
+                  - strong [ref=e371]: 智谱 GLM
+                  - generic [ref=e372]: 凭据已就绪
+                  - generic [ref=e373]:
+                    - generic [ref=e374]:
+                      - generic [ref=e375]: 服务地址
+                      - generic [ref=e376]: https://open.bigmodel.cn/api/anthropic
+                    - generic [ref=e377]:
+                      - generic [ref=e378]: 模型
+                      - generic [ref=e379]: Opus glm-5.1 · Sonnet glm-5-turbo
+                    - generic [ref=e380]:
+                      - generic [ref=e381]: 凭据
+                      - generic [ref=e382]: 凭据已就绪
+                    - generic [ref=e383]:
+                      - generic [ref=e384]: 本机设置
+                      - generic [ref=e385]: 默认模型 opus · 权限模式 dontAsk · 清理周期 60 天
+                    - generic [ref=e386]:
+                      - generic [ref=e387]: 上下文策略
+                      - generic [ref=e388]: 窗口 100000 · 触发 70%
+                    - generic [ref=e389]:
+                      - generic [ref=e390]: 超时
+                      - generic [ref=e391]: 50 分钟
+                    - generic [ref=e392]:
+                      - generic [ref=e393]: 子代理
+                      - generic [ref=e394]: glm-4.5-air
+                    - generic [ref=e395]:
+                      - generic [ref=e396]: 配置健康
+                      - generic [ref=e397]: 已符合推荐值
+                    - generic [ref=e398]:
+                      - generic [ref=e399]: 扩展能力
+                      - generic [ref=e400]: 已连接 8 个 检查中 1 个 context7、microsoft-learn、zai-mcp-server、web-search-prime 等 8 个
+                    - generic [ref=e401]:
+                      - generic [ref=e402]: 额度说明
+                      - generic [ref=e403]: Third-party provider usage and quota data is not exposed through a stable Claude Code local API.
+                - button "当前" [disabled] [ref=e405]
+              - generic [ref=e406]:
+                - generic [ref=e407]:
+                  - strong [ref=e408]: DeepSeek v4
+                  - generic [ref=e409]: 缺少凭据 ANTHROPIC_API_KEY
+                  - generic [ref=e410]:
+                    - generic [ref=e411]:
+                      - generic [ref=e412]: 服务地址
+                      - generic [ref=e413]: https://api.deepseek.com/anthropic
+                    - generic [ref=e414]:
+                      - generic [ref=e415]: 模型
+                      - generic [ref=e416]: Opus deepseek-v4-pro[1m] · Sonnet deepseek-v4-pro[1m]
+                    - generic [ref=e417]:
+                      - generic [ref=e418]: 凭据
+                      - generic [ref=e419]: 缺少凭据 ANTHROPIC_API_KEY
+                - button "切换" [ref=e421] [cursor=pointer]
+          - generic [ref=e423]:
+            - heading "本机入口" [level=3] [ref=e424]
+            - paragraph [ref=e425]: 只开放本机 Claude 配置相关文件预览，不开放任意系统路径读取。
+            - generic [ref=e426]:
+              - button "查看 settings.json" [ref=e427] [cursor=pointer]
+              - button "查看 provider-profiles.json" [ref=e428] [cursor=pointer]
+              - button "查看切换脚本" [ref=e429] [cursor=pointer]

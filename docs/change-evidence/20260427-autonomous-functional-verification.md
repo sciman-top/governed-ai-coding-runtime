@@ -28,6 +28,7 @@
 - Temporary target attach/write smoke -> pass; `runtime-flow.ps1` created `.governed-ai` light pack, ran quick gates, executed low-tier write to `docs/write-smoke.txt`, and produced `live_closure_ready`.
 - `python scripts/run-readonly-trial.py --goal "inspect repository" --scope "readonly trial" --acceptance "readonly request accepted" --repo-profile "schemas/examples/repo-profile/python-service.example.json" --target-path "src/service.py" --max-steps 1 --max-minutes 5` -> pass.
 - `python scripts/run-codex-adapter-trial.py --repo-id "python-service" --task-id "task-codex-trial" --binding-id "binding-python-service"` -> pass.
+- `python scripts/run-claude-code-adapter-trial.py --repo-id governed-ai-coding-runtime --task-id task-gap-native-claude --binding-id binding-self-runtime --probe-live --probe-cwd D:\CODE\governed-ai-coding-runtime` -> pass; Claude parity evidence is recorded in `docs/change-evidence/20260427-claude-code-native-attach-tier-parity.md`.
 - `python scripts/run-multi-repo-trial.py` -> pass; 2 repo profiles, 0 gate failures.
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/package-runtime.ps1` -> pass; provenance verification status `verified`.
 - `python scripts/serve-operator-ui.py` -> pass; wrote `.runtime/artifacts/operator-ui/index.html`.

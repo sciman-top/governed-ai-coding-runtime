@@ -59,6 +59,7 @@ param(
   [string]$GovernanceFullCheckPath = "",
   [string]$GovernanceFastCheckPath = "",
   [switch]$PruneTargetRepoRuns,
+  [switch]$ExportTargetRepoRuns,
   [string]$PruneRunsRoot = "",
   [int]$PruneKeepDays = 30,
   [int]$PruneKeepLatestPerTarget = 30,
@@ -670,6 +671,53 @@ function Convert-PruneResultForJson {
   }
 }
 
+function Export-TargetRunEvidence {
+  param(
+    [Parameter(Mandatory = $true)]
+    [object[]]$TargetRuns,
+    [Parameter(Mandatory = $true)]
+    [string]$RunsRoot,
+    [Parameter(Mandatory = $true)]
+    [string]$FlowModeValue
+  )
+
+  $exported = @()
+  if (@($TargetRuns).Count -eq 0) {
+    return $exported
+  }
+
+  $stamp = Get-Date -Format "yyyyMMddHHmmss"
+  New-Item -ItemType Directory -Force -Path $RunsRoot | Out-Null
+  foreach ($targetRun in $TargetRuns) {
+    if ($null -eq $targetRun.flow_payload) {
+      continue
+    }
+    $targetName = [string]$targetRun.target
+    if ([string]::IsNullOrWhiteSpace($targetName)) {
+      continue
+    }
+
+    $payload = [ordered]@{}
+    foreach ($property in $targetRun.flow_payload.PSObject.Properties) {
+      $payload[$property.Name] = $property.Value
+    }
+    $payload["exported_at"] = (Get-Date).ToString("o")
+    $payload["export_source"] = "runtime-flow-preset"
+    $payload["export_target"] = $targetName
+
+    $fileName = "{0}-{1}-{2}.json" -f $targetName, $FlowModeValue, $stamp
+    $path = Join-Path $RunsRoot $fileName
+    ($payload | ConvertTo-Json -Depth 80) | Set-Content -LiteralPath $path -Encoding UTF8
+    $exported += [ordered]@{
+      target = $targetName
+      path = $path
+      file_name = $fileName
+      status = $(if ($targetRun.exit_code -eq 0) { "pass" } else { "fail" })
+    }
+  }
+  return $exported
+}
+
 function Load-TargetConfigMap {
   param(
     [Parameter(Mandatory = $true)]
@@ -699,7 +747,8 @@ function Load-TargetConfigMap {
       PrimaryLanguage = [string]$rawConfig.primary_language
       BuildCommand = [string]$rawConfig.build_command
       TestCommand = [string]$rawConfig.test_command
-      ContractCommand = [string]$rawConfig.contract_command
+      ContractCommand = Get-OptionalStringProperty -Object $rawConfig -Name "contract_command"
+      ContractCommandsJson = $(if (($rawConfig.PSObject.Properties.Name -contains "contract_commands") -and $null -ne $rawConfig.contract_commands) { ConvertTo-Json -InputObject $rawConfig.contract_commands -Compress -Depth 20 } else { "" })
       QuickTestCommand = Get-OptionalStringProperty -Object $rawConfig -Name "quick_test_command"
       QuickTestReason = Get-OptionalStringProperty -Object $rawConfig -Name "quick_test_reason"
       QuickTestTimeoutSeconds = Get-OptionalIntProperty -Object $rawConfig -Name "quick_test_timeout_seconds"
@@ -766,9 +815,11 @@ function Invoke-GovernanceBaselineSync {
     if (-not [string]::IsNullOrWhiteSpace($TargetConfig.ContractCommand)) {
       $attachArgs += @("--contract-command", $TargetConfig.ContractCommand)
     }
+    $hasContractGate = (-not [string]::IsNullOrWhiteSpace($TargetConfig.ContractCommand)) -or
+      (-not [string]::IsNullOrWhiteSpace($TargetConfig.ContractCommandsJson))
     if ([string]::IsNullOrWhiteSpace($TargetConfig.BuildCommand) -or
         [string]::IsNullOrWhiteSpace($TargetConfig.TestCommand) -or
-        [string]::IsNullOrWhiteSpace($TargetConfig.ContractCommand)) {
+        (-not $hasContractGate)) {
       $attachArgs += "--infer-gate-defaults"
     }
 
@@ -828,7 +879,10 @@ function Invoke-GovernanceBaselineSync {
   if (-not [string]::IsNullOrWhiteSpace($TargetConfig.TestCommand)) {
     $args += @("--test-command", $TargetConfig.TestCommand)
   }
-  if (-not [string]::IsNullOrWhiteSpace($TargetConfig.ContractCommand)) {
+  if (-not [string]::IsNullOrWhiteSpace($TargetConfig.ContractCommandsJson)) {
+    $args += @("--contract-commands-json", $TargetConfig.ContractCommandsJson)
+  }
+  elseif (-not [string]::IsNullOrWhiteSpace($TargetConfig.ContractCommand)) {
     $args += @("--contract-command", $TargetConfig.ContractCommand)
   }
   if (-not [string]::IsNullOrWhiteSpace($TargetConfig.QuickTestCommand)) {
@@ -2059,6 +2113,13 @@ foreach ($targetName in $selectedTargets) {
 }
 
 $failureCount = @($targetRuns | Where-Object { $_.exit_code -ne 0 }).Count
+$exportedTargetRepoRuns = @()
+if ($ExportTargetRepoRuns) {
+  $exportedTargetRepoRuns = Export-TargetRunEvidence `
+    -TargetRuns $targetRuns `
+    -RunsRoot $pruneRunsRootResolved `
+    -FlowModeValue $FlowMode
+}
 $pruneResult = [pscustomobject]@{
   status    = "skipped"
   reason    = "not_requested"
@@ -2306,6 +2367,7 @@ if ($Json) {
       batch_elapsed_seconds           = if ($BatchTimeoutSeconds -gt 0) { [int][Math]::Floor(((Get-Date) - $batchStartedAt).TotalSeconds) } else { 0 }
       target_count                    = @($targetRuns).Count
       failure_count                   = $failureCount
+      exported_target_repo_runs       = $exportedTargetRepoRuns
       outer_ai_recommendation_action  = if (@($outerAiRecommendationTasks).Count -gt 0) { "read_prompt_and_write_recommendation" } else { "none" }
       outer_ai_recommendation_tasks   = $outerAiRecommendationTasks
       results                         = $results

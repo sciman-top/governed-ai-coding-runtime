@@ -67,8 +67,10 @@ PROOF_CHECKS = (
         (
             "run-readonly-trial.py",
             "run-codex-adapter-trial.py",
+            "run-claude-code-adapter-trial.py",
             "run-multi-repo-trial.py",
             "2 repo profiles, 0 gate failures",
+            "claude-code-native-attach-tier-parity.md",
         ),
     ),
     ProofCheck(

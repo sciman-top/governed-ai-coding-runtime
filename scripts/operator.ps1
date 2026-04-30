@@ -216,7 +216,7 @@ function Invoke-GovernanceBaselineAll {
 }
 
 function Invoke-DailyAll {
-  $arguments = Get-BatchFlowArguments -BaseArguments @("-FlowMode", "daily", "-Mode", $Mode, "-Json")
+  $arguments = Get-BatchFlowArguments -BaseArguments @("-FlowMode", "daily", "-Mode", $Mode, "-Json", "-ExportTargetRepoRuns")
   Invoke-PwshScript -Name "daily-all-targets" -ScriptPath "scripts/runtime-flow-preset.ps1" -ScriptArguments $arguments
   Invoke-OperatorUi
 }
