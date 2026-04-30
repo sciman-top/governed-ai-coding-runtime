@@ -37,7 +37,7 @@ class HostFeedbackSummaryTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         payload = json.loads(completed.stdout)
         self.assertIn(payload["status"], {"pass", "attention", "fail"})
-        self.assertEqual(5, len(payload["dimensions"]))
+        self.assertEqual(6, len(payload["dimensions"]))
 
     def test_assert_minimum_passes_for_complete_temp_repo(self) -> None:
         module = _load_host_feedback_summary_script()
@@ -49,6 +49,7 @@ class HostFeedbackSummaryTests(unittest.TestCase):
             with (
                 mock.patch.object(module, "codex_status", return_value={"login_status": {"exit_code": 0}, "config": {"status": "ok"}}),
                 mock.patch.object(module, "claude_status", return_value={"active_provider": {"name": "glm"}, "config": {"status": "ok"}, "command": {"exit_code": 0}, "mcp": {"exit_code": 0}}),
+                mock.patch.object(module, "probe_claude_code_surface", return_value=self._claude_probe(module)),
             ):
                 payload = module.build_host_feedback_summary(repo_root=repo_root)
                 failures = module.validate_minimum_feedback_surface(payload)
@@ -66,6 +67,7 @@ class HostFeedbackSummaryTests(unittest.TestCase):
             with (
                 mock.patch.object(module, "codex_status", return_value={"login_status": {"exit_code": 0}, "config": {"status": "ok"}}),
                 mock.patch.object(module, "claude_status", return_value={"active_provider": {"name": "glm"}, "config": {"status": "ok"}, "command": {"exit_code": 0}, "mcp": {"exit_code": 0}}),
+                mock.patch.object(module, "probe_claude_code_surface", return_value=self._claude_probe(module)),
             ):
                 payload = module.build_host_feedback_summary(repo_root=repo_root)
                 failures = module.validate_minimum_feedback_surface(payload)
@@ -82,6 +84,7 @@ class HostFeedbackSummaryTests(unittest.TestCase):
             with (
                 mock.patch.object(module, "codex_status", return_value={"login_status": {"exit_code": 0}, "config": {"status": "attention"}}),
                 mock.patch.object(module, "claude_status", return_value={"active_provider": {"name": "glm"}, "config": {"status": "ok"}, "command": {"exit_code": 0}, "mcp": {"exit_code": 0}}),
+                mock.patch.object(module, "probe_claude_code_surface", return_value=self._claude_probe(module)),
             ):
                 payload = module.build_host_feedback_summary(repo_root=repo_root)
 
@@ -110,6 +113,7 @@ class HostFeedbackSummaryTests(unittest.TestCase):
             with (
                 mock.patch.object(module, "codex_status", return_value={"login_status": {"exit_code": 0}, "config": {"status": "ok"}}),
                 mock.patch.object(module, "claude_status", return_value={"active_provider": {"name": "glm"}, "config": {"status": "ok"}, "command": {"exit_code": 0}, "mcp": {"exit_code": 0}}),
+                mock.patch.object(module, "probe_claude_code_surface", return_value=self._claude_probe(module)),
             ):
                 payload = module.build_host_feedback_summary(repo_root=repo_root)
 
@@ -117,6 +121,27 @@ class HostFeedbackSummaryTests(unittest.TestCase):
         demo_run = next(item for item in target_runs["details"]["latest_runs"] if item["repo_id"] == "demo")
         self.assertEqual("demo-daily-20260430110000.json", demo_run["file_name"])
         self.assertEqual("daily", demo_run["run_kind"])
+
+    def test_claude_workload_dimension_surfaces_degraded_probe(self) -> None:
+        module = _load_host_feedback_summary_script()
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            self._write_minimal_repo(repo_root)
+
+            with (
+                mock.patch.object(module, "codex_status", return_value={"login_status": {"exit_code": 0}, "config": {"status": "ok"}}),
+                mock.patch.object(module, "claude_status", return_value={"active_provider": {"name": "glm"}, "config": {"status": "ok"}, "command": {"exit_code": 0}, "mcp": {"exit_code": 0}}),
+                mock.patch.object(module, "probe_claude_code_surface", return_value=self._claude_probe(module, native_attach_available=False, structured_events_available=False)),
+            ):
+                payload = module.build_host_feedback_summary(repo_root=repo_root)
+                failures = module.validate_minimum_feedback_surface(payload)
+
+        claude_workload = next(item for item in payload["dimensions"] if item["dimension_id"] == "claude_workload")
+        self.assertEqual([], failures)
+        self.assertEqual("attention", claude_workload["status"])
+        self.assertEqual("degraded", claude_workload["details"]["readiness"]["status"])
+        self.assertEqual("process_bridge", payload["summary"]["claude_adapter_tier"])
 
     def _write_minimal_repo(self, repo_root: Path, *, include_target_run: bool = True) -> None:
         for relative in (
@@ -161,6 +186,37 @@ class HostFeedbackSummaryTests(unittest.TestCase):
                 }
             },
         }
+
+    def _claude_probe(
+        self,
+        module,
+        *,
+        native_attach_available: bool = True,
+        structured_events_available: bool = True,
+    ):
+        return module.ClaudeCodeSurfaceProbe(
+            claude_cli_available=True,
+            version="2.1.114",
+            native_attach_available=native_attach_available,
+            process_bridge_available=True,
+            settings_available=True,
+            hooks_available=True,
+            session_id_available=True,
+            structured_events_available=structured_events_available,
+            evidence_export_available=True,
+            resume_available=True,
+            live_session_id=None,
+            live_resume_id=None,
+            reason="test probe",
+            probe_commands=[
+                module.ClaudeCodeProbeCommand(
+                    cmd="claude --version",
+                    exit_code=0,
+                    key_output="2.1.114",
+                    timestamp="2026-05-01T00:00:00+00:00",
+                )
+            ],
+        )
 
 
 if __name__ == "__main__":

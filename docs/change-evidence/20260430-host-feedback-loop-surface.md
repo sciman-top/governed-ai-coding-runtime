@@ -13,6 +13,7 @@
 - Added multi-contract catalog sync support so a target repo can receive both its normal contract gate and target-specific policy gates, then used it for `vps-ssh-launcher` `contract:powershell-policy`.
 - Added `runtime-flow-preset.ps1 -ExportTargetRepoRuns` and wired `operator.ps1 -Action DailyAll` to export fresh target-run JSON evidence after every all-target daily run.
 - Adjusted the runtime doctor test contract to accept explicit `codex-capability-degraded` as a valid host-feedback state while still blocking `codex-capability-blocked`.
+- Added a live `claude_workload` feedback dimension backed by `claude_code_adapter` probe/trial helpers so FeedbackReport can distinguish healthy Claude CLI/provider/MCP status from actual Claude Code workload readiness.
 
 ## Pre Change Review
 - `pre_change_review`: sensitive paths were reviewed before and during the change because this touched `docs/targets/target-repos-catalog.json`, `scripts/apply-target-repo-governance.py`, `scripts/runtime-flow-preset.ps1`, and `scripts/verify-target-repo-governance-consistency.py`.
@@ -35,8 +36,9 @@ Current observed status after hardening:
 - `FeedbackReport` exits 0 and writes `.runtime/artifacts/host-feedback-summary/latest.md`.
 - Overall report status is `attention`, not `pass`, because Codex local config reports `attention` and latest target-run evidence is stale at roughly 188 hours.
 - After multi-contract sync, `vps-ssh-launcher` governance consistency is `drift_count=0`; the remaining daily refresh blocker moved to self-runtime pre-change evidence until this evidence section was added.
-- After export wiring, `DailyAll -Mode quick` writes five fresh `*-daily-20260501004238.json` records and `FeedbackReport` returns `status=pass` with `target_run_freshness=fresh`.
+- After export wiring, `DailyAll -Mode quick` writes five fresh `*-daily-20260501004238.json` records and `FeedbackReport` returns `target_run_freshness=fresh`.
 - Current Codex runtime attachment posture is `process_bridge / fallback_explicit` because native attach status handshake is unavailable; this is now surfaced as host feedback instead of hidden behind stale evidence.
+- After Claude workload probe wiring, `FeedbackReport` reports `claude_workload=ok`, `readiness.status=ready`, and `adapter_tier=native_attach` on this host; current overall report status is `attention` only because the Codex local config dimension is still attention.
 
 ## Rollback
 - Revert `scripts/host-feedback-summary.py`, the operator/UI wiring, the new product docs, and this evidence file if the new summary surface causes regressions or proves too noisy.

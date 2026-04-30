@@ -15,7 +15,20 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS_SRC = ROOT / "scripts"
 if str(SCRIPTS_SRC) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_SRC))
+CONTRACTS_SRC = ROOT / "packages" / "contracts" / "src"
+if str(CONTRACTS_SRC) not in sys.path:
+    sys.path.insert(0, str(CONTRACTS_SRC))
 
+from governed_ai_coding_runtime_contracts.claude_code_adapter import (
+    ClaudeCodeProbeCommand,
+    ClaudeCodeSurfaceProbe,
+    build_claude_code_adapter_trial_result,
+    claude_code_adapter_trial_to_dict,
+    claude_code_capability_readiness_to_dict,
+    claude_code_probe_to_dict,
+    probe_claude_code_surface,
+    summarize_claude_code_capability_readiness,
+)
 from lib.claude_local import claude_status
 from lib.codex_local import codex_status
 
@@ -94,6 +107,7 @@ def build_host_feedback_summary(*, repo_root: Path, max_target_runs: int = 5) ->
     rules_dimension = _build_rules_dimension(resolved_root)
     hosts_dimension = _build_hosts_dimension()
     parity_dimension = _build_parity_dimension(resolved_root)
+    claude_workload_dimension = _build_claude_workload_dimension(resolved_root)
     target_runs_dimension = _build_target_runs_dimension(resolved_root, max_target_runs=max_target_runs, generated_at=generated_at)
 
     dimensions = [
@@ -101,6 +115,7 @@ def build_host_feedback_summary(*, repo_root: Path, max_target_runs: int = 5) ->
         rules_dimension,
         hosts_dimension,
         parity_dimension,
+        claude_workload_dimension,
         target_runs_dimension,
     ]
     status = _aggregate_status(dimensions)
@@ -112,6 +127,8 @@ def build_host_feedback_summary(*, repo_root: Path, max_target_runs: int = 5) ->
         "latest_target_repos": [item["repo_id"] for item in target_runs_dimension.details.get("latest_runs", [])],
         "codex_host_status": hosts_dimension.details["codex"].get("status"),
         "claude_host_status": hosts_dimension.details["claude"].get("status"),
+        "claude_workload_status": claude_workload_dimension.details.get("readiness", {}).get("status"),
+        "claude_adapter_tier": claude_workload_dimension.details.get("readiness", {}).get("adapter_tier"),
         "target_run_freshness": target_runs_dimension.details.get("freshness_status"),
         "rule_manifest_revision": rules_dimension.details.get("sync_revision"),
     }
@@ -153,6 +170,12 @@ def validate_minimum_feedback_surface(payload: dict[str, Any]) -> list[str]:
     elif parity["details"].get("missing_hosts"):
         failures.append("parity matrix missing hosts: " + ", ".join(parity["details"]["missing_hosts"]))
 
+    claude_workload = dimensions.get("claude_workload")
+    if not claude_workload:
+        failures.append("missing claude workload dimension")
+    elif claude_workload["details"].get("readiness", {}).get("status") == "blocked":
+        failures.append("claude workload probe is blocked")
+
     target_runs = dimensions.get("target_runs")
     if not target_runs:
         failures.append("missing target-runs dimension")
@@ -179,6 +202,8 @@ def render_markdown_report(payload: dict[str, Any]) -> str:
         f"- Rule manifest revision: `{summary.get('rule_manifest_revision') or 'unknown'}`",
         f"- Codex host status: `{summary.get('codex_host_status') or 'unknown'}`",
         f"- Claude host status: `{summary.get('claude_host_status') or 'unknown'}`",
+        f"- Claude workload status: `{summary.get('claude_workload_status') or 'unknown'}`",
+        f"- Claude adapter tier: `{summary.get('claude_adapter_tier') or 'unknown'}`",
         f"- Latest target repos: `{', '.join(summary.get('latest_target_repos') or []) or 'none'}`",
         "",
         "## Dimensions",
@@ -324,6 +349,56 @@ def _build_parity_dimension(repo_root: Path) -> FeedbackDimension:
     status = "ok" if not missing_hosts else "fail"
     summary = "Codex and Claude parity posture is documented" if status == "ok" else "parity matrix is missing required host rows"
     return FeedbackDimension("parity", status, summary, details)
+
+
+def _build_claude_workload_dimension(repo_root: Path) -> FeedbackDimension:
+    details: dict[str, Any] = {
+        "probe_source": "live_claude_code_adapter_probe",
+        "probe": None,
+        "readiness": None,
+        "trial": None,
+    }
+    try:
+        probe = probe_claude_code_surface(cwd=repo_root)
+        readiness = summarize_claude_code_capability_readiness(probe)
+        trial = build_claude_code_adapter_trial_result(
+            repo_id="governed-ai-coding-runtime",
+            task_id="host-feedback-claude-code-probe",
+            binding_id="binding-claude-code",
+            native_attach_available=probe.native_attach_available,
+            process_bridge_available=probe.process_bridge_available,
+            settings_available=probe.settings_available,
+            hooks_available=probe.hooks_available,
+            session_id_available=probe.session_id_available,
+            structured_events_available=probe.structured_events_available,
+            evidence_export_available=probe.evidence_export_available,
+            resume_available=probe.resume_available,
+            run_id="host-feedback-live-probe",
+            probe=probe,
+        )
+    except Exception as exc:
+        details["error"] = str(exc)
+        return FeedbackDimension(
+            "claude_workload",
+            "fail",
+            "Claude Code workload probe failed",
+            details,
+        )
+
+    details["probe"] = claude_code_probe_to_dict(probe)
+    details["readiness"] = claude_code_capability_readiness_to_dict(readiness)
+    details["trial"] = claude_code_adapter_trial_to_dict(trial)
+
+    if readiness.status == "ready":
+        status = "ok"
+        summary = "Claude Code workload adapter probe is ready"
+    elif readiness.status == "degraded":
+        status = "attention"
+        summary = "Claude Code workload adapter probe is degraded but usable"
+    else:
+        status = "fail"
+        summary = "Claude Code workload adapter probe is blocked"
+    return FeedbackDimension("claude_workload", status, summary, details)
 
 
 def _build_target_runs_dimension(repo_root: Path, *, max_target_runs: int, generated_at: datetime) -> FeedbackDimension:
@@ -529,6 +604,13 @@ def _build_recommendations(dimensions: list[FeedbackDimension]) -> list[str]:
     parity = dimension_map["parity"]
     if parity.details["missing_hosts"]:
         recommendations.append("补齐 adapter parity matrix 中的 Codex / Claude 行，避免后续无法明确回答双宿主是否等效。")
+
+    claude_workload = dimension_map["claude_workload"]
+    claude_readiness = claude_workload.details.get("readiness") or {}
+    if claude_readiness.get("status") == "blocked":
+        recommendations.append("Claude workload probe 已阻断；先修复 `claude --version` / `claude --help` 可执行入口，再重跑 FeedbackReport。")
+    elif claude_readiness.get("status") == "degraded":
+        recommendations.append("Claude workload probe 处于 degraded；优先补齐 managed settings/hooks、session/resume 或 structured event 能力，避免只停留在配置可用。")
 
     target_runs = dimension_map["target_runs"]
     if not target_runs.details["latest_runs"]:

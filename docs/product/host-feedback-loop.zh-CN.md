@@ -31,6 +31,7 @@
 | 宿主入口 | 现在调用的到底是不是预期的 `codex` / `claude` | 可执行入口、`config`/`settings` 状态、账号或 provider 状态 |
 | 规则生效 | 规则是不是只改了源文件，没有同步到用户目录/目标仓 | `rules/manifest.json`、`RulesDryRun`、全局目标副本 |
 | 能力姿态 | 当前是 `native_attach`、`process_bridge` 还是 `manual_handoff` | `adapter_tier`、`flow_kind`、`unsupported_capabilities` |
+| Claude workload probe | `Claude Code` 是否真的暴露本仓编码所需的 settings/hooks、session/resume 和结构化证据能力 | `claude_workload.readiness`、`probe_commands`、trial refs |
 | 门禁执行 | 是不是只跑了局部 quick slice | `build -> test -> contract/invariant -> hotspot` |
 | 写流治理 | 高风险改动是否真的进入 request/approve/execute 闭环 | `approval_status`、`write_status`、handoff/replay refs |
 | 证据可解释性 | 输出能不能解释“为什么通过/为什么降级/为什么阻断” | `evidence_link`、`artifact_refs`、`verification_refs` |
@@ -53,6 +54,7 @@ python scripts/host-feedback-summary.py --assert-minimum --write-markdown .runti
 输出包括：
 - 本机 `Codex` 状态摘要
 - 本机 `Claude` 状态摘要
+- live `Claude Code` workload adapter readiness
 - 规则 manifest 与全局副本同步面
 - `Codex` / `Claude` parity 文档面
 - 最新目标仓 run evidence 摘要
@@ -78,6 +80,9 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scop
 ### 情况 3：`adapter_tier` 降级但 gate 仍通过
 说明治理结果可用，但宿主能力没达到最佳态；此时应优化宿主接入，不应误报“功能整体失效”。
 
+### 情况 3.5：Claude 宿主健康，但 `claude_workload` 降级或阻断
+说明 `claude` CLI/provider/MCP 层可能正常，但真实编码 workload 路径还不完整。此时按 `claude_workload.readiness.status`、`adapter_tier`、`unsupported_capabilities`、`probe_commands` 判断缺的是 managed settings/hooks、session/resume 参数，还是 structured hook-event evidence。
+
 ### 情况 4：target run evidence 缺失
 说明你没有真实 workload 反馈，只能算“本仓静态健康”，不能据此判断 Codex/Claude 的真实效果。
 
@@ -90,6 +95,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scop
 以下四项同时满足，才算“已经拿到可用于优化决策的反馈闭环”：
 - `FeedbackReport` 可成功生成
 - `RulesDryRun` 无未预期漂移
+- `claude_workload.readiness.status` 不是 `blocked`
 - `target_runs.freshness_status=fresh`，且 latest runs 来自最新 `daily` 实跑证据
 - `verify-repo.ps1 -Check All` 通过
 

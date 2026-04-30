@@ -29,6 +29,7 @@ Explain how to get a clear, repeatable feedback loop for this repository when co
 | Host entrypoint | Are we using the real `codex` / `claude` entrypoint we think we are using? | local config, provider/account status, executable path |
 | Rule effect | Did the rules only change at source, or were they synchronized downstream? | `rules/manifest.json`, drift check, synchronized global copies |
 | Capability posture | Is the current host in `native_attach`, `process_bridge`, or `manual_handoff`? | `adapter_tier`, `flow_kind`, `unsupported_capabilities` |
+| Claude workload probe | Can Claude Code actually expose managed settings/hooks, session/resume, and structured evidence for this repo? | `claude_workload.readiness`, `probe_commands`, trial refs |
 | Gate execution | Did we actually run the full gate chain? | `build -> test -> contract/invariant -> hotspot` |
 | Write governance | Did risky edits really pass through request/approve/execute? | `approval_status`, `write_status`, handoff/replay refs |
 | Evidence clarity | Can the output explain why a path passed, degraded, or blocked? | `evidence_link`, `artifact_refs`, `verification_refs` |
@@ -51,6 +52,7 @@ python scripts/host-feedback-summary.py --assert-minimum --write-markdown .runti
 The report summarizes:
 - local Codex status
 - local Claude status
+- live Claude Code workload adapter readiness
 - rule manifest and synchronized global targets
 - Codex/Claude parity documentation surface
 - latest target-repo run evidence
@@ -76,6 +78,9 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scop
 ### `adapter_tier` degraded, gates still passing
 The governance outcome is still valid, but the host capability is not at its best posture. Improve the host boundary before claiming the whole feature regressed.
 
+### Claude host is healthy, but `claude_workload` is degraded or blocked
+The Claude CLI/provider/MCP layer can be healthy while the coding workload path is still incomplete. Use `claude_workload.readiness.status`, `adapter_tier`, `unsupported_capabilities`, and `probe_commands` to decide whether the problem is missing managed settings/hooks, missing session/resume flags, or missing structured hook-event evidence.
+
 ### No target-run evidence
 You only have static self-health, not real workload feedback. Do not use that to claim Codex/Claude effectiveness.
 
@@ -88,6 +93,7 @@ In that state, do not claim that the current real effect is clear. The correct c
 The feedback loop is only complete when all four are true:
 - `FeedbackReport` succeeds
 - `RulesDryRun` has no unexpected drift
+- `claude_workload.readiness.status` is not `blocked`
 - `target_runs.freshness_status=fresh`, with latest runs selected from the newest `daily` workload evidence
 - `verify-repo.ps1 -Check All` passes
 
