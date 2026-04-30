@@ -167,7 +167,7 @@ function Stop-ServiceProcess {
     $processes += $owner
   }
   foreach ($process in $processes) {
-    Stop-Process -Id $process.Id -ErrorAction SilentlyContinue
+    Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
   }
   Remove-Item -LiteralPath $PidPath -ErrorAction SilentlyContinue
 }

@@ -1,0 +1,170 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - heading "Governed Runtime 操作者面板" [level=1] [ref=e4]
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - text: "Runtime 根目录:"
+        - code [ref=e7]: D:/CODE/governed-ai-coding-runtime/.runtime
+      - generic [ref=e8]:
+        - text: "持久化:"
+        - code [ref=e9]: filesystem
+  - generic [ref=e10]:
+    - complementary [ref=e11]:
+      - generic [ref=e12]:
+        - heading "操作" [level=2] [ref=e13]
+        - generic [ref=e14]:
+          - button "刷新状态" [ref=e15] [cursor=pointer]
+          - button "列出目标仓" [ref=e16] [cursor=pointer]
+          - button "本仓 Readiness" [ref=e17] [cursor=pointer]
+          - button "规则漂移检查" [ref=e18] [cursor=pointer]
+          - button "同步规则文件" [ref=e19] [cursor=pointer]
+          - button "下发治理基线" [ref=e20] [cursor=pointer]
+          - button "运行 Daily" [ref=e21] [cursor=pointer]
+          - button "全部功能应用" [ref=e22] [cursor=pointer]
+      - generic [ref=e23]:
+        - heading "设置" [level=2] [ref=e24]
+        - generic [ref=e25]:
+          - generic [ref=e26]:
+            - text: 语言
+            - combobox "语言" [ref=e27]:
+              - option "中文" [selected]
+              - option "English"
+          - generic [ref=e28]:
+            - text: 目标仓
+            - combobox "目标仓" [ref=e29]:
+              - option "全部目标仓" [selected]
+              - option "classroomtoolkit"
+              - option "github-toolkit"
+              - option "self-runtime"
+              - option "skills-manager"
+              - option "vps-ssh-launcher"
+          - generic [ref=e30]:
+            - text: 验证模式
+            - combobox "验证模式" [ref=e31]:
+              - option "quick" [selected]
+              - option "full"
+              - option "l1"
+              - option "l2"
+              - option "l3"
+          - generic [ref=e32]:
+            - text: 目标并发
+            - spinbutton "目标并发" [ref=e33]: "1"
+          - generic [ref=e34]:
+            - text: 里程碑标签
+            - textbox "里程碑标签" [ref=e35]: milestone
+          - generic [ref=e36]:
+            - checkbox "失败即停" [ref=e37]
+            - text: 失败即停
+          - generic [ref=e38]:
+            - checkbox "只预演" [ref=e39]
+            - text: 只预演
+    - generic [ref=e40]:
+      - tablist "Operator view" [ref=e41]:
+        - tab "Runtime" [selected] [ref=e42] [cursor=pointer]
+        - tab "Codex" [ref=e43] [cursor=pointer]
+        - tab "Claude" [ref=e44] [cursor=pointer]
+      - generic [ref=e45]:
+        - region "Runtime 摘要" [ref=e46]:
+          - generic [ref=e47]:
+            - generic [ref=e48]: 任务
+            - strong [ref=e49]: "1"
+            - generic [ref=e50]: 最近运行记录
+          - generic [ref=e51]:
+            - generic [ref=e52]: 审批
+            - strong [ref=e53]: "1"
+            - generic [ref=e54]: 待人工确认的记录
+          - generic [ref=e55]:
+            - generic [ref=e56]: 验证结果
+            - strong [ref=e57]: "2"
+            - generic [ref=e58]: 最近验证输出
+          - generic [ref=e59]:
+            - generic [ref=e60]: 已接入仓库
+            - strong [ref=e61]: "0"
+            - generic [ref=e62]: 0 遇到风险会自动阻断
+        - generic [ref=e63]:
+          - generic [ref=e64]:
+            - heading "命令输出" [level=2] [ref=e65]
+            - generic [ref=e66]: 就绪
+          - generic [ref=e68]:
+            - heading "执行历史" [level=2] [ref=e69]
+            - paragraph [ref=e71]: 暂无执行历史。
+            - button "清空历史" [ref=e72] [cursor=pointer]
+        - generic [ref=e73]:
+          - generic [ref=e74]:
+            - heading "维护与升级" [level=2] [ref=e75]
+            - generic [ref=e76]:
+              - generic [ref=e77]:
+                - generic [ref=e78]: 阶段
+                - code [ref=e79]: 已完成
+              - generic [ref=e80]:
+                - generic [ref=e81]: 兼容性
+                - code [ref=e82]: docs/product/runtime-compatibility-and-upgrade-policy.md
+              - generic [ref=e83]:
+                - generic [ref=e84]: 升级
+                - code [ref=e85]: docs/product/runtime-compatibility-and-upgrade-policy.md
+              - generic [ref=e86]:
+                - generic [ref=e87]: 分流
+                - code [ref=e88]: docs/product/maintenance-deprecation-and-retirement-policy.md
+              - generic [ref=e89]:
+                - generic [ref=e90]: 弃用
+                - code [ref=e91]: docs/product/maintenance-deprecation-and-retirement-policy.md
+              - generic [ref=e92]:
+                - generic [ref=e93]: 退役
+                - code [ref=e94]: docs/product/maintenance-deprecation-and-retirement-policy.md
+          - generic [ref=e95]:
+            - heading "已接入仓库" [level=2] [ref=e96]
+            - generic [ref=e97]: 暂无已接入目标仓记录。
+        - generic [ref=e98]:
+          - heading "任务" [level=2] [ref=e99]
+          - table [ref=e101]:
+            - rowgroup [ref=e102]:
+              - row "任务 状态 目标 结果与记录" [ref=e103]:
+                - columnheader "任务" [ref=e104]
+                - columnheader "状态" [ref=e105]
+                - columnheader "目标" [ref=e106]
+                - columnheader "结果与记录" [ref=e107]
+            - rowgroup [ref=e108]:
+              - 'row "task-attached-e2e 执行: run-attached-e2e 工作区: 缺失 已完成 交互: 未记录 回滚: git checkout -- src/governed_probe.txt Attached repo governed e2e loop 审批 approval-a53115fc83ae444497e4615f84921107 执行输出 artifacts/task-attached-e2e/write-execution/execution-write/src-governed_probe.txt.json artifacts/task-attached-e2e/run-attached-e2e/handoff/attached-e2e.json 运行证据 artifacts/task-attached-e2e/policy/write-escalate.json artifacts/task-attached-e2e/write-execution/execution-write/src-governed_probe.txt.json 验证结果 artifacts/task-attached-e2e/run-attached-e2e/verification-output/test.txt artifacts/task-attached-e2e/run-attached-e2e/verification-output/contract.txt" [ref=e109]':
+                - 'cell "task-attached-e2e 执行: run-attached-e2e 工作区: 缺失" [ref=e110]':
+                  - generic [ref=e111]: task-attached-e2e
+                  - generic [ref=e112]:
+                    - text: "执行:"
+                    - code [ref=e113]: run-attached-e2e
+                  - generic [ref=e114]:
+                    - text: "工作区:"
+                    - code [ref=e115]: 缺失
+                - 'cell "已完成 交互: 未记录 回滚: git checkout -- src/governed_probe.txt" [ref=e116]':
+                  - generic [ref=e117]: 已完成
+                  - generic [ref=e118]: "交互: 未记录"
+                  - generic [ref=e119]:
+                    - text: "回滚:"
+                    - code [ref=e120]: git checkout -- src/governed_probe.txt
+                - cell "Attached repo governed e2e loop" [ref=e121]
+                - cell "审批 approval-a53115fc83ae444497e4615f84921107 执行输出 artifacts/task-attached-e2e/write-execution/execution-write/src-governed_probe.txt.json artifacts/task-attached-e2e/run-attached-e2e/handoff/attached-e2e.json 运行证据 artifacts/task-attached-e2e/policy/write-escalate.json artifacts/task-attached-e2e/write-execution/execution-write/src-governed_probe.txt.json 验证结果 artifacts/task-attached-e2e/run-attached-e2e/verification-output/test.txt artifacts/task-attached-e2e/run-attached-e2e/verification-output/contract.txt" [ref=e122]:
+                  - generic [ref=e123]:
+                    - generic [ref=e124]:
+                      - generic [ref=e125]: 审批
+                      - list [ref=e126]:
+                        - listitem [ref=e127]:
+                          - code [ref=e128]: approval-a53115fc83ae444497e4615f84921107
+                    - generic [ref=e129]:
+                      - generic [ref=e130]: 执行输出
+                      - list [ref=e131]:
+                        - listitem [ref=e132]:
+                          - button "artifacts/task-attached-e2e/write-execution/execution-write/src-governed_probe.txt.json" [ref=e133] [cursor=pointer]
+                        - listitem [ref=e134]:
+                          - button "artifacts/task-attached-e2e/run-attached-e2e/handoff/attached-e2e.json" [ref=e135] [cursor=pointer]
+                    - generic [ref=e136]:
+                      - generic [ref=e137]: 运行证据
+                      - list [ref=e138]:
+                        - listitem [ref=e139]:
+                          - button "artifacts/task-attached-e2e/policy/write-escalate.json" [ref=e140] [cursor=pointer]
+                        - listitem [ref=e141]:
+                          - button "artifacts/task-attached-e2e/write-execution/execution-write/src-governed_probe.txt.json" [ref=e142] [cursor=pointer]
+                    - generic [ref=e143]:
+                      - generic [ref=e144]: 验证结果
+                      - list [ref=e145]:
+                        - listitem [ref=e146]:
+                          - button "artifacts/task-attached-e2e/run-attached-e2e/verification-output/test.txt" [ref=e147] [cursor=pointer]
+                        - listitem [ref=e148]:
+                          - button "artifacts/task-attached-e2e/run-attached-e2e/verification-output/contract.txt" [ref=e149] [cursor=pointer]

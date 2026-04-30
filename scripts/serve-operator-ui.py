@@ -10,6 +10,7 @@ import time
 from urllib.parse import parse_qs, urlparse
 import webbrowser
 from pathlib import Path
+from threading import Lock
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACTS_SRC = ROOT / "packages" / "contracts" / "src"
@@ -34,6 +35,11 @@ ALLOWED_ACTIONS = {
     "daily_all": {"operator_action": "DailyAll", "timeout_seconds": 1800},
     "apply_all_features": {"operator_action": "ApplyAllFeatures", "timeout_seconds": 2400},
 }
+
+CODEX_STATUS_CACHE_TTL_SECONDS = 10.0
+CLAUDE_STATUS_CACHE_TTL_SECONDS = 15.0
+_STATUS_CACHE_LOCK = Lock()
+_STATUS_CACHE: dict[str, dict] = {}
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -141,6 +147,11 @@ def _build_handler(*, default_language: str):
                     status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
                     self._send_json(result, status=status)
                     return
+                if parsed.path == "/api/codex/refresh":
+                    result = load_codex_status(refresh_online=True)
+                    status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.INTERNAL_SERVER_ERROR
+                    self._send_json(result, status=status)
+                    return
                 if parsed.path == "/api/claude/switch":
                     result = run_claude_switch(self._read_json_body())
                     status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
@@ -191,22 +202,15 @@ def _build_handler(*, default_language: str):
     return OperatorUiHandler
 
 
-def load_codex_status() -> dict:
-    try:
-        payload = codex_status()
-    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
-        return {"status": "error", "error": str(exc)}
-    payload["status"] = "ok"
-    return payload
+def load_codex_status(*, refresh_online: bool = False) -> dict:
+    if refresh_online:
+        invalidate_status_cache("codex")
+        return _load_status_payload("codex", lambda: codex_status(refresh_online=True))
+    return _load_status_cached("codex", ttl_seconds=CODEX_STATUS_CACHE_TTL_SECONDS, loader=lambda: codex_status(refresh_online=False))
 
 
 def load_claude_status() -> dict:
-    try:
-        payload = claude_status()
-    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
-        return {"status": "error", "error": str(exc)}
-    payload["status"] = "ok"
-    return payload
+    return _load_status_cached("claude", ttl_seconds=CLAUDE_STATUS_CACHE_TTL_SECONDS, loader=claude_status)
 
 
 def run_codex_switch(payload: dict) -> dict:
@@ -215,9 +219,12 @@ def run_codex_switch(payload: dict) -> dict:
     name = _string(payload.get("name"), "")
     dry_run = bool(payload.get("dry_run", False))
     try:
-        return switch_auth_profile(name, dry_run=dry_run)
+        result = switch_auth_profile(name, dry_run=dry_run)
     except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
         return {"status": "error", "error": str(exc)}
+    if result.get("status") == "ok" and result.get("changed"):
+        invalidate_status_cache("codex")
+    return result
 
 
 def run_claude_switch(payload: dict) -> dict:
@@ -226,9 +233,47 @@ def run_claude_switch(payload: dict) -> dict:
     name = _string(payload.get("name"), "")
     dry_run = bool(payload.get("dry_run", False))
     try:
-        return switch_provider(name, dry_run=dry_run)
+        result = switch_provider(name, dry_run=dry_run)
     except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
         return {"status": "error", "error": str(exc)}
+    if result.get("status") == "ok" and result.get("changed"):
+        invalidate_status_cache("claude")
+    return result
+
+
+def invalidate_status_cache(kind: str | None = None) -> None:
+    with _STATUS_CACHE_LOCK:
+        if kind is None:
+            _STATUS_CACHE.clear()
+            return
+        _STATUS_CACHE.pop(kind, None)
+
+
+def _load_status_cached(kind: str, *, ttl_seconds: float, loader) -> dict:
+    now = time.time()
+    with _STATUS_CACHE_LOCK:
+        cached = _STATUS_CACHE.get(kind)
+        if cached and now - float(cached.get("loaded_at", 0.0)) <= ttl_seconds:
+            return dict(cached["payload"])
+    payload = _load_status_payload(kind, loader)
+    with _STATUS_CACHE_LOCK:
+        _STATUS_CACHE[kind] = {"loaded_at": now, "payload": dict(payload)}
+    return payload
+
+
+def _load_status_payload(kind: str, loader) -> dict:
+    try:
+        payload = loader()
+    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
+        return {"status": "error", "error": str(exc), "cache_kind": kind}
+    payload["status"] = "ok"
+    payload["cache_kind"] = kind
+    payload["cached_at"] = datetime_now_iso()
+    return payload
+
+
+def datetime_now_iso() -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
 def run_operator_action(payload: dict) -> dict:

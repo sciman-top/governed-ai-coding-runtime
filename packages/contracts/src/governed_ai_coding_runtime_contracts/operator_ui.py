@@ -15,38 +15,38 @@ _TRANSLATIONS = {
         "persistence": "持久化",
         "summary_aria": "Runtime 摘要",
         "tasks": "任务",
-        "tasks_caption": "runtime task 记录",
+        "tasks_caption": "最近运行记录",
         "approvals": "审批",
-        "approvals_caption": "关联 approval refs",
-        "verification": "验证",
-        "verification_caption": "verification refs",
-        "attachments": "接入仓",
-        "fail_closed_caption": "fail-closed",
-        "maintenance": "维护策略",
+        "approvals_caption": "待人工确认的记录",
+        "verification": "验证结果",
+        "verification_caption": "最近验证输出",
+        "attachments": "已接入仓库",
+        "fail_closed_caption": "遇到风险会自动阻断",
+        "maintenance": "维护与升级",
         "stage": "阶段",
         "compatibility": "兼容性",
         "upgrade": "升级",
         "triage": "分流",
         "deprecation": "弃用",
         "retirement": "退役",
-        "no_tasks": "暂无 governed task 记录。",
+        "no_tasks": "暂无运行记录。",
         "no_attachments": "暂无已接入目标仓记录。",
         "task": "任务",
         "state": "状态",
         "goal": "目标",
-        "outputs": "输出",
+        "outputs": "结果与记录",
         "run": "运行",
         "workspace": "工作区",
         "interaction": "交互",
         "rollback": "回滚",
         "repo": "仓库",
-        "adapter": "适配器",
-        "diagnostics": "诊断",
-        "binding": "绑定",
-        "light_pack": "Light pack",
-        "fail_closed": "Fail closed",
-        "preference": "偏好",
-        "gate_profile": "门禁 profile",
+        "adapter": "接入方式",
+        "diagnostics": "问题说明",
+        "binding": "接入标识",
+        "light_pack": "轻量上下文包",
+        "fail_closed": "风险自动阻断",
+        "preference": "默认方式",
+        "gate_profile": "验证档位",
         "reason": "原因",
         "remediation": "修复建议",
         "missing": "缺失",
@@ -70,25 +70,49 @@ _TRANSLATIONS = {
         "codex_account": "账号",
         "codex_active": "当前",
         "codex_usage": "额度",
-        "codex_usage_note": "额度数据源",
+        "codex_usage_note": "额度说明",
         "codex_switch": "切换",
         "codex_open_usage": "打开官方 Usage",
         "codex_refresh": "刷新 Codex 状态",
-        "codex_unknown_usage": "未知；官方未提供稳定本地 API",
+        "codex_refresh_online": "强制在线刷新",
+        "codex_refresh_online_hint": "会发起一次最小 Codex 在线请求，可能消耗极少量额度",
+        "codex_refresh_idle": "当前显示本机最新快照。",
+        "codex_refresh_ok": "在线刷新成功；当前显示最新在线快照。",
+        "codex_refresh_fallback": "在线刷新失败；已回退到本机最新快照。",
+        "codex_unknown_usage": "暂时无法读取额度信息",
         "codex_config": "配置健康",
         "codex_login": "登录状态",
+        "codex_token_validity": "本地令牌",
+        "codex_token_expiry": "登录令牌到期",
+        "codex_token_note": "登录令牌到期只表示本地 Codex 登录凭据的 token 截止时间。",
+        "codex_token_unknown": "未读取到本地 token 有效期",
+        "codex_subscription_expiry": "套餐到期日",
+        "codex_subscription_note": "套餐日期来自本地 token 声明，不是实时 billing API 查询。",
+        "codex_subscription_unknown": "未读取到套餐有效期",
+        "panel_cache_state": "数据状态",
+        "panel_cache_cold": "首次加载中",
+        "panel_cache_cached": "缓存快照",
+        "panel_cache_refreshing": "后台刷新中",
+        "panel_cache_ready": "已刷新",
+        "panel_cache_error": "刷新失败",
+        "codex_account_usage_unknown": "切换后可获取额度",
         "claude_console": "Claude Provider 与配置",
         "claude_provider": "Provider",
         "claude_active": "当前",
         "claude_switch": "切换",
         "claude_refresh": "刷新 Claude 状态",
+        "claude_service": "服务地址",
+        "claude_models": "模型",
+        "claude_extensions": "扩展能力",
+        "claude_usage_note": "额度说明",
+        "claude_settings_summary": "本机设置",
         "claude_config": "配置健康",
         "claude_command": "CLI 状态",
         "claude_mcp": "MCP 状态",
         "claude_settings": "本机设置",
         "claude_credential": "凭据",
         "claude_usage": "额度",
-        "claude_unknown_usage": "第三方 provider 暂无稳定本地额度 API",
+        "claude_unknown_usage": "暂时无法读取额度信息",
         "history": "执行历史",
         "no_history": "暂无执行历史。",
         "clear_history": "清空历史",
@@ -116,35 +140,35 @@ _TRANSLATIONS = {
         "persistence": "Persistence",
         "summary_aria": "Runtime Summary",
         "tasks": "Tasks",
-        "tasks_caption": "runtime task records",
+        "tasks_caption": "recent runtime activity",
         "approvals": "Approvals",
-        "approvals_caption": "linked approval refs",
+        "approvals_caption": "records waiting for approval",
         "verification": "Verification",
-        "verification_caption": "verification refs",
+        "verification_caption": "latest verification outputs",
         "attachments": "Attachments",
-        "fail_closed_caption": "fail-closed",
-        "maintenance": "Maintenance Policy Surface",
+        "fail_closed_caption": "auto-block on risk",
+        "maintenance": "Maintenance and Upgrade",
         "stage": "Stage",
         "compatibility": "Compatibility",
         "upgrade": "Upgrade",
         "triage": "Triage",
         "deprecation": "Deprecation",
         "retirement": "Retirement",
-        "no_tasks": "No governed tasks recorded.",
+        "no_tasks": "No runtime activity has been recorded.",
         "no_attachments": "No attached target repos recorded.",
         "task": "Task",
         "state": "State",
         "goal": "Goal",
-        "outputs": "Outputs",
+        "outputs": "Results",
         "run": "Run",
         "workspace": "Workspace",
         "interaction": "Interaction",
         "rollback": "Rollback",
         "repo": "Repo",
-        "adapter": "Adapter",
-        "diagnostics": "Diagnostics",
-        "binding": "Binding",
-        "light_pack": "Light pack",
+        "adapter": "Connection",
+        "diagnostics": "Issue details",
+        "binding": "Connection ID",
+        "light_pack": "Light context pack",
         "fail_closed": "Fail closed",
         "preference": "Preference",
         "gate_profile": "Gate profile",
@@ -171,25 +195,49 @@ _TRANSLATIONS = {
         "codex_account": "Account",
         "codex_active": "Active",
         "codex_usage": "Usage",
-        "codex_usage_note": "Usage source",
+        "codex_usage_note": "Usage details",
         "codex_switch": "Switch",
         "codex_open_usage": "Open Usage",
         "codex_refresh": "Refresh Codex",
-        "codex_unknown_usage": "Unknown; no stable local public API",
+        "codex_refresh_online": "Force online refresh",
+        "codex_refresh_online_hint": "Runs a minimal Codex online request and may consume a small amount of quota",
+        "codex_refresh_idle": "Showing the latest local snapshot.",
+        "codex_refresh_ok": "Online refresh succeeded; showing the latest online snapshot.",
+        "codex_refresh_fallback": "Online refresh failed; fell back to the latest local snapshot.",
+        "codex_unknown_usage": "Usage information is not available yet",
         "codex_config": "Config health",
         "codex_login": "Login status",
+        "codex_token_validity": "Local token",
+        "codex_token_expiry": "Sign-in token expiry",
+        "codex_token_note": "Sign-in token expiry only reflects the local Codex credential token lifetime.",
+        "codex_token_unknown": "Local token expiry is not available",
+        "codex_subscription_expiry": "Plan renewal date",
+        "codex_subscription_note": "Plan dates come from local token claims, not a live billing API query.",
+        "codex_subscription_unknown": "Plan validity is not available",
+        "panel_cache_state": "Data status",
+        "panel_cache_cold": "Loading for the first time",
+        "panel_cache_cached": "Cached snapshot",
+        "panel_cache_refreshing": "Refreshing in background",
+        "panel_cache_ready": "Refreshed",
+        "panel_cache_error": "Refresh failed",
+        "codex_account_usage_unknown": "Switch to this account to fetch usage",
         "claude_console": "Claude Provider and Config",
         "claude_provider": "Provider",
         "claude_active": "Active",
         "claude_switch": "Switch",
         "claude_refresh": "Refresh Claude",
+        "claude_service": "Service",
+        "claude_models": "Models",
+        "claude_extensions": "Extensions",
+        "claude_usage_note": "Usage",
+        "claude_settings_summary": "Settings",
         "claude_config": "Config health",
         "claude_command": "CLI status",
         "claude_mcp": "MCP status",
         "claude_settings": "Local settings",
         "claude_credential": "Credential",
         "claude_usage": "Usage",
-        "claude_unknown_usage": "No stable local usage API for third-party providers",
+        "claude_unknown_usage": "Usage information is not available yet",
         "history": "Run history",
         "no_history": "No run history.",
         "clear_history": "Clear history",
@@ -253,85 +301,143 @@ def render_runtime_snapshot_html(
   <style>
     :root {{
       color-scheme: light;
-      --bg: #f7f9fb;
+      --bg: #f4f7f8;
       --surface: #ffffff;
-      --surface-muted: #eef3f7;
-      --ink: #17202a;
-      --muted: #5f6b7a;
-      --line: #d7dde5;
-      --accent: #0b6f6a;
-      --warning: #a15c00;
+      --surface-muted: #edf3f4;
+      --ink: #162327;
+      --muted: #647177;
+      --line: #d6e0e2;
+      --line-strong: #b9c9cc;
+      --accent: #0b766e;
+      --accent-strong: #075e58;
+      --accent-soft: #e6f5f2;
+      --warning: #a55a00;
       --danger: #b42318;
+      --shadow-soft: 0 14px 34px rgba(17, 38, 43, 0.08);
+      --shadow-card: 0 8px 22px rgba(17, 38, 43, 0.06);
     }}
     * {{ box-sizing: border-box; }}
-    body {{ margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: var(--bg); color: var(--ink); font-size: 14px; }}
-    main {{ width: 100%; max-width: 1560px; margin: 0 auto; padding: 16px 18px 32px; }}
-    header {{ border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 14px; }}
-    h1 {{ font-size: 1.5rem; line-height: 1.2; margin: 0 0 8px; }}
-    h2 {{ font-size: 0.96rem; line-height: 1.3; margin: 0 0 10px; color: var(--ink); }}
+    body {{
+      margin: 0;
+      font-family: "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+      background:
+        linear-gradient(135deg, rgba(11, 118, 110, 0.12), transparent 320px),
+        linear-gradient(180deg, #fbfcfd 0, var(--bg) 420px);
+      color: var(--ink);
+      font-size: 14px;
+    }}
+    main {{ width: 100%; max-width: 1560px; margin: 0 auto; padding: 18px 18px 34px; }}
+    header {{
+      border: 1px solid #14363a;
+      border-radius: 8px;
+      padding: 17px 18px;
+      margin-bottom: 14px;
+      background: linear-gradient(135deg, #10262a 0, #173b3d 58%, #0b766e 160%);
+      color: #f6fbfb;
+      box-shadow: var(--shadow-soft);
+    }}
+    h1 {{ font-size: 1.46rem; line-height: 1.2; margin: 0 0 10px; }}
+    h2 {{ display: flex; align-items: center; gap: 8px; font-size: 0.98rem; line-height: 1.3; margin: 0 0 12px; color: var(--ink); }}
+    h2::before {{ content: ""; width: 4px; height: 1.05em; border-radius: 99px; background: var(--accent); }}
     .meta-row {{ display: flex; flex-wrap: wrap; gap: 10px 18px; color: var(--muted); font-size: 0.92rem; }}
+    header .meta-row {{ color: #cfe1e2; }}
+    header code {{ color: #ffffff; }}
     .console-layout {{ display: grid; grid-template-columns: minmax(260px, 300px) minmax(0, 1fr); gap: 14px; align-items: start; }}
     .sidebar {{ position: sticky; top: 12px; display: grid; gap: 12px; align-self: start; }}
     .dashboard {{ min-width: 0; display: grid; gap: 14px; }}
     .summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }}
     .feedback-grid {{ display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr); gap: 14px; align-items: start; }}
     .details-grid {{ display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr); gap: 14px; align-items: start; }}
-    .metric {{ background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px; padding: 12px; min-width: 0; }}
-    .metric span {{ display: block; color: var(--muted); font-size: 0.78rem; text-transform: uppercase; }}
-    .metric strong {{ display: block; font-size: 1.32rem; margin: 3px 0; }}
+    .metric {{
+      background: linear-gradient(180deg, #ffffff, #fbfdfd);
+      border: 1px solid var(--line);
+      border-top: 3px solid var(--accent);
+      border-radius: 8px;
+      padding: 13px 14px 12px;
+      min-width: 0;
+      box-shadow: var(--shadow-card);
+    }}
+    .metric span {{ display: block; color: var(--muted); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; }}
+    .metric strong {{ display: block; font-size: 1.45rem; margin: 4px 0 2px; }}
     .metric small {{ display: block; color: var(--muted); overflow-wrap: anywhere; }}
     .section {{ min-width: 0; }}
-    .table-wrap {{ background: var(--surface); border: 1px solid var(--line); border-radius: 6px; overflow-x: auto; }}
+    .table-wrap {{ background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; box-shadow: var(--shadow-card); }}
     table {{ width: 100%; border-collapse: collapse; min-width: 720px; }}
-    th, td {{ padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }}
-    th {{ background: var(--surface-muted); color: #314253; font-size: 0.78rem; text-transform: uppercase; }}
+    th, td {{ padding: 11px 13px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }}
+    th {{ background: linear-gradient(180deg, var(--surface-muted), #e6eef0); color: #314253; font-size: 0.78rem; text-transform: uppercase; }}
     tr:last-child td {{ border-bottom: 0; }}
+    tbody tr:hover {{ background: #fbfdfd; }}
     .task-id {{ font-weight: 700; }}
-    .state {{ font-weight: 700; color: var(--accent); }}
+    .state {{ display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: var(--accent); }}
+    .state::before {{ content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px rgba(11, 118, 110, 0.12); }}
     .state.warn {{ color: var(--warning); }}
     .state.danger {{ color: var(--danger); }}
     .meta {{ color: var(--muted); font-size: 0.86rem; margin-top: 4px; overflow-wrap: anywhere; }}
-    .empty-state {{ background: var(--surface); border: 1px dashed var(--line); border-radius: 6px; padding: 18px; color: var(--muted); }}
+    .info-list {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px 12px; margin-top: 7px; min-width: 0; align-items: start; }}
+    .info-line {{ min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; color: var(--muted); font-size: 0.86rem; line-height: 1.35; }}
+    .info-label {{ color: #53646a; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }}
+    .info-value {{ min-width: 0; color: #263940; overflow-wrap: anywhere; white-space: pre-line; }}
+    .empty-state {{ background: rgba(255, 255, 255, 0.72); border: 1px dashed var(--line-strong); border-radius: 8px; padding: 18px; color: var(--muted); }}
     .refs {{ display: grid; gap: 8px; }}
     .ref-title {{ display: block; color: var(--muted); font-size: 0.78rem; text-transform: uppercase; margin-bottom: 4px; }}
     ul {{ margin: 0; padding-left: 18px; }}
     li + li {{ margin-top: 4px; }}
-    code {{ font-family: Consolas, "Liberation Mono", monospace; font-size: 0.9rem; overflow-wrap: anywhere; }}
+    code {{ font-family: Consolas, "Cascadia Mono", "Liberation Mono", monospace; font-size: 0.9rem; overflow-wrap: anywhere; }}
     .policy-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }}
-    .policy-item {{ background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px; min-width: 0; }}
-    .policy-label {{ display: block; color: var(--muted); font-size: 0.78rem; text-transform: uppercase; margin-bottom: 4px; }}
-    .panel {{ background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px; min-width: 0; }}
-    .view-tabs {{ display: inline-flex; gap: 4px; background: var(--surface-muted); border: 1px solid var(--line); border-radius: 6px; padding: 4px; width: fit-content; max-width: 100%; }}
-    .view-tab {{ border: 0; background: transparent; border-radius: 4px; padding: 7px 12px; }}
-    .view-tab[aria-selected="true"] {{ background: var(--surface); color: var(--accent); box-shadow: 0 0 0 1px var(--line); font-weight: 700; }}
+    .policy-item {{ background: linear-gradient(180deg, #ffffff, #fbfdfd); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; box-shadow: 0 5px 14px rgba(17, 38, 43, 0.04); }}
+    .policy-label {{ display: block; color: var(--muted); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; }}
+    .panel {{ background: rgba(255, 255, 255, 0.9); border: 1px solid var(--line); border-top: 3px solid #c5d5d8; border-radius: 8px; padding: 13px; min-width: 0; box-shadow: var(--shadow-card); }}
+    .output-panel {{ border-top-color: var(--accent); }}
+    .view-tabs {{ display: inline-flex; gap: 4px; background: rgba(237, 243, 244, 0.84); border: 1px solid var(--line); border-radius: 8px; padding: 4px; width: fit-content; max-width: 100%; box-shadow: 0 7px 18px rgba(17, 38, 43, 0.05); }}
+    .view-tab {{ border: 0; background: transparent; border-radius: 6px; padding: 8px 13px; }}
+    .view-tab[aria-selected="true"] {{ background: var(--surface); color: var(--accent-strong); box-shadow: 0 0 0 1px var(--line), 0 6px 14px rgba(17, 38, 43, 0.08); font-weight: 700; }}
     .action-list {{ display: grid; gap: 8px; }}
     button, select, input {{ font: inherit; }}
-    button {{ border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 6px; padding: 8px 10px; cursor: pointer; text-align: left; }}
-    button:hover {{ border-color: var(--accent); }}
-    button.primary {{ background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }}
-    button.danger {{ border-color: #f2b8b5; color: var(--danger); }}
+    button {{ border: 1px solid var(--line); background: linear-gradient(180deg, #ffffff, #f8fbfb); color: var(--ink); border-radius: 7px; padding: 9px 11px; cursor: pointer; text-align: left; transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease; }}
+    button:hover {{ border-color: var(--accent); box-shadow: 0 7px 16px rgba(11, 118, 110, 0.10); transform: translateY(-1px); }}
+    button.primary {{ background: linear-gradient(135deg, var(--accent), var(--accent-strong)); border-color: var(--accent-strong); color: #fff; font-weight: 700; }}
+    button.danger {{ border-color: #f2b8b5; color: var(--danger); background: linear-gradient(180deg, #fff, #fff9f8); }}
     button:disabled {{ cursor: not-allowed; opacity: 0.55; }}
     .setting-grid {{ display: grid; gap: 10px; }}
     label {{ display: grid; gap: 4px; color: var(--muted); font-size: 0.82rem; min-width: 0; }}
-    select, input[type="number"], input[type="text"] {{ width: 100%; min-width: 0; max-width: 100%; border: 1px solid var(--line); border-radius: 6px; padding: 8px; color: var(--ink); background: #fff; }}
+    select, input[type="number"], input[type="text"] {{ width: 100%; min-width: 0; max-width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 8px 9px; color: var(--ink); background: #fff; }}
+    select:focus, input:focus, button:focus-visible {{ outline: 2px solid rgba(11, 118, 110, 0.24); outline-offset: 2px; }}
     .checkbox-row {{ display: flex; align-items: center; gap: 8px; color: var(--ink); }}
     .status-line {{ color: var(--muted); font-size: 0.86rem; min-height: 1.2rem; }}
-    .output {{ min-height: 260px; max-height: 460px; overflow: auto; white-space: pre-wrap; background: #0f1720; color: #d9e2ec; border-radius: 6px; padding: 12px; }}
+    .output {{
+      min-height: 260px;
+      max-height: 460px;
+      overflow: auto;
+      white-space: pre-wrap;
+      background: radial-gradient(circle at 20px 12px, rgba(69, 203, 184, 0.12), transparent 140px), #0d151b;
+      color: #dce8ea;
+      border: 1px solid #1e2f36;
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    }}
     .history-list {{ display: grid; gap: 8px; }}
     .history-item {{ width: 100%; min-width: 0; display: grid; gap: 2px; }}
     .history-item small {{ color: var(--muted); overflow-wrap: anywhere; }}
     .codex-toolbar {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }}
     .codex-toolbar select {{ width: min(100%, 260px); }}
-    .codex-grid {{ display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 0.8fr); gap: 12px; align-items: start; }}
+    .codex-grid {{ display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: start; }}
     .codex-list {{ display: grid; gap: 8px; }}
-    .codex-account {{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; border: 1px solid var(--line); border-radius: 6px; padding: 10px; }}
+    .codex-account {{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: start; border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: linear-gradient(180deg, #ffffff, #fbfdfd); }}
+    .codex-account-body {{ min-width: 0; display: grid; gap: 3px; }}
+    .codex-account-actions {{ display: flex; align-items: flex-start; justify-content: flex-end; }}
     .codex-account strong, .codex-account small {{ display: block; overflow-wrap: anywhere; }}
-    .codex-badge {{ display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; color: var(--accent); font-size: 0.78rem; }}
+    .codex-badge {{ display: inline-flex; align-items: center; align-self: start; border: 1px solid #bde0da; border-radius: 999px; padding: 4px 10px; color: var(--accent-strong); background: var(--accent-soft); font-size: 0.78rem; font-weight: 700; white-space: nowrap; }}
+    .codex-account-switch {{ display: inline-flex; align-items: center; justify-content: center; min-width: 68px; min-height: 34px; padding: 8px 14px; border-radius: 7px; text-align: center; font-weight: 700; }}
+    .codex-account-switch.is-current {{ border-color: #bde0da; color: var(--accent-strong); background: var(--accent-soft); }}
+    .codex-account-switch[disabled] {{ opacity: 1; cursor: default; box-shadow: none; transform: none; }}
     .ref-button {{ display: inline; padding: 0; border: 0; background: transparent; color: #0b5cad; text-align: left; font-family: Consolas, "Liberation Mono", monospace; font-size: 0.9rem; overflow-wrap: anywhere; }}
     .ref-button:hover {{ text-decoration: underline; }}
     @media (max-width: 820px) {{
       main {{ padding: 14px 12px 32px; }}
+      header {{ padding: 14px; }}
       .console-layout, .summary-grid, .policy-grid, .feedback-grid, .details-grid, .codex-grid, .codex-account {{ grid-template-columns: 1fr; }}
+      .info-list {{ grid-template-columns: 1fr; }}
       .sidebar {{ position: static; }}
       .output {{ min-height: 220px; }}
       .table-wrap {{ overflow-x: visible; }}
@@ -474,8 +580,9 @@ def _render_tasks(snapshot: RuntimeSnapshot, text: dict[str, str], *, interactiv
 
 
 def _render_task_row(task, text: dict[str, str], *, interactive: bool) -> str:
-    interaction = task.interaction_posture or text["not_recorded"]
+    interaction = _humanize_runtime_value(task.interaction_posture or text["not_recorded"], language=text["html_lang"])
     state_class = _state_class(task.current_state)
+    state_label = _humanize_runtime_value(task.current_state, language=text["html_lang"])
     return "\n".join(
         [
             "<tr>",
@@ -485,15 +592,15 @@ def _render_task_row(task, text: dict[str, str], *, interactive: bool) -> str:
             f"<div class='meta'>{escape(text['workspace'])}: <code>{escape(task.workspace_root or text['missing'])}</code></div>",
             "</td>",
             f"<td data-label='{escape(text['state'])}'>",
-            f"<div class='state {state_class}'>{escape(task.current_state)}</div>",
+            f"<div class='state {state_class}'>{escape(state_label)}</div>",
             f"<div class='meta'>{escape(text['interaction'])}: {escape(interaction)}</div>",
             f"<div class='meta'>{escape(text['rollback'])}: <code>{escape(task.rollback_ref or text['missing'])}</code></div>",
             "</td>",
             f"<td data-label='{escape(text['goal'])}'>{escape(task.goal)}</td>",
             f"<td data-label='{escape(text['outputs'])}'><div class='refs'>",
             _render_list(text["approvals"], task.approval_ids, text, interactive=interactive),
-            _render_list("Artifacts", task.artifact_refs, text, interactive=interactive),
-            _render_list("Evidence", task.evidence_refs, text, interactive=interactive),
+            _render_list("执行输出" if text["html_lang"] == "zh-CN" else "Execution outputs", task.artifact_refs, text, interactive=interactive),
+            _render_list("运行证据" if text["html_lang"] == "zh-CN" else "Evidence", task.evidence_refs, text, interactive=interactive),
             _render_list(text["verification"], task.verification_refs, text, interactive=interactive),
             "</div></td>",
             "</tr>",
@@ -537,6 +644,9 @@ def _render_attachments(snapshot: RuntimeSnapshot, text: dict[str, str], *, inte
 
 def _render_attachment_row(attachment, text: dict[str, str], *, interactive: bool) -> str:
     state_class = "danger" if attachment.fail_closed else _state_class(attachment.binding_state)
+    state_label = _humanize_runtime_value(attachment.binding_state, language=text["html_lang"])
+    adapter_label = _humanize_runtime_value(attachment.adapter_preference or text["missing"], language=text["html_lang"])
+    gate_profile_label = _humanize_runtime_value(attachment.gate_profile or text["missing"], language=text["html_lang"])
     return "\n".join(
         [
             "<tr>",
@@ -546,12 +656,12 @@ def _render_attachment_row(attachment, text: dict[str, str], *, interactive: boo
             f"<div class='meta'>{escape(text['light_pack'])}: {_render_ref_value(attachment.light_pack_path, interactive=interactive)}</div>",
             "</td>",
             f"<td data-label='{escape(text['state'])}'>",
-            f"<div class='state {state_class}'>{escape(attachment.binding_state)}</div>",
-            f"<div class='meta'>{escape(text['fail_closed'])}: {str(attachment.fail_closed).lower()}</div>",
+            f"<div class='state {state_class}'>{escape(state_label)}</div>",
+            f"<div class='meta'>{escape(text['fail_closed'])}: {escape(_humanize_bool(attachment.fail_closed, language=text['html_lang']))}</div>",
             "</td>",
             f"<td data-label='{escape(text['adapter'])}'>",
-            f"<div>{escape(text['preference'])}: <code>{escape(attachment.adapter_preference or text['missing'])}</code></div>",
-            f"<div class='meta'>{escape(text['gate_profile'])}: <code>{escape(attachment.gate_profile or text['missing'])}</code></div>",
+            f"<div>{escape(text['preference'])}: <code>{escape(adapter_label)}</code></div>",
+            f"<div class='meta'>{escape(text['gate_profile'])}: <code>{escape(gate_profile_label)}</code></div>",
             "</td>",
             f"<td data-label='{escape(text['diagnostics'])}'>",
             f"<div>{escape(text['reason'])}: {escape(attachment.reason or text['none'])}</div>",
@@ -586,14 +696,55 @@ def _is_viewable_ref(value: str) -> bool:
 
 
 def _render_policy_item(title: str, value: str | None, text: dict[str, str]) -> str:
+    rendered_value = _humanize_runtime_value(value or text["missing"], language=text["html_lang"])
     return "\n".join(
         [
             "<div class='policy-item'>",
             f"<span class='policy-label'>{escape(title)}</span>",
-            f"<code>{escape(value or text['missing'])}</code>",
+            f"<code>{escape(rendered_value)}</code>",
             "</div>",
         ]
     )
+
+
+def _humanize_bool(value: bool, *, language: str) -> str:
+    if language == "zh-CN":
+        return "是" if value else "否"
+    return "yes" if value else "no"
+
+
+def _humanize_runtime_value(value: str, *, language: str) -> str:
+    normalized = str(value or "").strip()
+    if not normalized:
+        return normalized
+    lower = normalized.lower()
+    zh_map = {
+        "missing": "未配置",
+        "not recorded": "未记录",
+        "completed": "已完成",
+        "delivered": "已完成",
+        "running": "执行中",
+        "queued": "排队中",
+        "failed": "失败",
+        "attached": "已接入",
+        "detached": "未接入",
+        "native_attach": "原生接入",
+        "manual_handoff": "人工接力",
+        "process_bridge": "进程桥接",
+        "quick": "快速",
+        "full": "完整",
+        "l1": "L1 基础",
+        "l2": "L2 标准",
+        "l3": "L3 深度",
+    }
+    en_map = {
+        "native_attach": "native attach",
+        "manual_handoff": "manual handoff",
+        "process_bridge": "process bridge",
+    }
+    if language == "zh-CN":
+        return zh_map.get(lower, normalized)
+    return en_map.get(lower, normalized)
 
 
 def _render_actions(text: dict[str, str], *, language: str, interactive: bool, target_options: list[str]) -> str:
@@ -664,7 +815,7 @@ def _render_feedback(text: dict[str, str], *, interactive: bool) -> str:
     return "\n".join(
         [
             "<section class='feedback-grid'>",
-            "<div class='panel'>",
+            "<div class='panel output-panel'>",
             f"<h2>{escape(text['command_output'])}</h2>",
             f"<div id='ui-status' class='status-line'>{escape(text['ready'])}</div>",
             "<pre id='ui-output' class='output'></pre>",
@@ -695,18 +846,15 @@ def _render_codex_panel(text: dict[str, str], *, interactive: bool) -> str:
             f"<h2>{escape(text['codex_console'])}</h2>",
             "<div class='codex-toolbar'>",
             f"<button type='button' data-codex-refresh='1'>{escape(text['codex_refresh'])}</button>",
-            "<select id='codex-account-select' aria-label='Codex account'></select>",
-            f"<button type='button' data-codex-switch='1'>{escape(text['codex_switch'])}</button>",
+            f"<button type='button' data-codex-refresh-online='1' title='{escape(text['codex_refresh_online_hint'])}'>{escape(text['codex_refresh_online'])}</button>",
             f"<button type='button' data-codex-usage='1'>{escape(text['codex_open_usage'])}</button>",
             "</div>",
             "<div class='codex-grid'>",
             "<div>",
             f"<div class='status-line' id='codex-login'>{escape(text['codex_login'])}: {escape(text['not_recorded'])}</div>",
+            f"<div class='status-line' id='codex-cache-state'>{escape(text['panel_cache_state'])}: {escape(text['panel_cache_cold'])}</div>",
+            f"<div class='status-line' id='codex-token-note'>{escape(text['codex_subscription_note'])} {escape(text['codex_token_note'])}</div>",
             "<div id='codex-accounts' class='codex-list'></div>",
-            "</div>",
-            "<div>",
-            f"<div class='policy-item'><span class='policy-label'>{escape(text['codex_usage'])}</span><code id='codex-usage'>{escape(text['codex_unknown_usage'])}</code><div class='meta' id='codex-usage-note'>{escape(text['codex_usage_note'])}: unknown</div></div>",
-            f"<div class='policy-item' style='margin-top: 10px;'><span class='policy-label'>{escape(text['codex_config'])}</span><div id='codex-config' class='meta'>{escape(text['not_recorded'])}</div></div>",
             "</div>",
             "</div>",
             "</section>",
@@ -730,19 +878,12 @@ def _render_claude_panel(text: dict[str, str], *, interactive: bool) -> str:
             f"<h2>{escape(text['claude_console'])}</h2>",
             "<div class='codex-toolbar'>",
             f"<button type='button' data-claude-refresh='1'>{escape(text['claude_refresh'])}</button>",
-            "<select id='claude-provider-select' aria-label='Claude provider'></select>",
-            f"<button type='button' data-claude-switch='1'>{escape(text['claude_switch'])}</button>",
             "</div>",
             "<div class='codex-grid'>",
             "<div>",
             f"<div class='status-line' id='claude-command'>{escape(text['claude_command'])}: {escape(text['not_recorded'])}</div>",
+            f"<div class='status-line' id='claude-cache-state'>{escape(text['panel_cache_state'])}: {escape(text['panel_cache_cold'])}</div>",
             "<div id='claude-providers' class='codex-list'></div>",
-            "</div>",
-            "<div>",
-            f"<div class='policy-item'><span class='policy-label'>{escape(text['claude_settings'])}</span><div id='claude-settings' class='meta'>{escape(text['not_recorded'])}</div></div>",
-            f"<div class='policy-item' style='margin-top: 10px;'><span class='policy-label'>{escape(text['claude_config'])}</span><div id='claude-config' class='meta'>{escape(text['not_recorded'])}</div></div>",
-            f"<div class='policy-item' style='margin-top: 10px;'><span class='policy-label'>{escape(text['claude_mcp'])}</span><div id='claude-mcp' class='meta'>{escape(text['not_recorded'])}</div></div>",
-            f"<div class='policy-item' style='margin-top: 10px;'><span class='policy-label'>{escape(text['claude_usage'])}</span><code id='claude-usage'>{escape(text['claude_unknown_usage'])}</code></div>",
             "</div>",
             "</div>",
             "</section>",
@@ -766,19 +907,14 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   const dryRun = document.getElementById('ui-dry-run');
   const historyList = document.getElementById('ui-history');
   const codexAccounts = document.getElementById('codex-accounts');
-  const codexAccountSelect = document.getElementById('codex-account-select');
   const codexLogin = document.getElementById('codex-login');
-  const codexUsage = document.getElementById('codex-usage');
-  const codexUsageNote = document.getElementById('codex-usage-note');
-  const codexConfig = document.getElementById('codex-config');
+  const codexCacheState = document.getElementById('codex-cache-state');
   const claudeProviders = document.getElementById('claude-providers');
-  const claudeProviderSelect = document.getElementById('claude-provider-select');
   const claudeCommand = document.getElementById('claude-command');
-  const claudeSettings = document.getElementById('claude-settings');
-  const claudeConfig = document.getElementById('claude-config');
-  const claudeMcp = document.getElementById('claude-mcp');
-  const claudeUsage = document.getElementById('claude-usage');
+  const claudeCacheState = document.getElementById('claude-cache-state');
   const historyKey = 'governed-runtime-operator-history';
+  const codexCacheKey = 'governed-runtime-operator-codex-status';
+  const claudeCacheKey = 'governed-runtime-operator-claude-status';
   let codexLoaded = false;
   let claudeLoaded = false;
 
@@ -793,6 +929,71 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
 
   function writeHistory(items) {{
     window.localStorage.setItem(historyKey, JSON.stringify(items.slice(0, 12)));
+  }}
+
+  function readPanelCache(key) {{
+    try {{
+      const value = JSON.parse(window.localStorage.getItem(key) || 'null');
+      return value && typeof value === 'object' ? value : null;
+    }} catch (error) {{
+      return null;
+    }}
+  }}
+
+  function writePanelCache(key, payload) {{
+    try {{
+      window.localStorage.setItem(key, JSON.stringify(payload));
+    }} catch (error) {{
+      return;
+    }}
+  }}
+
+  function formatCachedAtLabel(value) {{
+    const raw = String(value || '').trim();
+    if (!raw) {{
+      return '';
+    }}
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) {{
+      return raw;
+    }}
+    return parsed.toLocaleTimeString([], {{ hour: '2-digit', minute: '2-digit', second: '2-digit' }});
+  }}
+
+  function setPanelCacheState(kind, state, cachedAt) {{
+    const target = kind === 'codex' ? codexCacheState : claudeCacheState;
+    if (!target) {{
+      return;
+    }}
+    const label = {text['panel_cache_state']!r};
+    const stateLabels = {{
+      cold: {text['panel_cache_cold']!r},
+      cached: {text['panel_cache_cached']!r},
+      refreshing: {text['panel_cache_refreshing']!r},
+      ready: {text['panel_cache_ready']!r},
+      error: {text['panel_cache_error']!r},
+    }};
+    const suffix = formatCachedAtLabel(cachedAt);
+    target.textContent = suffix
+      ? `${{label}}: ${{stateLabels[state] || state}} · ${{suffix}}`
+      : `${{label}}: ${{stateLabels[state] || state}}`;
+  }}
+
+  function hydratePanelCache(kind, key) {{
+    const cached = readPanelCache(key);
+    if (!cached) {{
+      setPanelCacheState(kind, 'cold');
+      return false;
+    }}
+    if (kind === 'codex') {{
+      renderCodexStatus(cached);
+      codexLoaded = true;
+    }} else {{
+      renderClaudeStatus(cached);
+      claudeLoaded = true;
+    }}
+    setPanelCacheState(kind, 'cached', cached.cached_at);
+    return true;
   }}
 
   function renderHistory() {{
@@ -894,32 +1095,416 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     }}
   }}
 
+  function codexAccountLabel(account) {{
+    return account.account_label || account.email || account.display_name || account.account_hash || account.name || 'unknown';
+  }}
+
+  function formatPlanLabel(planType) {{
+    const value = String(planType || '').trim().toLowerCase();
+    if (!value) {{
+      return '';
+    }}
+    if (currentUiLanguage() === 'zh-CN') {{
+      const labels = {{
+        team: '团队版',
+        plus: 'Plus',
+        prolite: 'Pro',
+        pro: 'Pro',
+        free: '免费版',
+      }};
+      return labels[value] || planType;
+    }}
+    return planType;
+  }}
+
+  function formatAuthModeLabel(authMode) {{
+    const value = String(authMode || '').trim().toLowerCase();
+    if (!value) {{
+      return currentUiLanguage() === 'zh-CN' ? '登录方式未知' : 'unknown sign-in';
+    }}
+    if (value === 'chatgpt') {{
+      return currentUiLanguage() === 'zh-CN' ? 'ChatGPT 登录' : 'ChatGPT sign-in';
+    }}
+    return authMode;
+  }}
+
+  function formatTimestampLabel(timestamp) {{
+    const raw = String(timestamp || '').trim();
+    if (!raw) {{
+      return currentUiLanguage() === 'zh-CN' ? '最近刷新时间未知' : 'last refresh unknown';
+    }}
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) {{
+      return raw;
+    }}
+    const locale = currentUiLanguage() === 'zh-CN' ? 'zh-CN' : 'en-US';
+    return new Intl.DateTimeFormat(locale, {{
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }}).format(date);
+  }}
+
+  function formatCompactTimestamp(timestamp) {{
+    const raw = String(timestamp || '').trim();
+    if (!raw) {{
+      return '';
+    }}
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) {{
+      return raw;
+    }}
+    const locale = currentUiLanguage() === 'zh-CN' ? 'zh-CN' : 'en-US';
+    return new Intl.DateTimeFormat(locale, {{
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }}).format(date);
+  }}
+
+  function formatLoginSummary(login) {{
+    const summary = String((login && login.summary) || '').trim();
+    if (!summary) {{
+      return currentUiLanguage() === 'zh-CN' ? '未获取到登录状态' : 'login status unavailable';
+    }}
+    const lower = summary.toLowerCase();
+    if (currentUiLanguage() === 'zh-CN') {{
+      if (lower.includes('logged in using chatgpt')) {{
+        return '已登录，可使用 ChatGPT 认证';
+      }}
+      if (lower.includes('not logged in')) {{
+        return '未登录';
+      }}
+    }}
+    return summary;
+  }}
+
+  function formatCodexAuthPointer(auth) {{
+    const activeProfile = auth && auth.active_profile ? auth.active_profile : null;
+    if (!activeProfile) {{
+      return '';
+    }}
+    const profileName = String(activeProfile.name || activeProfile.file || '').trim();
+    const label = String(activeProfile.account_label || activeProfile.email || activeProfile.display_name || '').trim();
+    if (currentUiLanguage() === 'zh-CN') {{
+      if (profileName && label) {{
+        return `本机 auth.json -> ${{profileName}} (${{label}})`;
+      }}
+      if (profileName) {{
+        return `本机 auth.json -> ${{profileName}}`;
+      }}
+      if (label) {{
+        return `本机 auth.json -> ${{label}}`;
+      }}
+      return '本机 auth.json 已加载';
+    }}
+    if (profileName && label) {{
+      return `local auth.json -> ${{profileName}} (${{label}})`;
+    }}
+    if (profileName) {{
+      return `local auth.json -> ${{profileName}}`;
+    }}
+    if (label) {{
+      return `local auth.json -> ${{label}}`;
+    }}
+    return 'local auth.json loaded';
+  }}
+
+  function currentUiLanguage() {{
+    const lang = document.documentElement.lang || '';
+    return lang.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en-US';
+  }}
+
+  function formatUsageReset(resetAt) {{
+    const seconds = Number(resetAt);
+    if (!Number.isFinite(seconds) || seconds <= 0) {{
+      return '';
+    }}
+    const date = new Date(seconds * 1000);
+    if (Number.isNaN(date.getTime())) {{
+      return '';
+    }}
+    const now = new Date();
+    const sameDay = date.getFullYear() === now.getFullYear()
+      && date.getMonth() === now.getMonth()
+      && date.getDate() === now.getDate();
+    const locale = currentUiLanguage();
+    const options = sameDay
+      ? {{ hour: '2-digit', minute: '2-digit', hour12: false }}
+      : (locale === 'zh-CN' ? {{ month: 'long', day: 'numeric' }} : {{ month: 'numeric', day: 'numeric' }});
+    return new Intl.DateTimeFormat(locale, options).format(date);
+  }}
+
+  function formatUsageWindowLabel(item) {{
+    const minutes = Number(item.window_minutes);
+    if (currentUiLanguage() === 'zh-CN') {{
+      if (minutes === 300) {{
+        return '5 小时';
+      }}
+      if (minutes === 10080) {{
+        return '1 周';
+      }}
+    }}
+    return item.window || 'unknown';
+  }}
+
+  function formatUsageWindow(item) {{
+    const windowLabel = formatUsageWindowLabel(item);
+    const remaining = item.remaining_percent !== null && item.remaining_percent !== undefined
+      ? `${{item.remaining_percent}}%`
+      : (item.remaining || 'unknown');
+    const reset = formatUsageReset(item.reset_at);
+    return [windowLabel, remaining, reset].filter(Boolean).join(' ');
+  }}
+
+  function formatAccountUsageSummary(account) {{
+    const snapshot = account && account.usage_snapshot;
+    const windows = snapshot && Array.isArray(snapshot.windows) ? snapshot.windows : [];
+    if (!windows.length) {{
+      return {text['codex_account_usage_unknown']!r};
+    }}
+    return windows.map(formatUsageWindow).join('\\n');
+  }}
+
+  function formatUsageSourceLabel(source) {{
+    const value = String(source || '').trim();
+    if (!value) {{
+      return currentUiLanguage() === 'zh-CN' ? '来源未知' : 'unknown source';
+    }}
+    const labels = currentUiLanguage() === 'zh-CN'
+      ? {{
+          codex_logs_2_sqlite: '本机日志快照',
+          codex_sessions_jsonl: '在线刷新后的最新会话',
+          codex_exec_stdout: '在线响应结果',
+          unknown: '来源未知',
+        }}
+      : {{
+          codex_logs_2_sqlite: 'local log snapshot',
+          codex_sessions_jsonl: 'latest refreshed session',
+          codex_exec_stdout: 'online response',
+          unknown: 'unknown source',
+        }};
+    return labels[value] || value;
+  }}
+
+  function formatTokenExpirySummary(account) {{
+    const idExpiry = formatCompactTimestamp(account && account.id_token_expires_at);
+    const accessExpiry = formatCompactTimestamp(account && account.access_token_expires_at);
+    const parts = [];
+    if (idExpiry) {{
+      parts.push(`ID token ${{idExpiry}}`);
+    }}
+    if (accessExpiry) {{
+      parts.push(`Access token ${{accessExpiry}}`);
+    }}
+    if (!parts.length) {{
+      return {text['codex_token_unknown']!r};
+    }}
+    return parts.join('\\n');
+  }}
+
+  function formatSubscriptionExpirySummary(account) {{
+    const expiry = formatCompactTimestamp(account && account.subscription_active_until);
+    if (!expiry) {{
+      return {text['codex_subscription_unknown']!r};
+    }}
+    const checked = formatCompactTimestamp(account && account.subscription_last_checked);
+    if (!checked) {{
+      return expiry;
+    }}
+    return currentUiLanguage() === 'zh-CN'
+      ? `${{expiry}}，核验 ${{checked}}`
+      : `${{expiry}}, checked ${{checked}}`;
+  }}
+
+  function summarizeClaudeMcp(summary) {{
+    const text = String(summary || '').trim();
+    if (!text) {{
+      return currentUiLanguage() === 'zh-CN' ? '状态未知' : 'status unknown';
+    }}
+    const normalized = text.replace(/\\s+/g, ' ').trim();
+    const connected = (normalized.match(/Connected/gi) || []).length;
+    const checking = (normalized.match(/Checking MCP server health/gi) || []).length;
+    const names = Array.from(normalized.matchAll(/\\b([a-z0-9-]+):\\s/gi))
+      .map((match) => match[1])
+      .filter((name, index, items) => items.indexOf(name) === index);
+    const prefix = [];
+    if (connected) {{
+      prefix.push(currentUiLanguage() === 'zh-CN' ? `已连接 ${{connected}} 个` : `${{connected}} connected`);
+    }}
+    if (checking) {{
+      prefix.push(currentUiLanguage() === 'zh-CN' ? `检查中 ${{checking}} 个` : `${{checking}} checking`);
+    }}
+    const visibleNames = names.slice(0, 4).join(currentUiLanguage() === 'zh-CN' ? '、' : ', ');
+    const hiddenCount = Math.max(names.length - 4, 0);
+    if (visibleNames) {{
+      prefix.push(
+        currentUiLanguage() === 'zh-CN'
+          ? hiddenCount
+            ? `${{visibleNames}} 等 ${{names.length}} 个`
+            : visibleNames
+          : hiddenCount
+            ? `${{visibleNames}} and ${{hiddenCount}} more`
+            : visibleNames
+      );
+    }}
+    return prefix.join('\\n') || (currentUiLanguage() === 'zh-CN' ? '状态未知' : 'status unknown');
+  }}
+
+  function createInfoLine(label, value) {{
+    const line = document.createElement('div');
+    line.className = 'info-line';
+    const labelEl = document.createElement('span');
+    labelEl.className = 'info-label';
+    labelEl.textContent = label;
+    const valueEl = document.createElement('span');
+    valueEl.className = 'info-value';
+    valueEl.textContent = value;
+    line.append(labelEl, valueEl);
+    return line;
+  }}
+
+  function configCheckLabel(key) {{
+    const labels = currentUiLanguage() === 'zh-CN'
+      ? {{
+          model: '默认模型',
+          model_reasoning_effort: '推理强度',
+          model_verbosity: '回答详细度',
+          model_context_window: '上下文窗口',
+          model_auto_compact_token_limit: '自动压缩阈值',
+          sandbox_mode: '沙箱模式',
+          approval_policy: '审批策略',
+          web_search: '联网搜索',
+          cli_path: 'CLI 路径',
+          command_status: 'CLI 状态',
+          provider_name: 'Provider',
+          base_url: '服务地址',
+          credential_present: '凭据',
+        }}
+      : {{
+          model: 'default model',
+          model_reasoning_effort: 'reasoning effort',
+          model_verbosity: 'verbosity',
+          model_context_window: 'context window',
+          model_auto_compact_token_limit: 'auto compact threshold',
+          sandbox_mode: 'sandbox mode',
+          approval_policy: 'approval policy',
+          web_search: 'web search',
+          cli_path: 'CLI path',
+          command_status: 'CLI status',
+          provider_name: 'provider',
+          base_url: 'service URL',
+          credential_present: 'credential',
+        }};
+    return labels[key] || key || 'unknown';
+  }}
+
+  function formatConfigHealth(config) {{
+    if (!config || config.status === 'missing') {{
+      return currentUiLanguage() === 'zh-CN' ? '未检测到本机配置文件' : 'Local config file not found';
+    }}
+    const failedChecks = Array.isArray(config.checks) ? config.checks.filter((check) => !check.ok) : [];
+    const secretMarkers = Array.isArray(config.secret_like_markers) ? config.secret_like_markers : [];
+    if (!failedChecks.length && !secretMarkers.length) {{
+      return currentUiLanguage() === 'zh-CN' ? '已符合推荐值' : 'Matches recommended defaults';
+    }}
+    const issues = failedChecks.map((check) => configCheckLabel(check.key));
+    if (secretMarkers.length) {{
+      issues.push(currentUiLanguage() === 'zh-CN' ? '疑似敏感字段' : 'possible secret markers');
+    }}
+    const prefix = currentUiLanguage() === 'zh-CN' ? '建议调整：' : 'Needs attention: ';
+    return prefix + issues.join('、');
+  }}
+
   function renderCodexStatus(payload) {{
     const accounts = Array.isArray(payload.accounts) ? payload.accounts : [];
-    codexAccountSelect.innerHTML = '';
     codexAccounts.innerHTML = '';
     accounts.forEach((account) => {{
-      const option = document.createElement('option');
-      option.value = account.name;
-      option.textContent = `${{account.active ? '* ' : ''}}${{account.name}} · ${{account.account_hash || 'unknown'}}`;
-      option.selected = Boolean(account.active);
-      codexAccountSelect.appendChild(option);
-
+      const label = codexAccountLabel(account);
       const row = document.createElement('div');
       row.className = 'codex-account';
       const body = document.createElement('div');
+      body.className = 'codex-account-body';
       const name = document.createElement('strong');
-      name.textContent = account.name;
-      const meta = document.createElement('small');
-      meta.className = 'meta';
-      meta.textContent = `${{account.auth_mode || 'unknown'}} · ${{account.last_refresh || 'no refresh'}} · ${{account.account_hash || 'no account hash'}}`;
-      body.append(name, meta);
+      name.textContent = label;
+      const infoList = document.createElement('div');
+      infoList.className = 'info-list';
+      infoList.append(
+        createInfoLine(
+          currentUiLanguage() === 'zh-CN' ? '配置' : 'profile',
+          account.name || account.file || 'auth'
+        ),
+        createInfoLine(
+          currentUiLanguage() === 'zh-CN' ? '登录' : 'sign-in',
+          formatAuthModeLabel(account.auth_mode)
+        ),
+        createInfoLine(
+          {text['codex_subscription_expiry']!r},
+          formatSubscriptionExpirySummary(account)
+        ),
+        createInfoLine(
+          {text['codex_token_expiry']!r},
+          formatTokenExpirySummary(account)
+        )
+      );
+      const planLabel = formatPlanLabel(account.plan_type);
+      if (planLabel) {{
+        infoList.appendChild(
+          createInfoLine(
+            currentUiLanguage() === 'zh-CN' ? '套餐' : 'plan',
+            planLabel
+          )
+        );
+      }}
+      infoList.appendChild(
+        createInfoLine(
+          currentUiLanguage() === 'zh-CN' ? '额度' : 'usage',
+          formatAccountUsageSummary(account)
+        )
+      );
+      row.title = [
+        account.file ? `file=${{account.file}}` : '',
+        account.account_hash ? `hash=${{account.account_hash}}` : '',
+        account.last_refresh || '',
+      ].filter(Boolean).join(' · ');
+      body.append(name, infoList);
       row.appendChild(body);
+      const actions = document.createElement('div');
+      actions.className = 'codex-account-actions';
+      const switchButton = document.createElement('button');
+      switchButton.type = 'button';
+      switchButton.className = account.active ? 'codex-account-switch is-current' : 'codex-account-switch';
+      switchButton.textContent = account.active ? {text['codex_active']!r} : {text['codex_switch']!r};
       if (account.active) {{
-        const badge = document.createElement('span');
-        badge.className = 'codex-badge';
-        badge.textContent = {text['codex_active']!r};
-        row.appendChild(badge);
+        switchButton.disabled = true;
+      }} else {{
+        switchButton.dataset.codexSwitchName = account.name || '';
+      }}
+      actions.appendChild(switchButton);
+      row.appendChild(actions);
+      if (account.active) {{
+        infoList.append(
+          createInfoLine(
+            currentUiLanguage() === 'zh-CN' ? '配置健康' : 'config',
+            formatConfigHealth(payload.config || {{}})
+          ),
+          createInfoLine(
+            currentUiLanguage() === 'zh-CN' ? '额度来源' : 'usage source',
+            [
+              formatPlanLabel((payload.usage || {{}}).plan_type)
+                ? (currentUiLanguage() === 'zh-CN'
+                    ? `${{formatPlanLabel((payload.usage || {{}}).plan_type)}} 账号`
+                    : `${{formatPlanLabel((payload.usage || {{}}).plan_type)}} account`)
+                : '',
+              formatUsageSourceLabel((payload.usage || {{}}).source || 'unknown'),
+            ].filter(Boolean).join(' · ')
+          )
+        );
       }}
       codexAccounts.appendChild(row);
     }});
@@ -928,36 +1513,67 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     }}
 
     const login = payload.login_status || {{}};
-    codexLogin.textContent = `{text['codex_login']}: ${{login.summary || login.exit_code || 'unknown'}}`;
-    const usage = payload.usage || {{}};
-    const windows = Array.isArray(usage.windows) ? usage.windows.map((item) => `${{item.window}}=${{item.remaining ?? 'unknown'}}`).join(' · ') : {text['codex_unknown_usage']!r};
-    codexUsage.textContent = windows || {text['codex_unknown_usage']!r};
-    codexUsageNote.textContent = `{text['codex_usage_note']}: ${{usage.source || 'unknown'}}`;
-    const config = payload.config || {{}};
-    const failedChecks = Array.isArray(config.checks) ? config.checks.filter((check) => !check.ok).map((check) => check.key) : [];
-    codexConfig.textContent = failedChecks.length ? `attention: ${{failedChecks.join(', ')}}` : (config.status || 'ok');
+    const authPointer = formatCodexAuthPointer(payload.auth || {{}});
+    const loginSummary = formatLoginSummary(login) || login.exit_code || 'unknown';
+    codexLogin.textContent = authPointer
+      ? `${text['codex_login']}: ${{loginSummary}} · ${{authPointer}}`
+      : `${text['codex_login']}: ${{loginSummary}}`;
   }}
 
   async function refreshCodexStatus() {{
     if (!codexAccounts) {{
       return;
     }}
+    setPanelCacheState('codex', codexLoaded ? 'refreshing' : 'cold');
     try {{
       const response = await fetch('/api/codex/status');
       const payload = await response.json();
       if (!response.ok) {{
         codexAccounts.innerHTML = `<p class="meta">${{payload.error || response.statusText}}</p>`;
+        setPanelCacheState('codex', 'error');
         return;
       }}
       renderCodexStatus(payload);
+      writePanelCache(codexCacheKey, payload);
       codexLoaded = true;
+      setPanelCacheState('codex', 'ready', payload.cached_at);
     }} catch (error) {{
       codexAccounts.innerHTML = `<p class="meta">${{String(error)}}</p>`;
+      setPanelCacheState('codex', 'error');
     }}
   }}
 
-  async function switchCodexAccount() {{
-    const name = codexAccountSelect.value;
+  async function refreshCodexStatusOnline() {{
+    if (!codexAccounts) {{
+      return;
+    }}
+    setBusy(true);
+    setPanelCacheState('codex', codexLoaded ? 'refreshing' : 'cold');
+    try {{
+      const response = await fetch('/api/codex/refresh', {{
+        method: 'POST',
+        headers: {{ 'content-type': 'application/json' }},
+        body: JSON.stringify({{}})
+      }});
+      const payload = await response.json();
+      if (!response.ok) {{
+        codexAccounts.innerHTML = `<p class="meta">${{payload.error || response.statusText}}</p>`;
+        setPanelCacheState('codex', 'error');
+        return;
+      }}
+      renderCodexStatus(payload);
+      writePanelCache(codexCacheKey, payload);
+      codexLoaded = true;
+      setPanelCacheState('codex', 'ready', payload.cached_at);
+    }} catch (error) {{
+      codexAccounts.innerHTML = `<p class="meta">${{String(error)}}</p>`;
+      setPanelCacheState('codex', 'error');
+    }} finally {{
+      setBusy(false);
+    }}
+  }}
+
+  async function switchCodexAccount(name) {{
     if (!name) {{
       return;
     }}
@@ -980,32 +1596,93 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
 
   function renderClaudeStatus(payload) {{
     const providers = Array.isArray(payload.providers) ? payload.providers : [];
-    claudeProviderSelect.innerHTML = '';
     claudeProviders.innerHTML = '';
+    const settings = payload.settings || {{}};
+    const permissions = settings.permissions || {{}};
+    const config = payload.config || {{}};
+    const mcp = payload.mcp || {{}};
+    const usage = payload.usage || {{}};
     providers.forEach((provider) => {{
-      const option = document.createElement('option');
-      option.value = provider.name;
-      option.textContent = `${{provider.active ? '* ' : ''}}${{provider.label || provider.name}}`;
-      option.selected = Boolean(provider.active);
-      claudeProviderSelect.appendChild(option);
-
       const row = document.createElement('div');
       row.className = 'codex-account';
       const body = document.createElement('div');
+      body.className = 'codex-account-body';
       const name = document.createElement('strong');
       name.textContent = provider.label || provider.name;
-      const meta = document.createElement('small');
-      meta.className = 'meta';
       const models = provider.models || {{}};
-      const credential = provider.credential_present ? `{text['claude_credential']}: ok (${{provider.credential_source || 'unknown'}})` : `{text['claude_credential']}: missing ${{provider.auth_env || ''}}`;
-      meta.textContent = `${{provider.base_url || 'no base_url'}} · opus=${{models.opus || 'unknown'}} · sonnet=${{models.sonnet || 'unknown'}} · ${{credential}}`;
-      body.append(name, meta);
+      const credential = provider.credential_present
+        ? (currentUiLanguage() === 'zh-CN' ? `凭据已就绪` : `credential ready`)
+        : (currentUiLanguage() === 'zh-CN' ? `缺少凭据 ${{provider.auth_env || ''}}` : `missing credential ${{provider.auth_env || ''}}`);
+      const infoList = document.createElement('div');
+      infoList.className = 'info-list';
+      if (provider.base_url) {{
+        infoList.appendChild(
+          createInfoLine(
+            {text['claude_service']!r},
+            provider.base_url
+          )
+        );
+      }}
+      const modelSummary = [
+        models.opus ? `Opus ${{models.opus}}` : '',
+        models.sonnet ? `Sonnet ${{models.sonnet}}` : '',
+      ].filter(Boolean).join(' · ');
+      if (modelSummary) {{
+        infoList.appendChild(
+          createInfoLine(
+            {text['claude_models']!r},
+            modelSummary
+          )
+        );
+      }}
+      infoList.appendChild(
+        createInfoLine(
+          currentUiLanguage() === 'zh-CN' ? '凭据' : 'credential',
+          credential
+        )
+      );
+      body.append(name, infoList);
       row.appendChild(body);
+      const actions = document.createElement('div');
+      actions.className = 'codex-account-actions';
+      const switchButton = document.createElement('button');
+      switchButton.type = 'button';
+      switchButton.className = provider.active ? 'codex-account-switch is-current' : 'codex-account-switch';
+      switchButton.textContent = provider.active ? {text['claude_active']!r} : {text['claude_switch']!r};
       if (provider.active) {{
-        const badge = document.createElement('span');
-        badge.className = 'codex-badge';
-        badge.textContent = {text['claude_active']!r};
-        row.appendChild(badge);
+        switchButton.disabled = true;
+      }} else {{
+        switchButton.dataset.claudeSwitchName = provider.name || '';
+      }}
+      actions.appendChild(switchButton);
+      row.appendChild(actions);
+      if (provider.active) {{
+        infoList.append(
+          createInfoLine(
+            {text['claude_settings_summary']!r},
+            currentUiLanguage() === 'zh-CN'
+              ? `默认模型 ${{settings.model || 'unknown'}} · 权限模式 ${{permissions.defaultMode || 'unknown'}} · 清理周期 ${{settings.cleanupPeriodDays || 'unknown'}} 天`
+              : `model ${{settings.model || 'unknown'}} · mode ${{permissions.defaultMode || 'unknown'}} · cleanup ${{settings.cleanupPeriodDays || 'unknown'}}d`
+          ),
+          createInfoLine(
+            currentUiLanguage() === 'zh-CN' ? '配置健康' : 'config',
+            formatConfigHealth(config)
+          ),
+          createInfoLine(
+            {text['claude_extensions']!r},
+            summarizeClaudeMcp(
+              mcp.summary || (
+                currentUiLanguage() === 'zh-CN'
+                  ? `状态码 ${{mcp.exit_code ?? 'unknown'}}`
+                  : `exit_code=${{mcp.exit_code ?? 'unknown'}}`
+              )
+            )
+          ),
+          createInfoLine(
+            {text['claude_usage_note']!r},
+            usage.note || {text['claude_unknown_usage']!r}
+          )
+        );
       }}
       claudeProviders.appendChild(row);
     }});
@@ -1014,40 +1691,35 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     }}
 
     const command = payload.command || {{}};
-    claudeCommand.textContent = `{text['claude_command']}: ${{command.summary || command.exit_code || 'unknown'}}`;
-    const settings = payload.settings || {{}};
-    const permissions = settings.permissions || {{}};
-    claudeSettings.textContent = `model=${{settings.model || 'unknown'}} · mode=${{permissions.defaultMode || 'unknown'}} · cleanup=${{settings.cleanupPeriodDays || 'unknown'}}d`;
-    const config = payload.config || {{}};
-    const failedChecks = Array.isArray(config.checks) ? config.checks.filter((check) => !check.ok).map((check) => check.key) : [];
-    claudeConfig.textContent = failedChecks.length ? `attention: ${{failedChecks.join(', ')}}` : (config.status || 'ok');
-    const mcp = payload.mcp || {{}};
-    claudeMcp.textContent = mcp.summary || `exit_code=${{mcp.exit_code ?? 'unknown'}}`;
-    const usage = payload.usage || {{}};
-    claudeUsage.textContent = usage.note || {text['claude_unknown_usage']!r};
+    claudeCommand.textContent = `{text['claude_command']}: ${{formatLoginSummary(command) || command.exit_code || 'unknown'}}`;
   }}
 
   async function refreshClaudeStatus() {{
     if (!claudeProviders) {{
       return;
     }}
+    setPanelCacheState('claude', claudeLoaded ? 'refreshing' : 'cold');
     try {{
       const response = await fetch('/api/claude/status');
       const payload = await response.json();
       if (!response.ok) {{
         claudeProviders.innerHTML = `<p class="meta">${{payload.error || response.statusText}}</p>`;
+        setPanelCacheState('claude', 'error');
         return;
       }}
       renderClaudeStatus(payload);
+      writePanelCache(claudeCacheKey, payload);
       claudeLoaded = true;
+      setPanelCacheState('claude', 'ready', payload.cached_at);
     }} catch (error) {{
       claudeProviders.innerHTML = `<p class="meta">${{String(error)}}</p>`;
+      setPanelCacheState('claude', 'error');
     }}
   }}
 
-  async function switchClaudeProvider() {{
-    const name = claudeProviderSelect.value;
-    if (!name) {{
+  async function switchClaudeProvider(name) {{
+    const targetName = String(name || '').trim();
+    if (!targetName) {{
       return;
     }}
     setBusy(true);
@@ -1055,7 +1727,7 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
       const response = await fetch('/api/claude/switch', {{
         method: 'POST',
         headers: {{ 'content-type': 'application/json' }},
-        body: JSON.stringify({{ name }})
+        body: JSON.stringify({{ name: targetName }})
       }});
       const payload = await response.json();
       setOutput(JSON.stringify(payload, null, 2));
@@ -1089,10 +1761,23 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   }});
   document.querySelector('[data-refresh]').addEventListener('click', () => window.location.reload());
   document.querySelector('[data-codex-refresh]').addEventListener('click', () => refreshCodexStatus());
-  document.querySelector('[data-codex-switch]').addEventListener('click', () => switchCodexAccount());
+  document.querySelector('[data-codex-refresh-online]').addEventListener('click', () => refreshCodexStatusOnline());
   document.querySelector('[data-codex-usage]').addEventListener('click', () => window.open('https://chatgpt.com/codex/settings/usage', '_blank', 'noopener'));
+  codexAccounts.addEventListener('click', (event) => {{
+    const button = event.target.closest('button[data-codex-switch-name]');
+    if (!button) {{
+      return;
+    }}
+    switchCodexAccount(button.getAttribute('data-codex-switch-name') || '');
+  }});
   document.querySelector('[data-claude-refresh]').addEventListener('click', () => refreshClaudeStatus());
-  document.querySelector('[data-claude-switch]').addEventListener('click', () => switchClaudeProvider());
+  claudeProviders.addEventListener('click', (event) => {{
+    const button = event.target.closest('button[data-claude-switch-name]');
+    if (!button) {{
+      return;
+    }}
+    switchClaudeProvider(button.getAttribute('data-claude-switch-name') || '');
+  }});
   document.querySelectorAll('[data-view-tab]').forEach((button) => {{
     button.addEventListener('click', () => {{
       const selected = button.getAttribute('data-view-tab');
@@ -1103,9 +1788,11 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
         panel.hidden = panel.getAttribute('data-view-panel') !== selected;
       }});
       if (selected === 'codex' && !codexLoaded) {{
+        hydratePanelCache('codex', codexCacheKey);
         refreshCodexStatus();
       }}
       if (selected === 'claude' && !claudeLoaded) {{
+        hydratePanelCache('claude', claudeCacheKey);
         refreshClaudeStatus();
       }}
     }});
@@ -1116,6 +1803,12 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     window.location.href = next.toString();
   }});
   renderHistory();
+  hydratePanelCache('codex', codexCacheKey);
+  hydratePanelCache('claude', claudeCacheKey);
+  window.setTimeout(() => {{
+    refreshCodexStatus();
+    refreshClaudeStatus();
+  }}, 80);
 }})();
 </script>"""
 

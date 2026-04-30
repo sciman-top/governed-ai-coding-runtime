@@ -3,6 +3,7 @@ import importlib.util
 import shutil
 import subprocess
 import unittest
+from unittest import mock
 from pathlib import Path
 
 
@@ -130,6 +131,28 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertEqual("error", module.run_codex_switch({"name": ""})["status"])
         self.assertIn(module.load_claude_status()["status"], {"ok", "error"})
         self.assertEqual("error", module.run_claude_switch({"name": ""})["status"])
+
+    def test_operator_ui_status_helpers_cache_short_ttl_results(self) -> None:
+        module = _load_serve_operator_ui_module()
+        module.invalidate_status_cache()
+
+        with (
+            mock.patch.object(module, "codex_status", return_value={"sample": "codex"}) as codex_mock,
+            mock.patch.object(module, "claude_status", return_value={"sample": "claude"}) as claude_mock,
+        ):
+            first_codex = module.load_codex_status()
+            second_codex = module.load_codex_status()
+            first_claude = module.load_claude_status()
+            second_claude = module.load_claude_status()
+
+        self.assertEqual("ok", first_codex["status"])
+        self.assertEqual("ok", first_claude["status"])
+        self.assertEqual("codex", first_codex["cache_kind"])
+        self.assertEqual("claude", first_claude["cache_kind"])
+        self.assertEqual(1, codex_mock.call_count)
+        self.assertEqual(1, claude_mock.call_count)
+        self.assertEqual(first_codex["cached_at"], second_codex["cached_at"])
+        self.assertEqual(first_claude["cached_at"], second_claude["cached_at"])
 
     def test_operator_ui_server_dry_run_supports_single_target(self) -> None:
         module = _load_serve_operator_ui_module()
