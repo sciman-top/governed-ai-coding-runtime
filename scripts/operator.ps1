@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("Help", "Targets", "Readiness", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "FeedbackReport", "EvolutionReview", "ExperienceReview", "OperatorUi")]
+  [ValidateSet("Help", "Targets", "Readiness", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "OperatorUi")]
   [string]$Action = "Help",
 
   [ValidateSet("quick", "full", "l1", "l2", "l3")]
@@ -160,6 +160,7 @@ AI 推荐:
   FeedbackReport         生成 Codex/Claude 功能反馈汇总报告，并写入 runtime artifacts。
   EvolutionReview        执行 runtime 自我演进 dry-run，只生成候选和证据，不自动改代码。
   ExperienceReview       从 AI 编码证据/指标中生成 dry-run 改进提案和 skill manifest 候选。
+  EvolutionMaterialize   将低风险候选物化为 proposal 文件和禁用态 skill candidate 文件，不启用技能。
   OperatorUi             只生成本地 operator HTML；加 -OpenUi 会用默认浏览器打开。
 
 UI:
@@ -261,6 +262,10 @@ function Invoke-ExperienceReview {
   Invoke-PwshScript -Name "ai-coding-experience-review" -ScriptPath "scripts/extract-ai-coding-experience.ps1" -ScriptArguments @("-WriteArtifacts")
 }
 
+function Invoke-EvolutionMaterialize {
+  Invoke-PwshScript -Name "runtime-evolution-materialize" -ScriptPath "scripts/materialize-runtime-evolution.ps1" -ScriptArguments @("-Apply")
+}
+
 Push-Location -LiteralPath $RepoRoot
 try {
   switch ($Action) {
@@ -275,6 +280,7 @@ try {
     "FeedbackReport" { Invoke-FeedbackReport }
     "EvolutionReview" { Invoke-EvolutionReview }
     "ExperienceReview" { Invoke-ExperienceReview }
+    "EvolutionMaterialize" { Invoke-EvolutionMaterialize }
     "OperatorUi" { Invoke-OperatorUi }
   }
 }

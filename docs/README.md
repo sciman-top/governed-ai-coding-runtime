@@ -89,7 +89,7 @@
 - `Post-Certification Promotion Queue / GAP-113` is complete and enforced through `verify-repo.ps1 -Check Docs`.
 - `Post-Certification Selection Queue / GAP-114` is complete and enforced through `verify-repo.ps1 -Check Docs`.
 - `Dual First-Class Host Entrypoint Queue / GAP-115` through `GAP-119` is complete as owner-directed bounded scope for Codex plus Claude Code; latest native tier parity evidence is in `docs/change-evidence/20260427-claude-code-native-attach-tier-parity.md`.
-- `Runtime Evolution Review Queue / GAP-120` through `GAP-124` has dry-run `EvolutionReview` and `ExperienceReview` operator actions plus Docs gate coverage; automatic mutation remains disabled, and internal AI coding lessons must become evidence, controlled proposals, knowledge-source records, or skill manifests before they can drive changes.
+- `Runtime Evolution Review Queue / GAP-120` through `GAP-129` has dry-run `EvolutionReview` and `ExperienceReview` operator actions plus controlled `EvolutionMaterialize` file output. It may write proposal and disabled skill candidate files, but automatic policy apply, skill enablement, target repo sync, push, and merge remain disabled.
 - New LTP implementation queue items beyond this bounded host-support queue must use later ids and must pass the autonomous or owner-directed promotion scope fence.
 - Active verification for this repo remains `build -> test -> contract/invariant -> doctor`, with docs and script checks still included in `verify-repo -Check All`.
 - `docs/change-evidence/` remains historical evidence and planning trace, not the primary user-facing product surface.

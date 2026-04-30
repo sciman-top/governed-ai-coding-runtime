@@ -1,0 +1,33 @@
+{
+  "expected_impact": "Reduce repeated reasoning drift and make the pattern reusable without hidden memory authority.",
+  "human_review": {
+    "approval_ref": "not-approved",
+    "required": true,
+    "reviewer_role": "runtime maintainer"
+  },
+  "mutation_guard": {
+    "allows_direct_mutation": false,
+    "enforcement_note": "Proposal records are advisory and cannot mutate policy, skills, hooks, or controls directly."
+  },
+  "notes": "Generated on 2026-05-01 by dry-run AI coding experience extraction.",
+  "proposal_category": "skill",
+  "proposal_id": "proposal.checklist-first-bugfix",
+  "proposal_scope": "unified_governance",
+  "proposed_changes": [
+    "Create or update a governed skill asset after human review.",
+    "Add tests or gates before enabling any executable behavior."
+  ],
+  "rationale": "Signal scored 11 from recurrence, time saved, risk reduction, verification strength, reuse scope, and maintenance risk.",
+  "related_task_ids": [
+    "runtime-evolution-ai-coding-experience"
+  ],
+  "risk_posture": "low",
+  "rollback_ref": "Remove generated proposal artifacts; no runtime behavior is changed by proposal generation.",
+  "schema_version": "0.1-draft",
+  "source_refs": [
+    "schemas/examples/interaction-evidence/checklist-first-bugfix.example.json",
+    "schemas/examples/learning-efficiency-metrics/baseline.example.json"
+  ],
+  "status": "proposed",
+  "summary": "Promote repeated AI coding pattern: checklist-first bug diagnosis before root-cause reasoning."
+}

@@ -53,6 +53,7 @@ This directory holds the human and machine planning artifacts that bridge strate
 - `Post-Certification Selection Queue / GAP-114` is complete. It turns the promotion fence into the autonomous next-work selector.
 - `Dual First-Class Host Entrypoint Queue / GAP-115` through `GAP-119` is complete as owner-directed bounded scope. Codex and Claude Code are dual first-class entrypoints with current evidence-backed `native_attach` tier parity; host APIs remain different and future drift must degrade explicitly.
 - `Runtime Evolution Review Queue / GAP-120` through `GAP-124` is dry-run only. It defines the 30-day self-evolution policy, source collection, candidate evaluation, operator entrypoint, and freshness gate without enabling automatic mutation; AI coding experience is extracted through `ExperienceReview` only after it is captured as reviewable evidence, controlled proposals, knowledge records, or skill manifests.
+- `Runtime Evolution Materialization Queue / GAP-125` through `GAP-129` starts controlled auto-apply. It may materialize low-risk proposals and disabled skill candidates as files, but it must not enable skills, auto-apply policy, sync target repos, or push/merge without review.
 - Any heavy LTP implementation package after this selector must use ids beyond the bounded host-support queue and must pass the autonomous or owner-directed scope fence.
 - Historical `GAP-018` through `GAP-044` remain completion history and dependency context.
 - The active lifecycle is now anchored by:

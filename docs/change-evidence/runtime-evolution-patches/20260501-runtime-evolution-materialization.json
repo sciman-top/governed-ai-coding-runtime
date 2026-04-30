@@ -1,0 +1,16 @@
+{
+  "generated_on": "2026-05-01",
+  "mutation_guard": {
+    "policy_auto_apply": false,
+    "skill_auto_enable": false,
+    "target_repo_sync": false
+  },
+  "operation_paths": [
+    "docs/change-evidence/runtime-evolution-proposals/proposal.checklist-first-bugfix.json",
+    "skills/candidates/checklist-first-bugfix/skill-manifest.json",
+    "skills/candidates/checklist-first-bugfix/SKILL.md"
+  ],
+  "rollback": "Delete the generated proposal and skills/candidates files from this manifest; no enabled runtime behavior is changed.",
+  "schema_version": "0.1-draft",
+  "source_review": "scripts/operator.ps1 -Action ExperienceReview"
+}

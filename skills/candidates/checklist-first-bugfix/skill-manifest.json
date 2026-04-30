@@ -1,0 +1,41 @@
+{
+  "capabilities": [
+    "Restate the bug target before proposing a fix.",
+    "Ask for request, log, repro, and last-known-good observations when missing.",
+    "Keep the pattern advisory until project gates validate the fix."
+  ],
+  "compatibility": {
+    "minimum_kernel_version": "0.1-draft",
+    "required_contracts": [
+      "interaction-evidence",
+      "learning-efficiency-metrics",
+      "controlled-improvement-proposal"
+    ]
+  },
+  "default_enabled": false,
+  "description": "Use checklist-first observation before root-cause reasoning when bug evidence is incomplete.",
+  "display_name": "Checklist-first bug diagnosis",
+  "entrypoint": "skills/checklist-first-bugfix/SKILL.md",
+  "input_modes": [
+    "prompt_only",
+    "file_context"
+  ],
+  "notes": "Candidate only; install no skill until human review and tests approve it.",
+  "provenance": {
+    "source": "schemas/examples/interaction-evidence/checklist-first-bugfix.example.json, schemas/examples/learning-efficiency-metrics/baseline.example.json",
+    "version_or_digest": "2026-05-01"
+  },
+  "repo_scopes": [
+    "all"
+  ],
+  "requires_approval": false,
+  "risk_tier": "low",
+  "schema_version": "0.1-draft",
+  "skill_id": "skill.checklist-first-bugfix",
+  "tags": [
+    "ai-coding-experience",
+    "bugfix",
+    "skill-candidate"
+  ],
+  "version": "0.1.0-draft"
+}

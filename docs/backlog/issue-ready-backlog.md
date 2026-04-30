@@ -41,7 +41,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Post-Certification Promotion Queue / GAP-113` is complete on the current branch baseline. It mechanizes how to decide whether, why, and when an `LTP-01..06` heavy package may be autonomously promoted.
 - `Post-Certification Selection Queue / GAP-114` is complete on the current branch baseline. It mechanizes what autonomous work should happen next when `GAP-113` defers heavy LTP promotion.
 - `Dual First-Class Host Entrypoint Queue / GAP-115` through `GAP-119` is active as owner-directed bounded scope. It promotes Claude Code from generic degraded compatibility to first-class supported host parity with Codex in governance outcome and, on current live evidence, to the same `native_attach` tier while keeping host APIs and future drift explicit.
-- `Runtime Evolution Review Queue / GAP-120` through `GAP-124` is in dry-run implementation. It defines the 30-day self-evolution policy, source collection, candidate evaluation, operator entrypoint, and freshness gate without enabling automatic mutation.
+- `Runtime Evolution Review Queue / GAP-120` through `GAP-124` is implemented as a dry-run decision layer. `Runtime Evolution Materialization Queue / GAP-125` through `GAP-129` starts controlled auto-apply by materializing low-risk proposal and disabled skill candidate files without enabling skills, auto-applying policy, syncing target repos, or pushing/merging.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -1071,49 +1071,49 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: AFK
 - Blocked by: GAP-119
 - User stories: 13, 18, 21, 23, 29, 31, 44
-- Status: planned; draft policy and planning evidence started on 2026-05-01
+- Status: complete; closed by `docs/change-evidence/20260501-runtime-evolution-planning.md`
 - What to build:
   - 30-day runtime evolution policy
   - source priority and risk boundary for self-evolution
-  - explicit claim that this planning queue does not authorize automatic mutation
+  - explicit claim that this review queue does not authorize automatic mutation
 - Acceptance criteria:
-  - [ ] policy defines 30-day freshness, source priority, candidate actions, risk boundaries, and verification floor
-  - [ ] policy explicitly preserves existing LTP scope fences and host-neutral runtime identity
-  - [ ] docs identify current status as planning/draft until scripts and gates exist
+  - [x] policy defines 30-day freshness, source priority, candidate actions, risk boundaries, and verification floor
+  - [x] policy explicitly preserves existing LTP scope fences and host-neutral runtime identity
+  - [x] docs identify current status as dry-run implementation with automatic mutation disabled
 
 ### GAP-121 Evolution Source Collection Design
 - Type: AFK
 - Blocked by: GAP-120
 - User stories: 13, 18, 21, 23, 29, 31, 44
-- Status: dry-run implementation landed; online fetching remains deferred
+- Status: complete; closed by `docs/change-evidence/20260501-runtime-evolution-planning.md`
 - What to build:
   - source collection contract for official docs and changelogs
   - source collection contract for primary projects and community signals
-  - source collection contract for internal runtime evidence
+  - source collection contract for internal runtime evidence and AI coding experience
 - Acceptance criteria:
   - [x] source categories and priorities are machine-readable
   - [x] collected sources record URL/path, checked date, source type, summary, and confidence
-  - [ ] external content remains candidate evidence only and cannot override repo policy or code facts
+  - [x] external content remains candidate evidence only and cannot override repo policy or code facts
 
 ### GAP-122 Evolution Candidate Evaluation Design
 - Type: AFK
 - Blocked by: GAP-121
 - User stories: 13, 18, 21, 22, 23, 29, 31, 44
-- Status: dry-run implementation landed
+- Status: complete; closed by `docs/change-evidence/20260501-runtime-evolution-planning.md`
 - What to build:
   - candidate evaluator contract
   - add/modify/delete/defer/no-action decision rubric
   - delete and retirement criteria for stale or redundant capabilities
 - Acceptance criteria:
   - [x] each candidate can resolve to `add`, `modify`, `delete`, `defer`, or `no_action`
-  - [ ] delete/retire criteria are explicit and evidence-based
+  - [x] delete/retire criteria are explicit and evidence-based
   - [x] medium/high risk candidates stop at patch plan, scope fence, and rollback plan
 
 ### GAP-123 Operator EvolutionReview Entrypoint Plan
 - Type: AFK
 - Blocked by: GAP-122
 - User stories: 1, 11, 13, 14, 21, 31, 39, 44
-- Status: dry-run implementation landed
+- Status: complete; closed by `docs/change-evidence/20260501-runtime-evolution-planning.md`
 - What to build:
   - future `operator.ps1 -Action EvolutionReview` behavior plan
   - dry-run-first output and artifact layout
@@ -1127,7 +1127,7 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: AFK
 - Blocked by: GAP-123
 - User stories: 11, 13, 14, 18, 21, 23, 29, 31, 44
-- Status: dry-run implementation landed
+- Status: complete; closed by `docs/change-evidence/20260501-runtime-evolution-planning.md`
 - What to build:
   - 30-day freshness gate plan
   - evolution evidence format
@@ -1136,6 +1136,76 @@ The entries below record the executed queue for complete hybrid final-state and 
   - [x] gate plan distinguishes stale review detection from automatic apply
   - [x] evidence format records source -> candidate -> decision -> gate -> evidence -> rollback
   - [x] stale review has a safe remediation path and does not weaken current hard gates
+
+### GAP-125 Auto-Apply Policy Boundary
+- Type: AFK
+- Blocked by: GAP-124
+- User stories: 11, 13, 14, 18, 21, 23, 29, 31, 44
+- Status: implemented as controlled materialization guard
+- What to build:
+  - define the boundary between dry-run proposal generation and low-risk file materialization
+  - prohibit automatic skill enablement, policy auto-apply, target repo sync, push, merge, or credential changes
+  - expose materialization guard fields in machine-readable output
+- Acceptance criteria:
+  - [x] materialization output declares `policy_auto_apply=false` and `skill_auto_enable=false`
+  - [x] materialization writes only proposal, candidate, and manifest files
+  - [x] generated outputs retain human-review and rollback requirements
+
+### GAP-126 Low-Risk Runtime Evolution Patch Generator
+- Type: AFK
+- Blocked by: GAP-125
+- User stories: 11, 13, 14, 21, 23, 31, 44
+- Status: implemented as local materializer
+- What to build:
+  - generate a patch manifest from reviewed evolution and experience candidates
+  - support dry-run by default and explicit apply for controlled file writes
+  - keep operation paths relative and rollbackable
+- Acceptance criteria:
+  - [x] `scripts/materialize-runtime-evolution.py` emits operation summaries in dry-run mode
+  - [x] `--apply` writes a manifest under `docs/change-evidence/runtime-evolution-patches/`
+  - [x] unsafe absolute or parent-traversal paths are rejected
+
+### GAP-127 Skill Candidate Materialization
+- Type: AFK
+- Blocked by: GAP-126
+- User stories: 11, 13, 14, 21, 23, 31, 44
+- Status: implemented as disabled skill candidate output
+- What to build:
+  - materialize high-scoring skill candidates into a candidate directory
+  - write both `SKILL.md` and `skill-manifest.json`
+  - keep candidates disabled until human review and gates approve installation
+- Acceptance criteria:
+  - [x] generated skill manifests have `default_enabled=false`
+  - [x] generated candidate docs state they are not installed or enabled
+  - [x] high-risk skill candidates cannot be materialized automatically
+
+### GAP-128 Auto Branch Commit And PR Preparation
+- Type: HITL
+- Blocked by: GAP-126, GAP-127
+- User stories: 11, 13, 14, 21, 31, 39, 44
+- Status: complete as review-gated PR preparation; actual branch/commit/push/PR execution remains explicit follow-up
+- What to build:
+  - prepare the materialized file set for branch, commit, and PR workflows
+  - keep direct push and merge outside automatic apply
+  - preserve full gate evidence before any commit or PR
+- Acceptance criteria:
+  - [x] materialized files are deterministic and rollbackable
+  - [x] operator entrypoint can apply the local materialization step
+  - [x] branch, commit, push, and PR creation require explicit follow-up execution
+
+### GAP-129 Auto Retire And Delete Candidate Flow
+- Type: AFK
+- Blocked by: GAP-128
+- User stories: 13, 18, 21, 23, 29, 31, 44
+- Status: complete as dry-run retire/delete proposal review
+- What to build:
+  - identify stale or low-value generated candidates
+  - emit retire/delete proposals before deleting candidate files
+  - keep rule sources, policies, and target repo sync out of automatic delete scope
+- Acceptance criteria:
+  - [x] stale candidate detection uses evidence age and quality checks
+  - [x] delete candidates are proposal-backed before file removal
+  - [x] enabled or reviewed assets are never deleted by candidate cleanup
 
 ## Vision
 

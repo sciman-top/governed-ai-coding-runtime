@@ -610,6 +610,42 @@ function Invoke-AiCodingExperienceReviewChecks {
   Write-CheckOk "ai-coding-experience-review"
 }
 
+function Invoke-RuntimeEvolutionMaterializationChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/materialize-runtime-evolution.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Runtime evolution materialization checks failed"
+    }
+    throw "Runtime evolution materialization checks failed`n$detail"
+  }
+
+  Write-CheckOk "runtime-evolution-materialization"
+}
+
+function Invoke-RuntimeEvolutionPrPreparationChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/prepare-runtime-evolution-pr.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    throw "Runtime evolution PR preparation checks failed`n$detail"
+  }
+
+  Write-CheckOk "runtime-evolution-pr-preparation"
+}
+
+function Invoke-RuntimeEvolutionRetirementChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/review-runtime-evolution-retirements.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    throw "Runtime evolution retirement checks failed`n$detail"
+  }
+
+  Write-CheckOk "runtime-evolution-retirement"
+}
+
 function Invoke-ContractChecks {
   Invoke-SchemaJsonParse
   Invoke-SchemaExampleValidation
@@ -766,6 +802,9 @@ function Invoke-DocsChecks {
   Invoke-AutonomousNextWorkSelectionChecks
   Invoke-RuntimeEvolutionReviewChecks
   Invoke-AiCodingExperienceReviewChecks
+  Invoke-RuntimeEvolutionMaterializationChecks
+  Invoke-RuntimeEvolutionPrPreparationChecks
+  Invoke-RuntimeEvolutionRetirementChecks
   Invoke-GapEvidenceSloCheck
   Invoke-ClaimDriftSentinelCheck
   Invoke-ClaimExceptionPathCheck

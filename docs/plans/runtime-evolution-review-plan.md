@@ -3,8 +3,9 @@
 ## Status
 - Created on 2026-05-01 as the planning queue for governed self-evolution.
 - Queue: `GAP-120..124`.
-- Current status: dry-run implementation exists through policy, evaluator, operator action, Docs gate, and scheduled workflow.
-- This plan does not authorize automatic code mutation. The current executable phase remains dry-run by default.
+- Materialization queue: `GAP-125..129`.
+- Current status: dry-run implementation exists through policy, evaluator, operator action, Docs gate, and scheduled workflow; low-risk materialization can write proposal and disabled skill candidate files.
+- This plan does not authorize direct policy auto-apply, skill enablement, target repo sync, push, or merge. The only automatic apply currently allowed is candidate file materialization.
 
 ## Goal
 Make runtime self-evolution repeatable, source-grounded, and safe enough to run on a 30-day cadence.
@@ -31,6 +32,7 @@ Self-evolution does not mean:
 - Candidate deletion and retirement are first-class outcomes, not failures of the review.
 - AI coding experience is a valid source only when it becomes reviewable evidence, controlled improvement proposals, knowledge-source records, or skill-manifest candidates.
 - The AI coding experience dry-run entrypoint is `scripts/operator.ps1 -Action ExperienceReview`; it emits proposals and skill manifest candidates, not installed skills.
+- The controlled materialization entrypoint is `scripts/operator.ps1 -Action EvolutionMaterialize`; it writes proposal files, disabled skill candidate files, and a rollback manifest.
 
 ## Task List
 
@@ -120,6 +122,19 @@ Dependencies: `GAP-123`
 - Guard: generated records are dry-run artifacts; they cannot install skills, change policy, add hooks, or mutate controls.
 - Correctness checks: source refs must exist, scores must be recomputable, proposal and skill thresholds must be respected, proposals must require human review, proposals must be non-mutating, and skill candidates must stay disabled.
 - Accuracy checks: low-score signals remain evidence-only; high-score skill candidates must expose source refs, score formula, risk tier, compatibility contracts, and rollback/non-mutation guards.
+
+## Controlled Auto-Apply Materialization
+- Allowed automatic writes: controlled proposal JSON, disabled skill candidate `skill-manifest.json`, disabled candidate `SKILL.md`, and materialization manifest.
+- Disallowed automatic writes: enabled skills, policy enforcement changes, Codex/Claude/Gemini rules, target repo sync, credentials, provider config, branch push, merge, and release actions.
+- Operator entrypoint: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action EvolutionMaterialize`.
+- Guard fields: `policy_auto_apply=false`, `skill_auto_enable=false`, `target_repo_sync=false`, and `requires_human_review_before_enable=true`.
+- Rollback: delete paths listed in `docs/change-evidence/runtime-evolution-patches/<date>-runtime-evolution-materialization.json`.
+
+## Branch, PR, And Retirement Preparation
+- PR preparation entrypoint: `python scripts/prepare-runtime-evolution-pr.py`.
+- PR preparation output includes recommended `codex/` branch name, commit message, PR title/body, required gates, and an explicit guard that no branch, commit, push, or PR was created automatically.
+- Retirement review entrypoint: `python scripts/review-runtime-evolution-retirements.py`.
+- Retirement output is dry-run only: stale disabled candidates become retire proposals; enabled or reviewed assets are not directly deleted.
 
 ## Risks And Mitigations
 | risk | impact | mitigation |

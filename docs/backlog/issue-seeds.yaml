@@ -1,4 +1,4 @@
-issue_seed_version: "4.9"
+issue_seed_version: "5.0"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment
@@ -510,3 +510,28 @@ issues:
     type: AFK
     blocked_by: [GAP-123]
     user_stories: [11, 13, 14, 18, 21, 23, 29, 31, 44]
+  - id: GAP-125
+    title: Auto-Apply Policy Boundary
+    type: AFK
+    blocked_by: [GAP-124]
+    user_stories: [11, 13, 14, 18, 21, 23, 29, 31, 44]
+  - id: GAP-126
+    title: Low-Risk Runtime Evolution Patch Generator
+    type: AFK
+    blocked_by: [GAP-125]
+    user_stories: [11, 13, 14, 21, 23, 31, 44]
+  - id: GAP-127
+    title: Skill Candidate Materialization
+    type: AFK
+    blocked_by: [GAP-126]
+    user_stories: [11, 13, 14, 21, 23, 31, 44]
+  - id: GAP-128
+    title: Auto Branch Commit And PR Preparation
+    type: HITL
+    blocked_by: [GAP-126, GAP-127]
+    user_stories: [11, 13, 14, 21, 31, 39, 44]
+  - id: GAP-129
+    title: Auto Retire And Delete Candidate Flow
+    type: AFK
+    blocked_by: [GAP-128]
+    user_stories: [13, 18, 21, 23, 29, 31, 44]

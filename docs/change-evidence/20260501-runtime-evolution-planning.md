@@ -12,9 +12,13 @@ Add a governed self-evolution queue and dry-run implementation before enabling a
 - Added internal AI coding experience as a source category when captured as reviewable evidence, controlled improvement proposals, knowledge-source records, or skill-manifest candidates
 - Added dry-run AI coding experience extraction through `scripts/extract-ai-coding-experience.py` and `scripts/operator.ps1 -Action ExperienceReview`
 - Added extractor quality checks for source refs, recomputable scores, promotion thresholds, non-mutating proposals, mandatory human review, and disabled skill candidates
+- Added controlled materialization through `scripts/materialize-runtime-evolution.py` and `scripts/operator.ps1 -Action EvolutionMaterialize`
+- Added `GAP-125..129` for auto-apply boundary, low-risk patch generation, skill candidate materialization, branch/PR preparation, and retire/delete follow-up
+- Added review-gated PR preparation through `scripts/prepare-runtime-evolution-pr.py`
+- Added dry-run retire/delete proposal review through `scripts/review-runtime-evolution-retirements.py`
 
 ## Risk
-Low to medium. This change adds dry-run execution scripts, an operator action, a scheduled freshness workflow, and tests, but it does not permit automatic code mutation.
+Low to medium. This change adds dry-run execution scripts, operator actions, a scheduled freshness workflow, controlled materialization, and tests. It can write proposal and disabled skill candidate files, but it does not permit direct policy auto-apply, skill enablement, target repo sync, push, or merge.
 
 ## Verification
 pre_change_review:
@@ -61,6 +65,22 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Exper
 python scripts/extract-ai-coding-experience.py --as-of 2026-05-01
 ```
 
+```powershell
+python -m unittest tests.runtime.test_runtime_evolution_materialization
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action EvolutionMaterialize
+```
+
+```powershell
+python scripts/prepare-runtime-evolution-pr.py --as-of 2026-05-01
+```
+
+```powershell
+python scripts/review-runtime-evolution-retirements.py --as-of 2026-09-01 --stale-after-days 30
+```
+
 ## Rollback
 Use git history to revert:
 - `docs/architecture/runtime-evolution-policy.json`
@@ -71,4 +91,7 @@ Use git history to revert:
 - `docs/README.md`
 - `docs/architecture/README.md`
 - `docs/plans/README.md`
+- `docs/change-evidence/runtime-evolution-patches/`
+- `docs/change-evidence/runtime-evolution-proposals/`
+- `skills/candidates/`
 - this evidence file
