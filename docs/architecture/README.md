@@ -12,6 +12,7 @@ This directory holds the architectural views that explain product boundaries, ta
 6. [MVP Stack Vs Target Stack](./mvp-stack-vs-target-stack.md)
 7. [Compatibility Matrix](./compatibility-matrix.md)
 8. [Governed AI Coding Runtime Target Architecture](./governed-ai-coding-runtime-target-architecture.md)
+9. [Runtime Evolution Policy](./runtime-evolution-policy.json)
 
 ## Document Roles
 - [Minimum Viable Governance Loop](./minimum-viable-governance-loop.md)
@@ -30,6 +31,8 @@ This directory holds the architectural views that explain product boundaries, ta
   - support levels for OS, shell, repo host, CI model, and agent product shapes
 - [Governed AI Coding Runtime Target Architecture](./governed-ai-coding-runtime-target-architecture.md)
   - full target-state architecture and plane decomposition
+- [Runtime Evolution Policy](./runtime-evolution-policy.json)
+  - enforced dry-run policy for 30-day source-grounded self-evolution review, candidate decisions, AI coding experience/skillization signals, risk boundaries, and verification floor
 
 ## Usage Rule
 - If implementation scope is under debate, start with the first three documents before reading the full target architecture.

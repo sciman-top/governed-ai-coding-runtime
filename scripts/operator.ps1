@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("Help", "Targets", "Readiness", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "FeedbackReport", "OperatorUi")]
+  [ValidateSet("Help", "Targets", "Readiness", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "FeedbackReport", "EvolutionReview", "ExperienceReview", "OperatorUi")]
   [string]$Action = "Help",
 
   [ValidateSet("quick", "full", "l1", "l2", "l3")]
@@ -11,6 +11,7 @@ param(
   [ValidateSet("zh-CN", "en")]
   [string]$UiLanguage = "zh-CN",
   [switch]$OpenUi,
+  [switch]$OnlineSourceCheck,
   [switch]$DryRun,
   [switch]$FailFast
 )
@@ -157,6 +158,8 @@ AI 推荐:
   DailyAll               对所有 active targets 执行 daily flow，并刷新 operator UI。
   ApplyAllFeatures       执行全部当前目标仓功能、目标仓一致性检查，并刷新 operator UI。
   FeedbackReport         生成 Codex/Claude 功能反馈汇总报告，并写入 runtime artifacts。
+  EvolutionReview        执行 runtime 自我演进 dry-run，只生成候选和证据，不自动改代码。
+  ExperienceReview       从 AI 编码证据/指标中生成 dry-run 改进提案和 skill manifest 候选。
   OperatorUi             只生成本地 operator HTML；加 -OpenUi 会用默认浏览器打开。
 
 UI:
@@ -174,6 +177,7 @@ UI:
   -TargetParallelism <n>
   -FailFast
   -OpenUi
+  -OnlineSourceCheck      EvolutionReview 时执行轻量在线 source probe；默认不联网。
   -UiLanguage <zh-CN|en>
 "@ | Write-Host
 }
@@ -245,6 +249,18 @@ function Invoke-FeedbackReport {
   )
 }
 
+function Invoke-EvolutionReview {
+  $arguments = @("-WriteArtifacts")
+  if ($OnlineSourceCheck) {
+    $arguments += "-OnlineSourceCheck"
+  }
+  Invoke-PwshScript -Name "runtime-evolution-review" -ScriptPath "scripts/evolve-runtime.ps1" -ScriptArguments $arguments
+}
+
+function Invoke-ExperienceReview {
+  Invoke-PwshScript -Name "ai-coding-experience-review" -ScriptPath "scripts/extract-ai-coding-experience.ps1" -ScriptArguments @("-WriteArtifacts")
+}
+
 Push-Location -LiteralPath $RepoRoot
 try {
   switch ($Action) {
@@ -257,6 +273,8 @@ try {
     "DailyAll" { Invoke-DailyAll }
     "ApplyAllFeatures" { Invoke-ApplyAllFeatures }
     "FeedbackReport" { Invoke-FeedbackReport }
+    "EvolutionReview" { Invoke-EvolutionReview }
+    "ExperienceReview" { Invoke-ExperienceReview }
     "OperatorUi" { Invoke-OperatorUi }
   }
 }

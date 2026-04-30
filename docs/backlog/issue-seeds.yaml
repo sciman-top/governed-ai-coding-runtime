@@ -1,4 +1,4 @@
-issue_seed_version: "4.8"
+issue_seed_version: "4.9"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment
@@ -485,3 +485,28 @@ issues:
     type: HITL
     blocked_by: [GAP-117, GAP-118]
     user_stories: [13, 14, 18, 21, 29, 37, 44, 45]
+  - id: GAP-120
+    title: Runtime Evolution Policy And Scope Boundary
+    type: AFK
+    blocked_by: [GAP-119]
+    user_stories: [13, 18, 21, 23, 29, 31, 44]
+  - id: GAP-121
+    title: Evolution Source Collection Design
+    type: AFK
+    blocked_by: [GAP-120]
+    user_stories: [13, 18, 21, 23, 29, 31, 44]
+  - id: GAP-122
+    title: Evolution Candidate Evaluation Design
+    type: AFK
+    blocked_by: [GAP-121]
+    user_stories: [13, 18, 21, 22, 23, 29, 31, 44]
+  - id: GAP-123
+    title: Operator EvolutionReview Entrypoint Plan
+    type: AFK
+    blocked_by: [GAP-122]
+    user_stories: [1, 11, 13, 14, 21, 31, 39, 44]
+  - id: GAP-124
+    title: Evolution Gate Evidence And 30-Day Freshness Plan
+    type: AFK
+    blocked_by: [GAP-123]
+    user_stories: [11, 13, 14, 18, 21, 23, 29, 31, 44]

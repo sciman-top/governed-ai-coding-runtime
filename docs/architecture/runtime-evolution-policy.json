@@ -1,0 +1,159 @@
+{
+  "schema_version": "0.1-draft",
+  "policy_id": "default-runtime-evolution-review",
+  "status": "enforced",
+  "reviewed_on": "2026-05-01",
+  "review_expires_at": "2026-05-31",
+  "stale_after_days": 30,
+  "decision_claim": "Runtime self-evolution must be evidence-triggered, source-prioritized, default dry-run, and bounded by the existing build -> test -> contract/invariant -> hotspot verification floor.",
+  "manual_trigger": {
+    "planned_operator_action": "EvolutionReview",
+    "planned_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action EvolutionReview",
+    "current_status": "dry_run_available"
+  },
+  "automatic_trigger": {
+    "cadence": "at least every 30 days after last successful evolution review",
+    "allowed_surfaces": [
+      "local operator entrypoint",
+      "scheduled CI freshness check",
+      "manual Codex/Claude session execution"
+    ],
+    "safe_default": "dry_run_review_only"
+  },
+  "source_priority": [
+    {
+      "priority": 1,
+      "source_type": "official_doc_or_changelog",
+      "use": "authoritative semantics for Codex, Claude Code, GitHub Actions, PowerShell, Python, dependency managers, and owned runtime APIs"
+    },
+    {
+      "priority": 2,
+      "source_type": "primary_project_or_reference_implementation",
+      "use": "implementation pattern comparison; never copied without repo fit and gate evidence"
+    },
+    {
+      "priority": 3,
+      "source_type": "internal_runtime_evidence",
+      "use": "target-run failures, host feedback, doctor findings, claim drift, repeated manual work, and target repo rollout data"
+    },
+    {
+      "priority": 4,
+      "source_type": "internal_ai_coding_experience",
+      "use": "agent-session lessons, learning-efficiency metrics, controlled improvement proposals, knowledge-source curation, and skill-manifest candidates from real AI coding work"
+    },
+    {
+      "priority": 5,
+      "source_type": "community_best_practice",
+      "use": "candidate signal only; cannot override official docs, local code facts, or repository policy"
+    }
+  ],
+  "source_catalog": [
+    {
+      "source_id": "openai-codex-agents-md",
+      "source_type": "official_doc_or_changelog",
+      "source_ref": "https://developers.openai.com/codex/guides/agents-md",
+      "summary": "OpenAI Codex AGENTS.md loading and project instruction semantics."
+    },
+    {
+      "source_id": "github-actions-schedule",
+      "source_type": "official_doc_or_changelog",
+      "source_ref": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule",
+      "summary": "GitHub Actions schedule semantics, limitations, and workflow_dispatch relationship."
+    },
+    {
+      "source_id": "openai-codex-repository",
+      "source_type": "primary_project_or_reference_implementation",
+      "source_ref": "https://github.com/openai/codex",
+      "summary": "Primary Codex project surface for release and instruction-loading drift signals."
+    },
+    {
+      "source_id": "google-sre-eliminating-toil",
+      "source_type": "community_best_practice",
+      "source_ref": "https://sre.google/workbook/eliminating-toil/",
+      "summary": "Reference practice for deciding what repeated manual work should become automation."
+    },
+    {
+      "source_id": "runtime-learning-efficiency-metrics",
+      "source_type": "internal_ai_coding_experience",
+      "source_ref": "docs/specs/learning-efficiency-metrics-spec.md",
+      "summary": "Local contract for turning AI coding interaction friction, clarification, and handoff signals into reviewable metrics."
+    },
+    {
+      "source_id": "controlled-improvement-proposals",
+      "source_type": "internal_ai_coding_experience",
+      "source_ref": "docs/specs/controlled-improvement-proposal-spec.md",
+      "summary": "Local proposal contract for converting recurring AI coding lessons into governed policy, hook, skill, control, knowledge, or repo follow-up candidates."
+    },
+    {
+      "source_id": "skill-manifest-contract",
+      "source_type": "internal_ai_coding_experience",
+      "source_ref": "docs/specs/skill-manifest-spec.md",
+      "summary": "Local skill manifest contract for promoting repeated coding know-how into reusable, reviewable skills."
+    }
+  ],
+  "candidate_actions": [
+    "add",
+    "modify",
+    "delete",
+    "defer",
+    "no_action"
+  ],
+  "candidate_required_fields": [
+    "candidate_id",
+    "source_type",
+    "source_ref",
+    "source_checked_on",
+    "observed_change",
+    "repo_impact",
+    "proposed_action",
+    "risk_level",
+    "evidence_required",
+    "acceptance_gates",
+    "rollback_plan",
+    "patch_plan"
+  ],
+  "add_or_modify_criteria": [
+    "official source changes make the current local assumption stale, unsupported, or less safe",
+    "internal evidence shows repeated failures, repeated manual toil, or high-friction operator work",
+    "AI coding sessions repeatedly surface the same decision, repair pattern, prompt pattern, or tool workflow and it can be skillized with evidence and gates",
+    "a small bounded change improves verification, evidence quality, rollback, security, or cross-repo consistency",
+    "the change preserves the runtime identity as governance sidecar / attach-first runtime rather than host replacement"
+  ],
+  "delete_or_retire_criteria": [
+    "the capability has no recent usage evidence and its maintenance cost is visible",
+    "a narrower or existing canonical entrypoint already covers the behavior",
+    "the feature is narrative-only and lacks tests, contract, evidence, or operator path",
+    "the feature weakens security, provenance, compatibility, or the host-neutral governance boundary",
+    "the feature is a heavy-stack candidate without a selected LTP scope fence"
+  ],
+  "risk_automation_boundaries": {
+    "low": "may auto-generate docs, candidate reports, evidence refreshes, and dry-run patches after gates pass",
+    "medium": "may generate a patch plan and evidence, but must not apply rules, profiles, baselines, or target repo sync without explicit scope",
+    "high": "must stop at scope fence, rollback plan, and full-gate evidence; no automatic apply"
+  },
+  "verification_floor": [
+    "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1",
+    "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime",
+    "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract",
+    "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1"
+  ],
+  "invariants": [
+    "Evolution review is not permission to self-mutate without evidence.",
+    "Official documentation and local running facts outrank community examples.",
+    "AI coding experience can propose skill, knowledge, hook, policy, or control changes, but it must remain reviewable evidence rather than hidden memory authority.",
+    "The first implementation phase must be dry-run by default.",
+    "Every accepted candidate must preserve source -> candidate -> decision -> patch -> gate -> evidence -> rollback traceability.",
+    "No heavy LTP package may start unless the existing LTP promotion policy selects exactly one package or the user explicitly labels owner-directed scope."
+  ],
+  "planned_artifacts": [
+    "docs/change-evidence/evolution-sources/<date>.json",
+    "docs/change-evidence/runtime-evolution-candidates/<date>.json",
+    ".runtime/artifacts/runtime-evolution/<date>-runtime-evolution-review.md"
+  ],
+  "scheduled_check": {
+    "workflow_ref": ".github/workflows/runtime-evolution.yml",
+    "purpose": "Run dry-run evolution review and Docs freshness gate on a schedule and on workflow_dispatch.",
+    "mutation_allowed": false
+  },
+  "rollback_ref": "git revert the runtime evolution policy, implementation plan, backlog tasks, evidence, and later scripts or gates introduced by GAP-120..124"
+}

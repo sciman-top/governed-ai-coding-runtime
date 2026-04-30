@@ -41,6 +41,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Post-Certification Promotion Queue / GAP-113` is complete on the current branch baseline. It mechanizes how to decide whether, why, and when an `LTP-01..06` heavy package may be autonomously promoted.
 - `Post-Certification Selection Queue / GAP-114` is complete on the current branch baseline. It mechanizes what autonomous work should happen next when `GAP-113` defers heavy LTP promotion.
 - `Dual First-Class Host Entrypoint Queue / GAP-115` through `GAP-119` is active as owner-directed bounded scope. It promotes Claude Code from generic degraded compatibility to first-class supported host parity with Codex in governance outcome and, on current live evidence, to the same `native_attach` tier while keeping host APIs and future drift explicit.
+- `Runtime Evolution Review Queue / GAP-120` through `GAP-124` is in dry-run implementation. It defines the 30-day self-evolution policy, source collection, candidate evaluation, operator entrypoint, and freshness gate without enabling automatic mutation.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -1063,6 +1064,78 @@ The entries below record the executed queue for complete hybrid final-state and 
   - [x] one Codex path and one Claude Code path pass the same runtime-owned governance-result chain
   - [x] certification evidence names exact commands, target repos, adapter tiers, degraded capabilities, and rollback path
   - [x] final wording says governance result and current `native_attach` tier are equal while host APIs remain distinct and evidence-bound
+
+## Runtime Evolution Review Queue
+
+### GAP-120 Runtime Evolution Policy And Scope Boundary
+- Type: AFK
+- Blocked by: GAP-119
+- User stories: 13, 18, 21, 23, 29, 31, 44
+- Status: planned; draft policy and planning evidence started on 2026-05-01
+- What to build:
+  - 30-day runtime evolution policy
+  - source priority and risk boundary for self-evolution
+  - explicit claim that this planning queue does not authorize automatic mutation
+- Acceptance criteria:
+  - [ ] policy defines 30-day freshness, source priority, candidate actions, risk boundaries, and verification floor
+  - [ ] policy explicitly preserves existing LTP scope fences and host-neutral runtime identity
+  - [ ] docs identify current status as planning/draft until scripts and gates exist
+
+### GAP-121 Evolution Source Collection Design
+- Type: AFK
+- Blocked by: GAP-120
+- User stories: 13, 18, 21, 23, 29, 31, 44
+- Status: dry-run implementation landed; online fetching remains deferred
+- What to build:
+  - source collection contract for official docs and changelogs
+  - source collection contract for primary projects and community signals
+  - source collection contract for internal runtime evidence
+- Acceptance criteria:
+  - [x] source categories and priorities are machine-readable
+  - [x] collected sources record URL/path, checked date, source type, summary, and confidence
+  - [ ] external content remains candidate evidence only and cannot override repo policy or code facts
+
+### GAP-122 Evolution Candidate Evaluation Design
+- Type: AFK
+- Blocked by: GAP-121
+- User stories: 13, 18, 21, 22, 23, 29, 31, 44
+- Status: dry-run implementation landed
+- What to build:
+  - candidate evaluator contract
+  - add/modify/delete/defer/no-action decision rubric
+  - delete and retirement criteria for stale or redundant capabilities
+- Acceptance criteria:
+  - [x] each candidate can resolve to `add`, `modify`, `delete`, `defer`, or `no_action`
+  - [ ] delete/retire criteria are explicit and evidence-based
+  - [x] medium/high risk candidates stop at patch plan, scope fence, and rollback plan
+
+### GAP-123 Operator EvolutionReview Entrypoint Plan
+- Type: AFK
+- Blocked by: GAP-122
+- User stories: 1, 11, 13, 14, 21, 31, 39, 44
+- Status: dry-run implementation landed
+- What to build:
+  - future `operator.ps1 -Action EvolutionReview` behavior plan
+  - dry-run-first output and artifact layout
+  - implementation checklist for tests before action exposure
+- Acceptance criteria:
+  - [x] planned operator action is documented as `EvolutionReview`
+  - [x] first executable behavior is dry-run candidate generation
+  - [x] output artifacts and evidence paths are documented
+
+### GAP-124 Evolution Gate Evidence And 30-Day Freshness Plan
+- Type: AFK
+- Blocked by: GAP-123
+- User stories: 11, 13, 14, 18, 21, 23, 29, 31, 44
+- Status: dry-run implementation landed
+- What to build:
+  - 30-day freshness gate plan
+  - evolution evidence format
+  - stale review remediation path
+- Acceptance criteria:
+  - [x] gate plan distinguishes stale review detection from automatic apply
+  - [x] evidence format records source -> candidate -> decision -> gate -> evidence -> rollback
+  - [x] stale review has a safe remediation path and does not weaken current hard gates
 
 ## Vision
 

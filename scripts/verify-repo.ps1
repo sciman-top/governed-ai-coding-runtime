@@ -582,6 +582,34 @@ function Invoke-AutonomousNextWorkSelectionChecks {
   Write-CheckOk "autonomous-next-work-selection"
 }
 
+function Invoke-RuntimeEvolutionReviewChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/evaluate-runtime-evolution.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Runtime evolution review checks failed"
+    }
+    throw "Runtime evolution review checks failed`n$detail"
+  }
+
+  Write-CheckOk "runtime-evolution-review"
+}
+
+function Invoke-AiCodingExperienceReviewChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/extract-ai-coding-experience.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "AI coding experience review checks failed"
+    }
+    throw "AI coding experience review checks failed`n$detail"
+  }
+
+  Write-CheckOk "ai-coding-experience-review"
+}
+
 function Invoke-ContractChecks {
   Invoke-SchemaJsonParse
   Invoke-SchemaExampleValidation
@@ -736,6 +764,8 @@ function Invoke-DocsChecks {
   Invoke-CurrentSourceCompatibilityChecks
   Invoke-LtpAutonomousPromotionChecks
   Invoke-AutonomousNextWorkSelectionChecks
+  Invoke-RuntimeEvolutionReviewChecks
+  Invoke-AiCodingExperienceReviewChecks
   Invoke-GapEvidenceSloCheck
   Invoke-ClaimDriftSentinelCheck
   Invoke-ClaimExceptionPathCheck

@@ -1,0 +1,30 @@
+name: Runtime Evolution Review
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1"
+
+jobs:
+  dry-run-review:
+    name: Runtime evolution dry-run
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run runtime evolution dry-run
+        shell: pwsh
+        run: ./scripts/evolve-runtime.ps1 -WriteArtifacts -OnlineSourceCheck
+
+      - name: Run docs freshness gate
+        shell: pwsh
+        run: ./scripts/verify-repo.ps1 -Check Docs
+
+      - name: Upload runtime evolution artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: runtime-evolution-review
+          path: .runtime/artifacts/runtime-evolution/
+          if-no-files-found: ignore

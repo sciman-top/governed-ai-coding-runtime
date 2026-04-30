@@ -52,6 +52,7 @@ This directory holds the human and machine planning artifacts that bridge strate
 - `Post-Certification Promotion Queue / GAP-113` is complete. It adds the autonomous `LTP-01..06` promotion scope fence that answers whether, why, and how to advance after certification.
 - `Post-Certification Selection Queue / GAP-114` is complete. It turns the promotion fence into the autonomous next-work selector.
 - `Dual First-Class Host Entrypoint Queue / GAP-115` through `GAP-119` is complete as owner-directed bounded scope. Codex and Claude Code are dual first-class entrypoints with current evidence-backed `native_attach` tier parity; host APIs remain different and future drift must degrade explicitly.
+- `Runtime Evolution Review Queue / GAP-120` through `GAP-124` is dry-run only. It defines the 30-day self-evolution policy, source collection, candidate evaluation, operator entrypoint, and freshness gate without enabling automatic mutation; AI coding experience is extracted through `ExperienceReview` only after it is captured as reviewable evidence, controlled proposals, knowledge records, or skill manifests.
 - Any heavy LTP implementation package after this selector must use ids beyond the bounded host-support queue and must pass the autonomous or owner-directed scope fence.
 - Historical `GAP-018` through `GAP-044` remain completion history and dependency context.
 - The active lifecycle is now anchored by:
@@ -61,6 +62,7 @@ This directory holds the human and machine planning artifacts that bridge strate
   - [Optimized Hybrid Final-State Long-Term Roadmap](../roadmap/optimized-hybrid-final-state-long-term-roadmap.md)
   - [Optimized Hybrid Final-State Long-Term Implementation Plan](../plans/optimized-hybrid-final-state-long-term-implementation-plan.md)
   - [Claude Code First-Class Entrypoint Plan](../plans/claude-code-first-class-entrypoint-plan.md)
+  - [Runtime Evolution Review Plan](../plans/runtime-evolution-review-plan.md)
   - [Governance Optimization Lane Roadmap](../roadmap/governance-optimization-lane-roadmap.md)
   - [Governance Optimization Lane Implementation Plan](../plans/governance-optimization-lane-implementation-plan.md)
   - [Long-Term Gap Trigger Audit Plan](../plans/long-term-gap-trigger-audit-plan.md)
