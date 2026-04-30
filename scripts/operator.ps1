@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("Help", "Targets", "Readiness", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "OperatorUi")]
+  [ValidateSet("Help", "Targets", "Readiness", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "FeedbackReport", "OperatorUi")]
   [string]$Action = "Help",
 
   [ValidateSet("quick", "full", "l1", "l2", "l3")]
@@ -139,6 +139,10 @@ function Show-OperatorHelp {
   @"
 Governed runtime operator entrypoint
 
+长期核心原则:
+  综合效率优先 = 少打扰 / 自动连续执行 / 节省 token / 成本 / 高效率
+  说明: 当前模型、provider、compact 与自动化细节都只是阶段性实现，不高于该原则本身。
+
 AI 推荐:
   pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Readiness -OpenUi
   理由: 按本仓硬门禁顺序执行 build -> test -> contract/invariant -> hotspot，并刷新默认中文 operator UI。
@@ -152,6 +156,7 @@ AI 推荐:
   GovernanceBaselineAll  对所有 active targets 下发治理基线，然后验证目标仓治理一致性。
   DailyAll               对所有 active targets 执行 daily flow，并刷新 operator UI。
   ApplyAllFeatures       执行全部当前目标仓功能、目标仓一致性检查，并刷新 operator UI。
+  FeedbackReport         生成 Codex/Claude 功能反馈汇总报告，并写入 runtime artifacts。
   OperatorUi             只生成本地 operator HTML；加 -OpenUi 会用默认浏览器打开。
 
 UI:
@@ -232,6 +237,14 @@ function Invoke-ApplyAllFeatures {
   Invoke-OperatorUi
 }
 
+function Invoke-FeedbackReport {
+  Invoke-PythonScript -Name "host-feedback-summary" -ScriptPath "scripts/host-feedback-summary.py" -ScriptArguments @(
+    "--assert-minimum",
+    "--write-markdown",
+    ".runtime/artifacts/host-feedback-summary/latest.md"
+  )
+}
+
 Push-Location -LiteralPath $RepoRoot
 try {
   switch ($Action) {
@@ -243,6 +256,7 @@ try {
     "GovernanceBaselineAll" { Invoke-GovernanceBaselineAll }
     "DailyAll" { Invoke-DailyAll }
     "ApplyAllFeatures" { Invoke-ApplyAllFeatures }
+    "FeedbackReport" { Invoke-FeedbackReport }
     "OperatorUi" { Invoke-OperatorUi }
   }
 }

@@ -3,10 +3,17 @@
 ## Purpose
 Show how to use this runtime with Codex/Claude Code style host workflows and what concrete help it provides during real coding tasks.
 
+## Root Principle
+- The root operating principle for this repository's host-facing workflow is `efficiency first`.
+- In practice that means: low interruption, continuous execution, lower token and cost burn, and high throughput.
+- Current defaults such as `gpt-5.4 + medium + never` are only temporary implementation choices under that principle.
+- If future models, reasoning settings, compact thresholds, or host tooling change, keep this principle stable first; replace the current implementation only when safety and gates do not regress.
+
 ## Recommended Modes
 
 ### Entrypoint Cheat Sheet
 - Operator aggregate entrypoint: `scripts/operator.ps1`
+- Host feedback summary: `scripts/operator.ps1 -Action FeedbackReport`
 - Target-repo daily runs and batch one-command apply: `scripts/runtime-flow-preset.ps1`
 - Global/project AI rule sync: `scripts/sync-agent-rules.ps1`
 - Self-repo full verification: `scripts/verify-repo.ps1 -Check All`
@@ -21,6 +28,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Readi
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi
 
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en
+
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action FeedbackReport
 
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
 
@@ -53,6 +62,24 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Opera
 ```
 
 This UI runs a persistent local `127.0.0.1` interactive service. Later visits can use `http://127.0.0.1:8770/?lang=en` directly; use `scripts/operator-ui-service.ps1 -Action Status|Stop|Restart` to inspect or control the service. It can run allowlisted actions for readiness, target listing, rule drift checks, rule sync, governance baseline rollout, daily, and all-feature apply. It can target all repos or one selected target repo, exposes settings for language, mode, parallelism, fail-fast, dry-run, and milestone tag, records results in the output panel and local browser history, and refs can be clicked to preview evidence/artifact/verification files. Remove `-OpenUi` when you only want to generate a read-only `.runtime/artifacts/operator-ui/index.html` snapshot.
+The `Codex` tab treats `efficiency first` as the long-lived rule and renders the current model combo only as the present implementation choice, so future model updates do not replace the underlying principle.
+
+### Host feedback summary
+If you want one place to judge whether a feature is really working in Codex and Claude, whether a problem is host-local or runtime-local, and what should be optimized next, generate the unified report instead of reading isolated logs:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action FeedbackReport
+```
+
+It summarizes:
+- local Codex status
+- local Claude status
+- rule manifest and synchronized global targets
+- latest target repo run evidence
+- recommended next actions
+
+The markdown report is written to:
+- `.runtime/artifacts/host-feedback-summary/latest.md`
 
 ### Mode A: Governance Sidecar (lowest friction)
 Use your host tool normally, and run this runtime for readiness, verification, and traceability.
@@ -138,6 +165,7 @@ python scripts/run-governed-task.py execute-attachment-write `
 | Repo onboarding | attach-first light-pack generation/validation | consistent repo policy/gate metadata for host sessions |
 | Rule sync | `sync-agent-rules.ps1` distributes `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` from the manifest | reduce multi-host and multi-repo rule drift |
 | Repeated-issue prevention | governance baseline distributes Windows process environment, canonical entrypoint, low-token, and fast/full gate policies | turn recurring fixes into target-repo state instead of reminders |
+| Efficiency-first defaults | one stable default plus manual escalation only when needed | preserve continuity and lower token burn without removing an upgrade path |
 | Verification | runtime-managed gate flow (`build -> test -> contract/invariant -> hotspot`) | stable acceptance checks and reproducible gate artifacts |
 | Risky writes | policy + approval + fail-closed behavior for medium/high tiers | prevents silent high-risk mutations |
 | Delivery evidence | evidence/handoff/replay refs linked to task/run | auditable handoff and rollback trail |
@@ -152,4 +180,5 @@ python scripts/run-governed-task.py execute-attachment-write `
 - [Use With An Existing Repo](./use-with-existing-repo.md)
 - [在现有仓库中使用](./use-with-existing-repo.zh-CN.md)
 - [Codex CLI/App Integration Guide](../product/codex-cli-app-integration-guide.md)
+- [Codex / Claude Host Feedback Loop](../product/host-feedback-loop.md)
 - [Codex CLI/App 集成指南](../product/codex-cli-app-integration-guide.zh-CN.md)

@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import importlib.util
 import json
 import subprocess
 import sys
@@ -22,8 +23,23 @@ if str(SCRIPTS_SRC) not in sys.path:
 
 from governed_ai_coding_runtime_contracts.operator_ui import render_runtime_snapshot_html, write_runtime_snapshot_html
 from governed_ai_coding_runtime_contracts.runtime_status import RuntimeStatusStore, runtime_snapshot_to_dict
-from lib.claude_local import claude_status, switch_provider
+from lib.claude_local import claude_home, claude_status, optimize_claude_local, provider_profiles_path, settings_path, switch_provider
 from lib.codex_local import codex_status, switch_auth_profile
+
+
+def _load_host_feedback_summary_builder():
+    path = ROOT / "scripts" / "host-feedback-summary.py"
+    module_name = "host_feedback_summary_script"
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"could not load host feedback summary script: {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module.build_host_feedback_summary
+
+
+build_host_feedback_summary = _load_host_feedback_summary_builder()
 
 
 ALLOWED_ACTIONS = {
@@ -34,6 +50,7 @@ ALLOWED_ACTIONS = {
     "governance_baseline_all": {"operator_action": "GovernanceBaselineAll", "timeout_seconds": 1800},
     "daily_all": {"operator_action": "DailyAll", "timeout_seconds": 1800},
     "apply_all_features": {"operator_action": "ApplyAllFeatures", "timeout_seconds": 2400},
+    "feedback_report": {"operator_action": "FeedbackReport", "timeout_seconds": 600},
 }
 
 CODEX_STATUS_CACHE_TTL_SECONDS = 10.0
@@ -130,6 +147,17 @@ def _build_handler(*, default_language: str):
                 status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.INTERNAL_SERVER_ERROR
                 self._send_json(result, status=status)
                 return
+            if parsed.path == "/api/claude/file":
+                params = parse_qs(parsed.query)
+                result = read_claude_local_file(params.get("kind", [""])[0])
+                status = HTTPStatus.OK if "content" in result else HTTPStatus.BAD_REQUEST
+                self._send_json(result, status=status)
+                return
+            if parsed.path == "/api/feedback/summary":
+                result = load_feedback_summary()
+                status = HTTPStatus.OK if result.get("status") != "error" else HTTPStatus.INTERNAL_SERVER_ERROR
+                self._send_json(result, status=status)
+                return
             if parsed.path == "/api/file":
                 params = parse_qs(parsed.query)
                 requested = params.get("path", [""])[0]
@@ -155,6 +183,11 @@ def _build_handler(*, default_language: str):
                 if parsed.path == "/api/claude/switch":
                     result = run_claude_switch(self._read_json_body())
                     status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
+                    self._send_json(result, status=status)
+                    return
+                if parsed.path == "/api/claude/optimize":
+                    result = run_claude_optimize(self._read_json_body())
+                    status = HTTPStatus.OK if result.get("status") in {"ok", "dry_run"} else HTTPStatus.BAD_REQUEST
                     self._send_json(result, status=status)
                     return
                 self._send_json({"error": "not found"}, status=HTTPStatus.NOT_FOUND)
@@ -213,6 +246,21 @@ def load_claude_status() -> dict:
     return _load_status_cached("claude", ttl_seconds=CLAUDE_STATUS_CACHE_TTL_SECONDS, loader=claude_status)
 
 
+def load_feedback_summary() -> dict:
+    try:
+        payload = build_host_feedback_summary(repo_root=ROOT, max_target_runs=5)
+    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
+        return {"status": "error", "error": str(exc)}
+    markdown_path = ROOT / ".runtime" / "artifacts" / "host-feedback-summary" / "latest.md"
+    payload["status"] = payload.get("status") or "pass"
+    payload["report_path"] = (
+        markdown_path.relative_to(ROOT).as_posix() if markdown_path.exists() else None
+    )
+    payload["guide_path"] = "docs/product/host-feedback-loop.zh-CN.md"
+    payload["guide_path_en"] = "docs/product/host-feedback-loop.md"
+    return payload
+
+
 def run_codex_switch(payload: dict) -> dict:
     if "_json_error" in payload:
         return {"status": "error", "error": payload["_json_error"]}
@@ -238,6 +286,19 @@ def run_claude_switch(payload: dict) -> dict:
         return {"status": "error", "error": str(exc)}
     if result.get("status") == "ok" and result.get("changed"):
         invalidate_status_cache("claude")
+    return result
+
+
+def run_claude_optimize(payload: dict) -> dict:
+    if "_json_error" in payload:
+        return {"status": "error", "error": payload["_json_error"]}
+    provider = _string(payload.get("provider"), "bigmodel-glm") or "bigmodel-glm"
+    apply = bool(payload.get("apply", False))
+    try:
+        result = optimize_claude_local(provider_name=provider, apply=apply)
+    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
+        return {"status": "error", "error": str(exc)}
+    invalidate_status_cache("claude")
     return result
 
 
@@ -365,6 +426,25 @@ def read_repo_file(requested: str) -> dict:
         }
     except OSError as exc:
         return {"path": requested, "error": str(exc)}
+
+
+def read_claude_local_file(kind: str) -> dict:
+    normalized = _string(kind, "")
+    home = claude_home()
+    path_map = {
+        "settings": settings_path(home),
+        "profiles": provider_profiles_path(home),
+        "switcher": home / "scripts" / "Switch-ClaudeProvider.ps1",
+    }
+    path = path_map.get(normalized)
+    if path is None:
+        return {"error": f"unsupported Claude local file kind: {normalized}"}
+    if not path.exists() or not path.is_file():
+        return {"error": f"file not found: {path}"}
+    try:
+        return {"path": str(path), "content": path.read_text(encoding="utf-8", errors="replace")}
+    except OSError as exc:
+        return {"path": str(path), "error": str(exc)}
 
 
 def load_target_ids() -> list[str]:

@@ -81,6 +81,11 @@ _TRANSLATIONS = {
         "codex_refresh_fallback": "在线刷新失败；已回退到本机最新快照。",
         "codex_unknown_usage": "暂时无法读取额度信息",
         "codex_config": "配置健康",
+        "codex_recommended": "核心原则",
+        "codex_current_choice": "当前实现",
+        "codex_compact_policy": "压缩策略",
+        "codex_manual_upgrade": "手动升档",
+        "codex_recommended_note": "本项目长期优先遵循“综合效率优先”：少打扰、自动连续执行、节省 token / 成本、高效率。`gpt-5.4 + medium + never` 只是当前暂行实现；以后若模型、参数或技术栈更迭，应优先保持这个原则，而不是固化当前组合本身。",
         "codex_login": "登录状态",
         "codex_token_validity": "本地令牌",
         "codex_token_expiry": "登录令牌到期",
@@ -101,6 +106,11 @@ _TRANSLATIONS = {
         "claude_active": "当前",
         "claude_switch": "切换",
         "claude_refresh": "刷新 Claude 状态",
+        "claude_optimize_preview": "预演推荐配置",
+        "claude_optimize_apply": "应用推荐配置",
+        "claude_view_settings": "查看 settings.json",
+        "claude_view_profiles": "查看 provider-profiles.json",
+        "claude_view_switcher": "查看切换脚本",
         "claude_service": "服务地址",
         "claude_models": "模型",
         "claude_extensions": "扩展能力",
@@ -113,12 +123,57 @@ _TRANSLATIONS = {
         "claude_credential": "凭据",
         "claude_usage": "额度",
         "claude_unknown_usage": "暂时无法读取额度信息",
+        "claude_active_provider": "当前 Provider",
+        "claude_active_summary": "当前映射",
+        "claude_context_strategy": "上下文策略",
+        "claude_timeout": "超时",
+        "claude_subagent": "子代理",
+        "claude_note": "建议",
+        "claude_local_files": "本机入口",
+        "claude_file_hint": "只开放本机 Claude 配置相关文件预览，不开放任意系统路径读取。",
+        "claude_provider_profiles": "Provider 配置",
+        "claude_missing_credential": "缺少凭据",
+        "claude_credential_ready": "凭据已就绪",
+        "claude_apply_recommended_confirm": "将按当前激活 provider 备份并写入 Claude Code 推荐配置。继续执行？",
+        "claude_no_active_provider": "当前未识别到激活 provider",
         "history": "执行历史",
         "no_history": "暂无执行历史。",
         "clear_history": "清空历史",
         "runtime_view": "Runtime",
+        "feedback_view": "反馈",
         "codex_view": "Codex",
         "claude_view": "Claude",
+        "feedback_console": "功能反馈闭环",
+        "feedback_refresh": "刷新反馈摘要",
+        "feedback_status": "反馈状态",
+        "feedback_generated_at": "生成时间",
+        "feedback_summary_caption": "简版摘要",
+        "feedback_dimensions": "维度状态",
+        "feedback_recommendations": "优化建议",
+        "feedback_latest_runs": "最新目标仓证据",
+        "feedback_latest_runs_hint": "看这 3 项就够了：接入方式是否正常、闭环状态是否 ready、写入状态是否真的执行过。",
+        "feedback_repo_attach": "接入方式",
+        "feedback_repo_flow": "运行流",
+        "feedback_repo_closure": "闭环状态",
+        "feedback_repo_write": "写入状态",
+        "feedback_repo_attach_native": "原生直连",
+        "feedback_repo_attach_bridge": "桥接接入",
+        "feedback_repo_attach_manual": "人工接力",
+        "feedback_repo_flow_live": "宿主内直接运行",
+        "feedback_repo_flow_bridge": "通过桥接运行",
+        "feedback_repo_closure_ready": "已具备闭环",
+        "feedback_repo_closure_partial": "闭环未完成",
+        "feedback_repo_write_unknown": "未记录写入执行",
+        "feedback_repo_write_done": "已执行写入",
+        "feedback_links": "文档与报告",
+        "feedback_open_report": "查看详细报告",
+        "feedback_open_guide": "查看反馈指南",
+        "feedback_open_guide_en": "查看英文指南",
+        "feedback_report_missing": "尚未生成详细报告，可先执行“功能反馈汇总”。",
+        "feedback_loading": "正在加载反馈摘要…",
+        "feedback_empty": "暂未获取到反馈摘要。",
+        "feedback_preview": "文档预览",
+        "feedback_preview_idle": "点击“查看详细报告”或“查看反馈指南”后，会在这里展开内容。",
         "ready": "就绪",
         "running": "执行中",
         "static_snapshot": "静态快照",
@@ -129,6 +184,7 @@ _TRANSLATIONS = {
         "governance_baseline_action": "下发治理基线",
         "daily_all_action": "运行 Daily",
         "apply_all_action": "全部功能应用",
+        "feedback_report_action": "功能反馈汇总",
         "view_ref": "查看",
         "confirm_mutating": "该操作可能修改规则文件、目标仓治理基线或运行证据。继续执行？",
         "interactive_required": "当前是静态快照；启动本地服务后可执行操作。",
@@ -206,6 +262,11 @@ _TRANSLATIONS = {
         "codex_refresh_fallback": "Online refresh failed; fell back to the latest local snapshot.",
         "codex_unknown_usage": "Usage information is not available yet",
         "codex_config": "Config health",
+        "codex_recommended": "Core principle",
+        "codex_current_choice": "Current implementation",
+        "codex_compact_policy": "Compact policy",
+        "codex_manual_upgrade": "Manual upgrade",
+        "codex_recommended_note": "This project keeps the long-lived principle of efficiency first: low interruption, continuous execution, lower token and cost burn, and high throughput. `gpt-5.4 + medium + never` is only the current implementation. When future models, parameters, or tooling change, preserve that principle first rather than freezing the current combo itself.",
         "codex_login": "Login status",
         "codex_token_validity": "Local token",
         "codex_token_expiry": "Sign-in token expiry",
@@ -226,6 +287,11 @@ _TRANSLATIONS = {
         "claude_active": "Active",
         "claude_switch": "Switch",
         "claude_refresh": "Refresh Claude",
+        "claude_optimize_preview": "Preview recommended config",
+        "claude_optimize_apply": "Apply recommended config",
+        "claude_view_settings": "View settings.json",
+        "claude_view_profiles": "View provider-profiles.json",
+        "claude_view_switcher": "View switcher script",
         "claude_service": "Service",
         "claude_models": "Models",
         "claude_extensions": "Extensions",
@@ -238,12 +304,57 @@ _TRANSLATIONS = {
         "claude_credential": "Credential",
         "claude_usage": "Usage",
         "claude_unknown_usage": "Usage information is not available yet",
+        "claude_active_provider": "Active provider",
+        "claude_active_summary": "Current mapping",
+        "claude_context_strategy": "Context strategy",
+        "claude_timeout": "Timeout",
+        "claude_subagent": "Subagent",
+        "claude_note": "Recommendation",
+        "claude_local_files": "Local entrypoints",
+        "claude_file_hint": "Only Claude-related local config files are previewable here; arbitrary system files stay blocked.",
+        "claude_provider_profiles": "Provider profiles",
+        "claude_missing_credential": "missing credential",
+        "claude_credential_ready": "credential ready",
+        "claude_apply_recommended_confirm": "This will back up and write the recommended Claude Code config for the active provider. Continue?",
+        "claude_no_active_provider": "no active provider detected",
         "history": "Run history",
         "no_history": "No run history.",
         "clear_history": "Clear history",
         "runtime_view": "Runtime",
+        "feedback_view": "Feedback",
         "codex_view": "Codex",
         "claude_view": "Claude",
+        "feedback_console": "Host Feedback Loop",
+        "feedback_refresh": "Refresh feedback summary",
+        "feedback_status": "Feedback status",
+        "feedback_generated_at": "Generated at",
+        "feedback_summary_caption": "Snapshot summary",
+        "feedback_dimensions": "Dimension status",
+        "feedback_recommendations": "Recommendations",
+        "feedback_latest_runs": "Latest target evidence",
+        "feedback_latest_runs_hint": "Focus on the adapter, closure state, and whether a write step actually ran.",
+        "feedback_repo_attach": "Adapter",
+        "feedback_repo_flow": "Flow",
+        "feedback_repo_closure": "Closure",
+        "feedback_repo_write": "Write",
+        "feedback_repo_attach_native": "native attach",
+        "feedback_repo_attach_bridge": "bridge attach",
+        "feedback_repo_attach_manual": "manual handoff",
+        "feedback_repo_flow_live": "live host run",
+        "feedback_repo_flow_bridge": "bridge run",
+        "feedback_repo_closure_ready": "closure ready",
+        "feedback_repo_closure_partial": "closure incomplete",
+        "feedback_repo_write_unknown": "write not recorded",
+        "feedback_repo_write_done": "write executed",
+        "feedback_links": "Docs and reports",
+        "feedback_open_report": "Open detailed report",
+        "feedback_open_guide": "Open zh-CN guide",
+        "feedback_open_guide_en": "Open English guide",
+        "feedback_report_missing": "No detailed report yet. Run the feedback summary action first.",
+        "feedback_loading": "Loading feedback summary...",
+        "feedback_empty": "Feedback summary is not available yet.",
+        "feedback_preview": "Preview",
+        "feedback_preview_idle": "Open the detailed report or guide to preview the content here.",
         "ready": "Ready",
         "running": "Running",
         "static_snapshot": "Static snapshot",
@@ -254,6 +365,7 @@ _TRANSLATIONS = {
         "governance_baseline_action": "Apply governance baseline",
         "daily_all_action": "Run Daily",
         "apply_all_action": "Apply all features",
+        "feedback_report_action": "Feedback summary",
         "view_ref": "View",
         "confirm_mutating": "This action may modify rule files, target governance baseline, or runtime evidence. Continue?",
         "interactive_required": "This is a static snapshot; start the local service to run actions.",
@@ -288,6 +400,7 @@ def render_runtime_snapshot_html(
     feedback = _render_feedback(text, interactive=interactive)
     codex_panel = _render_codex_panel(text, interactive=interactive)
     claude_panel = _render_claude_panel(text, interactive=interactive)
+    feedback_panel = _render_host_feedback_panel(text, interactive=interactive)
     script = _render_interactive_script(text, language=language) if interactive else ""
     runtime_root = snapshot.runtime_root or text["missing"]
     tabs = _render_view_tabs(text)
@@ -348,6 +461,20 @@ def render_runtime_snapshot_html(
     .summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }}
     .feedback-grid {{ display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr); gap: 14px; align-items: start; }}
     .details-grid {{ display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr); gap: 14px; align-items: start; }}
+    .feedback-summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 12px; }}
+    .feedback-shell {{ display: grid; grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.1fr); gap: 14px; align-items: start; }}
+    .feedback-column {{ display: grid; gap: 12px; min-width: 0; }}
+    .feedback-list, .feedback-links, .feedback-latest-runs {{ display: grid; gap: 8px; }}
+    .feedback-run {{ border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: #fbfdfd; }}
+    .feedback-run strong {{ display: block; margin-bottom: 6px; }}
+    .status-pill-list {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }}
+    .status-pill {{ display: inline-flex; flex: 0 0 auto; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface-muted); font-size: 0.82rem; white-space: nowrap; max-width: 100%; }}
+    .status-pill.ok {{ border-color: #b2ddd6; background: #edf9f6; color: var(--accent-strong); }}
+    .status-pill.attention {{ border-color: #edd39b; background: #fff6e5; color: var(--warning); }}
+    .status-pill.fail {{ border-color: #efc2bc; background: #fff0ee; color: var(--danger); }}
+    .feedback-preview-card {{ display: grid; gap: 10px; }}
+    .feedback-preview {{ height: 420px; overflow: auto; white-space: pre-wrap; background: #fcfefe; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }}
+    .feedback-runs-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }}
     .metric {{
       background: linear-gradient(180deg, #ffffff, #fbfdfd);
       border: 1px solid var(--line);
@@ -431,12 +558,25 @@ def render_runtime_snapshot_html(
     .codex-account-switch {{ display: inline-flex; align-items: center; justify-content: center; min-width: 68px; min-height: 34px; padding: 8px 14px; border-radius: 7px; text-align: center; font-weight: 700; }}
     .codex-account-switch.is-current {{ border-color: #bde0da; color: var(--accent-strong); background: var(--accent-soft); }}
     .codex-account-switch[disabled] {{ opacity: 1; cursor: default; box-shadow: none; transform: none; }}
-    .ref-button {{ display: inline; padding: 0; border: 0; background: transparent; color: #0b5cad; text-align: left; font-family: Consolas, "Liberation Mono", monospace; font-size: 0.9rem; overflow-wrap: anywhere; }}
-    .ref-button:hover {{ text-decoration: underline; }}
+    .claude-toolbar {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }}
+    .claude-console-grid {{ display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(290px, 0.65fr); gap: 12px; align-items: start; }}
+    .claude-summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }}
+    .claude-summary-card {{ background: linear-gradient(180deg, #ffffff, #fbfdfd); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; box-shadow: var(--shadow-card); }}
+    .claude-summary-card .meta {{ margin: 0; }}
+    .claude-side-panel {{ display: grid; gap: 12px; min-width: 0; }}
+    .claude-file-actions {{ display: grid; gap: 8px; }}
+    .claude-provider-list {{ display: grid; gap: 10px; }}
+    .provider-status-pill {{ display: inline-flex; align-items: center; gap: 6px; width: fit-content; padding: 4px 10px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; border: 1px solid var(--line); background: #fff; color: var(--muted); }}
+    .provider-status-pill.ready {{ border-color: #bde0da; color: var(--accent-strong); background: var(--accent-soft); }}
+    .provider-status-pill.missing {{ border-color: #f2d2a4; color: #8b5d10; background: #fff7e8; }}
+    .provider-card-actions {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; justify-content: flex-end; }}
+    .ref-button {{ display: inline; padding: 0; border: 0; background: transparent; color: #0b5cad; text-align: left; font-family: inherit; font-size: 0.92rem; font-weight: 600; overflow-wrap: anywhere; box-shadow: none; transform: none; }}
+    .ref-button:hover {{ text-decoration: underline; border-color: transparent; box-shadow: none; transform: none; }}
     @media (max-width: 820px) {{
       main {{ padding: 14px 12px 32px; }}
       header {{ padding: 14px; }}
-      .console-layout, .summary-grid, .policy-grid, .feedback-grid, .details-grid, .codex-grid, .codex-account {{ grid-template-columns: 1fr; }}
+      .console-layout, .summary-grid, .policy-grid, .feedback-grid, .details-grid, .codex-grid, .codex-account, .claude-console-grid, .feedback-shell, .feedback-runs-grid {{ grid-template-columns: 1fr; }}
+      .feedback-preview {{ height: 300px; }}
       .info-list {{ grid-template-columns: 1fr; }}
       .sidebar {{ position: static; }}
       .output {{ min-height: 220px; }}
@@ -478,6 +618,9 @@ def render_runtime_snapshot_html(
         </div>
         <div data-view-panel="claude" hidden>
           {claude_panel}
+        </div>
+        <div data-view-panel="feedback" hidden>
+          {feedback_panel}
         </div>
       </div>
     </div>
@@ -522,6 +665,7 @@ def _render_view_tabs(text: dict[str, str]) -> str:
             f"<button type='button' class='view-tab' role='tab' aria-selected='true' data-view-tab='runtime'>{escape(text['runtime_view'])}</button>",
             f"<button type='button' class='view-tab' role='tab' aria-selected='false' data-view-tab='codex'>{escape(text['codex_view'])}</button>",
             f"<button type='button' class='view-tab' role='tab' aria-selected='false' data-view-tab='claude'>{escape(text['claude_view'])}</button>",
+            f"<button type='button' class='view-tab' role='tab' aria-selected='false' data-view-tab='feedback'>{escape(text['feedback_view'])}</button>",
             "</div>",
         ]
     )
@@ -768,6 +912,7 @@ def _render_actions(text: dict[str, str], *, language: str, interactive: bool, t
         ("governance_baseline_all", text["governance_baseline_action"], "danger", text["confirm_mutating"]),
         ("daily_all", text["daily_all_action"], "", ""),
         ("apply_all_features", text["apply_all_action"], "danger", text["confirm_mutating"]),
+        ("feedback_report", text["feedback_report_action"], "", ""),
     ]
     buttons = []
     for action_id, label, class_name, confirm in action_items:
@@ -854,6 +999,8 @@ def _render_codex_panel(text: dict[str, str], *, interactive: bool) -> str:
             f"<div class='status-line' id='codex-login'>{escape(text['codex_login'])}: {escape(text['not_recorded'])}</div>",
             f"<div class='status-line' id='codex-cache-state'>{escape(text['panel_cache_state'])}: {escape(text['panel_cache_cold'])}</div>",
             f"<div class='status-line' id='codex-token-note'>{escape(text['codex_subscription_note'])} {escape(text['codex_token_note'])}</div>",
+            f"<p class='meta' id='codex-recommended-note'>{escape(text['codex_recommended_note'])}</p>",
+            "<div id='codex-summary' class='claude-summary-grid'></div>",
             "<div id='codex-accounts' class='codex-list'></div>",
             "</div>",
             "</div>",
@@ -876,16 +1023,87 @@ def _render_claude_panel(text: dict[str, str], *, interactive: bool) -> str:
         [
             "<section class='panel'>",
             f"<h2>{escape(text['claude_console'])}</h2>",
-            "<div class='codex-toolbar'>",
+            "<div class='claude-toolbar'>",
             f"<button type='button' data-claude-refresh='1'>{escape(text['claude_refresh'])}</button>",
+            f"<button type='button' data-claude-optimize-preview='1'>{escape(text['claude_optimize_preview'])}</button>",
+            f"<button type='button' class='primary' data-claude-optimize-apply='1' data-confirm='{escape(text['claude_apply_recommended_confirm'])}'>{escape(text['claude_optimize_apply'])}</button>",
             "</div>",
-            "<div class='codex-grid'>",
-            "<div>",
+            "<div class='claude-console-grid'>",
+            "<div class='claude-side-panel'>",
             f"<div class='status-line' id='claude-command'>{escape(text['claude_command'])}: {escape(text['not_recorded'])}</div>",
             f"<div class='status-line' id='claude-cache-state'>{escape(text['panel_cache_state'])}: {escape(text['panel_cache_cold'])}</div>",
-            "<div id='claude-providers' class='codex-list'></div>",
+            "<div id='claude-summary' class='claude-summary-grid'></div>",
+            "<div id='claude-providers' class='claude-provider-list'></div>",
+            "</div>",
+            "<div class='claude-side-panel'>",
+            "<section class='panel'>",
+            f"<h3>{escape(text['claude_local_files'])}</h3>",
+            f"<p class='meta'>{escape(text['claude_file_hint'])}</p>",
+            "<div class='claude-file-actions'>",
+            f"<button type='button' data-claude-file='settings'>{escape(text['claude_view_settings'])}</button>",
+            f"<button type='button' data-claude-file='profiles'>{escape(text['claude_view_profiles'])}</button>",
+            f"<button type='button' data-claude-file='switcher'>{escape(text['claude_view_switcher'])}</button>",
+            "</div>",
+            "</section>",
             "</div>",
             "</div>",
+            "</section>",
+        ]
+    )
+
+
+def _render_host_feedback_panel(text: dict[str, str], *, interactive: bool) -> str:
+    if not interactive:
+        return "\n".join(
+            [
+                "<section class='panel'>",
+                f"<h2>{escape(text['feedback_console'])}</h2>",
+                f"<p class='meta'>{escape(text['interactive_required'])}</p>",
+                "</section>",
+            ]
+        )
+    return "\n".join(
+        [
+            "<section class='panel'>",
+            f"<h2>{escape(text['feedback_console'])}</h2>",
+            "<div class='claude-toolbar'>",
+            f"<button type='button' data-feedback-refresh='1'>{escape(text['feedback_refresh'])}</button>",
+            "</div>",
+            f"<div class='status-line' id='feedback-status'>{escape(text['feedback_status'])}: {escape(text['feedback_loading'])}</div>",
+            f"<div class='status-line' id='feedback-cache-state'>{escape(text['panel_cache_state'])}: {escape(text['panel_cache_cold'])}</div>",
+            f"<div class='status-line' id='feedback-generated-at'>{escape(text['feedback_generated_at'])}: {escape(text['not_recorded'])}</div>",
+            "<div id='feedback-summary' class='feedback-summary-grid'></div>",
+            "<div class='feedback-shell'>",
+            "<div class='feedback-column'>",
+            "<section class='panel'>",
+            f"<h2>{escape(text['feedback_dimensions'])}</h2>",
+            "<div id='feedback-dimensions' class='status-pill-list'></div>",
+            "</section>",
+            "<section class='panel'>",
+            f"<h2>{escape(text['feedback_recommendations'])}</h2>",
+            "<div id='feedback-recommendations' class='refs'></div>",
+            "</section>",
+            "<section class='panel'>",
+            f"<h2>{escape(text['feedback_links'])}</h2>",
+            "<div class='feedback-links'>",
+            "<div id='feedback-report-link'></div>",
+            "<div id='feedback-guide-link'></div>",
+            "<div id='feedback-guide-link-en'></div>",
+            "</div>",
+            "</section>",
+            "</div>",
+            "<div class='feedback-column'>",
+            "<section class='panel feedback-preview-card'>",
+            f"<h2>{escape(text['feedback_preview'])}</h2>",
+            f"<pre id='feedback-preview' class='feedback-preview'>{escape(text['feedback_preview_idle'])}</pre>",
+            "</section>",
+            "</div>",
+            "</div>",
+            "<section class='panel'>",
+            f"<h2>{escape(text['feedback_latest_runs'])}</h2>",
+            f"<p class='meta'>{escape(text['feedback_latest_runs_hint'])}</p>",
+            "<div id='feedback-latest-runs' class='feedback-runs-grid'></div>",
+            "</section>",
             "</section>",
         ]
     )
@@ -909,14 +1127,30 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   const codexAccounts = document.getElementById('codex-accounts');
   const codexLogin = document.getElementById('codex-login');
   const codexCacheState = document.getElementById('codex-cache-state');
+  const codexSummary = document.getElementById('codex-summary');
   const claudeProviders = document.getElementById('claude-providers');
   const claudeCommand = document.getElementById('claude-command');
   const claudeCacheState = document.getElementById('claude-cache-state');
+  const claudeSummary = document.getElementById('claude-summary');
+  const feedbackStatus = document.getElementById('feedback-status');
+  const feedbackCacheState = document.getElementById('feedback-cache-state');
+  const feedbackGeneratedAt = document.getElementById('feedback-generated-at');
+  const feedbackSummary = document.getElementById('feedback-summary');
+  const feedbackDimensions = document.getElementById('feedback-dimensions');
+  const feedbackRecommendations = document.getElementById('feedback-recommendations');
+  const feedbackLatestRuns = document.getElementById('feedback-latest-runs');
+  const feedbackReportLink = document.getElementById('feedback-report-link');
+  const feedbackGuideLink = document.getElementById('feedback-guide-link');
+  const feedbackGuideLinkEn = document.getElementById('feedback-guide-link-en');
+  const feedbackPreview = document.getElementById('feedback-preview');
   const historyKey = 'governed-runtime-operator-history';
   const codexCacheKey = 'governed-runtime-operator-codex-status';
   const claudeCacheKey = 'governed-runtime-operator-claude-status';
+  const feedbackCacheKey = 'governed-runtime-operator-feedback-summary';
   let codexLoaded = false;
   let claudeLoaded = false;
+  let feedbackLoaded = false;
+  let lastClaudePayload = null;
 
   function readHistory() {{
     try {{
@@ -961,11 +1195,13 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   }}
 
   function setPanelCacheState(kind, state, cachedAt) {{
-    const target = kind === 'codex' ? codexCacheState : claudeCacheState;
+    const target = kind === 'codex'
+      ? codexCacheState
+      : (kind === 'claude' ? claudeCacheState : feedbackCacheState);
     if (!target) {{
       return;
     }}
-    const label = {text['panel_cache_state']!r};
+    const label = kind === 'feedback' ? {text['feedback_status']!r} : {text['panel_cache_state']!r};
     const stateLabels = {{
       cold: {text['panel_cache_cold']!r},
       cached: {text['panel_cache_cached']!r},
@@ -988,9 +1224,12 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     if (kind === 'codex') {{
       renderCodexStatus(cached);
       codexLoaded = true;
-    }} else {{
+    }} else if (kind === 'claude') {{
       renderClaudeStatus(cached);
       claudeLoaded = true;
+    }} else {{
+      renderFeedbackSummary(cached);
+      feedbackLoaded = true;
     }}
     setPanelCacheState(kind, 'cached', cached.cached_at);
     return true;
@@ -1025,6 +1264,15 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   function setOutput(text) {{
     output.textContent = text || '';
     outputPanel.scrollIntoView({{ block: 'nearest', behavior: 'smooth' }});
+  }}
+
+  function setFeedbackPreview(text) {{
+    if (!feedbackPreview) {{
+      setOutput(text);
+      return;
+    }}
+    feedbackPreview.textContent = text || '';
+    feedbackPreview.scrollIntoView({{ block: 'nearest', behavior: 'smooth' }});
   }}
 
   function setBusy(isBusy) {{
@@ -1078,18 +1326,32 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     }}
   }}
 
-  async function viewRef(path) {{
+  async function viewRef(path, options = {{}}) {{
+    const previewTarget = options && options.previewTarget === 'feedback' ? 'feedback' : 'runtime';
     setBusy(true);
     try {{
       const response = await fetch('/api/file?path=' + encodeURIComponent(path));
       const payload = await response.json();
       if (!response.ok) {{
-        setOutput(payload.error || response.statusText);
+        if (previewTarget === 'feedback') {{
+          setFeedbackPreview(payload.error || response.statusText);
+        }} else {{
+          setOutput(payload.error || response.statusText);
+        }}
       }} else {{
-        setOutput(`path: ${{payload.path}}\\n\\n${{payload.content}}`);
+        const rendered = `path: ${{payload.path}}\\n\\n${{payload.content}}`;
+        if (previewTarget === 'feedback') {{
+          setFeedbackPreview(rendered);
+        }} else {{
+          setOutput(rendered);
+        }}
       }}
     }} catch (error) {{
-      setOutput(String(error));
+      if (previewTarget === 'feedback') {{
+        setFeedbackPreview(String(error));
+      }} else {{
+        setOutput(String(error));
+      }}
     }} finally {{
       setBusy(false);
     }}
@@ -1369,6 +1631,295 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     return line;
   }}
 
+  function formatFeedbackStatusLabel(value) {{
+    const normalized = String(value || '').trim().toLowerCase();
+    if (currentUiLanguage() === 'zh-CN') {{
+      const labels = {{
+        pass: '通过',
+        ok: '正常',
+        attention: '需关注',
+        fail: '失败',
+        error: '错误',
+      }};
+      return labels[normalized] || (value || '未知');
+    }}
+    return value || 'unknown';
+  }}
+
+  function summarizeFeedbackAdapter(value) {{
+    const normalized = String(value || '').trim().toLowerCase();
+    if (normalized === 'native_attach') {{
+      return {text['feedback_repo_attach_native']!r};
+    }}
+    if (normalized === 'process_bridge') {{
+      return {text['feedback_repo_attach_bridge']!r};
+    }}
+    if (normalized === 'manual_handoff') {{
+      return {text['feedback_repo_attach_manual']!r};
+    }}
+    return value || 'unknown';
+  }}
+
+  function summarizeFeedbackFlow(value) {{
+    const normalized = String(value || '').trim().toLowerCase();
+    if (normalized === 'live_attach') {{
+      return {text['feedback_repo_flow_live']!r};
+    }}
+    if (normalized === 'bridge_attach') {{
+      return {text['feedback_repo_flow_bridge']!r};
+    }}
+    return value || 'unknown';
+  }}
+
+  function summarizeFeedbackClosure(value) {{
+    const normalized = String(value || '').trim().toLowerCase();
+    if (normalized === 'live_closure_ready') {{
+      return {text['feedback_repo_closure_ready']!r};
+    }}
+    if (!normalized || normalized === 'unknown') {{
+      return currentUiLanguage() === 'zh-CN' ? '未记录' : 'not recorded';
+    }}
+    return {text['feedback_repo_closure_partial']!r};
+  }}
+
+  function summarizeFeedbackWrite(value) {{
+    const normalized = String(value || '').trim().toLowerCase();
+    if (!normalized || normalized === 'unknown') {{
+      return {text['feedback_repo_write_unknown']!r};
+    }}
+    return {text['feedback_repo_write_done']!r};
+  }}
+
+  function createRefButton(path, label, previewTarget = 'runtime') {{
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'ref-button';
+    button.dataset.ref = path;
+    button.textContent = label || path;
+    button.addEventListener('click', () => viewRef(path, {{ previewTarget }}));
+    return button;
+  }}
+
+  function renderFeedbackSummary(payload) {{
+    if (!feedbackSummary || !feedbackDimensions || !feedbackRecommendations || !feedbackLatestRuns) {{
+      return;
+    }}
+    const summary = payload && payload.summary ? payload.summary : {{}};
+    const dimensions = Array.isArray(payload && payload.dimensions) ? payload.dimensions : [];
+    const recommendations = Array.isArray(payload && payload.recommendations) ? payload.recommendations : [];
+    const generatedAt = payload && payload.generated_at ? formatTimestampLabel(payload.generated_at) : {text['not_recorded']!r};
+
+    feedbackGeneratedAt.textContent = `{text['feedback_generated_at']}: ${{generatedAt}}`;
+    feedbackStatus.textContent = `{text['feedback_status']}: ${{formatFeedbackStatusLabel(payload && payload.status)}}`;
+
+    feedbackSummary.innerHTML = '';
+    [
+      {{
+        label: {text['feedback_status']!r},
+        value: formatFeedbackStatusLabel(payload && payload.status),
+        detail: summary.rule_manifest_revision ? `manifest=${{summary.rule_manifest_revision}}` : ''
+      }},
+      {{
+        label: {text['feedback_summary_caption']!r},
+        value: currentUiLanguage() === 'zh-CN'
+          ? `正常 ${{summary.dimensions_ok || 0}} / 关注 ${{summary.dimensions_attention || 0}} / 失败 ${{summary.dimensions_fail || 0}}`
+          : `ok ${{summary.dimensions_ok || 0}} / attention ${{summary.dimensions_attention || 0}} / fail ${{summary.dimensions_fail || 0}}`,
+        detail: ''
+      }},
+      {{
+        label: 'Codex',
+        value: formatFeedbackStatusLabel(summary.codex_host_status),
+        detail: ''
+      }},
+      {{
+        label: 'Claude',
+        value: formatFeedbackStatusLabel(summary.claude_host_status),
+        detail: ''
+      }},
+    ].forEach((card) => {{
+      const section = document.createElement('section');
+      section.className = 'claude-summary-card';
+      section.appendChild(createInfoLine(card.label, card.value));
+      if (card.detail) {{
+        const meta = document.createElement('p');
+        meta.className = 'meta';
+        meta.textContent = card.detail;
+        section.appendChild(meta);
+      }}
+      feedbackSummary.appendChild(section);
+    }});
+
+    feedbackDimensions.innerHTML = '';
+    dimensions.forEach((item) => {{
+      const pill = document.createElement('span');
+      pill.className = `status-pill ${{String(item.status || '').toLowerCase()}}`;
+      pill.textContent = `${{item.dimension_id}}: ${{formatFeedbackStatusLabel(item.status)}}`;
+      pill.title = item.summary || '';
+      feedbackDimensions.appendChild(pill);
+    }});
+    if (!dimensions.length) {{
+      const empty = document.createElement('p');
+      empty.className = 'meta';
+      empty.textContent = {text['feedback_empty']!r};
+      feedbackDimensions.appendChild(empty);
+    }}
+
+    feedbackRecommendations.innerHTML = '';
+    if (recommendations.length) {{
+      const list = document.createElement('ul');
+      recommendations.forEach((item) => {{
+        const li = document.createElement('li');
+        li.textContent = String(item);
+        list.appendChild(li);
+      }});
+      feedbackRecommendations.appendChild(list);
+    }} else {{
+      feedbackRecommendations.innerHTML = `<p class="meta">{text['none']}</p>`;
+    }}
+
+    feedbackLatestRuns.innerHTML = '';
+    const targetRuns = dimensions.find((item) => item.dimension_id === 'target_runs');
+    const runs = targetRuns && targetRuns.details && Array.isArray(targetRuns.details.latest_runs)
+      ? targetRuns.details.latest_runs
+      : [];
+    runs.forEach((item) => {{
+      const card = document.createElement('div');
+      card.className = 'feedback-run';
+      const title = document.createElement('strong');
+      title.textContent = String(item.repo_id || 'repo');
+      const meta = document.createElement('div');
+      meta.className = 'info-list';
+      meta.append(
+        createInfoLine({text['feedback_repo_attach']!r}, summarizeFeedbackAdapter(item.adapter_tier)),
+        createInfoLine({text['feedback_repo_flow']!r}, summarizeFeedbackFlow(item.flow_kind || item.flow_mode)),
+        createInfoLine({text['feedback_repo_closure']!r}, summarizeFeedbackClosure(item.closure_state)),
+        createInfoLine({text['feedback_repo_write']!r}, summarizeFeedbackWrite(item.write_status))
+      );
+      card.append(title, meta);
+      feedbackLatestRuns.appendChild(card);
+    }});
+    if (!runs.length) {{
+      feedbackLatestRuns.innerHTML = `<p class="meta">{text['feedback_empty']}</p>`;
+    }}
+
+    feedbackReportLink.innerHTML = '';
+    if (payload && payload.report_path) {{
+      feedbackReportLink.appendChild(createRefButton(payload.report_path, {text['feedback_open_report']!r}, 'feedback'));
+    }} else {{
+      feedbackReportLink.innerHTML = `<p class="meta">{text['feedback_report_missing']}</p>`;
+    }}
+    feedbackGuideLink.innerHTML = '';
+    if (payload && payload.guide_path) {{
+      feedbackGuideLink.appendChild(createRefButton(payload.guide_path, {text['feedback_open_guide']!r}, 'feedback'));
+    }}
+    feedbackGuideLinkEn.innerHTML = '';
+    if ((document.documentElement.lang || '').toLowerCase().startsWith('en') && payload && payload.guide_path_en) {{
+      feedbackGuideLinkEn.appendChild(createRefButton(payload.guide_path_en, {text['feedback_open_guide_en']!r}, 'feedback'));
+    }}
+  }}
+
+  async function refreshFeedbackSummary() {{
+    if (!feedbackSummary) {{
+      return;
+    }}
+    setPanelCacheState('feedback', feedbackLoaded ? 'refreshing' : 'cold');
+    try {{
+      const response = await fetch('/api/feedback/summary');
+      const payload = await response.json();
+      if (!response.ok) {{
+        feedbackStatus.textContent = `{text['feedback_status']}: ${{payload.error || response.statusText}}`;
+        setPanelCacheState('feedback', 'error');
+        return;
+      }}
+      payload.cached_at = payload.generated_at || payload.cached_at;
+      renderFeedbackSummary(payload);
+      writePanelCache(feedbackCacheKey, payload);
+      feedbackLoaded = true;
+      setPanelCacheState('feedback', 'ready', payload.cached_at);
+    }} catch (error) {{
+      feedbackStatus.textContent = `{text['feedback_status']}: ${{String(error)}}`;
+      setPanelCacheState('feedback', 'error');
+    }}
+  }}
+
+  function summarizeClaudeContext(provider) {{
+    const env = provider && provider.env ? provider.env : {{}};
+    const compactWindow = String(env.CLAUDE_CODE_AUTO_COMPACT_WINDOW || '').trim();
+    const compactPct = String(env.CLAUDE_AUTOCOMPACT_PCT_OVERRIDE || '').trim();
+    const parts = [];
+    if (compactWindow) {{
+      parts.push(currentUiLanguage() === 'zh-CN' ? `窗口 ${{compactWindow}}` : `window ${{compactWindow}}`);
+    }}
+    if (compactPct) {{
+      parts.push(currentUiLanguage() === 'zh-CN' ? `触发 ${{compactPct}}%` : `trigger ${{compactPct}}%`);
+    }}
+    return parts.join(' · ') || (currentUiLanguage() === 'zh-CN' ? '未记录' : 'not recorded');
+  }}
+
+  function summarizeClaudeTimeout(provider) {{
+    const env = provider && provider.env ? provider.env : {{}};
+    const timeout = Number(env.API_TIMEOUT_MS || 0);
+    if (!Number.isFinite(timeout) || timeout <= 0) {{
+      return currentUiLanguage() === 'zh-CN' ? '未记录' : 'not recorded';
+    }}
+    const minutes = Math.round(timeout / 60000);
+    return currentUiLanguage() === 'zh-CN' ? `${{minutes}} 分钟` : `${{minutes}} min`;
+  }}
+
+  function summarizeClaudeModels(provider) {{
+    const models = provider && provider.models ? provider.models : {{}};
+    return [
+      models.opus ? `Opus ${{models.opus}}` : '',
+      models.sonnet ? `Sonnet ${{models.sonnet}}` : '',
+      models.haiku ? `Haiku ${{models.haiku}}` : '',
+    ].filter(Boolean).join(' · ');
+  }}
+
+  function renderClaudeSummary(payload) {{
+    if (!claudeSummary) {{
+      return;
+    }}
+    claudeSummary.innerHTML = '';
+    const provider = payload && payload.active_provider ? payload.active_provider : null;
+    const settings = payload && payload.settings ? payload.settings : {{}};
+    const env = settings.env && Array.isArray(settings.env) ? settings.env : [];
+    const subagent = env.find((item) => item && item.name === 'CLAUDE_CODE_SUBAGENT_MODEL');
+    const cards = [
+      {{
+        label: {text['claude_active_provider']!r},
+        value: provider ? (provider.label || provider.name || {text['claude_no_active_provider']!r}) : {text['claude_no_active_provider']!r},
+        detail: provider ? summarizeClaudeContext(provider) : ''
+      }},
+      {{
+        label: {text['claude_active_summary']!r},
+        value: provider ? summarizeClaudeModels(provider) : (currentUiLanguage() === 'zh-CN' ? '未记录' : 'not recorded'),
+        detail: provider && provider.base_url ? provider.base_url : ''
+      }},
+      {{
+        label: {text['claude_subagent']!r},
+        value: subagent && subagent.value ? String(subagent.value) : (currentUiLanguage() === 'zh-CN' ? '未设置' : 'not set'),
+        detail: provider ? summarizeClaudeTimeout(provider) : ''
+      }},
+      {{
+        label: {text['claude_note']!r},
+        value: provider && provider.note ? provider.note : (currentUiLanguage() === 'zh-CN' ? '暂无建议' : 'no recommendation'),
+        detail: ''
+      }},
+    ];
+    cards.forEach((card) => {{
+      const section = document.createElement('section');
+      section.className = 'claude-summary-card';
+      section.appendChild(createInfoLine(card.label, card.value));
+      if (card.detail) {{
+        const meta = document.createElement('p');
+        meta.className = 'meta';
+        meta.textContent = card.detail;
+        section.appendChild(meta);
+      }}
+      claudeSummary.appendChild(section);
+    }});
+  }}
+
   function configCheckLabel(key) {{
     const labels = currentUiLanguage() === 'zh-CN'
       ? {{
@@ -1421,8 +1972,78 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     return prefix + issues.join('、');
   }}
 
+  function renderCodexSummary(payload) {{
+    if (!codexSummary) {{
+      return;
+    }}
+    const defaults = payload && payload.recommended_defaults && typeof payload.recommended_defaults === 'object'
+      ? payload.recommended_defaults
+      : null;
+    const config = payload && payload.config && typeof payload.config === 'object'
+      ? payload.config
+      : null;
+    codexSummary.innerHTML = '';
+    if (!defaults) {{
+      return;
+    }}
+    const principles = Array.isArray(defaults.strategy_principles)
+      ? defaults.strategy_principles.map((item) => String(item || '').trim()).filter(Boolean)
+      : [];
+    const cards = [
+      {{
+        label: {text['codex_recommended']!r},
+        value: String(defaults.strategy_label || defaults.strategy || 'efficiency_first'),
+        detail: principles.length
+          ? principles.join(currentUiLanguage() === 'zh-CN' ? ' / ' : ' / ')
+          : (currentUiLanguage() === 'zh-CN'
+              ? '少打扰 / 自动连续执行 / 节省 token / 成本 / 高效率'
+              : 'low interruption / continuous execution / lower token and cost burn / high throughput')
+      }},
+      {{
+        label: {text['codex_current_choice']!r},
+        value: String(defaults.current_combo || 'gpt-5.4 + medium + never'),
+        detail: [
+          currentUiLanguage() === 'zh-CN'
+            ? '当前暂行实现'
+            : 'current temporary choice',
+          formatConfigHealth(config)
+        ].filter(Boolean).join(' · ')
+      }},
+      {{
+        label: {text['codex_compact_policy']!r},
+        value: String(defaults.compact_policy || '220000 on a 272000 window'),
+        detail: defaults.compact_ratio
+          ? (currentUiLanguage() === 'zh-CN'
+              ? `约占上下文窗口 ${{defaults.compact_ratio}}，优先压缩旧对话而不是吃满窗口。`
+              : `About ${{defaults.compact_ratio}} of the context window, compacting before the window gets crowded.`)
+          : ''
+      }},
+      {{
+        label: {text['codex_manual_upgrade']!r},
+        value: currentUiLanguage() === 'zh-CN' ? '必要时手动升档' : 'manual escalation when needed',
+        detail: [
+          defaults.manual_upgrade ? String(defaults.manual_upgrade) : '',
+          defaults.change_rule ? String(defaults.change_rule) : ''
+        ].filter(Boolean).join(' ')
+      }},
+    ];
+    cards.forEach((card) => {{
+      const section = document.createElement('section');
+      section.className = 'claude-summary-card';
+      section.appendChild(createInfoLine(card.label, card.value));
+      if (card.detail) {{
+        const meta = document.createElement('p');
+        meta.className = 'meta';
+        meta.textContent = card.detail;
+        section.appendChild(meta);
+      }}
+      codexSummary.appendChild(section);
+    }});
+  }}
+
   function renderCodexStatus(payload) {{
     const accounts = Array.isArray(payload.accounts) ? payload.accounts : [];
+    renderCodexSummary(payload);
     codexAccounts.innerHTML = '';
     accounts.forEach((account) => {{
       const label = codexAccountLabel(account);
@@ -1595,6 +2216,8 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   }}
 
   function renderClaudeStatus(payload) {{
+    lastClaudePayload = payload;
+    renderClaudeSummary(payload);
     const providers = Array.isArray(payload.providers) ? payload.providers : [];
     claudeProviders.innerHTML = '';
     const settings = payload.settings || {{}};
@@ -1611,8 +2234,11 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
       name.textContent = provider.label || provider.name;
       const models = provider.models || {{}};
       const credential = provider.credential_present
-        ? (currentUiLanguage() === 'zh-CN' ? `凭据已就绪` : `credential ready`)
-        : (currentUiLanguage() === 'zh-CN' ? `缺少凭据 ${{provider.auth_env || ''}}` : `missing credential ${{provider.auth_env || ''}}`);
+        ? {text['claude_credential_ready']!r}
+        : `${{currentUiLanguage() === 'zh-CN' ? {text['claude_missing_credential']!r} : {text['claude_missing_credential']!r}}} ${{provider.auth_env || ''}}`;
+      const badge = document.createElement('span');
+      badge.className = provider.credential_present ? 'provider-status-pill ready' : 'provider-status-pill missing';
+      badge.textContent = credential;
       const infoList = document.createElement('div');
       infoList.className = 'info-list';
       if (provider.base_url) {{
@@ -1637,14 +2263,14 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
       }}
       infoList.appendChild(
         createInfoLine(
-          currentUiLanguage() === 'zh-CN' ? '凭据' : 'credential',
+          {text['claude_credential']!r},
           credential
         )
       );
-      body.append(name, infoList);
+      body.append(name, badge, infoList);
       row.appendChild(body);
       const actions = document.createElement('div');
-      actions.className = 'codex-account-actions';
+      actions.className = 'provider-card-actions';
       const switchButton = document.createElement('button');
       switchButton.type = 'button';
       switchButton.className = provider.active ? 'codex-account-switch is-current' : 'codex-account-switch';
@@ -1663,6 +2289,19 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
             currentUiLanguage() === 'zh-CN'
               ? `默认模型 ${{settings.model || 'unknown'}} · 权限模式 ${{permissions.defaultMode || 'unknown'}} · 清理周期 ${{settings.cleanupPeriodDays || 'unknown'}} 天`
               : `model ${{settings.model || 'unknown'}} · mode ${{permissions.defaultMode || 'unknown'}} · cleanup ${{settings.cleanupPeriodDays || 'unknown'}}d`
+          ),
+          createInfoLine(
+            {text['claude_context_strategy']!r},
+            summarizeClaudeContext(provider)
+          ),
+          createInfoLine(
+            {text['claude_timeout']!r},
+            summarizeClaudeTimeout(provider)
+          ),
+          createInfoLine(
+            {text['claude_subagent']!r},
+            String((provider.env || {{}}).CLAUDE_CODE_SUBAGENT_MODEL || '')
+              || (currentUiLanguage() === 'zh-CN' ? '未记录' : 'not recorded')
           ),
           createInfoLine(
             currentUiLanguage() === 'zh-CN' ? '配置健康' : 'config',
@@ -1739,6 +2378,53 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     }}
   }}
 
+  async function optimizeClaudeConfig(apply) {{
+    const provider = lastClaudePayload && lastClaudePayload.active_provider ? lastClaudePayload.active_provider : null;
+    const providerName = provider && provider.name ? String(provider.name) : '';
+    if (!providerName) {{
+      setOutput({text['claude_no_active_provider']!r});
+      return;
+    }}
+    setBusy(true);
+    try {{
+      const response = await fetch('/api/claude/optimize', {{
+        method: 'POST',
+        headers: {{ 'content-type': 'application/json' }},
+        body: JSON.stringify({{ provider: providerName, apply: Boolean(apply) }})
+      }});
+      const payload = await response.json();
+      setOutput(JSON.stringify(payload, null, 2));
+      if (apply) {{
+        await refreshClaudeStatus();
+      }}
+    }} catch (error) {{
+      setOutput(String(error));
+    }} finally {{
+      setBusy(false);
+    }}
+  }}
+
+  async function viewClaudeLocalFile(kind) {{
+    const targetKind = String(kind || '').trim();
+    if (!targetKind) {{
+      return;
+    }}
+    setBusy(true);
+    try {{
+      const response = await fetch('/api/claude/file?kind=' + encodeURIComponent(targetKind));
+      const payload = await response.json();
+      if (!response.ok) {{
+        setOutput(payload.error || response.statusText);
+      }} else {{
+        setOutput(`path: ${{payload.path}}\\n\\n${{payload.content}}`);
+      }}
+    }} catch (error) {{
+      setOutput(String(error));
+    }} finally {{
+      setBusy(false);
+    }}
+  }}
+
   document.querySelectorAll('button[data-action]').forEach((button) => {{
     button.addEventListener('click', () => runAction(button.getAttribute('data-action'), button));
   }});
@@ -1771,6 +2457,17 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     switchCodexAccount(button.getAttribute('data-codex-switch-name') || '');
   }});
   document.querySelector('[data-claude-refresh]').addEventListener('click', () => refreshClaudeStatus());
+  document.querySelector('[data-claude-optimize-preview]').addEventListener('click', () => optimizeClaudeConfig(false));
+  document.querySelector('[data-claude-optimize-apply]').addEventListener('click', (event) => {{
+    const message = event.currentTarget.getAttribute('data-confirm');
+    if (message && !window.confirm(message)) {{
+      return;
+    }}
+    optimizeClaudeConfig(true);
+  }});
+  document.querySelectorAll('button[data-claude-file]').forEach((button) => {{
+    button.addEventListener('click', () => viewClaudeLocalFile(button.getAttribute('data-claude-file') || ''));
+  }});
   claudeProviders.addEventListener('click', (event) => {{
     const button = event.target.closest('button[data-claude-switch-name]');
     if (!button) {{
@@ -1778,6 +2475,7 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     }}
     switchClaudeProvider(button.getAttribute('data-claude-switch-name') || '');
   }});
+  document.querySelector('[data-feedback-refresh]').addEventListener('click', () => refreshFeedbackSummary());
   document.querySelectorAll('[data-view-tab]').forEach((button) => {{
     button.addEventListener('click', () => {{
       const selected = button.getAttribute('data-view-tab');
@@ -1795,6 +2493,10 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
         hydratePanelCache('claude', claudeCacheKey);
         refreshClaudeStatus();
       }}
+      if (selected === 'feedback' && !feedbackLoaded) {{
+        hydratePanelCache('feedback', feedbackCacheKey);
+        refreshFeedbackSummary();
+      }}
     }});
   }});
   languageSelect.addEventListener('change', () => {{
@@ -1805,9 +2507,11 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   renderHistory();
   hydratePanelCache('codex', codexCacheKey);
   hydratePanelCache('claude', claudeCacheKey);
+  hydratePanelCache('feedback', feedbackCacheKey);
   window.setTimeout(() => {{
     refreshCodexStatus();
     refreshClaudeStatus();
+    refreshFeedbackSummary();
   }}, 80);
 }})();
 </script>"""

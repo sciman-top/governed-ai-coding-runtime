@@ -6,6 +6,12 @@
 - MVP contract slices, the `Foundation / GAP-020` through `GAP-023` substrate, `Full Runtime / GAP-024` through `GAP-028`, `Public Usable Release / GAP-029` through `GAP-032`, and `Maintenance Baseline / GAP-033` through `GAP-034` are complete.
 - `Strategy Alignment Gates / GAP-040` through `GAP-044` are complete on the current branch baseline and remain encoded as satisfied hardening dependencies around the landed `Interactive Session Productization / GAP-035` through `GAP-039` productization slice.
 
+## Core Operating Principle
+- For local operator workflows and host integration, the long-lived project principle is `efficiency first`.
+- In this repository that means: low interruption, continuous execution, lower token and cost burn, and high throughput.
+- Concrete defaults such as a model name, reasoning level, compact threshold, provider mapping, or auth storage choice are implementation details under that principle, not a higher-order rule.
+- Replace a current default only when the new choice preserves safety and gates while serving this principle better.
+
 ## Current Working Set
 - [Hybrid Final-State Master Outline](./architecture/hybrid-final-state-master-outline.md)
 - [Direct-To-Hybrid Final-State Roadmap](./roadmap/direct-to-hybrid-final-state-roadmap.md)
@@ -97,7 +103,8 @@
   - UI default language: `zh-CN`; use `-UiLanguage en` for English
   - UI purpose: localhost interactive control console for allowlisted operator actions, runtime summary, maintenance policy refs, attachment posture, task/run evidence refs, evidence file preview, and local Codex/Claude config status
 - Codex local optimizer: `scripts/Optimize-CodexLocal.ps1`
-  - default mode is dry-run; use `-Apply` to write recommended user-level Codex config and install `codex-account`
+  - default mode is dry-run; use `-Apply` to write the current recommended user-level Codex config and install `codex-account`
+  - the stable policy is still `efficiency first`; the current default combo is only the present implementation under that rule
   - account switching preserves user-owned ChatGPT auth files and never prints tokens
   - usage limits are surfaced as `unknown` unless a stable official local source is available
 - Claude Code local optimizer: `scripts/Optimize-ClaudeLocal.ps1`
@@ -266,6 +273,8 @@ Primary reading entrypoints:
 - [Adapter Degrade Policy](./product/adapter-degrade-policy.md)
 - [Adapter Capability Tiers](./product/adapter-capability-tiers.md)
 - [Adapter Conformance Parity Matrix](./product/adapter-conformance-parity-matrix.md)
+- [Codex / Claude Host Feedback Loop](./product/host-feedback-loop.md)
+- [Codex / Claude 功能反馈闭环](./product/host-feedback-loop.zh-CN.md)
 - [Codex CLI/App Integration Guide](./product/codex-cli-app-integration-guide.md)
 - [Codex CLI/App 集成指南](./product/codex-cli-app-integration-guide.zh-CN.md)
 - [Codex Direct Adapter](./product/codex-direct-adapter.md)

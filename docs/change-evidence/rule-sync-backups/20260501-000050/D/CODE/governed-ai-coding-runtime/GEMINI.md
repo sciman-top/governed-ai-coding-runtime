@@ -1,6 +1,6 @@
-# AGENTS.md — governed-ai-coding-runtime（Codex 项目级）
+# GEMINI.md — governed-ai-coding-runtime（Gemini 项目级）
 **项目**: governed-ai-coding-runtime
-**承接来源**: `GlobalUser/AGENTS.md v9.47`
+**承接来源**: `GlobalUser/GEMINI.md v9.47`
 **适用范围**: 项目级（仓库根）
 **最后更新**: `2026-04-28`
 
@@ -9,8 +9,8 @@
 - 固定结构：`1 / A / B / C / D`；三工具项目规则的 `A/C/D` 语义一致，`B` 只放平台差异。
 - 裁决链：`运行事实/代码 > 项目级文件 > 全局文件 > 临时上下文`。
 - 自包含约束：执行规则以本文件正文为准，不依赖外部子文档或治理脚本作为前置条件。
-- 渐进披露边界：根文件保留本仓归宿、门禁、阻断、证据和回滚；长 runbook、批量目标仓细节和历史证据放入 `docs/`。
-- 精简原则：根文件只写本仓可验证事实、硬门禁、阻断和回滚；长示例、历史背景、排障细节进入 `docs/`。
+- 渐进披露边界：根文件保留本仓归宿、门禁、阻断、证据和回滚；长 runbook、批量目标仓细节和历史证据放入 `docs/` 或按需 imports。
+- 精简原则：根文件只写本仓可验证事实、硬门禁、阻断和回滚；长示例、历史背景、排障细节进入子文档。
 
 ## A. 项目基线
 ### A.1 事实边界
@@ -24,8 +24,6 @@
 - 每次改动先声明：当前落点 -> 目标归宿 -> 验证方式。
 - 默认中文沟通、中文解释、中文汇报；代码标识符、命令、日志、报错和 schema 字段保留英文原文。
 - 当前权威输入顺序：根 `README.md` -> `docs/README.md` -> PRD -> Architecture -> Roadmap -> Backlog -> Specs -> Schemas。
-- 本仓面向 `Codex / Claude Code / 本机操作者` 的长期核心原则是“综合效率优先”：少打扰、自动连续执行、节省 token / 成本、高效率。
-- 具体模型、推理档位、compact 阈值、provider、交互方式与自动化细节都只是该原则下的阶段性实现；后续可调整，但不得高于该原则本身。
 - 全局规则给风险、语言、N/A 和门禁语义；本文件给本仓目录归宿、真实命令、阻断条件、证据位置和回滚入口。
 - 项目规则只保留本仓不可由代码/CI自动推断且会改变执行、风险或验收的事实；长流程下沉到子文档或工具专属规则。
 - 规则文件、门禁、profile、baseline 或同步脚本修改前，必须先比对控制仓 `governed-ai-coding-runtime/rules/manifest.json`、源文件、用户目录/目标仓已分发副本、目标仓真实 gate/profile/CI/script/README 差异和当前工具官方加载模型；发现漂移先整合再同步，不盲目覆盖。
@@ -43,15 +41,14 @@
 - 一次最多 3 个澄清问题；确认后恢复 `direct_fix` 并清零失败计数。
 - 留痕字段：`issue_id`、`attempt_count`、`clarification_mode`、`clarification_questions`、`clarification_answers`。
 
-## B. Codex 平台差异
-- 用户目录：`~/.codex`（可由 `CODEX_HOME` 覆盖）。
-- 项目链从 Git root 到当前目录逐层加载；同层优先级：`AGENTS.override.md > AGENTS.md > configured fallback`。
-- 只有写入 `project_doc_fallback_filenames` 的文件名才按 Codex 项目指令处理；不要假定其他工具规则文件会被 Codex 自动加载。
-- `AGENTS.override.md` 仅用于短期排障，结论后必须清理并复测。
-- 诊断优先执行 `codex --version`、`codex --help`；`codex status` 非交互失败时按 `platform_na` 记录。
-- `AGENTS.md` 是上下文规则；确定性验证、权限或安全拦截应落到 `.codex/rules/*.rules`、本仓门禁、hooks 或 CI。
-- `prefix_rule()` 必须保持精确命令前缀并配 `match/not_match` 样例，避免过宽 allowlist。
-- 规则文件变更后用新命令或重启会话复测，不假定当前 Codex 会话热加载。
+## B. Gemini 平台差异
+- 用户规则：`~/.gemini/GEMINI.md`；项目/工作区规则按 Gemini CLI 层级加载和按需发现执行。
+- 启用 Trusted Folders 时，未受信目录可能进入 safe mode；遇到项目配置、环境变量、自动记忆或工具自动批准未生效，先记录 trust 状态或替代证据。
+- 可用 `@file.md` imports 组织长内容；只有本机 `settings.json` 明确配置上下文文件名时，才把其他文件名视为 Gemini 上下文文件，具体键名以当前 schema/help 为准。
+- 大仓或生成目录用 `.geminiignore` 排除缓存、构建产物、日志和敏感本地配置；修改后用 `/memory show` 核查完整上下文。
+- 来源与刷新命令先看当前 `/memory` help，支持则用 `/memory list` / `/memory refresh`，否则记录版本并用 `/memory reload` 兜底；非交互不可用时按 `platform_na` 记录。
+- 不假定 `GEMINI.override.md` 存在；临时排障规则必须记录清理点，结论后删除或恢复并复测。
+- `GEMINI.md` 是上下文规则；确定性验证、安全拦截和回滚能力应落到本仓门禁、MCP/扩展、checkpoint/restore 或 CI。
 
 ## C. 项目差异
 ### C.1 模块职责

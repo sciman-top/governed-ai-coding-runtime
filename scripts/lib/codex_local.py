@@ -16,6 +16,7 @@ from typing import Any
 
 
 DEFAULT_CONFIG = {
+    "cli_auth_credentials_store": "file",
     "model": "gpt-5.4",
     "model_reasoning_effort": "medium",
     "model_verbosity": "medium",
@@ -24,6 +25,22 @@ DEFAULT_CONFIG = {
     "sandbox_mode": "workspace-write",
     "approval_policy": "never",
     "web_search": "cached",
+}
+DEFAULT_CONFIG_PROFILE = {
+    "strategy": "efficiency_first",
+    "strategy_label": "综合效率优先",
+    "strategy_principles": [
+        "少打扰",
+        "自动连续执行",
+        "节省 token / 成本",
+        "高效率",
+    ],
+    "current_combo": "gpt-5.4 + medium + never",
+    "current_combo_status": "current_temporary_choice",
+    "compact_policy": "220000 on a 272000 window",
+    "compact_ratio": "81%",
+    "manual_upgrade": "Switch to a stronger model or reasoning level manually when a task genuinely needs deeper reasoning.",
+    "change_rule": "Future model or parameter updates should preserve the efficiency-first principle rather than the current combo itself.",
 }
 USAGE_DASHBOARD_URL = "https://chatgpt.com/codex/settings/usage"
 
@@ -170,6 +187,7 @@ def codex_status(home: Path | None = None, *, refresh_online: bool = False) -> d
         "auth": active_auth_status(home),
         "accounts": accounts,
         "config": config_health(home),
+        "recommended_defaults": DEFAULT_CONFIG_PROFILE,
         "usage": usage,
         "usage_refresh": usage_refresh,
     }

@@ -44,6 +44,7 @@ class OperatorEntrypointTests(unittest.TestCase):
 
         self.assertIn("AI 推荐", completed.stdout)
         self.assertIn("Readiness", completed.stdout)
+        self.assertIn("FeedbackReport", completed.stdout)
         self.assertIn("OperatorUi", completed.stdout)
         self.assertIn("-UiLanguage <zh-CN|en>", completed.stdout)
         self.assertIn("EnableAutoStart", completed.stdout)
@@ -119,6 +120,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         module = _load_serve_operator_ui_module()
 
         self.assertIn("readiness", module.ALLOWED_ACTIONS)
+        self.assertIn("feedback_report", module.ALLOWED_ACTIONS)
         self.assertIn("classroomtoolkit", module.load_target_ids())
         self.assertEqual(2, module.run_operator_action({"action": "unsupported"})["exit_code"])
         self.assertEqual(
@@ -131,6 +133,10 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertEqual("error", module.run_codex_switch({"name": ""})["status"])
         self.assertIn(module.load_claude_status()["status"], {"ok", "error"})
         self.assertEqual("error", module.run_claude_switch({"name": ""})["status"])
+        feedback = module.load_feedback_summary()
+        self.assertIn(feedback["status"], {"pass", "attention", "fail"})
+        self.assertEqual("docs/product/host-feedback-loop.zh-CN.md", feedback["guide_path"])
+        self.assertEqual("docs/product/host-feedback-loop.md", feedback["guide_path_en"])
 
     def test_operator_ui_status_helpers_cache_short_ttl_results(self) -> None:
         module = _load_serve_operator_ui_module()
@@ -172,6 +178,30 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("classroomtoolkit", result["command"])
         self.assertIn("-DryRun", result["command"])
         self.assertIn("DRY-RUN daily-all-targets", result["output"])
+
+    def test_operator_feedback_report_action_writes_summary(self) -> None:
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "operator.ps1"),
+                "-Action",
+                "FeedbackReport",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertIn("host-feedback-summary", completed.stdout)
+        self.assertIn(".runtime/artifacts/host-feedback-summary/latest.md", completed.stdout)
 
     def test_operator_ui_service_status_succeeds(self) -> None:
         completed = subprocess.run(

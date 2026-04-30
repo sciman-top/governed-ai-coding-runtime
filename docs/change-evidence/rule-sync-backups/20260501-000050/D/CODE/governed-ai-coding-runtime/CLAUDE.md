@@ -1,6 +1,6 @@
-# AGENTS.md — governed-ai-coding-runtime（Codex 项目级）
+# CLAUDE.md — governed-ai-coding-runtime（Claude 项目级）
 **项目**: governed-ai-coding-runtime
-**承接来源**: `GlobalUser/AGENTS.md v9.47`
+**承接来源**: `GlobalUser/CLAUDE.md v9.47`
 **适用范围**: 项目级（仓库根）
 **最后更新**: `2026-04-28`
 
@@ -9,8 +9,8 @@
 - 固定结构：`1 / A / B / C / D`；三工具项目规则的 `A/C/D` 语义一致，`B` 只放平台差异。
 - 裁决链：`运行事实/代码 > 项目级文件 > 全局文件 > 临时上下文`。
 - 自包含约束：执行规则以本文件正文为准，不依赖外部子文档或治理脚本作为前置条件。
-- 渐进披露边界：根文件保留本仓归宿、门禁、阻断、证据和回滚；长 runbook、批量目标仓细节和历史证据放入 `docs/`。
-- 精简原则：根文件只写本仓可验证事实、硬门禁、阻断和回滚；长示例、历史背景、排障细节进入 `docs/`。
+- 渐进披露边界：根文件保留本仓归宿、门禁、阻断、证据和回滚；长 runbook、批量目标仓细节和历史证据放入 `docs/` 或 `.claude/rules/`。
+- 精简原则：根文件只写本仓可验证事实、硬门禁、阻断和回滚；长示例、历史背景、排障细节进入子文档。
 
 ## A. 项目基线
 ### A.1 事实边界
@@ -24,8 +24,6 @@
 - 每次改动先声明：当前落点 -> 目标归宿 -> 验证方式。
 - 默认中文沟通、中文解释、中文汇报；代码标识符、命令、日志、报错和 schema 字段保留英文原文。
 - 当前权威输入顺序：根 `README.md` -> `docs/README.md` -> PRD -> Architecture -> Roadmap -> Backlog -> Specs -> Schemas。
-- 本仓面向 `Codex / Claude Code / 本机操作者` 的长期核心原则是“综合效率优先”：少打扰、自动连续执行、节省 token / 成本、高效率。
-- 具体模型、推理档位、compact 阈值、provider、交互方式与自动化细节都只是该原则下的阶段性实现；后续可调整，但不得高于该原则本身。
 - 全局规则给风险、语言、N/A 和门禁语义；本文件给本仓目录归宿、真实命令、阻断条件、证据位置和回滚入口。
 - 项目规则只保留本仓不可由代码/CI自动推断且会改变执行、风险或验收的事实；长流程下沉到子文档或工具专属规则。
 - 规则文件、门禁、profile、baseline 或同步脚本修改前，必须先比对控制仓 `governed-ai-coding-runtime/rules/manifest.json`、源文件、用户目录/目标仓已分发副本、目标仓真实 gate/profile/CI/script/README 差异和当前工具官方加载模型；发现漂移先整合再同步，不盲目覆盖。
@@ -43,15 +41,14 @@
 - 一次最多 3 个澄清问题；确认后恢复 `direct_fix` 并清零失败计数。
 - 留痕字段：`issue_id`、`attempt_count`、`clarification_mode`、`clarification_questions`、`clarification_answers`。
 
-## B. Codex 平台差异
-- 用户目录：`~/.codex`（可由 `CODEX_HOME` 覆盖）。
-- 项目链从 Git root 到当前目录逐层加载；同层优先级：`AGENTS.override.md > AGENTS.md > configured fallback`。
-- 只有写入 `project_doc_fallback_filenames` 的文件名才按 Codex 项目指令处理；不要假定其他工具规则文件会被 Codex 自动加载。
-- `AGENTS.override.md` 仅用于短期排障，结论后必须清理并复测。
-- 诊断优先执行 `codex --version`、`codex --help`；`codex status` 非交互失败时按 `platform_na` 记录。
-- `AGENTS.md` 是上下文规则；确定性验证、权限或安全拦截应落到 `.codex/rules/*.rules`、本仓门禁、hooks 或 CI。
-- `prefix_rule()` 必须保持精确命令前缀并配 `match/not_match` 样例，避免过宽 allowlist。
-- 规则文件变更后用新命令或重启会话复测，不假定当前 Codex 会话热加载。
+## B. Claude 平台差异
+- 用户规则：`~/.claude/CLAUDE.md`；项目规则：仓库根 `CLAUDE.md` 或 `.claude/CLAUDE.md`。
+- 个人项目偏好用 gitignored `CLAUDE.local.md` 或 `@~/.claude/...` import；多 worktree 共享偏好时优先 import；路径级差异用 `.claude/rules/`，不要假定 `CLAUDE.override.md` 存在。
+- 只适用于局部路径的规则必须放 `.claude/rules/` 并用 `paths` frontmatter 限定；无 `paths` 的规则会常驻上下文。
+- 诊断优先执行 `claude --version`、`claude --help`；状态/诊断命令采用“help 探测 -> 有则执行 -> 无则 `platform_na` 落证”。
+- 交互场景可用 `/memory` 查加载链；auto memory/local memory 只作辅助上下文，与代码、项目规则或证据冲突时以仓库事实为准。
+- Claude 权限/安全或重复验证要求应固化到 `.claude/settings*.json` permissions、hooks、CI 或本仓门禁；不要只依赖自然语言规则。
+- 多文件、跨模块或不熟悉代码时先短探索/短计划再实现；一眼能描述 diff 的低风险任务保持 direct fix。
 
 ## C. 项目差异
 ### C.1 模块职责

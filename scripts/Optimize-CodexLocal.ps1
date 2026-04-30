@@ -10,6 +10,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $Recommended = [ordered]@{
+    cli_auth_credentials_store = '"file"'
     approval_policy = '"never"'
     model = '"gpt-5.4"'
     model_reasoning_effort = '"medium"'
@@ -150,11 +151,26 @@ $plan = [ordered]@{
     apply = [bool]$Apply
     install_account_switcher = [bool]$InstallAccountSwitcher
     trusted_repo_roots = $TrustedRepoRoot
+    core_principle = '综合效率优先'
+    principle_targets = @(
+        '少打扰',
+        '自动连续执行',
+        '节省 token / 成本',
+        '高效率'
+    )
+    current_implementation = [ordered]@{
+        cli_auth_credentials_store = 'file'
+        model = 'gpt-5.4'
+        model_reasoning_effort = 'medium'
+        approval_policy = 'never'
+        model_context_window = 272000
+        model_auto_compact_token_limit = 220000
+    }
 }
 
 if (-not $Apply) {
     $plan.status = 'dry_run'
-    $plan.next = 'Re-run with -Apply to write config and install the account switcher.'
+    $plan.next = 'Re-run with -Apply to write the current implementation under the efficiency-first principle and install the account switcher.'
     $plan | ConvertTo-Json -Depth 5
     exit 0
 }

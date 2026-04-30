@@ -16,6 +16,7 @@ PROVIDER_PROFILES_FILE = "provider-profiles.json"
 CLAUDE_USAGE_NOTE = "Third-party provider usage and quota data is not exposed through a stable Claude Code local API."
 
 COMMON_RECOMMENDED_ENV = {
+    "CLAUDE_CODE_EFFORT_LEVEL": "high",
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
     "CLAUDE_CODE_ATTRIBUTION_HEADER": "0",
     "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS": "1",
@@ -88,8 +89,11 @@ DEFAULT_PROVIDER_PROFILES = [
             "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-5.1",
             "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-5-turbo",
             "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-4.5-air",
+            "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "70",
+            "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "100000",
+            "CLAUDE_CODE_SUBAGENT_MODEL": "glm-4.5-air",
         },
-        "note": "Recommended local default for this machine: quality-first GLM mapping with the existing Zhipu token kept only in ~/.claude/settings.json.",
+        "note": "Recommended GLM profile for this machine: keep effective coding context around 80k-120k and compact early instead of pushing the full 200k window.",
     },
     {
         "name": "deepseek-v4",
@@ -99,18 +103,21 @@ DEFAULT_PROVIDER_PROFILES = [
         "auth_env": "ANTHROPIC_API_KEY",
         "docs_url": "https://api-docs.deepseek.com/guides/anthropic_api",
         "models": {
-            "opus": "deepseek-v4-pro",
-            "sonnet": "deepseek-v4-flash",
+            "opus": "deepseek-v4-pro[1m]",
+            "sonnet": "deepseek-v4-pro[1m]",
             "haiku": "deepseek-v4-flash",
         },
         "env": {
-            "API_TIMEOUT_MS": "900000",
+            "API_TIMEOUT_MS": "1800000",
             "ANTHROPIC_BASE_URL": "https://api.deepseek.com/anthropic",
-            "ANTHROPIC_DEFAULT_OPUS_MODEL": "deepseek-v4-pro",
-            "ANTHROPIC_DEFAULT_SONNET_MODEL": "deepseek-v4-flash",
+            "ANTHROPIC_DEFAULT_OPUS_MODEL": "deepseek-v4-pro[1m]",
+            "ANTHROPIC_DEFAULT_SONNET_MODEL": "deepseek-v4-pro[1m]",
             "ANTHROPIC_DEFAULT_HAIKU_MODEL": "deepseek-v4-flash",
+            "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "70",
+            "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "450000",
+            "CLAUDE_CODE_SUBAGENT_MODEL": "deepseek-v4-flash",
         },
-        "note": "DeepSeek supports an Anthropic-compatible endpoint; add ANTHROPIC_API_KEY before switching.",
+        "note": "Recommended DeepSeek profile for this machine: use the 1M alias as headroom, but keep the effective coding context around 250k-500k with early compaction.",
     },
 ]
 
@@ -192,10 +199,18 @@ def write_default_provider_profiles(home: Path | None = None, *, active: str | N
     path = provider_profiles_path(home)
     if path.exists() and not overwrite:
         payload = _load_provider_profiles_payload(home)
-        if "active" not in payload:
-            payload["active"] = active or _detect_active_provider_name(load_settings(home)) or DEFAULT_PROVIDER_PROFILES[0]["name"]
+        changed = False
+        expected_active = active or payload.get("active") or _detect_active_provider_name(load_settings(home)) or DEFAULT_PROVIDER_PROFILES[0]["name"]
+        if payload.get("active") != expected_active:
+            payload["active"] = expected_active
+            changed = True
+        merged_profiles = _merge_provider_profiles(payload.get("profiles"))
+        if payload.get("profiles") != merged_profiles:
+            payload["profiles"] = merged_profiles
+            changed = True
+        if changed:
             _write_json(path, payload)
-        return {"status": "ok", "changed": False, "path": str(path)}
+        return {"status": "ok", "changed": changed, "path": str(path)}
     payload = {
         "schema_version": 1,
         "active": active or _detect_active_provider_name(load_settings(home)) or DEFAULT_PROVIDER_PROFILES[0]["name"],
@@ -416,12 +431,6 @@ def install_provider_switcher(home: Path | None = None, bin_dir: Path | None = N
 def _optimized_settings(settings: dict[str, Any], profile: ClaudeProviderProfile) -> dict[str, Any]:
     updated = deepcopy(settings)
     env = dict(_dict(updated.get("env")))
-    existing_credential = env.get(profile.auth_env)
-    for key in PROVIDER_AUTH_KEYS:
-        if key != profile.auth_env:
-            env.pop(key, None)
-    if existing_credential:
-        env[profile.auth_env] = existing_credential
     env.update(COMMON_RECOMMENDED_ENV)
     env.update(profile.env)
     updated["env"] = env
@@ -463,6 +472,38 @@ def _detect_active_provider_name(settings: dict[str, Any]) -> str:
         if base_url == str(profile["base_url"]).rstrip("/"):
             return str(profile["name"])
     return ""
+
+
+def _merge_provider_profiles(existing: Any) -> list[dict[str, Any]]:
+    existing_list = existing if isinstance(existing, list) else []
+    existing_by_name = {
+        str(item.get("name")): deepcopy(item)
+        for item in existing_list
+        if isinstance(item, dict) and item.get("name")
+    }
+    merged: list[dict[str, Any]] = []
+    for default_profile in DEFAULT_PROVIDER_PROFILES:
+        name = str(default_profile["name"])
+        current = existing_by_name.pop(name, {})
+        merged_profile = deepcopy(default_profile)
+        if isinstance(current, dict):
+            if isinstance(current.get("models"), dict):
+                for key, value in current["models"].items():
+                    key_text = str(key)
+                    if key_text not in merged_profile["models"]:
+                        merged_profile["models"][key_text] = str(value)
+            if isinstance(current.get("env"), dict):
+                for key, value in current["env"].items():
+                    key_text = str(key)
+                    if key_text not in merged_profile["env"]:
+                        merged_profile["env"][key_text] = str(value)
+            for key, value in current.items():
+                if key not in merged_profile:
+                    merged_profile[str(key)] = deepcopy(value)
+        merged.append(merged_profile)
+    for leftover in existing_by_name.values():
+        merged.append(deepcopy(leftover))
+    return merged
 
 
 def _provider_from_payload(payload: dict[str, Any], settings: dict[str, Any], active_name: str) -> ClaudeProviderProfile:

@@ -704,6 +704,20 @@ function Invoke-FunctionalEffectivenessChecks {
   Write-CheckOk "functional-effectiveness"
 }
 
+function Invoke-HostFeedbackSurfaceChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/host-feedback-summary.py" --assert-minimum 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Host feedback surface checks failed"
+    }
+    throw "Host feedback surface checks failed`n$detail"
+  }
+
+  Write-CheckOk "host-feedback-surface"
+}
+
 function Invoke-BuildChecks {
   & pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
   if ($LASTEXITCODE -ne 0) {
@@ -718,6 +732,7 @@ function Invoke-DocsChecks {
   Invoke-BacklogYamlIdCheck
   Invoke-OldProjectNameScan
   Invoke-HostReplacementClaimBoundaryScan
+  Invoke-HostFeedbackSurfaceChecks
   Invoke-CurrentSourceCompatibilityChecks
   Invoke-LtpAutonomousPromotionChecks
   Invoke-AutonomousNextWorkSelectionChecks

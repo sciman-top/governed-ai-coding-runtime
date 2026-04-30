@@ -48,7 +48,8 @@
 
 当前总入口与一键应用：
 - 操作者聚合入口：`scripts/operator.ps1`。它把 readiness、自检、规则漂移/同步、目标仓批量流和 operator UI 生成收成同一个入口；默认 `-Action Help`，适合日常少记长命令。
-- Codex 本机优化入口：`scripts/Optimize-CodexLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入推荐 Codex 默认配置、安装 `codex-account` 账号切换入口，并把当前仓加入 trusted project。
+- 宿主反馈汇总入口：`scripts/operator.ps1 -Action FeedbackReport`。它统一汇总 `Codex/Claude` 本机状态、规则同步面、parity 文档面和最新 target-run evidence。
+- Codex 本机优化入口：`scripts/Optimize-CodexLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入本项目当前推荐的 Codex 单默认配置。长期优先级是“综合效率优先”：少打扰、自动连续执行、节省 token / 成本、高效率；当前暂行实现是 `cli_auth_credentials_store = "file"`、`model = "gpt-5.4"`、`model_reasoning_effort = "medium"`、`approval_policy = "never"`、`model_context_window = 272000`、`model_auto_compact_token_limit = 220000`。以后如果模型、参数或技术栈更迭，应先保持这个原则；只有在安全与门禁不退化时，才替换当前实现。脚本同时会安装 `codex-account` 账号切换入口，并把当前仓加入 trusted project。
 - Claude Code 本机优化入口：`scripts/Optimize-ClaudeLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入第三方 Anthropic-compatible provider 推荐配置、安装 `claude-provider` 切换入口；密钥只保留在用户本机 settings/env，不写入仓库 profile。
 - 目标仓日常运行/批量下发总入口：`scripts/runtime-flow-preset.ps1`。它读取 `docs/targets/target-repos-catalog.json`，可以对单个 target 或所有 active targets 执行 attach、daily gate、治理基线同步、特性基线同步和里程碑提交。
 - AI 规则文件同步入口：`scripts/sync-agent-rules.ps1`。它读取 `rules/manifest.json`，把全局与项目级 `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` 同步到用户目录和目标仓；默认同 hash 跳过，内容漂移按脚本策略阻断或要求 `-Force`。
@@ -66,6 +67,12 @@ AI 推荐的本仓日常 readiness：
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Readiness
 ```
 
+一键生成 `Codex/Claude` 功能反馈汇总：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action FeedbackReport
+```
+
 打开本地交互 operator UI（默认中文，会启动 localhost 服务）：
 
 ```powershell
@@ -79,7 +86,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Opera
 ```
 
 UI 使用方式：`-OpenUi` 会启动 `127.0.0.1` 本地常驻交互控制台并打开浏览器；后续可直接访问 `http://127.0.0.1:8770/?lang=zh-CN`。状态/停止/重启使用 `scripts/operator-ui-service.ps1 -Action Status|Stop|Restart`；登录自动启动可用 `-Action EnableAutoStart|DisableAutoStart|AutoStartStatus` 管理。页面可执行 allowlist 内的本仓 readiness、目标仓列表、规则漂移检查、规则同步、治理基线下发、daily 和全部功能应用；可选择全部目标仓或单个目标仓，可调整语言、验证模式、并发、fail-fast、只预演与里程碑标签；执行结果会写入输出区和本地浏览器执行历史；可点击 evidence/artifact/verification refs 查看文件内容。若不加 `-OpenUi`，脚本只生成只读快照 `.runtime/artifacts/operator-ui/index.html` 并在 JSON 输出里给出 `file_url`。
-Codex 面板会显示本机 ChatGPT auth profiles、当前登录状态、推荐配置健康、官方 usage dashboard 入口和账号切换按钮；5h/7d 额度在缺少稳定官方本地 API 时标为 `unknown`，不伪造估算值。
+Codex 面板会显示本机 ChatGPT auth profiles、当前登录状态、推荐配置健康、官方 usage dashboard 入口和账号切换按钮；同时会把“综合效率优先”作为长期核心原则单独展示，明确四个目标是少打扰、自动连续执行、节省 token / 成本、高效率，再把 `gpt-5.4 + medium + never` 标为当前暂行实现，并把 `model_auto_compact_token_limit = 220000` 标为配套压缩阈值。以后如有新模型/新参数/新技术栈进入默认方案，也应优先保持这个原则，而不是固化当前组合。5h/7d 额度在缺少稳定官方本地 API 时标为 `unknown`，不伪造估算值。Claude 面板会集中展示第三方 provider 状态，并提供 provider 切换、推荐配置预演/应用，以及 `settings.json`、`provider-profiles.json`、切换脚本的本机预览入口。
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/Optimize-CodexLocal.ps1
@@ -200,6 +207,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -T
 - [多仓试运行快速开始](docs/quickstart/multi-repo-trial-quickstart.zh-CN.md)
 - [Codex CLI/App Integration Guide](docs/product/codex-cli-app-integration-guide.md)
 - [Codex CLI/App 集成指南](docs/product/codex-cli-app-integration-guide.zh-CN.md)
+- [Codex / Claude Host Feedback Loop](docs/product/host-feedback-loop.md)
+- [Codex / Claude 功能反馈闭环](docs/product/host-feedback-loop.zh-CN.md)
 - [Codex Direct Adapter](docs/product/codex-direct-adapter.md)
 - [Multi-Repo Trial Loop](docs/product/multi-repo-trial-loop.md)
 - [Positioning And Competitive Layering](docs/strategy/positioning-and-competitive-layering.md)

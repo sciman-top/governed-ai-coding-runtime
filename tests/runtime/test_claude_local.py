@@ -49,6 +49,9 @@ class ClaudeLocalTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)
             _write_settings(home / "settings.json")
+            settings = json.loads((home / "settings.json").read_text(encoding="utf-8"))
+            settings["env"]["ANTHROPIC_API_KEY"] = "deepseek-secret"
+            (home / "settings.json").write_text(json.dumps(settings), encoding="utf-8")
 
             result = claude_local.optimize_claude_local(home, provider_name="bigmodel-glm", apply=True, install_switcher=False)
             settings = json.loads((home / "settings.json").read_text(encoding="utf-8"))
@@ -60,7 +63,11 @@ class ClaudeLocalTests(unittest.TestCase):
             self.assertEqual("disable", settings["permissions"]["disableBypassPermissionsMode"])
             self.assertEqual("glm-5.1", settings["env"]["ANTHROPIC_DEFAULT_OPUS_MODEL"])
             self.assertEqual("secret-value", settings["env"]["ANTHROPIC_AUTH_TOKEN"])
+            self.assertEqual("deepseek-secret", settings["env"]["ANTHROPIC_API_KEY"])
+            self.assertEqual("100000", settings["env"]["CLAUDE_CODE_AUTO_COMPACT_WINDOW"])
+            self.assertEqual("high", settings["env"]["CLAUDE_CODE_EFFORT_LEVEL"])
             self.assertNotIn("secret-value", json.dumps(profiles))
+            self.assertNotIn("deepseek-secret", json.dumps(profiles))
             self.assertEqual("ok", claude_local.config_health(home)["status"])
 
     def test_switch_requires_matching_provider_credential(self) -> None:
