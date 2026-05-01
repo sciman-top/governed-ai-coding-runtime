@@ -1165,14 +1165,23 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   const feedbackGuideLink = document.getElementById('feedback-guide-link');
   const feedbackGuideLinkEn = document.getElementById('feedback-guide-link-en');
   const feedbackPreview = document.getElementById('feedback-preview');
+  const nextWorkAction = document.getElementById('next-work-action');
+  const nextWorkRecommendation = document.getElementById('next-work-recommendation');
+  const nextWorkState = document.getElementById('next-work-state');
+  const nextWorkWhy = document.getElementById('next-work-why');
+  const nextWorkJson = document.getElementById('next-work-json');
+  const nextWorkCacheState = document.getElementById('next-work-cache-state');
   const historyKey = 'governed-runtime-operator-history';
   const codexCacheKey = 'governed-runtime-operator-codex-status';
   const claudeCacheKey = 'governed-runtime-operator-claude-status';
   const feedbackCacheKey = 'governed-runtime-operator-feedback-summary';
+  const nextWorkCacheKey = 'governed-runtime-operator-next-work';
   let codexLoaded = false;
   let claudeLoaded = false;
   let feedbackLoaded = false;
+  let nextWorkLoaded = false;
   let lastClaudePayload = null;
+  let lastNextWorkPayload = null;
 
   function readHistory() {{
     try {{
@@ -1217,11 +1226,13 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   }}
 
   function setPanelCacheState(kind, state, cachedAt) {{
-    const target = kind === 'feedback' ? feedbackCacheState : null;
+    const target = kind === 'feedback' ? feedbackCacheState : (kind === 'next-work' ? nextWorkCacheState : null);
     if (!target) {{
       return;
     }}
-    const label = kind === 'feedback' ? {text['feedback_status']!r} : {text['panel_cache_state']!r};
+    const label = kind === 'feedback'
+      ? {text['feedback_status']!r}
+      : (currentUiLanguage() === 'zh-CN' ? 'next-work 状态' : 'next-work state');
     const stateLabels = {{
       cold: {text['panel_cache_cold']!r},
       cached: {text['panel_cache_cached']!r},
@@ -1247,9 +1258,12 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     }} else if (kind === 'claude') {{
       renderClaudeStatus(cached);
       claudeLoaded = true;
-    }} else {{
+    }} else if (kind === 'feedback') {{
       renderFeedbackSummary(cached);
       feedbackLoaded = true;
+    }} else {{
+      renderNextWorkSummary(cached);
+      nextWorkLoaded = true;
     }}
     setPanelCacheState(kind, 'cached', cached.cached_at);
     return true;
@@ -1298,13 +1312,123 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   function setBusy(isBusy) {{
     status.textContent = isBusy ? {text['running']!r} : {text['ready']!r};
     document.querySelectorAll('button[data-action]').forEach((button) => button.disabled = isBusy);
+    if (!isBusy) {{
+      syncNextWorkActionGuards();
+    }}
+  }}
+
+  function setNextWorkStatusLine(text) {{
+    if (nextWorkCacheState) {{
+      nextWorkCacheState.textContent = text || '';
+    }}
+  }}
+
+  function nextWorkStateLabel(value) {{
+    const normalized = String(value || '').trim() || 'unknown';
+    if (currentUiLanguage() === 'zh-CN') {{
+      if (normalized === 'healthy') return 'healthy';
+      if (normalized === 'attention') return 'attention';
+      if (normalized === 'action_required') return 'action_required';
+      return normalized;
+    }}
+    return normalized;
+  }}
+
+  function actionDisplayLabel(action) {{
+    const labels = {{
+      readiness: {text['readiness_action']!r},
+      rules_dry_run: {text['rules_dry_run_action']!r},
+      rules_apply: {text['rules_apply_action']!r},
+      governance_baseline_all: {text['governance_baseline_action']!r},
+      daily_all: {text['daily_all_action']!r},
+      apply_all_features: {text['apply_all_action']!r},
+      feedback_report: {text['feedback_report_action']!r},
+      evolution_review: 'EvolutionReview',
+      experience_review: 'ExperienceReview',
+      evolution_materialize: 'EvolutionMaterialize',
+      targets: {text['targets_action']!r},
+    }};
+    return labels[action] || action || 'unknown';
+  }}
+
+  function syncNextWorkActionGuards() {{
+    const blocked = new Set(Array.isArray((lastNextWorkPayload || {{}}).blocked_actions) ? lastNextWorkPayload.blocked_actions : []);
+    const why = String((lastNextWorkPayload || {{}}).why || '').trim();
+    document.querySelectorAll('button[data-action]').forEach((button) => {{
+      const action = button.getAttribute('data-action') || '';
+      const isBlocked = blocked.has(action);
+      if (isBlocked) {{
+        button.disabled = true;
+        button.dataset.blockedReason = why || 'blocked by next-work selector';
+        button.title = `${{actionDisplayLabel(action)}}: ${{button.dataset.blockedReason}}`;
+      }} else {{
+        if (!document.body.dataset.busy) {{
+          button.disabled = false;
+        }}
+        delete button.dataset.blockedReason;
+        button.title = '';
+      }}
+    }});
+  }}
+
+  function renderNextWorkSummary(payload) {{
+    lastNextWorkPayload = payload;
+    if (nextWorkAction) {{
+      nextWorkAction.textContent = String(payload.next_action || payload.safe_next_action || 'unknown');
+    }}
+    if (nextWorkRecommendation) {{
+      const safeAction = String(payload.safe_next_action || payload.next_action || 'unknown');
+      nextWorkRecommendation.textContent = currentUiLanguage() === 'zh-CN'
+        ? `AI 推荐: ${{safeAction}}`
+        : `AI recommended: ${{safeAction}}`;
+    }}
+    if (nextWorkState) {{
+      nextWorkState.textContent = currentUiLanguage() === 'zh-CN'
+        ? `状态: ${{nextWorkStateLabel(payload.ui_status)}}`
+        : `Status: ${{nextWorkStateLabel(payload.ui_status)}}`;
+    }}
+    if (nextWorkWhy) {{
+      nextWorkWhy.textContent = String(payload.why || '');
+    }}
+    if (nextWorkJson) {{
+      nextWorkJson.textContent = JSON.stringify(payload, null, 2);
+    }}
+    syncNextWorkActionGuards();
+  }}
+
+  async function refreshNextWorkSummary() {{
+    if (!nextWorkAction) {{
+      return;
+    }}
+    setPanelCacheState('next-work', nextWorkLoaded ? 'refreshing' : 'cold');
+    try {{
+      const response = await fetch('/api/next-work');
+      const payload = await response.json();
+      if (!response.ok) {{
+        setNextWorkStatusLine(payload.error || response.statusText);
+        return;
+      }}
+      renderNextWorkSummary(payload);
+      writePanelCache(nextWorkCacheKey, payload);
+      nextWorkLoaded = true;
+      setPanelCacheState('next-work', 'ready', payload.cached_at);
+    }} catch (error) {{
+      setNextWorkStatusLine(String(error));
+      setPanelCacheState('next-work', 'error');
+    }}
   }}
 
   async function runAction(action, button) {{
+    const blockedReason = button.getAttribute('data-blocked-reason');
+    if (blockedReason) {{
+      setOutput(`${{actionDisplayLabel(action)}}\n\n${{blockedReason}}`);
+      return;
+    }}
     const confirmMessage = button.getAttribute('data-confirm');
     if (confirmMessage && !window.confirm(confirmMessage)) {{
       return;
     }}
+    document.body.dataset.busy = 'true';
     setBusy(true);
     setOutput('');
     try {{
@@ -1339,9 +1463,13 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
         at: new Date().toLocaleString(),
         output: rendered
       }});
+      if (nextWorkAction) {{
+        await refreshNextWorkSummary();
+      }}
     }} catch (error) {{
       setOutput(String(error));
     }} finally {{
+      delete document.body.dataset.busy;
       setBusy(false);
     }}
   }}
@@ -2324,6 +2452,10 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     switchClaudeProvider(button.getAttribute('data-claude-switch-name') || '');
   }});
   document.querySelector('[data-feedback-refresh]').addEventListener('click', () => refreshFeedbackSummary());
+  const nextWorkRefreshButton = document.querySelector('[data-next-work-refresh]');
+  if (nextWorkRefreshButton) {{
+    nextWorkRefreshButton.addEventListener('click', () => refreshNextWorkSummary());
+  }}
   document.querySelectorAll('[data-view-tab]').forEach((button) => {{
     button.addEventListener('click', () => {{
       const selected = button.getAttribute('data-view-tab');
@@ -2356,10 +2488,12 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   hydratePanelCache('codex', codexCacheKey);
   hydratePanelCache('claude', claudeCacheKey);
   hydratePanelCache('feedback', feedbackCacheKey);
+  hydratePanelCache('next-work', nextWorkCacheKey);
   window.setTimeout(() => {{
     refreshCodexStatus();
     refreshClaudeStatus();
     refreshFeedbackSummary();
+    refreshNextWorkSummary();
   }}, 80);
 }})();
 </script>"""

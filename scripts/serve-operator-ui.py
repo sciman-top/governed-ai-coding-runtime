@@ -59,6 +59,16 @@ ALLOWED_ACTIONS = {
 
 CODEX_STATUS_CACHE_TTL_SECONDS = 10.0
 CLAUDE_STATUS_CACHE_TTL_SECONDS = 15.0
+NEXT_WORK_CACHE_TTL_SECONDS = 15.0
+SERVER_STARTED_AT = time.time()
+UI_SOURCE_FILES = (
+    ROOT / "scripts" / "serve-operator-ui.py",
+    ROOT / "scripts" / "operator-ui-service.ps1",
+    ROOT / "packages" / "contracts" / "src" / "governed_ai_coding_runtime_contracts" / "operator_ui.py",
+    ROOT / "packages" / "contracts" / "src" / "governed_ai_coding_runtime_contracts" / "runtime_status.py",
+    ROOT / "scripts" / "lib" / "codex_local.py",
+    ROOT / "scripts" / "lib" / "claude_local.py",
+)
 _STATUS_CACHE_LOCK = Lock()
 _STATUS_CACHE: dict[str, dict] = {}
 
@@ -134,6 +144,13 @@ def _build_handler(*, default_language: str):
             if parsed.path in {"/", "/index.html"}:
                 params = parse_qs(parsed.query)
                 language = _normalize_language(params.get("lang", [default_language])[0])
+                if is_operator_ui_process_stale():
+                    self._send_text(
+                        render_stale_service_html(language),
+                        content_type="text/html; charset=utf-8",
+                        status=HTTPStatus.CONFLICT,
+                    )
+                    return
                 snapshot = RuntimeStatusStore(ROOT / ".runtime" / "tasks", ROOT).snapshot()
                 html = render_runtime_snapshot_html(snapshot, language=language, interactive=True, target_options=load_target_ids())
                 html = inject_next_work_panel(html, language=language)
@@ -142,6 +159,9 @@ def _build_handler(*, default_language: str):
             if parsed.path == "/api/status":
                 snapshot = RuntimeStatusStore(ROOT / ".runtime" / "tasks", ROOT).snapshot()
                 self._send_json(runtime_snapshot_to_dict(snapshot))
+                return
+            if parsed.path == "/api/ui-process":
+                self._send_json(operator_ui_process_status())
                 return
             if parsed.path == "/api/targets":
                 self._send_json({"targets": load_target_ids()})
@@ -236,6 +256,10 @@ def _build_handler(*, default_language: str):
             self.send_response(int(status))
             self.send_header("content-type", content_type)
             self.send_header("content-length", str(len(body)))
+            self.send_header("cache-control", "no-store, max-age=0")
+            self.send_header("pragma", "no-cache")
+            self.send_header("expires", "0")
+            self.send_header("x-governed-runtime-ui-stale", "true" if is_operator_ui_process_stale() else "false")
             self.end_headers()
             self.wfile.write(body)
 
@@ -247,6 +271,76 @@ def _build_handler(*, default_language: str):
             )
 
     return OperatorUiHandler
+
+
+def operator_ui_source_last_write_epoch() -> float:
+    latest = 0.0
+    for path in UI_SOURCE_FILES:
+        try:
+            latest = max(latest, path.stat().st_mtime)
+        except FileNotFoundError:
+            continue
+    return latest
+
+
+def is_operator_ui_process_stale() -> bool:
+    source_last_write = operator_ui_source_last_write_epoch()
+    return bool(source_last_write and source_last_write > SERVER_STARTED_AT + 0.5)
+
+
+def operator_ui_process_status() -> dict:
+    source_last_write = operator_ui_source_last_write_epoch()
+    return {
+        "status": "ok",
+        "stale": is_operator_ui_process_stale(),
+        "process_started_at": epoch_to_iso(SERVER_STARTED_AT),
+        "source_last_write_utc": epoch_to_iso(source_last_write) if source_last_write else None,
+        "source_files": [path.relative_to(ROOT).as_posix() for path in UI_SOURCE_FILES],
+    }
+
+
+def render_stale_service_html(language: str) -> str:
+    status = operator_ui_process_status()
+    command = "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator-ui-service.ps1 -Action Start -UiLanguage zh-CN -Port 8770"
+    if language == "en":
+        title = "Operator UI service is stale"
+        message = "The running UI process is older than the UI source files, so this page refuses to serve stale content."
+        action = "Restart through the managed service entrypoint, then refresh this page."
+    else:
+        title = "Operator UI 服务已过期"
+        message = "当前运行中的 UI 进程早于 UI 源文件，本页已拒绝继续展示旧内容。"
+        action = "请通过受管服务入口重启，然后刷新页面。"
+    return f"""<!doctype html>
+<html lang="{escape(language)}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{escape(title)}</title>
+  <style>
+    body {{ margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f6f4ef; color: #1f2933; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; }}
+    main {{ width: min(760px, calc(100vw - 40px)); background: #fffdfa; border: 1px solid #ded7c8; border-radius: 8px; box-shadow: 0 20px 60px rgba(39, 33, 24, .14); padding: 28px; }}
+    h1 {{ margin: 0 0 12px; font-size: 28px; line-height: 1.2; }}
+    p {{ margin: 10px 0; line-height: 1.7; }}
+    code {{ display: block; overflow-x: auto; margin-top: 14px; padding: 14px; background: #1f2933; color: #f8f3e7; border-radius: 6px; }}
+    dl {{ display: grid; grid-template-columns: max-content 1fr; gap: 8px 14px; margin: 18px 0 0; font-size: 14px; }}
+    dt {{ color: #6b7280; }}
+    dd {{ margin: 0; }}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>{escape(title)}</h1>
+    <p>{escape(message)}</p>
+    <p>{escape(action)}</p>
+    <code>{escape(command)}</code>
+    <dl>
+      <dt>stale</dt><dd>{str(status["stale"]).lower()}</dd>
+      <dt>process_started_at</dt><dd>{escape(str(status["process_started_at"]))}</dd>
+      <dt>source_last_write_utc</dt><dd>{escape(str(status["source_last_write_utc"]))}</dd>
+    </dl>
+  </main>
+</body>
+</html>"""
 
 
 def load_codex_status(*, refresh_online: bool = False) -> dict:
@@ -288,27 +382,38 @@ def _load_next_work_module():
 
 
 def load_next_work_summary() -> dict:
-    try:
-        module = _load_next_work_module()
-        payload = module.inspect_next_work_selection(
-            repo_root=ROOT,
-            policy_path=ROOT / "docs" / "architecture" / "autonomous-next-work-selection-policy.json",
-            ltp_policy_path=ROOT / "docs" / "architecture" / "ltp-autonomous-promotion-policy.json",
-        )
-    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
-        return {"status": "error", "error": str(exc)}
+    payload = _load_status_cached("next_work", ttl_seconds=NEXT_WORK_CACHE_TTL_SECONDS, loader=_build_next_work_summary)
+    if payload.get("status") == "ok" and "policy_status" in payload:
+        payload["status"] = "pass"
+    return payload
 
-    next_action = payload.get("next_action")
-    if next_action in {"repair_gate_first", "refresh_evidence_first", "owner_directed_scope_required"}:
+
+def _build_next_work_summary() -> dict:
+    module = _load_next_work_module()
+    payload = module.inspect_next_work_selection(
+        repo_root=ROOT,
+        policy_path=ROOT / "docs" / "architecture" / "autonomous-next-work-selection-policy.json",
+        ltp_policy_path=ROOT / "docs" / "architecture" / "ltp-autonomous-promotion-policy.json",
+    )
+
+    next_action = str(payload.get("next_action", "unknown"))
+    if next_action in {"repair_gate_first", "refresh_evidence_first"}:
+        blocked_actions = ["daily_all", "apply_all_features", "evolution_materialize"]
+        ui_status = "action_required"
+    elif next_action == "owner_directed_scope_required":
+        blocked_actions = ["apply_all_features", "evolution_materialize"]
         ui_status = "action_required"
     elif next_action == "promote_ltp":
+        blocked_actions = []
         ui_status = "attention"
     else:
+        blocked_actions = []
         ui_status = "healthy"
 
     payload["status"] = payload.get("status") or "pass"
     payload["ui_status"] = ui_status
     payload["safe_next_action"] = next_action
+    payload["blocked_actions"] = blocked_actions
     return payload
 
 
@@ -348,15 +453,17 @@ def render_next_work_panel(*, language: str) -> str:
     escape_json = escape(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
     return "\n".join(
         [
-            "<section class='section'>",
+            "<section class='section' id='next-work-panel'>",
             f"<h2>{title}</h2>",
             "<div class='policy-grid'>",
-            f"<div class='policy-card'><strong>{'动作' if is_zh else 'Action'}</strong><span>{summary}</span></div>",
-            f"<div class='policy-card'><strong>{'建议' if is_zh else 'Recommendation'}</strong><span>{recommendation}</span></div>",
-            f"<div class='policy-card'><strong>{'判定' if is_zh else 'State'}</strong><span>{state_line}</span></div>",
+            f"<div class='policy-card'><strong>{'动作' if is_zh else 'Action'}</strong><span id='next-work-action'>{summary}</span></div>",
+            f"<div class='policy-card'><strong>{'建议' if is_zh else 'Recommendation'}</strong><span id='next-work-recommendation'>{recommendation}</span></div>",
+            f"<div class='policy-card'><strong>{'判定' if is_zh else 'State'}</strong><span id='next-work-state'>{state_line}</span></div>",
             "</div>",
-            f"<p class='meta'>{reason}</p>" if reason else "<p class='meta'></p>",
-            f"<details><summary>{'查看 selector JSON' if is_zh else 'View selector JSON'}</summary><pre class='output'>{escape_json}</pre></details>",
+            f"<p class='meta' id='next-work-why'>{reason}</p>" if reason else "<p class='meta' id='next-work-why'></p>",
+            "<div id='next-work-cache-state' class='status-line'></div>",
+            f"<button type='button' data-next-work-refresh='1'>{'刷新 next-work' if is_zh else 'Refresh next-work'}</button>",
+            f"<details><summary>{'查看 selector JSON' if is_zh else 'View selector JSON'}</summary><pre id='next-work-json' class='output'>{escape_json}</pre></details>",
             "</section>",
         ]
     )
@@ -436,6 +543,10 @@ def _load_status_payload(kind: str, loader) -> dict:
 
 def datetime_now_iso() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def epoch_to_iso(epoch_seconds: float) -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(epoch_seconds))
 
 
 def run_operator_action(payload: dict) -> dict:

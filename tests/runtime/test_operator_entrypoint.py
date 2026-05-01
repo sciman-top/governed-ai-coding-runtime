@@ -83,6 +83,8 @@ class OperatorEntrypointTests(unittest.TestCase):
         html = output.read_text(encoding="utf-8")
         self.assertIn("Runtime 摘要", html)
         self.assertIn("下一步选择", html)
+        self.assertIn("id='next-work-action'", html)
+        self.assertIn("data-next-work-refresh='1'", html)
         self.assertIn("Codex 账号与配置", html)
         self.assertIn("Claude Provider 与配置", html)
 
@@ -118,6 +120,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         html = output.read_text(encoding="utf-8")
         self.assertIn("Runtime Summary", html)
         self.assertIn("Next Work Selector", html)
+        self.assertIn("id='next-work-state'", html)
         self.assertIn("Codex Account and Config", html)
         self.assertIn("Claude Provider and Config", html)
 
@@ -149,6 +152,27 @@ class OperatorEntrypointTests(unittest.TestCase):
         if next_work["status"] != "error":
             self.assertIn(next_work["ui_status"], {"healthy", "attention", "action_required"})
             self.assertIn("next_action", next_work)
+            self.assertIn("blocked_actions", next_work)
+            self.assertIn("cached_at", next_work)
+        process_status = module.operator_ui_process_status()
+        self.assertEqual("ok", process_status["status"])
+        self.assertIn("stale", process_status)
+        self.assertIn("process_started_at", process_status)
+        self.assertIn("source_last_write_utc", process_status)
+        self.assertIn("scripts/serve-operator-ui.py", process_status["source_files"])
+
+    def test_operator_ui_server_refuses_stale_content_and_disables_cache(self) -> None:
+        script = (ROOT / "scripts" / "serve-operator-ui.py").read_text(encoding="utf-8")
+
+        self.assertIn("SERVER_STARTED_AT", script)
+        self.assertIn("UI_SOURCE_FILES", script)
+        self.assertIn("is_operator_ui_process_stale", script)
+        self.assertIn("operator_ui_process_status", script)
+        self.assertIn("/api/ui-process", script)
+        self.assertIn("render_stale_service_html", script)
+        self.assertIn("cache-control", script)
+        self.assertIn("no-store, max-age=0", script)
+        self.assertIn("x-governed-runtime-ui-stale", script)
 
     def test_operator_ui_status_helpers_cache_short_ttl_results(self) -> None:
         module = _load_serve_operator_ui_module()

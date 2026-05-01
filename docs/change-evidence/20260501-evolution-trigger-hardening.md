@@ -19,6 +19,11 @@
   - new helper: `load_next_work_summary()`
   - new API: `/api/next-work`
   - injected visible selector summary panel into generated HTML
+  - cached next-work payloads for short-lived UI refreshes
+- Added interactive UI guard wiring in `packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui.py`:
+  - refresh next-work summary on load and after actions
+  - disable blocked high-impact action buttons when selector says they must not run
+  - show the blocking reason inside the command output panel instead of silently ignoring clicks
 - Added regression coverage in:
   - `tests/runtime/test_operator_entrypoint.py`
 
@@ -48,6 +53,11 @@ python scripts/serve-operator-ui.py --lang zh-CN
   - `operator-preflight: action=Readiness next_action=defer_ltp_and_refresh_evidence`
   - `operator-preflight-state: gate=pass source=fresh evidence=fresh`
 - Generated operator HTML now contains a visible next-work panel and selector JSON details.
+- Generated operator HTML now includes:
+  - `id='next-work-action'`
+  - `data-next-work-refresh='1'`
+  - front-end hooks for `fetch('/api/next-work')`, `syncNextWorkActionGuards()`, and `data-blocked-reason`
+- `load_next_work_summary()` now returns `status=pass`, `ui_status=healthy`, `blocked_actions=[]`, and a `cached_at` timestamp for UI cache coordination.
 
 ## Compatibility
 - Existing operator actions remain unchanged when preflight is healthy.
