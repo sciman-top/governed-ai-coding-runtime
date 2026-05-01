@@ -44,6 +44,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Runtime Evolution Review Queue / GAP-120` through `GAP-124` is implemented as a dry-run decision layer. `Runtime Evolution Materialization Queue / GAP-125` through `GAP-129` starts controlled auto-apply by materializing low-risk proposal and disabled skill candidate files without enabling skills, auto-applying policy, syncing target repos, or pushing/merging.
 - `Governance Hub Reuse And Controlled Evolution Queue / GAP-130` is complete as the scope rebaseline, `GAP-131` is complete as the capability portfolio classifier baseline, `GAP-132` is complete as the control-pack execution contract baseline, `GAP-133` is complete as the inheritance override baseline, `GAP-134` is complete as the target-repo reuse effect feedback baseline, `GAP-135` is complete as the knowledge-memory lifecycle baseline, `GAP-136` is complete as the promotion lifecycle baseline, `GAP-137` is complete as the repo-map context artifact baseline, `GAP-138` is complete as the policy/tool/credential audit boundary baseline, `GAP-139` is complete as the governance hub certification baseline, `GAP-140` is complete as the bounded host-capability defer baseline, and `GAP-141` is complete as the historical problem-trace closure policy baseline. It clarifies that Codex and Claude Code are cooperation hosts while Hermes/OpenHands/SWE-agent/Letta/Mem0/Aider-style mechanisms are selective absorption sources, then requires real effect feedback before any capability is called live.
 - `GAP-142` is complete as the degraded fresh-evidence next-work guard. It makes fresh target-run evidence with degraded host capability an `attention` signal and forces the autonomous selector to choose `refresh_evidence_first` instead of treating freshness alone as enough.
+- `GAP-143` is complete as the evidence recovery posture contract. It makes the selector, host-feedback surface, and target-repo reuse effect report prove the same recovery rule before new implementation or LTP work can proceed.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -1396,6 +1397,20 @@ The entries below record the executed queue for complete hybrid final-state and 
   - [x] host-feedback summary reports degraded latest target runs as `attention`, not `ok`
   - [x] selector output becomes `refresh_evidence_first` when latest target runs are fresh but degraded
   - [x] tests cover the fresh-but-degraded evidence guard and preserve the LTP `defer_all` boundary
+
+### GAP-143 Evidence Recovery Posture Contract
+- Type: AFK
+- Blocked by: GAP-142
+- User stories: 13, 14, 18, 21, 23, 31, 44, 45
+- Status: complete; closed by `docs/change-evidence/20260501-gap-143-evidence-recovery-posture-contract.md`
+- What to build:
+  - add a machine-checkable recovery posture contract that joins autonomous next-work selection, host-feedback target-run posture, and target-repo reuse effect feedback
+  - keep `refresh_evidence_first` active while latest target runs are fresh but degraded
+  - require the same recovery evidence rule before claiming `native_attach` recovery or proceeding to new implementation/LTP work
+- Acceptance criteria:
+  - [x] `verify-evidence-recovery-posture.py` passes only when selector output, host-feedback status, and effect report remediation boundary agree
+  - [x] `verify-repo.ps1 -Check Docs` includes the recovery posture contract
+  - [x] claim catalog records the recovery posture as a drift-checked product claim
 
 ## Vision
 

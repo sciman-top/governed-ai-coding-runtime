@@ -1,4 +1,4 @@
-issue_seed_version: "5.2"
+issue_seed_version: "5.3"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment
@@ -599,4 +599,9 @@ issues:
     title: Degraded Fresh Evidence Next Work Guard
     type: AFK
     blocked_by: [GAP-141]
+    user_stories: [13, 14, 18, 21, 23, 31, 44, 45]
+  - id: GAP-143
+    title: Evidence Recovery Posture Contract
+    type: AFK
+    blocked_by: [GAP-142]
     user_stories: [13, 14, 18, 21, 23, 31, 44, 45]

@@ -180,6 +180,26 @@
           "contains": "GAP-142 Degraded Fresh Evidence Next Work Guard"
         }
       ]
+    },
+    {
+      "claim_id": "CLM-012",
+      "claim_text": "Evidence recovery posture is machine-checked across autonomous next-work selection, host-feedback target-run posture, and target-repo reuse effect feedback before new implementation or LTP work can proceed.",
+      "proof_command": "python scripts/verify-evidence-recovery-posture.py --as-of 2026-05-01",
+      "evidence_link": "docs/change-evidence/20260501-gap-143-evidence-recovery-posture-contract.md",
+      "source_refs": [
+        {
+          "path": "scripts/verify-evidence-recovery-posture.py",
+          "contains": "assert_evidence_recovery_posture"
+        },
+        {
+          "path": "scripts/verify-repo.ps1",
+          "contains": "Write-CheckOk \"evidence-recovery-posture\""
+        },
+        {
+          "path": "docs/backlog/issue-ready-backlog.md",
+          "contains": "GAP-143 Evidence Recovery Posture Contract"
+        }
+      ]
     }
   ]
 }

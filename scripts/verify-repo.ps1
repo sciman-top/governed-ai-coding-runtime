@@ -980,6 +980,20 @@ function Invoke-HostFeedbackSurfaceChecks {
   Write-CheckOk "host-feedback-surface"
 }
 
+function Invoke-EvidenceRecoveryPostureChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-evidence-recovery-posture.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Evidence recovery posture checks failed"
+    }
+    throw "Evidence recovery posture checks failed`n$detail"
+  }
+
+  Write-CheckOk "evidence-recovery-posture"
+}
+
 function Invoke-BuildChecks {
   & pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
   if ($LASTEXITCODE -ne 0) {
@@ -995,6 +1009,7 @@ function Invoke-DocsChecks {
   Invoke-OldProjectNameScan
   Invoke-HostReplacementClaimBoundaryScan
   Invoke-HostFeedbackSurfaceChecks
+  Invoke-EvidenceRecoveryPostureChecks
   Invoke-CurrentSourceCompatibilityChecks
   Invoke-CorePrinciplesChecks
   Invoke-CapabilityPortfolioChecks

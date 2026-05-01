@@ -4,6 +4,10 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260501 GAP-143 Evidence Recovery Posture Contract](./20260501-gap-143-evidence-recovery-posture-contract.md)
+  - implementation evidence for joining autonomous next-work selection, host-feedback target-run posture, and target-repo reuse effect feedback into one recovery posture contract
+- [20260501 GAP-142 Degraded Fresh Evidence Next-Work Guard](./20260501-gap-142-degraded-fresh-evidence-next-work-guard.md)
+  - implementation evidence for making fresh but degraded target-run evidence force `refresh_evidence_first`
 - [20260501 GAP-141 Historical Problem-Trace Closure Policy](./20260501-gap-141-historical-problem-trace-closure-policy.md)
   - implementation evidence for formalizing the rolling-window retention and closure rule behind the `GAP-141` historical problem-trace backlog candidate
 - [20260501 GAP-140 Bounded Host-Capability Defer](./20260501-gap-140-bounded-defer.md)
