@@ -1229,16 +1229,16 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: AFK
 - Blocked by: GAP-130
 - User stories: 13, 18, 21, 23, 29, 31, 37, 44
-- Status: planned
+- Status: complete; closed by `docs/change-evidence/20260501-gap-131-capability-portfolio-classifier.md`
 - What to build:
   - refreshed borrowing matrix for Codex, Claude Code, MCP, OPA, LangGraph, OpenHands, SWE-agent, Hermes Agent, Letta, Mem0, Aider repo map, Cline, OpenAI Cookbook/Evals, and Agent Skills
   - adoption and portfolio classifier for both external mechanisms and existing project capabilities
   - outcome states: `add`, `keep`, `improve`, `merge`, `deprecate`, `retire`, and `delete_candidate`
   - explicit hypothesis for each added, improved, retained, merged, deprecated, retired, or deleted capability: expected benefit, cost, risk, effect metric, and rollback
 - Acceptance criteria:
-  - [ ] each source or existing capability maps to a product layer and lifecycle outcome
-  - [ ] added, improved, retained, merged, deprecated, retired, and deleted capabilities have measurable effect hypotheses
-  - [ ] rejected, deprecated, retired, or deleted candidates include a reason, rollback or retention rule, and future trigger when applicable
+  - [x] each source or existing capability maps to a product layer and lifecycle outcome
+  - [x] added, improved, retained, merged, deprecated, retired, and deleted capabilities have measurable effect hypotheses
+  - [x] rejected, deprecated, retired, or deleted candidates include a reason, rollback or retention rule, and future trigger when applicable
 
 ### GAP-132 Control Pack Execution Contract Upgrade
 - Type: AFK

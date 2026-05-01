@@ -8,6 +8,7 @@ This directory holds the normative contract descriptions that the schema drafts 
 ### Governance kernel
 - [Control Registry Spec](./control-registry-spec.md)
 - [Control Pack Spec](./control-pack-spec.md)
+- [Capability Portfolio Classifier Spec](./capability-portfolio-classifier-spec.md)
 - [Risk Tier And Approval Spec](./risk-tier-and-approval-spec.md)
 - [Task Lifecycle And State Machine Spec](./task-lifecycle-and-state-machine-spec.md)
 - [Verification Gates Spec](./verification-gates-spec.md)

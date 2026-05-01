@@ -18,6 +18,9 @@ items:
   - name: control-pack
     path: schemas/jsonschema/control-pack.schema.json
     source_spec: docs/specs/control-pack-spec.md
+  - name: capability-portfolio-classifier
+    path: schemas/jsonschema/capability-portfolio-classifier.schema.json
+    source_spec: docs/specs/capability-portfolio-classifier-spec.md
   - name: repo-profile
     path: schemas/jsonschema/repo-profile.schema.json
     source_spec: docs/specs/repo-profile-spec.md

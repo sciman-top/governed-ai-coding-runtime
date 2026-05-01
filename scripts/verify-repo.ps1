@@ -603,6 +603,20 @@ function Invoke-CorePrinciplesChecks {
   Write-CheckOk "core-principles"
 }
 
+function Invoke-CapabilityPortfolioChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-capability-portfolio.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Capability portfolio checks failed"
+    }
+    throw "Capability portfolio checks failed`n$detail"
+  }
+
+  Write-CheckOk "capability-portfolio"
+}
+
 function Invoke-LtpAutonomousPromotionChecks {
   $python = Resolve-PythonCommand
   $output = & $python.Source "scripts/evaluate-ltp-promotion.py" 2>&1
@@ -863,6 +877,7 @@ function Invoke-DocsChecks {
   Invoke-HostFeedbackSurfaceChecks
   Invoke-CurrentSourceCompatibilityChecks
   Invoke-CorePrinciplesChecks
+  Invoke-CapabilityPortfolioChecks
   Invoke-LtpAutonomousPromotionChecks
   Invoke-AutonomousNextWorkSelectionChecks
   Invoke-RuntimeEvolutionReviewChecks

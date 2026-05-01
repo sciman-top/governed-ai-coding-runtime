@@ -1,0 +1,610 @@
+{
+  "schema_version": "1.0",
+  "portfolio_id": "default-governance-hub-capability-portfolio",
+  "status": "enforced",
+  "reviewed_on": "2026-05-01",
+  "review_expires_at": "2026-06-01",
+  "required_doc_refs": [
+    {
+      "path": "docs/plans/governance-hub-reuse-and-controlled-evolution-plan.md",
+      "why": "Defines the GAP-130 through GAP-139 execution queue and the GAP-131 classifier requirement."
+    },
+    {
+      "path": "docs/research/runtime-governance-borrowing-matrix.md",
+      "why": "Captures the refreshed borrowing review that the classifier turns into executable adoption decisions."
+    },
+    {
+      "path": "docs/specs/capability-portfolio-classifier-spec.md",
+      "why": "Defines the human-readable semantics for this classifier artifact."
+    }
+  ],
+  "evidence_refs": [
+    "docs/change-evidence/20260501-governance-hub-reuse-plan.md",
+    "docs/change-evidence/20260501-gap-131-capability-portfolio-classifier.md"
+  ],
+  "entries": [
+    {
+      "id": "external-codex-host-surface",
+      "title": "Codex host surface",
+      "source_type": "external_source",
+      "product_layer": "host_surface",
+      "lifecycle_outcome": "keep",
+      "summary": "Codex remains a primary cooperation host rather than a capability to replace.",
+      "source_refs": [
+        "docs/plans/governance-hub-reuse-and-controlled-evolution-plan.md"
+      ],
+      "review_refs": [
+        "docs/research/runtime-governance-borrowing-matrix.md",
+        "docs/specs/capability-portfolio-classifier-spec.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Preserves the native host path while later governance capabilities stay subordinate.",
+        "expected_cost": "Requires explicit compatibility tracking when new governed controls appear.",
+        "expected_risk": "Host-specific assumptions may drift if current-source compatibility is not refreshed.",
+        "effect_metric": "Current-source compatibility and host parity evidence remain green.",
+        "verification_command": "python scripts/verify-current-source-compatibility.py"
+      },
+      "rollback": "Revert only the classifier entry and evidence update if the host-boundary statement is proven inaccurate."
+    },
+    {
+      "id": "external-claude-code-provider-surface",
+      "title": "Claude Code provider surface",
+      "source_type": "external_source",
+      "product_layer": "host_surface",
+      "lifecycle_outcome": "keep",
+      "summary": "Claude Code remains a primary cooperation host and local third-party-provider usage surface.",
+      "source_refs": [
+        "docs/plans/governance-hub-reuse-and-controlled-evolution-plan.md"
+      ],
+      "review_refs": [
+        "docs/research/runtime-governance-borrowing-matrix.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Keeps the repository aligned with the owner-corrected product boundary.",
+        "expected_cost": "Requires provider-boundary language to stay precise in docs and future control packs.",
+        "expected_risk": "Official-subscription assumptions could reappear in docs or generated artifacts.",
+        "effect_metric": "Host-replacement claim scans and current-source compatibility checks stay green.",
+        "verification_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs"
+      },
+      "rollback": "Restore the prior wording if the provider boundary is later redefined by project evidence."
+    },
+    {
+      "id": "external-mcp-adapter-boundary",
+      "title": "MCP adapter boundary",
+      "source_type": "external_source",
+      "product_layer": "execution_boundary",
+      "lifecycle_outcome": "improve",
+      "summary": "Retain MCP as a governed adapter surface but improve classification before control packs are materialized.",
+      "source_refs": [
+        "docs/research/runtime-governance-borrowing-matrix.md"
+      ],
+      "review_refs": [
+        "docs/specs/capability-portfolio-classifier-spec.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Clarifies that adapter reuse must become an executable control, not only a research note.",
+        "expected_cost": "Requires later control-pack typing and inheritance rules.",
+        "expected_risk": "Boundary blur may survive until GAP-132 and GAP-133 land.",
+        "effect_metric": "Later control-pack contract validation can point back to this classifier entry.",
+        "verification_command": "python scripts/verify-capability-portfolio.py"
+      },
+      "rollback": "Drop the improvement classification if MCP adapter boundaries are removed from the active queue."
+    },
+    {
+      "id": "external-opa-policy-boundary",
+      "title": "OPA policy boundary",
+      "source_type": "external_source",
+      "product_layer": "governance_kernel",
+      "lifecycle_outcome": "deprecate",
+      "summary": "Treat full OPA runtime adoption as a deferred reference instead of a near-term implementation target.",
+      "source_refs": [
+        "docs/plans/governance-hub-reuse-and-controlled-evolution-plan.md"
+      ],
+      "review_refs": [
+        "docs/research/runtime-governance-borrowing-matrix.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Prevents premature policy-engine breadth from blocking the governed runtime path.",
+        "expected_cost": "Keeps some policy-language aspirations in documentation only for now.",
+        "expected_risk": "Future readers may misread deprecation as permanent exclusion without a trigger.",
+        "effect_metric": "Plan and backlog continue to defer full OPA runtime adoption without drift.",
+        "verification_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/github/create-roadmap-issues.ps1 -ValidateOnly -RenderAll"
+      },
+      "rollback": "Reclassify to improve or add if a future queue explicitly funds executable OPA integration.",
+      "retention_rule": "Keep only the research boundary and do not create an active implementation claim before later effect evidence exists.",
+      "future_trigger": "Promote only after a target repo needs executable cross-host policy evaluation with measurable effect."
+    },
+    {
+      "id": "external-langgraph-workflow-vocabulary",
+      "title": "LangGraph workflow vocabulary",
+      "source_type": "external_source",
+      "product_layer": "workflow_orchestration",
+      "lifecycle_outcome": "add",
+      "summary": "Absorb workflow vocabulary selectively as naming and contract guidance for later control-pack orchestration fields.",
+      "source_refs": [
+        "docs/research/runtime-governance-borrowing-matrix.md"
+      ],
+      "review_refs": [
+        "docs/specs/capability-portfolio-classifier-spec.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Lets later workflow contracts use established orchestration terminology without adopting a full workflow service.",
+        "expected_cost": "Requires disciplined scope control so vocabulary does not imply a platform commitment.",
+        "expected_risk": "Terminology could outpace runtime support if not tied to executable controls.",
+        "effect_metric": "GAP-132 control-pack fields can cite workflow vocabulary without adding unsupported runtime claims.",
+        "verification_command": "python scripts/verify-capability-portfolio.py"
+      },
+      "rollback": "Remove the vocabulary entry if later control-pack design chooses a simpler repository-native naming scheme."
+    },
+    {
+      "id": "external-openhands-execution-boundary",
+      "title": "OpenHands execution boundary",
+      "source_type": "external_source",
+      "product_layer": "execution_boundary",
+      "lifecycle_outcome": "retire",
+      "summary": "Retire full OpenHands-like execution-host ambitions from the active near-term queue.",
+      "source_refs": [
+        "docs/plans/governance-hub-reuse-and-controlled-evolution-plan.md"
+      ],
+      "review_refs": [
+        "docs/research/runtime-governance-borrowing-matrix.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Keeps the repository focused on governed controls rather than building a competing execution host.",
+        "expected_cost": "Some long-range execution-host ideas stay in historical research only.",
+        "expected_risk": "Readers may still infer host-competition intent from older documents.",
+        "effect_metric": "Current working-set docs keep host cooperation wording and do not reopen execution-host product scope.",
+        "verification_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs"
+      },
+      "rollback": "Create a new funded queue before restoring execution-host ambitions to active scope.",
+      "retention_rule": "Keep historical research only; do not promote into active queue items without a new scope decision.",
+      "future_trigger": "Reopen only if the owner explicitly asks for a first-party execution host with separate effect metrics."
+    },
+    {
+      "id": "external-swe-agent-repair-loop",
+      "title": "SWE-agent repair loop",
+      "source_type": "external_source",
+      "product_layer": "workflow_orchestration",
+      "lifecycle_outcome": "improve",
+      "summary": "Improve bugfix-loop borrowing criteria before any self-evolution flow can adopt repair-loop behavior.",
+      "source_refs": [
+        "docs/research/runtime-governance-borrowing-matrix.md"
+      ],
+      "review_refs": [
+        "docs/specs/capability-portfolio-classifier-spec.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Keeps repair-loop borrowing tied to evidence, rollback, and target-repo effect metrics.",
+        "expected_cost": "Requires later promotion-lifecycle work instead of direct adoption.",
+        "expected_risk": "Pressure to automate too early may bypass the classifier intent.",
+        "effect_metric": "Later promotion-lifecycle artifacts can map repair loops back to this improvement entry.",
+        "verification_command": "python scripts/verify-capability-portfolio.py"
+      },
+      "rollback": "Return to narrative-only benchmarking if repair-loop borrowing is removed from roadmap scope."
+    },
+    {
+      "id": "external-hermes-governed-skill-memory",
+      "title": "Hermes governed skill and memory patterns",
+      "source_type": "external_source",
+      "product_layer": "memory_and_knowledge",
+      "lifecycle_outcome": "add",
+      "summary": "Add Hermes-style governed skill and memory mechanisms as selective sources for later lifecycle work.",
+      "source_refs": [
+        "docs/research/runtime-governance-borrowing-matrix.md"
+      ],
+      "review_refs": [
+        "docs/specs/capability-portfolio-classifier-spec.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Seeds GAP-135 and GAP-136 with explicit external source coverage instead of ad hoc memory growth.",
+        "expected_cost": "Needs evidence-backed promotion and retirement rules before any live adoption.",
+        "expected_risk": "Could be confused with immediate runtime support if not tied to later executable contracts.",
+        "effect_metric": "Future memory and skill lifecycle contracts can trace their source lineage here.",
+        "verification_command": "python scripts/verify-capability-portfolio.py"
+      },
+      "rollback": "Remove from the classifier if the repository drops governed skill or memory lifecycle work."
+    },
+    {
+      "id": "external-letta-memory-blocks",
+      "title": "Letta memory blocks",
+      "source_type": "external_source",
+      "product_layer": "memory_and_knowledge",
+      "lifecycle_outcome": "improve",
+      "summary": "Use Letta-style memory-block ideas as a design input, not as an immediate runtime commitment.",
+      "source_refs": [
+        "docs/research/runtime-governance-borrowing-matrix.md"
+      ],
+      "review_refs": [
+        "docs/specs/capability-portfolio-classifier-spec.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Improves future memory segmentation vocabulary before implementation begins.",
+        "expected_cost": "Requires later schema and lifecycle work to define actual repository usage.",
+        "expected_risk": "Block semantics may be overfit if target-repo evidence stays weak.",
+        "effect_metric": "Memory lifecycle design keeps explicit block-level rationale instead of flat narrative notes.",
+        "verification_command": "python scripts/verify-capability-portfolio.py"
+      },
+      "rollback": "Downgrade to narrative research only if no memory-block contract is justified later."
+    },
+    {
+      "id": "external-mem0-memory-lifecycle",
+      "title": "Mem0 memory lifecycle",
+      "source_type": "external_source",
+      "product_layer": "memory_and_knowledge",
+      "lifecycle_outcome": "improve",
+      "summary": "Treat Mem0-style memory lifecycle as an improvement source for evidence-backed retention and pruning behavior.",
+      "source_refs": [
+        "docs/research/runtime-governance-borrowing-matrix.md"
+      ],
+      "review_refs": [
+        "docs/specs/capability-portfolio-classifier-spec.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Improves future memory retention design with explicit keep, prune, and reactivation intent.",
+        "expected_cost": "Requires later lifecycle schema and effect metrics work.",
+        "expected_risk": "Lifecycle language may become more detailed than the current executable surface.",
+        "effect_metric": "GAP-135 artifacts can express retention and expiry logic using evidence-backed lifecycle fields.",
+        "verification_command": "python scripts/verify-capability-portfolio.py"
+      },
+      "rollback": "Remove the lifecycle borrowing if later controlled-evolution scope excludes persistent memory."
+    },
+    {
+      "id": "external-aider-repo-map",
+      "title": "Aider repo map discipline",
+      "source_type": "external_source",
+      "product_layer": "context_shaping",
+      "lifecycle_outcome": "add",
+      "summary": "Adopt Aider-style repo-map discipline as a governed context artifact rather than an unmanaged helper.",
+      "source_refs": [
+        "docs/research/runtime-governance-borrowing-matrix.md"
+      ],
+      "review_refs": [
+        "docs/specs/capability-portfolio-classifier-spec.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Prepares GAP-137 to add context-shaping metrics without widening host scope.",
+        "expected_cost": "Needs governed artifact and measurement fields before rollout.",
+        "expected_risk": "Repo-map support could bloat context if effect metrics are weak.",
+        "effect_metric": "Later repo-map artifacts can show token and effect metrics traced to this classifier entry.",
+        "verification_command": "python scripts/verify-capability-portfolio.py"
+      },
+      "rollback": "Withdraw the add classification if context shaping remains fully manual."
+    },
+    {
+      "id": "external-cline-permission-surface",
+      "title": "Cline permission surface",
+      "source_type": "external_source",
+      "product_layer": "execution_boundary",
+      "lifecycle_outcome": "keep",
+      "summary": "Keep permission-surface review as a borrowing source for later tool and credential audit boundaries.",
+      "source_refs": [
+        "docs/research/runtime-governance-borrowing-matrix.md"
+      ],
+      "review_refs": [
+        "docs/specs/capability-portfolio-classifier-spec.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Preserves a concrete reference for scoped tool and credential controls without adding a new host product.",
+        "expected_cost": "Requires later audit-boundary typing and proof paths.",
+        "expected_risk": "Permission semantics may be copied loosely if not normalized in GAP-138.",
+        "effect_metric": "Audit-boundary design can cite a kept borrowing source with explicit scope.",
+        "verification_command": "python scripts/verify-capability-portfolio.py"
+      },
+      "rollback": "Drop the kept source if later audit-boundary work uses only repository-native policy inputs."
+    },
+    {
+      "id": "external-openai-cookbook-evals",
+      "title": "OpenAI Cookbook and eval patterns",
+      "source_type": "external_source",
+      "product_layer": "evidence_and_feedback",
+      "lifecycle_outcome": "merge",
+      "summary": "Merge external eval pattern guidance into the repository's own evidence and effect-feedback vocabulary.",
+      "source_refs": [
+        "docs/research/runtime-governance-borrowing-matrix.md"
+      ],
+      "review_refs": [
+        "docs/specs/capability-portfolio-classifier-spec.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Keeps evaluation language aligned with measurable effect rather than prose-only quality claims.",
+        "expected_cost": "Requires later unification with repository-native evidence contracts.",
+        "expected_risk": "Eval terminology may fragment if merge targets stay implicit.",
+        "effect_metric": "Later certification and effect-harness work can reference merged eval vocabulary.",
+        "verification_command": "python scripts/verify-capability-portfolio.py"
+      },
+      "rollback": "Revert to keep or add if merged eval vocabulary becomes too ambiguous for later contracts."
+    },
+    {
+      "id": "external-agent-skills-governed-surface",
+      "title": "Agent Skills governed surface",
+      "source_type": "external_source",
+      "product_layer": "governance_kernel",
+      "lifecycle_outcome": "add",
+      "summary": "Add governed skill-surface borrowing as an input to later skill, hook, and eval promotion lifecycle work.",
+      "source_refs": [
+        "docs/research/runtime-governance-borrowing-matrix.md"
+      ],
+      "review_refs": [
+        "docs/specs/capability-portfolio-classifier-spec.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Creates an explicit source lineage for governed skill promotion instead of implicit borrowing.",
+        "expected_cost": "Needs later lifecycle rules, evidence, and rollback wiring.",
+        "expected_risk": "Could be mistaken for direct skill installation authority if not kept subordinate to control packs.",
+        "effect_metric": "Later lifecycle artifacts can reference a declared external source for governed skills.",
+        "verification_command": "python scripts/verify-capability-portfolio.py"
+      },
+      "rollback": "Remove the add classification if skill lifecycle work is reduced to repository-local patterns only."
+    },
+    {
+      "id": "existing-borrowing-matrix-research",
+      "title": "Borrowing matrix research",
+      "source_type": "existing_capability",
+      "product_layer": "candidate_process",
+      "lifecycle_outcome": "keep",
+      "summary": "Keep the borrowing matrix as the upstream review artifact that feeds executable classification.",
+      "source_refs": [
+        "docs/research/runtime-governance-borrowing-matrix.md"
+      ],
+      "review_refs": [
+        "docs/specs/capability-portfolio-classifier-spec.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Preserves the human review basis for later machine-checkable portfolio entries.",
+        "expected_cost": "Needs ongoing refresh whenever sources or queue boundaries move.",
+        "expected_risk": "Matrix drift can weaken later classifier trust if not refreshed with evidence.",
+        "effect_metric": "Classifier verification can still trace back to the active borrowing matrix.",
+        "verification_command": "python scripts/verify-capability-portfolio.py"
+      },
+      "rollback": "Replace with a newer review source only after the successor artifact becomes authoritative."
+    },
+    {
+      "id": "existing-benchmark-borrowing-notes",
+      "title": "External benchmark notes",
+      "source_type": "existing_capability",
+      "product_layer": "candidate_process",
+      "lifecycle_outcome": "merge",
+      "summary": "Merge older benchmark notes into the classifier-led portfolio instead of leaving them as standalone narrative guidance.",
+      "source_refs": [
+        "docs/research/2026-04-27-hybrid-final-state-external-benchmark-review.md"
+      ],
+      "review_refs": [
+        "docs/research/runtime-governance-borrowing-matrix.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Reduces narrative-only benchmark sprawl by tying benchmark takeaways to classifier outcomes.",
+        "expected_cost": "Requires ongoing maintenance when benchmark conclusions change.",
+        "expected_risk": "Merged notes may lose nuance if not linked back to source research.",
+        "effect_metric": "Current working set can point to the classifier artifact instead of multiple disconnected benchmark summaries.",
+        "verification_command": "python scripts/verify-capability-portfolio.py"
+      },
+      "rollback": "Unmerge by restoring separate benchmark guidance if classifier compression loses needed context."
+    },
+    {
+      "id": "existing-core-principles-policy",
+      "title": "Core principles policy",
+      "source_type": "existing_capability",
+      "product_layer": "governance_kernel",
+      "lifecycle_outcome": "keep",
+      "summary": "Keep core principles as a stable kernel input while the classifier only describes later capability decisions.",
+      "source_refs": [
+        "docs/architecture/core-principles-policy.json"
+      ],
+      "review_refs": [
+        "docs/specs/core-principles-spec.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Separates stable principles from later capability portfolio changes.",
+        "expected_cost": "Requires future control packs to map back to principles explicitly.",
+        "expected_risk": "Portfolio work might accidentally duplicate principle semantics without this separation.",
+        "effect_metric": "Core-principles verification remains green while classifier work expands around it.",
+        "verification_command": "python scripts/verify-core-principles.py"
+      },
+      "rollback": "Revert only the classifier statement if core principles are materially refactored later."
+    },
+    {
+      "id": "existing-current-source-compatibility-guard",
+      "title": "Current-source compatibility guard",
+      "source_type": "existing_capability",
+      "product_layer": "host_surface",
+      "lifecycle_outcome": "keep",
+      "summary": "Keep the compatibility guard as the proof path for host-boundary claims.",
+      "source_refs": [
+        "docs/change-evidence/20260427-gap-112-current-source-compatibility-guard.md"
+      ],
+      "review_refs": [
+        "docs/architecture/current-source-compatibility-policy.json"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Provides a real verification path for Codex and Claude Code boundary claims.",
+        "expected_cost": "Needs refresh when source assumptions age out.",
+        "expected_risk": "Stale compatibility evidence can undermine host-surface decisions.",
+        "effect_metric": "Compatibility guard output remains usable from docs checks.",
+        "verification_command": "python scripts/verify-current-source-compatibility.py"
+      },
+      "rollback": "Replace with the newer compatibility source if this guard is superseded."
+    },
+    {
+      "id": "existing-target-repo-governance-baseline",
+      "title": "Target repo governance baseline",
+      "source_type": "existing_capability",
+      "product_layer": "governance_kernel",
+      "lifecycle_outcome": "keep",
+      "summary": "Keep the target-repo governance baseline as the landing surface that later GAP-134 effect feedback will exercise.",
+      "source_refs": [
+        "docs/targets/target-repo-governance-baseline.json"
+      ],
+      "review_refs": [
+        "docs/targets/target-repo-rollout-contract.json"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Preserves the reusable baseline that later effect harness work needs.",
+        "expected_cost": "Requires inheritance and override verification before effect claims are trusted.",
+        "expected_risk": "Baseline drift can hide later rollout inconsistencies.",
+        "effect_metric": "Target-repo governance consistency verification remains green.",
+        "verification_command": "python scripts/verify-target-repo-governance-consistency.py"
+      },
+      "rollback": "Restore the previous baseline mapping if later rollout contracts change."
+    },
+    {
+      "id": "existing-runtime-evolution-review",
+      "title": "Runtime evolution review",
+      "source_type": "existing_capability",
+      "product_layer": "candidate_process",
+      "lifecycle_outcome": "improve",
+      "summary": "Improve runtime self-evolution review by adding explicit portfolio decisions instead of proposal-only flow.",
+      "source_refs": [
+        "docs/architecture/runtime-evolution-policy.json"
+      ],
+      "review_refs": [
+        "docs/plans/runtime-evolution-review-plan.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Connects dry-run evolution review output to a governed keep or retire decision model.",
+        "expected_cost": "Needs later integration work so classifier and evolution artifacts reinforce each other.",
+        "expected_risk": "Parallel candidate systems may diverge if they stay unlinked.",
+        "effect_metric": "Classifier and runtime-evolution dry-run flows remain compatible at the evidence level.",
+        "verification_command": "python scripts/evaluate-runtime-evolution.py"
+      },
+      "rollback": "Keep runtime evolution as a separate dry-run lane if convergence proves too costly."
+    },
+    {
+      "id": "existing-ai-coding-experience-extraction",
+      "title": "AI coding experience extraction",
+      "source_type": "existing_capability",
+      "product_layer": "memory_and_knowledge",
+      "lifecycle_outcome": "improve",
+      "summary": "Improve experience extraction so future knowledge and memory lifecycles inherit explicit portfolio decisions.",
+      "source_refs": [
+        "docs/plans/runtime-evolution-review-plan.md"
+      ],
+      "review_refs": [
+        "docs/architecture/runtime-evolution-policy.json"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Prevents extracted experience from turning into unmanaged long-tail memory.",
+        "expected_cost": "Requires later lifecycle and promotion wiring.",
+        "expected_risk": "Experience artifacts may remain informative but not actionable until lifecycle work lands.",
+        "effect_metric": "Experience review output can be traced to later knowledge and memory queues.",
+        "verification_command": "python scripts/extract-ai-coding-experience.py"
+      },
+      "rollback": "Leave experience extraction as review-only if no governed lifecycle follows."
+    },
+    {
+      "id": "existing-claim-drift-sentinel",
+      "title": "Claim drift sentinel",
+      "source_type": "existing_capability",
+      "product_layer": "evidence_and_feedback",
+      "lifecycle_outcome": "keep",
+      "summary": "Keep the claim-drift sentinel as the proof path that planned work is not misreported as live.",
+      "source_refs": [
+        "docs/change-evidence/20260421-gap-084-claim-drift-guard-closeout.md"
+      ],
+      "review_refs": [
+        "docs/specs/controlled-improvement-proposal-spec.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Protects the GAP-131 queue from accidental overclaiming.",
+        "expected_cost": "Requires current docs and evidence to stay synchronized.",
+        "expected_risk": "Out-of-sync status lines can still trigger false positives or missed drift.",
+        "effect_metric": "Claim-drift sentinel stays green after status and evidence updates.",
+        "verification_command": "python scripts/verify-claim-drift.py"
+      },
+      "rollback": "Revisit only if a stronger claim-governance mechanism replaces the sentinel."
+    },
+    {
+      "id": "existing-host-feedback-surface",
+      "title": "Host feedback surface",
+      "source_type": "existing_capability",
+      "product_layer": "evidence_and_feedback",
+      "lifecycle_outcome": "merge",
+      "summary": "Merge host-feedback evidence into the same effect-feedback vocabulary used by the portfolio classifier.",
+      "source_refs": [
+        "docs/change-evidence/20260430-host-feedback-loop-surface.md"
+      ],
+      "review_refs": [
+        "docs/specs/interaction-evidence-spec.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Lets host feedback participate in the same measurable effect model as later target-repo reuse.",
+        "expected_cost": "Requires later normalization between operator feedback and repo effect metrics.",
+        "expected_risk": "Merged feedback streams may stay incomparable until GAP-134 defines the harness.",
+        "effect_metric": "Host feedback checks still pass while effect-feedback vocabulary expands.",
+        "verification_command": "python scripts/host-feedback-summary.py --assert-minimum"
+      },
+      "rollback": "Keep host feedback separate if merged evidence makes operator signals less clear."
+    },
+    {
+      "id": "candidate-narrative-only-borrowing-reviews",
+      "title": "Narrative-only borrowing reviews",
+      "source_type": "candidate_cleanup",
+      "product_layer": "candidate_process",
+      "lifecycle_outcome": "deprecate",
+      "summary": "Deprecate borrowing reviews that stop at prose and never produce machine-checkable effect hypotheses.",
+      "source_refs": [
+        "docs/research/runtime-governance-borrowing-matrix.md"
+      ],
+      "review_refs": [
+        "docs/specs/capability-portfolio-classifier-spec.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Moves the queue from descriptive research toward executable governance inputs.",
+        "expected_cost": "Requires a classifier and later contracts to absorb useful narrative content.",
+        "expected_risk": "Important nuance could be lost if reviews are deprecated without traceability.",
+        "effect_metric": "Active queue artifacts reference classifier outcomes instead of free-form borrowing prose alone.",
+        "verification_command": "python scripts/verify-capability-portfolio.py"
+      },
+      "rollback": "Keep narrative-only reviews active again if machine-checkable outputs become infeasible.",
+      "retention_rule": "Retain historical research notes, but do not treat them as completion evidence for future gaps.",
+      "future_trigger": "Stop deprecating only if a future phase explicitly proves narrative review is sufficient for effect certification."
+    },
+    {
+      "id": "candidate-planning-only-heavy-stack-candidates",
+      "title": "Planning-only heavy-stack candidates",
+      "source_type": "candidate_cleanup",
+      "product_layer": "candidate_process",
+      "lifecycle_outcome": "retire",
+      "summary": "Retire large-stack candidate ideas that have no executable control path or funded target-repo effect proof.",
+      "source_refs": [
+        "docs/plans/governance-hub-reuse-and-controlled-evolution-plan.md"
+      ],
+      "review_refs": [
+        "docs/specs/capability-portfolio-classifier-spec.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Keeps the queue focused on implementable governed controls instead of speculative platforms.",
+        "expected_cost": "Some ambitious options remain in history only.",
+        "expected_risk": "Future readers may overlook retired ideas that become relevant again.",
+        "effect_metric": "The active queue stays bounded to executable GAP-131 through GAP-139 work.",
+        "verification_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/github/create-roadmap-issues.ps1 -ValidateOnly -RenderAll"
+      },
+      "rollback": "Create a new queue item and evidence batch before bringing a retired heavy-stack candidate back.",
+      "retention_rule": "Keep only as historical planning context, not as an active near-term implementation candidate.",
+      "future_trigger": "Reopen only if a target-repo effect harness demonstrates a concrete need and funded execution path."
+    },
+    {
+      "id": "candidate-narrative-only-capability-without-effect-metric",
+      "title": "Narrative-only capability without effect metric",
+      "source_type": "candidate_cleanup",
+      "product_layer": "candidate_process",
+      "lifecycle_outcome": "delete_candidate",
+      "summary": "Delete candidate records that cannot name an effect metric, verification command, or rollback path.",
+      "source_refs": [
+        "docs/plans/governance-hub-reuse-and-controlled-evolution-plan.md"
+      ],
+      "review_refs": [
+        "docs/specs/capability-portfolio-classifier-spec.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Removes false progress indicators from the self-evolution backlog.",
+        "expected_cost": "Requires stricter upfront discipline for future candidate creation.",
+        "expected_risk": "Potentially useful ideas may be dropped if they are documented too early.",
+        "effect_metric": "Classifier verification fails closed when required effect fields are missing.",
+        "verification_command": "python scripts/verify-capability-portfolio.py"
+      },
+      "rollback": "Restore a deleted candidate only by recreating it with full effect, evidence, and rollback fields.",
+      "retention_rule": "Do not keep empty candidate shells in the active portfolio.",
+      "future_trigger": "Allow recreation only after a real effect metric and verification path are known."
+    }
+  ]
+}

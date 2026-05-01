@@ -6,6 +6,7 @@ Machine-readable schema drafts and example instances for the platform's core gov
 ## JSON Schema Drafts
 - `jsonschema/control-registry.schema.json`
 - `jsonschema/control-pack.schema.json`
+- `jsonschema/capability-portfolio-classifier.schema.json`
 - `jsonschema/repo-profile.schema.json`
 - `jsonschema/repo-admission-minimums.schema.json`
 - `jsonschema/tool-contract.schema.json`
@@ -32,6 +33,7 @@ Machine-readable schema drafts and example instances for the platform's core gov
 ## Example Instances
 - `examples/README.md`
 - `examples/control-pack/minimum-governance-kernel.example.json`
+- `examples/capability-portfolio-classifier/default-governance-hub.example.json`
 - `examples/hook-contract/pre-write-path-guard.example.json`
 - `examples/skill-manifest/repo-map-audit.example.json`
 - `examples/knowledge-source/docs-index-authoritative.example.json`

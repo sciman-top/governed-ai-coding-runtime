@@ -3,7 +3,7 @@
 ## Status
 - Created: 2026-05-01.
 - Queue: `GAP-130` through `GAP-139`.
-- Current state: `GAP-130` scope rebaseline is complete; `GAP-131..139` remain planned implementation work. This plan does not enable automatic policy mutation, automatic skill installation, target-repo sync, push, or merge.
+- Current state: `GAP-130` scope rebaseline and `GAP-131` capability portfolio classifier baseline are complete; `GAP-132..139` remain planned implementation work. This plan does not enable automatic policy mutation, automatic skill installation, target-repo sync, push, or merge.
 - Prior dependency: `GAP-120..129` established runtime evolution review and controlled materialization. This plan turns the clarified product direction into the next implementation queue.
 
 ## Goal

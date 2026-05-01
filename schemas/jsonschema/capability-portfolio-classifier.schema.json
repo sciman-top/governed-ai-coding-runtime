@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/capability-portfolio-classifier.schema.json",
+  "title": "Capability Portfolio Classifier",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "portfolio_id",
+    "status",
+    "reviewed_on",
+    "review_expires_at",
+    "required_doc_refs",
+    "evidence_refs",
+    "entries"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "portfolio_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_.-]+$"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "enforced"
+      ]
+    },
+    "reviewed_on": {
+      "type": "string",
+      "format": "date"
+    },
+    "review_expires_at": {
+      "type": "string",
+      "format": "date"
+    },
+    "required_doc_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/pathRef"
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/entry"
+      }
+    }
+  },
+  "$defs": {
+    "pathRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "why"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "why": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "effectHypothesis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expected_benefit",
+        "expected_cost",
+        "expected_risk",
+        "effect_metric",
+        "verification_command"
+      ],
+      "properties": {
+        "expected_benefit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected_cost": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected_risk": {
+          "type": "string",
+          "minLength": 1
+        },
+        "effect_metric": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verification_command": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "source_type",
+        "product_layer",
+        "lifecycle_outcome",
+        "summary",
+        "source_refs",
+        "review_refs",
+        "effect_hypothesis",
+        "rollback"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_.-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_type": {
+          "type": "string",
+          "enum": [
+            "external_source",
+            "existing_capability",
+            "candidate_cleanup"
+          ]
+        },
+        "product_layer": {
+          "type": "string",
+          "enum": [
+            "host_surface",
+            "governance_kernel",
+            "execution_boundary",
+            "workflow_orchestration",
+            "memory_and_knowledge",
+            "context_shaping",
+            "evidence_and_feedback",
+            "candidate_process"
+          ]
+        },
+        "lifecycle_outcome": {
+          "type": "string",
+          "enum": [
+            "add",
+            "keep",
+            "improve",
+            "merge",
+            "deprecate",
+            "retire",
+            "delete_candidate"
+          ]
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "review_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "effect_hypothesis": {
+          "$ref": "#/$defs/effectHypothesis"
+        },
+        "rollback": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retention_rule": {
+          "type": "string"
+        },
+        "future_trigger": {
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "lifecycle_outcome": {
+                "enum": [
+                  "deprecate",
+                  "retire",
+                  "delete_candidate"
+                ]
+              }
+            },
+            "required": [
+              "lifecycle_outcome"
+            ]
+          },
+          "then": {
+            "required": [
+              "retention_rule",
+              "future_trigger"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
