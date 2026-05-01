@@ -1,0 +1,191 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - heading "Governed Runtime 操作者面板" [level=1] [ref=e4]
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - text: "Runtime 根目录:"
+        - code [ref=e7]: D:/CODE/governed-ai-coding-runtime/.runtime
+      - generic [ref=e8]:
+        - text: "持久化:"
+        - code [ref=e9]: filesystem
+  - generic [ref=e10]:
+    - complementary [ref=e11]:
+      - generic [ref=e12]:
+        - heading "操作" [level=2] [ref=e13]
+        - generic [ref=e14]:
+          - button "刷新状态" [ref=e15] [cursor=pointer]
+          - button "列出目标仓" [ref=e16] [cursor=pointer]
+          - button "本仓 Readiness" [ref=e17] [cursor=pointer]
+          - button "规则漂移检查" [ref=e18] [cursor=pointer]
+          - button "同步规则文件" [ref=e19] [cursor=pointer]
+          - button "下发治理基线" [ref=e20] [cursor=pointer]
+          - button "运行 Daily" [ref=e21] [cursor=pointer]
+          - button "全部功能应用" [ref=e22] [cursor=pointer]
+          - button "功能反馈汇总" [ref=e23] [cursor=pointer]
+      - generic [ref=e24]:
+        - heading "设置" [level=2] [ref=e25]
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - text: 语言
+            - combobox "语言" [ref=e28]:
+              - option "中文" [selected]
+              - option "English"
+          - generic [ref=e29]:
+            - text: 目标仓
+            - combobox "目标仓" [ref=e30]:
+              - option "全部目标仓" [selected]
+              - option "classroomtoolkit"
+              - option "github-toolkit"
+              - option "self-runtime"
+              - option "skills-manager"
+              - option "vps-ssh-launcher"
+          - generic [ref=e31]:
+            - text: 验证模式
+            - combobox "验证模式" [ref=e32]:
+              - option "quick" [selected]
+              - option "full"
+              - option "l1"
+              - option "l2"
+              - option "l3"
+          - generic [ref=e33]:
+            - text: 目标并发
+            - spinbutton "目标并发" [ref=e34]: "1"
+          - generic [ref=e35]:
+            - text: 里程碑标签
+            - textbox "里程碑标签" [ref=e36]: milestone
+          - generic [ref=e37]:
+            - checkbox "失败即停" [ref=e38]
+            - text: 失败即停
+          - generic [ref=e39]:
+            - checkbox "只预演" [ref=e40]
+            - text: 只预演
+    - generic [ref=e41]:
+      - tablist "Operator view" [ref=e42]:
+        - tab "Runtime" [ref=e43] [cursor=pointer]
+        - tab "Codex" [ref=e44] [cursor=pointer]
+        - tab "Claude" [ref=e45] [cursor=pointer]
+        - tab "反馈" [active] [selected] [ref=e46] [cursor=pointer]
+      - generic [ref=e384]:
+        - heading "功能反馈闭环" [level=2] [ref=e385]
+        - button "刷新反馈摘要" [ref=e387] [cursor=pointer]
+        - generic [ref=e388]: "反馈状态: 需关注"
+        - generic [ref=e389]: "反馈状态: 已刷新 · 15:56:26"
+        - generic [ref=e390]: "生成时间: 2026/05/01 15:56"
+        - generic [ref=e391]:
+          - generic [ref=e392]:
+            - generic [ref=e393]:
+              - generic [ref=e394]: 反馈状态
+              - generic [ref=e395]: 需关注
+            - paragraph [ref=e396]: manifest=2026-04-28.3
+          - generic [ref=e398]:
+            - generic [ref=e399]: 简版摘要
+            - generic [ref=e400]: 正常 5 / 关注 1 / 失败 0
+          - generic [ref=e402]:
+            - generic [ref=e403]: Codex
+            - generic [ref=e404]: 正常
+          - generic [ref=e406]:
+            - generic [ref=e407]: Claude
+            - generic [ref=e408]: 正常
+        - generic [ref=e409]:
+          - generic [ref=e410]:
+            - generic [ref=e411]:
+              - heading "维度状态" [level=2] [ref=e412]
+              - generic [ref=e413]:
+                - generic "feedback guide docs are present" [ref=e414]: "docs: 正常"
+                - generic "manifest-backed rule distribution is present" [ref=e415]: "rules: 正常"
+                - generic "one or more host snapshots need attention" [ref=e416]: "hosts: 需关注"
+                - generic "Codex and Claude parity posture is documented" [ref=e417]: "parity: 正常"
+                - generic "Claude Code workload adapter probe is ready" [ref=e418]: "claude_workload: 正常"
+                - generic "fresh target-run evidence summarized for 5 repos" [ref=e419]: "target_runs: 正常"
+            - generic [ref=e420]:
+              - heading "优化建议" [level=2] [ref=e421]
+              - list [ref=e423]:
+                - listitem [ref=e424]: "Codex 本机状态需要关注；先核对真实 `codex` 可执行入口、登录状态和 `C:\\Users\\sciman\\.codex\\config.toml`。"
+                - listitem [ref=e425]: "对每次功能优化，先生成 host feedback summary，再对照 latest target runs 的 `adapter_tier / closure_state / write_status` 判断是宿主问题、规则问题还是 runtime 问题。"
+            - generic [ref=e426]:
+              - heading "文档与报告" [level=2] [ref=e427]
+              - generic [ref=e428]:
+                - button "查看详细报告" [ref=e430] [cursor=pointer]
+                - button "查看反馈指南" [ref=e432] [cursor=pointer]
+          - generic [ref=e434]:
+            - heading "文档预览" [level=2] [ref=e435]
+            - generic [ref=e436]: 点击“查看详细报告”或“查看反馈指南”后，会在这里展开内容。
+        - generic [ref=e437]:
+          - heading "最新目标仓证据" [level=2] [ref=e438]
+          - paragraph [ref=e439]: 看这 3 项就够了：接入方式是否正常、闭环状态是否 ready、写入状态是否真的执行过。
+          - generic [ref=e440]:
+            - generic [ref=e441]:
+              - strong [ref=e442]: classroomtoolkit
+              - generic [ref=e443]:
+                - generic [ref=e444]:
+                  - generic [ref=e445]: 接入方式
+                  - generic [ref=e446]: 桥接接入
+                - generic [ref=e447]:
+                  - generic [ref=e448]: 运行流
+                  - generic [ref=e449]: process_bridge
+                - generic [ref=e450]:
+                  - generic [ref=e451]: 闭环状态
+                  - generic [ref=e452]: 闭环未完成
+                - generic [ref=e453]:
+                  - generic [ref=e454]: 写入状态
+                  - generic [ref=e455]: 未记录写入执行
+            - generic [ref=e456]:
+              - strong [ref=e457]: github-toolkit
+              - generic [ref=e458]:
+                - generic [ref=e459]:
+                  - generic [ref=e460]: 接入方式
+                  - generic [ref=e461]: 桥接接入
+                - generic [ref=e462]:
+                  - generic [ref=e463]: 运行流
+                  - generic [ref=e464]: process_bridge
+                - generic [ref=e465]:
+                  - generic [ref=e466]: 闭环状态
+                  - generic [ref=e467]: 闭环未完成
+                - generic [ref=e468]:
+                  - generic [ref=e469]: 写入状态
+                  - generic [ref=e470]: 未记录写入执行
+            - generic [ref=e471]:
+              - strong [ref=e472]: self-runtime
+              - generic [ref=e473]:
+                - generic [ref=e474]:
+                  - generic [ref=e475]: 接入方式
+                  - generic [ref=e476]: 桥接接入
+                - generic [ref=e477]:
+                  - generic [ref=e478]: 运行流
+                  - generic [ref=e479]: process_bridge
+                - generic [ref=e480]:
+                  - generic [ref=e481]: 闭环状态
+                  - generic [ref=e482]: 闭环未完成
+                - generic [ref=e483]:
+                  - generic [ref=e484]: 写入状态
+                  - generic [ref=e485]: 未记录写入执行
+            - generic [ref=e486]:
+              - strong [ref=e487]: skills-manager
+              - generic [ref=e488]:
+                - generic [ref=e489]:
+                  - generic [ref=e490]: 接入方式
+                  - generic [ref=e491]: 桥接接入
+                - generic [ref=e492]:
+                  - generic [ref=e493]: 运行流
+                  - generic [ref=e494]: process_bridge
+                - generic [ref=e495]:
+                  - generic [ref=e496]: 闭环状态
+                  - generic [ref=e497]: 闭环未完成
+                - generic [ref=e498]:
+                  - generic [ref=e499]: 写入状态
+                  - generic [ref=e500]: 未记录写入执行
+            - generic [ref=e501]:
+              - strong [ref=e502]: vps-ssh-launcher
+              - generic [ref=e503]:
+                - generic [ref=e504]:
+                  - generic [ref=e505]: 接入方式
+                  - generic [ref=e506]: 桥接接入
+                - generic [ref=e507]:
+                  - generic [ref=e508]: 运行流
+                  - generic [ref=e509]: process_bridge
+                - generic [ref=e510]:
+                  - generic [ref=e511]: 闭环状态
+                  - generic [ref=e512]: 闭环未完成
+                - generic [ref=e513]:
+                  - generic [ref=e514]: 写入状态
+                  - generic [ref=e515]: 未记录写入执行

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import importlib.util
 import json
 import sys
 from pathlib import Path
@@ -113,7 +114,14 @@ def inspect_runtime_evolution_policy(
         as_of=today,
         online_source_check=online_source_check,
     )
-    candidates = _build_candidates(policy=policy, source_records=source_records, stale=stale, as_of=today)
+    evidence_snapshot = _build_evidence_snapshot(repo_root=resolved_root, as_of=today)
+    candidates = _build_candidates(
+        policy=policy,
+        source_records=source_records,
+        stale=stale,
+        as_of=today,
+        evidence_snapshot=evidence_snapshot,
+    )
     invalid_reasons = _collect_invalid_reasons(policy, candidates)
     missing_required_refs = _collect_missing_required_refs(resolved_root, policy)
 
@@ -135,6 +143,7 @@ def inspect_runtime_evolution_policy(
         "source_count": len(source_records),
         "candidate_count": len(candidates),
         "source_records": source_records,
+        "evidence_snapshot": evidence_snapshot,
         "candidates": candidates,
         "invalid_reasons": invalid_reasons,
         "missing_required_refs": missing_required_refs,
@@ -293,99 +302,332 @@ def _source_confidence(source_type: str, local_ref_exists: bool | None) -> str:
     return "medium"
 
 
-def _build_candidates(*, policy: dict, source_records: list[dict], stale: bool, as_of: dt.date) -> list[dict]:
+def _load_script_module(path: Path, module_name: str):
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise ValueError(f"unable to load helper module: {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _build_evidence_snapshot(*, repo_root: Path, as_of: dt.date) -> dict[str, dict]:
+    snapshots: dict[str, dict] = {}
+
+    current_source_module = _load_script_module(
+        repo_root / "scripts" / "verify-current-source-compatibility.py",
+        "verify_current_source_compatibility_evolution",
+    )
+    current_source = current_source_module.inspect_current_source_compatibility(
+        repo_root=repo_root,
+        policy_path=repo_root / "docs" / "architecture" / "current-source-compatibility-policy.json",
+        as_of=as_of,
+    )
+    snapshots["current_source"] = {
+        "status": current_source["status"],
+        "expired": bool(current_source["expired"]),
+        "missing_doc_refs": list(current_source["missing_doc_refs"]),
+        "missing_evidence_refs": list(current_source["missing_evidence_refs"]),
+        "forbidden_pattern_hits": list(current_source["forbidden_pattern_hits"]),
+        "protocols_missing_kernel_semantics": list(current_source["protocols_missing_kernel_semantics"]),
+        "review_expires_at": current_source["review_expires_at"],
+    }
+
+    host_feedback_module = _load_script_module(
+        repo_root / "scripts" / "host-feedback-summary.py",
+        "host_feedback_summary_evolution",
+    )
+    host_feedback = host_feedback_module.build_host_feedback_summary(repo_root=repo_root, max_target_runs=5)
+    target_runs_details = next(
+        (
+            item.get("details", {})
+            for item in host_feedback.get("dimensions", [])
+            if isinstance(item, dict) and item.get("dimension_id") == "target_runs"
+        ),
+        {},
+    )
+    snapshots["host_feedback"] = {
+        "status": host_feedback["status"],
+        "target_run_freshness": target_runs_details.get("freshness_status"),
+        "stale_latest_runs": list(target_runs_details.get("stale_latest_runs", [])),
+        "recommendation_count": len(host_feedback.get("recommendations", [])),
+        "codex_host_status": host_feedback.get("summary", {}).get("codex_host_status"),
+        "claude_host_status": host_feedback.get("summary", {}).get("claude_host_status"),
+        "claude_workload_status": host_feedback.get("summary", {}).get("claude_workload_status"),
+    }
+
+    effect_module = _load_script_module(
+        repo_root / "scripts" / "verify-target-repo-reuse-effect-report.py",
+        "verify_target_repo_effect_evolution",
+    )
+    effect_feedback = effect_module.inspect_effect_report()
+    snapshots["effect_feedback"] = {
+        "status": effect_feedback["status"],
+        "decision": effect_feedback.get("decision"),
+        "target": effect_feedback.get("target"),
+        "backlog_candidate_count": int(effect_feedback.get("backlog_candidate_count", 0)),
+        "error_count": len(effect_feedback.get("errors", [])),
+        "errors": list(effect_feedback.get("errors", [])),
+    }
+
+    ai_experience_module = _load_script_module(
+        repo_root / "scripts" / "extract-ai-coding-experience.py",
+        "extract_ai_coding_experience_evolution",
+    )
+    ai_experience = ai_experience_module.inspect_ai_coding_experience(repo_root=repo_root, as_of=as_of)
+    snapshots["ai_coding_experience"] = {
+        "status": ai_experience["status"],
+        "proposal_count": int(ai_experience["proposal_count"]),
+        "knowledge_candidate_count": int(ai_experience["knowledge_candidate_count"]),
+        "pattern_candidate_count": int(ai_experience["pattern_candidate_count"]),
+        "skill_manifest_candidate_count": int(ai_experience["skill_manifest_candidate_count"]),
+        "retirement_record_count": int(ai_experience["retirement_record_count"]),
+        "invalid_reasons": list(ai_experience["invalid_reasons"]),
+    }
+
+    return snapshots
+
+
+def _build_candidates(
+    *,
+    policy: dict,
+    source_records: list[dict],
+    stale: bool,
+    as_of: dt.date,
+    evidence_snapshot: dict[str, dict],
+) -> list[dict]:
     candidates: list[dict] = []
-    candidates.append(
-        {
-            "candidate_id": "EVOL-001",
-            "source_type": "internal_runtime_evidence",
-            "source_ref": "docs/architecture/runtime-evolution-policy.json",
-            "source_checked_on": as_of.isoformat(),
-            "observed_change": "Runtime evolution policy exists and defines a 30-day dry-run review loop.",
-            "repo_impact": "Enables a deterministic self-evolution review without automatic mutation.",
-            "proposed_action": "modify" if stale else "no_action",
-            "risk_level": "low",
-            "evidence_required": [
-                "runtime evolution policy",
-                "candidate dry-run artifact",
-                "Docs gate output",
-            ],
-            "acceptance_gates": policy["verification_floor"],
-            "rollback_plan": policy["rollback_ref"],
-            "patch_plan": [
-                {
-                    "path": "docs/architecture/runtime-evolution-policy.json",
-                    "operation": "refresh reviewed_on/review_expires_at only after a new review artifact exists",
-                    "apply_mode": "manual_or_future_low_risk_only",
-                }
-            ],
-            "decision": "refresh_review" if stale else "review_current",
-        }
-    )
-    candidates.append(
-        {
-            "candidate_id": "EVOL-002",
-            "source_type": "official_doc_or_changelog",
-            "source_ref": "dry-run source inventory",
-            "source_checked_on": as_of.isoformat(),
-            "observed_change": "Official documentation source collection is planned but not fetched in dry-run mode.",
-            "repo_impact": "Prevents community or stale assumptions from becoming execution rules without review.",
-            "proposed_action": "defer",
-            "risk_level": "medium",
-            "evidence_required": [
-                "source collection artifact",
-                "candidate evaluator artifact",
-                "platform_na record if online source is unavailable",
-            ],
-            "acceptance_gates": [
-                "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs"
-            ],
-            "rollback_plan": "remove the source collection candidate from the evolution dry-run output",
-            "patch_plan": [
-                {
-                    "path": "scripts/evaluate-runtime-evolution.py",
-                    "operation": "promote source collection from probe-only to parsed source snapshots after schema is defined",
-                    "apply_mode": "defer_until_scope_fenced",
-                }
-            ],
-            "decision": "implement_source_collector_before_online_fetch",
-        }
-    )
-    candidates.append(
-        {
-            "candidate_id": "EVOL-003",
-            "source_type": "internal_ai_coding_experience",
-            "source_ref": "docs/specs/controlled-improvement-proposal-spec.md",
-            "source_checked_on": as_of.isoformat(),
-            "observed_change": "AI coding experience, repeated repair patterns, and skillization candidates are now first-class evolution sources.",
-            "repo_impact": "Allows lessons from real agent work to become governed skill, knowledge, hook, policy, or control proposals without treating memory as an authority.",
-            "proposed_action": "no_action",
-            "risk_level": "low",
-            "evidence_required": [
-                "learning-efficiency metrics or interaction evidence",
-                "controlled improvement proposal",
-                "skill or knowledge-source manifest when reusable behavior is promoted",
-            ],
-            "acceptance_gates": [
-                "python -m unittest tests.runtime.test_runtime_evolution tests.runtime.test_learning_efficiency_metrics",
-                "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs",
-            ],
-            "rollback_plan": "remove internal AI coding experience source records and keep official/community/runtime evidence sources unchanged",
-            "patch_plan": [
-                {
-                    "path": "scripts/extract-ai-coding-experience.py",
-                    "operation": "use existing proposal buckets to classify repeated lessons as skill, knowledge, hook, policy, control, or repo follow-up",
-                    "apply_mode": "proposal_only_until_reviewed",
-                },
-                {
-                    "path": "docs/specs/skill-manifest-spec.md",
-                    "operation": "promote repeated AI coding workflows only when a reviewable skill manifest and tests exist",
-                    "apply_mode": "manual_or_future_low_risk_only",
-                },
-            ],
-            "decision": "accepted_as_source_category",
-        }
-    )
+    current_source = evidence_snapshot["current_source"]
+    if stale or current_source["expired"]:
+        candidates.append(
+            {
+                "candidate_id": "EVOL-REVIEW-FRESHNESS",
+                "source_type": "internal_runtime_evidence",
+                "source_ref": "docs/architecture/runtime-evolution-policy.json",
+                "source_checked_on": as_of.isoformat(),
+                "observed_change": "Runtime evolution review or current-source compatibility review has crossed its freshness boundary.",
+                "repo_impact": "Keeps self-evolution claims tied to fresh policy review instead of stale timing assumptions.",
+                "proposed_action": "modify",
+                "risk_level": "low",
+                "evidence_required": [
+                    "runtime evolution policy",
+                    "current-source compatibility policy",
+                    "candidate dry-run artifact",
+                ],
+                "acceptance_gates": policy["verification_floor"],
+                "rollback_plan": policy["rollback_ref"],
+                "patch_plan": [
+                    {
+                        "path": "docs/architecture/runtime-evolution-policy.json",
+                        "operation": "refresh reviewed_on/review_expires_at only after a new review artifact exists",
+                        "apply_mode": "manual_or_future_low_risk_only",
+                    },
+                    {
+                        "path": "docs/architecture/current-source-compatibility-policy.json",
+                        "operation": "refresh current-source review when official host or protocol assumptions age out",
+                        "apply_mode": "manual_or_future_low_risk_only",
+                    },
+                ],
+                "decision": "refresh_review",
+            }
+        )
+
+    if (
+        current_source["missing_doc_refs"]
+        or current_source["missing_evidence_refs"]
+        or current_source["forbidden_pattern_hits"]
+        or current_source["protocols_missing_kernel_semantics"]
+    ):
+        candidates.append(
+            {
+                "candidate_id": "EVOL-SOURCE-COMPATIBILITY",
+                "source_type": "official_doc_or_changelog",
+                "source_ref": "docs/architecture/current-source-compatibility-policy.json",
+                "source_checked_on": as_of.isoformat(),
+                "observed_change": "Current-source compatibility signals missing references or forbidden claim drift in active docs.",
+                "repo_impact": "Prevents stale host or protocol assumptions from silently widening runtime claims.",
+                "proposed_action": "modify",
+                "risk_level": "medium",
+                "evidence_required": [
+                    "current-source compatibility verifier output",
+                    "required doc/evidence references",
+                    "claim-drift remediation evidence",
+                ],
+                "acceptance_gates": [
+                    "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs"
+                ],
+                "rollback_plan": "revert current-source compatibility policy or docs updates that introduced the drift",
+                "patch_plan": [
+                    {
+                        "path": "docs/architecture/current-source-compatibility-policy.json",
+                        "operation": "restore required boundary refs and review metadata",
+                        "apply_mode": "manual_repair_first",
+                    }
+                ],
+                "decision": "repair_source_compatibility",
+            }
+        )
+
+    host_feedback = evidence_snapshot["host_feedback"]
+    if host_feedback["status"] != "pass" or host_feedback["target_run_freshness"] == "stale":
+        candidates.append(
+            {
+                "candidate_id": "EVOL-HOST-FEEDBACK",
+                "source_type": "internal_runtime_evidence",
+                "source_ref": ".runtime/artifacts/host-feedback-summary/latest.md",
+                "source_checked_on": as_of.isoformat(),
+                "observed_change": "Host feedback or target-run freshness shows attention-level posture.",
+                "repo_impact": "Keeps self-evolution prompts aligned with real host degradation and stale target workload evidence.",
+                "proposed_action": "modify",
+                "risk_level": "low",
+                "evidence_required": [
+                    "host feedback summary",
+                    "latest target repo runs",
+                    "operator-facing recommendation surface",
+                ],
+                "acceptance_gates": [
+                    "python scripts/host-feedback-summary.py --assert-minimum",
+                    "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs",
+                ],
+                "rollback_plan": "remove host-feedback-driven candidate wiring if it misclassifies freshness or host posture",
+                "patch_plan": [
+                    {
+                        "path": "scripts/host-feedback-summary.py",
+                        "operation": "refresh host and target-run evidence before promoting new implementation work",
+                        "apply_mode": "manual_or_future_low_risk_only",
+                    }
+                ],
+                "decision": "refresh_host_feedback",
+            }
+        )
+
+    effect_feedback = evidence_snapshot["effect_feedback"]
+    if effect_feedback["status"] != "pass" or effect_feedback["backlog_candidate_count"] > 0:
+        proposed_action = "delete" if effect_feedback.get("decision") == "retire" else "modify"
+        decision = "retire_low_value_capability" if proposed_action == "delete" else "improve_target_effect_loop"
+        candidates.append(
+            {
+                "candidate_id": "EVOL-EFFECT-FEEDBACK",
+                "source_type": "internal_runtime_evidence",
+                "source_ref": "docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json",
+                "source_checked_on": as_of.isoformat(),
+                "observed_change": "Target repo effect feedback still carries unresolved backlog candidates or verifier errors.",
+                "repo_impact": "Turns real target repo effect gaps into explicit evolution work instead of leaving them in report-only form.",
+                "proposed_action": proposed_action,
+                "risk_level": "medium",
+                "evidence_required": [
+                    "target repo reuse effect report",
+                    "backlog candidates with reason and disposition",
+                    "fresh daily target-run evidence",
+                ],
+                "acceptance_gates": policy["verification_floor"],
+                "rollback_plan": "revert any follow-up change that was justified only by stale or misread target effect feedback",
+                "patch_plan": [
+                    {
+                        "path": "docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json",
+                        "operation": "refresh effect report and translate remaining candidates into bounded follow-up work",
+                        "apply_mode": "manual_or_future_low_risk_only",
+                    }
+                ],
+                "decision": decision,
+            }
+        )
+
+    ai_experience = evidence_snapshot["ai_coding_experience"]
+    if ai_experience["proposal_count"] > 0 or ai_experience["retirement_record_count"] > 0:
+        proposed_action = "delete" if ai_experience["retirement_record_count"] > 0 and ai_experience["proposal_count"] == 0 else "add"
+        candidates.append(
+            {
+                "candidate_id": "EVOL-AI-EXPERIENCE",
+                "source_type": "internal_ai_coding_experience",
+                "source_ref": ".runtime/artifacts/ai-coding-experience/20260501-ai-coding-experience-review.json",
+                "source_checked_on": as_of.isoformat(),
+                "observed_change": "AI coding evidence now contains reusable proposals, knowledge candidates, or retirement signals.",
+                "repo_impact": "Lets repeated AI coding patterns become governed proposals or cleanup candidates instead of hidden session-only know-how.",
+                "proposed_action": proposed_action,
+                "risk_level": "low",
+                "evidence_required": [
+                    "learning-efficiency metrics or interaction evidence",
+                    "controlled improvement proposals",
+                    "knowledge or skill candidate manifest",
+                ],
+                "acceptance_gates": [
+                    "python -m unittest tests.runtime.test_runtime_evolution tests.runtime.test_learning_efficiency_metrics",
+                    "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs",
+                ],
+                "rollback_plan": "remove generated AI-coding-experience candidates if their reuse value or verification posture regresses",
+                "patch_plan": [
+                    {
+                        "path": "scripts/extract-ai-coding-experience.py",
+                        "operation": "promote repeated signals into reviewable proposals and keep retirement candidate cleanup explicit",
+                        "apply_mode": "proposal_only_until_reviewed" if proposed_action == "add" else "manual_or_future_low_risk_only",
+                    }
+                ],
+                "decision": "promote_ai_experience_candidate" if proposed_action == "add" else "retire_low_value_candidate",
+            }
+        )
+
+    if not any(record.get("retrieval_mode") == "online_probe" for record in source_records if isinstance(record, dict)):
+        candidates.append(
+            {
+                "candidate_id": "EVOL-SOURCE-COLLECTOR",
+                "source_type": "official_doc_or_changelog",
+                "source_ref": "dry-run source inventory",
+                "source_checked_on": as_of.isoformat(),
+                "observed_change": "Official documentation source collection remains catalog-only unless the optional online probe is enabled.",
+                "repo_impact": "Prevents community or stale assumptions from becoming execution rules without reviewable source evidence.",
+                "proposed_action": "defer",
+                "risk_level": "medium",
+                "evidence_required": [
+                    "source collection artifact",
+                    "candidate evaluator artifact",
+                    "platform_na record if online source is unavailable",
+                ],
+                "acceptance_gates": [
+                    "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs"
+                ],
+                "rollback_plan": "remove the source collection candidate from the evolution dry-run output",
+                "patch_plan": [
+                    {
+                        "path": "scripts/evaluate-runtime-evolution.py",
+                        "operation": "promote source collection from probe-only to parsed source snapshots after schema is defined",
+                        "apply_mode": "defer_until_scope_fenced",
+                    }
+                ],
+                "decision": "implement_source_collector_before_online_fetch",
+            }
+        )
+
+    if not candidates:
+        candidates.append(
+            {
+                "candidate_id": "EVOL-KEEP-CURRENT",
+                "source_type": "internal_runtime_evidence",
+                "source_ref": "docs/architecture/runtime-evolution-policy.json",
+                "source_checked_on": as_of.isoformat(),
+                "observed_change": "All current evolution triggers are fresh and no higher-priority evidence requires change.",
+                "repo_impact": "Keeps the evolution lane honest when there is nothing worth changing right now.",
+                "proposed_action": "no_action",
+                "risk_level": "low",
+                "evidence_required": [
+                    "fresh evolution review",
+                    "fresh host feedback summary",
+                    "passing target effect report",
+                ],
+                "acceptance_gates": policy["verification_floor"],
+                "rollback_plan": policy["rollback_ref"],
+                "patch_plan": [
+                    {
+                        "path": "docs/architecture/runtime-evolution-policy.json",
+                        "operation": "keep current review window and wait for a stronger evidence trigger",
+                        "apply_mode": "no_change_required",
+                    }
+                ],
+                "decision": "review_current",
+            }
+        )
+
     if not source_records:
         candidates.append(
             {

@@ -43,6 +43,10 @@ class AutonomousNextWorkSelectionTests(unittest.TestCase):
         self.assertEqual(payload["ltp_decision"], "defer_all")
         self.assertEqual(payload["next_action"], "defer_ltp_and_refresh_evidence")
         self.assertIsNone(payload["selected_package"])
+        self.assertEqual(payload["gate_state"], "pass")
+        self.assertEqual(payload["source_state"], "fresh")
+        self.assertEqual(payload["evidence_state"], "fresh")
+        self.assertIn("auto_detected_inputs", payload)
 
     def test_selector_promotes_one_auto_selected_ltp_package(self) -> None:
         module = _load_selector_script()
@@ -57,6 +61,9 @@ class AutonomousNextWorkSelectionTests(unittest.TestCase):
                 policy_path=next_policy,
                 ltp_policy_path=ltp_policy,
                 as_of=dt.date(2026, 4, 27),
+                gate_state="pass",
+                source_state="fresh",
+                evidence_state="fresh",
             )
 
             self.assertEqual(result["next_action"], "promote_ltp")
@@ -76,6 +83,8 @@ class AutonomousNextWorkSelectionTests(unittest.TestCase):
                 ltp_policy_path=ltp_policy,
                 as_of=dt.date(2026, 4, 27),
                 gate_state="fail",
+                source_state="fresh",
+                evidence_state="fresh",
             )
 
             self.assertEqual(result["next_action"], "repair_gate_first")
@@ -94,6 +103,8 @@ class AutonomousNextWorkSelectionTests(unittest.TestCase):
                 policy_path=next_policy,
                 ltp_policy_path=ltp_policy,
                 as_of=dt.date(2026, 4, 27),
+                gate_state="pass",
+                source_state="fresh",
                 evidence_state="stale",
             )
 
@@ -113,10 +124,33 @@ class AutonomousNextWorkSelectionTests(unittest.TestCase):
                 policy_path=next_policy,
                 ltp_policy_path=ltp_policy,
                 as_of=dt.date(2026, 4, 27),
+                gate_state="pass",
+                source_state="fresh",
+                evidence_state="fresh",
             )
 
             self.assertEqual(result["next_action"], "owner_directed_scope_required")
             self.assertIsNone(result["selected_package"])
+
+    def test_selector_auto_detection_fails_closed_when_repo_lacks_evidence(self) -> None:
+        module = _load_selector_script()
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            next_policy = self._write_next_policy(repo_root)
+            ltp_policy = self._write_ltp_policy(repo_root, decision="defer_all")
+
+            result = module.assert_next_work_selection(
+                repo_root=repo_root,
+                policy_path=next_policy,
+                ltp_policy_path=ltp_policy,
+                as_of=dt.date(2026, 4, 27),
+            )
+
+            self.assertEqual(result["gate_state"], "fail")
+            self.assertEqual(result["source_state"], "stale")
+            self.assertEqual(result["evidence_state"], "stale")
+            self.assertEqual(result["next_action"], "repair_gate_first")
 
     def test_verify_repo_docs_runs_next_work_selector(self) -> None:
         completed = subprocess.run(

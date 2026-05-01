@@ -33,7 +33,7 @@ class OperatorUiTests(unittest.TestCase):
             )
         )
 
-        self.assertIn("Governed Runtime 操作者面板", html)
+        self.assertIn("Governed Runtime 控制台", html)
         self.assertIn("暂无运行记录", html)
         self.assertIn("维护与升级", html)
         self.assertIn("Runtime 摘要", html)
@@ -101,7 +101,7 @@ class OperatorUiTests(unittest.TestCase):
             output = operator_ui.write_runtime_snapshot_html(snapshot, Path(tmp_dir) / "operator.html")
 
             self.assertTrue(output.exists())
-            self.assertIn("Governed Runtime 操作者面板", output.read_text(encoding="utf-8"))
+            self.assertIn("Governed Runtime 控制台", output.read_text(encoding="utf-8"))
 
     def test_operator_ui_renders_english_html_when_requested(self) -> None:
         runtime_status = importlib.import_module("governed_ai_coding_runtime_contracts.runtime_status")
@@ -126,7 +126,7 @@ class OperatorUiTests(unittest.TestCase):
         )
 
         self.assertIn('lang="en"', html)
-        self.assertIn("Governed Runtime Operator Surface", html)
+        self.assertIn("Governed Runtime Console", html)
         self.assertIn("No runtime activity has been recorded", html)
         self.assertIn("Maintenance and Upgrade", html)
         self.assertIn("Claude Provider and Config", html)

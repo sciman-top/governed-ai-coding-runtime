@@ -1,0 +1,218 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - heading "Governed Runtime 控制台" [level=1] [ref=e4]
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - text: "Runtime 根目录:"
+        - code [ref=e7]: D:/CODE/governed-ai-coding-runtime/.runtime
+      - generic [ref=e8]:
+        - text: "持久化:"
+        - code [ref=e9]: filesystem
+  - generic [ref=e10]:
+    - complementary [ref=e11]:
+      - generic [ref=e12]:
+        - heading "执行入口" [level=2] [ref=e13]
+        - generic [ref=e14]:
+          - button "刷新状态" [ref=e15] [cursor=pointer]
+          - button "查看目标仓" [ref=e16] [cursor=pointer]
+          - button "检查本仓状态" [ref=e17] [cursor=pointer]
+          - button "规则漂移检查" [ref=e18] [cursor=pointer]
+          - button "同步规则文件" [ref=e19] [cursor=pointer]
+          - button "下发治理基线" [ref=e20] [cursor=pointer]
+          - button "运行 Daily 巡检" [ref=e21] [cursor=pointer]
+          - button "应用全部治理能力" [ref=e22] [cursor=pointer]
+          - button "功能反馈汇总" [ref=e23] [cursor=pointer]
+      - generic [ref=e24]:
+        - heading "运行设置" [level=2] [ref=e25]
+        - generic [ref=e26]:
+          - generic [ref=e27]:
+            - text: 语言
+            - combobox "语言" [ref=e28]:
+              - option "中文" [selected]
+              - option "English"
+          - generic [ref=e29]:
+            - text: 目标仓
+            - combobox "目标仓" [ref=e30]:
+              - option "全部目标仓" [selected]
+              - option "classroomtoolkit"
+              - option "github-toolkit"
+              - option "self-runtime"
+              - option "skills-manager"
+              - option "vps-ssh-launcher"
+          - generic [ref=e31]:
+            - text: 验证模式
+            - combobox "验证模式" [ref=e32]:
+              - option "quick" [selected]
+              - option "full"
+              - option "l1"
+              - option "l2"
+              - option "l3"
+          - generic [ref=e33]:
+            - text: 目标并发
+            - spinbutton "目标并发" [ref=e34]: "1"
+          - generic [ref=e35]:
+            - text: 里程碑标签
+            - textbox "里程碑标签" [ref=e36]: milestone
+          - generic [ref=e37]:
+            - checkbox "失败即停" [ref=e38]
+            - text: 失败即停
+          - generic [ref=e39]:
+            - checkbox "只预演" [ref=e40]
+            - text: 只预演
+    - generic [ref=e41]:
+      - tablist "Operator view" [ref=e42]:
+        - tab "Runtime" [ref=e43] [cursor=pointer]
+        - tab "Codex" [active] [selected] [ref=e44] [cursor=pointer]
+        - tab "Claude" [ref=e45] [cursor=pointer]
+        - tab "反馈" [ref=e46] [cursor=pointer]
+      - generic [ref=e153]:
+        - heading "Codex 账号与配置" [level=2] [ref=e154]
+        - generic [ref=e155]:
+          - button "刷新 Codex 状态" [ref=e156] [cursor=pointer]
+          - button "强制在线刷新" [ref=e157] [cursor=pointer]
+          - button "打开官方 Usage" [ref=e158] [cursor=pointer]
+        - generic [ref=e161]:
+          - generic "file=auth1.json · hash=1c3cf6c342ea · 2026-04-29T12:38:06.998751600Z" [ref=e162]:
+            - generic [ref=e163]:
+              - strong [ref=e164]: sciman.top@gmail.com
+              - generic [ref=e165]:
+                - generic [ref=e166]:
+                  - generic [ref=e167]: 配置
+                  - generic [ref=e168]: auth1
+                - generic [ref=e169]:
+                  - generic [ref=e170]: 登录
+                  - generic [ref=e171]: ChatGPT 登录
+                - generic [ref=e172]:
+                  - generic [ref=e173]: 套餐到期日
+                  - generic [ref=e174]: 05/29 11:19，核验 04/29 20:38
+                - generic [ref=e175]:
+                  - generic [ref=e176]: 登录令牌到期
+                  - generic [ref=e177]: ID token 04/29 21:38 Access token 05/09 20:38
+                - generic [ref=e178]:
+                  - generic [ref=e179]: 套餐
+                  - generic [ref=e180]: Pro
+                - generic [ref=e181]:
+                  - generic [ref=e182]: 额度
+                  - generic [ref=e183]: 5 小时 86% 17:57 1 周 89% 5月5日
+                - generic [ref=e184]:
+                  - generic [ref=e185]: 配置健康
+                  - generic [ref=e186]: 建议调整：默认模型
+                - generic [ref=e187]:
+                  - generic [ref=e188]: 额度来源
+                  - generic [ref=e189]: Pro 账号 · 本机日志快照
+            - button "当前" [disabled] [ref=e191]
+          - generic "file=auth2.json · hash=1de78701235e · 2026-04-29T13:01:17.411568Z" [ref=e192]:
+            - generic [ref=e193]:
+              - strong [ref=e194]: ai.sciman.top@gmail.com
+              - generic [ref=e195]:
+                - generic [ref=e196]:
+                  - generic [ref=e197]: 配置
+                  - generic [ref=e198]: auth2
+                - generic [ref=e199]:
+                  - generic [ref=e200]: 登录
+                  - generic [ref=e201]: ChatGPT 登录
+                - generic [ref=e202]:
+                  - generic [ref=e203]: 套餐到期日
+                  - generic [ref=e204]: 05/10 10:33，核验 04/29 21:00
+                - generic [ref=e205]:
+                  - generic [ref=e206]: 登录令牌到期
+                  - generic [ref=e207]: ID token 04/29 22:01 Access token 05/09 21:01
+                - generic [ref=e208]:
+                  - generic [ref=e209]: 套餐
+                  - generic [ref=e210]: Plus
+                - generic [ref=e211]:
+                  - generic [ref=e212]: 额度
+                  - generic [ref=e213]: 切换后可获取额度
+            - button "切换" [ref=e215] [cursor=pointer]
+          - generic "file=auth3.json · hash=29b2444c9156 · 2026-04-29T13:22:11.017018600Z" [ref=e216]:
+            - generic [ref=e217]:
+              - strong [ref=e218]: sciman.phys@gmail.com
+              - generic [ref=e219]:
+                - generic [ref=e220]:
+                  - generic [ref=e221]: 配置
+                  - generic [ref=e222]: auth3
+                - generic [ref=e223]:
+                  - generic [ref=e224]: 登录
+                  - generic [ref=e225]: ChatGPT 登录
+                - generic [ref=e226]:
+                  - generic [ref=e227]: 套餐到期日
+                  - generic [ref=e228]: 05/19 12:10，核验 04/29 21:22
+                - generic [ref=e229]:
+                  - generic [ref=e230]: 登录令牌到期
+                  - generic [ref=e231]: ID token 04/29 22:22 Access token 05/09 21:22
+                - generic [ref=e232]:
+                  - generic [ref=e233]: 套餐
+                  - generic [ref=e234]: Plus
+                - generic [ref=e235]:
+                  - generic [ref=e236]: 额度
+                  - generic [ref=e237]: 切换后可获取额度
+            - button "切换" [ref=e239] [cursor=pointer]
+          - generic "file=auth3-2.json · hash=7abfe1176fa4 · 2026-04-29T13:42:16.484513600Z" [ref=e240]:
+            - generic [ref=e241]:
+              - strong [ref=e242]: sciman.phys@gmail.com
+              - generic [ref=e243]:
+                - generic [ref=e244]:
+                  - generic [ref=e245]: 配置
+                  - generic [ref=e246]: auth3-2
+                - generic [ref=e247]:
+                  - generic [ref=e248]: 登录
+                  - generic [ref=e249]: ChatGPT 登录
+                - generic [ref=e250]:
+                  - generic [ref=e251]: 套餐到期日
+                  - generic [ref=e252]: 05/03 10:58，核验 04/29 21:42
+                - generic [ref=e253]:
+                  - generic [ref=e254]: 登录令牌到期
+                  - generic [ref=e255]: ID token 04/29 22:42 Access token 05/09 21:42
+                - generic [ref=e256]:
+                  - generic [ref=e257]: 套餐
+                  - generic [ref=e258]: 团队版
+                - generic [ref=e259]:
+                  - generic [ref=e260]: 额度
+                  - generic [ref=e261]: 5 小时 0% 14:43 1 周 53% 5月6日
+            - button "切换" [ref=e263] [cursor=pointer]
+          - generic "file=auth4.json · hash=a4557019d99b · 2026-04-29T13:09:38.856711200Z" [ref=e264]:
+            - generic [ref=e265]:
+              - strong [ref=e266]: agi.sciman@gmail.com
+              - generic [ref=e267]:
+                - generic [ref=e268]:
+                  - generic [ref=e269]: 配置
+                  - generic [ref=e270]: auth4
+                - generic [ref=e271]:
+                  - generic [ref=e272]: 登录
+                  - generic [ref=e273]: ChatGPT 登录
+                - generic [ref=e274]:
+                  - generic [ref=e275]: 套餐到期日
+                  - generic [ref=e276]: 05/13 15:36，核验 04/29 21:09
+                - generic [ref=e277]:
+                  - generic [ref=e278]: 登录令牌到期
+                  - generic [ref=e279]: ID token 04/29 22:09 Access token 05/09 21:09
+                - generic [ref=e280]:
+                  - generic [ref=e281]: 套餐
+                  - generic [ref=e282]: Plus
+                - generic [ref=e283]:
+                  - generic [ref=e284]: 额度
+                  - generic [ref=e285]: 切换后可获取额度
+            - button "切换" [ref=e287] [cursor=pointer]
+          - generic "file=auth5.json · hash=1302877bd2b9 · 2026-04-30T12:59:30.076598500Z" [ref=e288]:
+            - generic [ref=e289]:
+              - strong [ref=e290]: agi.phys@gmail.com
+              - generic [ref=e291]:
+                - generic [ref=e292]:
+                  - generic [ref=e293]: 配置
+                  - generic [ref=e294]: auth5
+                - generic [ref=e295]:
+                  - generic [ref=e296]: 登录
+                  - generic [ref=e297]: ChatGPT 登录
+                - generic [ref=e298]:
+                  - generic [ref=e299]: 套餐到期日
+                  - generic [ref=e300]: 05/06 05:30，核验 04/30 20:59
+                - generic [ref=e301]:
+                  - generic [ref=e302]: 登录令牌到期
+                  - generic [ref=e303]: ID token 04/30 21:59 Access token 05/10 20:59
+                - generic [ref=e304]:
+                  - generic [ref=e305]: 套餐
+                  - generic [ref=e306]: Plus
+                - generic [ref=e307]:
+                  - generic [ref=e308]: 额度
+                  - generic [ref=e309]: 5 小时 28% 16:12 1 周 47% 5月6日
+            - button "切换" [ref=e311] [cursor=pointer]

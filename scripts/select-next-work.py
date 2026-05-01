@@ -108,9 +108,10 @@ def inspect_next_work_selection(
         raise ValueError("reviewed_on must be on or before review_expires_at")
 
     defaults = policy["default_inputs"]
-    selected_gate_state = gate_state or defaults["gate_state"]
-    selected_source_state = source_state or defaults["source_state"]
-    selected_evidence_state = evidence_state or defaults["evidence_state"]
+    auto_inputs = _auto_detect_runtime_inputs(repo_root=resolved_root, as_of=today)
+    selected_gate_state = gate_state or auto_inputs["gate_state"] or defaults["gate_state"]
+    selected_source_state = source_state or auto_inputs["source_state"] or defaults["source_state"]
+    selected_evidence_state = evidence_state or auto_inputs["evidence_state"] or defaults["evidence_state"]
     _validate_runtime_state("gate_state", selected_gate_state, VALID_STATE)
     _validate_runtime_state("source_state", selected_source_state, VALID_FRESHNESS)
     _validate_runtime_state("evidence_state", selected_evidence_state, VALID_FRESHNESS)
@@ -144,6 +145,7 @@ def inspect_next_work_selection(
         "gate_state": selected_gate_state,
         "source_state": selected_source_state,
         "evidence_state": selected_evidence_state,
+        "auto_detected_inputs": auto_inputs,
         "ltp_decision": ltp["decision"],
         "ltp_should_promote": bool(ltp["should_promote"]),
         "selected_package": selected_package,
@@ -165,7 +167,7 @@ def _select_action(
 ) -> tuple[str, str, str | None]:
     if gate_state == "fail":
         return "repair_gate_first", _why(policy, "repair_gate_first"), None
-    if source_state == "stale" or evidence_state == "stale":
+    if source_state in {"stale", "unknown"} or evidence_state in {"stale", "unknown"}:
         return "refresh_evidence_first", _why(policy, "refresh_evidence_first"), None
     if ltp["decision"] == "auto_select":
         return "promote_ltp", _why(policy, "promote_ltp"), ltp["selected_package"]
@@ -291,6 +293,154 @@ def _load_ltp_module():
     sys.modules["evaluate_ltp_promotion_script"] = module
     spec.loader.exec_module(module)
     return module
+
+
+def _load_helper_module(path: Path, module_name: str):
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise ValueError(f"unable to load helper module: {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _auto_detect_runtime_inputs(*, repo_root: Path, as_of: dt.date) -> dict:
+    result = {
+        "gate_state": "unknown",
+        "source_state": "unknown",
+        "evidence_state": "unknown",
+        "details": {},
+    }
+
+    try:
+        functional_module = _load_helper_module(
+            ROOT / "scripts" / "verify-functional-effectiveness.py",
+            "verify_functional_effectiveness_selector",
+        )
+        functional = functional_module.inspect_functional_effectiveness(repo_root=repo_root, as_of=as_of)
+        gate_fail = (
+            functional["status"] != "pass"
+            or functional["expired"]
+            or functional["future_dated"]
+            or bool(functional["missing_sections"])
+            or any(check["missing_tokens"] for check in functional["proof_checks"])
+        )
+        result["gate_state"] = "fail" if gate_fail else "pass"
+        result["details"]["functional_effectiveness"] = {
+            "status": functional["status"],
+            "expired": functional["expired"],
+            "evidence_date": functional["evidence_date"],
+            "evidence_age_days": functional["evidence_age_days"],
+        }
+    except Exception as exc:
+        result["gate_state"] = "fail"
+        result["details"]["functional_effectiveness"] = {"status": "error", "error": str(exc)}
+
+    try:
+        current_source_module = _load_helper_module(
+            ROOT / "scripts" / "verify-current-source-compatibility.py",
+            "verify_current_source_compatibility_selector",
+        )
+        current_source = current_source_module.inspect_current_source_compatibility(
+            repo_root=repo_root,
+            policy_path=repo_root / "docs" / "architecture" / "current-source-compatibility-policy.json",
+            as_of=as_of,
+        )
+        evolution_module = _load_helper_module(
+            ROOT / "scripts" / "evaluate-runtime-evolution.py",
+            "evaluate_runtime_evolution_selector",
+        )
+        evolution = evolution_module.inspect_runtime_evolution_policy(
+            repo_root=repo_root,
+            policy_path=repo_root / "docs" / "architecture" / "runtime-evolution-policy.json",
+            as_of=as_of,
+            write_artifacts=False,
+            online_source_check=False,
+        )
+        source_stale = (
+            current_source["status"] != "pass"
+            or current_source["expired"]
+            or bool(current_source["missing_doc_refs"])
+            or bool(current_source["missing_evidence_refs"])
+            or bool(current_source["forbidden_pattern_hits"])
+            or bool(current_source["protocols_missing_kernel_semantics"])
+            or evolution["status"] != "pass"
+            or evolution["expired"]
+            or evolution["stale"]
+            or bool(evolution["missing_required_refs"])
+            or bool(evolution["invalid_reasons"])
+        )
+        result["source_state"] = "stale" if source_stale else "fresh"
+        result["details"]["current_source"] = {
+            "status": current_source["status"],
+            "expired": current_source["expired"],
+            "review_expires_at": current_source["review_expires_at"],
+        }
+        result["details"]["runtime_evolution_review"] = {
+            "status": evolution["status"],
+            "expired": evolution["expired"],
+            "stale": evolution["stale"],
+            "review_expires_at": evolution["review_expires_at"],
+        }
+    except Exception as exc:
+        result["source_state"] = "stale"
+        result["details"]["source_detection"] = {"status": "error", "error": str(exc)}
+
+    try:
+        host_feedback_module = _load_helper_module(
+            ROOT / "scripts" / "host-feedback-summary.py",
+            "host_feedback_summary_selector",
+        )
+        host_feedback = host_feedback_module.build_host_feedback_summary(repo_root=repo_root, max_target_runs=5)
+        target_runs = next(
+            (
+                item.get("details", {})
+                for item in host_feedback.get("dimensions", [])
+                if isinstance(item, dict) and item.get("dimension_id") == "target_runs"
+            ),
+            {},
+        )
+        effect_module = _load_helper_module(
+            ROOT / "scripts" / "verify-target-repo-reuse-effect-report.py",
+            "verify_target_repo_effect_selector",
+        )
+        effect = effect_module.inspect_effect_report(
+            report_path=repo_root / "docs" / "change-evidence" / "target-repo-runs" / "effect-report-classroomtoolkit.json",
+            runs_root=repo_root / "docs" / "change-evidence" / "target-repo-runs",
+        )
+        ai_experience_module = _load_helper_module(
+            ROOT / "scripts" / "extract-ai-coding-experience.py",
+            "extract_ai_coding_experience_selector",
+        )
+        ai_experience = ai_experience_module.inspect_ai_coding_experience(repo_root=repo_root, as_of=as_of)
+        evidence_stale = (
+            host_feedback["status"] == "fail"
+            or target_runs.get("freshness_status") != "fresh"
+            or effect["status"] != "pass"
+            or ai_experience["status"] != "pass"
+            or bool(ai_experience["invalid_reasons"])
+        )
+        result["evidence_state"] = "stale" if evidence_stale else "fresh"
+        result["details"]["host_feedback"] = {
+            "status": host_feedback["status"],
+            "target_run_freshness": target_runs.get("freshness_status"),
+        }
+        result["details"]["effect_feedback"] = {
+            "status": effect["status"],
+            "decision": effect.get("decision"),
+            "backlog_candidate_count": effect.get("backlog_candidate_count"),
+        }
+        result["details"]["ai_coding_experience"] = {
+            "status": ai_experience["status"],
+            "proposal_count": ai_experience["proposal_count"],
+            "retirement_record_count": ai_experience["retirement_record_count"],
+        }
+    except Exception as exc:
+        result["evidence_state"] = "stale"
+        result["details"]["evidence_detection"] = {"status": "error", "error": str(exc)}
+
+    return result
 
 
 def _validate_runtime_state(field_name: str, value: object, allowed: set[str]) -> None:

@@ -61,11 +61,20 @@ def build_policy_tool_credential_audit(
         raise ValueError("audit config target_repo_override_entries must be a non-empty list")
 
     known_tools = {str(entry["tool_name"]).strip().lower() for entry in entries}
+    tool_decisions = {
+        str(entry["tool_name"]).strip().lower(): str(entry.get("decision", "")).strip().lower()
+        for entry in entries
+    }
     allowlist = repo_profile.get("tool_allowlist", [])
     if not isinstance(allowlist, list):
         raise ValueError("repo profile tool_allowlist must be a list")
     normalized_allowlist = sorted({str(item).strip().lower() for item in allowlist if str(item).strip()})
     unknown_tools = [tool for tool in normalized_allowlist if tool not in known_tools]
+    denied_allowlisted_tools = [
+        tool
+        for tool in normalized_allowlist
+        if tool in known_tools and tool_decisions.get(tool) != "allow"
+    ]
 
     registry_declared_tools = sorted(
         {
@@ -100,6 +109,7 @@ def build_policy_tool_credential_audit(
         missing_registry_refs.extend(f"{tool_name}:{ref}" for ref in entry_missing_registry)
 
         overbroad = _is_overbroad_scope(credential_scope)
+        denied_but_allowlisted = tool_name in denied_allowlisted_tools
         if overbroad:
             overbroad_credential_refs.append(tool_name)
 
@@ -121,7 +131,7 @@ def build_policy_tool_credential_audit(
                 "remediation": entry.get("remediation"),
                 "repo_profile_allowlisted": tool_name in normalized_allowlist,
                 "status": "fail"
-                if entry_missing_policy or entry_missing_evidence or entry_missing_registry or overbroad
+                if entry_missing_policy or entry_missing_evidence or entry_missing_registry or overbroad or denied_but_allowlisted
                 else "pass",
             }
         )
@@ -147,7 +157,15 @@ def build_policy_tool_credential_audit(
         )
 
     status = "pass"
-    if unknown_tools or missing_policy_basis_refs or missing_evidence_refs or missing_registry_refs or overbroad_credential_refs or unsupported_override_refs:
+    if (
+        unknown_tools
+        or denied_allowlisted_tools
+        or missing_policy_basis_refs
+        or missing_evidence_refs
+        or missing_registry_refs
+        or overbroad_credential_refs
+        or unsupported_override_refs
+    ):
         status = "fail"
 
     report = {
@@ -163,6 +181,7 @@ def build_policy_tool_credential_audit(
         "audited_tools": audited_tools,
         "override_audit": override_audit,
         "unknown_tools": unknown_tools,
+        "denied_allowlisted_tools": denied_allowlisted_tools,
         "missing_policy_basis_refs": sorted(set(missing_policy_basis_refs)),
         "missing_evidence_refs": sorted(set(missing_evidence_refs)),
         "missing_registry_refs": sorted(set(missing_registry_refs)),
@@ -175,6 +194,7 @@ def build_policy_tool_credential_audit(
             "audited_tool_count": len(audited_tools),
             "override_surface_count": len(override_audit),
             "unknown_tool_count": len(unknown_tools),
+            "denied_allowlisted_tool_count": len(denied_allowlisted_tools),
             "missing_policy_basis_count": len(set(missing_policy_basis_refs)),
             "overbroad_credential_count": len(set(overbroad_credential_refs)),
             "unsupported_override_count": len(set(unsupported_override_refs)),

@@ -178,6 +178,50 @@ class TargetRepoReuseEffectFeedbackTests(unittest.TestCase):
             codes = {error["code"] for error in result["errors"]}
             self.assertIn("issue_without_candidate", codes)
 
+    def test_verify_effect_report_recomputes_metrics_from_run_refs(self) -> None:
+        build_module = _load_script(
+            "scripts/build-target-repo-reuse-effect-report.py",
+            "build_target_repo_reuse_effect_report_script",
+        )
+        verify_module = _load_script(
+            "scripts/verify-target-repo-reuse-effect-report.py",
+            "verify_target_repo_reuse_effect_report_script",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            runs_root = Path(tmp_dir) / "runs"
+            runs_root.mkdir(parents=True)
+            _write_run(
+                runs_root / "demo-onboard-20260420090000.json",
+                stamp="20260420090000",
+                overall_status="fail",
+                codex_status="ready",
+                flow_kind="live_attach",
+                has_problem=True,
+            )
+            _write_run(
+                runs_root / "demo-daily-20260420120000.json",
+                stamp="20260420120000",
+                overall_status="pass",
+                codex_status="degraded",
+                flow_kind="process_bridge",
+                has_problem=False,
+            )
+
+            report = build_module.build_effect_report(target="demo", runs_root=runs_root)
+            report["after_metrics"]["codex_capability_status"] = "ready"
+            report["rolling_kpi"]["total_daily_runs"] = 999
+            report["backlog_candidates"] = []
+            report_path = runs_root / "effect-report-demo.json"
+            report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+            result = verify_module.inspect_effect_report(report_path=report_path, runs_root=runs_root)
+
+        self.assertEqual("fail", result["status"])
+        codes = {error["code"] for error in result["errors"]}
+        self.assertIn("after_metrics_drift", codes)
+        self.assertIn("rolling_kpi_drift", codes)
+
 
 if __name__ == "__main__":
     unittest.main()

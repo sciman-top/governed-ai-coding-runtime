@@ -250,6 +250,7 @@
           "tool_name": "browser"
         }
       ],
+      "denied_allowlisted_tools": [],
       "fail_closed_defaults": {
         "missing_policy_basis": "deny",
         "overbroad_credential_scope": "deny",
@@ -298,6 +299,7 @@
       "status": "pass",
       "summary": {
         "audited_tool_count": 4,
+        "denied_allowlisted_tool_count": 0,
         "known_tool_count": 4,
         "missing_policy_basis_count": 0,
         "overbroad_credential_count": 0,
@@ -323,8 +325,36 @@
     "runtime_evolution": {
       "artifact_refs": {},
       "as_of": "2026-05-01",
-      "candidate_count": 3,
+      "candidate_count": 4,
       "candidates": [
+        {
+          "acceptance_gates": [
+            "python scripts/host-feedback-summary.py --assert-minimum",
+            "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs"
+          ],
+          "candidate_id": "EVOL-HOST-FEEDBACK",
+          "decision": "refresh_host_feedback",
+          "evidence_required": [
+            "host feedback summary",
+            "latest target repo runs",
+            "operator-facing recommendation surface"
+          ],
+          "observed_change": "Host feedback or target-run freshness shows attention-level posture.",
+          "patch_plan": [
+            {
+              "apply_mode": "manual_or_future_low_risk_only",
+              "operation": "refresh host and target-run evidence before promoting new implementation work",
+              "path": "scripts/host-feedback-summary.py"
+            }
+          ],
+          "proposed_action": "modify",
+          "repo_impact": "Keeps self-evolution prompts aligned with real host degradation and stale target workload evidence.",
+          "risk_level": "low",
+          "rollback_plan": "remove host-feedback-driven candidate wiring if it misclassifies freshness or host posture",
+          "source_checked_on": "2026-05-01",
+          "source_ref": ".runtime/artifacts/host-feedback-summary/latest.md",
+          "source_type": "internal_runtime_evidence"
+        },
         {
           "acceptance_gates": [
             "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1",
@@ -332,41 +362,69 @@
             "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract",
             "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1"
           ],
-          "candidate_id": "EVOL-001",
-          "decision": "review_current",
+          "candidate_id": "EVOL-EFFECT-FEEDBACK",
+          "decision": "improve_target_effect_loop",
           "evidence_required": [
-            "runtime evolution policy",
-            "candidate dry-run artifact",
-            "Docs gate output"
+            "target repo reuse effect report",
+            "backlog candidates with reason and disposition",
+            "fresh daily target-run evidence"
           ],
-          "observed_change": "Runtime evolution policy exists and defines a 30-day dry-run review loop.",
+          "observed_change": "Target repo effect feedback still carries unresolved backlog candidates or verifier errors.",
           "patch_plan": [
             {
               "apply_mode": "manual_or_future_low_risk_only",
-              "operation": "refresh reviewed_on/review_expires_at only after a new review artifact exists",
-              "path": "docs/architecture/runtime-evolution-policy.json"
+              "operation": "refresh effect report and translate remaining candidates into bounded follow-up work",
+              "path": "docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json"
             }
           ],
-          "proposed_action": "no_action",
-          "repo_impact": "Enables a deterministic self-evolution review without automatic mutation.",
-          "risk_level": "low",
-          "rollback_plan": "git revert the runtime evolution policy, implementation plan, backlog tasks, evidence, and later scripts or gates introduced by GAP-120..124",
+          "proposed_action": "modify",
+          "repo_impact": "Turns real target repo effect gaps into explicit evolution work instead of leaving them in report-only form.",
+          "risk_level": "medium",
+          "rollback_plan": "revert any follow-up change that was justified only by stale or misread target effect feedback",
           "source_checked_on": "2026-05-01",
-          "source_ref": "docs/architecture/runtime-evolution-policy.json",
+          "source_ref": "docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json",
           "source_type": "internal_runtime_evidence"
+        },
+        {
+          "acceptance_gates": [
+            "python -m unittest tests.runtime.test_runtime_evolution tests.runtime.test_learning_efficiency_metrics",
+            "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs"
+          ],
+          "candidate_id": "EVOL-AI-EXPERIENCE",
+          "decision": "promote_ai_experience_candidate",
+          "evidence_required": [
+            "learning-efficiency metrics or interaction evidence",
+            "controlled improvement proposals",
+            "knowledge or skill candidate manifest"
+          ],
+          "observed_change": "AI coding evidence now contains reusable proposals, knowledge candidates, or retirement signals.",
+          "patch_plan": [
+            {
+              "apply_mode": "proposal_only_until_reviewed",
+              "operation": "promote repeated signals into reviewable proposals and keep retirement candidate cleanup explicit",
+              "path": "scripts/extract-ai-coding-experience.py"
+            }
+          ],
+          "proposed_action": "add",
+          "repo_impact": "Lets repeated AI coding patterns become governed proposals or cleanup candidates instead of hidden session-only know-how.",
+          "risk_level": "low",
+          "rollback_plan": "remove generated AI-coding-experience candidates if their reuse value or verification posture regresses",
+          "source_checked_on": "2026-05-01",
+          "source_ref": ".runtime/artifacts/ai-coding-experience/20260501-ai-coding-experience-review.json",
+          "source_type": "internal_ai_coding_experience"
         },
         {
           "acceptance_gates": [
             "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs"
           ],
-          "candidate_id": "EVOL-002",
+          "candidate_id": "EVOL-SOURCE-COLLECTOR",
           "decision": "implement_source_collector_before_online_fetch",
           "evidence_required": [
             "source collection artifact",
             "candidate evaluator artifact",
             "platform_na record if online source is unavailable"
           ],
-          "observed_change": "Official documentation source collection is planned but not fetched in dry-run mode.",
+          "observed_change": "Official documentation source collection remains catalog-only unless the optional online probe is enabled.",
           "patch_plan": [
             {
               "apply_mode": "defer_until_scope_fenced",
@@ -375,47 +433,51 @@
             }
           ],
           "proposed_action": "defer",
-          "repo_impact": "Prevents community or stale assumptions from becoming execution rules without review.",
+          "repo_impact": "Prevents community or stale assumptions from becoming execution rules without reviewable source evidence.",
           "risk_level": "medium",
           "rollback_plan": "remove the source collection candidate from the evolution dry-run output",
           "source_checked_on": "2026-05-01",
           "source_ref": "dry-run source inventory",
           "source_type": "official_doc_or_changelog"
-        },
-        {
-          "acceptance_gates": [
-            "python -m unittest tests.runtime.test_runtime_evolution tests.runtime.test_learning_efficiency_metrics",
-            "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs"
-          ],
-          "candidate_id": "EVOL-003",
-          "decision": "accepted_as_source_category",
-          "evidence_required": [
-            "learning-efficiency metrics or interaction evidence",
-            "controlled improvement proposal",
-            "skill or knowledge-source manifest when reusable behavior is promoted"
-          ],
-          "observed_change": "AI coding experience, repeated repair patterns, and skillization candidates are now first-class evolution sources.",
-          "patch_plan": [
-            {
-              "apply_mode": "proposal_only_until_reviewed",
-              "operation": "use existing proposal buckets to classify repeated lessons as skill, knowledge, hook, policy, control, or repo follow-up",
-              "path": "scripts/extract-ai-coding-experience.py"
-            },
-            {
-              "apply_mode": "manual_or_future_low_risk_only",
-              "operation": "promote repeated AI coding workflows only when a reviewable skill manifest and tests exist",
-              "path": "docs/specs/skill-manifest-spec.md"
-            }
-          ],
-          "proposed_action": "no_action",
-          "repo_impact": "Allows lessons from real agent work to become governed skill, knowledge, hook, policy, or control proposals without treating memory as an authority.",
-          "risk_level": "low",
-          "rollback_plan": "remove internal AI coding experience source records and keep official/community/runtime evidence sources unchanged",
-          "source_checked_on": "2026-05-01",
-          "source_ref": "docs/specs/controlled-improvement-proposal-spec.md",
-          "source_type": "internal_ai_coding_experience"
         }
       ],
+      "evidence_snapshot": {
+        "ai_coding_experience": {
+          "invalid_reasons": [],
+          "knowledge_candidate_count": 1,
+          "pattern_candidate_count": 1,
+          "proposal_count": 1,
+          "retirement_record_count": 0,
+          "skill_manifest_candidate_count": 1,
+          "status": "pass"
+        },
+        "current_source": {
+          "expired": false,
+          "forbidden_pattern_hits": [],
+          "missing_doc_refs": [],
+          "missing_evidence_refs": [],
+          "protocols_missing_kernel_semantics": [],
+          "review_expires_at": "2026-07-26",
+          "status": "pass"
+        },
+        "effect_feedback": {
+          "backlog_candidate_count": 2,
+          "decision": "adjust",
+          "error_count": 0,
+          "errors": [],
+          "status": "pass",
+          "target": "classroomtoolkit"
+        },
+        "host_feedback": {
+          "claude_host_status": "ok",
+          "claude_workload_status": "ready",
+          "codex_host_status": "ok",
+          "recommendation_count": 2,
+          "stale_latest_runs": [],
+          "status": "attention",
+          "target_run_freshness": "fresh"
+        }
+      },
       "expired": false,
       "invalid_reasons": [],
       "missing_required_refs": [],

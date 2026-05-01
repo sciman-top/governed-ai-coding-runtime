@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -48,14 +50,96 @@ def inspect_effect_report(*, report_path: Path = DEFAULT_REPORT_PATH, runs_root:
 
     baseline_ref = report.get("baseline_run_ref")
     after_ref = report.get("after_run_ref")
+    baseline_path = runs_root / baseline_ref if isinstance(baseline_ref, str) else None
+    after_path = runs_root / after_ref if isinstance(after_ref, str) else None
     if isinstance(baseline_ref, str):
-        if not (runs_root / baseline_ref).exists():
+        if not baseline_path.exists():
             errors.append({"code": "baseline_run_ref_missing", "detail": f"baseline run ref not found: {baseline_ref}"})
     if isinstance(after_ref, str):
-        if not (runs_root / after_ref).exists():
+        if not after_path.exists():
             errors.append({"code": "after_run_ref_missing", "detail": f"after run ref not found: {after_ref}"})
     if baseline_ref == after_ref:
         errors.append({"code": "baseline_after_same", "detail": "baseline_run_ref and after_run_ref must differ"})
+
+    expected_after_metrics: dict[str, Any] | None = None
+    expected_rolling_kpi: dict[str, Any] | None = None
+    if not errors and baseline_path is not None and after_path is not None:
+        builder = _load_effect_report_builder()
+        try:
+            baseline_entry = _run_entry_from_path(builder, baseline_path)
+            after_entry = _run_entry_from_path(builder, after_path)
+            expected_baseline_metrics = builder._extract_metrics(baseline_entry)
+            expected_after_metrics = builder._extract_metrics(after_entry)
+            _append_metric_drift_errors(
+                errors=errors,
+                code="baseline_metrics_drift",
+                report_metrics=report.get("baseline_metrics", {}),
+                expected_metrics=expected_baseline_metrics,
+                fields=[
+                    "overall_status",
+                    "required_entrypoint_policy_present",
+                    "codex_capability_status",
+                    "adapter_tier",
+                    "flow_kind",
+                    "gate_order",
+                    "gate_results",
+                    "evidence_complete",
+                ],
+            )
+            _append_metric_drift_errors(
+                errors=errors,
+                code="after_metrics_drift",
+                report_metrics=report.get("after_metrics", {}),
+                expected_metrics=expected_after_metrics,
+                fields=[
+                    "overall_status",
+                    "required_entrypoint_policy_present",
+                    "codex_capability_status",
+                    "adapter_tier",
+                    "flow_kind",
+                    "gate_order",
+                    "gate_results",
+                    "evidence_complete",
+                ],
+            )
+            expected_rolling_kpi = _build_expected_kpi(builder, target=str(report.get("target", "")), runs_root=runs_root)
+            _append_metric_drift_errors(
+                errors=errors,
+                code="rolling_kpi_drift",
+                report_metrics=report.get("rolling_kpi", {}),
+                expected_metrics=expected_rolling_kpi,
+                fields=[
+                    "total_daily_runs",
+                    "fallback_rate",
+                    "problem_run_rate",
+                    "problem_recovery_retries",
+                    "latest_problem_run_ref",
+                    "latest_evidence_ref",
+                ],
+            )
+            expected_decision, expected_candidates = builder._decision_for(expected_after_metrics, expected_rolling_kpi)
+            if report.get("decision") != expected_decision:
+                errors.append(
+                    {
+                        "code": "decision_drift",
+                        "detail": f"decision expected {expected_decision!r} from run refs, got {report.get('decision')!r}",
+                    }
+                )
+            expected_candidate_ids = {item.get("candidate_id") for item in expected_candidates}
+            reported_candidate_ids = {
+                item.get("candidate_id")
+                for item in report.get("backlog_candidates", [])
+                if isinstance(item, dict)
+            }
+            if expected_candidate_ids != reported_candidate_ids:
+                errors.append(
+                    {
+                        "code": "backlog_candidates_drift",
+                        "detail": "backlog candidate ids do not match recomputed run evidence",
+                    }
+                )
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            errors.append({"code": "run_ref_recompute_failed", "detail": str(exc)})
 
     after_metrics = report.get("after_metrics", {})
     if not isinstance(after_metrics, dict):
@@ -97,6 +181,68 @@ def inspect_effect_report(*, report_path: Path = DEFAULT_REPORT_PATH, runs_root:
         "backlog_candidate_count": len(backlog_candidates),
         "errors": errors,
     }
+
+
+def _load_effect_report_builder():
+    script_path = ROOT / "scripts" / "build-target-repo-reuse-effect-report.py"
+    spec = importlib.util.spec_from_file_location("build_target_repo_reuse_effect_report_for_verifier", script_path)
+    if spec is None or spec.loader is None:
+        raise ValueError(f"unable to load effect report builder: {script_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _run_entry_from_path(builder, path: Path) -> dict[str, Any]:
+    match = builder._RUN_FILE_PATTERN.match(path.name)
+    if not match:
+        raise ValueError(f"run ref filename does not match expected target-flow-stamp shape: {path.name}")
+    return {
+        "path": path,
+        "flow": match.group("flow"),
+        "stamp": match.group("stamp"),
+        "timestamp": datetime.strptime(match.group("stamp"), "%Y%m%d%H%M%S").replace(tzinfo=timezone.utc),
+        "payload": _load_json(path),
+    }
+
+
+def _build_expected_kpi(builder, *, target: str, runs_root: Path) -> dict[str, Any]:
+    if not target:
+        raise ValueError("effect report target must be a non-empty string")
+    kpi_snapshot = builder.export_target_repo_speed_kpi(
+        target_repo_runs_root=runs_root,
+        window_kind="rolling",
+        window_size=5,
+    )
+    kpi_record = next((builder.asdict(record) for record in kpi_snapshot.records if record.target == target), None)
+    if kpi_record is None:
+        raise ValueError(f"rolling KPI record not found for target {target}")
+    return kpi_record
+
+
+def _append_metric_drift_errors(
+    *,
+    errors: list[dict[str, str]],
+    code: str,
+    report_metrics: object,
+    expected_metrics: dict[str, Any],
+    fields: list[str],
+) -> None:
+    if not isinstance(report_metrics, dict):
+        errors.append({"code": code, "detail": "metrics payload must be an object"})
+        return
+    mismatches = [
+        field
+        for field in fields
+        if report_metrics.get(field) != expected_metrics.get(field)
+    ]
+    if mismatches:
+        errors.append(
+            {
+                "code": code,
+                "detail": "field mismatch: " + ", ".join(mismatches),
+            }
+        )
 
 
 def main() -> int:

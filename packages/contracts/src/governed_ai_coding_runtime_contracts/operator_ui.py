@@ -10,18 +10,18 @@ from governed_ai_coding_runtime_contracts.runtime_status import RuntimeSnapshot
 _TRANSLATIONS = {
     "zh-CN": {
         "html_lang": "zh-CN",
-        "title": "Governed Runtime 操作者面板",
+        "title": "Governed Runtime 控制台",
         "runtime_root": "Runtime 根目录",
         "persistence": "持久化",
         "summary_aria": "Runtime 摘要",
         "tasks": "任务",
-        "tasks_caption": "最近运行记录",
+        "tasks_caption": "最近任务",
         "approvals": "审批",
-        "approvals_caption": "待人工确认的记录",
+        "approvals_caption": "待确认",
         "verification": "验证结果",
-        "verification_caption": "最近验证输出",
+        "verification_caption": "验证记录",
         "attachments": "已接入仓库",
-        "fail_closed_caption": "遇到风险会自动阻断",
+        "fail_closed_caption": "风险自动阻断",
         "maintenance": "维护与升级",
         "stage": "阶段",
         "compatibility": "兼容性",
@@ -53,8 +53,8 @@ _TRANSLATIONS = {
         "none": "无",
         "not_recorded": "未记录",
         "unknown_repo": "未知仓库",
-        "actions": "操作",
-        "settings": "设置",
+        "actions": "执行入口",
+        "settings": "运行设置",
         "language": "语言",
         "target": "目标仓",
         "all_targets": "全部目标仓",
@@ -65,7 +65,7 @@ _TRANSLATIONS = {
         "milestone": "里程碑标签",
         "refresh": "刷新状态",
         "run": "执行",
-        "command_output": "命令输出",
+        "command_output": "执行输出",
         "codex_console": "Codex 账号与配置",
         "codex_account": "账号",
         "codex_active": "当前",
@@ -176,14 +176,14 @@ _TRANSLATIONS = {
         "feedback_preview_idle": "点击“查看详细报告”或“查看反馈指南”后，会在这里展开内容。",
         "ready": "就绪",
         "running": "执行中",
-        "static_snapshot": "静态快照",
-        "targets_action": "列出目标仓",
-        "readiness_action": "本仓 Readiness",
+        "static_snapshot": "只读快照",
+        "targets_action": "查看目标仓",
+        "readiness_action": "检查本仓状态",
         "rules_dry_run_action": "规则漂移检查",
         "rules_apply_action": "同步规则文件",
         "governance_baseline_action": "下发治理基线",
-        "daily_all_action": "运行 Daily",
-        "apply_all_action": "全部功能应用",
+        "daily_all_action": "运行 Daily 巡检",
+        "apply_all_action": "应用全部治理能力",
         "feedback_report_action": "功能反馈汇总",
         "view_ref": "查看",
         "confirm_mutating": "该操作可能修改规则文件、目标仓治理基线或运行证据。继续执行？",
@@ -191,18 +191,18 @@ _TRANSLATIONS = {
     },
     "en": {
         "html_lang": "en",
-        "title": "Governed Runtime Operator Surface",
+        "title": "Governed Runtime Console",
         "runtime_root": "Runtime root",
         "persistence": "Persistence",
         "summary_aria": "Runtime Summary",
         "tasks": "Tasks",
-        "tasks_caption": "recent runtime activity",
+        "tasks_caption": "recent tasks",
         "approvals": "Approvals",
-        "approvals_caption": "records waiting for approval",
+        "approvals_caption": "waiting",
         "verification": "Verification",
-        "verification_caption": "latest verification outputs",
+        "verification_caption": "verification records",
         "attachments": "Attachments",
-        "fail_closed_caption": "auto-block on risk",
+        "fail_closed_caption": "risk auto-block",
         "maintenance": "Maintenance and Upgrade",
         "stage": "Stage",
         "compatibility": "Compatibility",
@@ -234,8 +234,8 @@ _TRANSLATIONS = {
         "none": "none",
         "not_recorded": "not recorded",
         "unknown_repo": "unknown repo",
-        "actions": "Actions",
-        "settings": "Settings",
+        "actions": "Runbook",
+        "settings": "Run settings",
         "language": "Language",
         "target": "Target repo",
         "all_targets": "All targets",
@@ -246,7 +246,7 @@ _TRANSLATIONS = {
         "milestone": "Milestone tag",
         "refresh": "Refresh status",
         "run": "Run",
-        "command_output": "Command output",
+        "command_output": "Execution output",
         "codex_console": "Codex Account and Config",
         "codex_account": "Account",
         "codex_active": "Active",
@@ -357,14 +357,14 @@ _TRANSLATIONS = {
         "feedback_preview_idle": "Open the detailed report or guide to preview the content here.",
         "ready": "Ready",
         "running": "Running",
-        "static_snapshot": "Static snapshot",
-        "targets_action": "List targets",
-        "readiness_action": "Repo readiness",
+        "static_snapshot": "Read-only snapshot",
+        "targets_action": "View targets",
+        "readiness_action": "Check repo status",
         "rules_dry_run_action": "Rule drift check",
         "rules_apply_action": "Sync rules",
         "governance_baseline_action": "Apply governance baseline",
-        "daily_all_action": "Run Daily",
-        "apply_all_action": "Apply all features",
+        "daily_all_action": "Run Daily sweep",
+        "apply_all_action": "Apply all governance",
         "feedback_report_action": "Feedback summary",
         "view_ref": "View",
         "confirm_mutating": "This action may modify rule files, target governance baseline, or runtime evidence. Continue?",
@@ -414,84 +414,111 @@ def render_runtime_snapshot_html(
   <style>
     :root {{
       color-scheme: light;
-      --bg: #f4f7f8;
+      --bg: #eef3f3;
+      --bg-deep: #0e1c20;
       --surface: #ffffff;
-      --surface-muted: #edf3f4;
-      --ink: #162327;
-      --muted: #647177;
-      --line: #d6e0e2;
-      --line-strong: #b9c9cc;
+      --surface-raised: rgba(255, 255, 255, 0.94);
+      --surface-muted: #eef4f3;
+      --ink: #152125;
+      --ink-strong: #091316;
+      --muted: #5d6b70;
+      --line: #d4dfe0;
+      --line-strong: #aebfc2;
       --accent: #0b766e;
-      --accent-strong: #075e58;
-      --accent-soft: #e6f5f2;
-      --warning: #a55a00;
+      --accent-strong: #064f49;
+      --accent-soft: #e7f5f2;
+      --gold: #b8872d;
+      --gold-soft: #fff5df;
+      --warning: #9a5b08;
       --danger: #b42318;
-      --shadow-soft: 0 14px 34px rgba(17, 38, 43, 0.08);
-      --shadow-card: 0 8px 22px rgba(17, 38, 43, 0.06);
+      --danger-soft: #fff0ee;
+      --shadow-soft: 0 22px 54px rgba(8, 22, 26, 0.13);
+      --shadow-card: 0 10px 28px rgba(12, 31, 36, 0.08);
+      --shadow-tight: 0 2px 0 rgba(255, 255, 255, 0.84) inset, 0 1px 2px rgba(12, 31, 36, 0.04);
     }}
     * {{ box-sizing: border-box; }}
     body {{
       margin: 0;
-      font-family: "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+      font-family: "Segoe UI Variable", "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
       background:
-        linear-gradient(135deg, rgba(11, 118, 110, 0.12), transparent 320px),
-        linear-gradient(180deg, #fbfcfd 0, var(--bg) 420px);
+        linear-gradient(90deg, rgba(15, 35, 39, 0.035) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(15, 35, 39, 0.035) 1px, transparent 1px),
+        linear-gradient(145deg, rgba(11, 118, 110, 0.16), transparent 360px),
+        linear-gradient(180deg, #fbfcfb 0, var(--bg) 460px);
+      background-size: 42px 42px, 42px 42px, auto, auto;
       color: var(--ink);
       font-size: 14px;
+      letter-spacing: 0;
     }}
-    main {{ width: 100%; max-width: 1560px; margin: 0 auto; padding: 18px 18px 34px; }}
+    main {{ width: 100%; max-width: 1600px; margin: 0 auto; padding: 20px 20px 36px; }}
     header {{
-      border: 1px solid #14363a;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(236, 245, 243, 0.1);
       border-radius: 8px;
-      padding: 17px 18px;
-      margin-bottom: 14px;
-      background: linear-gradient(135deg, #10262a 0, #173b3d 58%, #0b766e 160%);
+      padding: 20px 22px;
+      margin-bottom: 16px;
+      background:
+        linear-gradient(120deg, rgba(255, 255, 255, 0.08), transparent 34%),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 14px),
+        linear-gradient(135deg, #0c171b 0, #173136 54%, #075e58 150%);
       color: #f6fbfb;
       box-shadow: var(--shadow-soft);
     }}
-    h1 {{ font-size: 1.46rem; line-height: 1.2; margin: 0 0 10px; }}
-    h2 {{ display: flex; align-items: center; gap: 8px; font-size: 0.98rem; line-height: 1.3; margin: 0 0 12px; color: var(--ink); }}
-    h2::before {{ content: ""; width: 4px; height: 1.05em; border-radius: 99px; background: var(--accent); }}
+    header::after {{
+      content: "";
+      position: absolute;
+      inset: auto 18px 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(239, 209, 142, 0.72), transparent);
+    }}
+    h1 {{ font-size: 1.58rem; line-height: 1.18; margin: 0 0 10px; font-weight: 760; }}
+    h2 {{ display: flex; align-items: center; gap: 8px; font-size: 0.98rem; line-height: 1.3; margin: 0 0 12px; color: var(--ink-strong); }}
+    h2::before {{ content: ""; width: 4px; height: 1.05em; border-radius: 99px; background: linear-gradient(180deg, var(--gold), var(--accent)); }}
+    h3 {{ margin: 0 0 10px; font-size: 0.95rem; line-height: 1.35; color: var(--ink-strong); }}
     .meta-row {{ display: flex; flex-wrap: wrap; gap: 10px 18px; color: var(--muted); font-size: 0.92rem; }}
     header .meta-row {{ color: #cfe1e2; }}
     header code {{ color: #ffffff; }}
-    .console-layout {{ display: grid; grid-template-columns: minmax(260px, 300px) minmax(0, 1fr); gap: 14px; align-items: start; }}
-    .sidebar {{ position: sticky; top: 12px; display: grid; gap: 12px; align-self: start; }}
-    .dashboard {{ min-width: 0; display: grid; gap: 14px; }}
-    .summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }}
+    .console-layout {{ display: grid; grid-template-columns: minmax(278px, 320px) minmax(0, 1fr); gap: 16px; align-items: start; }}
+    .sidebar {{ position: sticky; top: 14px; display: grid; gap: 12px; align-self: start; }}
+    .dashboard {{ min-width: 0; display: grid; gap: 15px; }}
+    .summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 12px; margin-bottom: 2px; }}
     .feedback-grid {{ display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr); gap: 14px; align-items: start; }}
     .details-grid {{ display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr); gap: 14px; align-items: start; }}
     .feedback-summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 12px; }}
     .feedback-shell {{ display: grid; grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.1fr); gap: 14px; align-items: start; }}
     .feedback-column {{ display: grid; gap: 12px; min-width: 0; }}
     .feedback-list, .feedback-links, .feedback-latest-runs {{ display: grid; gap: 8px; }}
-    .feedback-run {{ border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: #fbfdfd; }}
+    .feedback-run {{ border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px; background: linear-gradient(180deg, #ffffff, #f9fcfc); box-shadow: var(--shadow-tight); }}
     .feedback-run strong {{ display: block; margin-bottom: 6px; }}
     .status-pill-list {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }}
-    .status-pill {{ display: inline-flex; flex: 0 0 auto; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface-muted); font-size: 0.82rem; white-space: nowrap; max-width: 100%; }}
+    .status-pill {{ display: inline-flex; flex: 0 0 auto; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface-muted); font-size: 0.82rem; white-space: nowrap; max-width: 100%; box-shadow: var(--shadow-tight); }}
     .status-pill.ok {{ border-color: #b2ddd6; background: #edf9f6; color: var(--accent-strong); }}
     .status-pill.attention {{ border-color: #edd39b; background: #fff6e5; color: var(--warning); }}
     .status-pill.fail {{ border-color: #efc2bc; background: #fff0ee; color: var(--danger); }}
     .feedback-preview-card {{ display: grid; gap: 10px; }}
-    .feedback-preview {{ height: 420px; overflow: auto; white-space: pre-wrap; background: #fcfefe; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }}
+    .feedback-preview {{ height: 420px; overflow: auto; white-space: pre-wrap; background: linear-gradient(180deg, #ffffff, #fbfdfc); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 14px; box-shadow: var(--shadow-tight); }}
     .feedback-runs-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }}
     .metric {{
-      background: linear-gradient(180deg, #ffffff, #fbfdfd);
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(180deg, #ffffff, #f8fbfa);
       border: 1px solid var(--line);
-      border-top: 3px solid var(--accent);
+      border-top: 3px solid var(--gold);
       border-radius: 8px;
       padding: 13px 14px 12px;
       min-width: 0;
       box-shadow: var(--shadow-card);
     }}
-    .metric span {{ display: block; color: var(--muted); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; }}
-    .metric strong {{ display: block; font-size: 1.45rem; margin: 4px 0 2px; }}
+    .metric::after {{ content: ""; position: absolute; inset: 0 0 auto; height: 1px; background: rgba(255,255,255,0.92); }}
+    .metric span {{ display: block; color: var(--muted); font-size: 0.75rem; font-weight: 760; text-transform: uppercase; }}
+    .metric strong {{ display: block; font-size: 1.52rem; line-height: 1.05; margin: 5px 0 4px; color: var(--ink-strong); }}
     .metric small {{ display: block; color: var(--muted); overflow-wrap: anywhere; }}
     .section {{ min-width: 0; }}
-    .table-wrap {{ background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; box-shadow: var(--shadow-card); }}
+    .table-wrap {{ background: var(--surface-raised); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; box-shadow: var(--shadow-card); backdrop-filter: blur(6px); }}
     table {{ width: 100%; border-collapse: collapse; min-width: 720px; }}
     th, td {{ padding: 11px 13px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }}
-    th {{ background: linear-gradient(180deg, var(--surface-muted), #e6eef0); color: #314253; font-size: 0.78rem; text-transform: uppercase; }}
+    th {{ background: linear-gradient(180deg, #f2f6f6, #e7eeee); color: #314253; font-size: 0.76rem; text-transform: uppercase; }}
     tr:last-child td {{ border-bottom: 0; }}
     tbody tr:hover {{ background: #fbfdfd; }}
     .task-id {{ font-weight: 700; }}
@@ -504,30 +531,30 @@ def render_runtime_snapshot_html(
     .info-line {{ min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; color: var(--muted); font-size: 0.86rem; line-height: 1.35; }}
     .info-label {{ color: #53646a; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }}
     .info-value {{ min-width: 0; color: #263940; overflow-wrap: anywhere; white-space: pre-line; }}
-    .empty-state {{ background: rgba(255, 255, 255, 0.72); border: 1px dashed var(--line-strong); border-radius: 8px; padding: 18px; color: var(--muted); }}
+    .empty-state {{ background: rgba(255, 255, 255, 0.8); border: 1px dashed var(--line-strong); border-radius: 8px; padding: 18px; color: var(--muted); box-shadow: var(--shadow-tight); }}
     .refs {{ display: grid; gap: 8px; }}
     .ref-title {{ display: block; color: var(--muted); font-size: 0.78rem; text-transform: uppercase; margin-bottom: 4px; }}
     ul {{ margin: 0; padding-left: 18px; }}
     li + li {{ margin-top: 4px; }}
     code {{ font-family: Consolas, "Cascadia Mono", "Liberation Mono", monospace; font-size: 0.9rem; overflow-wrap: anywhere; }}
     .policy-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }}
-    .policy-item {{ background: linear-gradient(180deg, #ffffff, #fbfdfd); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; box-shadow: 0 5px 14px rgba(17, 38, 43, 0.04); }}
+    .policy-item {{ background: linear-gradient(180deg, #ffffff, #f9fcfb); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; box-shadow: var(--shadow-tight); }}
     .policy-label {{ display: block; color: var(--muted); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; }}
-    .panel {{ background: rgba(255, 255, 255, 0.9); border: 1px solid var(--line); border-top: 3px solid #c5d5d8; border-radius: 8px; padding: 13px; min-width: 0; box-shadow: var(--shadow-card); }}
-    .output-panel {{ border-top-color: var(--accent); }}
-    .view-tabs {{ display: inline-flex; gap: 4px; background: rgba(237, 243, 244, 0.84); border: 1px solid var(--line); border-radius: 8px; padding: 4px; width: fit-content; max-width: 100%; box-shadow: 0 7px 18px rgba(17, 38, 43, 0.05); }}
+    .panel {{ background: var(--surface-raised); border: 1px solid var(--line); border-top: 3px solid #c5d5d8; border-radius: 8px; padding: 14px; min-width: 0; box-shadow: var(--shadow-card); backdrop-filter: blur(6px); }}
+    .output-panel {{ border-top-color: var(--gold); }}
+    .view-tabs {{ display: inline-flex; gap: 4px; background: rgba(234, 241, 241, 0.92); border: 1px solid var(--line); border-radius: 8px; padding: 4px; width: fit-content; max-width: 100%; box-shadow: 0 9px 22px rgba(12, 31, 36, 0.07); }}
     .view-tab {{ border: 0; background: transparent; border-radius: 6px; padding: 8px 13px; }}
-    .view-tab[aria-selected="true"] {{ background: var(--surface); color: var(--accent-strong); box-shadow: 0 0 0 1px var(--line), 0 6px 14px rgba(17, 38, 43, 0.08); font-weight: 700; }}
+    .view-tab[aria-selected="true"] {{ background: var(--surface); color: var(--accent-strong); box-shadow: 0 0 0 1px var(--line), 0 6px 14px rgba(12, 31, 36, 0.09); font-weight: 760; }}
     .action-list {{ display: grid; gap: 8px; }}
     button, select, input {{ font: inherit; }}
-    button {{ border: 1px solid var(--line); background: linear-gradient(180deg, #ffffff, #f8fbfb); color: var(--ink); border-radius: 7px; padding: 9px 11px; cursor: pointer; text-align: left; transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease; }}
+    button {{ border: 1px solid var(--line); background: linear-gradient(180deg, #ffffff, #f8fbfb); color: var(--ink); border-radius: 7px; padding: 9px 11px; cursor: pointer; text-align: left; transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease, background 140ms ease; }}
     button:hover {{ border-color: var(--accent); box-shadow: 0 7px 16px rgba(11, 118, 110, 0.10); transform: translateY(-1px); }}
-    button.primary {{ background: linear-gradient(135deg, var(--accent), var(--accent-strong)); border-color: var(--accent-strong); color: #fff; font-weight: 700; }}
-    button.danger {{ border-color: #f2b8b5; color: var(--danger); background: linear-gradient(180deg, #fff, #fff9f8); }}
+    button.primary {{ background: linear-gradient(135deg, var(--accent), var(--accent-strong)); border-color: var(--accent-strong); color: #fff; font-weight: 760; }}
+    button.danger {{ border-color: #efb8b2; color: var(--danger); background: linear-gradient(180deg, #fff, var(--danger-soft)); }}
     button:disabled {{ cursor: not-allowed; opacity: 0.55; }}
     .setting-grid {{ display: grid; gap: 10px; }}
     label {{ display: grid; gap: 4px; color: var(--muted); font-size: 0.82rem; min-width: 0; }}
-    select, input[type="number"], input[type="text"] {{ width: 100%; min-width: 0; max-width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 8px 9px; color: var(--ink); background: #fff; }}
+    select, input[type="number"], input[type="text"] {{ width: 100%; min-width: 0; max-width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 8px 9px; color: var(--ink); background: #fff; box-shadow: var(--shadow-tight); }}
     select:focus, input:focus, button:focus-visible {{ outline: 2px solid rgba(11, 118, 110, 0.24); outline-offset: 2px; }}
     .checkbox-row {{ display: flex; align-items: center; gap: 8px; color: var(--ink); }}
     .status-line {{ color: var(--muted); font-size: 0.86rem; min-height: 1.2rem; }}
@@ -536,7 +563,11 @@ def render_runtime_snapshot_html(
       max-height: 460px;
       overflow: auto;
       white-space: pre-wrap;
-      background: radial-gradient(circle at 20px 12px, rgba(69, 203, 184, 0.12), transparent 140px), #0d151b;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(180deg, #111d23, #071015);
+      background-size: 18px 18px, 18px 18px, auto;
       color: #dce8ea;
       border: 1px solid #1e2f36;
       border-radius: 8px;
@@ -550,42 +581,47 @@ def render_runtime_snapshot_html(
     .codex-toolbar select {{ width: min(100%, 260px); }}
     .codex-grid {{ display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: start; }}
     .codex-list {{ display: grid; gap: 8px; }}
-    .codex-account {{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: start; border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: linear-gradient(180deg, #ffffff, #fbfdfd); }}
+    .codex-account {{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: start; border: 1px solid var(--line); border-radius: 8px; padding: 13px; background: linear-gradient(180deg, #ffffff, #f9fcfb); box-shadow: var(--shadow-tight); }}
     .codex-account-body {{ min-width: 0; display: grid; gap: 3px; }}
     .codex-account-actions {{ display: flex; align-items: flex-start; justify-content: flex-end; }}
     .codex-account strong, .codex-account small {{ display: block; overflow-wrap: anywhere; }}
-    .codex-badge {{ display: inline-flex; align-items: center; align-self: start; border: 1px solid #bde0da; border-radius: 999px; padding: 4px 10px; color: var(--accent-strong); background: var(--accent-soft); font-size: 0.78rem; font-weight: 700; white-space: nowrap; }}
+    .codex-badge {{ display: inline-flex; align-items: center; align-self: start; border: 1px solid #bde0da; border-radius: 999px; padding: 4px 10px; color: var(--accent-strong); background: var(--accent-soft); font-size: 0.78rem; font-weight: 760; white-space: nowrap; }}
     .codex-account-switch {{ display: inline-flex; align-items: center; justify-content: center; min-width: 68px; min-height: 34px; padding: 8px 14px; border-radius: 7px; text-align: center; font-weight: 700; }}
     .codex-account-switch.is-current {{ border-color: #bde0da; color: var(--accent-strong); background: var(--accent-soft); }}
     .codex-account-switch[disabled] {{ opacity: 1; cursor: default; box-shadow: none; transform: none; }}
     .claude-toolbar {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }}
     .claude-console-grid {{ display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(290px, 0.65fr); gap: 12px; align-items: start; }}
     .claude-summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }}
-    .claude-summary-card {{ background: linear-gradient(180deg, #ffffff, #fbfdfd); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; box-shadow: var(--shadow-card); }}
+    .claude-summary-card {{ background: linear-gradient(180deg, #ffffff, #f9fcfb); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; box-shadow: var(--shadow-tight); }}
     .claude-summary-card .meta {{ margin: 0; }}
     .claude-side-panel {{ display: grid; gap: 12px; min-width: 0; }}
     .claude-file-actions {{ display: grid; gap: 8px; }}
     .claude-provider-list {{ display: grid; gap: 10px; }}
-    .provider-status-pill {{ display: inline-flex; align-items: center; gap: 6px; width: fit-content; padding: 4px 10px; border-radius: 999px; font-size: 0.76rem; font-weight: 700; border: 1px solid var(--line); background: #fff; color: var(--muted); }}
+    .provider-status-pill {{ display: inline-flex; align-items: center; gap: 6px; width: fit-content; padding: 4px 10px; border-radius: 999px; font-size: 0.76rem; font-weight: 760; border: 1px solid var(--line); background: #fff; color: var(--muted); }}
     .provider-status-pill.ready {{ border-color: #bde0da; color: var(--accent-strong); background: var(--accent-soft); }}
     .provider-status-pill.missing {{ border-color: #f2d2a4; color: #8b5d10; background: #fff7e8; }}
     .provider-card-actions {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; justify-content: flex-end; }}
     .ref-button {{ display: inline; padding: 0; border: 0; background: transparent; color: #0b5cad; text-align: left; font-family: inherit; font-size: 0.92rem; font-weight: 600; overflow-wrap: anywhere; box-shadow: none; transform: none; }}
     .ref-button:hover {{ text-decoration: underline; border-color: transparent; box-shadow: none; transform: none; }}
     @media (max-width: 820px) {{
-      main {{ padding: 14px 12px 32px; }}
-      header {{ padding: 14px; }}
+      body {{ font-size: 13px; }}
+      main {{ padding: 12px 10px 28px; }}
+      header {{ padding: 14px; margin-bottom: 12px; }}
+      h1 {{ font-size: 1.2rem; }}
       .console-layout, .summary-grid, .policy-grid, .feedback-grid, .details-grid, .codex-grid, .codex-account, .claude-console-grid, .feedback-shell, .feedback-runs-grid {{ grid-template-columns: 1fr; }}
+      .view-tabs {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; }}
+      .view-tab {{ text-align: center; padding: 8px 7px; }}
       .feedback-preview {{ height: 300px; }}
       .info-list {{ grid-template-columns: 1fr; }}
       .sidebar {{ position: static; }}
       .output {{ min-height: 220px; }}
+      .panel, .metric, .policy-item, .table-wrap {{ box-shadow: 0 4px 16px rgba(12, 31, 36, 0.06); }}
       .table-wrap {{ overflow-x: visible; }}
       table, thead, tbody, tr, th, td {{ display: block; min-width: 0; width: 100%; }}
       thead {{ position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }}
       tr {{ border-bottom: 1px solid var(--line); }}
       tr:last-child {{ border-bottom: 0; }}
-      td {{ display: grid; grid-template-columns: 94px minmax(0, 1fr); gap: 10px; border-bottom: 1px solid var(--line); }}
+      td {{ display: grid; grid-template-columns: 82px minmax(0, 1fr); gap: 9px; border-bottom: 1px solid var(--line); }}
       td:last-child {{ border-bottom: 0; }}
       td::before {{ content: attr(data-label); color: var(--muted); font-size: 0.76rem; text-transform: uppercase; }}
     }}

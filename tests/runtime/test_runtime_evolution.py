@@ -43,9 +43,12 @@ class RuntimeEvolutionTests(unittest.TestCase):
         self.assertEqual(payload["mode"], "dry_run")
         self.assertFalse(payload["online_source_check"])
         self.assertGreaterEqual(payload["candidate_count"], 1)
+        self.assertIn("evidence_snapshot", payload)
+        self.assertEqual(payload["evidence_snapshot"]["current_source"]["status"], "pass")
         self.assertTrue(any(item["retrieval_mode"] == "dry_run_catalog" for item in payload["source_records"]))
         self.assertTrue(any(item["source_type"] == "internal_ai_coding_experience" for item in payload["source_records"]))
-        self.assertTrue(any(item["candidate_id"] == "EVOL-003" for item in payload["candidates"]))
+        self.assertTrue(any(item["candidate_id"] == "EVOL-AI-EXPERIENCE" for item in payload["candidates"]))
+        self.assertTrue(any(item["candidate_id"] == "EVOL-EFFECT-FEEDBACK" for item in payload["candidates"]))
         self.assertTrue(all(item["patch_plan"] for item in payload["candidates"]))
 
     def test_internal_ai_coding_experience_sources_are_local_checks(self) -> None:
@@ -79,7 +82,9 @@ class RuntimeEvolutionTests(unittest.TestCase):
         )
 
         self.assertTrue(result["stale"])
-        self.assertEqual(result["candidates"][0]["proposed_action"], "modify")
+        self.assertTrue(any(item["candidate_id"] == "EVOL-REVIEW-FRESHNESS" for item in result["candidates"]))
+        refresh = next(item for item in result["candidates"] if item["candidate_id"] == "EVOL-REVIEW-FRESHNESS")
+        self.assertEqual(refresh["proposed_action"], "modify")
 
     def test_runtime_evolution_rejects_invalid_candidate_action(self) -> None:
         module = _load_runtime_evolution_script()
