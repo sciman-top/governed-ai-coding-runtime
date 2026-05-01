@@ -1,0 +1,687 @@
+{
+  "onboard_attach": null,
+  "next_actions": [],
+  "governance_baseline_sync": {
+    "payload": null,
+    "exit_code": 0
+  },
+  "runtime_check": {
+    "payload": {
+      "write_preflight": null,
+      "source_string_contract_guard": {
+        "detected_classes": [
+          "ClassroomToolkit.Tests.App.LauncherOverflowContractTests",
+          "ClassroomToolkit.Tests.App.MainWindowImmediateZOrderRetouchContractTests",
+          "ClassroomToolkit.Tests.App.MainWindowSettingsSaveNotificationContractTests",
+          "ClassroomToolkit.Tests.App.PaintOverlayForegroundProcessContractTests",
+          "ClassroomToolkit.Tests.App.PaintOverlayWpsHookUnavailableContractTests",
+          "ClassroomToolkit.Tests.App.PhotoOverlayDiagnosticsStartupContractTests",
+          "ClassroomToolkit.Tests.App.RegionCaptureWhiteboardIntegrationContractTests",
+          "ClassroomToolkit.Tests.App.RollCallRemoteHookDispatchFallbackContractTests",
+          "ClassroomToolkit.Tests.App.RollCallRemoteHookLifecycleContractTests",
+          "ClassroomToolkit.Tests.App.RollCallSettingsSaveNotificationContractTests",
+          "ClassroomToolkit.Tests.App.RollCallSpeechDispatchFallbackContractTests",
+          "ClassroomToolkit.Tests.App.RollCallWindowLifecycleSubscriptionContractTests",
+          "ClassroomToolkit.Tests.App.RollCallWindowMinSizeDispatchFallbackContractTests",
+          "ClassroomToolkit.Tests.App.RollCallWindowSettingsReloadContractTests",
+          "ClassroomToolkit.Tests.App.SettingsMigrationFallbackContractTests",
+          "ClassroomToolkit.Tests.App.StartupCompatibilitySuppressionPersistSafetyContractTests",
+          "ClassroomToolkit.Tests.App.StartupCompatibilityWarningCopyContractTests",
+          "ClassroomToolkit.Tests.App.SystemDiagnosticsCopyContractTests",
+          "ClassroomToolkit.Tests.App.WindowInteropRetryExecutorContractTests",
+          "ClassroomToolkit.Tests.AppFoundationEventCallbackSafetyContractTests",
+          "ClassroomToolkit.Tests.AppGlobalExceptionDialogDispatchContractTests",
+          "ClassroomToolkit.Tests.BorderFixHelperDeferredDispatchFallbackContractTests",
+          "ClassroomToolkit.Tests.ComObjectManagerContractTests",
+          "ClassroomToolkit.Tests.CrossPageDisplayLifecycleContractTests",
+          "ClassroomToolkit.Tests.CrossPageInputResumeExecutionContractTests",
+          "ClassroomToolkit.Tests.DependencyGovernancePackageSourceContractTests",
+          "ClassroomToolkit.Tests.FileLoggerProviderShutdownSafetyContractTests",
+          "ClassroomToolkit.Tests.GlobalHookServiceLifecycleContractTests",
+          "ClassroomToolkit.Tests.ImageItemPropertyChangedSafetyContractTests",
+          "ClassroomToolkit.Tests.ImageManagerCloseCallbackSafetyContractTests",
+          "ClassroomToolkit.Tests.ImageManagerDispatcherShutdownGuardContractTests",
+          "ClassroomToolkit.Tests.ImageManagerEventCallbackSafetyContractTests",
+          "ClassroomToolkit.Tests.ImageManagerLoadImagesPostAwaitGuardContractTests",
+          "ClassroomToolkit.Tests.ImageManagerThumbnailCacheWarmupContractTests",
+          "ClassroomToolkit.Tests.ImageManagerThumbnailDispatchFallbackContractTests",
+          "ClassroomToolkit.Tests.ImageManagerTouchFlowContractTests",
+          "ClassroomToolkit.Tests.ImageManagerWindowDispatchFallbackContractTests",
+          "ClassroomToolkit.Tests.ImageManagerWindowFolderExpandLifecycleContractTests",
+          "ClassroomToolkit.Tests.InkStorageDiagnosticsContractTests",
+          "ClassroomToolkit.Tests.InteropAnalyzerContractTests",
+          "ClassroomToolkit.Tests.InteropBackgroundDispatchContractTests",
+          "ClassroomToolkit.Tests.InteropHookEventDispatchContractTests",
+          "ClassroomToolkit.Tests.InteropHookLifecycleContractTests",
+          "ClassroomToolkit.Tests.LauncherBubbleDispatchFallbackContractTests",
+          "ClassroomToolkit.Tests.LauncherBubblePositionCallbackSafetyContractTests",
+          "ClassroomToolkit.Tests.LauncherBubbleRestoreCallbackSafetyContractTests",
+          "ClassroomToolkit.Tests.LauncherBubbleTouchContractTests",
+          "ClassroomToolkit.Tests.LongPressBehaviorContractTests",
+          "ClassroomToolkit.Tests.LowFrequencyCallbackIsolationContractTests",
+          "ClassroomToolkit.Tests.MainWindowDiagnosticsEntryContractTests",
+          "ClassroomToolkit.Tests.MainWindowExitLifecycleContractTests",
+          "ClassroomToolkit.Tests.MainWindowPhotoFocusDispatchContractTests",
+          "ClassroomToolkit.Tests.MainWindowStartupDiagnosticsDialogTimingContractTests",
+          "ClassroomToolkit.Tests.MainWindowStartupDiagnosticsDispatchContractTests",
+          "ClassroomToolkit.Tests.MainWindowStartupWarmupDispatchContractTests",
+          "ClassroomToolkit.Tests.OverlayDeferredBoundsRecoveryContractTests",
+          "ClassroomToolkit.Tests.PaintModeManagerEventCallbackSafetyContractTests",
+          "ClassroomToolkit.Tests.PaintOverlayClearAllCrossPageRecoveryContractTests",
+          "ClassroomToolkit.Tests.PaintOverlayDrawingStateContractTests",
+          "ClassroomToolkit.Tests.PaintOverlayEventCallbackSafetyContractTests",
+          "ClassroomToolkit.Tests.PaintOverlayInkRedrawTelemetryContractTests",
+          "ClassroomToolkit.Tests.PaintOverlayPresentationTargetRoutingContractTests",
+          "ClassroomToolkit.Tests.PaintOverlaySetModeDispatchFallbackContractTests",
+          "ClassroomToolkit.Tests.PaintOverlayWhiteboardPhotoCacheContractTests",
+          "ClassroomToolkit.Tests.PaintOverlayWindowLifecycleContractTests",
+          "ClassroomToolkit.Tests.PaintSettingsDialogPresentationControlContractTests",
+          "ClassroomToolkit.Tests.PaintSettingsDialogSizeToContentContractTests",
+          "ClassroomToolkit.Tests.PaintToolbarDragModeContractTests",
+          "ClassroomToolkit.Tests.PaintToolbarEventCallbackSafetyContractTests",
+          "ClassroomToolkit.Tests.PaintToolbarTouchSettingsContractTests",
+          "ClassroomToolkit.Tests.PaintWindowOrchestratorEventCallbackSafetyContractTests",
+          "ClassroomToolkit.Tests.PaintWindowOrchestratorLifecycleContractTests",
+          "ClassroomToolkit.Tests.PaintWindowOrchestratorWhiteboardContractTests",
+          "ClassroomToolkit.Tests.PdfVisiblePrefetchDispatchContractTests",
+          "ClassroomToolkit.Tests.PhotoFullscreenBoundsEnforcementContractTests",
+          "ClassroomToolkit.Tests.PhotoNavigationDiagnosticsDisposeSafetyContractTests",
+          "ClassroomToolkit.Tests.PhotoOverlayAsyncLoadDispatchContractTests",
+          "ClassroomToolkit.Tests.PhotoOverlayEventCallbackSafetyContractTests",
+          "ClassroomToolkit.Tests.PhotoOverlayLoadBitmapDecodeContractTests",
+          "ClassroomToolkit.Tests.PhotoOverlayLoadedBitmapDispatchContractTests",
+          "ClassroomToolkit.Tests.PhotoOverlayShowOrderContractTests",
+          "ClassroomToolkit.Tests.PhotoOverlayTopmostNoActivateContractTests",
+          "ClassroomToolkit.Tests.PhotoPanInertiaRenderingContractTests",
+          "ClassroomToolkit.Tests.PhotoSaveNavigationContractTests",
+          "ClassroomToolkit.Tests.PhotoTouchInputContractTests",
+          "ClassroomToolkit.Tests.PilotMetricsScriptContractTests",
+          "ClassroomToolkit.Tests.PresentationDiagnosticsProbeBlockingSafetyContractTests",
+          "ClassroomToolkit.Tests.ReleasePreflightOutputRootContractTests",
+          "ClassroomToolkit.Tests.ReleasePrepareDistributionContractTests",
+          "ClassroomToolkit.Tests.RollCallViewModelEventCallbackSafetyContractTests",
+          "ClassroomToolkit.Tests.RollCallWindowPhotoOverlayReuseContractTests",
+          "ClassroomToolkit.Tests.RunLocalQualityGatesProfilePropagationContractTests",
+          "ClassroomToolkit.Tests.SpeechServiceLifecycleContractTests",
+          "ClassroomToolkit.Tests.WindowsProcessEnvironmentBootstrapContractTests"
+        ],
+        "detected_files": [
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\AppFoundationEventCallbackSafetyContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\AppGlobalExceptionDialogDispatchContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\App\\LauncherOverflowContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\App\\MainWindowImmediateZOrderRetouchContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\App\\MainWindowSettingsSaveNotificationContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\App\\PaintOverlayForegroundProcessContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\App\\PaintOverlayWpsHookUnavailableContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\App\\PhotoOverlayDiagnosticsStartupContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\App\\RegionCaptureWhiteboardIntegrationContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\App\\RollCallRemoteHookDispatchFallbackContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\App\\RollCallRemoteHookLifecycleContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\App\\RollCallSettingsSaveNotificationContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\App\\RollCallSpeechDispatchFallbackContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\App\\RollCallWindowLifecycleSubscriptionContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\App\\RollCallWindowMinSizeDispatchFallbackContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\App\\RollCallWindowSettingsReloadContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\App\\SettingsMigrationFallbackContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\App\\StartupCompatibilitySuppressionPersistSafetyContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\App\\StartupCompatibilityWarningCopyContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\App\\SystemDiagnosticsCopyContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\App\\WindowInteropRetryExecutorContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\BorderFixHelperDeferredDispatchFallbackContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\ComObjectManagerContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\CrossPageDisplayLifecycleContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\CrossPageInputResumeExecutionContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\DependencyGovernancePackageSourceContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\FileLoggerProviderShutdownSafetyContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\GlobalHookServiceLifecycleContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\ImageItemPropertyChangedSafetyContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\ImageManagerCloseCallbackSafetyContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\ImageManagerDispatcherShutdownGuardContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\ImageManagerEventCallbackSafetyContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\ImageManagerLoadImagesPostAwaitGuardContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\ImageManagerThumbnailCacheWarmupContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\ImageManagerThumbnailDispatchFallbackContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\ImageManagerTouchFlowContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\ImageManagerWindowDispatchFallbackContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\ImageManagerWindowFolderExpandLifecycleContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\InkStorageDiagnosticsContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\InteropAnalyzerContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\InteropBackgroundDispatchContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\InteropHookEventDispatchContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\InteropHookLifecycleContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\LauncherBubbleDispatchFallbackContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\LauncherBubblePositionCallbackSafetyContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\LauncherBubbleRestoreCallbackSafetyContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\LauncherBubbleTouchContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\LongPressBehaviorContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\LowFrequencyCallbackIsolationContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\MainWindowDiagnosticsEntryContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\MainWindowExitLifecycleContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\MainWindowPhotoFocusDispatchContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\MainWindowStartupDiagnosticsDialogTimingContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\MainWindowStartupDiagnosticsDispatchContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\MainWindowStartupWarmupDispatchContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\OverlayDeferredBoundsRecoveryContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PaintModeManagerEventCallbackSafetyContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PaintOverlayClearAllCrossPageRecoveryContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PaintOverlayDrawingStateContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PaintOverlayEventCallbackSafetyContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PaintOverlayInkRedrawTelemetryContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PaintOverlayPresentationTargetRoutingContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PaintOverlaySetModeDispatchFallbackContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PaintOverlayWhiteboardPhotoCacheContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PaintOverlayWindowLifecycleContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PaintSettingsDialogPresentationControlContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PaintSettingsDialogSizeToContentContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PaintToolbarDragModeContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PaintToolbarEventCallbackSafetyContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PaintToolbarTouchSettingsContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PaintWindowOrchestratorEventCallbackSafetyContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PaintWindowOrchestratorLifecycleContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PaintWindowOrchestratorWhiteboardContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PdfVisiblePrefetchDispatchContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PhotoFullscreenBoundsEnforcementContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PhotoNavigationDiagnosticsDisposeSafetyContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PhotoOverlayAsyncLoadDispatchContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PhotoOverlayEventCallbackSafetyContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PhotoOverlayLoadBitmapDecodeContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PhotoOverlayLoadedBitmapDispatchContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PhotoOverlayShowOrderContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PhotoOverlayTopmostNoActivateContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PhotoPanInertiaRenderingContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PhotoSaveNavigationContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PhotoTouchInputContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PilotMetricsScriptContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\PresentationDiagnosticsProbeBlockingSafetyContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\ReleasePreflightOutputRootContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\ReleasePrepareDistributionContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\RollCallViewModelEventCallbackSafetyContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\RollCallWindowPhotoOverlayReuseContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\RunLocalQualityGatesProfilePropagationContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\SpeechServiceLifecycleContractTests.cs",
+          "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\WindowsProcessEnvironmentBootstrapContractTests.cs"
+        ],
+        "executed_batches": [
+          {
+            "class_count": 20,
+            "exit_code": 0,
+            "filter": "FullyQualifiedName~ClassroomToolkit.Tests.App.LauncherOverflowContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.MainWindowImmediateZOrderRetouchContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.MainWindowSettingsSaveNotificationContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.PaintOverlayForegroundProcessContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.PaintOverlayWpsHookUnavailableContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.PhotoOverlayDiagnosticsStartupContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.RegionCaptureWhiteboardIntegrationContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.RollCallRemoteHookDispatchFallbackContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.RollCallRemoteHookLifecycleContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.RollCallSettingsSaveNotificationContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.RollCallSpeechDispatchFallbackContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.RollCallWindowLifecycleSubscriptionContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.RollCallWindowMinSizeDispatchFallbackContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.RollCallWindowSettingsReloadContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.SettingsMigrationFallbackContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.StartupCompatibilitySuppressionPersistSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.StartupCompatibilityWarningCopyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.SystemDiagnosticsCopyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.WindowInteropRetryExecutorContractTests|FullyQualifiedName~ClassroomToolkit.Tests.AppFoundationEventCallbackSafetyContractTests"
+          },
+          {
+            "class_count": 20,
+            "exit_code": 0,
+            "filter": "FullyQualifiedName~ClassroomToolkit.Tests.AppGlobalExceptionDialogDispatchContractTests|FullyQualifiedName~ClassroomToolkit.Tests.BorderFixHelperDeferredDispatchFallbackContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ComObjectManagerContractTests|FullyQualifiedName~ClassroomToolkit.Tests.CrossPageDisplayLifecycleContractTests|FullyQualifiedName~ClassroomToolkit.Tests.CrossPageInputResumeExecutionContractTests|FullyQualifiedName~ClassroomToolkit.Tests.DependencyGovernancePackageSourceContractTests|FullyQualifiedName~ClassroomToolkit.Tests.FileLoggerProviderShutdownSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.GlobalHookServiceLifecycleContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ImageItemPropertyChangedSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ImageManagerCloseCallbackSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ImageManagerDispatcherShutdownGuardContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ImageManagerEventCallbackSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ImageManagerLoadImagesPostAwaitGuardContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ImageManagerThumbnailCacheWarmupContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ImageManagerThumbnailDispatchFallbackContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ImageManagerTouchFlowContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ImageManagerWindowDispatchFallbackContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ImageManagerWindowFolderExpandLifecycleContractTests|FullyQualifiedName~ClassroomToolkit.Tests.InkStorageDiagnosticsContractTests|FullyQualifiedName~ClassroomToolkit.Tests.InteropAnalyzerContractTests"
+          },
+          {
+            "class_count": 20,
+            "exit_code": 0,
+            "filter": "FullyQualifiedName~ClassroomToolkit.Tests.InteropBackgroundDispatchContractTests|FullyQualifiedName~ClassroomToolkit.Tests.InteropHookEventDispatchContractTests|FullyQualifiedName~ClassroomToolkit.Tests.InteropHookLifecycleContractTests|FullyQualifiedName~ClassroomToolkit.Tests.LauncherBubbleDispatchFallbackContractTests|FullyQualifiedName~ClassroomToolkit.Tests.LauncherBubblePositionCallbackSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.LauncherBubbleRestoreCallbackSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.LauncherBubbleTouchContractTests|FullyQualifiedName~ClassroomToolkit.Tests.LongPressBehaviorContractTests|FullyQualifiedName~ClassroomToolkit.Tests.LowFrequencyCallbackIsolationContractTests|FullyQualifiedName~ClassroomToolkit.Tests.MainWindowDiagnosticsEntryContractTests|FullyQualifiedName~ClassroomToolkit.Tests.MainWindowExitLifecycleContractTests|FullyQualifiedName~ClassroomToolkit.Tests.MainWindowPhotoFocusDispatchContractTests|FullyQualifiedName~ClassroomToolkit.Tests.MainWindowStartupDiagnosticsDialogTimingContractTests|FullyQualifiedName~ClassroomToolkit.Tests.MainWindowStartupDiagnosticsDispatchContractTests|FullyQualifiedName~ClassroomToolkit.Tests.MainWindowStartupWarmupDispatchContractTests|FullyQualifiedName~ClassroomToolkit.Tests.OverlayDeferredBoundsRecoveryContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintModeManagerEventCallbackSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintOverlayClearAllCrossPageRecoveryContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintOverlayDrawingStateContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintOverlayEventCallbackSafetyContractTests"
+          },
+          {
+            "class_count": 20,
+            "exit_code": 0,
+            "filter": "FullyQualifiedName~ClassroomToolkit.Tests.PaintOverlayInkRedrawTelemetryContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintOverlayPresentationTargetRoutingContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintOverlaySetModeDispatchFallbackContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintOverlayWhiteboardPhotoCacheContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintOverlayWindowLifecycleContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintSettingsDialogPresentationControlContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintSettingsDialogSizeToContentContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintToolbarDragModeContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintToolbarEventCallbackSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintToolbarTouchSettingsContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintWindowOrchestratorEventCallbackSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintWindowOrchestratorLifecycleContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintWindowOrchestratorWhiteboardContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PdfVisiblePrefetchDispatchContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PhotoFullscreenBoundsEnforcementContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PhotoNavigationDiagnosticsDisposeSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PhotoOverlayAsyncLoadDispatchContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PhotoOverlayEventCallbackSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PhotoOverlayLoadBitmapDecodeContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PhotoOverlayLoadedBitmapDispatchContractTests"
+          },
+          {
+            "class_count": 14,
+            "exit_code": 0,
+            "filter": "FullyQualifiedName~ClassroomToolkit.Tests.PhotoOverlayShowOrderContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PhotoOverlayTopmostNoActivateContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PhotoPanInertiaRenderingContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PhotoSaveNavigationContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PhotoTouchInputContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PilotMetricsScriptContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PresentationDiagnosticsProbeBlockingSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ReleasePreflightOutputRootContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ReleasePrepareDistributionContractTests|FullyQualifiedName~ClassroomToolkit.Tests.RollCallViewModelEventCallbackSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.RollCallWindowPhotoOverlayReuseContractTests|FullyQualifiedName~ClassroomToolkit.Tests.RunLocalQualityGatesProfilePropagationContractTests|FullyQualifiedName~ClassroomToolkit.Tests.SpeechServiceLifecycleContractTests|FullyQualifiedName~ClassroomToolkit.Tests.WindowsProcessEnvironmentBootstrapContractTests"
+          }
+        ],
+        "failed_classes": [],
+        "reason": "all_source_string_contract_tests_passed",
+        "status": "pass",
+        "target_repo_root": "D:\\CODE\\ClassroomToolkit",
+        "test_project": "D:\\CODE\\ClassroomToolkit\\tests\\ClassroomToolkit.Tests\\ClassroomToolkit.Tests.csproj"
+      },
+      "status": {
+        "attachments": [
+          {
+            "adapter_preference": "native_attach",
+            "binding_id": "binding-classroomtoolkit",
+            "binding_state": "healthy",
+            "fail_closed": false,
+            "gate_profile": "default",
+            "light_pack_path": "D:\\CODE\\ClassroomToolkit\\.governed-ai\\light-pack.json",
+            "reason": null,
+            "remediation": null,
+            "repo_id": "classroomtoolkit",
+            "required_entrypoint_policy": {
+              "allow_direct_entrypoints": [
+                "run-governed-task.status",
+                "session-bridge.inspect_status",
+                "session-bridge.inspect_evidence",
+                "session-bridge.inspect_handoff",
+                "verify-repo"
+              ],
+              "canonical_entrypoints": [
+                "runtime-flow",
+                "runtime-flow-preset"
+              ],
+              "current_mode": "targeted_enforced",
+              "promotion_condition_ref": "docs/governance/entrypoint-promotion.md",
+              "target_mode": "repo_wide_enforced",
+              "targeted_enforcement_scopes": [
+                "run_quick_gate",
+                "run_full_gate",
+                "verify_attachment",
+                "govern_attachment_write",
+                "write_request",
+                "write_execute",
+                "execute_attachment_write"
+              ]
+            }
+          }
+        ],
+        "codex_capability": {
+          "adapter_tier": "process_bridge",
+          "evidence_export_available": true,
+          "failure_stage": "live_attach_probe_unsupported_status_command_missing",
+          "flow_kind": "process_bridge",
+          "live_attach_available": false,
+          "probe_attempts": 2,
+          "remediation_hint": "Treat `codex exec resume --help` as supporting evidence only. Native attach requires a build that exposes a status handshake command.",
+          "resume_available": true,
+          "stability_state": "degraded_after_retry",
+          "status": "degraded",
+          "structured_events_available": true,
+          "unsupported_capabilities": [
+            "native_attach"
+          ]
+        },
+        "maintenance": {
+          "compatibility_policy_ref": "docs/product/runtime-compatibility-and-upgrade-policy.md",
+          "deprecation_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+          "retirement_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+          "stage": "completed",
+          "triage_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+          "upgrade_policy_ref": "docs/product/runtime-compatibility-and-upgrade-policy.md"
+        },
+        "runtime_roots": {
+          "artifacts_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/artifacts",
+          "compatibility_mode": false,
+          "replay_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/replay",
+          "runtime_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime",
+          "tasks_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/tasks",
+          "workspaces_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/workspaces"
+        },
+        "tasks": [],
+        "total_tasks": 0
+      },
+      "write_execute": null,
+      "next_actions": [],
+      "verify_attachment": {
+        "binding_id": "binding-classroomtoolkit",
+        "blocking_gate_ids": [
+          "test",
+          "contract"
+        ],
+        "entrypoint_policy": {
+          "allow_direct_entrypoints": [
+            "run-governed-task.status",
+            "session-bridge.inspect_status",
+            "session-bridge.inspect_evidence",
+            "session-bridge.inspect_handoff",
+            "verify-repo"
+          ],
+          "blocked": false,
+          "canonical_entrypoints": [
+            "runtime-flow",
+            "runtime-flow-preset"
+          ],
+          "current_mode": "targeted_enforced",
+          "drift_detected": false,
+          "entrypoint_id": "runtime-flow-preset",
+          "is_allowed_direct": false,
+          "is_canonical": true,
+          "reason": null,
+          "remediation_hint": null,
+          "scope": "verify_attachment",
+          "target_mode": "repo_wide_enforced",
+          "targeted_enforcement_scopes": [
+            "run_quick_gate",
+            "run_full_gate",
+            "verify_attachment",
+            "govern_attachment_write",
+            "write_request",
+            "write_execute",
+            "execute_attachment_write"
+          ]
+        },
+        "evidence_link": "artifacts/task-20260501182519-classroomtoolkit/run-20260501182519-classroomtoolkit/verification-output/contract.txt",
+        "gate_order": [
+          "test",
+          "contract"
+        ],
+        "mode": "quick",
+        "outcome": "pass",
+        "repo_id": "classroomtoolkit",
+        "required_gate_ids": [
+          "test",
+          "contract"
+        ],
+        "result_artifact_refs": {
+          "contract": "artifacts/task-20260501182519-classroomtoolkit/run-20260501182519-classroomtoolkit/verification-output/contract.txt",
+          "test": "artifacts/task-20260501182519-classroomtoolkit/run-20260501182519-classroomtoolkit/verification-output/test.txt"
+        },
+        "results": {
+          "contract": "pass",
+          "test": "pass"
+        },
+        "run_id": "run-20260501182519-classroomtoolkit",
+        "service_boundary": "control-plane",
+        "task_id": "task-20260501182519-classroomtoolkit"
+      },
+      "steps": [
+        {
+          "exit_code": 0,
+          "output": "{\n  \"allowed_external_modules\": [],\n  \"allowed_local_modules\": [\n    \"governed_ai_coding_runtime_contracts\",\n    \"lib\"\n  ],\n  \"baseline_path\": \"D:/CODE/governed-ai-coding-runtime/docs/dependency-baseline.json\",\n  \"host_tooling\": [\n    {\n      \"found\": true,\n      \"name\": \"python\",\n      \"required\": true\n    },\n    {\n      \"found\": true,\n      \"name\": \"pwsh\",\n      \"required\": true\n    },\n    {\n      \"found\": true,\n      \"name\": \"git\",\n      \"required\": false\n    },\n    {\n      \"found\": true,\n      \"name\": \"codex\",\n      \"required\": false\n    }\n  ],\n  \"missing_required_tools\": [],\n  \"observed_external_modules\": [],\n  \"observed_import_roots\": [\n    \"__future__\",\n    \"argparse\",\n    \"ast\",\n    \"base64\",\n    \"binascii\",\n    \"collections\",\n    \"concurrent\",\n    \"contextlib\",\n    \"copy\",\n    \"dataclasses\",\n    \"datetime\",\n    \"fnmatch\",\n    \"functools\",\n    \"governed_ai_coding_runtime_contracts\",\n    \"hashlib\",\n    \"html\",\n    \"http\",\n    \"importlib\",\n    \"json\",\n    \"lib\",\n    \"os\",\n    \"pathlib\",\n    \"re\",\n    \"shutil\",\n    \"sqlite3\",\n    \"subprocess\",\n    \"sys\",\n    \"sysconfig\",\n    \"tempfile\",\n    \"threading\",\n    \"time\",\n    \"tomllib\",\n    \"types\",\n    \"typing\",\n    \"unittest\",\n    \"urllib\",\n    \"uuid\",\n    \"webbrowser\",\n    \"winreg\"\n  ],\n  \"scan_roots\": [\n    \"apps\",\n    \"packages\",\n    \"scripts\",\n    \"tests\"\n  ],\n  \"status\": \"pass\",\n  \"target_repo_baseline\": {\n    \"checked\": true,\n    \"expected_paths\": [\n      \"docs/dependency-baseline.md\",\n      \".governed-ai/dependency-baseline.json\"\n    ],\n    \"matched_paths\": [\n      \"docs/dependency-baseline.md\",\n      \".governed-ai/dependency-baseline.json\"\n    ],\n    \"present\": true,\n    \"required\": true,\n    \"target_repo_root\": \"D:/CODE/ClassroomToolkit\"\n  },\n  \"undeclared_imports\": {}\n}",
+          "label": "dependency-baseline-target-repo"
+        },
+        {
+          "exit_code": 0,
+          "output": "{\n  \"attachments\": [\n    {\n      \"adapter_preference\": \"native_attach\",\n      \"binding_id\": \"binding-classroomtoolkit\",\n      \"binding_state\": \"healthy\",\n      \"fail_closed\": false,\n      \"gate_profile\": \"default\",\n      \"light_pack_path\": \"D:\\\\CODE\\\\ClassroomToolkit\\\\.governed-ai\\\\light-pack.json\",\n      \"reason\": null,\n      \"remediation\": null,\n      \"repo_id\": \"classroomtoolkit\",\n      \"required_entrypoint_policy\": {\n        \"allow_direct_entrypoints\": [\n          \"run-governed-task.status\",\n          \"session-bridge.inspect_status\",\n          \"session-bridge.inspect_evidence\",\n          \"session-bridge.inspect_handoff\",\n          \"verify-repo\"\n        ],\n        \"canonical_entrypoints\": [\n          \"runtime-flow\",\n          \"runtime-flow-preset\"\n        ],\n        \"current_mode\": \"targeted_enforced\",\n        \"promotion_condition_ref\": \"docs/governance/entrypoint-promotion.md\",\n        \"target_mode\": \"repo_wide_enforced\",\n        \"targeted_enforcement_scopes\": [\n          \"run_quick_gate\",\n          \"run_full_gate\",\n          \"verify_attachment\",\n          \"govern_attachment_write\",\n          \"write_request\",\n          \"write_execute\",\n          \"execute_attachment_write\"\n        ]\n      }\n    }\n  ],\n  \"codex_capability\": {\n    \"adapter_tier\": \"process_bridge\",\n    \"evidence_export_available\": true,\n    \"failure_stage\": \"live_attach_probe_unsupported_status_command_missing\",\n    \"flow_kind\": \"process_bridge\",\n    \"live_attach_available\": false,\n    \"probe_attempts\": 2,\n    \"remediation_hint\": \"Treat `codex exec resume --help` as supporting evidence only. Native attach requires a build that exposes a status handshake command.\",\n    \"resume_available\": true,\n    \"stability_state\": \"degraded_after_retry\",\n    \"status\": \"degraded\",\n    \"structured_events_available\": true,\n    \"unsupported_capabilities\": [\n      \"native_attach\"\n    ]\n  },\n  \"maintenance\": {\n    \"compatibility_policy_ref\": \"docs/product/runtime-compatibility-and-upgrade-policy.md\",\n    \"deprecation_policy_ref\": \"docs/product/maintenance-deprecation-and-retirement-policy.md\",\n    \"retirement_policy_ref\": \"docs/product/maintenance-deprecation-and-retirement-policy.md\",\n    \"stage\": \"completed\",\n    \"triage_policy_ref\": \"docs/product/maintenance-deprecation-and-retirement-policy.md\",\n    \"upgrade_policy_ref\": \"docs/product/runtime-compatibility-and-upgrade-policy.md\"\n  },\n  \"runtime_roots\": {\n    \"artifacts_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/artifacts\",\n    \"compatibility_mode\": false,\n    \"replay_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/replay\",\n    \"runtime_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime\",\n    \"tasks_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/tasks\",\n    \"workspaces_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/workspaces\"\n  },\n  \"tasks\": [],\n  \"total_tasks\": 0\n}",
+          "label": "status"
+        },
+        {
+          "exit_code": 0,
+          "output": "OK python-command\nOK windows-process-environment\nOK python-asyncio\nOK windows-node-csprng\nOK runtime-path-contracts\nOK runtime-path-schema-catalog\nOK runtime-path-specs\nOK runtime-path-tests\nOK dependency-baseline-doc\nOK dependency-baseline-manifest\nOK dependency-baseline-script\nOK runtime-policy-compatibility\nOK runtime-policy-maintenance\nOK schema-catalog-visible\nOK gate-command-build\nOK gate-command-test\nOK gate-command-contract\nOK gate-command-doctor\nOK gate-command-operator\nOK repo-hook-pre-commit\nOK repo-hook-script\nOK repo-hook-installer\nOK repo-hooks-path\nOK runtime-status-surface\nOK maintenance-policy-visible\nWARN codex-capability-degraded\nHINT Treat `codex exec resume --help` as supporting evidence only. Native attach requires a build that exposes a status handshake command.\nOK adapter-posture-visible\nREMEDIATE-EVIDENCE D:\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\classroomtoolkit\\doctor\\remediation-20260501T182526307.json\nWARN attachment-light-pack-provenance-unsupported\nOK attachment-target-repo-dependency-baseline\nOK attachment-posture-healthy",
+          "label": "doctor"
+        },
+        {
+          "exit_code": 0,
+          "output": "{\n  \"command_id\": \"cmd-20260501182519-classroomtoolkit\",\n  \"command_type\": \"run_quick_gate\",\n  \"payload\": {\n    \"adapter_event_ref\": \"artifacts/task-20260501182519-classroomtoolkit/task-20260501182519-classroomtoolkit-session-bridge-request/evidence/adapter-events.json\",\n    \"adapter_event_summary\": {\n      \"approval_event_count\": 0,\n      \"file_change_count\": 0,\n      \"gate_run_count\": 2,\n      \"handoff_ref_count\": 0,\n      \"live_event_count\": 0,\n      \"manual_event_count\": 0,\n      \"task_id\": \"task-20260501182519-classroomtoolkit\",\n      \"tool_call_count\": 0,\n      \"unsupported_event_count\": 1\n    },\n    \"adapter_id\": \"codex-cli\",\n    \"blocking_gate_ids\": [\n      \"test\",\n      \"contract\"\n    ],\n    \"commands\": [\n      \"pwsh -NoProfile -ExecutionPolicy Bypass -Command \\\". .\\\\scripts\\\\env\\\\Initialize-WindowsProcessEnvironment.ps1; dotnet test tests\\\\ClassroomToolkit.Tests\\\\ClassroomToolkit.Tests.csproj -c Debug --no-restore --filter 'FullyQualifiedName~ArchitectureDependencyTests|FullyQualifiedName~InteropHookLifecycleContractTests|FullyQualifiedName~InteropHookEventDispatchContractTests|FullyQualifiedName~GlobalHookServiceLifecycleContractTests|FullyQualifiedName~CrossPageDisplayLifecycleContractTests'\\\"\",\n      \"pwsh -NoProfile -ExecutionPolicy Bypass -Command \\\". .\\\\scripts\\\\env\\\\Initialize-WindowsProcessEnvironment.ps1; dotnet test tests\\\\ClassroomToolkit.Tests\\\\ClassroomToolkit.Tests.csproj -c Debug --no-restore --filter 'FullyQualifiedName~ArchitectureDependencyTests|FullyQualifiedName~InteropHookLifecycleContractTests|FullyQualifiedName~InteropHookEventDispatchContractTests|FullyQualifiedName~GlobalHookServiceLifecycleContractTests|FullyQualifiedName~CrossPageDisplayLifecycleContractTests'\\\"\"\n    ],\n    \"continuation_id\": \"task-20260501182519-classroomtoolkit:run-20260501182519-classroomtoolkit\",\n    \"entrypoint_policy\": {\n      \"allow_direct_entrypoints\": [\n        \"run-governed-task.status\",\n        \"session-bridge.inspect_status\",\n        \"session-bridge.inspect_evidence\",\n        \"session-bridge.inspect_handoff\",\n        \"verify-repo\"\n      ],\n      \"blocked\": false,\n      \"canonical_entrypoints\": [\n        \"runtime-flow\",\n        \"runtime-flow-preset\"\n      ],\n      \"current_mode\": \"targeted_enforced\",\n      \"drift_detected\": false,\n      \"entrypoint_id\": \"runtime-flow-preset\",\n      \"is_allowed_direct\": false,\n      \"is_canonical\": true,\n      \"reason\": null,\n      \"remediation_hint\": null,\n      \"scope\": \"run_quick_gate\",\n      \"target_mode\": \"repo_wide_enforced\",\n      \"targeted_enforcement_scopes\": [\n        \"run_quick_gate\",\n        \"run_full_gate\",\n        \"verify_attachment\",\n        \"govern_attachment_write\",\n        \"write_request\",\n        \"write_execute\",\n        \"execute_attachment_write\"\n      ]\n    },\n    \"evidence_link\": \"artifacts/task-20260501182519-classroomtoolkit/session-bridge-request/verification-output/contract.txt\",\n    \"execution_id\": \"task-20260501182519-classroomtoolkit:session-bridge-request\",\n    \"gate_order\": [\n      \"test\",\n      \"contract\"\n    ],\n    \"mode\": \"quick\",\n    \"outcome\": \"pass\",\n    \"plan_only\": false,\n    \"required_gate_ids\": [\n      \"test\",\n      \"contract\"\n    ],\n    \"result_artifact_refs\": {\n      \"contract\": \"artifacts/task-20260501182519-classroomtoolkit/session-bridge-request/verification-output/contract.txt\",\n      \"test\": \"artifacts/task-20260501182519-classroomtoolkit/session-bridge-request/verification-output/test.txt\"\n    },\n    \"results\": {\n      \"contract\": \"pass\",\n      \"test\": \"pass\"\n    },\n    \"risky_artifact_refs\": [],\n    \"run_id\": \"session-bridge-request\",\n    \"session_identity\": {\n      \"adapter_id\": \"codex-cli\",\n      \"adapter_tier\": \"process_bridge\",\n      \"continuation_id\": \"task-20260501182519-classroomtoolkit:run-20260501182519-classroomtoolkit\",\n      \"flow_kind\": \"process_bridge\",\n      \"live_attach_available\": false,\n      \"posture_reason\": \"codex status command is unavailable; keep process bridge and treat resume command surface as supporting evidence only\",\n      \"resume_id\": \"resume-task-20260501182519-classroomtoolkit\",\n      \"session_id\": \"session-task-20260501182519-classroomtoolkit\",\n      \"unsupported_capabilities\": [\n        \"native_attach\"\n      ]\n    }\n  },\n  \"policy_decision_ref\": \"artifacts/task-20260501182519-classroomtoolkit/policy/session-bridge-allow.json\",\n  \"reason\": null,\n  \"status\": \"verification_completed\",\n  \"unsupported_capability_behavior\": null\n}",
+          "label": "session-bridge-request-gate"
+        },
+        {
+          "exit_code": 0,
+          "output": "{\n  \"binding_id\": \"binding-classroomtoolkit\",\n  \"blocking_gate_ids\": [\n    \"test\",\n    \"contract\"\n  ],\n  \"entrypoint_policy\": {\n    \"allow_direct_entrypoints\": [\n      \"run-governed-task.status\",\n      \"session-bridge.inspect_status\",\n      \"session-bridge.inspect_evidence\",\n      \"session-bridge.inspect_handoff\",\n      \"verify-repo\"\n    ],\n    \"blocked\": false,\n    \"canonical_entrypoints\": [\n      \"runtime-flow\",\n      \"runtime-flow-preset\"\n    ],\n    \"current_mode\": \"targeted_enforced\",\n    \"drift_detected\": false,\n    \"entrypoint_id\": \"runtime-flow-preset\",\n    \"is_allowed_direct\": false,\n    \"is_canonical\": true,\n    \"reason\": null,\n    \"remediation_hint\": null,\n    \"scope\": \"verify_attachment\",\n    \"target_mode\": \"repo_wide_enforced\",\n    \"targeted_enforcement_scopes\": [\n      \"run_quick_gate\",\n      \"run_full_gate\",\n      \"verify_attachment\",\n      \"govern_attachment_write\",\n      \"write_request\",\n      \"write_execute\",\n      \"execute_attachment_write\"\n    ]\n  },\n  \"evidence_link\": \"artifacts/task-20260501182519-classroomtoolkit/run-20260501182519-classroomtoolkit/verification-output/contract.txt\",\n  \"gate_order\": [\n    \"test\",\n    \"contract\"\n  ],\n  \"mode\": \"quick\",\n  \"outcome\": \"pass\",\n  \"repo_id\": \"classroomtoolkit\",\n  \"required_gate_ids\": [\n    \"test\",\n    \"contract\"\n  ],\n  \"result_artifact_refs\": {\n    \"contract\": \"artifacts/task-20260501182519-classroomtoolkit/run-20260501182519-classroomtoolkit/verification-output/contract.txt\",\n    \"test\": \"artifacts/task-20260501182519-classroomtoolkit/run-20260501182519-classroomtoolkit/verification-output/test.txt\"\n  },\n  \"results\": {\n    \"contract\": \"pass\",\n    \"test\": \"pass\"\n  },\n  \"run_id\": \"run-20260501182519-classroomtoolkit\",\n  \"service_boundary\": \"control-plane\",\n  \"task_id\": \"task-20260501182519-classroomtoolkit\"\n}",
+          "label": "verify-attachment"
+        },
+        {
+          "exit_code": 0,
+          "output": "{\n  \"detected_classes\": [\n    \"ClassroomToolkit.Tests.App.LauncherOverflowContractTests\",\n    \"ClassroomToolkit.Tests.App.MainWindowImmediateZOrderRetouchContractTests\",\n    \"ClassroomToolkit.Tests.App.MainWindowSettingsSaveNotificationContractTests\",\n    \"ClassroomToolkit.Tests.App.PaintOverlayForegroundProcessContractTests\",\n    \"ClassroomToolkit.Tests.App.PaintOverlayWpsHookUnavailableContractTests\",\n    \"ClassroomToolkit.Tests.App.PhotoOverlayDiagnosticsStartupContractTests\",\n    \"ClassroomToolkit.Tests.App.RegionCaptureWhiteboardIntegrationContractTests\",\n    \"ClassroomToolkit.Tests.App.RollCallRemoteHookDispatchFallbackContractTests\",\n    \"ClassroomToolkit.Tests.App.RollCallRemoteHookLifecycleContractTests\",\n    \"ClassroomToolkit.Tests.App.RollCallSettingsSaveNotificationContractTests\",\n    \"ClassroomToolkit.Tests.App.RollCallSpeechDispatchFallbackContractTests\",\n    \"ClassroomToolkit.Tests.App.RollCallWindowLifecycleSubscriptionContractTests\",\n    \"ClassroomToolkit.Tests.App.RollCallWindowMinSizeDispatchFallbackContractTests\",\n    \"ClassroomToolkit.Tests.App.RollCallWindowSettingsReloadContractTests\",\n    \"ClassroomToolkit.Tests.App.SettingsMigrationFallbackContractTests\",\n    \"ClassroomToolkit.Tests.App.StartupCompatibilitySuppressionPersistSafetyContractTests\",\n    \"ClassroomToolkit.Tests.App.StartupCompatibilityWarningCopyContractTests\",\n    \"ClassroomToolkit.Tests.App.SystemDiagnosticsCopyContractTests\",\n    \"ClassroomToolkit.Tests.App.WindowInteropRetryExecutorContractTests\",\n    \"ClassroomToolkit.Tests.AppFoundationEventCallbackSafetyContractTests\",\n    \"ClassroomToolkit.Tests.AppGlobalExceptionDialogDispatchContractTests\",\n    \"ClassroomToolkit.Tests.BorderFixHelperDeferredDispatchFallbackContractTests\",\n    \"ClassroomToolkit.Tests.ComObjectManagerContractTests\",\n    \"ClassroomToolkit.Tests.CrossPageDisplayLifecycleContractTests\",\n    \"ClassroomToolkit.Tests.CrossPageInputResumeExecutionContractTests\",\n    \"ClassroomToolkit.Tests.DependencyGovernancePackageSourceContractTests\",\n    \"ClassroomToolkit.Tests.FileLoggerProviderShutdownSafetyContractTests\",\n    \"ClassroomToolkit.Tests.GlobalHookServiceLifecycleContractTests\",\n    \"ClassroomToolkit.Tests.ImageItemPropertyChangedSafetyContractTests\",\n    \"ClassroomToolkit.Tests.ImageManagerCloseCallbackSafetyContractTests\",\n    \"ClassroomToolkit.Tests.ImageManagerDispatcherShutdownGuardContractTests\",\n    \"ClassroomToolkit.Tests.ImageManagerEventCallbackSafetyContractTests\",\n    \"ClassroomToolkit.Tests.ImageManagerLoadImagesPostAwaitGuardContractTests\",\n    \"ClassroomToolkit.Tests.ImageManagerThumbnailCacheWarmupContractTests\",\n    \"ClassroomToolkit.Tests.ImageManagerThumbnailDispatchFallbackContractTests\",\n    \"ClassroomToolkit.Tests.ImageManagerTouchFlowContractTests\",\n    \"ClassroomToolkit.Tests.ImageManagerWindowDispatchFallbackContractTests\",\n    \"ClassroomToolkit.Tests.ImageManagerWindowFolderExpandLifecycleContractTests\",\n    \"ClassroomToolkit.Tests.InkStorageDiagnosticsContractTests\",\n    \"ClassroomToolkit.Tests.InteropAnalyzerContractTests\",\n    \"ClassroomToolkit.Tests.InteropBackgroundDispatchContractTests\",\n    \"ClassroomToolkit.Tests.InteropHookEventDispatchContractTests\",\n    \"ClassroomToolkit.Tests.InteropHookLifecycleContractTests\",\n    \"ClassroomToolkit.Tests.LauncherBubbleDispatchFallbackContractTests\",\n    \"ClassroomToolkit.Tests.LauncherBubblePositionCallbackSafetyContractTests\",\n    \"ClassroomToolkit.Tests.LauncherBubbleRestoreCallbackSafetyContractTests\",\n    \"ClassroomToolkit.Tests.LauncherBubbleTouchContractTests\",\n    \"ClassroomToolkit.Tests.LongPressBehaviorContractTests\",\n    \"ClassroomToolkit.Tests.LowFrequencyCallbackIsolationContractTests\",\n    \"ClassroomToolkit.Tests.MainWindowDiagnosticsEntryContractTests\",\n    \"ClassroomToolkit.Tests.MainWindowExitLifecycleContractTests\",\n    \"ClassroomToolkit.Tests.MainWindowPhotoFocusDispatchContractTests\",\n    \"ClassroomToolkit.Tests.MainWindowStartupDiagnosticsDialogTimingContractTests\",\n    \"ClassroomToolkit.Tests.MainWindowStartupDiagnosticsDispatchContractTests\",\n    \"ClassroomToolkit.Tests.MainWindowStartupWarmupDispatchContractTests\",\n    \"ClassroomToolkit.Tests.OverlayDeferredBoundsRecoveryContractTests\",\n    \"ClassroomToolkit.Tests.PaintModeManagerEventCallbackSafetyContractTests\",\n    \"ClassroomToolkit.Tests.PaintOverlayClearAllCrossPageRecoveryContractTests\",\n    \"ClassroomToolkit.Tests.PaintOverlayDrawingStateContractTests\",\n    \"ClassroomToolkit.Tests.PaintOverlayEventCallbackSafetyContractTests\",\n    \"ClassroomToolkit.Tests.PaintOverlayInkRedrawTelemetryContractTests\",\n    \"ClassroomToolkit.Tests.PaintOverlayPresentationTargetRoutingContractTests\",\n    \"ClassroomToolkit.Tests.PaintOverlaySetModeDispatchFallbackContractTests\",\n    \"ClassroomToolkit.Tests.PaintOverlayWhiteboardPhotoCacheContractTests\",\n    \"ClassroomToolkit.Tests.PaintOverlayWindowLifecycleContractTests\",\n    \"ClassroomToolkit.Tests.PaintSettingsDialogPresentationControlContractTests\",\n    \"ClassroomToolkit.Tests.PaintSettingsDialogSizeToContentContractTests\",\n    \"ClassroomToolkit.Tests.PaintToolbarDragModeContractTests\",\n    \"ClassroomToolkit.Tests.PaintToolbarEventCallbackSafetyContractTests\",\n    \"ClassroomToolkit.Tests.PaintToolbarTouchSettingsContractTests\",\n    \"ClassroomToolkit.Tests.PaintWindowOrchestratorEventCallbackSafetyContractTests\",\n    \"ClassroomToolkit.Tests.PaintWindowOrchestratorLifecycleContractTests\",\n    \"ClassroomToolkit.Tests.PaintWindowOrchestratorWhiteboardContractTests\",\n    \"ClassroomToolkit.Tests.PdfVisiblePrefetchDispatchContractTests\",\n    \"ClassroomToolkit.Tests.PhotoFullscreenBoundsEnforcementContractTests\",\n    \"ClassroomToolkit.Tests.PhotoNavigationDiagnosticsDisposeSafetyContractTests\",\n    \"ClassroomToolkit.Tests.PhotoOverlayAsyncLoadDispatchContractTests\",\n    \"ClassroomToolkit.Tests.PhotoOverlayEventCallbackSafetyContractTests\",\n    \"ClassroomToolkit.Tests.PhotoOverlayLoadBitmapDecodeContractTests\",\n    \"ClassroomToolkit.Tests.PhotoOverlayLoadedBitmapDispatchContractTests\",\n    \"ClassroomToolkit.Tests.PhotoOverlayShowOrderContractTests\",\n    \"ClassroomToolkit.Tests.PhotoOverlayTopmostNoActivateContractTests\",\n    \"ClassroomToolkit.Tests.PhotoPanInertiaRenderingContractTests\",\n    \"ClassroomToolkit.Tests.PhotoSaveNavigationContractTests\",\n    \"ClassroomToolkit.Tests.PhotoTouchInputContractTests\",\n    \"ClassroomToolkit.Tests.PilotMetricsScriptContractTests\",\n    \"ClassroomToolkit.Tests.PresentationDiagnosticsProbeBlockingSafetyContractTests\",\n    \"ClassroomToolkit.Tests.ReleasePreflightOutputRootContractTests\",\n    \"ClassroomToolkit.Tests.ReleasePrepareDistributionContractTests\",\n    \"ClassroomToolkit.Tests.RollCallViewModelEventCallbackSafetyContractTests\",\n    \"ClassroomToolkit.Tests.RollCallWindowPhotoOverlayReuseContractTests\",\n    \"ClassroomToolkit.Tests.RunLocalQualityGatesProfilePropagationContractTests\",\n    \"ClassroomToolkit.Tests.SpeechServiceLifecycleContractTests\",\n    \"ClassroomToolkit.Tests.WindowsProcessEnvironmentBootstrapContractTests\"\n  ],\n  \"detected_files\": [\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\AppFoundationEventCallbackSafetyContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\AppGlobalExceptionDialogDispatchContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\App\\\\LauncherOverflowContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\App\\\\MainWindowImmediateZOrderRetouchContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\App\\\\MainWindowSettingsSaveNotificationContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\App\\\\PaintOverlayForegroundProcessContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\App\\\\PaintOverlayWpsHookUnavailableContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\App\\\\PhotoOverlayDiagnosticsStartupContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\App\\\\RegionCaptureWhiteboardIntegrationContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\App\\\\RollCallRemoteHookDispatchFallbackContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\App\\\\RollCallRemoteHookLifecycleContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\App\\\\RollCallSettingsSaveNotificationContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\App\\\\RollCallSpeechDispatchFallbackContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\App\\\\RollCallWindowLifecycleSubscriptionContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\App\\\\RollCallWindowMinSizeDispatchFallbackContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\App\\\\RollCallWindowSettingsReloadContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\App\\\\SettingsMigrationFallbackContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\App\\\\StartupCompatibilitySuppressionPersistSafetyContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\App\\\\StartupCompatibilityWarningCopyContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\App\\\\SystemDiagnosticsCopyContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\App\\\\WindowInteropRetryExecutorContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\BorderFixHelperDeferredDispatchFallbackContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\ComObjectManagerContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\CrossPageDisplayLifecycleContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\CrossPageInputResumeExecutionContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\DependencyGovernancePackageSourceContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\FileLoggerProviderShutdownSafetyContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\GlobalHookServiceLifecycleContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\ImageItemPropertyChangedSafetyContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\ImageManagerCloseCallbackSafetyContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\ImageManagerDispatcherShutdownGuardContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\ImageManagerEventCallbackSafetyContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\ImageManagerLoadImagesPostAwaitGuardContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\ImageManagerThumbnailCacheWarmupContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\ImageManagerThumbnailDispatchFallbackContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\ImageManagerTouchFlowContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\ImageManagerWindowDispatchFallbackContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\ImageManagerWindowFolderExpandLifecycleContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\InkStorageDiagnosticsContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\InteropAnalyzerContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\InteropBackgroundDispatchContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\InteropHookEventDispatchContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\InteropHookLifecycleContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\LauncherBubbleDispatchFallbackContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\LauncherBubblePositionCallbackSafetyContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\LauncherBubbleRestoreCallbackSafetyContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\LauncherBubbleTouchContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\LongPressBehaviorContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\LowFrequencyCallbackIsolationContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\MainWindowDiagnosticsEntryContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\MainWindowExitLifecycleContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\MainWindowPhotoFocusDispatchContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\MainWindowStartupDiagnosticsDialogTimingContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\MainWindowStartupDiagnosticsDispatchContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\MainWindowStartupWarmupDispatchContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\OverlayDeferredBoundsRecoveryContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PaintModeManagerEventCallbackSafetyContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PaintOverlayClearAllCrossPageRecoveryContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PaintOverlayDrawingStateContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PaintOverlayEventCallbackSafetyContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PaintOverlayInkRedrawTelemetryContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PaintOverlayPresentationTargetRoutingContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PaintOverlaySetModeDispatchFallbackContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PaintOverlayWhiteboardPhotoCacheContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PaintOverlayWindowLifecycleContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PaintSettingsDialogPresentationControlContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PaintSettingsDialogSizeToContentContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PaintToolbarDragModeContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PaintToolbarEventCallbackSafetyContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PaintToolbarTouchSettingsContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PaintWindowOrchestratorEventCallbackSafetyContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PaintWindowOrchestratorLifecycleContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PaintWindowOrchestratorWhiteboardContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PdfVisiblePrefetchDispatchContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PhotoFullscreenBoundsEnforcementContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PhotoNavigationDiagnosticsDisposeSafetyContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PhotoOverlayAsyncLoadDispatchContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PhotoOverlayEventCallbackSafetyContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PhotoOverlayLoadBitmapDecodeContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PhotoOverlayLoadedBitmapDispatchContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PhotoOverlayShowOrderContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PhotoOverlayTopmostNoActivateContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PhotoPanInertiaRenderingContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PhotoSaveNavigationContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PhotoTouchInputContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PilotMetricsScriptContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\PresentationDiagnosticsProbeBlockingSafetyContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\ReleasePreflightOutputRootContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\ReleasePrepareDistributionContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\RollCallViewModelEventCallbackSafetyContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\RollCallWindowPhotoOverlayReuseContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\RunLocalQualityGatesProfilePropagationContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\SpeechServiceLifecycleContractTests.cs\",\n    \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\WindowsProcessEnvironmentBootstrapContractTests.cs\"\n  ],\n  \"executed_batches\": [\n    {\n      \"class_count\": 20,\n      \"exit_code\": 0,\n      \"filter\": \"FullyQualifiedName~ClassroomToolkit.Tests.App.LauncherOverflowContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.MainWindowImmediateZOrderRetouchContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.MainWindowSettingsSaveNotificationContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.PaintOverlayForegroundProcessContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.PaintOverlayWpsHookUnavailableContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.PhotoOverlayDiagnosticsStartupContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.RegionCaptureWhiteboardIntegrationContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.RollCallRemoteHookDispatchFallbackContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.RollCallRemoteHookLifecycleContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.RollCallSettingsSaveNotificationContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.RollCallSpeechDispatchFallbackContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.RollCallWindowLifecycleSubscriptionContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.RollCallWindowMinSizeDispatchFallbackContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.RollCallWindowSettingsReloadContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.SettingsMigrationFallbackContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.StartupCompatibilitySuppressionPersistSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.StartupCompatibilityWarningCopyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.SystemDiagnosticsCopyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.App.WindowInteropRetryExecutorContractTests|FullyQualifiedName~ClassroomToolkit.Tests.AppFoundationEventCallbackSafetyContractTests\"\n    },\n    {\n      \"class_count\": 20,\n      \"exit_code\": 0,\n      \"filter\": \"FullyQualifiedName~ClassroomToolkit.Tests.AppGlobalExceptionDialogDispatchContractTests|FullyQualifiedName~ClassroomToolkit.Tests.BorderFixHelperDeferredDispatchFallbackContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ComObjectManagerContractTests|FullyQualifiedName~ClassroomToolkit.Tests.CrossPageDisplayLifecycleContractTests|FullyQualifiedName~ClassroomToolkit.Tests.CrossPageInputResumeExecutionContractTests|FullyQualifiedName~ClassroomToolkit.Tests.DependencyGovernancePackageSourceContractTests|FullyQualifiedName~ClassroomToolkit.Tests.FileLoggerProviderShutdownSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.GlobalHookServiceLifecycleContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ImageItemPropertyChangedSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ImageManagerCloseCallbackSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ImageManagerDispatcherShutdownGuardContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ImageManagerEventCallbackSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ImageManagerLoadImagesPostAwaitGuardContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ImageManagerThumbnailCacheWarmupContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ImageManagerThumbnailDispatchFallbackContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ImageManagerTouchFlowContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ImageManagerWindowDispatchFallbackContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ImageManagerWindowFolderExpandLifecycleContractTests|FullyQualifiedName~ClassroomToolkit.Tests.InkStorageDiagnosticsContractTests|FullyQualifiedName~ClassroomToolkit.Tests.InteropAnalyzerContractTests\"\n    },\n    {\n      \"class_count\": 20,\n      \"exit_code\": 0,\n      \"filter\": \"FullyQualifiedName~ClassroomToolkit.Tests.InteropBackgroundDispatchContractTests|FullyQualifiedName~ClassroomToolkit.Tests.InteropHookEventDispatchContractTests|FullyQualifiedName~ClassroomToolkit.Tests.InteropHookLifecycleContractTests|FullyQualifiedName~ClassroomToolkit.Tests.LauncherBubbleDispatchFallbackContractTests|FullyQualifiedName~ClassroomToolkit.Tests.LauncherBubblePositionCallbackSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.LauncherBubbleRestoreCallbackSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.LauncherBubbleTouchContractTests|FullyQualifiedName~ClassroomToolkit.Tests.LongPressBehaviorContractTests|FullyQualifiedName~ClassroomToolkit.Tests.LowFrequencyCallbackIsolationContractTests|FullyQualifiedName~ClassroomToolkit.Tests.MainWindowDiagnosticsEntryContractTests|FullyQualifiedName~ClassroomToolkit.Tests.MainWindowExitLifecycleContractTests|FullyQualifiedName~ClassroomToolkit.Tests.MainWindowPhotoFocusDispatchContractTests|FullyQualifiedName~ClassroomToolkit.Tests.MainWindowStartupDiagnosticsDialogTimingContractTests|FullyQualifiedName~ClassroomToolkit.Tests.MainWindowStartupDiagnosticsDispatchContractTests|FullyQualifiedName~ClassroomToolkit.Tests.MainWindowStartupWarmupDispatchContractTests|FullyQualifiedName~ClassroomToolkit.Tests.OverlayDeferredBoundsRecoveryContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintModeManagerEventCallbackSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintOverlayClearAllCrossPageRecoveryContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintOverlayDrawingStateContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintOverlayEventCallbackSafetyContractTests\"\n    },\n    {\n      \"class_count\": 20,\n      \"exit_code\": 0,\n      \"filter\": \"FullyQualifiedName~ClassroomToolkit.Tests.PaintOverlayInkRedrawTelemetryContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintOverlayPresentationTargetRoutingContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintOverlaySetModeDispatchFallbackContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintOverlayWhiteboardPhotoCacheContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintOverlayWindowLifecycleContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintSettingsDialogPresentationControlContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintSettingsDialogSizeToContentContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintToolbarDragModeContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintToolbarEventCallbackSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintToolbarTouchSettingsContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintWindowOrchestratorEventCallbackSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintWindowOrchestratorLifecycleContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PaintWindowOrchestratorWhiteboardContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PdfVisiblePrefetchDispatchContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PhotoFullscreenBoundsEnforcementContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PhotoNavigationDiagnosticsDisposeSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PhotoOverlayAsyncLoadDispatchContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PhotoOverlayEventCallbackSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PhotoOverlayLoadBitmapDecodeContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PhotoOverlayLoadedBitmapDispatchContractTests\"\n    },\n    {\n      \"class_count\": 14,\n      \"exit_code\": 0,\n      \"filter\": \"FullyQualifiedName~ClassroomToolkit.Tests.PhotoOverlayShowOrderContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PhotoOverlayTopmostNoActivateContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PhotoPanInertiaRenderingContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PhotoSaveNavigationContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PhotoTouchInputContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PilotMetricsScriptContractTests|FullyQualifiedName~ClassroomToolkit.Tests.PresentationDiagnosticsProbeBlockingSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ReleasePreflightOutputRootContractTests|FullyQualifiedName~ClassroomToolkit.Tests.ReleasePrepareDistributionContractTests|FullyQualifiedName~ClassroomToolkit.Tests.RollCallViewModelEventCallbackSafetyContractTests|FullyQualifiedName~ClassroomToolkit.Tests.RollCallWindowPhotoOverlayReuseContractTests|FullyQualifiedName~ClassroomToolkit.Tests.RunLocalQualityGatesProfilePropagationContractTests|FullyQualifiedName~ClassroomToolkit.Tests.SpeechServiceLifecycleContractTests|FullyQualifiedName~ClassroomToolkit.Tests.WindowsProcessEnvironmentBootstrapContractTests\"\n    }\n  ],\n  \"failed_classes\": [],\n  \"reason\": \"all_source_string_contract_tests_passed\",\n  \"status\": \"pass\",\n  \"target_repo_root\": \"D:\\\\CODE\\\\ClassroomToolkit\",\n  \"test_project\": \"D:\\\\CODE\\\\ClassroomToolkit\\\\tests\\\\ClassroomToolkit.Tests\\\\ClassroomToolkit.Tests.csproj\"\n}",
+          "label": "source-string-contract-guard"
+        }
+      ],
+      "live_loop": {
+        "fallback_reason": "codex status command is unavailable; keep process bridge and treat resume command surface as supporting evidence only",
+        "continuation_continuity": true,
+        "flow_kind": "process_bridge",
+        "closure_state": "fallback_explicit",
+        "resume_identity_continuity": true,
+        "session_identity_continuity": true,
+        "runtime_refs": [
+          "artifacts/task-20260501182519-classroomtoolkit/task-20260501182519-classroomtoolkit-session-bridge-request/evidence/adapter-events.json",
+          "artifacts/task-20260501182519-classroomtoolkit/session-bridge-request/verification-output/contract.txt",
+          "artifacts/task-20260501182519-classroomtoolkit/session-bridge-request/verification-output/test.txt"
+        ],
+        "fallback_explicit": true,
+        "is_live_attach": false,
+        "evidence_linkage_complete": true
+      },
+      "inspect_handoff": null,
+      "request_gate": {
+        "command_id": "cmd-20260501182519-classroomtoolkit",
+        "command_type": "run_quick_gate",
+        "payload": {
+          "adapter_event_ref": "artifacts/task-20260501182519-classroomtoolkit/task-20260501182519-classroomtoolkit-session-bridge-request/evidence/adapter-events.json",
+          "adapter_event_summary": {
+            "approval_event_count": 0,
+            "file_change_count": 0,
+            "gate_run_count": 2,
+            "handoff_ref_count": 0,
+            "live_event_count": 0,
+            "manual_event_count": 0,
+            "task_id": "task-20260501182519-classroomtoolkit",
+            "tool_call_count": 0,
+            "unsupported_event_count": 1
+          },
+          "adapter_id": "codex-cli",
+          "blocking_gate_ids": [
+            "test",
+            "contract"
+          ],
+          "commands": [
+            "pwsh -NoProfile -ExecutionPolicy Bypass -Command \". .\\scripts\\env\\Initialize-WindowsProcessEnvironment.ps1; dotnet test tests\\ClassroomToolkit.Tests\\ClassroomToolkit.Tests.csproj -c Debug --no-restore --filter 'FullyQualifiedName~ArchitectureDependencyTests|FullyQualifiedName~InteropHookLifecycleContractTests|FullyQualifiedName~InteropHookEventDispatchContractTests|FullyQualifiedName~GlobalHookServiceLifecycleContractTests|FullyQualifiedName~CrossPageDisplayLifecycleContractTests'\"",
+            "pwsh -NoProfile -ExecutionPolicy Bypass -Command \". .\\scripts\\env\\Initialize-WindowsProcessEnvironment.ps1; dotnet test tests\\ClassroomToolkit.Tests\\ClassroomToolkit.Tests.csproj -c Debug --no-restore --filter 'FullyQualifiedName~ArchitectureDependencyTests|FullyQualifiedName~InteropHookLifecycleContractTests|FullyQualifiedName~InteropHookEventDispatchContractTests|FullyQualifiedName~GlobalHookServiceLifecycleContractTests|FullyQualifiedName~CrossPageDisplayLifecycleContractTests'\""
+          ],
+          "continuation_id": "task-20260501182519-classroomtoolkit:run-20260501182519-classroomtoolkit",
+          "entrypoint_policy": {
+            "allow_direct_entrypoints": [
+              "run-governed-task.status",
+              "session-bridge.inspect_status",
+              "session-bridge.inspect_evidence",
+              "session-bridge.inspect_handoff",
+              "verify-repo"
+            ],
+            "blocked": false,
+            "canonical_entrypoints": [
+              "runtime-flow",
+              "runtime-flow-preset"
+            ],
+            "current_mode": "targeted_enforced",
+            "drift_detected": false,
+            "entrypoint_id": "runtime-flow-preset",
+            "is_allowed_direct": false,
+            "is_canonical": true,
+            "reason": null,
+            "remediation_hint": null,
+            "scope": "run_quick_gate",
+            "target_mode": "repo_wide_enforced",
+            "targeted_enforcement_scopes": [
+              "run_quick_gate",
+              "run_full_gate",
+              "verify_attachment",
+              "govern_attachment_write",
+              "write_request",
+              "write_execute",
+              "execute_attachment_write"
+            ]
+          },
+          "evidence_link": "artifacts/task-20260501182519-classroomtoolkit/session-bridge-request/verification-output/contract.txt",
+          "execution_id": "task-20260501182519-classroomtoolkit:session-bridge-request",
+          "gate_order": [
+            "test",
+            "contract"
+          ],
+          "mode": "quick",
+          "outcome": "pass",
+          "plan_only": false,
+          "required_gate_ids": [
+            "test",
+            "contract"
+          ],
+          "result_artifact_refs": {
+            "contract": "artifacts/task-20260501182519-classroomtoolkit/session-bridge-request/verification-output/contract.txt",
+            "test": "artifacts/task-20260501182519-classroomtoolkit/session-bridge-request/verification-output/test.txt"
+          },
+          "results": {
+            "contract": "pass",
+            "test": "pass"
+          },
+          "risky_artifact_refs": [],
+          "run_id": "session-bridge-request",
+          "session_identity": {
+            "adapter_id": "codex-cli",
+            "adapter_tier": "process_bridge",
+            "continuation_id": "task-20260501182519-classroomtoolkit:run-20260501182519-classroomtoolkit",
+            "flow_kind": "process_bridge",
+            "live_attach_available": false,
+            "posture_reason": "codex status command is unavailable; keep process bridge and treat resume command surface as supporting evidence only",
+            "resume_id": "resume-task-20260501182519-classroomtoolkit",
+            "session_id": "session-task-20260501182519-classroomtoolkit",
+            "unsupported_capabilities": [
+              "native_attach"
+            ]
+          }
+        },
+        "policy_decision_ref": "artifacts/task-20260501182519-classroomtoolkit/policy/session-bridge-allow.json",
+        "reason": null,
+        "status": "verification_completed",
+        "unsupported_capability_behavior": null
+      },
+      "dependency_baseline": {
+        "allowed_external_modules": [],
+        "allowed_local_modules": [
+          "governed_ai_coding_runtime_contracts",
+          "lib"
+        ],
+        "baseline_path": "D:/CODE/governed-ai-coding-runtime/docs/dependency-baseline.json",
+        "host_tooling": [
+          {
+            "found": true,
+            "name": "python",
+            "required": true
+          },
+          {
+            "found": true,
+            "name": "pwsh",
+            "required": true
+          },
+          {
+            "found": true,
+            "name": "git",
+            "required": false
+          },
+          {
+            "found": true,
+            "name": "codex",
+            "required": false
+          }
+        ],
+        "missing_required_tools": [],
+        "observed_external_modules": [],
+        "observed_import_roots": [
+          "__future__",
+          "argparse",
+          "ast",
+          "base64",
+          "binascii",
+          "collections",
+          "concurrent",
+          "contextlib",
+          "copy",
+          "dataclasses",
+          "datetime",
+          "fnmatch",
+          "functools",
+          "governed_ai_coding_runtime_contracts",
+          "hashlib",
+          "html",
+          "http",
+          "importlib",
+          "json",
+          "lib",
+          "os",
+          "pathlib",
+          "re",
+          "shutil",
+          "sqlite3",
+          "subprocess",
+          "sys",
+          "sysconfig",
+          "tempfile",
+          "threading",
+          "time",
+          "tomllib",
+          "types",
+          "typing",
+          "unittest",
+          "urllib",
+          "uuid",
+          "webbrowser",
+          "winreg"
+        ],
+        "scan_roots": [
+          "apps",
+          "packages",
+          "scripts",
+          "tests"
+        ],
+        "status": "pass",
+        "target_repo_baseline": {
+          "checked": true,
+          "expected_paths": [
+            "docs/dependency-baseline.md",
+            ".governed-ai/dependency-baseline.json"
+          ],
+          "matched_paths": [
+            "docs/dependency-baseline.md",
+            ".governed-ai/dependency-baseline.json"
+          ],
+          "present": true,
+          "required": true,
+          "target_repo_root": "D:/CODE/ClassroomToolkit"
+        },
+        "undeclared_imports": {}
+      },
+      "write_status": null,
+      "write_governance": null,
+      "problem_trace": {
+        "failure_stage": "none",
+        "write_issue": {
+          "reason": null,
+          "governance_status": null,
+          "execution_status": null,
+          "preflight_blocked": false,
+          "retry_command": null,
+          "policy_status": null,
+          "target_path": null
+        },
+        "failure_signature": "none",
+        "failed_steps": [],
+        "evidence_refs": [
+          "artifacts/task-20260501182519-classroomtoolkit/task-20260501182519-classroomtoolkit-session-bridge-request/evidence/adapter-events.json",
+          "artifacts/task-20260501182519-classroomtoolkit/session-bridge-request/verification-output/contract.txt",
+          "artifacts/task-20260501182519-classroomtoolkit/session-bridge-request/verification-output/test.txt",
+          "artifacts/task-20260501182519-classroomtoolkit/run-20260501182519-classroomtoolkit/verification-output/contract.txt"
+        ],
+        "problem_kind": "none",
+        "target_context": {
+          "task_id": "task-20260501182519-classroomtoolkit",
+          "flow_kind": "process_bridge",
+          "repo_binding_id": "binding-classroomtoolkit",
+          "entrypoint_id": "runtime-flow-preset",
+          "attachment_root": "D:\\CODE\\ClassroomToolkit",
+          "command_id": "cmd-20260501182519-classroomtoolkit",
+          "run_id": "run-20260501182519-classroomtoolkit",
+          "mode": "quick",
+          "closure_state": "fallback_explicit"
+        },
+        "gate_failure_ids": [],
+        "has_problem": false,
+        "failure_reason": null,
+        "next_actions": []
+      },
+      "inspect_evidence": null,
+      "summary": {
+        "attachment_root": "D:\\CODE\\ClassroomToolkit",
+        "flow_kind": "process_bridge",
+        "closure_state": "fallback_explicit",
+        "resume_id": "resume-task-20260501182519-classroomtoolkit",
+        "entrypoint_id": "runtime-flow-preset",
+        "session_id": "session-task-20260501182519-classroomtoolkit",
+        "entrypoint_policy_mode": "targeted_enforced",
+        "entrypoint_blocked": false,
+        "run_id": "run-20260501182519-classroomtoolkit",
+        "continuation_id": "task-20260501182519-classroomtoolkit:run-20260501182519-classroomtoolkit",
+        "attachment_runtime_state_root": "D:\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\classroomtoolkit",
+        "overall_status": "pass",
+        "entrypoint_drift": false,
+        "mode": "quick",
+        "repo_binding_id": "binding-classroomtoolkit",
+        "command_id": "cmd-20260501182519-classroomtoolkit",
+        "attachment_health": "healthy",
+        "task_id": "task-20260501182519-classroomtoolkit"
+      },
+      "write_approval": null
+    },
+    "exit_code": 0
+  },
+  "overall_status": "pass",
+  "flow_mode": "daily",
+  "exported_at": "2026-05-01T18:29:23.5165982+08:00",
+  "export_source": "runtime-flow-preset",
+  "export_target": "classroomtoolkit"
+}

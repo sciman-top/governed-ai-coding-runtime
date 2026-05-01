@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0",
   "report_kind": "target_repo_reuse_effect_feedback",
-  "generated_at": "2026-05-01T09:36:28.643721+00:00",
+  "generated_at": "2026-05-01T10:32:46.228489+00:00",
   "target": "classroomtoolkit",
   "runs_root": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\target-repo-runs",
   "baseline_run_ref": "classroomtoolkit-daily-20260420225453.json",
-  "after_run_ref": "classroomtoolkit-daily-20260501004238.json",
+  "after_run_ref": "classroomtoolkit-daily-20260501182923.json",
   "baseline_metrics": {
     "run_ref": "classroomtoolkit-daily-20260420225453.json",
     "flow": "daily",
@@ -39,9 +39,9 @@
     ]
   },
   "after_metrics": {
-    "run_ref": "classroomtoolkit-daily-20260501004238.json",
+    "run_ref": "classroomtoolkit-daily-20260501182923.json",
     "flow": "daily",
-    "timestamp_utc": "2026-05-01T00:42:38+00:00",
+    "timestamp_utc": "2026-05-01T18:29:23+00:00",
     "overall_status": "pass",
     "attachment_health": "healthy",
     "binding_state": "healthy",
@@ -64,23 +64,23 @@
     "evidence_complete": true,
     "evidence_completeness_ratio": 1.0,
     "evidence_refs": [
-      "artifacts/task-20260501003937-classroomtoolkit/run-20260501003937-classroomtoolkit/verification-output/contract.txt",
-      "artifacts/task-20260501003937-classroomtoolkit/session-bridge-request/verification-output/contract.txt",
-      "artifacts/task-20260501003937-classroomtoolkit/policy/session-bridge-allow.json",
-      "artifacts/task-20260501003937-classroomtoolkit/task-20260501003937-classroomtoolkit-session-bridge-request/evidence/adapter-events.json",
-      "artifacts/task-20260501003937-classroomtoolkit/session-bridge-request/verification-output/test.txt",
-      "artifacts/task-20260501003937-classroomtoolkit/run-20260501003937-classroomtoolkit/verification-output/test.txt"
+      "artifacts/task-20260501182519-classroomtoolkit/run-20260501182519-classroomtoolkit/verification-output/contract.txt",
+      "artifacts/task-20260501182519-classroomtoolkit/session-bridge-request/verification-output/contract.txt",
+      "artifacts/task-20260501182519-classroomtoolkit/policy/session-bridge-allow.json",
+      "artifacts/task-20260501182519-classroomtoolkit/task-20260501182519-classroomtoolkit-session-bridge-request/evidence/adapter-events.json",
+      "artifacts/task-20260501182519-classroomtoolkit/session-bridge-request/verification-output/test.txt",
+      "artifacts/task-20260501182519-classroomtoolkit/run-20260501182519-classroomtoolkit/verification-output/test.txt"
     ]
   },
   "rolling_kpi": {
     "target": "classroomtoolkit",
-    "total_daily_runs": 4,
-    "onboarding_latency_seconds": 710851,
-    "first_pass_latency_seconds": 710851,
+    "total_daily_runs": 5,
+    "onboarding_latency_seconds": 774856,
+    "first_pass_latency_seconds": 774856,
     "deny_to_success_retries": 0,
-    "fallback_rate": 0.25,
+    "fallback_rate": 0.4,
     "medium_risk_loop_success_ratio": null,
-    "problem_run_rate": 0.25,
+    "problem_run_rate": 0.2,
     "problem_recovery_retries": 1,
     "problem_signature_counts": {
       "summary:fail": 1
@@ -89,8 +89,8 @@
     "latest_problem_run_ref": "classroomtoolkit-daily-20260420225453.json",
     "latest_problem_evidence_ref": "artifacts/task-classroomtoolkit-daily-20260420225453/run-classroomtoolkit-daily-20260420225453/verification-output/contract.txt",
     "window_start_utc": "2026-04-20T22:54:53+00:00",
-    "window_end_utc": "2026-05-01T00:42:38+00:00",
-    "latest_evidence_ref": "artifacts/task-20260501003937-classroomtoolkit/run-20260501003937-classroomtoolkit/verification-output/contract.txt"
+    "window_end_utc": "2026-05-01T18:29:23+00:00",
+    "latest_evidence_ref": "artifacts/task-20260501182519-classroomtoolkit/run-20260501182519-classroomtoolkit/verification-output/contract.txt"
   },
   "decision": "adjust",
   "backlog_candidates": [
@@ -112,12 +112,12 @@
         "claim_guard": "do not claim native_attach recovery until a fresh target repo run proves it"
       },
       "evidence_refs": [
-        "artifacts/task-20260501003937-classroomtoolkit/run-20260501003937-classroomtoolkit/verification-output/contract.txt",
-        "artifacts/task-20260501003937-classroomtoolkit/session-bridge-request/verification-output/contract.txt",
-        "artifacts/task-20260501003937-classroomtoolkit/policy/session-bridge-allow.json",
-        "artifacts/task-20260501003937-classroomtoolkit/task-20260501003937-classroomtoolkit-session-bridge-request/evidence/adapter-events.json",
-        "artifacts/task-20260501003937-classroomtoolkit/session-bridge-request/verification-output/test.txt",
-        "artifacts/task-20260501003937-classroomtoolkit/run-20260501003937-classroomtoolkit/verification-output/test.txt"
+        "artifacts/task-20260501182519-classroomtoolkit/run-20260501182519-classroomtoolkit/verification-output/contract.txt",
+        "artifacts/task-20260501182519-classroomtoolkit/session-bridge-request/verification-output/contract.txt",
+        "artifacts/task-20260501182519-classroomtoolkit/policy/session-bridge-allow.json",
+        "artifacts/task-20260501182519-classroomtoolkit/task-20260501182519-classroomtoolkit-session-bridge-request/evidence/adapter-events.json",
+        "artifacts/task-20260501182519-classroomtoolkit/session-bridge-request/verification-output/test.txt",
+        "artifacts/task-20260501182519-classroomtoolkit/run-20260501182519-classroomtoolkit/verification-output/test.txt"
       ]
     },
     {
