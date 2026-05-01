@@ -116,6 +116,96 @@ function Invoke-PythonScript {
   Invoke-OperatorStep -Name $Name -Executable $python -Arguments (@($ScriptPath) + $ScriptArguments)
 }
 
+function Get-OperatorPreflightDecision {
+  $fixture = $env:GOVERNED_RUNTIME_OPERATOR_PREFLIGHT_JSON
+  if (-not [string]::IsNullOrWhiteSpace($fixture)) {
+    try {
+      return $fixture | ConvertFrom-Json -Depth 10
+    }
+    catch {
+      throw "Invalid GOVERNED_RUNTIME_OPERATOR_PREFLIGHT_JSON: $($_.Exception.Message)"
+    }
+  }
+
+  $python = Resolve-RequiredCommand -Names @("python", "python3")
+  $scriptPath = Join-Path $RepoRoot "scripts/select-next-work.py"
+  $arguments = @($scriptPath, "--as-of", (Get-Date -Format "yyyy-MM-dd"))
+
+  if ($DryRun) {
+    Write-Host ("operator-preflight-command: {0}" -f (Format-CommandForDisplay -Executable $python -Arguments $arguments))
+  }
+
+  $output = & $python @arguments 2>&1
+  $exitCode = $LASTEXITCODE
+  if ($null -eq $exitCode) {
+    $exitCode = 0
+  }
+  if ($exitCode -ne 0) {
+    $rendered = (($output | ForEach-Object { $_.ToString().TrimEnd() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($rendered)) {
+      $rendered = "no output"
+    }
+    throw "Operator preflight failed (exit_code=$exitCode): $rendered"
+  }
+
+  $json = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+  try {
+    return $json | ConvertFrom-Json -Depth 20
+  }
+  catch {
+    throw "Operator preflight returned invalid JSON: $($_.Exception.Message)"
+  }
+}
+
+function Show-OperatorPreflight {
+  param(
+    [Parameter(Mandatory = $true)]$Decision,
+    [Parameter(Mandatory = $true)][string]$ActionName
+  )
+
+  $nextAction = [string]$Decision.next_action
+  $why = [string]$Decision.why
+  $gateState = [string]$Decision.gate_state
+  $sourceState = [string]$Decision.source_state
+  $evidenceState = [string]$Decision.evidence_state
+  Write-Host ("operator-preflight: action={0} next_action={1}" -f $ActionName, $nextAction)
+  Write-Host ("operator-preflight-state: gate={0} source={1} evidence={2}" -f $gateState, $sourceState, $evidenceState)
+  if (-not [string]::IsNullOrWhiteSpace($why)) {
+    Write-Host ("operator-preflight-why: {0}" -f $why)
+  }
+}
+
+function Assert-OperatorPreflight {
+  param(
+    [Parameter(Mandatory = $true)][string]$ActionName
+  )
+
+  $decision = Get-OperatorPreflightDecision
+  Show-OperatorPreflight -Decision $decision -ActionName $ActionName
+
+  $blockingActions = @{
+    "Readiness"            = @()
+    "DailyAll"             = @("repair_gate_first", "refresh_evidence_first")
+    "ApplyAllFeatures"     = @("repair_gate_first", "refresh_evidence_first", "owner_directed_scope_required")
+    "EvolutionMaterialize" = @("repair_gate_first", "refresh_evidence_first", "owner_directed_scope_required")
+  }
+
+  $blockedBy = @($blockingActions[$ActionName])
+  if ($blockedBy.Count -eq 0) {
+    return
+  }
+
+  $nextAction = [string]$decision.next_action
+  if ($blockedBy -contains $nextAction) {
+    $message = "operator-preflight blocked: $ActionName requires '$nextAction' first."
+    $why = [string]$decision.why
+    if (-not [string]::IsNullOrWhiteSpace($why)) {
+      $message += " $why"
+    }
+    throw $message
+  }
+}
+
 function Get-BatchFlowArguments {
   param(
     [string[]]$BaseArguments = @()
@@ -202,6 +292,7 @@ function Invoke-OperatorUi {
 }
 
 function Invoke-Readiness {
+  Assert-OperatorPreflight -ActionName "Readiness"
   Invoke-PwshScript -Name "build" -ScriptPath "scripts/build-runtime.ps1"
   Invoke-PwshScript -Name "test" -ScriptPath "scripts/verify-repo.ps1" -ScriptArguments @("-Check", "Runtime")
   Invoke-PwshScript -Name "contract-invariant" -ScriptPath "scripts/verify-repo.ps1" -ScriptArguments @("-Check", "Contract")
@@ -229,12 +320,14 @@ function Invoke-GovernanceBaselineAll {
 }
 
 function Invoke-DailyAll {
+  Assert-OperatorPreflight -ActionName "DailyAll"
   $arguments = Get-BatchFlowArguments -BaseArguments @("-FlowMode", "daily", "-Mode", $Mode, "-Json", "-ExportTargetRepoRuns")
   Invoke-PwshScript -Name "daily-all-targets" -ScriptPath "scripts/runtime-flow-preset.ps1" -ScriptArguments $arguments
   Invoke-OperatorUi
 }
 
 function Invoke-ApplyAllFeatures {
+  Assert-OperatorPreflight -ActionName "ApplyAllFeatures"
   $arguments = Get-BatchFlowArguments -BaseArguments @(
     "-ApplyAllFeatures",
     "-FlowMode",
@@ -271,6 +364,7 @@ function Invoke-ExperienceReview {
 }
 
 function Invoke-EvolutionMaterialize {
+  Assert-OperatorPreflight -ActionName "EvolutionMaterialize"
   Invoke-PwshScript -Name "runtime-evolution-materialize" -ScriptPath "scripts/materialize-runtime-evolution.ps1" -ScriptArguments @("-Apply")
 }
 

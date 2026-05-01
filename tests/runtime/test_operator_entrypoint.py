@@ -1,5 +1,6 @@
 import json
 import importlib.util
+import os
 import shutil
 import subprocess
 import unittest
@@ -81,6 +82,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertTrue(output.exists())
         html = output.read_text(encoding="utf-8")
         self.assertIn("Runtime 摘要", html)
+        self.assertIn("下一步选择", html)
         self.assertIn("Codex 账号与配置", html)
         self.assertIn("Claude Provider 与配置", html)
 
@@ -115,6 +117,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertTrue(output.exists())
         html = output.read_text(encoding="utf-8")
         self.assertIn("Runtime Summary", html)
+        self.assertIn("Next Work Selector", html)
         self.assertIn("Codex Account and Config", html)
         self.assertIn("Claude Provider and Config", html)
 
@@ -123,6 +126,8 @@ class OperatorEntrypointTests(unittest.TestCase):
 
         self.assertIn("readiness", module.ALLOWED_ACTIONS)
         self.assertIn("feedback_report", module.ALLOWED_ACTIONS)
+        self.assertIn("evolution_review", module.ALLOWED_ACTIONS)
+        self.assertIn("evolution_materialize", module.ALLOWED_ACTIONS)
         self.assertIn("classroomtoolkit", module.load_target_ids())
         self.assertEqual(2, module.run_operator_action({"action": "unsupported"})["exit_code"])
         self.assertEqual(
@@ -139,6 +144,11 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn(feedback["status"], {"pass", "attention", "fail"})
         self.assertEqual("docs/product/host-feedback-loop.zh-CN.md", feedback["guide_path"])
         self.assertEqual("docs/product/host-feedback-loop.md", feedback["guide_path_en"])
+        next_work = module.load_next_work_summary()
+        self.assertIn(next_work["status"], {"pass", "error"})
+        if next_work["status"] != "error":
+            self.assertIn(next_work["ui_status"], {"healthy", "attention", "action_required"})
+            self.assertIn("next_action", next_work)
 
     def test_operator_ui_status_helpers_cache_short_ttl_results(self) -> None:
         module = _load_serve_operator_ui_module()
@@ -180,6 +190,78 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("classroomtoolkit", result["command"])
         self.assertIn("-DryRun", result["command"])
         self.assertIn("DRY-RUN daily-all-targets", result["output"])
+
+    def test_operator_preflight_blocks_high_impact_actions(self) -> None:
+        env = dict(os.environ)
+        env["GOVERNED_RUNTIME_OPERATOR_PREFLIGHT_JSON"] = json.dumps(
+            {
+                "next_action": "repair_gate_first",
+                "why": "Repo gates are not healthy.",
+                "gate_state": "fail",
+                "source_state": "fresh",
+                "evidence_state": "fresh",
+            }
+        )
+
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "operator.ps1"),
+                "-Action",
+                "ApplyAllFeatures",
+                "-DryRun",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+            env=env,
+        )
+
+        self.assertNotEqual(0, completed.returncode)
+        self.assertIn("operator-preflight blocked: ApplyAllFeatures", completed.stderr)
+
+    def test_operator_preflight_does_not_block_readiness(self) -> None:
+        env = dict(os.environ)
+        env["GOVERNED_RUNTIME_OPERATOR_PREFLIGHT_JSON"] = json.dumps(
+            {
+                "next_action": "repair_gate_first",
+                "why": "Repo gates are not healthy.",
+                "gate_state": "fail",
+                "source_state": "fresh",
+                "evidence_state": "fresh",
+            }
+        )
+
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "operator.ps1"),
+                "-Action",
+                "Readiness",
+                "-DryRun",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+            env=env,
+        )
+
+        self.assertEqual(0, completed.returncode, completed.stderr)
+        self.assertIn("operator-preflight: action=Readiness next_action=repair_gate_first", completed.stdout)
 
     def test_operator_feedback_report_action_writes_summary(self) -> None:
         completed = subprocess.run(
@@ -229,6 +311,18 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn(payload["status"], {"running", "stopped"})
         self.assertIn("operator-ui.pid", payload["pid_path"])
         self.assertIn("operator-ui.log", payload["log_path"])
+        self.assertIn("stale", payload)
+        self.assertIn("source_last_write_utc", payload)
+
+    def test_operator_ui_service_detects_stale_source_processes(self) -> None:
+        script = (ROOT / "scripts" / "operator-ui-service.ps1").read_text(encoding="utf-8")
+
+        self.assertIn("function Test-ServiceProcessStale", script)
+        self.assertIn("Get-ServiceSourceLastWriteUtc", script)
+        self.assertIn("operator_ui.py", script)
+        self.assertIn("serve-operator-ui.py", script)
+        self.assertIn("Stop-ServiceProcess", script)
+        self.assertIn("source_last_write_utc", script)
 
     def test_operator_ui_service_autostart_status_succeeds(self) -> None:
         completed = subprocess.run(

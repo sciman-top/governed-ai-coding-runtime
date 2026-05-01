@@ -23,6 +23,14 @@ $LogPath = Join-Path $RuntimeDir "operator-ui.log"
 $ErrorLogPath = Join-Path $RuntimeDir "operator-ui.err.log"
 $Url = "http://$HostAddress`:$Port/?lang=$UiLanguage"
 $AutoStartTaskName = "GovernedRuntimeOperatorUi-$Port"
+$SourceFiles = @(
+  (Join-Path $RepoRoot "scripts/serve-operator-ui.py"),
+  (Join-Path $RepoRoot "scripts/operator-ui-service.ps1"),
+  (Join-Path $RepoRoot "packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui.py"),
+  (Join-Path $RepoRoot "packages/contracts/src/governed_ai_coding_runtime_contracts/runtime_status.py"),
+  (Join-Path $RepoRoot "scripts/lib/codex_local.py"),
+  (Join-Path $RepoRoot "scripts/lib/claude_local.py")
+)
 
 function Resolve-PythonCommand {
   $python = Get-Command python -ErrorAction SilentlyContinue
@@ -70,19 +78,65 @@ function Test-UiReady {
   }
 }
 
+function Get-ServiceSourceLastWriteUtc {
+  $latest = [datetime]::MinValue
+  foreach ($sourceFile in $SourceFiles) {
+    if (-not (Test-Path -LiteralPath $sourceFile)) {
+      continue
+    }
+    $item = Get-Item -LiteralPath $sourceFile -ErrorAction SilentlyContinue
+    if ($item -and $item.LastWriteTimeUtc -gt $latest) {
+      $latest = $item.LastWriteTimeUtc
+    }
+  }
+  return $latest
+}
+
+function Get-ProcessStartUtc {
+  param([Parameter(Mandatory = $true)]$Process)
+
+  try {
+    return $Process.StartTime.ToUniversalTime()
+  }
+  catch {
+    return $null
+  }
+}
+
+function Test-ServiceProcessStale {
+  param([Parameter(Mandatory = $true)]$Process)
+
+  $processStartUtc = Get-ProcessStartUtc -Process $Process
+  if ($null -eq $processStartUtc) {
+    return $false
+  }
+  $sourceLastWriteUtc = Get-ServiceSourceLastWriteUtc
+  if ($sourceLastWriteUtc -eq [datetime]::MinValue) {
+    return $false
+  }
+  return $sourceLastWriteUtc -gt $processStartUtc
+}
+
 function Show-Status {
   $recorded = Get-RecordedProcess
   $owner = Get-PortOwner
   $ready = Test-UiReady
+  $serviceProcess = if ($owner) { $owner } elseif ($recorded) { $recorded } else { $null }
+  $sourceLastWriteUtc = Get-ServiceSourceLastWriteUtc
+  $processStartUtc = if ($serviceProcess) { Get-ProcessStartUtc -Process $serviceProcess } else { $null }
+  $stale = if ($serviceProcess) { Test-ServiceProcessStale -Process $serviceProcess } else { $false }
   [pscustomobject]@{
     status       = if ($ready) { "running" } else { "stopped" }
     url          = $Url
-    pid          = if ($owner) { $owner.Id } elseif ($recorded) { $recorded.Id } else { $null }
+    pid          = if ($serviceProcess) { $serviceProcess.Id } else { $null }
     pid_path     = $PidPath
     log_path     = $LogPath
     error_log_path = $ErrorLogPath
     port         = $Port
     ready        = $ready
+    stale        = $stale
+    process_start_utc = if ($processStartUtc) { $processStartUtc.ToString("o") } else { $null }
+    source_last_write_utc = if ($sourceLastWriteUtc -ne [datetime]::MinValue) { $sourceLastWriteUtc.ToString("o") } else { $null }
     autostart    = Get-AutoStartStatus
   } | ConvertTo-Json -Depth 3
 }
@@ -174,6 +228,20 @@ function Stop-ServiceProcess {
 
 function Start-ServiceProcess {
   New-Item -ItemType Directory -Path $RuntimeDir -Force | Out-Null
+
+  if (Test-UiReady) {
+    $owner = Get-PortOwner
+    if ($owner -and (Test-ServiceProcessStale -Process $owner)) {
+      Stop-ServiceProcess
+    }
+    else {
+      Show-Status
+      if ($OpenUi) {
+        Start-Process $Url | Out-Null
+      }
+      return
+    }
+  }
 
   if (Test-UiReady) {
     Show-Status

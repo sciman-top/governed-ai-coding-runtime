@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from html import escape
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import importlib.util
@@ -21,7 +22,7 @@ if str(CONTRACTS_SRC) not in sys.path:
 if str(SCRIPTS_SRC) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_SRC))
 
-from governed_ai_coding_runtime_contracts.operator_ui import render_runtime_snapshot_html, write_runtime_snapshot_html
+from governed_ai_coding_runtime_contracts.operator_ui import render_runtime_snapshot_html
 from governed_ai_coding_runtime_contracts.runtime_status import RuntimeStatusStore, runtime_snapshot_to_dict
 from lib.claude_local import claude_home, claude_status, optimize_claude_local, provider_profiles_path, settings_path, switch_provider
 from lib.codex_local import codex_status, switch_auth_profile
@@ -51,6 +52,9 @@ ALLOWED_ACTIONS = {
     "daily_all": {"operator_action": "DailyAll", "timeout_seconds": 1800},
     "apply_all_features": {"operator_action": "ApplyAllFeatures", "timeout_seconds": 2400},
     "feedback_report": {"operator_action": "FeedbackReport", "timeout_seconds": 600},
+    "evolution_review": {"operator_action": "EvolutionReview", "timeout_seconds": 900},
+    "experience_review": {"operator_action": "ExperienceReview", "timeout_seconds": 900},
+    "evolution_materialize": {"operator_action": "EvolutionMaterialize", "timeout_seconds": 900},
 }
 
 CODEX_STATUS_CACHE_TTL_SECONDS = 10.0
@@ -88,7 +92,11 @@ def main(argv: list[str] | None = None) -> int:
     if not output.is_absolute():
         output = ROOT / output
     snapshot = RuntimeStatusStore(ROOT / ".runtime" / "tasks", ROOT).snapshot()
-    written = write_runtime_snapshot_html(snapshot, output, language=args.lang, target_options=load_target_ids())
+    html = render_runtime_snapshot_html(snapshot, language=args.lang, target_options=load_target_ids())
+    html = inject_next_work_panel(html, language=args.lang)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(html, encoding="utf-8")
+    written = output
     file_url = written.resolve().as_uri()
     payload = {
         "file_url": file_url,
@@ -128,6 +136,7 @@ def _build_handler(*, default_language: str):
                 language = _normalize_language(params.get("lang", [default_language])[0])
                 snapshot = RuntimeStatusStore(ROOT / ".runtime" / "tasks", ROOT).snapshot()
                 html = render_runtime_snapshot_html(snapshot, language=language, interactive=True, target_options=load_target_ids())
+                html = inject_next_work_panel(html, language=language)
                 self._send_text(html, content_type="text/html; charset=utf-8")
                 return
             if parsed.path == "/api/status":
@@ -155,6 +164,11 @@ def _build_handler(*, default_language: str):
                 return
             if parsed.path == "/api/feedback/summary":
                 result = load_feedback_summary()
+                status = HTTPStatus.OK if result.get("status") != "error" else HTTPStatus.INTERNAL_SERVER_ERROR
+                self._send_json(result, status=status)
+                return
+            if parsed.path == "/api/next-work":
+                result = load_next_work_summary()
                 status = HTTPStatus.OK if result.get("status") != "error" else HTTPStatus.INTERNAL_SERVER_ERROR
                 self._send_json(result, status=status)
                 return
@@ -259,6 +273,93 @@ def load_feedback_summary() -> dict:
     payload["guide_path"] = "docs/product/host-feedback-loop.zh-CN.md"
     payload["guide_path_en"] = "docs/product/host-feedback-loop.md"
     return payload
+
+
+def _load_next_work_module():
+    path = ROOT / "scripts" / "select-next-work.py"
+    module_name = "select_next_work_script"
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"could not load next-work selector: {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_next_work_summary() -> dict:
+    try:
+        module = _load_next_work_module()
+        payload = module.inspect_next_work_selection(
+            repo_root=ROOT,
+            policy_path=ROOT / "docs" / "architecture" / "autonomous-next-work-selection-policy.json",
+            ltp_policy_path=ROOT / "docs" / "architecture" / "ltp-autonomous-promotion-policy.json",
+        )
+    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
+        return {"status": "error", "error": str(exc)}
+
+    next_action = payload.get("next_action")
+    if next_action in {"repair_gate_first", "refresh_evidence_first", "owner_directed_scope_required"}:
+        ui_status = "action_required"
+    elif next_action == "promote_ltp":
+        ui_status = "attention"
+    else:
+        ui_status = "healthy"
+
+    payload["status"] = payload.get("status") or "pass"
+    payload["ui_status"] = ui_status
+    payload["safe_next_action"] = next_action
+    return payload
+
+
+def inject_next_work_panel(html: str, *, language: str) -> str:
+    marker = '<div class="details-grid">'
+    if marker not in html:
+        return html
+    panel = render_next_work_panel(language=language)
+    return html.replace(marker, panel + "\n" + marker, 1)
+
+
+def render_next_work_panel(*, language: str) -> str:
+    payload = load_next_work_summary()
+    is_zh = not language.lower().startswith("en")
+    title = "下一步选择" if is_zh else "Next Work Selector"
+    if payload.get("status") == "error":
+        summary = "读取失败" if is_zh else "Load failed"
+        reason = payload.get("error", "")
+        state_line = f"{'状态' if is_zh else 'Status'}: error"
+        recommendation = "先修复 selector 或其依赖脚本。" if is_zh else "Repair the selector or one of its helper scripts first."
+    else:
+        ui_status = str(payload.get("ui_status", "healthy"))
+        status_labels = {
+            "zh": {"healthy": "healthy", "attention": "attention", "action_required": "action_required"},
+            "en": {"healthy": "healthy", "attention": "attention", "action_required": "action_required"},
+        }
+        next_action = str(payload.get("next_action", "unknown"))
+        summary = next_action
+        reason = str(payload.get("why", ""))
+        state_line = (
+            f"{'状态' if is_zh else 'Status'}: {status_labels['zh' if is_zh else 'en'].get(ui_status, ui_status)}"
+        )
+        recommendation = (
+            f"{'AI 推荐' if is_zh else 'AI recommended'}: {payload.get('safe_next_action', next_action)}"
+        )
+
+    escape_json = escape(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    return "\n".join(
+        [
+            "<section class='section'>",
+            f"<h2>{title}</h2>",
+            "<div class='policy-grid'>",
+            f"<div class='policy-card'><strong>{'动作' if is_zh else 'Action'}</strong><span>{summary}</span></div>",
+            f"<div class='policy-card'><strong>{'建议' if is_zh else 'Recommendation'}</strong><span>{recommendation}</span></div>",
+            f"<div class='policy-card'><strong>{'判定' if is_zh else 'State'}</strong><span>{state_line}</span></div>",
+            "</div>",
+            f"<p class='meta'>{reason}</p>" if reason else "<p class='meta'></p>",
+            f"<details><summary>{'查看 selector JSON' if is_zh else 'View selector JSON'}</summary><pre class='output'>{escape_json}</pre></details>",
+            "</section>",
+        ]
+    )
 
 
 def run_codex_switch(payload: dict) -> dict:
