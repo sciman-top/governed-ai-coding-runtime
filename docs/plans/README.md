@@ -13,6 +13,9 @@ This directory holds executable implementation plans that translate strategy and
 - [Runtime Evolution Review Plan](./runtime-evolution-review-plan.md)
   - Status: dry-run review and controlled materialization queue after `GAP-119`
   - Scope: `GAP-120` through `GAP-129` defining 30-day self-evolution policy, source collection, candidate evaluation, operator entrypoints, freshness/evidence gate, and low-risk materialization of proposal plus disabled skill candidate files without direct policy auto-apply or skill enablement
+- [Governance Hub Reuse And Controlled Evolution Plan](./governance-hub-reuse-and-controlled-evolution-plan.md)
+  - Status: active post-`GAP-129` implementation queue after the 2026-05-01 Codex/Claude cooperation-host and Hermes-style selective-absorption clarification; `GAP-130` is complete as scope rebaseline and `GAP-131..139` remain planned implementation work
+  - Scope: `GAP-130` through `GAP-139` for governance hub scope rebaseline, executable control packs, inheritance/override verification, target-repo effect feedback, governed knowledge/memory, skill/hook/gate/eval promotion, repo-map context shaping, tool/credential audit, and effect-metric certification
 - [Long-Term Gap Trigger Audit Plan](./long-term-gap-trigger-audit-plan.md)
   - Status: completed trigger-audit queue for `GAP-090` through `GAP-092`; all `LTP-01..05` packages remain deferred pending future trigger evidence
   - Scope: final-state claim refresh, sustained real-workload evidence window, and gated decision for whether exactly one `LTP-01..05` package should start
@@ -68,6 +71,7 @@ This directory holds executable implementation plans that translate strategy and
    - use [Optimized Hybrid Final-State Long-Term Implementation Plan](./optimized-hybrid-final-state-long-term-implementation-plan.md) and [Optimized Hybrid Final-State Long-Term Roadmap](../roadmap/optimized-hybrid-final-state-long-term-roadmap.md) as the active `GAP-093..114` chain after the 2026-04-27 stack review; `GAP-104..111` are the complete realization queue and `GAP-112..114` are post-certification guards
    - use [Claude Code First-Class Entrypoint Plan](./claude-code-first-class-entrypoint-plan.md) as the completed owner-directed `GAP-115..119` queue for Codex plus Claude Code dual first-class host entrypoints
    - use [Runtime Evolution Review Plan](./runtime-evolution-review-plan.md) as the `GAP-120..129` queue for governed 30-day self-evolution review and controlled materialization
+   - use [Governance Hub Reuse And Controlled Evolution Plan](./governance-hub-reuse-and-controlled-evolution-plan.md) as the `GAP-130..139` queue for the governance hub, reusable contract, and controlled evolution implementation path with real effect feedback
    - use [Long-Term Gap Trigger Audit Plan](./long-term-gap-trigger-audit-plan.md) as the completed `GAP-090..092` trigger-audit record before opening any future long-term package implementation
    - use [Continuous Execution Readiness And Rollout Plan](./continuous-execution-readiness-and-rollout-plan.md) as the active loop-oriented execution baseline
    - the local runtime baseline through `Maintenance Baseline / GAP-034` is complete on the current branch baseline

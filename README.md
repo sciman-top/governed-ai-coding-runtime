@@ -41,6 +41,10 @@
 - 不宣称所有未来外部仓、所有未来高风险流程都已被无条件接管；新增 LTP implementation queue 必须使用 `GAP-111` 之后的新 id，并由 scope fence 重新选择。
 - `LTP-01..06` 仍是触发式候选：当前 certification 将部分能力用 transition-stack 方式落地或覆盖，但未引入 Temporal/OPA/event bus/object store/full ops/signing 等重型包。
 
+当前受控演进口径：
+- `GAP-120..129` 已把 30 天自我演进 review、AI 编码经验沉淀、低风险 proposal/disabled skill materialization 纳入受控流程；但仍不自动改 policy、不自动启用 skill、不自动同步目标仓、不自动 push/merge。
+- `GAP-130` 已完成范围重基线；`GAP-131..139` 是下一条已规划的“治理中枢 + 复用契约 + 受控演进”实现路线：Codex 和 Claude Code 作为日常合作宿主，不与其竞争；本项目里的 Claude Code 默认按本机接入 GLM/DeepSeek 等第三方 Anthropic-compatible provider 处理，不假定官方订阅或官方账号权益；Hermes/OpenHands/SWE-agent/Letta/Mem0/Aider 等作为可选择吸收的机制来源。完成标准必须包含真实 target-repo effect feedback，而不只是新增文档或候选文件。自我演进必须评估现有功能组合，能按证据执行 `add/keep/improve/merge/deprecate/retire/delete_candidate`，而不是只会新增。
+
 现在能否用于其他项目？
 - 可以，**但边界是“治理 sidecar / attach-first metadata + runtime-managed gate/write flows + explicit degrade semantics”**。
 - 对 `..\ClassroomToolkit` 这类仓库，已经可以生成或校验 `.governed-ai`、挂到 machine-local runtime state、跑 status/doctor、执行 gate 流、执行受治理写流并保留证据链。
@@ -254,6 +258,10 @@ Current complete hybrid final-state certification posture:
 - It does not mean this project takes over upstream host UI ownership. Upstream authentication remains user-owned, and `native_attach` still degrades explicitly to `process_bridge` / `manual_handoff` when host capability is absent.
 - It does not claim unconditional takeover of every future external repo or every future high-risk workflow. New LTP implementation queues must use ids beyond `GAP-111` and pass a scope fence.
 - `LTP-01..06` remain trigger-based candidates: this certification lands or covers the required transition-stack capabilities without introducing Temporal, OPA, event bus, object store, full operations stack, or external signing as mandatory packages.
+
+Current controlled-evolution posture:
+- `GAP-120..129` put 30-day evolution review, AI coding experience capture, and low-risk proposal/disabled-skill materialization under governance. They still do not auto-apply policy, auto-enable skills, sync target repos, push, or merge.
+- `GAP-130` is complete as the scope rebaseline; `GAP-131..139` are the planned `Governance Hub + Reusable Contract + Controlled Evolution` implementation queue. Codex and Claude Code are cooperation hosts, not competitors; Claude Code is treated as local use through third-party Anthropic-compatible providers such as GLM or DeepSeek, not as an official subscription dependency; Hermes/OpenHands/SWE-agent/Letta/Mem0/Aider-style projects are selective mechanism sources. Completion requires real target-repo effect feedback, not only new docs or generated candidates. Self-evolution must evaluate the existing capability portfolio and decide `add/keep/improve/merge/deprecate/retire/delete_candidate` from evidence instead of only adding features.
 
 Primary docs:
 - [Single-Machine Runtime Quickstart](docs/quickstart/single-machine-runtime-quickstart.md)

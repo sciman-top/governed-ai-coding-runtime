@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260501 Governance Hub Reuse Plan](./20260501-governance-hub-reuse-plan.md)
+  - planning evidence for the `GAP-130..139` governance hub, reusable contract, controlled evolution, and effect-feedback queue after the Codex/Claude cooperation-host and Hermes-style selective-absorption clarification
 - [20260428 Operator Workflow UX And Local UI Refresh](./20260428-operator-workflow-ux.md)
   - evidence companion for adding the operator aggregate entrypoint, improving local operator HTML scanability, and refreshing user-facing entrypoint guidance
 - [20260427 Claude Code Native Attach Tier Parity](./20260427-claude-code-native-attach-tier-parity.md)

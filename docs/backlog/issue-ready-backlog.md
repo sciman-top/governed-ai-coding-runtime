@@ -42,6 +42,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Post-Certification Selection Queue / GAP-114` is complete on the current branch baseline. It mechanizes what autonomous work should happen next when `GAP-113` defers heavy LTP promotion.
 - `Dual First-Class Host Entrypoint Queue / GAP-115` through `GAP-119` is active as owner-directed bounded scope. It promotes Claude Code from generic degraded compatibility to first-class supported host parity with Codex in governance outcome and, on current live evidence, to the same `native_attach` tier while keeping host APIs and future drift explicit.
 - `Runtime Evolution Review Queue / GAP-120` through `GAP-124` is implemented as a dry-run decision layer. `Runtime Evolution Materialization Queue / GAP-125` through `GAP-129` starts controlled auto-apply by materializing low-risk proposal and disabled skill candidate files without enabling skills, auto-applying policy, syncing target repos, or pushing/merging.
+- `Governance Hub Reuse And Controlled Evolution Queue / GAP-130` is complete as the scope rebaseline, and `GAP-131` through `GAP-139` are planned as the next executable scope. It clarifies that Codex and Claude Code are cooperation hosts while Hermes/OpenHands/SWE-agent/Letta/Mem0/Aider-style mechanisms are selective absorption sources, then requires real effect feedback before any capability is called live.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -1206,6 +1207,152 @@ The entries below record the executed queue for complete hybrid final-state and 
   - [x] stale candidate detection uses evidence age and quality checks
   - [x] delete candidates are proposal-backed before file removal
   - [x] enabled or reviewed assets are never deleted by candidate cleanup
+
+## Governance Hub Reuse And Controlled Evolution Queue
+
+### GAP-130 Governance Hub Scope Rebaseline
+- Type: HITL
+- Blocked by: GAP-129
+- User stories: 13, 18, 21, 23, 29, 31, 37, 44
+- Status: complete; closed by `docs/change-evidence/20260501-governance-hub-reuse-plan.md`
+- What to build:
+  - post-`GAP-129` scope rebaseline for `Governance Hub + Reusable Contract + Controlled Evolution`
+  - explicit cooperation boundary for Codex and Claude Code as primary hosts
+  - selective absorption boundary for Hermes/OpenHands/SWE-agent/Letta/Mem0/Aider/Cline-style mechanisms
+  - source, evidence, rollback, and effect-feedback requirements for the new queue
+- Acceptance criteria:
+  - [x] plan distinguishes active cooperation hosts from external mechanism sources
+  - [x] final-state wording does not claim planned capabilities are already implemented
+  - [x] every new capability category has a required evidence and rollback path
+
+### GAP-131 Extended Borrowing Matrix And Capability Portfolio Classifier
+- Type: AFK
+- Blocked by: GAP-130
+- User stories: 13, 18, 21, 23, 29, 31, 37, 44
+- Status: planned
+- What to build:
+  - refreshed borrowing matrix for Codex, Claude Code, MCP, OPA, LangGraph, OpenHands, SWE-agent, Hermes Agent, Letta, Mem0, Aider repo map, Cline, OpenAI Cookbook/Evals, and Agent Skills
+  - adoption and portfolio classifier for both external mechanisms and existing project capabilities
+  - outcome states: `add`, `keep`, `improve`, `merge`, `deprecate`, `retire`, and `delete_candidate`
+  - explicit hypothesis for each added, improved, retained, merged, deprecated, retired, or deleted capability: expected benefit, cost, risk, effect metric, and rollback
+- Acceptance criteria:
+  - [ ] each source or existing capability maps to a product layer and lifecycle outcome
+  - [ ] added, improved, retained, merged, deprecated, retired, and deleted capabilities have measurable effect hypotheses
+  - [ ] rejected, deprecated, retired, or deleted candidates include a reason, rollback or retention rule, and future trigger when applicable
+
+### GAP-132 Control Pack Execution Contract Upgrade
+- Type: AFK
+- Blocked by: GAP-131
+- User stories: 7, 8, 11, 13, 18, 21, 23, 31, 44
+- Status: planned
+- What to build:
+  - executable control-pack contract for `policy`, `gate`, `hook`, `eval`, `workflow`, `skill`, `knowledge`, `memory`, `evidence`, and `rollback`
+  - schema or contract tests that fail when a control pack is metadata-only
+  - controlled materialization path from source-of-truth docs/schemas into runtime-consumable packs
+- Acceptance criteria:
+  - [ ] control packs include runnable or verifiable references, not only prose
+  - [ ] validation distinguishes unified kernel fields from target-repo fields
+  - [ ] invalid or incomplete packs fail closed before target repo sync
+
+### GAP-133 Inheritance Override And Forbidden Override Verifier
+- Type: AFK
+- Blocked by: GAP-132
+- User stories: 7, 8, 11, 13, 18, 21, 31, 38, 44
+- Status: planned
+- What to build:
+  - machine-readable matrix for `unified_governance`, `target_inherit`, `target_override`, and `forbidden_override`
+  - verifier that compares hub control packs with target repo profiles and emitted light packs
+  - clear `platform_na` and `gate_na` output when an override cannot be validated
+- Acceptance criteria:
+  - [ ] target repos cannot weaken unified gate order, evidence, rollback, or risk semantics
+  - [ ] allowed overrides are explicit, typed, and evidence-backed
+  - [ ] drift is visible through the existing verification entrypoint
+
+### GAP-134 Target Repo Reuse Effect Feedback Harness
+- Type: HITL
+- Blocked by: GAP-133
+- User stories: 11, 13, 14, 15, 21, 31, 38, 39, 44, 45
+- Status: planned
+- What to build:
+  - one-target proof that a target repo can inherit a control pack, apply allowed overrides, run gates, and emit effect metrics
+  - baseline-versus-after comparison for readiness, gate outcomes, drift, repeated failures, and evidence completeness
+  - operator-facing effect report that decides keep, adjust, retire, or promote
+- Acceptance criteria:
+  - [ ] at least one target repo run produces baseline and after metrics
+  - [ ] failures become backlog or retirement candidates rather than informal notes
+  - [ ] effect report is written to evidence and referenced by the verifier
+
+### GAP-135 Governed Knowledge Memory Lifecycle
+- Type: AFK
+- Blocked by: GAP-131, GAP-134
+- User stories: 13, 18, 21, 22, 23, 29, 31, 44
+- Status: planned
+- What to build:
+  - lifecycle for AI coding experience notes, knowledge candidates, pattern candidates, and memory records
+  - usefulness filter based on recurrence, transferability, verification, freshness, and blast-radius reduction
+  - expiry, retirement, and rollback rules for stale or harmful knowledge
+- Acceptance criteria:
+  - [ ] experience can be promoted only after source evidence and verification are attached
+  - [ ] memory records include scope, provenance, confidence, expiry, and retrieval evidence
+  - [ ] stale or low-value knowledge can be retired without deleting audit history
+
+### GAP-136 Skill Hook Gate Eval Promotion Lifecycle
+- Type: AFK
+- Blocked by: GAP-132, GAP-134
+- User stories: 7, 8, 11, 13, 14, 21, 23, 31, 44
+- Status: planned
+- What to build:
+  - staged lifecycle for skills, hooks, gates, evals, policies, and workflows
+  - disabled-by-default materialization followed by review, test, promotion, observe, enforce, and retirement
+  - effect metrics that prove a promoted skill or gate improves the real workflow
+  - cleanup path for stale, unreviewed, duplicated, or replaced candidates
+- Acceptance criteria:
+  - [ ] generated skills or hooks never auto-enable without promotion evidence
+  - [ ] promotion requires eval or gate evidence and rollback instructions
+  - [ ] retirement can remove inactive, duplicated, replaced, or harmful candidates without touching reviewed assets or evidence history
+
+### GAP-137 Repo Map And Context Shaping Integration
+- Type: AFK
+- Blocked by: GAP-133, GAP-134
+- User stories: 11, 13, 14, 15, 20, 31, 39, 44
+- Status: planned
+- What to build:
+  - repo-map artifact inspired by Aider-style concise repository context
+  - context budget and include/exclude rules for target repo profiles
+  - effect measurement for token cost, file-selection accuracy, and repeated clarification reduction
+- Acceptance criteria:
+  - [ ] context artifacts are generated or validated rather than manually copied
+  - [ ] target repos can override include/exclude rules without hiding required governance files
+  - [ ] effect metrics decide whether the repo map is kept, adjusted, or retired
+
+### GAP-138 Policy Tool Credential Audit Boundary
+- Type: HITL
+- Blocked by: GAP-133, GAP-134
+- User stories: 7, 8, 10, 13, 18, 21, 27, 31, 44
+- Status: planned
+- What to build:
+  - audit boundary for tool identity, credential scope, MCP/tool registry, host actions, and policy decisions
+  - fail-closed checks for unknown tools, overbroad credential use, and missing policy basis
+  - explicit deferral boundary for full IAM, gateway, or credential-broker products
+- Acceptance criteria:
+  - [ ] audit output identifies tool, scope, policy basis, decision, evidence, and remediation
+  - [ ] credential and tool checks can fail closed without becoming a standalone IAM system
+  - [ ] target repo overrides can only tighten policy or declare platform limitations
+
+### GAP-139 Governance Hub Certification With Effect Metrics
+- Type: HITL
+- Blocked by: GAP-134, GAP-135, GAP-136, GAP-137, GAP-138
+- User stories: 13, 14, 18, 21, 29, 31, 37, 38, 44, 45
+- Status: planned
+- What to build:
+  - certification package for governance hub, reusable contract, controlled evolution, and effect feedback
+  - current-source compatibility review that prevents claims from outgrowing implemented capabilities
+  - keep/improve/merge/deprecate/retire/delete-candidate decisions for every accelerated mechanism and existing capability under review
+- Acceptance criteria:
+  - [ ] certification includes target repo effect evidence, not only document or schema completion
+  - [ ] Codex and Claude Code remain cooperation hosts, not competitors
+  - [ ] any unimplemented or deferred capability is explicitly fenced with future trigger evidence
+  - [ ] final status answers whether the project has review, knowledge, capability upgrade, capability cleanup, controlled evolution, and self-improvement loops in executable form
 
 ## Vision
 

@@ -1,4 +1,4 @@
-issue_seed_version: "5.0"
+issue_seed_version: "5.1"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment
@@ -535,3 +535,53 @@ issues:
     type: AFK
     blocked_by: [GAP-128]
     user_stories: [13, 18, 21, 23, 29, 31, 44]
+  - id: GAP-130
+    title: Governance Hub Scope Rebaseline
+    type: HITL
+    blocked_by: [GAP-129]
+    user_stories: [13, 18, 21, 23, 29, 31, 37, 44]
+  - id: GAP-131
+    title: Extended Borrowing Matrix And Capability Portfolio Classifier
+    type: AFK
+    blocked_by: [GAP-130]
+    user_stories: [13, 18, 21, 23, 29, 31, 37, 44]
+  - id: GAP-132
+    title: Control Pack Execution Contract Upgrade
+    type: AFK
+    blocked_by: [GAP-131]
+    user_stories: [7, 8, 11, 13, 18, 21, 23, 31, 44]
+  - id: GAP-133
+    title: Inheritance Override And Forbidden Override Verifier
+    type: AFK
+    blocked_by: [GAP-132]
+    user_stories: [7, 8, 11, 13, 18, 21, 31, 38, 44]
+  - id: GAP-134
+    title: Target Repo Reuse Effect Feedback Harness
+    type: HITL
+    blocked_by: [GAP-133]
+    user_stories: [11, 13, 14, 15, 21, 31, 38, 39, 44, 45]
+  - id: GAP-135
+    title: Governed Knowledge Memory Lifecycle
+    type: AFK
+    blocked_by: [GAP-131, GAP-134]
+    user_stories: [13, 18, 21, 22, 23, 29, 31, 44]
+  - id: GAP-136
+    title: Skill Hook Gate Eval Promotion Lifecycle
+    type: AFK
+    blocked_by: [GAP-132, GAP-134]
+    user_stories: [7, 8, 11, 13, 14, 21, 23, 31, 44]
+  - id: GAP-137
+    title: Repo Map And Context Shaping Integration
+    type: AFK
+    blocked_by: [GAP-133, GAP-134]
+    user_stories: [11, 13, 14, 15, 20, 31, 39, 44]
+  - id: GAP-138
+    title: Policy Tool Credential Audit Boundary
+    type: HITL
+    blocked_by: [GAP-133, GAP-134]
+    user_stories: [7, 8, 10, 13, 18, 21, 27, 31, 44]
+  - id: GAP-139
+    title: Governance Hub Certification With Effect Metrics
+    type: HITL
+    blocked_by: [GAP-134, GAP-135, GAP-136, GAP-137, GAP-138]
+    user_stories: [13, 14, 18, 21, 29, 31, 37, 38, 44, 45]

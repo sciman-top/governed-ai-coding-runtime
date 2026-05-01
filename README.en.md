@@ -38,6 +38,11 @@ Complete hybrid final-state certification posture:
 - It does not claim unconditional takeover of every future external repo or every future high-risk workflow. New LTP implementation queues must use ids beyond `GAP-111` and pass a scope fence.
 - `LTP-01..06` remain trigger-based candidates: this certification lands or covers the required transition-stack capabilities without introducing Temporal, OPA, event bus, object store, full operations stack, or external signing as mandatory packages.
 
+## Current Controlled-Evolution Posture
+`GAP-120..129` put 30-day evolution review, AI coding experience capture, and low-risk proposal/disabled-skill materialization under governance. They still do not auto-apply policy, auto-enable skills, sync target repos, push, or merge.
+
+`GAP-130` is complete as the scope rebaseline; `GAP-131..139` are the planned `Governance Hub + Reusable Contract + Controlled Evolution` implementation queue. Codex and Claude Code are cooperation hosts, not competitors; Claude Code is treated as local use through third-party Anthropic-compatible providers such as GLM or DeepSeek, not as an official subscription dependency; Hermes/OpenHands/SWE-agent/Letta/Mem0/Aider-style projects are selective mechanism sources. Completion requires real target-repo effect feedback, not only new docs or generated candidates. Self-evolution must evaluate the existing capability portfolio and decide `add/keep/improve/merge/deprecate/retire/delete_candidate` from evidence instead of only adding features.
+
 ## Can I Use This With Another Repo?
 Yes, with the current boundary.
 
