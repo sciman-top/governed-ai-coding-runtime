@@ -56,6 +56,9 @@ Allowed `declared_rule` values:
 - every audit output must identify tool, scope, policy basis, decision, evidence, and remediation
 - target-repo overrides in this audit boundary may only tighten policy or declare platform limitations
 - Codex and Claude Code remain cooperation hosts; credential ownership stays user-owned unless a later bounded contract proves otherwise
+- local Codex/Claude/Gemini user configuration may preserve operator convenience settings only when deterministic guard evidence remains present
+- plaintext local login tokens are accepted operator-owned state only when credential-bearing config files are denied to agents and are not synchronized into repositories
+- MCP server synchronization is acceptable only when credentials remain indirect through environment-variable references rather than expanded token values
 
 ## Non-Goals
 - full IAM

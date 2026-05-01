@@ -39,6 +39,8 @@ def inspect_policy_tool_credential_audit(*, repo_root: Path) -> dict:
         failures.append("overbroad_credential_scope")
     if result["unsupported_override_refs"]:
         failures.append("unsupported_override")
+    if result["local_agent_config_audit"]["status"] not in {"pass", "platform_na"}:
+        failures.append("local_agent_config_failure")
     if any(item["status"] != "pass" for item in result["audited_tools"]):
         failures.append("tool_entry_failure")
     if any(item["status"] != "pass" for item in result["override_audit"]):

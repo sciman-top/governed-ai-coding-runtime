@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import tomllib
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +22,7 @@ def main() -> int:
     parser.add_argument("--repo-profile", default=str(DEFAULT_REPO_PROFILE))
     parser.add_argument("--tool-contract", default=str(DEFAULT_TOOL_CONTRACT))
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT))
+    parser.add_argument("--home", default=str(Path.home()))
     args = parser.parse_args()
 
     try:
@@ -30,6 +32,7 @@ def main() -> int:
             repo_profile_path=Path(args.repo_profile),
             tool_contract_path=Path(args.tool_contract),
             output_path=Path(args.output),
+            home_path=Path(args.home),
         )
     except ValueError as exc:
         print(str(exc), file=sys.stderr)
@@ -46,8 +49,10 @@ def build_policy_tool_credential_audit(
     repo_profile_path: Path,
     tool_contract_path: Path,
     output_path: Path,
+    home_path: Path | None = None,
 ) -> dict[str, Any]:
     repo_root = repo_root.resolve(strict=False)
+    home_path = (home_path or Path.home()).resolve(strict=False)
     config = _load_json(config_path)
     repo_profile = _load_json(repo_profile_path)
     tool_contract = _load_json(tool_contract_path)
@@ -180,6 +185,7 @@ def build_policy_tool_credential_audit(
         "repo_profile_allowlist": normalized_allowlist,
         "audited_tools": audited_tools,
         "override_audit": override_audit,
+        "local_agent_config_audit": _inspect_local_agent_config(home_path=home_path),
         "unknown_tools": unknown_tools,
         "denied_allowlisted_tools": denied_allowlisted_tools,
         "missing_policy_basis_refs": sorted(set(missing_policy_basis_refs)),
@@ -207,6 +213,103 @@ def build_policy_tool_credential_audit(
     return report
 
 
+def _inspect_local_agent_config(*, home_path: Path) -> dict[str, Any]:
+    codex_dir = home_path / ".codex"
+    claude_dir = home_path / ".claude"
+    gemini_dir = home_path / ".gemini"
+
+    if not codex_dir.exists() and not claude_dir.exists() and not gemini_dir.exists():
+        return {
+            "status": "platform_na",
+            "home_ref": "~",
+            "reason": "No Codex, Claude, or Gemini user config directory is present under the inspected home path.",
+            "checks": [],
+            "failed_checks": [],
+        }
+
+    codex_config = _load_optional_toml(codex_dir / "config.toml")
+    claude_settings = _load_optional_json(claude_dir / "settings.json")
+    gemini_settings = _load_optional_json(gemini_dir / "settings.json")
+
+    checks = [
+        _check(
+            check_id="codex_analytics_disabled",
+            status=_nested_get(codex_config, ["analytics", "enabled"]) is False,
+            reason="Codex analytics should be explicitly disabled for local governance runs.",
+            evidence_ref="~/.codex/config.toml",
+            remediation="Set analytics.enabled = false in ~/.codex/config.toml.",
+        ),
+        _check(
+            check_id="codex_never_policy_has_rules_guard",
+            status=(
+                _nested_get(codex_config, ["approval_policy"]) != "never"
+                or _has_nonempty_rules_file(codex_dir / "rules")
+            ),
+            reason="approval_policy=never is an accepted operator preference only when deterministic rules are present.",
+            evidence_ref="~/.codex/config.toml + ~/.codex/rules/*.rules",
+            remediation="Keep ~/.codex/rules/*.rules present and non-empty when using approval_policy=never.",
+        ),
+        _check(
+            check_id="claude_sensitive_settings_read_denied",
+            status=_claude_denies_sensitive_user_files(claude_settings),
+            reason="Plaintext Claude login convenience is accepted, but agent reads of credential-bearing user config must be denied.",
+            evidence_ref="~/.claude/settings.json permissions.deny",
+            remediation="Add Read denies for Claude/Codex/Gemini credential-bearing user config files.",
+        ),
+        _check(
+            check_id="gemini_secure_mode_enabled",
+            status=_nested_get(gemini_settings, ["admin", "secureModeEnabled"]) is True,
+            reason="Gemini secure mode should block YOLO and Always allow bypass paths for local governance runs.",
+            evidence_ref="~/.gemini/settings.json admin.secureModeEnabled",
+            remediation="Set admin.secureModeEnabled = true in ~/.gemini/settings.json.",
+        ),
+        _check(
+            check_id="gemini_secret_redaction_configured",
+            status=_gemini_redacts_secret_env(gemini_settings),
+            reason="Gemini should redact and exclude known credential environment variables from model context.",
+            evidence_ref="~/.gemini/settings.json security.environmentVariableRedaction + advanced.excludedEnvVars",
+            remediation="Add common token variables to Gemini redaction and excludedEnvVars settings.",
+        ),
+        _check(
+            check_id="gemini_sensitive_files_ignored",
+            status=_gemini_ignores_sensitive_files(gemini_settings, gemini_dir / ".geminiignore"),
+            reason="Gemini file discovery should respect a user-level ignore file for OAuth and account state.",
+            evidence_ref="~/.gemini/settings.json context.fileFiltering + ~/.gemini/.geminiignore",
+            remediation="Create ~/.gemini/.geminiignore and reference it from context.fileFiltering.customIgnoreFilePaths.",
+        ),
+    ]
+
+    mcp_checks = _inspect_mcp_token_indirection(
+        codex_config=codex_config,
+        claude_mcp=_load_optional_json(claude_dir / ".mcp.json"),
+        gemini_settings=gemini_settings,
+        gemini_mcp=_load_optional_json(gemini_dir / ".mcp.json"),
+    )
+    checks.extend(mcp_checks)
+
+    failed = [item["check_id"] for item in checks if item["status"] != "pass"]
+    return {
+        "status": "fail" if failed else "pass",
+        "home_ref": "~",
+        "personal_preference_exceptions": [
+            {
+                "exception_id": "claude_plaintext_token_for_login_convenience",
+                "accepted_when": "credential-bearing settings files remain read-denied to agents and are not synchronized into repositories",
+            },
+            {
+                "exception_id": "codex_approval_policy_never_for_automation",
+                "accepted_when": "deterministic rules, project gates, and repository policies remain active",
+            },
+            {
+                "exception_id": "managed_mcp_sync",
+                "accepted_when": "synchronized MCP configs keep credential values indirect through environment-variable references",
+            },
+        ],
+        "checks": checks,
+        "failed_checks": failed,
+    }
+
+
 def _load_json(path: Path) -> dict[str, Any]:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
@@ -219,6 +322,24 @@ def _load_json(path: Path) -> dict[str, Any]:
     return payload
 
 
+def _load_optional_json(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    return _load_json(path)
+
+
+def _load_optional_toml(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        payload = tomllib.loads(path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise ValueError(f"toml file is not readable: {path} ({exc})") from exc
+    except tomllib.TOMLDecodeError as exc:
+        raise ValueError(f"toml file is invalid: {path} ({exc})") from exc
+    return payload
+
+
 def _string_list(value: object) -> list[str]:
     if not isinstance(value, list):
         return []
@@ -228,6 +349,134 @@ def _string_list(value: object) -> list[str]:
         if text:
             result.append(text)
     return result
+
+
+def _nested_get(payload: dict[str, Any], keys: list[str]) -> Any:
+    current: Any = payload
+    for key in keys:
+        if not isinstance(current, dict) or key not in current:
+            return None
+        current = current[key]
+    return current
+
+
+def _check(*, check_id: str, status: bool, reason: str, evidence_ref: str, remediation: str) -> dict[str, str]:
+    return {
+        "check_id": check_id,
+        "status": "pass" if status else "fail",
+        "reason": reason,
+        "evidence_ref": evidence_ref,
+        "remediation": remediation,
+    }
+
+
+def _has_nonempty_rules_file(rules_dir: Path) -> bool:
+    if not rules_dir.exists():
+        return False
+    return any(path.is_file() and path.suffix == ".rules" and path.stat().st_size > 0 for path in rules_dir.glob("*.rules"))
+
+
+def _claude_denies_sensitive_user_files(settings: dict[str, Any]) -> bool:
+    deny_entries = {
+        item.replace("\\", "/").lower()
+        for item in _string_list(_nested_get(settings, ["permissions", "deny"]))
+    }
+    required_suffixes = [
+        "/.claude/settings.json)",
+        "/.codex/auth*.json)",
+        "/.gemini/oauth_creds.json)",
+        "/.gemini/google_accounts.json)",
+    ]
+    return all(any(entry.endswith(suffix) for entry in deny_entries) for suffix in required_suffixes)
+
+
+def _gemini_redacts_secret_env(settings: dict[str, Any]) -> bool:
+    required = {"ANTHROPIC_AUTH_TOKEN", "GITHUB_PERSONAL_ACCESS_TOKEN", "OPENAI_API_KEY", "GEMINI_API_KEY"}
+    blocked = set(_string_list(_nested_get(settings, ["security", "environmentVariableRedaction", "blocked"])))
+    excluded = set(_string_list(_nested_get(settings, ["advanced", "excludedEnvVars"])))
+    return _nested_get(settings, ["security", "environmentVariableRedaction", "enabled"]) is True and required <= blocked and required <= excluded
+
+
+def _gemini_ignores_sensitive_files(settings: dict[str, Any], ignore_path: Path) -> bool:
+    if not ignore_path.exists():
+        return False
+    ignore_text = ignore_path.read_text(encoding="utf-8")
+    required_patterns = ("oauth_creds.json", "google_accounts.json", "*credentials*")
+    custom_ignores = {
+        item.replace("\\", "/").lower()
+        for item in _string_list(_nested_get(settings, ["context", "fileFiltering", "customIgnoreFilePaths"]))
+    }
+    return (
+        _nested_get(settings, ["context", "fileFiltering", "respectGeminiIgnore"]) is True
+        and ignore_path.as_posix().lower() in custom_ignores
+        and all(pattern in ignore_text for pattern in required_patterns)
+    )
+
+
+def _inspect_mcp_token_indirection(
+    *,
+    codex_config: dict[str, Any],
+    claude_mcp: dict[str, Any],
+    gemini_settings: dict[str, Any],
+    gemini_mcp: dict[str, Any],
+) -> list[dict[str, str]]:
+    return [
+        _check(
+            check_id="codex_mcp_tokens_use_env_refs",
+            status=_codex_mcp_tokens_are_indirect(codex_config),
+            reason="Codex MCP credentials should be referenced through env vars, not expanded into config.toml.",
+            evidence_ref="~/.codex/config.toml mcp_servers.*.bearer_token_env_var",
+            remediation="Use bearer_token_env_var for Codex MCP credentials.",
+        ),
+        _check(
+            check_id="claude_mcp_tokens_use_env_refs",
+            status=_json_mcp_tokens_are_indirect(claude_mcp),
+            reason="Claude MCP config should not contain expanded bearer tokens.",
+            evidence_ref="~/.claude/.mcp.json",
+            remediation="Keep MCP Authorization headers as environment-variable references.",
+        ),
+        _check(
+            check_id="gemini_mcp_tokens_use_env_refs",
+            status=_json_mcp_tokens_are_indirect({"mcpServers": gemini_settings.get("mcpServers", {})})
+            and _json_mcp_tokens_are_indirect(gemini_mcp),
+            reason="Gemini MCP config should not contain expanded bearer tokens.",
+            evidence_ref="~/.gemini/settings.json + ~/.gemini/.mcp.json",
+            remediation="Keep MCP Authorization headers as environment-variable references.",
+        ),
+    ]
+
+
+def _codex_mcp_tokens_are_indirect(config: dict[str, Any]) -> bool:
+    servers = config.get("mcp_servers", {})
+    if not isinstance(servers, dict):
+        return True
+    for server in servers.values():
+        if not isinstance(server, dict):
+            continue
+        if "bearer_token" in server:
+            return False
+        if any("token" in str(key).lower() for key in server) and "bearer_token_env_var" not in server:
+            return False
+    return True
+
+
+def _json_mcp_tokens_are_indirect(config: dict[str, Any]) -> bool:
+    servers = config.get("mcpServers", {})
+    if not isinstance(servers, dict):
+        return True
+    for server in servers.values():
+        if not isinstance(server, dict):
+            continue
+        headers = server.get("headers", {})
+        if not isinstance(headers, dict):
+            continue
+        for key, value in headers.items():
+            if str(key).lower() != "authorization":
+                continue
+            text = str(value)
+            if "Bearer " in text and "$" not in text and "${" not in text:
+                return False
+    return True
 
 
 def _is_overbroad_scope(scope: dict[str, Any]) -> bool:
