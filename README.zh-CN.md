@@ -45,7 +45,13 @@
 
 最佳工程终态已固化为 `Governance Hub + Reusable Contract + Controlled Evolution loop + outer AI intelligent review/generation capability`，即治理中枢、可复用控制契约、受控演进闭环和外层 AI 智能评审/生成能力，而不是新的宿主产品。
 
-核心原则已强化为 `Automation-first, outer-AI-assisted, gate-controlled evolution`：本项目自身应高度自动化，并可自动触发外层 AI 做智能 review、知识提取、候选生成和演进建议；但外层 AI 输出必须先成为结构化候选，并通过风险分级、机器门禁、证据、回滚和必要 review 边界后才能生效。
+核心原则已收敛为 5 条人类可读口径，机器细则仍以 `docs/architecture/core-principles-policy.json` 的 14 个 enforced principles 为准：
+
+- `Efficiency first, safety bounded`：综合效率优先，安全边界约束；少打扰、自动连续执行、节省 token / 成本、高效率，但不得越过安全、最小权限、证据、回滚和 review 边界。
+- `Automation-first, outer-AI-assisted, gate-controlled evolution`：确定性治理工作应自动化；外层 AI 可自动生成 review、知识、候选和建议，但有效变更必须先成为结构化候选并通过风险分级、机器门禁、证据、回滚和必要 review。
+- `Governance hub, reusable contract, host-compatible execution`：本项目是治理中枢和可复用契约，不竞争或替代 Codex / Claude Code 等宿主；外部 agent 项目只作为机制来源。
+- `Context budget, instruction minimalism, least privilege`：`context_budget_and_instruction_minimalism` 与 `least_privilege_tool_credential_boundary` 是同一执行边界；根规则保持短而硬，工具权限、凭据、sandbox、mount、network、provider secret 必须可审计并尽量由确定性控制执行。
+- `Measured effect over claims`：`measured_effect_feedback_over_claims` 要求完成声明必须有 fresh target-run evidence、eval trace、effect feedback、verification command 与 rollback；文档、代码存在或候选文件本身不等于完成。
 
 ## 现在能否用于其他项目
 可以，但要按当前边界理解。
@@ -71,7 +77,7 @@
 
 ## 当前总入口与一键应用
 - 操作者聚合入口：`scripts/operator.ps1`。它把 readiness、自检、规则漂移/同步、目标仓批量流和 operator UI 生成收成同一个入口；默认 `-Action Help`。
-- Codex 本机优化入口：`scripts/Optimize-CodexLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入本项目当前推荐的 Codex 单默认配置。长期优先级是“综合效率优先”：少打扰、自动连续执行、节省 token / 成本、高效率；当前暂行实现是 `cli_auth_credentials_store = "file"`、`model = "gpt-5.4"`、`model_reasoning_effort = "medium"`、`approval_policy = "never"`、`model_context_window = 272000`、`model_auto_compact_token_limit = 220000`。以后如果模型、参数或技术栈更迭，应先保持这个原则；只有在安全与门禁不退化时，才替换当前实现。脚本同时会安装 `codex-account` 账号切换入口，并把当前仓加入 trusted project。
+- Codex 本机优化入口：`scripts/Optimize-CodexLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入本项目当前推荐的 Codex 单默认配置。长期优先级是“综合效率优先，安全边界约束”：少打扰、自动连续执行、节省 token / 成本、高效率，同时不退化安全、最小权限、门禁、证据和回滚；当前暂行实现是 `cli_auth_credentials_store = "file"`、`model = "gpt-5.5"`、`model_reasoning_effort = "medium"`、`approval_policy = "never"`、`model_context_window = 272000`、`model_auto_compact_token_limit = 220000`。以后如果模型、参数或技术栈更迭，应先保持这个原则；只有在安全与门禁不退化时，才替换当前实现。脚本同时会安装 `codex-account` 账号切换入口，并把当前仓加入 trusted project。
 - Claude Code 本机优化入口：`scripts/Optimize-ClaudeLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入第三方 Anthropic-compatible provider 推荐配置、安装 `claude-provider` 切换入口；密钥只保留在用户本机 settings/env，不写入仓库 profile。
 - 核心原则变更候选入口：`scripts/operator.ps1 -Action CorePrincipleMaterialize`。默认只 dry-run 报告候选；得到明确允许后加 `-ConfirmCorePrincipleProposalWrite` 才写 reviewable proposal/manifest；如只需审计留痕，加 `-WriteCorePrincipleDryRunReport` 只写 dry-run report。以上路径仍不直接改 active core-principles policy、spec、verifier 或目标仓。
 - 目标仓日常运行/批量下发总入口：`scripts/runtime-flow-preset.ps1`。它读取 `docs/targets/target-repos-catalog.json`，支持单 target 或所有 active targets。
