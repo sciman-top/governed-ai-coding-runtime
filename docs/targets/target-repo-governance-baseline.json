@@ -6,19 +6,45 @@
     {
       "path": ".governed-ai/verify-powershell-policy.py",
       "source": "docs/targets/templates/verify-powershell-policy.py",
+      "management_mode": "replace",
       "description": "Repo-local guard that fails on direct normal-path powershell/powershell.exe invocations and keeps target repos pwsh-first."
     },
     {
       "path": ".claude/settings.json",
       "source": "docs/targets/templates/claude-code/settings.json",
+      "management_mode": "json_merge",
       "description": "Managed Claude Code project settings that bind shared permissions and hooks to runtime-owned governance semantics without touching local-only settings."
     },
     {
       "path": ".claude/hooks/governed-pre-tool-use.py",
       "source": "docs/targets/templates/claude-code/governed-pre-tool-use.py",
-      "description": "Claude Code PreToolUse guard that fail-closes direct Windows PowerShell usage and sensitive local file reads with exit code 2."
+      "management_mode": "block_on_drift",
+      "description": "Claude Code PreToolUse guard that fail-closes direct Windows PowerShell usage and sensitive local file reads with exit code 2, but blocks silent overwrite when a target repo has intentionally extended the hook locally."
     }
   ],
+  "repo_profile_field_ownership": {
+    "baseline_override_fields": [
+      "required_entrypoint_policy",
+      "auto_commit_policy",
+      "interaction_profile",
+      "learning_assistance_policy",
+      "rule_file_coordination_policy",
+      "windows_process_environment_policy"
+    ],
+    "derived_runtime_fields": [
+      "quick_gate_commands",
+      "full_gate_commands",
+      "gate_timeout_seconds"
+    ],
+    "catalog_input_fields": [
+      "repo_id",
+      "display_name",
+      "primary_language",
+      "build_commands",
+      "test_commands",
+      "contract_commands"
+    ]
+  },
   "target_repo_speed_profile_policy": {
     "enabled": true,
     "materialize_quick_gate_commands": true,

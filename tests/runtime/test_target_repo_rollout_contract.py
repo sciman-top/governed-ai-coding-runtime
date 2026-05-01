@@ -39,6 +39,17 @@ class TargetRepoRolloutContractTests(unittest.TestCase):
         self.assertGreaterEqual(payload["capability_count"], 10)
         self.assertGreaterEqual(payload["feature_count"], 4)
         self.assertEqual(payload["errors"], [])
+        contract = json.loads(DEFAULT_CONTRACT_PATH.read_text(encoding="utf-8"))
+        managed_modes = {item["path"]: item["management_mode"] for item in contract["managed_file_rollout"]["required_managed_files"]}
+        self.assertEqual(managed_modes[".claude/hooks/governed-pre-tool-use.py"], "block_on_drift")
+        ownership = contract["repo_profile_ownership_contract"]
+        self.assertEqual(
+            set(ownership["catalog_input_fields"]),
+            {"repo_id", "display_name", "primary_language", "build_commands", "test_commands", "contract_commands"},
+        )
+        runtime_contract_ids = {item["capability_id"] for item in contract["runtime_orchestrated_capability_contracts"]}
+        self.assertIn("target-repo-problem-trace-and-kpi", runtime_contract_ids)
+        self.assertIn("native-attach-runtime-flow", runtime_contract_ids)
 
     def test_fails_when_baseline_field_is_not_registered_for_one_click_rollout(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -61,6 +72,116 @@ class TargetRepoRolloutContractTests(unittest.TestCase):
             payload = json.loads(completed.stdout)
             codes = {error["code"] for error in payload["errors"]}
             self.assertIn("baseline_field_not_in_rollout_contract", codes)
+
+    def test_fails_when_managed_file_is_not_registered_for_one_click_rollout(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            baseline = json.loads(DEFAULT_BASELINE_PATH.read_text(encoding="utf-8"))
+            baseline["required_managed_files"].append(
+                {
+                    "path": ".governed-ai/new-managed-check.py",
+                    "source": "docs/targets/templates/verify-powershell-policy.py",
+                }
+            )
+            baseline_path = workspace / "baseline.json"
+            _write_json(baseline_path, baseline)
+
+            completed = _run_rollout_contract_check(
+                "--contract-path",
+                str(DEFAULT_CONTRACT_PATH),
+                "--baseline-path",
+                str(baseline_path),
+            )
+
+            self.assertNotEqual(completed.returncode, 0)
+            payload = json.loads(completed.stdout)
+            codes = {error["code"] for error in payload["errors"]}
+            self.assertIn("managed_file_not_in_rollout_contract", codes)
+
+    def test_fails_when_speed_policy_field_is_not_registered_for_one_click_rollout(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            baseline = json.loads(DEFAULT_BASELINE_PATH.read_text(encoding="utf-8"))
+            baseline["target_repo_speed_profile_policy"]["new_required_speed_behavior"] = True
+            baseline_path = workspace / "baseline.json"
+            _write_json(baseline_path, baseline)
+
+            completed = _run_rollout_contract_check(
+                "--contract-path",
+                str(DEFAULT_CONTRACT_PATH),
+                "--baseline-path",
+                str(baseline_path),
+            )
+
+            self.assertNotEqual(completed.returncode, 0)
+            payload = json.loads(completed.stdout)
+            codes = {error["code"] for error in payload["errors"]}
+            self.assertIn("target_repo_speed_profile_policy_field_not_in_rollout_contract", codes)
+
+    def test_fails_when_managed_file_mode_is_not_supported_by_rollout_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            contract = json.loads(DEFAULT_CONTRACT_PATH.read_text(encoding="utf-8"))
+            contract["managed_file_rollout"]["required_managed_files"][0]["management_mode"] = "yaml_patch"
+            contract_path = workspace / "contract.json"
+            _write_json(contract_path, contract)
+
+            completed = _run_rollout_contract_check("--contract-path", str(contract_path))
+
+            self.assertNotEqual(completed.returncode, 0)
+            payload = json.loads(completed.stdout)
+            codes = {error["code"] for error in payload["errors"]}
+            self.assertIn("managed_file_not_in_rollout_contract", codes)
+
+    def test_fails_when_repo_profile_ownership_contract_mismatches_baseline(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            contract = json.loads(DEFAULT_CONTRACT_PATH.read_text(encoding="utf-8"))
+            contract["repo_profile_ownership_contract"]["catalog_input_fields"] = ["repo_id", "display_name"]
+            contract_path = workspace / "contract.json"
+            _write_json(contract_path, contract)
+
+            completed = _run_rollout_contract_check("--contract-path", str(contract_path))
+
+            self.assertNotEqual(completed.returncode, 0)
+            payload = json.loads(completed.stdout)
+            codes = {error["code"] for error in payload["errors"]}
+            self.assertIn("repo_profile_ownership_contract_catalog_mismatch", codes)
+
+    def test_fails_when_runtime_orchestrated_capability_contract_is_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            contract = json.loads(DEFAULT_CONTRACT_PATH.read_text(encoding="utf-8"))
+            contract["runtime_orchestrated_capability_contracts"] = [
+                item for item in contract["runtime_orchestrated_capability_contracts"]
+                if item["capability_id"] != "native-attach-runtime-flow"
+            ]
+            contract_path = workspace / "contract.json"
+            _write_json(contract_path, contract)
+
+            completed = _run_rollout_contract_check("--contract-path", str(contract_path))
+
+            self.assertNotEqual(completed.returncode, 0)
+            payload = json.loads(completed.stdout)
+            codes = {error["code"] for error in payload["errors"]}
+            self.assertIn("runtime_orchestrated_capability_missing_contract", codes)
+
+    def test_fails_when_coding_speed_profile_args_are_missing_from_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            contract = json.loads(DEFAULT_CONTRACT_PATH.read_text(encoding="utf-8"))
+            contract["canonical_one_click_entrypoint"]["coding_speed_profile_args"] = ["-AllTargets"]
+            contract["target_repo_speed_profile_rollout"]["coding_speed_profile_args"] = ["-AllTargets"]
+            contract_path = workspace / "contract.json"
+            _write_json(contract_path, contract)
+
+            completed = _run_rollout_contract_check("--contract-path", str(contract_path))
+
+            self.assertNotEqual(completed.returncode, 0)
+            payload = json.loads(completed.stdout)
+            codes = {error["code"] for error in payload["errors"]}
+            self.assertIn("missing_coding_speed_profile_arg", codes)
+            self.assertIn("missing_target_repo_speed_profile_rollout_arg", codes)
 
     def test_fails_when_milestone_commit_template_is_not_chinese(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

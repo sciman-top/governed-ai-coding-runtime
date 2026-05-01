@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 from pathlib import Path
 from typing import Any
@@ -19,6 +20,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CATALOG_PATH = ROOT / "docs" / "targets" / "target-repos-catalog.json"
 DEFAULT_BASELINE_PATH = ROOT / "docs" / "targets" / "target-repo-governance-baseline.json"
 DEFAULT_QUICK_TEST_RECOMMENDATION_RELATIVE_PATH = ".governed-ai/quick-test-slice.recommendation.json"
+DERIVED_RUNTIME_PROFILE_FIELDS = {"quick_gate_commands", "full_gate_commands", "gate_timeout_seconds"}
+CATALOG_PROFILE_FIELDS = {"repo_id", "display_name", "primary_language", "build_commands", "test_commands", "contract_commands"}
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -26,6 +29,16 @@ def _load_json(path: Path) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise ValueError(f"json object required: {path}")
     return data
+
+
+def _as_string_list(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, list):
+        return [item for item in value if isinstance(item, str)]
+    return []
 
 
 def _expand_template(value: str, variables: dict[str, str]) -> str:
@@ -51,10 +64,46 @@ def _validate_baseline(path: Path) -> tuple[str, dict[str, Any], list[dict[str, 
             raise ValueError(f"baseline.required_managed_files[{index}] must be an object")
         target_path = item.get("path")
         source_path = item.get("source")
+        management_mode = item.get("management_mode", "replace")
         if not isinstance(target_path, str) or not target_path.strip():
             raise ValueError(f"baseline.required_managed_files[{index}].path must be a non-empty string")
         if not isinstance(source_path, str) or not source_path.strip():
             raise ValueError(f"baseline.required_managed_files[{index}].source must be a non-empty string")
+        if management_mode not in {"replace", "json_merge", "block_on_drift"}:
+            raise ValueError(
+                f"baseline.required_managed_files[{index}].management_mode must be replace, json_merge, or block_on_drift"
+            )
+    ownership = baseline.get("repo_profile_field_ownership")
+    if ownership is None:
+        ownership = {
+            "baseline_override_fields": sorted(set(overrides.keys())),
+            "derived_runtime_fields": sorted(DERIVED_RUNTIME_PROFILE_FIELDS),
+            "catalog_input_fields": sorted(CATALOG_PROFILE_FIELDS),
+        }
+        baseline["repo_profile_field_ownership"] = ownership
+    if not isinstance(ownership, dict):
+        raise ValueError("baseline.repo_profile_field_ownership must be an object when present")
+    baseline_override_fields = set(_as_string_list(ownership.get("baseline_override_fields")))
+    derived_runtime_fields = set(_as_string_list(ownership.get("derived_runtime_fields")))
+    catalog_input_fields = set(_as_string_list(ownership.get("catalog_input_fields")))
+    if not baseline_override_fields:
+        raise ValueError("baseline.repo_profile_field_ownership.baseline_override_fields must be a non-empty list")
+    if baseline_override_fields != set(overrides.keys()):
+        raise ValueError("baseline.repo_profile_field_ownership.baseline_override_fields must match required_profile_overrides keys")
+    if not derived_runtime_fields:
+        raise ValueError("baseline.repo_profile_field_ownership.derived_runtime_fields must be a non-empty list")
+    if derived_runtime_fields != DERIVED_RUNTIME_PROFILE_FIELDS:
+        raise ValueError("baseline.repo_profile_field_ownership.derived_runtime_fields must match runtime-derived profile fields")
+    if not catalog_input_fields:
+        raise ValueError("baseline.repo_profile_field_ownership.catalog_input_fields must be a non-empty list")
+    if catalog_input_fields != CATALOG_PROFILE_FIELDS:
+        raise ValueError("baseline.repo_profile_field_ownership.catalog_input_fields must match catalog-synced profile fields")
+    if baseline_override_fields & derived_runtime_fields:
+        raise ValueError("baseline.repo_profile_field_ownership baseline_override_fields and derived_runtime_fields must not overlap")
+    if baseline_override_fields & catalog_input_fields:
+        raise ValueError("baseline.repo_profile_field_ownership baseline_override_fields and catalog_input_fields must not overlap")
+    if derived_runtime_fields & catalog_input_fields:
+        raise ValueError("baseline.repo_profile_field_ownership derived_runtime_fields and catalog_input_fields must not overlap")
     speed_policy = baseline.get("target_repo_speed_profile_policy")
     if speed_policy is not None:
         speed_policy = normalize_speed_profile_policy(speed_policy)
@@ -176,6 +225,30 @@ def _source_path(raw_path: str) -> Path:
     if not source.is_absolute():
         source = ROOT / source
     return source.resolve(strict=False)
+
+
+def _deep_merge_json(base: Any, overlay: Any) -> Any:
+    if isinstance(base, dict) and isinstance(overlay, dict):
+        merged = {key: copy.deepcopy(value) for key, value in base.items()}
+        for key, value in overlay.items():
+            if key in merged:
+                merged[key] = _deep_merge_json(merged[key], value)
+            else:
+                merged[key] = copy.deepcopy(value)
+        return merged
+    return copy.deepcopy(overlay)
+
+
+def _managed_file_expected_text(*, source_text: str, actual_text: str | None, management_mode: str) -> str:
+    if management_mode in {"replace", "block_on_drift"} or actual_text is None:
+        return source_text
+    if management_mode != "json_merge":
+        raise ValueError(f"unsupported management_mode: {management_mode}")
+
+    source_json = json.loads(source_text)
+    actual_json = json.loads(actual_text)
+    merged = _deep_merge_json(actual_json, source_json)
+    return json.dumps(merged, ensure_ascii=False, indent=2) + "\n"
 
 
 def _load_targets(catalog_path: Path) -> dict[str, dict[str, Any]]:
@@ -313,15 +386,22 @@ def main() -> int:
         for item in managed_files:
             target_path = _target_relative_path(attachment_root, str(item["path"]))
             source_path = _source_path(str(item["source"]))
+            management_mode = str(item.get("management_mode", "replace"))
             if not source_path.exists():
                 raise SystemExit(f"managed file source not found: {source_path}")
-            expected = source_path.read_text(encoding="utf-8")
+            source_text = source_path.read_text(encoding="utf-8")
             actual = target_path.read_text(encoding="utf-8") if target_path.exists() else None
+            expected = _managed_file_expected_text(
+                source_text=source_text,
+                actual_text=actual,
+                management_mode=management_mode,
+            )
             if actual != expected:
                 mismatched_managed_files.append(
                     {
                         "path": str(target_path.relative_to(attachment_root)).replace("\\", "/"),
                         "source": str(source_path),
+                        "management_mode": management_mode,
                         "reason": "missing" if actual is None else "content_drift",
                     }
                 )

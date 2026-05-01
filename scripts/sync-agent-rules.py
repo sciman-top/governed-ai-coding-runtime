@@ -180,6 +180,96 @@ def _backup_existing(target_path: Path, backup_root: Path, target_text: str) -> 
     return backup_path
 
 
+def _split_markdown_sections(text: str, prefix: str) -> tuple[str, list[tuple[str, str]]]:
+    pattern = re.compile(rf"(?m)^(?P<heading>{re.escape(prefix)}[^\n]*\n)")
+    matches = list(pattern.finditer(text))
+    if not matches:
+        return text, []
+
+    preamble = text[: matches[0].start()]
+    sections: list[tuple[str, str]] = []
+    for index, match in enumerate(matches):
+        start = match.end()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        sections.append((match.group("heading"), text[start:end]))
+    return preamble, sections
+
+
+def _tokenize_markdown_body(body: str) -> list[str]:
+    tokens: list[str] = []
+    paragraph_lines: list[str] = []
+
+    def flush_paragraph() -> None:
+        nonlocal paragraph_lines
+        if paragraph_lines:
+            tokens.append("\n".join(paragraph_lines).strip())
+            paragraph_lines = []
+
+    for raw_line in body.splitlines():
+        line = raw_line.rstrip()
+        stripped = line.strip()
+        if not stripped:
+            flush_paragraph()
+            continue
+        if re.match(r"^([-*] |\d+\. )", stripped):
+            flush_paragraph()
+            tokens.append(stripped)
+            continue
+        paragraph_lines.append(line)
+
+    flush_paragraph()
+    return [token for token in tokens if token.strip()]
+
+
+def _normalize_token(token: str) -> str:
+    return " ".join(token.split())
+
+
+def _merge_markdown_body(source_body: str, target_body: str) -> tuple[str, int]:
+    source_tokens = _tokenize_markdown_body(source_body)
+    target_tokens = _tokenize_markdown_body(target_body)
+    source_seen = {_normalize_token(token) for token in source_tokens}
+    target_only = [token for token in target_tokens if _normalize_token(token) not in source_seen]
+    if not target_only:
+        return source_body, 0
+
+    merged = source_body.rstrip()
+    addition_block = "\n".join(target_only)
+    if merged:
+        merged += "\n\n"
+    merged += "<!-- auto-merged target-local additions -->\n" + addition_block + "\n"
+    return merged, len(target_only)
+
+
+def _merge_project_rule_text(source_text: str, target_text: str) -> tuple[str, int] | None:
+    source_preamble, source_sections = _split_markdown_sections(source_text, "## ")
+    target_preamble, target_sections = _split_markdown_sections(target_text, "## ")
+    if [heading for heading, _ in source_sections] != [heading for heading, _ in target_sections]:
+        return None
+
+    merged_parts = [source_preamble]
+    added_count = 0
+    for (source_heading, source_body), (_, target_body) in zip(source_sections, target_sections):
+        source_intro, source_subsections = _split_markdown_sections(source_body, "### ")
+        target_intro, target_subsections = _split_markdown_sections(target_body, "### ")
+        if [heading for heading, _ in source_subsections] != [heading for heading, _ in target_subsections]:
+            return None
+
+        merged_section_parts = []
+        merged_intro, intro_additions = _merge_markdown_body(source_intro, target_intro)
+        added_count += intro_additions
+        merged_section_parts.append(merged_intro)
+
+        for (source_subheading, source_subbody), (_, target_subbody) in zip(source_subsections, target_subsections):
+            merged_subbody, sub_additions = _merge_markdown_body(source_subbody, target_subbody)
+            added_count += sub_additions
+            merged_section_parts.append(source_subheading + merged_subbody)
+
+        merged_parts.append(source_heading + "".join(merged_section_parts))
+
+    return "".join(merged_parts), added_count
+
+
 def _plan_entry(
     *,
     entry: dict[str, Any],
@@ -221,6 +311,29 @@ def _plan_entry(
         return result
 
     comparison = _compare_versions(target_version, source_version)
+    if (
+        entry["scope"] == "project"
+        and target_version == source_version
+        and target_path.suffix.lower() == ".md"
+    ):
+        merged_text = _merge_project_rule_text(source_text, target_text)
+        if merged_text is not None:
+            integrated_text, integrated_additions = merged_text
+            integrated_hash = _sha256_text(integrated_text)
+            result["merge_strategy"] = "project_rule_structured_union"
+            result["merged_target_additions"] = integrated_additions
+            if integrated_hash == target_hash:
+                result["status"] = "skipped_same_hash"
+                return result
+            result["status"] = "merged_same_version_drift" if apply else "would_merge_same_version_drift"
+            result["merged_sha256"] = integrated_hash
+            if apply:
+                backup_path = _backup_existing(target_path, backup_root, target_text)
+                result["backup_path"] = str(backup_path)
+                target_path.parent.mkdir(parents=True, exist_ok=True)
+                target_path.write_text(integrated_text, encoding="utf-8")
+            return result
+
     if not force and target_version == source_version:
         result["status"] = "blocked_same_version_drift"
         result["reason"] = "target has the same rule version but different content"

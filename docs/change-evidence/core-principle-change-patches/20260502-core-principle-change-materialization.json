@@ -1,0 +1,30 @@
+{
+  "existing_file_behavior": "overwrite_same_candidate",
+  "generated_on": "2026-05-02",
+  "guard": {
+    "active_policy_auto_apply": false,
+    "active_spec_auto_apply": false,
+    "merge": false,
+    "push": false,
+    "requires_human_review_before_effective_change": true,
+    "skill_auto_enable": false,
+    "target_repo_sync": false,
+    "verifier_auto_update": false
+  },
+  "operation_artifacts": [
+    {
+      "existing_file_behavior": "overwrite_same_candidate",
+      "operation": "write_core_principle_change_proposal",
+      "path": "docs/change-evidence/core-principle-change-proposals/20260502-governance-hub-reusable-contract-final-state.json",
+      "risk": "medium",
+      "sha256": "5f9d4b3223a253958280dce89f5686697783610dd014382d94f70047ade158f9"
+    }
+  ],
+  "operation_paths": [
+    "docs/change-evidence/core-principle-change-proposals/20260502-governance-hub-reusable-contract-final-state.json",
+    "docs/change-evidence/core-principle-change-patches/20260502-core-principle-change-materialization.json"
+  ],
+  "rollback": "Delete files listed in operation_paths. Active core principle files are untouched by this materializer.",
+  "schema_version": "0.1-draft",
+  "source_command": "scripts/operator.ps1 -Action CorePrincipleMaterialize"
+}

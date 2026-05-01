@@ -22,6 +22,21 @@ _TRANSLATIONS = {
         "verification_caption": "验证记录",
         "attachments": "已接入仓库",
         "fail_closed_caption": "风险自动阻断",
+        "workspace_overview": "控制台总览",
+        "workspace_overview_caption": "首屏只保留决策摘要，详细信息留在各自面板。",
+        "open_surface": "打开面板",
+        "surface_current": "当前面板",
+        "runtime_surface_caption": "任务、执行输出、下一步建议和目标仓状态。",
+        "codex_surface_caption": "当前账号、配置健康和额度快照。",
+        "claude_surface_caption": "当前 Provider、凭据状态和本机配置入口。",
+        "feedback_surface_caption": "闭环状态、证据新鲜度和处理建议。",
+        "surface_loading": "正在加载摘要…",
+        "surface_runtime_summary": "任务 {tasks} · 审批 {approvals} · 验证 {verification}",
+        "surface_runtime_detail": "接入仓库 {attachments} · 风险阻断 {fail_closed}",
+        "surface_runtime_action": "在此查看执行输出、历史和下一步建议。",
+        "surface_codex_action": "去 Codex 面板查看账号详情和在线刷新。",
+        "surface_claude_action": "去 Claude 面板查看 Provider 和推荐配置。",
+        "surface_feedback_action": "去反馈面板查看证据、建议和详细报告。",
         "maintenance": "维护与升级",
         "stage": "阶段",
         "compatibility": "兼容性",
@@ -55,6 +70,9 @@ _TRANSLATIONS = {
         "unknown_repo": "未知仓库",
         "actions": "执行入口",
         "settings": "运行设置",
+        "common_actions": "常用动作",
+        "change_actions": "治理变更",
+        "page_actions": "页面操作",
         "language": "语言",
         "target": "目标仓",
         "all_targets": "全部目标仓",
@@ -205,6 +223,21 @@ _TRANSLATIONS = {
         "verification_caption": "verification records",
         "attachments": "Attachments",
         "fail_closed_caption": "risk auto-block",
+        "workspace_overview": "Workbench Overview",
+        "workspace_overview_caption": "Keep only decision summaries on the first screen; leave detail in each panel.",
+        "open_surface": "Open panel",
+        "surface_current": "Current panel",
+        "runtime_surface_caption": "Tasks, execution output, next-work recommendation, and target state.",
+        "codex_surface_caption": "Active account, config health, and usage snapshot.",
+        "claude_surface_caption": "Active provider, credential status, and local config entrypoints.",
+        "feedback_surface_caption": "Closure status, evidence freshness, and recommendations.",
+        "surface_loading": "Loading summary...",
+        "surface_runtime_summary": "Tasks {tasks} · Approvals {approvals} · Verification {verification}",
+        "surface_runtime_detail": "Attachments {attachments} · Fail-closed {fail_closed}",
+        "surface_runtime_action": "Use Runtime for output, history, and next-work decisions.",
+        "surface_codex_action": "Open Codex for account detail and online refresh.",
+        "surface_claude_action": "Open Claude for provider status and recommended config.",
+        "surface_feedback_action": "Open Feedback for evidence, recommendations, and reports.",
         "maintenance": "Maintenance and Upgrade",
         "stage": "Stage",
         "compatibility": "Compatibility",
@@ -238,6 +271,9 @@ _TRANSLATIONS = {
         "unknown_repo": "unknown repo",
         "actions": "Runbook",
         "settings": "Run settings",
+        "common_actions": "Common Actions",
+        "change_actions": "Governance Changes",
+        "page_actions": "Page Actions",
         "language": "Language",
         "target": "Target repo",
         "all_targets": "All targets",
@@ -405,9 +441,18 @@ def render_runtime_snapshot_html(
     codex_panel = _render_codex_panel(text, interactive=interactive)
     claude_panel = _render_claude_panel(text, interactive=interactive)
     feedback_panel = _render_host_feedback_panel(text, interactive=interactive)
-    script = _render_interactive_script(text, language=language) if interactive else ""
+    script = _render_interactive_script(
+        text,
+        language=language,
+        total_tasks=snapshot.total_tasks,
+        approval_count=approval_count,
+        verification_count=verification_count,
+        attachment_count=len(snapshot.attachments),
+        fail_closed_count=fail_closed_count,
+    ) if interactive else ""
     runtime_root = snapshot.runtime_root or text["missing"]
     tabs = _render_view_tabs(text)
+    workspace_overview = _render_workspace_overview(text, interactive=interactive)
     return f"""<!doctype html>
 <html lang="{escape(text['html_lang'])}">
 <head>
@@ -488,7 +533,10 @@ def render_runtime_snapshot_html(
     .dashboard {{ min-width: 0; display: grid; gap: 15px; }}
     .summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 12px; margin-bottom: 2px; }}
     .feedback-grid {{ display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr); gap: 14px; align-items: start; }}
-    .details-grid {{ display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr); gap: 14px; align-items: start; }}
+    .runtime-shell {{ display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.9fr); gap: 14px; align-items: start; }}
+    .runtime-main, .runtime-side {{ display: grid; gap: 14px; min-width: 0; }}
+    .runtime-main > *, .runtime-side > * {{ min-width: 0; }}
+    .details-grid {{ display: grid; gap: 14px; align-items: start; }}
     .feedback-summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 12px; }}
     .feedback-shell {{ display: grid; grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.1fr); gap: 14px; align-items: start; }}
     .feedback-column {{ display: grid; gap: 12px; min-width: 0; }}
@@ -557,10 +605,24 @@ def render_runtime_snapshot_html(
     .policy-label {{ display: block; color: var(--muted); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; }}
     .panel {{ background: var(--surface-raised); border: 1px solid var(--line); border-top: 3px solid #c5d5d8; border-radius: 8px; padding: 14px; min-width: 0; box-shadow: var(--shadow-card); backdrop-filter: blur(6px); }}
     .output-panel {{ border-top-color: var(--gold); }}
+    .surface-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }}
+    .surface-card {{ display: grid; grid-template-rows: auto minmax(96px, 1fr) auto; gap: 10px; align-content: start; background: linear-gradient(180deg, #ffffff, #f9fcfb); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; box-shadow: var(--shadow-tight); }}
+    .surface-card.active {{ border-color: #bde0da; background: linear-gradient(180deg, #f2fbf8, #ffffff); }}
+    .surface-card-head {{ display: flex; align-items: center; justify-content: space-between; gap: 8px; }}
+    .surface-card-title {{ font-weight: 760; color: var(--ink-strong); }}
+    .surface-summary {{ display: grid; align-content: start; gap: 4px; min-width: 0; }}
+    .surface-summary p {{ margin: 0; color: var(--muted); line-height: 1.45; overflow-wrap: anywhere; }}
+    .surface-summary p:first-child {{ color: var(--ink); font-weight: 650; }}
+    .surface-card button {{ min-height: 36px; align-self: end; width: 100%; }}
+    .surface-badge {{ display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 8px; font-size: 0.76rem; font-weight: 760; border: 1px solid var(--line); background: var(--surface-muted); color: var(--muted); }}
+    .surface-card.active .surface-badge {{ border-color: #bde0da; color: var(--accent-strong); background: var(--accent-soft); }}
     .view-tabs {{ display: inline-flex; gap: 4px; background: rgba(234, 241, 241, 0.92); border: 1px solid var(--line); border-radius: 8px; padding: 4px; width: fit-content; max-width: 100%; box-shadow: 0 9px 22px rgba(12, 31, 36, 0.07); }}
     .view-tab {{ border: 0; background: transparent; border-radius: 6px; padding: 8px 13px; }}
     .view-tab[aria-selected="true"] {{ background: var(--surface); color: var(--accent-strong); box-shadow: 0 0 0 1px var(--line), 0 6px 14px rgba(12, 31, 36, 0.09); font-weight: 760; }}
     .action-list {{ display: grid; gap: 8px; }}
+    .action-group {{ display: grid; gap: 8px; }}
+    .action-group + .action-group {{ margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }}
+    .action-group-title {{ margin: 0; color: var(--muted); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; }}
     button, select, input {{ font: inherit; }}
     button {{ border: 1px solid var(--line); background: linear-gradient(180deg, #ffffff, #f8fbfb); color: var(--ink); border-radius: 7px; padding: 9px 11px; cursor: pointer; text-align: left; transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease, background 140ms ease; }}
     button:hover {{ border-color: var(--accent); box-shadow: 0 7px 16px rgba(11, 118, 110, 0.10); transform: translateY(-1px); }}
@@ -623,7 +685,7 @@ def render_runtime_snapshot_html(
       main {{ padding: 12px 10px 28px; }}
       header {{ padding: 14px; margin-bottom: 12px; }}
       h1 {{ font-size: 1.2rem; }}
-      .console-layout, .summary-grid, .policy-grid, .feedback-grid, .details-grid, .codex-grid, .codex-account, .claude-console-grid, .feedback-shell, .feedback-runs-grid {{ grid-template-columns: 1fr; }}
+      .console-layout, .summary-grid, .policy-grid, .feedback-grid, .runtime-shell, .details-grid, .codex-grid, .codex-account, .claude-console-grid, .feedback-shell, .feedback-runs-grid, .surface-grid {{ grid-template-columns: 1fr; }}
       .view-tabs {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; }}
       .view-tab {{ text-align: center; padding: 8px 7px; }}
       .feedback-preview {{ height: 300px; }}
@@ -655,12 +717,20 @@ def render_runtime_snapshot_html(
       {actions}
       <div class="dashboard">
         {tabs}
+        {workspace_overview}
         <div data-view-panel="runtime">
           {summary}
-          {feedback}
-          <div class="details-grid">
-            {maintenance}
-            {attachments}
+          <div class="runtime-shell">
+            <div class="runtime-main">
+              {feedback}
+              <!-- NEXT_WORK_PANEL -->
+            </div>
+            <div class="runtime-side">
+              <div class="details-grid">
+                {maintenance}
+                {attachments}
+              </div>
+            </div>
           </div>
           {tasks}
         </div>
@@ -720,6 +790,66 @@ def _render_view_tabs(text: dict[str, str]) -> str:
             "</div>",
         ]
     )
+
+
+def _render_workspace_overview(text: dict[str, str], *, interactive: bool) -> str:
+    surfaces = [
+        ("runtime", text["runtime_view"], text["runtime_surface_caption"], True),
+        ("codex", text["codex_view"], text["codex_surface_caption"], False),
+        ("claude", text["claude_view"], text["claude_surface_caption"], False),
+        ("feedback", text["feedback_view"], text["feedback_surface_caption"], False),
+    ]
+    cards: list[str] = []
+    for surface_id, title, caption, active in surfaces:
+        badge = text["surface_current"] if active else text["open_surface"]
+        button_label = text["surface_current"] if active else text["open_surface"]
+        button_attrs = " disabled" if active or not interactive else ""
+        button_class = " class='primary'" if not active and interactive else ""
+        summary_lines = [
+            text["surface_loading"],
+            caption,
+            _runtime_surface_default_summary(text) if surface_id == "runtime" else _surface_action_text(surface_id, text),
+        ]
+        cards.append(
+            "\n".join(
+                [
+                    f"<article class='surface-card{' active' if active else ''}' data-surface-card='{escape(surface_id)}'>",
+                    "<div class='surface-card-head'>",
+                    f"<span class='surface-card-title'>{escape(title)}</span>",
+                    f"<span class='surface-badge' data-surface-badge='{escape(surface_id)}'>{escape(badge)}</span>",
+                    "</div>",
+                    f"<div class='surface-summary' data-surface-summary='{escape(surface_id)}'>{''.join(f'<p>{escape(line)}</p>' for line in summary_lines if line)}</div>",
+                    f"<button type='button'{button_class} data-open-view='{escape(surface_id)}'{button_attrs}>{escape(button_label)}</button>",
+                    "</article>",
+                ]
+            )
+        )
+
+    return "\n".join(
+        [
+            "<section class='panel'>",
+            f"<h2>{escape(text['workspace_overview'])}</h2>",
+            f"<p class='meta'>{escape(text['workspace_overview_caption'])}</p>",
+            "<div class='surface-grid'>",
+            *cards,
+            "</div>",
+            "</section>",
+        ]
+    )
+
+
+def _runtime_surface_default_summary(text: dict[str, str]) -> str:
+    return text["surface_runtime_action"]
+
+
+def _surface_action_text(surface_id: str, text: dict[str, str]) -> str:
+    mapping = {
+        "runtime": text["surface_runtime_action"],
+        "codex": text["surface_codex_action"],
+        "claude": text["surface_claude_action"],
+        "feedback": text["surface_feedback_action"],
+    }
+    return mapping.get(surface_id, "")
 
 
 def _render_maintenance(snapshot: RuntimeSnapshot, text: dict[str, str]) -> str:
@@ -972,6 +1102,8 @@ def _render_actions(text: dict[str, str], *, language: str, interactive: bool, t
         buttons.append(
             f"<button type='button'{class_attr} data-action='{escape(action_id)}'{confirm_attr}>{escape(label)}</button>"
         )
+    common_buttons = buttons[0:4]
+    change_buttons = buttons[4:]
     target_choices = [("__all__", text["all_targets"])] + [(target, target) for target in target_options]
     target_select_options = "".join(
         f"<option value='{escape(value, quote=True)}'>{escape(label)}</option>"
@@ -983,9 +1115,21 @@ def _render_actions(text: dict[str, str], *, language: str, interactive: bool, t
             "<aside class='sidebar'>",
             "<section class='panel'>",
             f"<h2>{escape(text['actions'])}</h2>",
-            "<div class='action-list'>",
+            "<div class='action-group'>",
+            f"<p class='action-group-title'>{escape(text['page_actions'])}</p>",
             f"<button type='button' data-refresh='1'>{escape(text['refresh'])}</button>",
-            *buttons,
+            "</div>",
+            "<div class='action-group'>",
+            f"<p class='action-group-title'>{escape(text['common_actions'])}</p>",
+            "<div class='action-list'>",
+            *common_buttons,
+            "</div>",
+            "</div>",
+            "<div class='action-group'>",
+            f"<p class='action-group-title'>{escape(text['change_actions'])}</p>",
+            "<div class='action-list'>",
+            *change_buttons,
+            "</div>",
             "</div>",
             "</section>",
             "<section class='panel'>",
@@ -1152,7 +1296,16 @@ def _render_host_feedback_panel(text: dict[str, str], *, interactive: bool) -> s
     )
 
 
-def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
+def _render_interactive_script(
+    text: dict[str, str],
+    *,
+    language: str,
+    total_tasks: int,
+    approval_count: int,
+    verification_count: int,
+    attachment_count: int,
+    fail_closed_count: int,
+) -> str:
     return f"""
 <script>
 (() => {{
@@ -1191,6 +1344,14 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   const claudeCacheKey = 'governed-runtime-operator-claude-status';
   const feedbackCacheKey = 'governed-runtime-operator-feedback-summary';
   const nextWorkCacheKey = 'governed-runtime-operator-next-work';
+  const surfaceOpenLabel = {text['open_surface']!r};
+  const surfaceCurrentLabel = {text['surface_current']!r};
+  const runtimeSurfaceSummaryTemplate = {text['surface_runtime_summary']!r};
+  const runtimeSurfaceDetailTemplate = {text['surface_runtime_detail']!r};
+  const runtimeSurfaceActionText = {text['surface_runtime_action']!r};
+  const codexSurfaceActionText = {text['surface_codex_action']!r};
+  const claudeSurfaceActionText = {text['surface_claude_action']!r};
+  const feedbackSurfaceActionText = {text['surface_feedback_action']!r};
   let codexLoaded = false;
   let claudeLoaded = false;
   let feedbackLoaded = false;
@@ -1284,6 +1445,112 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     return true;
   }}
 
+  function escapeHtml(value) {{
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }}
+
+  function setSurfaceSummary(surface, lines) {{
+    const target = document.querySelector(`[data-surface-summary="${{surface}}"]`);
+    if (!target) {{
+      return;
+    }}
+    const items = Array.isArray(lines)
+      ? lines.map((item) => String(item || '').trim()).filter(Boolean)
+      : [];
+    target.innerHTML = items.map((item) => `<p>${{escapeHtml(item)}}</p>`).join('');
+  }}
+
+  function updateRuntimeSurfaceSummary() {{
+    const summary = runtimeSurfaceSummaryTemplate
+      .replace('{{tasks}}', String({total_tasks}))
+      .replace('{{approvals}}', String({approval_count}))
+      .replace('{{verification}}', String({verification_count}));
+    const detail = runtimeSurfaceDetailTemplate
+      .replace('{{attachments}}', String({attachment_count}))
+      .replace('{{fail_closed}}', String({fail_closed_count}));
+    setSurfaceSummary('runtime', [summary, detail, runtimeSurfaceActionText]);
+  }}
+
+  function updateCodexSurfaceSummary(payload) {{
+    const accounts = Array.isArray(payload && payload.accounts) ? payload.accounts : [];
+    const active = accounts.find((item) => item && item.active) || accounts[0] || null;
+    const usage = payload && payload.usage ? payload.usage : {{}};
+    const config = payload && payload.config ? payload.config : {{}};
+    setSurfaceSummary('codex', [
+      active ? codexAccountLabel(active) : (currentUiLanguage() === 'zh-CN' ? '未识别当前账号' : 'No active account'),
+      formatConfigHealth(config),
+      usage && usage.source ? formatUsageSourceLabel(usage.source) : codexSurfaceActionText,
+    ]);
+  }}
+
+  function updateClaudeSurfaceSummary(payload) {{
+    const provider = payload && payload.active_provider ? payload.active_provider : null;
+    const config = payload && payload.config ? payload.config : {{}};
+    setSurfaceSummary('claude', [
+      provider && (provider.label || provider.name)
+        ? (provider.label || provider.name)
+        : (currentUiLanguage() === 'zh-CN' ? '未识别当前 Provider' : 'No active provider'),
+      provider ? (provider.credential_present ? {text['claude_credential_ready']!r} : {text['claude_missing_credential']!r})
+        : (currentUiLanguage() === 'zh-CN' ? '凭据状态未知' : 'Credential status unknown'),
+      formatConfigHealth(config) || claudeSurfaceActionText,
+    ]);
+  }}
+
+  function updateFeedbackSurfaceSummary(payload) {{
+    const summary = payload && payload.summary ? payload.summary : {{}};
+    const firstRecommendation = payload && Array.isArray(payload.recommendations) && payload.recommendations.length
+      ? String(payload.recommendations[0] || '').trim()
+      : '';
+    setSurfaceSummary('feedback', [
+      currentUiLanguage() === 'zh-CN'
+        ? `总状态 ${{formatFeedbackStatusLabel(payload && payload.status)}}`
+        : `Overall ${{formatFeedbackStatusLabel(payload && payload.status)}}`,
+      `Codex ${{formatFeedbackStatusLabel(summary.codex_host_status)}} · Claude ${{formatFeedbackStatusLabel(summary.claude_host_status)}}`,
+      firstRecommendation || feedbackSurfaceActionText,
+    ]);
+  }}
+
+  function activateView(selected) {{
+    document.querySelectorAll('[data-view-tab]').forEach((tab) => {{
+      const isSelected = tab.getAttribute('data-view-tab') === selected;
+      tab.setAttribute('aria-selected', String(isSelected));
+    }});
+    document.querySelectorAll('[data-view-panel]').forEach((panel) => {{
+      panel.hidden = panel.getAttribute('data-view-panel') !== selected;
+    }});
+    document.querySelectorAll('[data-surface-card]').forEach((card) => {{
+      const isSelected = card.getAttribute('data-surface-card') === selected;
+      card.classList.toggle('active', isSelected);
+      const badge = card.querySelector('[data-surface-badge]');
+      if (badge) {{
+        badge.textContent = isSelected ? surfaceCurrentLabel : surfaceOpenLabel;
+      }}
+      const button = card.querySelector('button[data-open-view]');
+      if (button) {{
+        button.disabled = isSelected;
+        button.classList.toggle('primary', !isSelected);
+        button.textContent = isSelected ? surfaceCurrentLabel : surfaceOpenLabel;
+      }}
+    }});
+    if (selected === 'codex' && !codexLoaded) {{
+      hydratePanelCache('codex', codexCacheKey);
+      refreshCodexStatus();
+    }}
+    if (selected === 'claude' && !claudeLoaded) {{
+      hydratePanelCache('claude', claudeCacheKey);
+      refreshClaudeStatus();
+    }}
+    if (selected === 'feedback' && !feedbackLoaded) {{
+      hydratePanelCache('feedback', feedbackCacheKey);
+      refreshFeedbackSummary();
+    }}
+  }}
+
   function renderHistory() {{
     const items = readHistory();
     if (!items.length) {{
@@ -1366,6 +1633,28 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     return labels[action] || action || 'unknown';
   }}
 
+  function nextWorkActionLabel(action) {{
+    const value = String(action || '').trim();
+    const labels = currentUiLanguage() === 'zh-CN'
+      ? {{
+          refresh_evidence_first: '先刷新证据',
+          repair_gate_first: '先修门禁',
+          owner_directed_scope_required: '需要人工定范围',
+          promote_ltp: '进入 LTP 提升评审',
+          defer_ltp_and_refresh_evidence: '暂缓 LTP，先补新证据',
+          defer_all: '暂缓自动推进',
+        }}
+      : {{
+          refresh_evidence_first: 'Refresh evidence first',
+          repair_gate_first: 'Repair gates first',
+          owner_directed_scope_required: 'Owner scope required',
+          promote_ltp: 'Promote LTP',
+          defer_ltp_and_refresh_evidence: 'Defer LTP and refresh evidence',
+          defer_all: 'Defer automatic progression',
+        }};
+    return labels[value] || value || 'unknown';
+  }}
+
   function syncNextWorkActionGuards() {{
     const blocked = new Set(Array.isArray((lastNextWorkPayload || {{}}).blocked_actions) ? lastNextWorkPayload.blocked_actions : []);
     const why = String((lastNextWorkPayload || {{}}).why || '').trim();
@@ -1388,14 +1677,14 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
 
   function renderNextWorkSummary(payload) {{
     lastNextWorkPayload = payload;
+    const safeAction = String(payload.safe_next_action || payload.next_action || 'unknown');
     if (nextWorkAction) {{
-      nextWorkAction.textContent = String(payload.next_action || payload.safe_next_action || 'unknown');
+      nextWorkAction.textContent = nextWorkActionLabel(safeAction);
     }}
     if (nextWorkRecommendation) {{
-      const safeAction = String(payload.safe_next_action || payload.next_action || 'unknown');
       nextWorkRecommendation.textContent = currentUiLanguage() === 'zh-CN'
-        ? `AI 推荐: ${{safeAction}}`
-        : `AI recommended: ${{safeAction}}`;
+        ? `AI 推荐: ${{nextWorkActionLabel(safeAction)}}`
+        : `AI recommended: ${{nextWorkActionLabel(safeAction)}}`;
     }}
     if (nextWorkState) {{
       nextWorkState.textContent = currentUiLanguage() === 'zh-CN'
@@ -1970,6 +2259,7 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
       }}
       feedbackSummary.appendChild(section);
     }});
+    updateFeedbackSurfaceSummary(payload);
 
     feedbackDimensions.innerHTML = '';
     dimensions.forEach((item) => {{
@@ -2245,6 +2535,7 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     if (!accounts.length) {{
       codexAccounts.innerHTML = `<p class="meta">{text['not_recorded']}</p>`;
     }}
+    updateCodexSurfaceSummary(payload);
 
   }}
 
@@ -2434,6 +2725,7 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     if (!providers.length) {{
       claudeProviders.innerHTML = `<p class="meta">{text['not_recorded']}</p>`;
     }}
+    updateClaudeSurfaceSummary(payload);
 
   }}
 
@@ -2584,26 +2876,19 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   if (nextWorkRefreshButton) {{
     nextWorkRefreshButton.addEventListener('click', () => refreshNextWorkSummaryWithMode(true));
   }}
+  document.querySelectorAll('button[data-open-view]').forEach((button) => {{
+    button.addEventListener('click', () => {{
+      const selected = button.getAttribute('data-open-view');
+      if (selected) {{
+        activateView(selected);
+      }}
+    }});
+  }});
   document.querySelectorAll('[data-view-tab]').forEach((button) => {{
     button.addEventListener('click', () => {{
       const selected = button.getAttribute('data-view-tab');
-      document.querySelectorAll('[data-view-tab]').forEach((tab) => {{
-        tab.setAttribute('aria-selected', String(tab === button));
-      }});
-      document.querySelectorAll('[data-view-panel]').forEach((panel) => {{
-        panel.hidden = panel.getAttribute('data-view-panel') !== selected;
-      }});
-      if (selected === 'codex' && !codexLoaded) {{
-        hydratePanelCache('codex', codexCacheKey);
-        refreshCodexStatus();
-      }}
-      if (selected === 'claude' && !claudeLoaded) {{
-        hydratePanelCache('claude', claudeCacheKey);
-        refreshClaudeStatus();
-      }}
-      if (selected === 'feedback' && !feedbackLoaded) {{
-        hydratePanelCache('feedback', feedbackCacheKey);
-        refreshFeedbackSummary();
+      if (selected) {{
+        activateView(selected);
       }}
     }});
   }});
@@ -2613,10 +2898,17 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     window.location.href = next.toString();
   }});
   renderHistory();
+  updateRuntimeSurfaceSummary();
   hydratePanelCache('codex', codexCacheKey);
   hydratePanelCache('claude', claudeCacheKey);
   hydratePanelCache('feedback', feedbackCacheKey);
   hydratePanelCache('next-work', nextWorkCacheKey);
+  activateView('runtime');
+  window.setTimeout(() => {{
+    refreshCodexStatus();
+    refreshClaudeStatus();
+    refreshFeedbackSummary();
+  }}, 120);
   window.setTimeout(() => {{
     refreshNextWorkSummary();
   }}, 80);

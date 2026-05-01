@@ -1,4 +1,5 @@
 import importlib.util
+import datetime as dt
 import json
 import shutil
 import subprocess
@@ -56,7 +57,11 @@ class RuntimeEvolutionMaterializationTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             repo_root = self._copy_minimal_repo(Path(tmp_dir))
-            result = module.materialize_runtime_evolution(repo_root=repo_root, apply=True)
+            result = module.materialize_runtime_evolution(
+                repo_root=repo_root,
+                as_of=dt.date(2026, 5, 1),
+                apply=True,
+            )
 
             self.assertEqual(result["status"], "pass")
             self.assertEqual(result["mode"], "apply")
@@ -95,12 +100,16 @@ class RuntimeEvolutionMaterializationTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             repo_root = self._copy_minimal_repo(Path(tmp_dir))
-            materializer.materialize_runtime_evolution(repo_root=repo_root, apply=True)
+            materializer.materialize_runtime_evolution(
+                repo_root=repo_root,
+                as_of=dt.date(2026, 5, 1),
+                apply=True,
+            )
             manifest_path = repo_root / "docs/change-evidence/runtime-evolution-patches/20260501-runtime-evolution-materialization.json"
             result = pr_prepare.prepare_runtime_evolution_pr(
                 repo_root=repo_root,
                 manifest_path=manifest_path,
-                as_of=__import__("datetime").date(2026, 5, 1),
+                as_of=dt.date(2026, 5, 1),
             )
 
             self.assertEqual(result["status"], "pass")
@@ -117,10 +126,14 @@ class RuntimeEvolutionMaterializationTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             repo_root = self._copy_minimal_repo(Path(tmp_dir))
-            materializer.materialize_runtime_evolution(repo_root=repo_root, apply=True)
+            materializer.materialize_runtime_evolution(
+                repo_root=repo_root,
+                as_of=dt.date(2026, 5, 1),
+                apply=True,
+            )
             result = retire.review_runtime_evolution_retirements(
                 repo_root=repo_root,
-                as_of=__import__("datetime").date(2026, 9, 1),
+                as_of=dt.date(2026, 9, 1),
                 stale_after_days=30,
             )
 

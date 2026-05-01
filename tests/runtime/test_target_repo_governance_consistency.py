@@ -23,6 +23,7 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
         coordination = baseline["required_profile_overrides"]["rule_file_coordination_policy"]
         policy = baseline["required_profile_overrides"]["windows_process_environment_policy"]
         managed_files = baseline["required_managed_files"]
+        ownership = baseline["repo_profile_field_ownership"]
         speed_policy = baseline["target_repo_speed_profile_policy"]
 
         self.assertEqual(interaction["communication_language"], "zh-CN")
@@ -120,6 +121,19 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
         self.assertIn(".governed-ai/verify-powershell-policy.py", [item["path"] for item in managed_files])
         self.assertIn(".claude/settings.json", [item["path"] for item in managed_files])
         self.assertIn(".claude/hooks/governed-pre-tool-use.py", [item["path"] for item in managed_files])
+        managed_file_modes = {item["path"]: item.get("management_mode", "replace") for item in managed_files}
+        self.assertEqual(managed_file_modes[".governed-ai/verify-powershell-policy.py"], "replace")
+        self.assertEqual(managed_file_modes[".claude/settings.json"], "json_merge")
+        self.assertEqual(managed_file_modes[".claude/hooks/governed-pre-tool-use.py"], "block_on_drift")
+        self.assertEqual(set(ownership["baseline_override_fields"]), set(baseline["required_profile_overrides"].keys()))
+        self.assertEqual(
+            set(ownership["derived_runtime_fields"]),
+            {"quick_gate_commands", "full_gate_commands", "gate_timeout_seconds"},
+        )
+        self.assertEqual(
+            set(ownership["catalog_input_fields"]),
+            {"repo_id", "display_name", "primary_language", "build_commands", "test_commands", "contract_commands"},
+        )
         self.assertTrue(speed_policy["enabled"])
         self.assertTrue(speed_policy["materialize_quick_gate_commands"])
         self.assertTrue(speed_policy["materialize_full_gate_commands"])
@@ -183,6 +197,46 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             self.assertEqual(updated_profile["required_entrypoint_policy"]["current_mode"], "targeted_enforced")
             self.assertEqual(updated_profile["auto_commit_policy"]["enabled"], True)
             self.assertTrue((target_repo / ".governed-ai" / "verify-powershell-policy.py").exists())
+
+    def test_apply_target_repo_governance_rejects_overlapping_repo_profile_ownership(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "repo-a"
+            profile_path = target_repo / ".governed-ai" / "repo-profile.json"
+            _write_json(profile_path, {"repo_id": "repo-a"})
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-05-02.5",
+                    "repo_profile_field_ownership": {
+                        "baseline_override_fields": ["auto_commit_policy"],
+                        "derived_runtime_fields": ["quick_gate_commands", "gate_timeout_seconds"],
+                        "catalog_input_fields": ["repo_id", "auto_commit_policy"],
+                    },
+                    "required_profile_overrides": {"auto_commit_policy": {"enabled": True}},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/apply-target-repo-governance.py",
+                    "--target-repo",
+                    str(target_repo),
+                    "--baseline-path",
+                    str(baseline_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertNotEqual(completed.returncode, 0)
+            self.assertIn("repo_profile_field_ownership", completed.stderr)
 
     def test_apply_target_repo_governance_materializes_speed_profile_from_existing_gates(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -253,6 +307,173 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             self.assertEqual(updated_profile["quick_gate_commands"][0]["timeout_seconds"], 30)
             self.assertEqual(updated_profile["full_gate_commands"][0]["timeout_seconds"], 60)
             self.assertEqual(updated_profile["gate_timeout_seconds"], 90)
+
+    def test_apply_target_repo_governance_json_merge_managed_file_preserves_local_keys(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "repo-a"
+            profile_path = target_repo / ".governed-ai" / "repo-profile.json"
+            _write_json(profile_path, {"repo_id": "repo-a"})
+            target_settings_path = target_repo / ".claude" / "settings.json"
+            _write_json(
+                target_settings_path,
+                {
+                    "permissions": {"allow": ["Read(**/notes.md)"]},
+                    "local_only": {"keep": True},
+                },
+            )
+            template_path = workspace / "settings-template.json"
+            _write_json(
+                template_path,
+                {
+                    "permissions": {"deny": ["Read(**/.env)"]},
+                    "hooks": {"PreToolUse": [{"matcher": "Read"}]},
+                },
+            )
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-05-02.1",
+                    "required_managed_files": [
+                        {
+                            "path": ".claude/settings.json",
+                            "source": str(template_path),
+                            "management_mode": "json_merge",
+                        }
+                    ],
+                    "required_profile_overrides": {"auto_commit_policy": {"enabled": True}},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/apply-target-repo-governance.py",
+                    "--target-repo",
+                    str(target_repo),
+                    "--baseline-path",
+                    str(baseline_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["status"], "applied")
+            self.assertEqual(payload["changed_managed_files"][0]["management_mode"], "json_merge")
+            merged_settings = json.loads(target_settings_path.read_text(encoding="utf-8"))
+            self.assertEqual(merged_settings["permissions"]["deny"], ["Read(**/.env)"])
+            self.assertEqual(merged_settings["permissions"]["allow"], ["Read(**/notes.md)"])
+            self.assertEqual(merged_settings["local_only"]["keep"], True)
+            self.assertIn("PreToolUse", merged_settings["hooks"])
+
+    def test_apply_target_repo_governance_block_on_drift_managed_file_refuses_overwrite(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "repo-a"
+            profile_path = target_repo / ".governed-ai" / "repo-profile.json"
+            _write_json(profile_path, {"repo_id": "repo-a"})
+            target_hook_path = target_repo / ".claude" / "hooks" / "custom-hook.py"
+            target_hook_path.parent.mkdir(parents=True, exist_ok=True)
+            target_hook_path.write_text("print('target-local')\n", encoding="utf-8")
+            template_path = workspace / "hook-template.py"
+            template_path.write_text("print('runtime-owned')\n", encoding="utf-8")
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-05-02.2",
+                    "required_managed_files": [
+                        {
+                            "path": ".claude/hooks/custom-hook.py",
+                            "source": str(template_path),
+                            "management_mode": "block_on_drift",
+                        }
+                    ],
+                    "required_profile_overrides": {"auto_commit_policy": {"enabled": True}},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/apply-target-repo-governance.py",
+                    "--target-repo",
+                    str(target_repo),
+                    "--baseline-path",
+                    str(baseline_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 2, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["status"], "blocked")
+            self.assertEqual(payload["blocked_managed_files"][0]["management_mode"], "block_on_drift")
+            self.assertEqual(payload["blocked_managed_files"][0]["reason"], "content_drift")
+            self.assertEqual(target_hook_path.read_text(encoding="utf-8"), "print('target-local')\n")
+
+    def test_apply_target_repo_governance_block_on_drift_managed_file_creates_missing_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "repo-a"
+            profile_path = target_repo / ".governed-ai" / "repo-profile.json"
+            _write_json(profile_path, {"repo_id": "repo-a"})
+            template_path = workspace / "hook-template.py"
+            template_path.write_text("print('runtime-owned')\n", encoding="utf-8")
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-05-02.3",
+                    "required_managed_files": [
+                        {
+                            "path": ".claude/hooks/custom-hook.py",
+                            "source": str(template_path),
+                            "management_mode": "block_on_drift",
+                        }
+                    ],
+                    "required_profile_overrides": {"auto_commit_policy": {"enabled": True}},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/apply-target-repo-governance.py",
+                    "--target-repo",
+                    str(target_repo),
+                    "--baseline-path",
+                    str(baseline_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["status"], "applied")
+            self.assertEqual(payload["changed_managed_files"][0]["management_mode"], "block_on_drift")
+            self.assertFalse(payload["blocked_managed_files"])
+            self.assertEqual(
+                (target_repo / ".claude" / "hooks" / "custom-hook.py").read_text(encoding="utf-8"),
+                "print('runtime-owned')\n",
+            )
 
     def test_apply_target_repo_governance_accepts_catalog_contract_command_array(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -1371,6 +1592,184 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             self.assertEqual(payload["status"], "fail")
             self.assertEqual(payload["drift"][0]["reason"], "managed_file_drift")
             self.assertEqual(payload["drift"][0]["mismatched_managed_files"][0]["reason"], "missing")
+
+    def test_verify_target_repo_governance_consistency_allows_json_merge_managed_file_local_keys(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_root = workspace / "runtime"
+            code_root = workspace / "code"
+            runtime_state_base = repo_root / ".runtime" / "attachments"
+            repo_root.mkdir(parents=True)
+            code_root.mkdir(parents=True)
+
+            template_path = workspace / "settings-template.json"
+            _write_json(
+                template_path,
+                {
+                    "permissions": {"deny": ["Read(**/.env)"]},
+                    "hooks": {"PreToolUse": [{"matcher": "Read"}]},
+                },
+            )
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-05-02.1",
+                    "required_managed_files": [
+                        {
+                            "path": ".claude/settings.json",
+                            "source": str(template_path),
+                            "management_mode": "json_merge",
+                        }
+                    ],
+                    "required_profile_overrides": {
+                        "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                    },
+                },
+            )
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": "${code_root}/repo-a",
+                            "attachment_runtime_state_root": "${runtime_state_base}/repo-a",
+                        }
+                    },
+                },
+            )
+            _write_json(
+                code_root / "repo-a" / ".governed-ai" / "repo-profile.json",
+                {
+                    "repo_id": "repo-a",
+                    "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                },
+            )
+            _write_json(
+                code_root / "repo-a" / ".claude" / "settings.json",
+                {
+                    "permissions": {
+                        "deny": ["Read(**/.env)"],
+                        "allow": ["Read(**/notes.md)"],
+                    },
+                    "hooks": {"PreToolUse": [{"matcher": "Read"}]},
+                    "local_only": {"keep": True},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/verify-target-repo-governance-consistency.py",
+                    "--catalog-path",
+                    str(catalog_path),
+                    "--baseline-path",
+                    str(baseline_path),
+                    "--repo-root",
+                    str(repo_root),
+                    "--code-root",
+                    str(code_root),
+                    "--runtime-state-base",
+                    str(runtime_state_base),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["status"], "pass")
+            self.assertEqual(payload["drift_count"], 0)
+
+    def test_verify_target_repo_governance_consistency_fails_on_block_on_drift_managed_file_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_root = workspace / "runtime"
+            code_root = workspace / "code"
+            runtime_state_base = repo_root / ".runtime" / "attachments"
+            repo_root.mkdir(parents=True)
+            code_root.mkdir(parents=True)
+
+            template_path = workspace / "hook-template.py"
+            template_path.write_text("print('runtime-owned')\n", encoding="utf-8")
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-05-02.4",
+                    "required_managed_files": [
+                        {
+                            "path": ".claude/hooks/custom-hook.py",
+                            "source": str(template_path),
+                            "management_mode": "block_on_drift",
+                        }
+                    ],
+                    "required_profile_overrides": {
+                        "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                    },
+                },
+            )
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": "${code_root}/repo-a",
+                            "attachment_runtime_state_root": "${runtime_state_base}/repo-a",
+                        }
+                    },
+                },
+            )
+            _write_json(
+                code_root / "repo-a" / ".governed-ai" / "repo-profile.json",
+                {
+                    "repo_id": "repo-a",
+                    "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                },
+            )
+            target_hook_path = code_root / "repo-a" / ".claude" / "hooks" / "custom-hook.py"
+            target_hook_path.parent.mkdir(parents=True, exist_ok=True)
+            target_hook_path.write_text("print('target-local')\n", encoding="utf-8")
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/verify-target-repo-governance-consistency.py",
+                    "--catalog-path",
+                    str(catalog_path),
+                    "--baseline-path",
+                    str(baseline_path),
+                    "--repo-root",
+                    str(repo_root),
+                    "--code-root",
+                    str(code_root),
+                    "--runtime-state-base",
+                    str(runtime_state_base),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertNotEqual(completed.returncode, 0)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["status"], "fail")
+            self.assertEqual(payload["drift"][0]["reason"], "managed_file_drift")
+            self.assertEqual(payload["drift"][0]["mismatched_managed_files"][0]["management_mode"], "block_on_drift")
+            self.assertEqual(payload["drift"][0]["mismatched_managed_files"][0]["reason"], "content_drift")
 
 
 if __name__ == "__main__":

@@ -30,6 +30,70 @@
       "auto_commit_trigger"
     ]
   },
+  "managed_file_rollout": {
+    "distribution_scope": "repo_local_artifact",
+    "required_managed_files": [
+      {
+        "path": ".governed-ai/verify-powershell-policy.py",
+        "source": "docs/targets/templates/verify-powershell-policy.py",
+        "management_mode": "replace"
+      },
+      {
+        "path": ".claude/settings.json",
+        "source": "docs/targets/templates/claude-code/settings.json",
+        "management_mode": "json_merge"
+      },
+      {
+        "path": ".claude/hooks/governed-pre-tool-use.py",
+        "source": "docs/targets/templates/claude-code/governed-pre-tool-use.py",
+        "management_mode": "block_on_drift"
+      }
+    ]
+  },
+  "repo_profile_ownership_contract": {
+    "baseline_override_fields": [
+      "required_entrypoint_policy",
+      "auto_commit_policy",
+      "interaction_profile",
+      "learning_assistance_policy",
+      "rule_file_coordination_policy",
+      "windows_process_environment_policy"
+    ],
+    "derived_runtime_fields": [
+      "quick_gate_commands",
+      "full_gate_commands",
+      "gate_timeout_seconds"
+    ],
+    "catalog_input_fields": [
+      "repo_id",
+      "display_name",
+      "primary_language",
+      "build_commands",
+      "test_commands",
+      "contract_commands"
+    ]
+  },
+  "target_repo_speed_profile_rollout": {
+    "distribution_scope": "runtime_orchestrated",
+    "coding_speed_profile_args": [
+      "-AllTargets",
+      "-ApplyCodingSpeedProfile"
+    ],
+    "required_json_fields": [
+      "apply_coding_speed_profile"
+    ],
+    "required_policy_fields": [
+      "enabled",
+      "materialize_quick_gate_commands",
+      "materialize_full_gate_commands",
+      "preserve_existing_gate_commands",
+      "refresh_existing_derived_gate_commands",
+      "default_gate_timeout_seconds",
+      "quick_gate_timeout_seconds",
+      "full_gate_timeout_seconds",
+      "reason"
+    ]
+  },
   "milestone_auto_commit": {
     "baseline_field": "auto_commit_policy",
     "required_trigger": "milestone",
@@ -48,6 +112,46 @@
       "{timestamp}"
     ]
   },
+  "runtime_orchestrated_capability_contracts": [
+    {
+      "capability_id": "target-repo-problem-trace-and-kpi",
+      "required_json_fields": [
+        "exported_target_repo_runs"
+      ]
+    },
+    {
+      "capability_id": "target-repo-runs-retention-prune",
+      "required_json_fields": [
+        "prune_target_repo_runs"
+      ]
+    },
+    {
+      "capability_id": "target-repo-gate-speed-controls",
+      "required_json_fields": [
+        "apply_coding_speed_profile",
+        "milestone_gate_mode",
+        "milestone_gate_mode_source",
+        "milestone_gate_mode_reason"
+      ]
+    },
+    {
+      "capability_id": "source-string-contract-guard",
+      "required_json_fields": [
+        "governance_full_check_path",
+        "governance_fast_check_path"
+      ]
+    },
+    {
+      "capability_id": "native-attach-runtime-flow",
+      "required_json_fields": [
+        "flow_mode"
+      ],
+      "required_script_tokens": [
+        "native_attach",
+        "AdapterPreference"
+      ]
+    }
+  ],
   "target_repo_capabilities": [
     {
       "capability_id": "target-repo-entrypoint-enforcement",

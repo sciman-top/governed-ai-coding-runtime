@@ -432,16 +432,17 @@ def _build_next_work_summary() -> dict:
 
 
 def inject_next_work_panel(html: str, *, language: str) -> str:
-    marker = '<div class="details-grid">'
+    marker = "<!-- NEXT_WORK_PANEL -->"
     if marker not in html:
         return html
     panel = render_next_work_panel(language=language)
-    return html.replace(marker, panel + "\n" + marker, 1)
+    return html.replace(marker, panel, 1)
 
 
 def render_next_work_panel(*, language: str) -> str:
     is_zh = not language.lower().startswith("en")
     title = "下一步选择" if is_zh else "Next Work Selector"
+    caption = "把当前建议、阻断和推荐动作放在执行输出下面，便于直接决定下一步。" if is_zh else "Keep the current recommendation, blockers, and suggested action directly under the output panel."
     summary = "加载中" if is_zh else "Loading"
     recommendation = "AI 推荐: 正在刷新" if is_zh else "AI recommended: refreshing"
     state_line = "状态: loading" if is_zh else "Status: loading"
@@ -449,8 +450,9 @@ def render_next_work_panel(*, language: str) -> str:
     escape_json = escape(json.dumps({"status": "loading"}, ensure_ascii=False, indent=2, sort_keys=True))
     return "\n".join(
         [
-            "<section class='section' id='next-work-panel'>",
+            "<section class='panel section' id='next-work-panel'>",
             f"<h2>{title}</h2>",
+            f"<p class='meta'>{caption}</p>",
             "<div class='policy-grid'>",
             f"<div class='policy-card'><strong>{'动作' if is_zh else 'Action'}</strong><span id='next-work-action'>{summary}</span></div>",
             f"<div class='policy-card'><strong>{'建议' if is_zh else 'Recommendation'}</strong><span id='next-work-recommendation'>{recommendation}</span></div>",
