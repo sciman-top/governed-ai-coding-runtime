@@ -45,7 +45,13 @@ Complete hybrid final-state certification posture:
 
 The best engineering final state is now fixed as `Governance Hub + Reusable Contract + Controlled Evolution loop + outer AI intelligent review/generation capability`: a governance center, reusable control contract, controlled evolution loop, and outer-AI review/generation capability, not a new host product.
 
-The core principle is now strengthened as `Automation-first, outer-AI-assisted, gate-controlled evolution`: this project should highly automate its deterministic governance work and may automatically trigger outer AI for intelligent review, knowledge extraction, candidate generation, and evolution proposals; outer AI output must first become a structured candidate and pass risk classification, machine gates, evidence, rollback, and required review boundaries before it can take effect.
+The human-readable core principle is now converged into five statements, while the machine details remain in the 14 enforced principles in `docs/architecture/core-principles-policy.json`:
+
+- `Efficiency first, safety bounded`: optimize for low interruption, continuous execution, lower token/cost burn, and high throughput, but never bypass safety, least privilege, evidence, rollback, or review boundaries.
+- `Automation-first, outer-AI-assisted, gate-controlled evolution`: deterministic governance work should be automated, and outer AI may generate reviews, knowledge, candidates, and proposals; effective changes must first become structured candidates and pass risk classification, machine gates, evidence, rollback, and required review.
+- `Governance hub, reusable contract, host-compatible execution`: this project is a governance hub and reusable contract layer, not a competing replacement for Codex, Claude Code, or other AI coding hosts; external agent projects are mechanism sources only.
+- `Context budget, instruction minimalism, least privilege`: `context_budget_and_instruction_minimalism` and `least_privilege_tool_credential_boundary` keep root rules short and hard while tool permissions, credentials, sandbox, mounts, network, and provider secrets stay auditable and deterministic where possible.
+- `Measured effect over claims`: `measured_effect_feedback_over_claims` means completion claims require fresh target-run evidence, eval traces, effect feedback, verification commands, and rollback; docs, code presence, or candidate files alone do not prove completion.
 
 ## Can I Use This With Another Repo?
 Yes, with the current boundary.
