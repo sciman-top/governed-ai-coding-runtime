@@ -3,7 +3,7 @@
   "effect_feedback": {
     "after_evidence_complete": true,
     "after_overall_status": "pass",
-    "backlog_candidate_count": 2,
+    "backlog_candidate_count": 1,
     "decision": "adjust",
     "target": "classroomtoolkit",
     "verifier_status": "pass"
@@ -461,7 +461,7 @@
           "status": "pass"
         },
         "effect_feedback": {
-          "backlog_candidate_count": 2,
+          "backlog_candidate_count": 1,
           "decision": "adjust",
           "error_count": 0,
           "errors": [],
@@ -656,7 +656,7 @@
       "status": "pass"
     },
     "target_repo_effect_feedback": {
-      "backlog_candidate_count": 2,
+      "backlog_candidate_count": 1,
       "decision": "adjust",
       "errors": [],
       "report_path": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\target-repo-runs\\effect-report-classroomtoolkit.json",

@@ -26,6 +26,7 @@
 - 当前权威输入顺序：根 `README.md` -> `docs/README.md` -> PRD -> Architecture -> Roadmap -> Backlog -> Specs -> Schemas。
 - 本仓面向 `Codex / Claude Code / 本机操作者` 的长期核心原则是“综合效率优先”：少打扰、自动连续执行、节省 token / 成本、高效率。
 - 具体模型、推理档位、compact 阈值、provider、交互方式与自动化细节都只是该原则下的阶段性实现；后续可调整，但不得高于该原则本身。
+- 本仓核心原则还包括：上下文预算与指令最小化、最小权限工具/凭据边界、效果反馈优先于完成声明；这些原则必须通过 policy/spec/verifier/evidence 承接，不只写成提示词。
 - 全局规则给风险、语言、N/A 和门禁语义；本文件给本仓目录归宿、真实命令、阻断条件、证据位置和回滚入口。
 - 项目规则只保留本仓不可由代码/CI自动推断且会改变执行、风险或验收的事实；长流程下沉到子文档或工具专属规则。
 - 规则文件、门禁、profile、baseline 或同步脚本修改前，必须先比对控制仓 `governed-ai-coding-runtime/rules/manifest.json`、源文件、用户目录/目标仓已分发副本、目标仓真实 gate/profile/CI/script/README 差异和当前工具官方加载模型；发现漂移先整合再同步，不盲目覆盖。

@@ -6,7 +6,7 @@
     {
       "principle_id": "efficiency_first",
       "category": "execution",
-      "summary": "The long-lived operating principle is low interruption, continuous execution, lower token and cost burn, and high throughput.",
+      "summary": "The long-lived operating principle is low interruption, continuous execution, bounded context, lower token and cost burn, measured throughput, and safe automation.",
       "required": true,
       "enforcement_level": "docs_gate",
       "machine_gate": "verify-core-principles",
@@ -87,7 +87,34 @@
     {
       "principle_id": "evidence_and_rollback_required",
       "category": "evidence",
-      "summary": "Planning, schema, script, rule, and governance baseline changes require evidence and rollback records.",
+      "summary": "Planning, schema, script, rule, and governance baseline changes require fresh evidence, effect metrics, verification commands, explicit N/A expiry when applicable, and rollback records.",
+      "required": true,
+      "enforcement_level": "docs_gate",
+      "machine_gate": "verify-core-principles",
+      "rollback_ref": "git revert core-principles policy change"
+    },
+    {
+      "principle_id": "context_budget_and_instruction_minimalism",
+      "category": "execution",
+      "summary": "Core rules, instruction files, repo maps, and memory artifacts must stay bounded, concise, and verifiable so context budget is preserved for the task, code, and evidence.",
+      "required": true,
+      "enforcement_level": "docs_gate",
+      "machine_gate": "verify-core-principles",
+      "rollback_ref": "git revert core-principles policy change"
+    },
+    {
+      "principle_id": "least_privilege_tool_credential_boundary",
+      "category": "security",
+      "summary": "Tool permissions, sandbox scope, credentials, provider secrets, mounted paths, and network access must be least-privilege, auditable, and enforced through deterministic controls where possible.",
+      "required": true,
+      "enforcement_level": "docs_gate",
+      "machine_gate": "verify-core-principles",
+      "rollback_ref": "git revert core-principles policy change"
+    },
+    {
+      "principle_id": "measured_effect_feedback_over_claims",
+      "category": "evidence",
+      "summary": "Capability completion claims must be backed by fresh target-run evidence, eval traces, effect feedback, verification commands, and rollback paths rather than documentation or code existence alone.",
       "required": true,
       "enforcement_level": "docs_gate",
       "machine_gate": "verify-core-principles",
@@ -148,6 +175,18 @@
     },
     {
       "path": "AGENTS.md",
+      "contains": "上下文预算与指令最小化"
+    },
+    {
+      "path": "AGENTS.md",
+      "contains": "最小权限工具/凭据边界"
+    },
+    {
+      "path": "AGENTS.md",
+      "contains": "效果反馈优先于完成声明"
+    },
+    {
+      "path": "AGENTS.md",
       "contains": "build -> test -> contract/invariant -> hotspot"
     },
     {
@@ -181,6 +220,38 @@
     {
       "path": "docs/README.md",
       "contains": "does not authorize automatic host replacement, policy mutation, skill enablement, push, or merge"
+    },
+    {
+      "path": "docs/README.md",
+      "contains": "Context budget and instruction minimalism"
+    },
+    {
+      "path": "docs/README.md",
+      "contains": "Least-privilege tool and credential boundary"
+    },
+    {
+      "path": "docs/README.md",
+      "contains": "Measured effect feedback over claims"
+    },
+    {
+      "path": "docs/README.md",
+      "contains": "Automation-first, gate-controlled, evidence-measured governance"
+    },
+    {
+      "path": "docs/README.md",
+      "contains": "Efficiency never overrides safety, permissions, evidence, rollback, or review boundaries"
+    },
+    {
+      "path": "docs/README.md",
+      "contains": "freshness_status"
+    },
+    {
+      "path": "docs/specs/core-principles-spec.md",
+      "contains": "Efficiency must not override safety, least privilege, evidence, rollback, or review boundaries"
+    },
+    {
+      "path": "docs/specs/core-principles-spec.md",
+      "contains": "effect metric delta"
     },
     {
       "path": "docs/research/runtime-governance-borrowing-matrix.md",
@@ -235,7 +306,9 @@
     }
   ],
   "evidence_refs": [
-    "docs/change-evidence/20260501-governance-hub-reuse-plan.md"
+    "docs/change-evidence/20260501-governance-hub-reuse-plan.md",
+    "docs/change-evidence/20260501-core-principle-best-practice-optimization.md",
+    "docs/change-evidence/20260501-core-principle-readable-convergence.md"
   ],
   "rollback_ref": "git revert core-principles policy, schema, verifier, and docs gate wiring"
 }

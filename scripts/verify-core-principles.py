@@ -24,6 +24,9 @@ REQUIRED_PRINCIPLES = {
     "automation_first_outer_ai_intelligent_evolution",
     "no_automatic_mutation_without_review",
     "evidence_and_rollback_required",
+    "context_budget_and_instruction_minimalism",
+    "least_privilege_tool_credential_boundary",
+    "measured_effect_feedback_over_claims",
     "hard_gate_order",
 }
 
