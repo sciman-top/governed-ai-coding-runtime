@@ -1,0 +1,39 @@
+{
+  "schema_version": "0.1-draft",
+  "certification_id": "example-governance-hub-certification",
+  "status": "enforced",
+  "reviewed_on": "2026-05-01",
+  "verification_command": "python scripts/verify-governance-hub-certification.py",
+  "report_output_ref": "docs/change-evidence/governance-hub-certification-report.json",
+  "portfolio_ref": "docs/architecture/capability-portfolio-classifier.json",
+  "effect_feedback_ref": "docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json",
+  "policy_audit_ref": "docs/change-evidence/policy-tool-credential-audit-report.json",
+  "required_artifact_refs": [
+    "docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json",
+    "docs/change-evidence/policy-tool-credential-audit-report.json"
+  ],
+  "required_outcomes": [
+    "add",
+    "keep",
+    "improve",
+    "merge",
+    "deprecate",
+    "retire",
+    "delete_candidate"
+  ],
+  "required_loop_ids": [
+    "review_loop",
+    "knowledge_loop",
+    "capability_upgrade_loop",
+    "capability_cleanup_loop",
+    "controlled_evolution_loop",
+    "self_improvement_loop"
+  ],
+  "host_statement_refs": [
+    {
+      "path": "README.md",
+      "contains": "Codex and Claude Code are cooperation hosts, not competitors"
+    }
+  ],
+  "rollback_ref": "Revert the example asset."
+}

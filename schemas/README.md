@@ -17,6 +17,8 @@ Machine-readable schema drafts and example instances for the platform's core gov
 - `jsonschema/knowledge-source.schema.json`
 - `jsonschema/knowledge-memory-lifecycle.schema.json`
 - `jsonschema/promotion-lifecycle.schema.json`
+- `jsonschema/policy-tool-credential-audit.schema.json`
+- `jsonschema/governance-hub-certification.schema.json`
 - `jsonschema/waiver-and-exception.schema.json`
 - `jsonschema/provenance-and-attestation.schema.json`
 - `jsonschema/repo-map-context-shaping.schema.json`
@@ -43,6 +45,8 @@ Machine-readable schema drafts and example instances for the platform's core gov
 - `examples/knowledge-source/docs-index-authoritative.example.json`
 - `examples/knowledge-memory-lifecycle/default-governed-lifecycle.example.json`
 - `examples/promotion-lifecycle/default-runtime-evolution.example.json`
+- `examples/policy-tool-credential-audit/default-runtime.example.json`
+- `examples/governance-hub-certification/default-runtime.example.json`
 - `examples/waiver-and-exception/temporary-gate-waiver.example.json`
 - `examples/provenance-and-attestation/schema-bundle-release.example.json`
 - `examples/repo-map-context-shaping/hybrid-default.example.json`

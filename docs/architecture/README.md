@@ -13,6 +13,8 @@ This directory holds the architectural views that explain product boundaries, ta
 7. [Compatibility Matrix](./compatibility-matrix.md)
 8. [Governed AI Coding Runtime Target Architecture](./governed-ai-coding-runtime-target-architecture.md)
 9. [Runtime Evolution Policy](./runtime-evolution-policy.json)
+10. [Policy Tool Credential Audit Boundary](./policy-tool-credential-audit-boundary.json)
+11. [Governance Hub Certification](./governance-hub-certification.json)
 
 ## Document Roles
 - [Minimum Viable Governance Loop](./minimum-viable-governance-loop.md)
@@ -33,6 +35,10 @@ This directory holds the architectural views that explain product boundaries, ta
   - full target-state architecture and plane decomposition
 - [Runtime Evolution Policy](./runtime-evolution-policy.json)
   - enforced dry-run policy for 30-day source-grounded self-evolution review, candidate decisions, AI coding experience/skillization signals, risk boundaries, and verification floor
+- [Policy Tool Credential Audit Boundary](./policy-tool-credential-audit-boundary.json)
+  - enforced fail-closed audit boundary for tool identity, credential scope, policy basis, and target-repo override limits without becoming an IAM platform
+- [Governance Hub Certification](./governance-hub-certification.json)
+  - enforced certification contract that combines target-repo effect evidence, current-source compatibility, controlled evolution loops, and host-boundary assertions
 
 ## Usage Rule
 - If implementation scope is under debate, start with the first three documents before reading the full target architecture.

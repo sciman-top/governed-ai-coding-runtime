@@ -242,10 +242,10 @@ Make skill/hook/gate/eval/policy/workflow promotion and retirement executable, s
 Borrow Aider-style repo-map discipline as a governed context artifact with token/effect metrics.
 
 ### GAP-138 Policy Tool Credential Audit Boundary
-Add an audit boundary for tool identity, credential scope, and policy decisions without becoming an IAM platform.
+Complete as the fail-closed audit boundary for tool identity, credential scope, host actions, and target-repo override limits without becoming an IAM platform.
 
 ### GAP-139 Governance Hub Certification With Effect Metrics
-Certify that the governance hub, reusable contract, and controlled evolution loop produce measurable effect on at least one target repo, can keep or remove capabilities based on evidence, and do not compete with Codex or Claude Code.
+Complete as the executable certification package proving that the governance hub, reusable contract, and controlled evolution loop produce measurable effect on at least one target repo, can keep or remove capabilities based on evidence, and do not compete with Codex or Claude Code.
 
 ## Verification Standard
 Planning completion requires:

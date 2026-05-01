@@ -3,7 +3,7 @@
   "governance_override_enforced": false,
   "metrics": {
     "clarification_reduction_proxy": 1.0,
-    "estimated_token_cost": 5986,
+    "estimated_token_cost": 5985,
     "file_selection_accuracy": 1.0,
     "max_tokens": 6000,
     "selected_file_count": 31
@@ -43,10 +43,10 @@
     "scripts/apply-target-repo-governance.py",
     "scripts/attach-target-repo.py",
     "scripts/bootstrap-runtime.ps1",
+    "scripts/build-governance-hub-certification.py",
+    "scripts/build-policy-tool-credential-audit.py",
     "scripts/build-repo-map-context-artifact.py",
     "scripts/build-runtime.ps1",
-    "scripts/build-target-repo-reuse-effect-report.py",
-    "scripts/check-source-string-contract-guard.py",
     "scripts/lib/__init__.py",
     "scripts/verify-agent-rules.ps1"
   ],

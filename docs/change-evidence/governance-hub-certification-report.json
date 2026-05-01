@@ -1,0 +1,605 @@
+{
+  "certification_id": "default-governance-hub-certification",
+  "effect_feedback": {
+    "after_evidence_complete": true,
+    "after_overall_status": "pass",
+    "backlog_candidate_count": 2,
+    "decision": "adjust",
+    "target": "classroomtoolkit",
+    "verifier_status": "pass"
+  },
+  "final_answers": {
+    "capability_cleanup_loop_executable": true,
+    "capability_upgrade_loop_executable": true,
+    "controlled_evolution_loop_executable": true,
+    "knowledge_loop_executable": true,
+    "review_loop_executable": true,
+    "self_improvement_loop_executable": true
+  },
+  "host_posture": {
+    "claude_code_is_cooperation_host": true,
+    "claude_provider_boundary_enforced": true,
+    "codex_is_cooperation_host": true,
+    "no_host_competition_claim": true
+  },
+  "invalid_reasons": [],
+  "loop_status": {
+    "capability_cleanup_loop": true,
+    "capability_upgrade_loop": true,
+    "controlled_evolution_loop": true,
+    "knowledge_loop": true,
+    "review_loop": true,
+    "self_improvement_loop": true
+  },
+  "missing_artifact_refs": [],
+  "missing_host_statement_refs": [],
+  "missing_outcomes": [],
+  "outcome_counts": {
+    "add": 4,
+    "delete_candidate": 1,
+    "deprecate": 2,
+    "improve": 6,
+    "keep": 8,
+    "merge": 3,
+    "retire": 2
+  },
+  "report_path": "D:/CODE/governed-ai-coding-runtime/docs/change-evidence/governance-hub-certification-report.json",
+  "required_outcomes": [
+    "add",
+    "delete_candidate",
+    "deprecate",
+    "improve",
+    "keep",
+    "merge",
+    "retire"
+  ],
+  "reviewed_on": "2026-05-01",
+  "rollback_ref": "Revert the GAP-139 certification contract, verifier, tests, generated report, and status updates.",
+  "schema_version": "0.1-draft",
+  "special_entries_without_future_trigger": [],
+  "status": "pass",
+  "verification_command": "python scripts/verify-governance-hub-certification.py",
+  "verifier_results": {
+    "ai_coding_experience": {
+      "knowledge_candidate_count": 1,
+      "pattern_candidate_count": 1,
+      "proposal_count": 1,
+      "status": "pass"
+    },
+    "capability_portfolio": {
+      "entry_count": 26,
+      "errors": [],
+      "portfolio_path": "docs\\architecture\\capability-portfolio-classifier.json",
+      "status": "pass"
+    },
+    "current_source_compatibility": {
+      "as_of": "2026-05-01",
+      "expired": false,
+      "forbidden_pattern_hits": [],
+      "kernel_owned_semantics": [
+        "task_lifecycle",
+        "approval",
+        "containment",
+        "verification",
+        "rollback",
+        "evidence",
+        "claim_drift"
+      ],
+      "missing_doc_refs": [],
+      "missing_evidence_refs": [],
+      "policy_id": "default-current-source-compatibility",
+      "policy_path": "D:/CODE/governed-ai-coding-runtime/docs/architecture/current-source-compatibility-policy.json",
+      "policy_status": "enforced",
+      "protocol_ids": [
+        "mcp_roots",
+        "a2a_1_0_0",
+        "codex_sandbox_and_guardrails",
+        "claude_code_settings_hooks",
+        "slsa_provenance"
+      ],
+      "protocols_missing_kernel_semantics": [],
+      "review_expires_at": "2026-07-26",
+      "reviewed_on": "2026-04-27",
+      "source_ids": [
+        "openai-codex-agents-md",
+        "openai-agents-sandbox",
+        "openai-agents-guardrails",
+        "anthropic-claude-code-memory",
+        "anthropic-claude-code-settings",
+        "anthropic-claude-code-cli",
+        "anthropic-claude-code-hooks",
+        "mcp-roots",
+        "a2a-latest",
+        "slsa-provenance"
+      ],
+      "status": "pass"
+    },
+    "knowledge_memory_lifecycle": {
+      "as_of": "2026-05-01",
+      "entrypoint": "scripts/operator.ps1 -Action ExperienceReview",
+      "knowledge_candidate_count": 1,
+      "memory_record_count": 1,
+      "pattern_candidate_count": 1,
+      "retirement_record_count": 0,
+      "status": "pass",
+      "verification_command": "python scripts/verify-knowledge-memory-lifecycle.py"
+    },
+    "policy_tool_credential_audit": {
+      "audit_id": "default-policy-tool-credential-audit-boundary",
+      "audited_tools": [
+        {
+          "credential_scope": {
+            "allowed_actions": [
+              "run repo-local build and verification commands",
+              "run bounded maintenance commands declared by the control repo"
+            ],
+            "owner_boundary": "command execution is bounded by the repo profile, host shell, and fail-closed governance checks.",
+            "resource_boundary": "repo-local commands only; no external credential is owned or brokered by this audit surface.",
+            "scope_id": "cred-none-shell",
+            "scope_kind": "none"
+          },
+          "decision": "allow",
+          "evidence_refs": [
+            ".governed-ai/repo-profile.json",
+            "docs/change-evidence/20260501-gap-134-target-repo-reuse-effect-feedback.md"
+          ],
+          "host_surface": "repo-local verification and maintenance commands",
+          "policy_basis_refs": [
+            "docs/specs/policy-tool-credential-audit-spec.md",
+            "docs/architecture/control-pack-inheritance-matrix.json",
+            "docs/specs/tool-contract-spec.md"
+          ],
+          "registry_refs": [
+            ".governed-ai/repo-profile.json",
+            "packages/contracts/src/governed_ai_coding_runtime_contracts/tool_runner.py"
+          ],
+          "remediation": "Keep repo-profile allowlists bounded to declared commands and deny any undeclared tool family or shell surface.",
+          "repo_profile_allowlisted": true,
+          "status": "pass",
+          "tool_name": "shell"
+        },
+        {
+          "credential_scope": {
+            "allowed_actions": [
+              "use host-approved local Codex session attachment",
+              "observe readiness and token expiry as host-owned state"
+            ],
+            "owner_boundary": "credential ownership remains with the operator and host product rather than this repository.",
+            "resource_boundary": "local Codex session and host-owned sign-in token lifetime only; no repo-owned credential copy is allowed.",
+            "scope_id": "cred-codex-user-token",
+            "scope_kind": "user_owned_token"
+          },
+          "decision": "allow",
+          "evidence_refs": [
+            "docs/change-evidence/20260430-host-feedback-loop-surface.md",
+            "docs/change-evidence/20260501-gap-134-target-repo-reuse-effect-feedback.md"
+          ],
+          "host_surface": "Codex cooperation host attachment and local execution posture",
+          "policy_basis_refs": [
+            "docs/architecture/core-principles-policy.json",
+            "docs/architecture/current-source-compatibility-policy.json",
+            "docs/specs/policy-tool-credential-audit-spec.md"
+          ],
+          "registry_refs": [
+            "docs/research/runtime-governance-borrowing-matrix.md",
+            "docs/architecture/current-source-compatibility-policy.json"
+          ],
+          "remediation": "Do not copy, broker, or extend Codex credentials; fail closed when host readiness or policy basis is missing.",
+          "repo_profile_allowlisted": false,
+          "status": "pass",
+          "tool_name": "codex-cli"
+        },
+        {
+          "credential_scope": {
+            "allowed_actions": [
+              "switch the active local provider when its credential is present",
+              "write bounded local config for the active provider profile only"
+            ],
+            "owner_boundary": "credential values remain user-owned provider env or local profile inputs outside repository storage.",
+            "resource_boundary": "active local third-party provider only; no official subscription entitlement is assumed by the baseline.",
+            "scope_id": "cred-claude-provider-env",
+            "scope_kind": "provider_env_reference"
+          },
+          "decision": "allow",
+          "evidence_refs": [
+            "scripts/Optimize-ClaudeLocal.ps1",
+            "packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui.py"
+          ],
+          "host_surface": "local Claude Code provider profile switching and bounded configuration",
+          "policy_basis_refs": [
+            "docs/architecture/core-principles-policy.json",
+            "docs/research/runtime-governance-borrowing-matrix.md",
+            "docs/specs/policy-tool-credential-audit-spec.md"
+          ],
+          "registry_refs": [
+            "docs/research/runtime-governance-borrowing-matrix.md",
+            "packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui.py",
+            "scripts/Optimize-ClaudeLocal.ps1"
+          ],
+          "remediation": "Require a matching provider credential before switch/apply and fail closed when the active provider boundary cannot be proven.",
+          "repo_profile_allowlisted": false,
+          "status": "pass",
+          "tool_name": "claude-local-provider"
+        },
+        {
+          "credential_scope": {
+            "allowed_actions": [
+              "deny by default until an explicit session scope and evidence path are declared"
+            ],
+            "owner_boundary": "this repository does not own browser or gateway credentials for default execution.",
+            "resource_boundary": "no default credential scope; external side effects remain denied until a later bounded session contract exists.",
+            "scope_id": "cred-none-browser-default",
+            "scope_kind": "none"
+          },
+          "decision": "deny",
+          "evidence_refs": [
+            "schemas/examples/tool-contract/default-runtime.example.json"
+          ],
+          "host_surface": "browser automation or MCP-like external side-effect surface",
+          "policy_basis_refs": [
+            "schemas/examples/tool-contract/default-runtime.example.json",
+            "docs/specs/policy-tool-credential-audit-spec.md"
+          ],
+          "registry_refs": [
+            "schemas/examples/tool-contract/default-runtime.example.json",
+            "docs/specs/policy-tool-credential-audit-spec.md"
+          ],
+          "remediation": "Keep browser or gateway-like actions disabled by default and require a future bounded contract instead of silently widening scope.",
+          "repo_profile_allowlisted": false,
+          "status": "pass",
+          "tool_name": "browser"
+        }
+      ],
+      "fail_closed_defaults": {
+        "missing_policy_basis": "deny",
+        "overbroad_credential_scope": "deny",
+        "unknown_tool": "deny",
+        "unsupported_override": "deny"
+      },
+      "invalid_reasons": [],
+      "missing_evidence_refs": [],
+      "missing_policy_basis_refs": [],
+      "missing_registry_refs": [],
+      "overbroad_credential_refs": [],
+      "override_audit": [
+        {
+          "basis_refs": [
+            "docs/architecture/control-pack-inheritance-matrix.json",
+            "docs/specs/policy-tool-credential-audit-spec.md"
+          ],
+          "declared_rule": "tighten_only",
+          "limitation_note": "Target repos may remove or further restrict risky tools, but they may not expand the allowlist beyond the control repo's declared registry and policy basis.",
+          "status": "pass",
+          "surface_id": "repo_profile.tool_allowlist"
+        },
+        {
+          "basis_refs": [
+            "docs/architecture/core-principles-policy.json",
+            "docs/specs/policy-tool-credential-audit-spec.md"
+          ],
+          "declared_rule": "platform_limit_only",
+          "limitation_note": "Target repos may declare provider capability unavailable on a platform that cannot satisfy the credential boundary, but they may not broaden provider scope or claim official entitlement.",
+          "status": "pass",
+          "surface_id": "repo_profile.claude_provider_boundary"
+        }
+      ],
+      "registry_declared_tools": [
+        "apply_patch",
+        "browser",
+        "git"
+      ],
+      "repo_profile_allowlist": [
+        "shell"
+      ],
+      "report_path": "D:/CODE/governed-ai-coding-runtime/docs/change-evidence/policy-tool-credential-audit-report.json",
+      "reviewed_on": "2026-05-01",
+      "rollback_ref": "Revert the GAP-138 audit boundary contract, verifier, tests, and generated report.",
+      "schema_version": "0.1-draft",
+      "status": "pass",
+      "summary": {
+        "audited_tool_count": 4,
+        "known_tool_count": 4,
+        "missing_policy_basis_count": 0,
+        "overbroad_credential_count": 0,
+        "override_surface_count": 2,
+        "registry_declared_tool_count": 3,
+        "repo_profile_allowlist_count": 1,
+        "unknown_tool_count": 0,
+        "unsupported_override_count": 0
+      },
+      "unknown_tools": [],
+      "unsupported_override_refs": [],
+      "verification_command": "python scripts/verify-policy-tool-credential-audit.py"
+    },
+    "promotion_lifecycle": {
+      "as_of": "2026-05-01",
+      "entrypoint": "python scripts/materialize-runtime-evolution.py --apply",
+      "lifecycle_entry_count": 2,
+      "retire_proposal_count": 2,
+      "retirement_entrypoint": "python scripts/review-runtime-evolution-retirements.py",
+      "status": "pass",
+      "verification_command": "python scripts/verify-promotion-lifecycle.py"
+    },
+    "runtime_evolution": {
+      "artifact_refs": {},
+      "as_of": "2026-05-01",
+      "candidate_count": 3,
+      "candidates": [
+        {
+          "acceptance_gates": [
+            "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1",
+            "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime",
+            "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract",
+            "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1"
+          ],
+          "candidate_id": "EVOL-001",
+          "decision": "review_current",
+          "evidence_required": [
+            "runtime evolution policy",
+            "candidate dry-run artifact",
+            "Docs gate output"
+          ],
+          "observed_change": "Runtime evolution policy exists and defines a 30-day dry-run review loop.",
+          "patch_plan": [
+            {
+              "apply_mode": "manual_or_future_low_risk_only",
+              "operation": "refresh reviewed_on/review_expires_at only after a new review artifact exists",
+              "path": "docs/architecture/runtime-evolution-policy.json"
+            }
+          ],
+          "proposed_action": "no_action",
+          "repo_impact": "Enables a deterministic self-evolution review without automatic mutation.",
+          "risk_level": "low",
+          "rollback_plan": "git revert the runtime evolution policy, implementation plan, backlog tasks, evidence, and later scripts or gates introduced by GAP-120..124",
+          "source_checked_on": "2026-05-01",
+          "source_ref": "docs/architecture/runtime-evolution-policy.json",
+          "source_type": "internal_runtime_evidence"
+        },
+        {
+          "acceptance_gates": [
+            "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs"
+          ],
+          "candidate_id": "EVOL-002",
+          "decision": "implement_source_collector_before_online_fetch",
+          "evidence_required": [
+            "source collection artifact",
+            "candidate evaluator artifact",
+            "platform_na record if online source is unavailable"
+          ],
+          "observed_change": "Official documentation source collection is planned but not fetched in dry-run mode.",
+          "patch_plan": [
+            {
+              "apply_mode": "defer_until_scope_fenced",
+              "operation": "promote source collection from probe-only to parsed source snapshots after schema is defined",
+              "path": "scripts/evaluate-runtime-evolution.py"
+            }
+          ],
+          "proposed_action": "defer",
+          "repo_impact": "Prevents community or stale assumptions from becoming execution rules without review.",
+          "risk_level": "medium",
+          "rollback_plan": "remove the source collection candidate from the evolution dry-run output",
+          "source_checked_on": "2026-05-01",
+          "source_ref": "dry-run source inventory",
+          "source_type": "official_doc_or_changelog"
+        },
+        {
+          "acceptance_gates": [
+            "python -m unittest tests.runtime.test_runtime_evolution tests.runtime.test_learning_efficiency_metrics",
+            "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs"
+          ],
+          "candidate_id": "EVOL-003",
+          "decision": "accepted_as_source_category",
+          "evidence_required": [
+            "learning-efficiency metrics or interaction evidence",
+            "controlled improvement proposal",
+            "skill or knowledge-source manifest when reusable behavior is promoted"
+          ],
+          "observed_change": "AI coding experience, repeated repair patterns, and skillization candidates are now first-class evolution sources.",
+          "patch_plan": [
+            {
+              "apply_mode": "proposal_only_until_reviewed",
+              "operation": "use existing proposal buckets to classify repeated lessons as skill, knowledge, hook, policy, control, or repo follow-up",
+              "path": "scripts/extract-ai-coding-experience.py"
+            },
+            {
+              "apply_mode": "manual_or_future_low_risk_only",
+              "operation": "promote repeated AI coding workflows only when a reviewable skill manifest and tests exist",
+              "path": "docs/specs/skill-manifest-spec.md"
+            }
+          ],
+          "proposed_action": "no_action",
+          "repo_impact": "Allows lessons from real agent work to become governed skill, knowledge, hook, policy, or control proposals without treating memory as an authority.",
+          "risk_level": "low",
+          "rollback_plan": "remove internal AI coding experience source records and keep official/community/runtime evidence sources unchanged",
+          "source_checked_on": "2026-05-01",
+          "source_ref": "docs/specs/controlled-improvement-proposal-spec.md",
+          "source_type": "internal_ai_coding_experience"
+        }
+      ],
+      "expired": false,
+      "invalid_reasons": [],
+      "missing_required_refs": [],
+      "mode": "dry_run",
+      "mutation_allowed": false,
+      "online_source_check": false,
+      "policy_id": "default-runtime-evolution-review",
+      "policy_path": "D:/CODE/governed-ai-coding-runtime/docs/architecture/runtime-evolution-policy.json",
+      "policy_status": "enforced",
+      "review_age_days": 0,
+      "review_expires_at": "2026-05-31",
+      "reviewed_on": "2026-05-01",
+      "source_count": 16,
+      "source_records": [
+        {
+          "confidence": "high",
+          "retrieval_mode": "dry_run_no_network",
+          "source_checked_on": "2026-05-01",
+          "source_id": "policy-source-1",
+          "source_ref": "official_doc_or_changelog",
+          "source_type": "official_doc_or_changelog",
+          "summary": "authoritative semantics for Codex, Claude Code, GitHub Actions, PowerShell, Python, dependency managers, and owned runtime APIs"
+        },
+        {
+          "confidence": "high",
+          "retrieval_mode": "dry_run_no_network",
+          "source_checked_on": "2026-05-01",
+          "source_id": "policy-source-2",
+          "source_ref": "primary_project_or_reference_implementation",
+          "source_type": "primary_project_or_reference_implementation",
+          "summary": "implementation pattern comparison; never copied without repo fit and gate evidence"
+        },
+        {
+          "confidence": "medium",
+          "retrieval_mode": "dry_run_no_network",
+          "source_checked_on": "2026-05-01",
+          "source_id": "policy-source-3",
+          "source_ref": "internal_runtime_evidence",
+          "source_type": "internal_runtime_evidence",
+          "summary": "target-run failures, host feedback, doctor findings, claim drift, repeated manual work, and target repo rollout data"
+        },
+        {
+          "confidence": "medium",
+          "retrieval_mode": "dry_run_no_network",
+          "source_checked_on": "2026-05-01",
+          "source_id": "policy-source-4",
+          "source_ref": "internal_ai_coding_experience",
+          "source_type": "internal_ai_coding_experience",
+          "summary": "agent-session lessons, learning-efficiency metrics, controlled improvement proposals, knowledge-source curation, and skill-manifest candidates from real AI coding work"
+        },
+        {
+          "confidence": "medium",
+          "retrieval_mode": "dry_run_no_network",
+          "source_checked_on": "2026-05-01",
+          "source_id": "policy-source-5",
+          "source_ref": "community_best_practice",
+          "source_type": "community_best_practice",
+          "summary": "candidate signal only; cannot override official docs, local code facts, or repository policy"
+        },
+        {
+          "confidence": "high",
+          "local_ref_exists": null,
+          "online_probe": null,
+          "retrieval_mode": "dry_run_catalog",
+          "source_checked_on": "2026-05-01",
+          "source_id": "openai-codex-agents-md",
+          "source_ref": "https://developers.openai.com/codex/guides/agents-md",
+          "source_type": "official_doc_or_changelog",
+          "summary": "OpenAI Codex AGENTS.md loading and project instruction semantics."
+        },
+        {
+          "confidence": "high",
+          "local_ref_exists": null,
+          "online_probe": null,
+          "retrieval_mode": "dry_run_catalog",
+          "source_checked_on": "2026-05-01",
+          "source_id": "github-actions-schedule",
+          "source_ref": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule",
+          "source_type": "official_doc_or_changelog",
+          "summary": "GitHub Actions schedule semantics, limitations, and workflow_dispatch relationship."
+        },
+        {
+          "confidence": "medium",
+          "local_ref_exists": null,
+          "online_probe": null,
+          "retrieval_mode": "dry_run_catalog",
+          "source_checked_on": "2026-05-01",
+          "source_id": "openai-codex-repository",
+          "source_ref": "https://github.com/openai/codex",
+          "source_type": "primary_project_or_reference_implementation",
+          "summary": "Primary Codex project surface for release and instruction-loading drift signals."
+        },
+        {
+          "confidence": "medium",
+          "local_ref_exists": null,
+          "online_probe": null,
+          "retrieval_mode": "dry_run_catalog",
+          "source_checked_on": "2026-05-01",
+          "source_id": "google-sre-eliminating-toil",
+          "source_ref": "https://sre.google/workbook/eliminating-toil/",
+          "source_type": "community_best_practice",
+          "summary": "Reference practice for deciding what repeated manual work should become automation."
+        },
+        {
+          "confidence": "high",
+          "local_ref_exists": true,
+          "online_probe": null,
+          "retrieval_mode": "local_file_check",
+          "source_checked_on": "2026-05-01",
+          "source_id": "runtime-learning-efficiency-metrics",
+          "source_ref": "docs/specs/learning-efficiency-metrics-spec.md",
+          "source_type": "internal_ai_coding_experience",
+          "summary": "Local contract for turning AI coding interaction friction, clarification, and handoff signals into reviewable metrics."
+        },
+        {
+          "confidence": "high",
+          "local_ref_exists": true,
+          "online_probe": null,
+          "retrieval_mode": "local_file_check",
+          "source_checked_on": "2026-05-01",
+          "source_id": "controlled-improvement-proposals",
+          "source_ref": "docs/specs/controlled-improvement-proposal-spec.md",
+          "source_type": "internal_ai_coding_experience",
+          "summary": "Local proposal contract for converting recurring AI coding lessons into governed policy, hook, skill, control, knowledge, or repo follow-up candidates."
+        },
+        {
+          "confidence": "high",
+          "local_ref_exists": true,
+          "online_probe": null,
+          "retrieval_mode": "local_file_check",
+          "source_checked_on": "2026-05-01",
+          "source_id": "skill-manifest-contract",
+          "source_ref": "docs/specs/skill-manifest-spec.md",
+          "source_type": "internal_ai_coding_experience",
+          "summary": "Local skill manifest contract for promoting repeated coding know-how into reusable, reviewable skills."
+        },
+        {
+          "confidence": "high",
+          "retrieval_mode": "local_file_check",
+          "source_checked_on": "2026-05-01",
+          "source_id": "internal-current-source-compatibility-policy",
+          "source_ref": "docs/architecture/current-source-compatibility-policy.json",
+          "source_type": "internal_runtime_evidence",
+          "summary": "Internal policy or evidence file exists."
+        },
+        {
+          "confidence": "high",
+          "retrieval_mode": "local_file_check",
+          "source_checked_on": "2026-05-01",
+          "source_id": "internal-ltp-autonomous-promotion-policy",
+          "source_ref": "docs/architecture/ltp-autonomous-promotion-policy.json",
+          "source_type": "internal_runtime_evidence",
+          "summary": "Internal policy or evidence file exists."
+        },
+        {
+          "confidence": "high",
+          "retrieval_mode": "local_file_check",
+          "source_checked_on": "2026-05-01",
+          "source_id": "internal-autonomous-next-work-selection-policy",
+          "source_ref": "docs/architecture/autonomous-next-work-selection-policy.json",
+          "source_type": "internal_runtime_evidence",
+          "summary": "Internal policy or evidence file exists."
+        },
+        {
+          "confidence": "high",
+          "retrieval_mode": "local_file_check",
+          "source_checked_on": "2026-05-01",
+          "source_id": "internal-20260501-runtime-evolution-planning",
+          "source_ref": "docs/change-evidence/20260501-runtime-evolution-planning.md",
+          "source_type": "internal_runtime_evidence",
+          "summary": "Internal policy or evidence file exists."
+        }
+      ],
+      "stale": false,
+      "stale_after_days": 30,
+      "status": "pass"
+    },
+    "target_repo_effect_feedback": {
+      "backlog_candidate_count": 2,
+      "decision": "adjust",
+      "errors": [],
+      "report_path": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\target-repo-runs\\effect-report-classroomtoolkit.json",
+      "status": "pass",
+      "target": "classroomtoolkit"
+    }
+  }
+}

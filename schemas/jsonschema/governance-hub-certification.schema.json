@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/governance-hub-certification.schema.json",
+  "title": "Governance Hub Certification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "certification_id",
+    "status",
+    "reviewed_on",
+    "verification_command",
+    "report_output_ref",
+    "portfolio_ref",
+    "effect_feedback_ref",
+    "policy_audit_ref",
+    "required_artifact_refs",
+    "required_outcomes",
+    "required_loop_ids",
+    "host_statement_refs",
+    "rollback_ref"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "certification_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "observe",
+        "enforced"
+      ]
+    },
+    "reviewed_on": {
+      "type": "string",
+      "format": "date"
+    },
+    "verification_command": {
+      "type": "string",
+      "minLength": 1
+    },
+    "report_output_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "portfolio_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "effect_feedback_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "policy_audit_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "required_artifact_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "required_outcomes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "add",
+          "keep",
+          "improve",
+          "merge",
+          "deprecate",
+          "retire",
+          "delete_candidate"
+        ]
+      }
+    },
+    "required_loop_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "review_loop",
+          "knowledge_loop",
+          "capability_upgrade_loop",
+          "capability_cleanup_loop",
+          "controlled_evolution_loop",
+          "self_improvement_loop"
+        ]
+      }
+    },
+    "host_statement_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "contains"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "contains": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "rollback_ref": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

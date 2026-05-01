@@ -9,6 +9,8 @@ Provide minimal but realistic JSON instances that exercise the repository's curr
 - `knowledge-source/`: knowledge source examples
 - `knowledge-memory-lifecycle/`: governed knowledge and memory lifecycle examples
 - `promotion-lifecycle/`: staged promotion and retirement lifecycle examples
+- `policy-tool-credential-audit/`: fail-closed tool, credential, and override audit examples
+- `governance-hub-certification/`: executable certification package examples
 - `waiver-and-exception/`: waiver record examples
 - `provenance-and-attestation/`: provenance and attestation examples
 - `controlled-improvement-proposal/`: controlled proposal pipeline examples
@@ -32,6 +34,8 @@ Provide minimal but realistic JSON instances that exercise the repository's curr
 - `knowledge-source/docs-index-authoritative.example.json`
 - `knowledge-memory-lifecycle/default-governed-lifecycle.example.json`
 - `promotion-lifecycle/default-runtime-evolution.example.json`
+- `policy-tool-credential-audit/default-runtime.example.json`
+- `governance-hub-certification/default-runtime.example.json`
 - `waiver-and-exception/temporary-gate-waiver.example.json`
 - `provenance-and-attestation/schema-bundle-release.example.json`
 - `provenance-and-attestation/repo-light-pack.example.json`
@@ -77,6 +81,12 @@ Get-Content -Raw 'schemas/examples/knowledge-memory-lifecycle/default-governed-l
 
 Get-Content -Raw 'schemas/examples/promotion-lifecycle/default-runtime-evolution.example.json' |
   Test-Json -SchemaFile 'schemas/jsonschema/promotion-lifecycle.schema.json'
+
+Get-Content -Raw 'schemas/examples/policy-tool-credential-audit/default-runtime.example.json' |
+  Test-Json -SchemaFile 'schemas/jsonschema/policy-tool-credential-audit.schema.json'
+
+Get-Content -Raw 'schemas/examples/governance-hub-certification/default-runtime.example.json' |
+  Test-Json -SchemaFile 'schemas/jsonschema/governance-hub-certification.schema.json'
 
 Get-Content -Raw 'schemas/examples/waiver-and-exception/temporary-gate-waiver.example.json' |
   Test-Json -SchemaFile 'schemas/jsonschema/waiver-and-exception.schema.json'

@@ -1,4 +1,4 @@
-schema_catalog_version: "1.12"
+schema_catalog_version: "1.13"
 items:
   - name: core-principles
     path: schemas/jsonschema/core-principles.schema.json
@@ -57,6 +57,12 @@ items:
   - name: promotion-lifecycle
     path: schemas/jsonschema/promotion-lifecycle.schema.json
     source_spec: docs/specs/promotion-lifecycle-spec.md
+  - name: policy-tool-credential-audit
+    path: schemas/jsonschema/policy-tool-credential-audit.schema.json
+    source_spec: docs/specs/policy-tool-credential-audit-spec.md
+  - name: governance-hub-certification
+    path: schemas/jsonschema/governance-hub-certification.schema.json
+    source_spec: docs/specs/governance-hub-certification-spec.md
   - name: waiver-and-exception
     path: schemas/jsonschema/waiver-and-exception.schema.json
     source_spec: docs/specs/waiver-and-exception-spec.md

@@ -42,7 +42,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Post-Certification Selection Queue / GAP-114` is complete on the current branch baseline. It mechanizes what autonomous work should happen next when `GAP-113` defers heavy LTP promotion.
 - `Dual First-Class Host Entrypoint Queue / GAP-115` through `GAP-119` is active as owner-directed bounded scope. It promotes Claude Code from generic degraded compatibility to first-class supported host parity with Codex in governance outcome and, on current live evidence, to the same `native_attach` tier while keeping host APIs and future drift explicit.
 - `Runtime Evolution Review Queue / GAP-120` through `GAP-124` is implemented as a dry-run decision layer. `Runtime Evolution Materialization Queue / GAP-125` through `GAP-129` starts controlled auto-apply by materializing low-risk proposal and disabled skill candidate files without enabling skills, auto-applying policy, syncing target repos, or pushing/merging.
-- `Governance Hub Reuse And Controlled Evolution Queue / GAP-130` is complete as the scope rebaseline, and `GAP-131` through `GAP-139` are planned as the next executable scope. It clarifies that Codex and Claude Code are cooperation hosts while Hermes/OpenHands/SWE-agent/Letta/Mem0/Aider-style mechanisms are selective absorption sources, then requires real effect feedback before any capability is called live.
+- `Governance Hub Reuse And Controlled Evolution Queue / GAP-130` is complete as the scope rebaseline, `GAP-131` is complete as the capability portfolio classifier baseline, `GAP-132` is complete as the control-pack execution contract baseline, `GAP-133` is complete as the inheritance override baseline, `GAP-134` is complete as the target-repo reuse effect feedback baseline, `GAP-135` is complete as the knowledge-memory lifecycle baseline, `GAP-136` is complete as the promotion lifecycle baseline, `GAP-137` is complete as the repo-map context artifact baseline, `GAP-138` is complete as the policy/tool/credential audit boundary baseline, and `GAP-139` is complete as the governance hub certification baseline. It clarifies that Codex and Claude Code are cooperation hosts while Hermes/OpenHands/SWE-agent/Letta/Mem0/Aider-style mechanisms are selective absorption sources, then requires real effect feedback before any capability is called live.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -1329,30 +1329,30 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: HITL
 - Blocked by: GAP-133, GAP-134
 - User stories: 7, 8, 10, 13, 18, 21, 27, 31, 44
-- Status: planned
+- Status: complete in governance hub audit baseline
 - What to build:
   - audit boundary for tool identity, credential scope, MCP/tool registry, host actions, and policy decisions
   - fail-closed checks for unknown tools, overbroad credential use, and missing policy basis
   - explicit deferral boundary for full IAM, gateway, or credential-broker products
 - Acceptance criteria:
-  - [ ] audit output identifies tool, scope, policy basis, decision, evidence, and remediation
-  - [ ] credential and tool checks can fail closed without becoming a standalone IAM system
-  - [ ] target repo overrides can only tighten policy or declare platform limitations
+  - [x] audit output identifies tool, scope, policy basis, decision, evidence, and remediation
+  - [x] credential and tool checks can fail closed without becoming a standalone IAM system
+  - [x] target repo overrides can only tighten policy or declare platform limitations
 
 ### GAP-139 Governance Hub Certification With Effect Metrics
 - Type: HITL
 - Blocked by: GAP-134, GAP-135, GAP-136, GAP-137, GAP-138
 - User stories: 13, 14, 18, 21, 29, 31, 37, 38, 44, 45
-- Status: planned
+- Status: complete in governance hub certification baseline
 - What to build:
   - certification package for governance hub, reusable contract, controlled evolution, and effect feedback
   - current-source compatibility review that prevents claims from outgrowing implemented capabilities
   - keep/improve/merge/deprecate/retire/delete-candidate decisions for every accelerated mechanism and existing capability under review
 - Acceptance criteria:
-  - [ ] certification includes target repo effect evidence, not only document or schema completion
-  - [ ] Codex and Claude Code remain cooperation hosts, not competitors
-  - [ ] any unimplemented or deferred capability is explicitly fenced with future trigger evidence
-  - [ ] final status answers whether the project has review, knowledge, capability upgrade, capability cleanup, controlled evolution, and self-improvement loops in executable form
+  - [x] certification includes target repo effect evidence, not only document or schema completion
+  - [x] Codex and Claude Code remain cooperation hosts, not competitors
+  - [x] any unimplemented or deferred capability is explicitly fenced with future trigger evidence
+  - [x] final status answers whether the project has review, knowledge, capability upgrade, capability cleanup, controlled evolution, and self-improvement loops in executable form
 
 ## Vision
 

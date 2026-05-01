@@ -738,6 +738,8 @@ function Invoke-ContractChecks {
   Invoke-KnowledgeMemoryLifecycleChecks
   Invoke-PromotionLifecycleChecks
   Invoke-RepoMapContextArtifactChecks
+  Invoke-PolicyToolCredentialAuditChecks
+  Invoke-GovernanceHubCertificationChecks
   Invoke-TargetRepoPowerShellPolicyChecks
   Invoke-AgentRuleSyncChecks
   Invoke-PreChangeReviewChecks
@@ -864,6 +866,34 @@ function Invoke-RepoMapContextArtifactChecks {
   }
 
   Write-CheckOk "repo-map-context-artifact"
+}
+
+function Invoke-PolicyToolCredentialAuditChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-policy-tool-credential-audit.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Policy tool credential audit checks failed"
+    }
+    throw "Policy tool credential audit checks failed`n$detail"
+  }
+
+  Write-CheckOk "policy-tool-credential-audit"
+}
+
+function Invoke-GovernanceHubCertificationChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-governance-hub-certification.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Governance hub certification checks failed"
+    }
+    throw "Governance hub certification checks failed`n$detail"
+  }
+
+  Write-CheckOk "governance-hub-certification"
 }
 
 function Invoke-ControlPackExecutionChecks {

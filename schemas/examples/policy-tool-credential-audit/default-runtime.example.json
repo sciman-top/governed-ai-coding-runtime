@@ -1,0 +1,52 @@
+{
+  "schema_version": "0.1-draft",
+  "audit_id": "example-policy-tool-credential-audit",
+  "status": "enforced",
+  "reviewed_on": "2026-05-01",
+  "verification_command": "python scripts/verify-policy-tool-credential-audit.py",
+  "report_output_ref": "docs/change-evidence/policy-tool-credential-audit-report.json",
+  "fail_closed_defaults": {
+    "unknown_tool": "deny",
+    "overbroad_credential_scope": "deny",
+    "missing_policy_basis": "deny",
+    "unsupported_override": "deny"
+  },
+  "entries": [
+    {
+      "id": "audit-shell-entrypoint",
+      "tool_name": "shell",
+      "host_surface": "repo-local verification commands",
+      "registry_refs": [
+        ".governed-ai/repo-profile.json"
+      ],
+      "credential_scope": {
+        "scope_id": "cred-none-shell",
+        "scope_kind": "none",
+        "resource_boundary": "repo-local commands only",
+        "owner_boundary": "bounded by repo profile",
+        "allowed_actions": [
+          "run declared verification commands"
+        ]
+      },
+      "policy_basis_refs": [
+        "docs/specs/policy-tool-credential-audit-spec.md"
+      ],
+      "evidence_refs": [
+        ".governed-ai/repo-profile.json"
+      ],
+      "decision": "allow",
+      "remediation": "Deny undeclared shell tools."
+    }
+  ],
+  "target_repo_override_entries": [
+    {
+      "surface_id": "repo_profile.tool_allowlist",
+      "declared_rule": "tighten_only",
+      "limitation_note": "Target repos may only tighten local tool scope.",
+      "basis_refs": [
+        "docs/specs/policy-tool-credential-audit-spec.md"
+      ]
+    }
+  ],
+  "rollback_ref": "Revert the example asset."
+}
