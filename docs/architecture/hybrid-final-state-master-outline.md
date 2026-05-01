@@ -98,7 +98,7 @@ Post-`GAP-112`, the correct way to decide whether to keep pushing toward a heavi
 
 Post-`GAP-113`, the correct way to decide what to do next is `scripts/select-next-work.py`. The current selector answer is `defer_ltp_and_refresh_evidence`: do not convert `defer_all` into hidden LTP implementation; keep gates, evidence, and source compatibility fresh until a higher-priority repair, refresh, selected LTP, or owner-directed scope appears.
 
-The user has now explicitly made Claude Code a frequent day-to-day host. That created an owner-directed bounded scope after `GAP-114`: Codex and Claude Code should be dual first-class entrypoints in governance outcome. The bounded queue `GAP-115..119` is complete. It promotes Claude Code from generic non-Codex compatibility to first-class supported host status and, on current live evidence, the same `native_attach` tier as Codex. This is not a claim that both hosts expose identical APIs, and it still does not start the full `LTP-04 multi-host-first-class` package by default.
+The user has now explicitly made Claude Code a frequent day-to-day host. That created an owner-directed bounded scope after `GAP-114`: Codex and Claude Code should be dual first-class entrypoints in governance outcome. The bounded queue `GAP-115..119` is complete. It promotes Claude Code from generic non-Codex compatibility to first-class supported host status while keeping adapter-tier claims evidence-bound. This is not a claim that both hosts expose identical APIs or that degraded Codex target-run posture has recovered to `native_attach`, and it still does not start the full `LTP-04 multi-host-first-class` package by default.
 
 ## Current Baseline
 The current branch baseline has already proven and landed:

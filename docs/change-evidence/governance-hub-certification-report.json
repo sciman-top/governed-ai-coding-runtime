@@ -98,16 +98,21 @@
         "slsa_provenance"
       ],
       "protocols_missing_kernel_semantics": [],
-      "review_expires_at": "2026-07-26",
-      "reviewed_on": "2026-04-27",
+      "review_expires_at": "2026-07-30",
+      "reviewed_on": "2026-05-01",
       "source_ids": [
         "openai-codex-agents-md",
+        "openai-codex-agents-scope-spec",
         "openai-agents-sandbox",
         "openai-agents-guardrails",
         "anthropic-claude-code-memory",
+        "anthropic-claude-code-best-practices",
         "anthropic-claude-code-settings",
         "anthropic-claude-code-cli",
         "anthropic-claude-code-hooks",
+        "github-copilot-repository-instructions",
+        "vscode-copilot-custom-instructions",
+        "openhands-sandbox-overview",
         "mcp-roots",
         "a2a-latest",
         "slsa-provenance"
@@ -457,7 +462,7 @@
           "missing_doc_refs": [],
           "missing_evidence_refs": [],
           "protocols_missing_kernel_semantics": [],
-          "review_expires_at": "2026-07-26",
+          "review_expires_at": "2026-07-30",
           "status": "pass"
         },
         "effect_feedback": {

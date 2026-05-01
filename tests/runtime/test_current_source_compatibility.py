@@ -40,6 +40,10 @@ class CurrentSourceCompatibilityTests(unittest.TestCase):
         self.assertEqual(payload["status"], "pass")
         self.assertEqual(payload["policy_id"], "default-current-source-compatibility")
         self.assertIn("a2a_1_0_0", payload["protocol_ids"])
+        self.assertIn("github-copilot-repository-instructions", payload["source_ids"])
+        self.assertIn("vscode-copilot-custom-instructions", payload["source_ids"])
+        self.assertIn("anthropic-claude-code-best-practices", payload["source_ids"])
+        self.assertIn("openhands-sandbox-overview", payload["source_ids"])
         self.assertFalse(payload["expired"])
 
     def test_current_source_policy_fails_when_review_expired(self) -> None:

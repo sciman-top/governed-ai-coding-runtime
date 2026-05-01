@@ -4,7 +4,7 @@
 - Created from the 2026-04-27 optimized hybrid final-state and stack-staging review.
 - Future-facing queue: `GAP-093..119`.
 - Current posture: `GAP-093..103` are complete. No long-term package was implemented; `LTP-01..06` remain deferred/watch or not triggered pending fresh scope-fence evidence.
-- Certified realization queue: `GAP-104..111` is complete on the current branch baseline and defines the evidence-backed complete hybrid final-state closure point. `GAP-112` mechanizes current-source compatibility after that closure. `GAP-113` mechanizes whether, why, and how autonomous `LTP-01..06` promotion can proceed after certification. `GAP-114` mechanizes the next autonomous work action after that promotion decision. `GAP-115..119` are active as owner-directed bounded scope for Codex plus Claude Code dual first-class host entrypoints.
+- Certified realization queue: `GAP-104..111` is complete on the current branch baseline and defines the evidence-backed complete hybrid final-state closure point. `GAP-112` mechanizes current-source compatibility after that closure. `GAP-113` mechanizes whether, why, and how autonomous `LTP-01..06` promotion can proceed after certification. `GAP-114` mechanizes the next autonomous work action after that promotion decision. `GAP-115..119` are complete as owner-directed bounded support for Codex plus Claude Code dual first-class host entrypoints.
 
 ## Goal
 Provide an implementation-ready plan for the long-term optimized hybrid final state while preserving the current rule that heavyweight components remain trigger-based.
@@ -835,12 +835,12 @@ HITL
 - Keep adapter tier claims host-specific and evidence-bound; do not claim unverified Claude Code `native_attach` parity.
 
 ### Status
-Active owner-directed bounded scope.
+Complete. Closed by `docs/change-evidence/20260427-claude-code-first-class-entrypoint-planning.md`.
 
 ### Acceptance Criteria
-- [ ] roadmap, implementation plan, backlog, issue seeds, claim catalog, and evidence agree on `GAP-115..119`
-- [ ] docs distinguish governance-result parity from identical host capability
-- [ ] the queue is bounded and does not start full `LTP-04` infrastructure by default
+- [x] roadmap, implementation plan, backlog, issue seeds, claim catalog, and evidence agree on `GAP-115..119`
+- [x] docs distinguish governance-result parity from identical host capability
+- [x] the queue is bounded and does not start full `LTP-04` infrastructure by default
 
 ### Verification
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/github/create-roadmap-issues.ps1 -ValidateOnly -RenderAll`
