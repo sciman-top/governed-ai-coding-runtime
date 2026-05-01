@@ -174,6 +174,16 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("no-store, max-age=0", script)
         self.assertIn("x-governed-runtime-ui-stale", script)
 
+    def test_operator_ui_next_work_panel_does_not_block_initial_html(self) -> None:
+        module = _load_serve_operator_ui_module()
+
+        with mock.patch.object(module, "load_next_work_summary", side_effect=AssertionError("selector should be async")):
+            html = module.render_next_work_panel(language="zh-CN")
+
+        self.assertIn("下一步选择", html)
+        self.assertIn("加载中", html)
+        self.assertIn("data-next-work-refresh='1'", html)
+
     def test_operator_ui_status_helpers_cache_short_ttl_results(self) -> None:
         module = _load_serve_operator_ui_module()
         module.invalidate_status_cache()

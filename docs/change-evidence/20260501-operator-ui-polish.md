@@ -16,6 +16,7 @@
 - Updated `tests/runtime/test_operator_ui.py` for the revised bilingual title.
 - Updated `scripts/operator-ui-service.ps1` so `Start` no longer blindly reuses an already running localhost UI process when UI source files have changed after the process started.
 - Updated `scripts/serve-operator-ui.py` so live HTML/API responses disable browser caching, expose `/api/ui-process`, and refuse to render the normal UI when the running process is older than UI source files.
+- Updated `scripts/serve-operator-ui.py` and `packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui.py` so the expensive `next-work` selector no longer blocks initial HTML rendering; `next-work` and feedback summary now refresh asynchronously and use short server-side caches for normal refreshes, while manual refresh buttons force recomputation.
 - Updated `tests/runtime/test_operator_entrypoint.py` to assert the service status exposes stale-source metadata and that the service script contains stale-process detection.
 
 ## Visual Evidence
@@ -38,6 +39,12 @@
 - HTML evidence after HTTP freshness guard and final restart: `StatusCode=200`, `x-governed-runtime-ui-stale=false`, `Cache-Control=no-store, max-age=0`, title content includes `Governed Runtime 控制台`, stale diagnostic content absent.
 - Browser evidence after restart: page title and H1 both rendered `Governed Runtime 控制台` at `http://127.0.0.1:8770/?lang=zh-CN`.
 
+## Refresh Performance Fix
+- Baseline before optimization: live HTML request at `http://127.0.0.1:8770/?lang=zh-CN` took about `13643.8ms` because initial HTML rendering synchronously ran expensive status selectors.
+- Fix: initial HTML renders a lightweight `next-work` shell, then refreshes `next-work` asynchronously. Codex/Claude/feedback panels hydrate from `localStorage` and refresh when selected or manually requested instead of all blocking page open.
+- Fix: `/api/next-work` uses a `60s` normal-refresh cache and `/api/feedback/summary` uses a `30s` normal-refresh cache; `?refresh=1` bypasses cache for manual refresh buttons.
+- Live evidence after optimization: HTML request `63.6ms`; `/api/next-work` first request `11922.4ms`, second cached request `7.9ms`; `/api/feedback/summary` first request `5998.6ms`, second cached request `2.8ms`.
+
 ## Verification
 - Browser inspection at `http://127.0.0.1:8790/?lang=zh-CN`.
 - Checked Runtime, Codex, Claude, Feedback, and 390px mobile layouts.
@@ -50,6 +57,8 @@
   - Result: pass, 2 tests.
 - `python -m unittest tests.runtime.test_operator_entrypoint.OperatorEntrypointTests.test_operator_ui_server_helpers_are_bounded_to_repo_actions_and_files tests.runtime.test_operator_entrypoint.OperatorEntrypointTests.test_operator_ui_server_refuses_stale_content_and_disables_cache tests.runtime.test_operator_entrypoint.OperatorEntrypointTests.test_operator_ui_service_status_succeeds tests.runtime.test_operator_entrypoint.OperatorEntrypointTests.test_operator_ui_service_detects_stale_source_processes`
   - Result: pass, 4 tests.
+- `python -m unittest tests.runtime.test_operator_entrypoint.OperatorEntrypointTests.test_operator_ui_action_generates_html tests.runtime.test_operator_entrypoint.OperatorEntrypointTests.test_operator_ui_server_helpers_are_bounded_to_repo_actions_and_files tests.runtime.test_operator_entrypoint.OperatorEntrypointTests.test_operator_ui_next_work_panel_does_not_block_initial_html tests.runtime.test_operator_entrypoint.OperatorEntrypointTests.test_operator_feedback_report_action_writes_summary tests.runtime.test_operator_ui`
+  - Result: pass, 10 tests.
 - `python -m unittest tests.runtime.test_operator_entrypoint tests.runtime.test_operator_ui tests.service.test_operator_api`
   - Result: pass, 19 tests.
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`

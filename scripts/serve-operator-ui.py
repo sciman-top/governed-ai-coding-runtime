@@ -59,7 +59,8 @@ ALLOWED_ACTIONS = {
 
 CODEX_STATUS_CACHE_TTL_SECONDS = 10.0
 CLAUDE_STATUS_CACHE_TTL_SECONDS = 15.0
-NEXT_WORK_CACHE_TTL_SECONDS = 15.0
+FEEDBACK_SUMMARY_CACHE_TTL_SECONDS = 30.0
+NEXT_WORK_CACHE_TTL_SECONDS = 60.0
 SERVER_STARTED_AT = time.time()
 UI_SOURCE_FILES = (
     ROOT / "scripts" / "serve-operator-ui.py",
@@ -183,11 +184,17 @@ def _build_handler(*, default_language: str):
                 self._send_json(result, status=status)
                 return
             if parsed.path == "/api/feedback/summary":
+                params = parse_qs(parsed.query)
+                if _truthy(params.get("refresh", [""])[0]):
+                    invalidate_status_cache("feedback")
                 result = load_feedback_summary()
                 status = HTTPStatus.OK if result.get("status") != "error" else HTTPStatus.INTERNAL_SERVER_ERROR
                 self._send_json(result, status=status)
                 return
             if parsed.path == "/api/next-work":
+                params = parse_qs(parsed.query)
+                if _truthy(params.get("refresh", [""])[0]):
+                    invalidate_status_cache("next_work")
                 result = load_next_work_summary()
                 status = HTTPStatus.OK if result.get("status") != "error" else HTTPStatus.INTERNAL_SERVER_ERROR
                 self._send_json(result, status=status)
@@ -355,12 +362,19 @@ def load_claude_status() -> dict:
 
 
 def load_feedback_summary() -> dict:
+    payload = _load_status_cached("feedback", ttl_seconds=FEEDBACK_SUMMARY_CACHE_TTL_SECONDS, loader=_build_feedback_summary)
+    if payload.get("status") == "ok" and "overall_status" in payload:
+        payload["status"] = payload.get("overall_status") or "pass"
+    return payload
+
+
+def _build_feedback_summary() -> dict:
     try:
         payload = build_host_feedback_summary(repo_root=ROOT, max_target_runs=5)
     except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
         return {"status": "error", "error": str(exc)}
+    payload["overall_status"] = payload.get("status") or "pass"
     markdown_path = ROOT / ".runtime" / "artifacts" / "host-feedback-summary" / "latest.md"
-    payload["status"] = payload.get("status") or "pass"
     payload["report_path"] = (
         markdown_path.relative_to(ROOT).as_posix() if markdown_path.exists() else None
     )
@@ -426,31 +440,13 @@ def inject_next_work_panel(html: str, *, language: str) -> str:
 
 
 def render_next_work_panel(*, language: str) -> str:
-    payload = load_next_work_summary()
     is_zh = not language.lower().startswith("en")
     title = "下一步选择" if is_zh else "Next Work Selector"
-    if payload.get("status") == "error":
-        summary = "读取失败" if is_zh else "Load failed"
-        reason = payload.get("error", "")
-        state_line = f"{'状态' if is_zh else 'Status'}: error"
-        recommendation = "先修复 selector 或其依赖脚本。" if is_zh else "Repair the selector or one of its helper scripts first."
-    else:
-        ui_status = str(payload.get("ui_status", "healthy"))
-        status_labels = {
-            "zh": {"healthy": "healthy", "attention": "attention", "action_required": "action_required"},
-            "en": {"healthy": "healthy", "attention": "attention", "action_required": "action_required"},
-        }
-        next_action = str(payload.get("next_action", "unknown"))
-        summary = next_action
-        reason = str(payload.get("why", ""))
-        state_line = (
-            f"{'状态' if is_zh else 'Status'}: {status_labels['zh' if is_zh else 'en'].get(ui_status, ui_status)}"
-        )
-        recommendation = (
-            f"{'AI 推荐' if is_zh else 'AI recommended'}: {payload.get('safe_next_action', next_action)}"
-        )
-
-    escape_json = escape(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    summary = "加载中" if is_zh else "Loading"
+    recommendation = "AI 推荐: 正在刷新" if is_zh else "AI recommended: refreshing"
+    state_line = "状态: loading" if is_zh else "Status: loading"
+    reason = ""
+    escape_json = escape(json.dumps({"status": "loading"}, ensure_ascii=False, indent=2, sort_keys=True))
     return "\n".join(
         [
             "<section class='section' id='next-work-panel'>",
@@ -691,6 +687,10 @@ def _string(value: object, default: str) -> str:
     if isinstance(value, str):
         return value.strip()
     return default
+
+
+def _truthy(value: object) -> bool:
+    return str(value or "").strip().lower() in {"1", "true", "yes", "y", "on"}
 
 
 if __name__ == "__main__":

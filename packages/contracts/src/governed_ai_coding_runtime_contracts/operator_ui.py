@@ -1397,12 +1397,18 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   }}
 
   async function refreshNextWorkSummary() {{
+    return refreshNextWorkSummaryWithMode(false);
+  }}
+
+  async function refreshNextWorkSummaryWithMode(forceRefresh) {{
     if (!nextWorkAction) {{
       return;
     }}
     setPanelCacheState('next-work', nextWorkLoaded ? 'refreshing' : 'cold');
     try {{
-      const response = await fetch('/api/next-work');
+      const response = forceRefresh
+        ? await fetch('/api/next-work?refresh=1')
+        : await fetch('/api/next-work');
       const payload = await response.json();
       if (!response.ok) {{
         setNextWorkStatusLine(payload.error || response.statusText);
@@ -1919,12 +1925,18 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   }}
 
   async function refreshFeedbackSummary() {{
+    return refreshFeedbackSummaryWithMode(false);
+  }}
+
+  async function refreshFeedbackSummaryWithMode(forceRefresh) {{
     if (!feedbackSummary) {{
       return;
     }}
     setPanelCacheState('feedback', feedbackLoaded ? 'refreshing' : 'cold');
     try {{
-      const response = await fetch('/api/feedback/summary');
+      const response = forceRefresh
+        ? await fetch('/api/feedback/summary?refresh=1')
+        : await fetch('/api/feedback/summary');
       const payload = await response.json();
       if (!response.ok) {{
         feedbackStatus.textContent = `{text['feedback_status']}: ${{payload.error || response.statusText}}`;
@@ -2451,10 +2463,10 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     }}
     switchClaudeProvider(button.getAttribute('data-claude-switch-name') || '');
   }});
-  document.querySelector('[data-feedback-refresh]').addEventListener('click', () => refreshFeedbackSummary());
+  document.querySelector('[data-feedback-refresh]').addEventListener('click', () => refreshFeedbackSummaryWithMode(true));
   const nextWorkRefreshButton = document.querySelector('[data-next-work-refresh]');
   if (nextWorkRefreshButton) {{
-    nextWorkRefreshButton.addEventListener('click', () => refreshNextWorkSummary());
+    nextWorkRefreshButton.addEventListener('click', () => refreshNextWorkSummaryWithMode(true));
   }}
   document.querySelectorAll('[data-view-tab]').forEach((button) => {{
     button.addEventListener('click', () => {{
@@ -2490,9 +2502,6 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   hydratePanelCache('feedback', feedbackCacheKey);
   hydratePanelCache('next-work', nextWorkCacheKey);
   window.setTimeout(() => {{
-    refreshCodexStatus();
-    refreshClaudeStatus();
-    refreshFeedbackSummary();
     refreshNextWorkSummary();
   }}, 80);
 }})();
