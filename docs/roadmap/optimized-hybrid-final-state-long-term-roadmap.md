@@ -121,7 +121,7 @@ The corrected implementation posture is:
 | `GAP-118` | sync Claude Code rule/config surfaces across targets | all configured target repos have synchronized or explicitly N/A Claude Code managed surfaces |
 | `GAP-119` | certify dual first-class host support | Codex and Claude Code governance-result parity is evidence-backed or visibly downgraded |
 
-Current realization status on the 2026-04-27 branch baseline: `GAP-104` through `GAP-111` are complete. Complete hybrid final-state closure is certified by the `GAP-111` evidence batch and remains subject to claim-drift gates. `GAP-112` is complete as a post-certification guard that keeps external-source assumptions machine-checkable. `GAP-113` is complete as the autonomous promotion guard that keeps heavy `LTP` adoption evidence-triggered and one-package-at-a-time. `GAP-114` is complete as the next-work selector that answers what autonomous work should happen when LTP promotion is deferred. `GAP-115..119` are complete as bounded support for the user's frequent Claude Code workflow.
+Current realization status on the 2026-05-01 branch baseline: `GAP-104` through `GAP-111` are complete. Complete hybrid final-state closure is certified by the `GAP-111` evidence batch and remains subject to claim-drift gates. `GAP-112` is complete as a post-certification guard that keeps external-source assumptions machine-checkable. `GAP-113` is complete as the autonomous promotion guard that keeps heavy `LTP` adoption evidence-triggered and one-package-at-a-time. `GAP-114` is complete as the next-work selector that answers what autonomous work should happen when LTP promotion is deferred. `GAP-115..119` are complete as bounded support for the user's frequent Claude Code workflow. `GAP-130..142` are complete as the governance hub reuse, controlled evolution, bounded host-capability defer, historical trace closure, and degraded fresh-evidence guard queue.
 
 ## Does Executing This Plan Truly Realize The Final State?
 Executing only `GAP-093..103` does not realize the complete hybrid final state. It proves optimized planning, containment/provenance floors, transition-stack discipline, trigger reviews, and fresh target-repo health.
@@ -164,6 +164,7 @@ Implementation gaps must additionally run the relevant runtime, contract, doctor
 - `docs/change-evidence/20260427-gap-104-111-realization-planning.md`
 - `docs/change-evidence/20260427-gap-113-autonomous-ltp-promotion-scope-fence.md`
 - `docs/change-evidence/20260427-gap-114-autonomous-next-work-selector.md`
+- `docs/change-evidence/20260501-gap-142-degraded-fresh-evidence-next-work-guard.md`
 - `docs/plans/claude-code-first-class-entrypoint-plan.md`
 - `docs/change-evidence/20260427-claude-code-first-class-entrypoint-planning.md`
 

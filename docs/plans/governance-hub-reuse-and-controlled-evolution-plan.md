@@ -2,8 +2,8 @@
 
 ## Status
 - Created: 2026-05-01.
-- Queue: `GAP-130` through `GAP-141`.
-- Current state: `GAP-130..141` are complete on the current branch baseline. `GAP-140` closes as a bounded defer because the current local `codex-cli` command surface still lacks the native attach handshake command required by this repository contract, and `GAP-141` closes by formalizing the historical problem-trace retention and exit rule for rolling KPI windows. This plan does not enable automatic policy mutation, automatic skill installation, target-repo sync, push, or merge.
+- Queue: `GAP-130` through `GAP-142`.
+- Current state: `GAP-130..142` are complete on the current branch baseline. `GAP-140` closes as a bounded defer because the current local `codex-cli` command surface still lacks the native attach handshake command required by this repository contract, `GAP-141` closes by formalizing the historical problem-trace retention and exit rule for rolling KPI windows, and `GAP-142` closes by making fresh-but-degraded target-run evidence force `refresh_evidence_first` before any further implementation. This plan does not enable automatic policy mutation, automatic skill installation, target-repo sync, push, or merge.
 - Prior dependency: `GAP-120..129` established runtime evolution review and controlled materialization. This plan turns the clarified product direction into the next implementation queue.
 
 ## Goal

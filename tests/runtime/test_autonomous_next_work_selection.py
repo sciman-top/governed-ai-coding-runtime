@@ -27,9 +27,9 @@ class AutonomousNextWorkSelectionTests(unittest.TestCase):
         sys.modules.pop("select_next_work_script", None)
         sys.modules.pop("evaluate_ltp_promotion_script", None)
 
-    def test_repo_selector_defers_ltp_when_no_package_is_selected(self) -> None:
+    def test_repo_selector_refreshes_evidence_when_target_runs_are_degraded(self) -> None:
         completed = subprocess.run(
-            [sys.executable, "scripts/select-next-work.py", "--as-of", "2026-04-27"],
+            [sys.executable, "scripts/select-next-work.py", "--as-of", "2026-05-01"],
             check=False,
             capture_output=True,
             text=True,
@@ -41,11 +41,12 @@ class AutonomousNextWorkSelectionTests(unittest.TestCase):
         self.assertEqual(payload["status"], "pass")
         self.assertEqual(payload["policy_id"], "default-autonomous-next-work-selection")
         self.assertEqual(payload["ltp_decision"], "defer_all")
-        self.assertEqual(payload["next_action"], "defer_ltp_and_refresh_evidence")
+        self.assertEqual(payload["next_action"], "refresh_evidence_first")
         self.assertIsNone(payload["selected_package"])
         self.assertEqual(payload["gate_state"], "pass")
         self.assertEqual(payload["source_state"], "fresh")
-        self.assertEqual(payload["evidence_state"], "fresh")
+        self.assertEqual(payload["evidence_state"], "stale")
+        self.assertGreater(payload["auto_detected_inputs"]["details"]["host_feedback"]["degraded_latest_run_count"], 0)
         self.assertIn("auto_detected_inputs", payload)
 
     def test_selector_promotes_one_auto_selected_ltp_package(self) -> None:

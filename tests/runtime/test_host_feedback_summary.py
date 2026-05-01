@@ -168,6 +168,7 @@ class HostFeedbackSummaryTests(unittest.TestCase):
                 payload = module.build_host_feedback_summary(repo_root=repo_root)
 
         target_runs = next(item for item in payload["dimensions"] if item["dimension_id"] == "target_runs")
+        self.assertEqual("attention", target_runs["status"])
         self.assertEqual("degraded", target_runs["details"]["degraded_latest_runs"][0]["codex_capability_status"])
         self.assertEqual("process_bridge", target_runs["details"]["degraded_latest_runs"][0]["adapter_tier"])
         self.assertIn("native_attach", target_runs["details"]["degraded_latest_runs"][0]["recovery_evidence_rule"])

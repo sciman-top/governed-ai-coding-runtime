@@ -535,10 +535,13 @@ def render_runtime_snapshot_html(
     .info-line {{ min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; color: var(--muted); font-size: 0.86rem; line-height: 1.35; }}
     .info-label {{ color: #53646a; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }}
     .info-value {{ min-width: 0; color: #263940; overflow-wrap: anywhere; white-space: pre-line; }}
+    .info-value-stack {{ min-width: 0; display: grid; gap: 2px; }}
+    .info-value-line {{ min-width: 0; overflow-wrap: anywhere; white-space: pre-wrap; }}
+    .info-value-line.secondary {{ color: var(--muted); }}
     .usage-meter-list {{ display: grid; gap: 7px; min-width: 0; }}
     .usage-meter-row {{ display: grid; gap: 4px; min-width: 0; }}
-    .usage-meter-head {{ display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #263940; font-size: 0.82rem; }}
-    .usage-meter-head small {{ color: var(--muted); font-size: 0.76rem; white-space: nowrap; }}
+    .usage-meter-head {{ display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 8px; color: #263940; font-size: 0.82rem; }}
+    .usage-meter-head small {{ color: var(--muted); font-size: 0.76rem; white-space: normal; overflow-wrap: anywhere; }}
     .usage-bar {{ position: relative; height: 7px; overflow: hidden; border-radius: 999px; background: #dce7e8; box-shadow: inset 0 1px 2px rgba(12, 31, 36, 0.13); }}
     .usage-fill {{ position: absolute; inset: 0 auto 0 0; width: 0%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), #55b8a9); }}
     .usage-fill.warn {{ background: linear-gradient(90deg, #c78317, #e2b051); }}
@@ -1818,11 +1821,36 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     valueEl.className = 'info-value';
     if (value && typeof value === 'object' && value.nodeType) {{
       valueEl.appendChild(value);
+    }} else if (String(value || '').includes('\\n')) {{
+      valueEl.appendChild(createMultilineInfoValue(value));
     }} else {{
       valueEl.textContent = value;
     }}
     line.append(labelEl, valueEl);
     return line;
+  }}
+
+  function createInfoValueStack(lines) {{
+    const stack = document.createElement('div');
+    stack.className = 'info-value-stack';
+    lines.filter(Boolean).forEach((text, index) => {{
+      const line = document.createElement('span');
+      line.className = index === 0 ? 'info-value-line' : 'info-value-line secondary';
+      line.textContent = text;
+      stack.appendChild(line);
+    }});
+    return stack;
+  }}
+
+  function createMultilineInfoValue(value) {{
+    const lines = String(value || '')
+      .split('\\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (lines.length <= 1) {{
+      return lines[0] || '';
+    }}
+    return createInfoValueStack(lines);
   }}
 
   function formatFeedbackStatusLabel(value) {{
@@ -2151,11 +2179,11 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
         ),
         createInfoLine(
           currentUiLanguage() === 'zh-CN' ? '套餐' : 'plan',
-          formatSubscriptionExpirySummary(account)
+          createMultilineInfoValue(formatSubscriptionExpirySummary(account))
         ),
         createInfoLine(
           currentUiLanguage() === 'zh-CN' ? '令牌' : 'token',
-          formatTokenExpirySummary(account)
+          createMultilineInfoValue(formatTokenExpirySummary(account))
         )
       );
       const planLabel = formatPlanLabel(account.plan_type);

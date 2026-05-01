@@ -401,6 +401,9 @@ def _auto_detect_runtime_inputs(*, repo_root: Path, as_of: dt.date) -> dict:
             ),
             {},
         )
+        degraded_latest_runs = target_runs.get("degraded_latest_runs")
+        if not isinstance(degraded_latest_runs, list):
+            degraded_latest_runs = []
         effect_module = _load_helper_module(
             ROOT / "scripts" / "verify-target-repo-reuse-effect-report.py",
             "verify_target_repo_effect_selector",
@@ -417,6 +420,7 @@ def _auto_detect_runtime_inputs(*, repo_root: Path, as_of: dt.date) -> dict:
         evidence_stale = (
             host_feedback["status"] == "fail"
             or target_runs.get("freshness_status") != "fresh"
+            or bool(degraded_latest_runs)
             or effect["status"] != "pass"
             or ai_experience["status"] != "pass"
             or bool(ai_experience["invalid_reasons"])
@@ -425,6 +429,7 @@ def _auto_detect_runtime_inputs(*, repo_root: Path, as_of: dt.date) -> dict:
         result["details"]["host_feedback"] = {
             "status": host_feedback["status"],
             "target_run_freshness": target_runs.get("freshness_status"),
+            "degraded_latest_run_count": len(degraded_latest_runs),
         }
         result["details"]["effect_feedback"] = {
             "status": effect["status"],

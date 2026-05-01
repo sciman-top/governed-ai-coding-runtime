@@ -160,6 +160,26 @@
           "contains": "current `native_attach` tier are equal while host APIs remain distinct and evidence-bound"
         }
       ]
+    },
+    {
+      "claim_id": "CLM-011",
+      "claim_text": "Fresh target-run evidence is not sufficient when the latest host capability posture is degraded; degraded fresh evidence must surface as attention and force refresh_evidence_first before implementation work.",
+      "proof_command": "python scripts/select-next-work.py --as-of 2026-05-01",
+      "evidence_link": "docs/change-evidence/20260501-gap-142-degraded-fresh-evidence-next-work-guard.md",
+      "source_refs": [
+        {
+          "path": "scripts/host-feedback-summary.py",
+          "contains": "fresh target-run evidence is degraded"
+        },
+        {
+          "path": "scripts/select-next-work.py",
+          "contains": "degraded_latest_run_count"
+        },
+        {
+          "path": "docs/backlog/issue-ready-backlog.md",
+          "contains": "GAP-142 Degraded Fresh Evidence Next Work Guard"
+        }
+      ]
     }
   ]
 }

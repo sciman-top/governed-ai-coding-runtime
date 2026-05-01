@@ -185,7 +185,7 @@ function Assert-OperatorPreflight {
 
   $blockingActions = @{
     "Readiness"            = @()
-    "DailyAll"             = @("repair_gate_first", "refresh_evidence_first")
+    "DailyAll"             = @("repair_gate_first")
     "ApplyAllFeatures"     = @("repair_gate_first", "refresh_evidence_first", "owner_directed_scope_required")
     "EvolutionMaterialize" = @("repair_gate_first", "refresh_evidence_first", "owner_directed_scope_required")
   }

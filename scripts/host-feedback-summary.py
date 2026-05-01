@@ -460,12 +460,16 @@ def _build_target_runs_dimension(repo_root: Path, *, max_target_runs: int, gener
     if latest_runs:
         details["freshness_status"] = "stale" if stale_runs else "fresh"
 
+    degraded_runs = details.get("degraded_latest_runs") or []
     if not latest_runs:
         status = "fail"
         summary = "no target-run evidence found"
     elif stale_runs:
         status = "attention"
         summary = f"latest target-run evidence is stale for {len(stale_runs)} repos"
+    elif degraded_runs:
+        status = "attention"
+        summary = f"fresh target-run evidence is degraded for {len(degraded_runs)} repos"
     else:
         status = "ok"
         summary = f"fresh target-run evidence summarized for {len(latest_runs)} repos"
