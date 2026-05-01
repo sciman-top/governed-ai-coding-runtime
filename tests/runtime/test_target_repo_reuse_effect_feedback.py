@@ -121,6 +121,23 @@ class TargetRepoReuseEffectFeedbackTests(unittest.TestCase):
             self.assertEqual("adjust", report["decision"])
             self.assertEqual("demo-daily-20260420120000.json", report["after_run_ref"])
             self.assertTrue(report["backlog_candidates"])
+            self.assertEqual("rolling", report["historical_problem_trace_policy"]["window_kind"])
+            self.assertIn(
+                "current pass-state claim",
+                report["historical_problem_trace_policy"]["claim_guard"],
+            )
+            host_gap = next(
+                item for item in report["backlog_candidates"] if item["candidate_id"] == "target-repo-reuse-host-capability-gap"
+            )
+            self.assertEqual("degraded", host_gap["current_posture"]["codex_capability_status"])
+            self.assertEqual("process_bridge", host_gap["current_posture"]["adapter_tier"])
+            self.assertIn("native_attach", host_gap["remediation_boundary"]["required_recovery_evidence"])
+            history_gap = next(
+                item
+                for item in report["backlog_candidates"]
+                if item["candidate_id"] == "target-repo-reuse-historical-problem-trace"
+            )
+            self.assertIn("current pass-state claim", history_gap["closure_boundary"]["claim_guard"])
 
     def test_verify_effect_report_requires_candidates_when_issue_present(self) -> None:
         verify_module = _load_script(
@@ -164,6 +181,10 @@ class TargetRepoReuseEffectFeedbackTests(unittest.TestCase):
                         "rolling_kpi": {"problem_run_rate": 0.5},
                         "decision": "adjust",
                         "backlog_candidates": [],
+                        "historical_problem_trace_policy": {
+                            "window_kind": "rolling",
+                            "claim_guard": "do not collapse historical failures into the current pass-state claim",
+                        },
                         "verifier_ref": "python scripts/verify-target-repo-reuse-effect-report.py",
                     },
                     ensure_ascii=False,
@@ -212,6 +233,10 @@ class TargetRepoReuseEffectFeedbackTests(unittest.TestCase):
             report["after_metrics"]["codex_capability_status"] = "ready"
             report["rolling_kpi"]["total_daily_runs"] = 999
             report["backlog_candidates"] = []
+            report["historical_problem_trace_policy"] = {
+                "window_kind": "rolling",
+                "claim_guard": "do not collapse historical failures into the current pass-state claim",
+            }
             report_path = runs_root / "effect-report-demo.json"
             report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 

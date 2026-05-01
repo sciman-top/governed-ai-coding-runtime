@@ -1606,7 +1606,7 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     }}
     const dayMs = 24 * 60 * 60 * 1000;
     const days = Math.max(0, Math.ceil((date.getTime() - Date.now()) / dayMs));
-    return currentUiLanguage() === 'zh-CN' ? `余${{days}}日` : `${{days}}d left`;
+    return currentUiLanguage() === 'zh-CN' ? `剩余${{days}}日` : `${{days}}d left`;
   }}
 
   function formatCompactTimestampWithDays(timestamp) {{
@@ -1770,8 +1770,8 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
       return expiry;
     }}
     return currentUiLanguage() === 'zh-CN'
-      ? `${{expiry}}，核验 ${{checked}}`
-      : `${{expiry}}, checked ${{checked}}`;
+      ? `${{expiry}}\n核验 ${{checked}}`
+      : `${{expiry}}\nchecked ${{checked}}`;
   }}
 
   function summarizeClaudeMcp(summary) {{

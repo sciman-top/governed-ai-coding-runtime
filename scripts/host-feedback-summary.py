@@ -408,6 +408,7 @@ def _build_target_runs_dimension(repo_root: Path, *, max_target_runs: int, gener
         "exists": evidence_root.exists(),
         "total_run_files": 0,
         "latest_runs": [],
+        "degraded_latest_runs": [],
         "skipped_files": [],
         "freshness_status": "unknown",
         "stale_after_hours": TARGET_RUN_STALE_AFTER_HOURS,
@@ -434,6 +435,19 @@ def _build_target_runs_dimension(repo_root: Path, *, max_target_runs: int, gener
             details["skipped_files"].append({"file_name": selected.name, "reason": str(exc)})
     latest_runs.sort(key=lambda item: item.get("run_stamp") or item["file_name"], reverse=True)
     details["latest_runs"] = latest_runs[:max_target_runs]
+    details["degraded_latest_runs"] = [
+        {
+            "repo_id": item["repo_id"],
+            "file_name": item["file_name"],
+            "codex_capability_status": item.get("codex_capability_status"),
+            "adapter_tier": item.get("adapter_tier"),
+            "flow_kind": item.get("flow_kind"),
+            "recovery_evidence_rule": "fresh target run with codex_capability_status=ready and adapter_tier=native_attach",
+            "claim_guard": "do not claim native_attach recovery until a fresh target repo run proves it",
+        }
+        for item in latest_runs[:max_target_runs]
+        if item.get("codex_capability_status") not in {"ready", None}
+    ]
     stale_runs = [
         item
         for item in latest_runs
@@ -617,6 +631,8 @@ def _build_recommendations(dimensions: list[FeedbackDimension]) -> list[str]:
         recommendations.append("先跑一轮 `runtime-flow-preset.ps1 -AllTargets -FlowMode daily -Json`，否则没有真实目标仓反馈可分析。")
     elif target_runs.details.get("freshness_status") == "stale":
         recommendations.append("最新 target-run evidence 已过期；先跑 `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action DailyAll -Mode quick` 刷新真实 workload 反馈。")
+    elif target_runs.details.get("degraded_latest_runs"):
+        recommendations.append("最新 target runs 仍存在 degraded host posture；先刷新目标仓 run 和 host feedback，并仅在 fresh evidence 同时回到 `codex_capability_status=ready` 与 `adapter_tier=native_attach` 后再宣称恢复。")
     else:
         recommendations.append("对每次功能优化，先生成 host feedback summary，再对照 latest target runs 的 `adapter_tier / closure_state / write_status` 判断是宿主问题、规则问题还是 runtime 问题。")
 

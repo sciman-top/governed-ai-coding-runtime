@@ -121,6 +121,16 @@ def _decision_for(after_metrics: dict[str, Any], kpi_record: dict[str, Any]) -> 
                 "candidate_id": "target-repo-reuse-host-capability-gap",
                 "disposition": "adjust",
                 "reason": "Latest target run still depends on degraded host capability posture.",
+                "current_posture": {
+                    "codex_capability_status": after_metrics.get("codex_capability_status"),
+                    "adapter_tier": after_metrics.get("adapter_tier"),
+                    "flow_kind": after_metrics.get("flow_kind"),
+                },
+                "remediation_boundary": {
+                    "allowed_interim_tiers": ["process_bridge", "manual_handoff"],
+                    "required_recovery_evidence": "fresh target run with codex_capability_status=ready and adapter_tier=native_attach",
+                    "claim_guard": "do not claim native_attach recovery until a fresh target repo run proves it",
+                },
                 "evidence_refs": after_metrics["evidence_refs"],
             }
         )
@@ -151,6 +161,11 @@ def _decision_for(after_metrics: dict[str, Any], kpi_record: dict[str, Any]) -> 
                 "candidate_id": "target-repo-reuse-historical-problem-trace",
                 "disposition": "adjust",
                 "reason": "Rolling KPI window still records problem runs that must stay tracked as backlog candidates.",
+                "closure_boundary": {
+                    "current_success_claim": "latest run may pass while historical problem traces remain open",
+                    "close_when": "rolling KPI window ages out or supersedes the last problem trace under the documented retention rule",
+                    "claim_guard": "do not collapse historical failures into the current pass-state claim",
+                },
                 "evidence_refs": [ref for ref in [kpi_record.get("latest_problem_evidence_ref")] if isinstance(ref, str)],
             }
         )
@@ -179,6 +194,13 @@ def build_effect_report(*, target: str, runs_root: Path = DEFAULT_RUNS_ROOT, out
         raise ValueError(f"rolling KPI record not found for target {target}")
 
     decision, backlog_candidates = _decision_for(after_metrics, kpi_record)
+    historical_problem_trace_policy = {
+        "window_kind": "rolling",
+        "window_size": 5,
+        "keep_backlog_candidate_when_problem_run_rate_gt": 0.0,
+        "close_when": "problem_run_rate == 0 and no latest_problem_run_ref remains inside the active rolling window",
+        "claim_guard": "do not collapse historical failures into the current pass-state claim",
+    }
     report = {
         "schema_version": "1.0",
         "report_kind": "target_repo_reuse_effect_feedback",
@@ -192,6 +214,7 @@ def build_effect_report(*, target: str, runs_root: Path = DEFAULT_RUNS_ROOT, out
         "rolling_kpi": kpi_record,
         "decision": decision,
         "backlog_candidates": backlog_candidates,
+        "historical_problem_trace_policy": historical_problem_trace_policy,
         "comparison": {
             "overall_status_changed": baseline_metrics["overall_status"] != after_metrics["overall_status"],
             "adapter_tier_changed": baseline_metrics["adapter_tier"] != after_metrics["adapter_tier"],

@@ -143,6 +143,36 @@ class HostFeedbackSummaryTests(unittest.TestCase):
         self.assertEqual("degraded", claude_workload["details"]["readiness"]["status"])
         self.assertEqual("process_bridge", payload["summary"]["claude_adapter_tier"])
 
+    def test_target_runs_dimension_surfaces_degraded_run_recovery_boundary(self) -> None:
+        module = _load_host_feedback_summary_script()
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            self._write_minimal_repo(repo_root, include_target_run=False)
+            runs_root = repo_root / "docs" / "change-evidence" / "target-repo-runs"
+            runs_root.mkdir(parents=True, exist_ok=True)
+            degraded_payload = self._target_run_payload("daily")
+            degraded_payload["runtime_check"]["payload"]["status"]["codex_capability"]["adapter_tier"] = "process_bridge"
+            degraded_payload["runtime_check"]["payload"]["status"]["codex_capability"]["flow_kind"] = "process_bridge"
+            degraded_payload["runtime_check"]["payload"]["status"]["codex_capability"]["status"] = "degraded"
+            (runs_root / "demo-daily-20260430120000.json").write_text(
+                json.dumps(degraded_payload),
+                encoding="utf-8",
+            )
+
+            with (
+                mock.patch.object(module, "codex_status", return_value={"login_status": {"exit_code": 0}, "config": {"status": "ok"}}),
+                mock.patch.object(module, "claude_status", return_value={"active_provider": {"name": "glm"}, "config": {"status": "ok"}, "command": {"exit_code": 0}, "mcp": {"exit_code": 0}}),
+                mock.patch.object(module, "probe_claude_code_surface", return_value=self._claude_probe(module)),
+            ):
+                payload = module.build_host_feedback_summary(repo_root=repo_root)
+
+        target_runs = next(item for item in payload["dimensions"] if item["dimension_id"] == "target_runs")
+        self.assertEqual("degraded", target_runs["details"]["degraded_latest_runs"][0]["codex_capability_status"])
+        self.assertEqual("process_bridge", target_runs["details"]["degraded_latest_runs"][0]["adapter_tier"])
+        self.assertIn("native_attach", target_runs["details"]["degraded_latest_runs"][0]["recovery_evidence_rule"])
+        self.assertTrue(any("native_attach" in recommendation for recommendation in payload["recommendations"]))
+
     def _write_minimal_repo(self, repo_root: Path, *, include_target_run: bool = True) -> None:
         for relative in (
             "docs/product/host-feedback-loop.md",

@@ -4,6 +4,12 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260501 GAP-141 Historical Problem-Trace Closure Policy](./20260501-gap-141-historical-problem-trace-closure-policy.md)
+  - implementation evidence for formalizing the rolling-window retention and closure rule behind the `GAP-141` historical problem-trace backlog candidate
+- [20260501 GAP-140 Bounded Host-Capability Defer](./20260501-gap-140-bounded-defer.md)
+  - closeout evidence for treating the current Codex host limitation as a bounded defer instead of a silent or indefinite active queue
+- [20260501 GAP-140 Remediation Boundary Alignment](./20260501-gap-140-remediation-boundary-alignment.md)
+  - implementation evidence for making host feedback and target-repo reuse effect feedback share the same degraded-posture and recovery-evidence boundary for `GAP-140`
 - [20260501 Post-Certification Effect-Feedback Follow-On Planning](./20260501-post-certification-effect-feedback-follow-on-planning.md)
   - planning evidence for `GAP-140..141`, promoting the live host-capability-gap and historical-problem-trace candidates into bounded follow-on work after `GAP-139`
 - [20260501 Governance Hub Reuse Plan](./20260501-governance-hub-reuse-plan.md)

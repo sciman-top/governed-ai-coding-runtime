@@ -43,6 +43,7 @@ def inspect_effect_report(*, report_path: Path = DEFAULT_REPORT_PATH, runs_root:
         "rolling_kpi",
         "decision",
         "backlog_candidates",
+        "historical_problem_trace_policy",
         "verifier_ref",
     ):
         if field_name not in report:
@@ -150,6 +151,9 @@ def inspect_effect_report(*, report_path: Path = DEFAULT_REPORT_PATH, runs_root:
     backlog_candidates = report.get("backlog_candidates", [])
     if not isinstance(backlog_candidates, list):
         backlog_candidates = []
+    historical_problem_trace_policy = report.get("historical_problem_trace_policy", {})
+    if not isinstance(historical_problem_trace_policy, dict):
+        historical_problem_trace_policy = {}
 
     has_adjustable_issue = (
         after_metrics.get("codex_capability_status") not in {"ready", None}
@@ -170,6 +174,20 @@ def inspect_effect_report(*, report_path: Path = DEFAULT_REPORT_PATH, runs_root:
             {
                 "code": "verifier_ref_drift",
                 "detail": "effect report verifier_ref must point to python scripts/verify-target-repo-reuse-effect-report.py",
+            }
+        )
+    if historical_problem_trace_policy.get("window_kind") != "rolling":
+        errors.append(
+            {
+                "code": "historical_trace_policy_drift",
+                "detail": "historical_problem_trace_policy.window_kind must be 'rolling'",
+            }
+        )
+    if historical_problem_trace_policy.get("claim_guard") != "do not collapse historical failures into the current pass-state claim":
+        errors.append(
+            {
+                "code": "historical_trace_claim_guard_drift",
+                "detail": "historical problem trace claim guard must preserve separation from the current pass-state claim",
             }
         )
 

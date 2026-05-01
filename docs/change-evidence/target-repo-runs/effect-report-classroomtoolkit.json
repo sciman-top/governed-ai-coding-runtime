@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "report_kind": "target_repo_reuse_effect_feedback",
-  "generated_at": "2026-05-01T05:51:33.678696+00:00",
+  "generated_at": "2026-05-01T09:36:28.643721+00:00",
   "target": "classroomtoolkit",
   "runs_root": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\target-repo-runs",
   "baseline_run_ref": "classroomtoolkit-daily-20260420225453.json",
@@ -98,6 +98,19 @@
       "candidate_id": "target-repo-reuse-host-capability-gap",
       "disposition": "adjust",
       "reason": "Latest target run still depends on degraded host capability posture.",
+      "current_posture": {
+        "codex_capability_status": "degraded",
+        "adapter_tier": "process_bridge",
+        "flow_kind": "process_bridge"
+      },
+      "remediation_boundary": {
+        "allowed_interim_tiers": [
+          "process_bridge",
+          "manual_handoff"
+        ],
+        "required_recovery_evidence": "fresh target run with codex_capability_status=ready and adapter_tier=native_attach",
+        "claim_guard": "do not claim native_attach recovery until a fresh target repo run proves it"
+      },
       "evidence_refs": [
         "artifacts/task-20260501003937-classroomtoolkit/run-20260501003937-classroomtoolkit/verification-output/contract.txt",
         "artifacts/task-20260501003937-classroomtoolkit/session-bridge-request/verification-output/contract.txt",
@@ -111,11 +124,23 @@
       "candidate_id": "target-repo-reuse-historical-problem-trace",
       "disposition": "adjust",
       "reason": "Rolling KPI window still records problem runs that must stay tracked as backlog candidates.",
+      "closure_boundary": {
+        "current_success_claim": "latest run may pass while historical problem traces remain open",
+        "close_when": "rolling KPI window ages out or supersedes the last problem trace under the documented retention rule",
+        "claim_guard": "do not collapse historical failures into the current pass-state claim"
+      },
       "evidence_refs": [
         "artifacts/task-classroomtoolkit-daily-20260420225453/run-classroomtoolkit-daily-20260420225453/verification-output/contract.txt"
       ]
     }
   ],
+  "historical_problem_trace_policy": {
+    "window_kind": "rolling",
+    "window_size": 5,
+    "keep_backlog_candidate_when_problem_run_rate_gt": 0.0,
+    "close_when": "problem_run_rate == 0 and no latest_problem_run_ref remains inside the active rolling window",
+    "claim_guard": "do not collapse historical failures into the current pass-state claim"
+  },
   "comparison": {
     "overall_status_changed": true,
     "adapter_tier_changed": true,

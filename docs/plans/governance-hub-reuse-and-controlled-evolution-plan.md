@@ -3,7 +3,7 @@
 ## Status
 - Created: 2026-05-01.
 - Queue: `GAP-130` through `GAP-141`.
-- Current state: `GAP-130..139` are complete on the current branch baseline. `GAP-140..141` are the post-certification effect-feedback follow-on queue: first recover or explicitly defer degraded host-capability posture with fresh evidence, then close or formalize the historical problem-trace window. This plan does not enable automatic policy mutation, automatic skill installation, target-repo sync, push, or merge.
+- Current state: `GAP-130..141` are complete on the current branch baseline. `GAP-140` closes as a bounded defer because the current local `codex-cli` command surface still lacks the native attach handshake command required by this repository contract, and `GAP-141` closes by formalizing the historical problem-trace retention and exit rule for rolling KPI windows. This plan does not enable automatic policy mutation, automatic skill installation, target-repo sync, push, or merge.
 - Prior dependency: `GAP-120..129` established runtime evolution review and controlled materialization. This plan turns the clarified product direction into the next implementation queue.
 
 ## Goal
