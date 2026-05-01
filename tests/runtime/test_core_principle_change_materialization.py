@@ -40,6 +40,8 @@ class CorePrincipleChangeMaterializationTests(unittest.TestCase):
             self.assertEqual("pass", result["status"])
             self.assertEqual("dry_run", result["mode"])
             self.assertFalse(result["written_files"])
+            self.assertIn("sha256", result["operations"][0])
+            self.assertEqual("overwrite_same_candidate", result["operations"][0]["existing_file_behavior"])
             self.assertFalse(result["guard"]["active_policy_auto_apply"])
             self.assertTrue(result["guard"]["requires_human_review_before_effective_change"])
             self.assertFalse((repo_root / "docs/architecture/core-principles-policy.json").exists())
@@ -80,6 +82,51 @@ class CorePrincipleChangeMaterializationTests(unittest.TestCase):
             self.assertIn("Controlled Evolution", proposal["summary"])
             self.assertIn("outer AI", proposal["summary"])
             self.assertFalse(proposal["guard"]["active_policy_auto_apply"])
+            manifest = json.loads(
+                (
+                    repo_root
+                    / "docs/change-evidence/core-principle-change-patches/20260501-core-principle-change-materialization.json"
+                ).read_text(encoding="utf-8")
+            )
+            self.assertEqual("overwrite_same_candidate", manifest["existing_file_behavior"])
+            self.assertEqual(1, len(manifest["operation_artifacts"]))
+            self.assertRegex(manifest["operation_artifacts"][0]["sha256"], r"^[a-f0-9]{64}$")
+
+    def test_materializer_can_write_audit_only_dry_run_report(self) -> None:
+        module = _load_materializer()
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            result = module.materialize_core_principle_change(
+                repo_root=repo_root,
+                as_of=dt.date(2026, 5, 1),
+                apply=False,
+                write_dry_run_report=True,
+            )
+
+            self.assertEqual("pass", result["status"])
+            self.assertEqual("dry_run", result["mode"])
+            self.assertEqual(
+                ["docs/change-evidence/core-principle-change-reports/20260501-governance-hub-reusable-contract-final-state-dry-run-report.json"],
+                result["written_files"],
+            )
+            self.assertFalse((repo_root / "docs/change-evidence/core-principle-change-proposals").exists())
+            report = json.loads((repo_root / result["dry_run_report_path"]).read_text(encoding="utf-8"))
+            self.assertEqual("dry_run_report", report["mode"])
+            self.assertFalse(report["guard"]["active_policy_auto_apply"])
+            self.assertRegex(report["operations"][0]["sha256"], r"^[a-f0-9]{64}$")
+
+    def test_materializer_rejects_combined_apply_and_dry_run_report(self) -> None:
+        module = _load_materializer()
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            with self.assertRaises(ValueError):
+                module.materialize_core_principle_change(
+                    repo_root=Path(tmp_dir),
+                    as_of=dt.date(2026, 5, 1),
+                    apply=True,
+                    write_dry_run_report=True,
+                )
 
     def test_materializer_cli_dry_run_succeeds(self) -> None:
         completed = subprocess.run(
@@ -94,6 +141,7 @@ class CorePrincipleChangeMaterializationTests(unittest.TestCase):
         payload = json.loads(completed.stdout)
         self.assertEqual("dry_run", payload["mode"])
         self.assertEqual(2, payload["operation_count"])
+        self.assertRegex(payload["operations"][0]["sha256"], r"^[a-f0-9]{64}$")
         self.assertFalse(payload["guard"]["active_policy_auto_apply"])
 
     def test_operator_dry_run_exposes_core_principle_materialize_flow(self) -> None:
@@ -180,6 +228,31 @@ class CorePrincipleChangeMaterializationTests(unittest.TestCase):
         self.assertEqual("apply", payload["mode"])
         self.assertTrue(payload["written_files"])
         self.assertFalse(payload["guard"]["active_policy_auto_apply"])
+
+    def test_operator_core_principle_materialize_can_write_dry_run_report_only(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/materialize-core-principle-change.py",
+                    "--repo-root",
+                    tmp_dir,
+                    "--as-of",
+                    "2026-05-01",
+                    "--write-dry-run-report",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual("dry_run", payload["mode"])
+            self.assertEqual(1, len(payload["written_files"]))
+            self.assertIn("core-principle-change-reports", payload["written_files"][0])
+            self.assertFalse((Path(tmp_dir) / "docs/change-evidence/core-principle-change-proposals").exists())
 
 
 if __name__ == "__main__":

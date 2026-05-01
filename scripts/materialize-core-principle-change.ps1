@@ -1,6 +1,7 @@
 param(
   [string]$AsOf,
-  [switch]$Apply
+  [switch]$Apply,
+  [switch]$WriteDryRunReport
 )
 
 Set-StrictMode -Version Latest
@@ -26,6 +27,9 @@ try {
   }
   if ($Apply) {
     $arguments += "--apply"
+  }
+  if ($WriteDryRunReport) {
+    $arguments += "--write-dry-run-report"
   }
 
   & $python.Source @arguments

@@ -13,6 +13,7 @@ param(
   [switch]$OpenUi,
   [switch]$OnlineSourceCheck,
   [switch]$ConfirmCorePrincipleProposalWrite,
+  [switch]$WriteCorePrincipleDryRunReport,
   [switch]$DryRun,
   [switch]$FailFast
 )
@@ -163,6 +164,7 @@ AI 推荐:
   ExperienceReview       从 AI 编码证据/指标中生成 dry-run 改进提案和 skill manifest 候选。
   EvolutionMaterialize   将低风险候选物化为 proposal 文件和禁用态 skill candidate 文件，不启用技能。
   CorePrincipleMaterialize 默认只报告核心原则变更候选；加 -ConfirmCorePrincipleProposalWrite 才写 reviewable proposal/manifest，不改 active policy。
+                           加 -WriteCorePrincipleDryRunReport 只写审计用 dry-run report，不写 proposal/manifest。
   OperatorUi             只生成本地 operator HTML；加 -OpenUi 会用默认浏览器打开。
 
 UI:
@@ -183,6 +185,8 @@ UI:
   -OnlineSourceCheck      EvolutionReview 时执行轻量在线 source probe；默认不联网。
   -ConfirmCorePrincipleProposalWrite
                           CorePrincipleMaterialize 时才允许写 proposal/manifest；仍不改 active policy。
+  -WriteCorePrincipleDryRunReport
+                          CorePrincipleMaterialize 时只允许写 dry-run report；不能与 -ConfirmCorePrincipleProposalWrite 同用。
   -UiLanguage <zh-CN|en>
 "@ | Write-Host
 }
@@ -271,9 +275,16 @@ function Invoke-EvolutionMaterialize {
 }
 
 function Invoke-CorePrincipleMaterialize {
+  if ($ConfirmCorePrincipleProposalWrite -and $WriteCorePrincipleDryRunReport) {
+    throw "ConfirmCorePrincipleProposalWrite and WriteCorePrincipleDryRunReport cannot be used together."
+  }
+
   $arguments = @()
   if ($ConfirmCorePrincipleProposalWrite) {
     $arguments += "-Apply"
+  }
+  if ($WriteCorePrincipleDryRunReport) {
+    $arguments += "-WriteDryRunReport"
   }
   Invoke-PwshScript -Name "core-principle-change-materialize" -ScriptPath "scripts/materialize-core-principle-change.ps1" -ScriptArguments $arguments
 }

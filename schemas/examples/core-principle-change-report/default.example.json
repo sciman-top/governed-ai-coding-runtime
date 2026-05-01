@@ -1,0 +1,30 @@
+{
+  "generated_on": "2026-05-01",
+  "guard": {
+    "active_policy_auto_apply": false,
+    "active_spec_auto_apply": false,
+    "merge": false,
+    "push": false,
+    "requires_human_review_before_effective_change": true,
+    "skill_auto_enable": false,
+    "target_repo_sync": false,
+    "verifier_auto_update": false
+  },
+  "manifest_path": "docs/change-evidence/core-principle-change-patches/20260501-core-principle-change-materialization.json",
+  "mode": "dry_run_report",
+  "operations": [
+    {
+      "existing_file_behavior": "overwrite_same_candidate",
+      "exists_before_write": false,
+      "operation": "write_core_principle_change_proposal",
+      "path": "docs/change-evidence/core-principle-change-proposals/20260501-governance-hub-reusable-contract-final-state.json",
+      "risk": "medium",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ],
+  "proposal_id": "principle.governance_hub_reusable_contract_final_state",
+  "proposal_path": "docs/change-evidence/core-principle-change-proposals/20260501-governance-hub-reusable-contract-final-state.json",
+  "rollback": "Delete this dry-run report. Proposal, manifest, and active policy files are untouched.",
+  "schema_version": "0.1-draft",
+  "source_command": "scripts/operator.ps1 -Action CorePrincipleMaterialize -WriteCorePrincipleDryRunReport"
+}

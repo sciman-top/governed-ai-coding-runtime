@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/core-principle-change-report.schema.json",
+  "title": "Core Principle Change Dry-Run Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "generated_on",
+    "mode",
+    "source_command",
+    "proposal_id",
+    "proposal_path",
+    "manifest_path",
+    "operations",
+    "guard",
+    "rollback"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "generated_on": {
+      "type": "string",
+      "format": "date"
+    },
+    "mode": {
+      "const": "dry_run_report"
+    },
+    "source_command": {
+      "type": "string",
+      "minLength": 1
+    },
+    "proposal_id": {
+      "type": "string",
+      "pattern": "^principle\\.[a-z0-9_.-]+$"
+    },
+    "proposal_path": {
+      "type": "string",
+      "pattern": "^docs/change-evidence/core-principle-change-proposals/[^/]+\\.json$"
+    },
+    "manifest_path": {
+      "type": "string",
+      "pattern": "^docs/change-evidence/core-principle-change-patches/[^/]+\\.json$"
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation",
+          "path",
+          "risk",
+          "sha256",
+          "existing_file_behavior",
+          "exists_before_write"
+        ],
+        "properties": {
+          "operation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^docs/change-evidence/core-principle-change-(proposals|patches|reports)/[^/]+\\.json$"
+          },
+          "risk": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "existing_file_behavior": {
+            "type": "string",
+            "enum": [
+              "overwrite_same_candidate",
+              "fail_if_exists"
+            ]
+          },
+          "exists_before_write": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "guard": {
+      "$ref": "#/$defs/core_principle_change_guard"
+    },
+    "rollback": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "$defs": {
+    "core_principle_change_guard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "active_policy_auto_apply",
+        "active_spec_auto_apply",
+        "verifier_auto_update",
+        "skill_auto_enable",
+        "target_repo_sync",
+        "push",
+        "merge",
+        "requires_human_review_before_effective_change"
+      ],
+      "properties": {
+        "active_policy_auto_apply": {
+          "const": false
+        },
+        "active_spec_auto_apply": {
+          "const": false
+        },
+        "verifier_auto_update": {
+          "const": false
+        },
+        "skill_auto_enable": {
+          "const": false
+        },
+        "target_repo_sync": {
+          "const": false
+        },
+        "push": {
+          "const": false
+        },
+        "merge": {
+          "const": false
+        },
+        "requires_human_review_before_effective_change": {
+          "const": true
+        }
+      }
+    }
+  }
+}

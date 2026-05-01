@@ -1,8 +1,17 @@
-schema_catalog_version: "1.11"
+schema_catalog_version: "1.12"
 items:
   - name: core-principles
     path: schemas/jsonschema/core-principles.schema.json
     source_spec: docs/specs/core-principles-spec.md
+  - name: core-principle-change-proposal
+    path: schemas/jsonschema/core-principle-change-proposal.schema.json
+    source_spec: docs/specs/core-principle-change-proposal-spec.md
+  - name: core-principle-change-manifest
+    path: schemas/jsonschema/core-principle-change-manifest.schema.json
+    source_spec: docs/specs/core-principle-change-manifest-spec.md
+  - name: core-principle-change-report
+    path: schemas/jsonschema/core-principle-change-report.schema.json
+    source_spec: docs/specs/core-principle-change-report-spec.md
   - name: control-registry
     path: schemas/jsonschema/control-registry.schema.json
     source_spec: docs/specs/control-registry-spec.md

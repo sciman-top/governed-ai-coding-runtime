@@ -84,6 +84,41 @@ function Invoke-SchemaCatalogPairing {
   Write-CheckOk "schema-catalog-pairing"
 }
 
+function Invoke-CorePrincipleChangeArtifactSchemaCheck {
+  $checks = @(
+    @{
+      Name = "core-principle-change-proposal-artifacts"
+      Directory = "docs/change-evidence/core-principle-change-proposals"
+      Schema = "schemas/jsonschema/core-principle-change-proposal.schema.json"
+    },
+    @{
+      Name = "core-principle-change-manifest-artifacts"
+      Directory = "docs/change-evidence/core-principle-change-patches"
+      Schema = "schemas/jsonschema/core-principle-change-manifest.schema.json"
+    },
+    @{
+      Name = "core-principle-change-report-artifacts"
+      Directory = "docs/change-evidence/core-principle-change-reports"
+      Schema = "schemas/jsonschema/core-principle-change-report.schema.json"
+    }
+  )
+
+  foreach ($check in $checks) {
+    if (-not (Test-Path $check.Directory)) {
+      continue
+    }
+
+    Get-ChildItem -Path $check.Directory -File -Filter *.json | Sort-Object FullName | ForEach-Object {
+      $ok = Test-Json -Json (Get-Content -Raw $_.FullName) -SchemaFile $check.Schema
+      if (-not $ok) {
+        throw "Core principle change artifact failed schema validation: $($_.FullName)"
+      }
+    }
+
+    Write-CheckOk $check.Name
+  }
+}
+
 function Invoke-PowerShellParse {
   Get-ChildItem scripts -Recurse -File -Filter *.ps1 | Sort-Object FullName | ForEach-Object {
     $tokens = $null
@@ -678,6 +713,7 @@ function Invoke-ContractChecks {
   Invoke-SchemaJsonParse
   Invoke-SchemaExampleValidation
   Invoke-SchemaCatalogPairing
+  Invoke-CorePrincipleChangeArtifactSchemaCheck
   Invoke-DependencyBaselineChecks
   Invoke-TransitionStackConvergenceChecks
   Invoke-TargetRepoRolloutContractChecks

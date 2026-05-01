@@ -114,6 +114,7 @@
 - Core-principle change candidate entrypoint: `scripts/operator.ps1 -Action CorePrincipleMaterialize`
   - default behavior is dry-run reporting only
   - after explicit permission, add `-ConfirmCorePrincipleProposalWrite` to write reviewable proposal/manifest files under `docs/change-evidence/core-principle-change-*`
+  - for audit-only persistence, add `-WriteCorePrincipleDryRunReport` to write only a dry-run report under `docs/change-evidence/core-principle-change-reports/`
   - does not directly change active core-principles policy, specs, verifiers, target repositories, push, or merge
 - Codex local optimizer: `scripts/Optimize-CodexLocal.ps1`
   - default mode is dry-run; use `-Apply` to write the current recommended user-level Codex config and install `codex-account`
