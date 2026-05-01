@@ -42,7 +42,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 - `Post-Certification Selection Queue / GAP-114` is complete on the current branch baseline. It mechanizes what autonomous work should happen next when `GAP-113` defers heavy LTP promotion.
 - `Dual First-Class Host Entrypoint Queue / GAP-115` through `GAP-119` is active as owner-directed bounded scope. It promotes Claude Code from generic degraded compatibility to first-class supported host parity with Codex in governance outcome and, on current live evidence, to the same `native_attach` tier while keeping host APIs and future drift explicit.
 - `Runtime Evolution Review Queue / GAP-120` through `GAP-124` is implemented as a dry-run decision layer. `Runtime Evolution Materialization Queue / GAP-125` through `GAP-129` starts controlled auto-apply by materializing low-risk proposal and disabled skill candidate files without enabling skills, auto-applying policy, syncing target repos, or pushing/merging.
-- `Governance Hub Reuse And Controlled Evolution Queue / GAP-130` is complete as the scope rebaseline, `GAP-131` is complete as the capability portfolio classifier baseline, `GAP-132` is complete as the control-pack execution contract baseline, `GAP-133` is complete as the inheritance override baseline, `GAP-134` is complete as the target-repo reuse effect feedback baseline, `GAP-135` is complete as the knowledge-memory lifecycle baseline, `GAP-136` is complete as the promotion lifecycle baseline, `GAP-137` is complete as the repo-map context artifact baseline, `GAP-138` is complete as the policy/tool/credential audit boundary baseline, and `GAP-139` is complete as the governance hub certification baseline. It clarifies that Codex and Claude Code are cooperation hosts while Hermes/OpenHands/SWE-agent/Letta/Mem0/Aider-style mechanisms are selective absorption sources, then requires real effect feedback before any capability is called live.
+- `Governance Hub Reuse And Controlled Evolution Queue / GAP-130` is complete as the scope rebaseline, `GAP-131` is complete as the capability portfolio classifier baseline, `GAP-132` is complete as the control-pack execution contract baseline, `GAP-133` is complete as the inheritance override baseline, `GAP-134` is complete as the target-repo reuse effect feedback baseline, `GAP-135` is complete as the knowledge-memory lifecycle baseline, `GAP-136` is complete as the promotion lifecycle baseline, `GAP-137` is complete as the repo-map context artifact baseline, `GAP-138` is complete as the policy/tool/credential audit boundary baseline, and `GAP-139` is complete as the governance hub certification baseline. `GAP-140..141` are the next bounded follow-on queue for real host-capability recovery and historical problem-trace closure after certification. It clarifies that Codex and Claude Code are cooperation hosts while Hermes/OpenHands/SWE-agent/Letta/Mem0/Aider-style mechanisms are selective absorption sources, then requires real effect feedback before any capability is called live.
 
 ## Direct-To-Hybrid-Final-State Mainline
 
@@ -1142,7 +1142,7 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: AFK
 - Blocked by: GAP-124
 - User stories: 11, 13, 14, 18, 21, 23, 29, 31, 44
-- Status: implemented as controlled materialization guard
+- Status: complete in controlled materialization guard baseline
 - What to build:
   - define the boundary between dry-run proposal generation and low-risk file materialization
   - prohibit automatic skill enablement, policy auto-apply, target repo sync, push, merge, or credential changes
@@ -1156,7 +1156,7 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: AFK
 - Blocked by: GAP-125
 - User stories: 11, 13, 14, 21, 23, 31, 44
-- Status: implemented as local materializer
+- Status: complete in local materializer baseline
 - What to build:
   - generate a patch manifest from reviewed evolution and experience candidates
   - support dry-run by default and explicit apply for controlled file writes
@@ -1170,7 +1170,7 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: AFK
 - Blocked by: GAP-126
 - User stories: 11, 13, 14, 21, 23, 31, 44
-- Status: implemented as disabled skill candidate output
+- Status: complete in disabled skill candidate output baseline
 - What to build:
   - materialize high-scoring skill candidates into a candidate directory
   - write both `SKILL.md` and `skill-manifest.json`
@@ -1353,6 +1353,34 @@ The entries below record the executed queue for complete hybrid final-state and 
   - [x] Codex and Claude Code remain cooperation hosts, not competitors
   - [x] any unimplemented or deferred capability is explicitly fenced with future trigger evidence
   - [x] final status answers whether the project has review, knowledge, capability upgrade, capability cleanup, controlled evolution, and self-improvement loops in executable form
+
+### GAP-140 Target Repo Host Capability Recovery Follow-On
+- Type: HITL
+- Blocked by: GAP-139
+- User stories: 13, 14, 18, 21, 31, 37, 44, 45
+- Status: planned in post-certification effect-feedback follow-on queue
+- What to build:
+  - translate the `target-repo-reuse-host-capability-gap` candidate into bounded remediation work instead of leaving it only inside the effect report
+  - keep Codex and Claude Code as cooperation hosts while making degraded host posture, adapter tier downgrade, and remediation hints explicit
+  - refresh target-run and host-feedback evidence without claiming `native_attach` recovery until a fresh target repo run proves it
+- Acceptance criteria:
+  - [ ] backlog, issue seeds, plan, and evidence all carry the same `GAP-140` intent and dependency
+  - [ ] host-feedback summary, effect report, and backlog use the same degraded host capability explanation and expected remediation boundary
+  - [ ] completion requires fresh target-run evidence or an explicit bounded defer decision with rollback wording
+
+### GAP-141 Historical Problem Trace Closure Window
+- Type: AFK
+- Blocked by: GAP-140
+- User stories: 13, 14, 18, 21, 23, 31, 44
+- Status: planned in post-certification effect-feedback follow-on queue
+- What to build:
+  - turn the `target-repo-reuse-historical-problem-trace` candidate into an explicit closure rule for rolling KPI windows and effect reports
+  - define when historical problem runs stay visible, when they downgrade to background evidence, and when they can stop emitting backlog pressure
+  - keep the closure rule evidence-backed, reversible, and separate from claims about current pass/fail state
+- Acceptance criteria:
+  - [ ] rolling KPI, effect report, and backlog define the same retention and closure rule for historical problem traces
+  - [ ] current success evidence and historical failure evidence are reported as separate claims rather than collapsed into one health statement
+  - [ ] completion updates the effect-feedback path so historical traces either remain explicitly open or exit the backlog with documented criteria
 
 ## Vision
 

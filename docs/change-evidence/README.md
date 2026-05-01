@@ -4,6 +4,8 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current Evidence Baseline
+- [20260501 Post-Certification Effect-Feedback Follow-On Planning](./20260501-post-certification-effect-feedback-follow-on-planning.md)
+  - planning evidence for `GAP-140..141`, promoting the live host-capability-gap and historical-problem-trace candidates into bounded follow-on work after `GAP-139`
 - [20260501 Governance Hub Reuse Plan](./20260501-governance-hub-reuse-plan.md)
   - planning evidence for the `GAP-130..139` governance hub, reusable contract, controlled evolution, and effect-feedback queue after the Codex/Claude cooperation-host and Hermes-style selective-absorption clarification
 - [20260428 Operator Workflow UX And Local UI Refresh](./20260428-operator-workflow-ux.md)

@@ -45,6 +45,14 @@
 - Fix: `/api/next-work` uses a `60s` normal-refresh cache and `/api/feedback/summary` uses a `30s` normal-refresh cache; `?refresh=1` bypasses cache for manual refresh buttons.
 - Live evidence after optimization: HTML request `63.6ms`; `/api/next-work` first request `11922.4ms`, second cached request `7.9ms`; `/api/feedback/summary` first request `5998.6ms`, second cached request `2.8ms`.
 
+## Codex Account Density Fix
+- Goal: make Codex quota easier to scan and reduce text weight in account cards.
+- Change: Codex usage now renders as compact progress bars backed by each usage window's `remaining_percent` instead of a multiline text-only value.
+- Change: plan expiry and sign-in token expiry now append remaining days, for example `05/29 11:19 余28日` and `Access token 05/09 20:38 余9日`.
+- Change: Codex account card labels were shortened to `配置 / 登录 / 套餐 / 令牌 / 类型 / 额度 / 来源` to free horizontal and vertical space.
+- Browser evidence at `http://127.0.0.1:8770/?lang=zh-CN`: Codex tab rendered `usageMeters=3`, usage fill widths included `81%`, `88%`, `53%`, `28%`, `47%`, and `stale=false`.
+- HTTP evidence: live HTML contains `usage-meter-list`, `余${days}日`, compact `令牌/token` label logic, and `x-governed-runtime-ui-stale=false`.
+
 ## Verification
 - Browser inspection at `http://127.0.0.1:8790/?lang=zh-CN`.
 - Checked Runtime, Codex, Claude, Feedback, and 390px mobile layouts.
@@ -59,6 +67,10 @@
   - Result: pass, 4 tests.
 - `python -m unittest tests.runtime.test_operator_entrypoint.OperatorEntrypointTests.test_operator_ui_action_generates_html tests.runtime.test_operator_entrypoint.OperatorEntrypointTests.test_operator_ui_server_helpers_are_bounded_to_repo_actions_and_files tests.runtime.test_operator_entrypoint.OperatorEntrypointTests.test_operator_ui_next_work_panel_does_not_block_initial_html tests.runtime.test_operator_entrypoint.OperatorEntrypointTests.test_operator_feedback_report_action_writes_summary tests.runtime.test_operator_ui`
   - Result: pass, 10 tests.
+- `python -m unittest tests.runtime.test_operator_ui tests.runtime.test_operator_entrypoint.OperatorEntrypointTests.test_operator_ui_action_generates_html`
+  - Result: pass, 7 tests.
+- `python -m py_compile packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui.py scripts/serve-operator-ui.py`
+  - Result: pass.
 - `python -m unittest tests.runtime.test_operator_entrypoint tests.runtime.test_operator_ui tests.service.test_operator_api`
   - Result: pass, 19 tests.
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`

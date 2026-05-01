@@ -585,3 +585,13 @@ issues:
     type: HITL
     blocked_by: [GAP-134, GAP-135, GAP-136, GAP-137, GAP-138]
     user_stories: [13, 14, 18, 21, 29, 31, 37, 38, 44, 45]
+  - id: GAP-140
+    title: Target Repo Host Capability Recovery Follow-On
+    type: HITL
+    blocked_by: [GAP-139]
+    user_stories: [13, 14, 18, 21, 31, 37, 44, 45]
+  - id: GAP-141
+    title: Historical Problem Trace Closure Window
+    type: AFK
+    blocked_by: [GAP-140]
+    user_stories: [13, 14, 18, 21, 23, 31, 44]

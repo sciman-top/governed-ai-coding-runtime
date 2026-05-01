@@ -2,8 +2,8 @@
 
 ## Status
 - Created: 2026-05-01.
-- Queue: `GAP-130` through `GAP-139`.
-- Current state: `GAP-130` scope rebaseline, `GAP-131` capability portfolio classifier baseline, `GAP-132` control-pack execution contract baseline, `GAP-133` inheritance override baseline, `GAP-134` target-repo reuse effect feedback baseline, `GAP-135` knowledge-memory lifecycle baseline, `GAP-136` promotion lifecycle baseline, and `GAP-137` repo-map context artifact baseline are complete; `GAP-138..139` remain planned implementation work. This plan does not enable automatic policy mutation, automatic skill installation, target-repo sync, push, or merge.
+- Queue: `GAP-130` through `GAP-141`.
+- Current state: `GAP-130..139` are complete on the current branch baseline. `GAP-140..141` are the post-certification effect-feedback follow-on queue: first recover or explicitly defer degraded host-capability posture with fresh evidence, then close or formalize the historical problem-trace window. This plan does not enable automatic policy mutation, automatic skill installation, target-repo sync, push, or merge.
 - Prior dependency: `GAP-120..129` established runtime evolution review and controlled materialization. This plan turns the clarified product direction into the next implementation queue.
 
 ## Goal
@@ -247,11 +247,17 @@ Complete as the fail-closed audit boundary for tool identity, credential scope, 
 ### GAP-139 Governance Hub Certification With Effect Metrics
 Complete as the executable certification package proving that the governance hub, reusable contract, and controlled evolution loop produce measurable effect on at least one target repo, can keep or remove capabilities based on evidence, and do not compete with Codex or Claude Code.
 
+### GAP-140 Target Repo Host Capability Recovery Follow-On
+Translate the live `target-repo-reuse-host-capability-gap` candidate into bounded remediation or explicit defer evidence. The work must keep host cooperation boundaries explicit and must not claim restored `native_attach` posture until fresh target-run evidence proves it.
+
+### GAP-141 Historical Problem Trace Closure Window
+Turn the live `target-repo-reuse-historical-problem-trace` candidate into a governed closure rule for rolling KPI windows and effect reports, separating historical problem visibility from current pass-state claims.
+
 ## Verification Standard
 Planning completion requires:
 
-- backlog entries for `GAP-130..139`
-- machine-readable issue seeds for `GAP-130..139`
+- backlog entries for `GAP-130..141`
+- machine-readable issue seeds for `GAP-130..141`
 - issue-render script support for the new queue
 - source matrix update
 - evidence entry

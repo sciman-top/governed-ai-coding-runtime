@@ -101,6 +101,8 @@ _TRANSLATIONS = {
         "panel_cache_ready": "已刷新",
         "panel_cache_error": "刷新失败",
         "codex_account_usage_unknown": "切换后可获取额度",
+        "codex_usage_remaining": "余量",
+        "codex_usage_reset": "重置",
         "claude_console": "Claude Provider 与配置",
         "claude_provider": "Provider",
         "claude_active": "当前",
@@ -282,6 +284,8 @@ _TRANSLATIONS = {
         "panel_cache_ready": "Refreshed",
         "panel_cache_error": "Refresh failed",
         "codex_account_usage_unknown": "Switch to this account to fetch usage",
+        "codex_usage_remaining": "left",
+        "codex_usage_reset": "reset",
         "claude_console": "Claude Provider and Config",
         "claude_provider": "Provider",
         "claude_active": "Active",
@@ -531,6 +535,14 @@ def render_runtime_snapshot_html(
     .info-line {{ min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; color: var(--muted); font-size: 0.86rem; line-height: 1.35; }}
     .info-label {{ color: #53646a; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }}
     .info-value {{ min-width: 0; color: #263940; overflow-wrap: anywhere; white-space: pre-line; }}
+    .usage-meter-list {{ display: grid; gap: 7px; min-width: 0; }}
+    .usage-meter-row {{ display: grid; gap: 4px; min-width: 0; }}
+    .usage-meter-head {{ display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #263940; font-size: 0.82rem; }}
+    .usage-meter-head small {{ color: var(--muted); font-size: 0.76rem; white-space: nowrap; }}
+    .usage-bar {{ position: relative; height: 7px; overflow: hidden; border-radius: 999px; background: #dce7e8; box-shadow: inset 0 1px 2px rgba(12, 31, 36, 0.13); }}
+    .usage-fill {{ position: absolute; inset: 0 auto 0 0; width: 0%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), #55b8a9); }}
+    .usage-fill.warn {{ background: linear-gradient(90deg, #c78317, #e2b051); }}
+    .usage-fill.danger {{ background: linear-gradient(90deg, var(--danger), #df6b5f); }}
     .empty-state {{ background: rgba(255, 255, 255, 0.8); border: 1px dashed var(--line-strong); border-radius: 8px; padding: 18px; color: var(--muted); box-shadow: var(--shadow-tight); }}
     .refs {{ display: grid; gap: 8px; }}
     .ref-title {{ display: block; color: var(--muted); font-size: 0.78rem; text-transform: uppercase; margin-bottom: 4px; }}
@@ -1583,6 +1595,26 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     }}).format(date);
   }}
 
+  function daysRemainingLabel(timestamp) {{
+    const raw = String(timestamp || '').trim();
+    if (!raw) {{
+      return '';
+    }}
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) {{
+      return '';
+    }}
+    const dayMs = 24 * 60 * 60 * 1000;
+    const days = Math.max(0, Math.ceil((date.getTime() - Date.now()) / dayMs));
+    return currentUiLanguage() === 'zh-CN' ? `余${{days}}日` : `${{days}}d left`;
+  }}
+
+  function formatCompactTimestampWithDays(timestamp) {{
+    const compact = formatCompactTimestamp(timestamp);
+    const days = daysRemainingLabel(timestamp);
+    return [compact, days].filter(Boolean).join(currentUiLanguage() === 'zh-CN' ? ' ' : ', ');
+  }}
+
   function currentUiLanguage() {{
     const lang = document.documentElement.lang || '';
     return lang.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en-US';
@@ -1627,7 +1659,8 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
       ? `${{item.remaining_percent}}%`
       : (item.remaining || 'unknown');
     const reset = formatUsageReset(item.reset_at);
-    return [windowLabel, remaining, reset].filter(Boolean).join(' ');
+    const resetLabel = reset ? `${{ {text['codex_usage_reset']!r} }} ${{reset}}` : '';
+    return [windowLabel, remaining, resetLabel].filter(Boolean).join(' ');
   }}
 
   function formatAccountUsageSummary(account) {{
@@ -1637,6 +1670,57 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
       return {text['codex_account_usage_unknown']!r};
     }}
     return windows.map(formatUsageWindow).join('\\n');
+  }}
+
+  function clampUsagePercent(value) {{
+    const percent = Number(value);
+    if (!Number.isFinite(percent)) {{
+      return null;
+    }}
+    return Math.max(0, Math.min(100, percent));
+  }}
+
+  function createUsageMeter(account) {{
+    const snapshot = account && account.usage_snapshot;
+    const windows = snapshot && Array.isArray(snapshot.windows) ? snapshot.windows : [];
+    if (!windows.length) {{
+      const fallback = document.createElement('span');
+      fallback.textContent = {text['codex_account_usage_unknown']!r};
+      return fallback;
+    }}
+    const list = document.createElement('div');
+    list.className = 'usage-meter-list';
+    windows.forEach((item) => {{
+      const percent = clampUsagePercent(item.remaining_percent);
+      const row = document.createElement('div');
+      row.className = 'usage-meter-row';
+      const head = document.createElement('div');
+      head.className = 'usage-meter-head';
+      const label = document.createElement('span');
+      label.textContent = formatUsageWindowLabel(item);
+      const detail = document.createElement('small');
+      const reset = formatUsageReset(item.reset_at);
+      const remaining = percent === null ? (item.remaining || 'unknown') : `${{percent}}%`;
+      detail.textContent = [
+        `${{ {text['codex_usage_remaining']!r} }} ${{remaining}}`,
+        reset ? `${{ {text['codex_usage_reset']!r} }} ${{reset}}` : '',
+      ].filter(Boolean).join(' · ');
+      head.append(label, detail);
+      const bar = document.createElement('div');
+      bar.className = 'usage-bar';
+      const fill = document.createElement('span');
+      fill.className = 'usage-fill';
+      if (percent !== null && percent <= 15) {{
+        fill.classList.add('danger');
+      }} else if (percent !== null && percent <= 35) {{
+        fill.classList.add('warn');
+      }}
+      fill.style.width = `${{percent === null ? 0 : percent}}%`;
+      bar.appendChild(fill);
+      row.append(head, bar);
+      list.appendChild(row);
+    }});
+    return list;
   }}
 
   function formatUsageSourceLabel(source) {{
@@ -1661,8 +1745,8 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   }}
 
   function formatTokenExpirySummary(account) {{
-    const idExpiry = formatCompactTimestamp(account && account.id_token_expires_at);
-    const accessExpiry = formatCompactTimestamp(account && account.access_token_expires_at);
+    const idExpiry = formatCompactTimestampWithDays(account && account.id_token_expires_at);
+    const accessExpiry = formatCompactTimestampWithDays(account && account.access_token_expires_at);
     const parts = [];
     if (idExpiry) {{
       parts.push(`ID token ${{idExpiry}}`);
@@ -1677,7 +1761,7 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
   }}
 
   function formatSubscriptionExpirySummary(account) {{
-    const expiry = formatCompactTimestamp(account && account.subscription_active_until);
+    const expiry = formatCompactTimestampWithDays(account && account.subscription_active_until);
     if (!expiry) {{
       return {text['codex_subscription_unknown']!r};
     }}
@@ -1732,7 +1816,11 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
     labelEl.textContent = label;
     const valueEl = document.createElement('span');
     valueEl.className = 'info-value';
-    valueEl.textContent = value;
+    if (value && typeof value === 'object' && value.nodeType) {{
+      valueEl.appendChild(value);
+    }} else {{
+      valueEl.textContent = value;
+    }}
     line.append(labelEl, valueEl);
     return line;
   }}
@@ -2062,11 +2150,11 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
           formatAuthModeLabel(account.auth_mode)
         ),
         createInfoLine(
-          {text['codex_subscription_expiry']!r},
+          currentUiLanguage() === 'zh-CN' ? '套餐' : 'plan',
           formatSubscriptionExpirySummary(account)
         ),
         createInfoLine(
-          {text['codex_token_expiry']!r},
+          currentUiLanguage() === 'zh-CN' ? '令牌' : 'token',
           formatTokenExpirySummary(account)
         )
       );
@@ -2074,7 +2162,7 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
       if (planLabel) {{
         infoList.appendChild(
           createInfoLine(
-            currentUiLanguage() === 'zh-CN' ? '套餐' : 'plan',
+            currentUiLanguage() === 'zh-CN' ? '类型' : 'type',
             planLabel
           )
         );
@@ -2082,7 +2170,7 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
       infoList.appendChild(
         createInfoLine(
           currentUiLanguage() === 'zh-CN' ? '额度' : 'usage',
-          formatAccountUsageSummary(account)
+          createUsageMeter(account)
         )
       );
       row.title = [
@@ -2108,11 +2196,11 @@ def _render_interactive_script(text: dict[str, str], *, language: str) -> str:
       if (account.active) {{
         infoList.append(
           createInfoLine(
-            currentUiLanguage() === 'zh-CN' ? '配置健康' : 'config',
+            currentUiLanguage() === 'zh-CN' ? '配置' : 'config',
             formatConfigHealth(payload.config || {{}})
           ),
           createInfoLine(
-            currentUiLanguage() === 'zh-CN' ? '额度来源' : 'usage source',
+            currentUiLanguage() === 'zh-CN' ? '来源' : 'source',
             [
               formatPlanLabel((payload.usage || {{}}).plan_type)
                 ? (currentUiLanguage() === 'zh-CN'
