@@ -11,6 +11,8 @@
 - In this repository that means: low interruption, continuous execution, lower token and cost burn, and high throughput.
 - Concrete defaults such as a model name, reasoning level, compact threshold, provider mapping, or auth storage choice are implementation details under that principle, not a higher-order rule.
 - Replace a current default only when the new choice preserves safety and gates while serving this principle better.
+- Automation-first, outer-AI-assisted, gate-controlled evolution is also a core principle: the repository should automate deterministic governance work and may automatically trigger outer AI for intelligent review, knowledge extraction, candidate generation, and evolution proposals, while effective changes remain blocked by structured candidates, risk gates, machine gates, evidence, rollback, and required review boundaries.
+- The best engineering final state is Governance Hub + Reusable Contract + Controlled Evolution loop + outer AI intelligent review/generation capability, implemented as governed controls rather than a competing AI coding host.
 
 ## Current Working Set
 - [Hybrid Final-State Master Outline](./architecture/hybrid-final-state-master-outline.md)
@@ -109,6 +111,10 @@
   - typical uses: `-Action Help`, `-Action Readiness`, `-Action RulesDryRun`, `-Action DailyAll`, `-Action OperatorUi -OpenUi`
   - UI default language: `zh-CN`; use `-UiLanguage en` for English
   - UI purpose: localhost interactive control console for allowlisted operator actions, runtime summary, maintenance policy refs, attachment posture, task/run evidence refs, evidence file preview, and local Codex/Claude config status
+- Core-principle change candidate entrypoint: `scripts/operator.ps1 -Action CorePrincipleMaterialize`
+  - default behavior is dry-run reporting only
+  - after explicit permission, add `-ConfirmCorePrincipleProposalWrite` to write reviewable proposal/manifest files under `docs/change-evidence/core-principle-change-*`
+  - does not directly change active core-principles policy, specs, verifiers, target repositories, push, or merge
 - Codex local optimizer: `scripts/Optimize-CodexLocal.ps1`
   - default mode is dry-run; use `-Apply` to write the current recommended user-level Codex config and install `codex-account`
   - the stable policy is still `efficiency first`; the current default combo is only the present implementation under that rule

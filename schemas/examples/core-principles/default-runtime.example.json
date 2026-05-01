@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0",
+  "policy_id": "default-core-principles",
+  "status": "enforced",
+  "principles": [
+    {
+      "principle_id": "codex_claude_cooperation_hosts",
+      "category": "host_boundary",
+      "summary": "Codex and Claude Code are cooperation hosts, not products to replace.",
+      "required": true,
+      "enforcement_level": "docs_gate",
+      "machine_gate": "verify-core-principles",
+      "rollback_ref": "git revert core principles"
+    }
+  ],
+  "capability_portfolio_outcomes": [
+    "add",
+    "keep",
+    "improve",
+    "merge",
+    "deprecate",
+    "retire",
+    "delete_candidate"
+  ],
+  "outer_ai_evolution_controls": {
+    "automatic_trigger_allowed": true,
+    "allowed_automatic_actions": [
+      "source_collection",
+      "experience_extraction",
+      "knowledge_candidate_generation",
+      "skill_candidate_generation",
+      "evolution_proposal_generation",
+      "candidate_evaluation",
+      "effect_feedback_analysis"
+    ],
+    "forbidden_automatic_effective_actions": [
+      "active_policy_mutation",
+      "skill_enablement",
+      "target_repo_sync",
+      "push",
+      "merge",
+      "reviewed_evidence_deletion",
+      "active_gate_deletion"
+    ],
+    "required_controls": [
+      "structured_candidate",
+      "risk_gate",
+      "machine_gate",
+      "evidence_ref",
+      "rollback_ref",
+      "human_review_for_high_risk"
+    ]
+  },
+  "required_doc_refs": [
+    {
+      "path": "docs/README.md",
+      "contains": "cooperation hosts"
+    }
+  ],
+  "forbidden_active_patterns": [
+    {
+      "pattern": "official Claude subscription is required",
+      "scan_roots": [
+        "docs"
+      ]
+    }
+  ],
+  "evidence_refs": [
+    "docs/change-evidence/example.md"
+  ],
+  "rollback_ref": "git revert core principles"
+}

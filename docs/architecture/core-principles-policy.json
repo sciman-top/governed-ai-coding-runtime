@@ -1,0 +1,241 @@
+{
+  "schema_version": "1.0",
+  "policy_id": "default-core-principles",
+  "status": "enforced",
+  "principles": [
+    {
+      "principle_id": "efficiency_first",
+      "category": "execution",
+      "summary": "The long-lived operating principle is low interruption, continuous execution, lower token and cost burn, and high throughput.",
+      "required": true,
+      "enforcement_level": "docs_gate",
+      "machine_gate": "verify-core-principles",
+      "rollback_ref": "git revert core-principles policy change"
+    },
+    {
+      "principle_id": "codex_claude_cooperation_hosts",
+      "category": "host_boundary",
+      "summary": "Codex and Claude Code are the user's primary AI coding hosts and must be integrated with before competing surfaces are considered.",
+      "required": true,
+      "enforcement_level": "docs_gate",
+      "machine_gate": "verify-core-principles",
+      "rollback_ref": "git revert core-principles policy change"
+    },
+    {
+      "principle_id": "no_host_competition",
+      "category": "positioning",
+      "summary": "The project must not duplicate Codex or Claude Code chat UI, model loop, tool-calling surface, or host-owned memory UX.",
+      "required": true,
+      "enforcement_level": "docs_gate",
+      "machine_gate": "verify-core-principles",
+      "rollback_ref": "git revert core-principles policy change"
+    },
+    {
+      "principle_id": "claude_third_party_provider_boundary",
+      "category": "provider_boundary",
+      "summary": "Claude Code support is local third-party Anthropic-compatible provider usage such as GLM or DeepSeek and must not require official Claude subscription entitlement.",
+      "required": true,
+      "enforcement_level": "docs_gate",
+      "machine_gate": "verify-core-principles",
+      "rollback_ref": "git revert core-principles policy change"
+    },
+    {
+      "principle_id": "external_mechanism_selective_absorption",
+      "category": "positioning",
+      "summary": "Hermes Agent, OpenHands, SWE-agent, Letta, Mem0, LangGraph, Aider, Cline, OPA, MCP gateways, and similar projects are selective mechanism sources, not product identities.",
+      "required": true,
+      "enforcement_level": "docs_gate",
+      "machine_gate": "verify-core-principles",
+      "rollback_ref": "git revert core-principles policy change"
+    },
+    {
+      "principle_id": "governance_hub_reusable_contract_final_state",
+      "category": "positioning",
+      "summary": "The best engineering final state is Governance Hub + Reusable Contract + Controlled Evolution loop + outer AI intelligent review/generation capability, implemented as governed controls rather than a competing host product.",
+      "required": true,
+      "enforcement_level": "docs_gate",
+      "machine_gate": "verify-core-principles",
+      "rollback_ref": "git revert core-principles policy change"
+    },
+    {
+      "principle_id": "controlled_evolution_portfolio_lifecycle",
+      "category": "evolution",
+      "summary": "Self-evolution must classify existing and proposed capabilities as add, keep, improve, merge, deprecate, retire, or delete_candidate using evidence.",
+      "required": true,
+      "enforcement_level": "docs_gate",
+      "machine_gate": "verify-core-principles",
+      "rollback_ref": "git revert core-principles policy change"
+    },
+    {
+      "principle_id": "automation_first_outer_ai_intelligent_evolution",
+      "category": "evolution",
+      "summary": "The runtime should automate deterministic governance work and may automatically trigger outer AI for intelligent review, knowledge extraction, candidate generation, and evolution proposals while effective changes remain gate-controlled.",
+      "required": true,
+      "enforcement_level": "docs_gate",
+      "machine_gate": "verify-core-principles",
+      "rollback_ref": "git revert core-principles policy change"
+    },
+    {
+      "principle_id": "no_automatic_mutation_without_review",
+      "category": "evolution",
+      "summary": "Automatic policy mutation, skill enablement, target-repo sync, push, and merge remain disabled unless a later reviewed implementation explicitly changes the guard.",
+      "required": true,
+      "enforcement_level": "docs_gate",
+      "machine_gate": "verify-core-principles",
+      "rollback_ref": "git revert core-principles policy change"
+    },
+    {
+      "principle_id": "evidence_and_rollback_required",
+      "category": "evidence",
+      "summary": "Planning, schema, script, rule, and governance baseline changes require evidence and rollback records.",
+      "required": true,
+      "enforcement_level": "docs_gate",
+      "machine_gate": "verify-core-principles",
+      "rollback_ref": "git revert core-principles policy change"
+    },
+    {
+      "principle_id": "hard_gate_order",
+      "category": "verification",
+      "summary": "Final delivery must preserve the build -> test -> contract/invariant -> hotspot gate order.",
+      "required": true,
+      "enforcement_level": "docs_gate",
+      "machine_gate": "verify-core-principles",
+      "rollback_ref": "git revert core-principles policy change"
+    }
+  ],
+  "capability_portfolio_outcomes": [
+    "add",
+    "keep",
+    "improve",
+    "merge",
+    "deprecate",
+    "retire",
+    "delete_candidate"
+  ],
+  "outer_ai_evolution_controls": {
+    "automatic_trigger_allowed": true,
+    "allowed_automatic_actions": [
+      "source_collection",
+      "experience_extraction",
+      "knowledge_candidate_generation",
+      "skill_candidate_generation",
+      "evolution_proposal_generation",
+      "candidate_evaluation",
+      "effect_feedback_analysis"
+    ],
+    "forbidden_automatic_effective_actions": [
+      "active_policy_mutation",
+      "skill_enablement",
+      "target_repo_sync",
+      "push",
+      "merge",
+      "reviewed_evidence_deletion",
+      "active_gate_deletion"
+    ],
+    "required_controls": [
+      "structured_candidate",
+      "risk_gate",
+      "machine_gate",
+      "evidence_ref",
+      "rollback_ref",
+      "human_review_for_high_risk"
+    ]
+  },
+  "required_doc_refs": [
+    {
+      "path": "AGENTS.md",
+      "contains": "综合效率优先"
+    },
+    {
+      "path": "AGENTS.md",
+      "contains": "build -> test -> contract/invariant -> hotspot"
+    },
+    {
+      "path": "docs/plans/governance-hub-reuse-and-controlled-evolution-plan.md",
+      "contains": "Do not duplicate Codex or Claude Code chat UI"
+    },
+    {
+      "path": "docs/plans/governance-hub-reuse-and-controlled-evolution-plan.md",
+      "contains": "third-party Anthropic-compatible providers such as GLM or DeepSeek"
+    },
+    {
+      "path": "docs/plans/governance-hub-reuse-and-controlled-evolution-plan.md",
+      "contains": "delete_candidate"
+    },
+    {
+      "path": "docs/plans/governance-hub-reuse-and-controlled-evolution-plan.md",
+      "contains": "Governance Hub + Reusable Contract + Controlled Evolution loop + outer AI intelligent review/generation"
+    },
+    {
+      "path": "docs/README.md",
+      "contains": "Governance Hub + Reusable Contract + Controlled Evolution loop + outer AI intelligent review/generation"
+    },
+    {
+      "path": "docs/plans/governance-hub-reuse-and-controlled-evolution-plan.md",
+      "contains": "Automation-first, outer-AI-assisted, gate-controlled evolution"
+    },
+    {
+      "path": "docs/README.md",
+      "contains": "Automation-first, outer-AI-assisted, gate-controlled evolution"
+    },
+    {
+      "path": "docs/README.md",
+      "contains": "does not authorize automatic host replacement, policy mutation, skill enablement, push, or merge"
+    },
+    {
+      "path": "docs/research/runtime-governance-borrowing-matrix.md",
+      "contains": "selective mechanism sources"
+    }
+  ],
+  "forbidden_active_patterns": [
+    {
+      "pattern": "official Claude subscription is required",
+      "scan_roots": [
+        "README.md",
+        "README.en.md",
+        "README.zh-CN.md",
+        "docs"
+      ]
+    },
+    {
+      "pattern": "auto-enable skills by default",
+      "scan_roots": [
+        "README.md",
+        "README.en.md",
+        "README.zh-CN.md",
+        "docs"
+      ]
+    },
+    {
+      "pattern": "host UI replacement is the goal",
+      "scan_roots": [
+        "README.md",
+        "README.en.md",
+        "README.zh-CN.md",
+        "docs"
+      ]
+    },
+    {
+      "pattern": "outer AI may directly apply policy",
+      "scan_roots": [
+        "README.md",
+        "README.en.md",
+        "README.zh-CN.md",
+        "docs"
+      ]
+    },
+    {
+      "pattern": "outer AI can enable skills automatically",
+      "scan_roots": [
+        "README.md",
+        "README.en.md",
+        "README.zh-CN.md",
+        "docs"
+      ]
+    }
+  ],
+  "evidence_refs": [
+    "docs/change-evidence/20260501-governance-hub-reuse-plan.md"
+  ],
+  "rollback_ref": "git revert core-principles policy, schema, verifier, and docs gate wiring"
+}

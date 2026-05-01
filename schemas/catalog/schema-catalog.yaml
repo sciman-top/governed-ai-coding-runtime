@@ -1,5 +1,8 @@
-schema_catalog_version: "1.10"
+schema_catalog_version: "1.11"
 items:
+  - name: core-principles
+    path: schemas/jsonschema/core-principles.schema.json
+    source_spec: docs/specs/core-principles-spec.md
   - name: control-registry
     path: schemas/jsonschema/control-registry.schema.json
     source_spec: docs/specs/control-registry-spec.md

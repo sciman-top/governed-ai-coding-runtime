@@ -43,6 +43,10 @@
 
 `GAP-130` 已完成范围重基线；`GAP-131..139` 是下一条已规划的“治理中枢 + 复用契约 + 受控演进”实现路线：Codex 和 Claude Code 作为日常合作宿主，不与其竞争；本项目里的 Claude Code 默认按本机接入 GLM/DeepSeek 等第三方 Anthropic-compatible provider 处理，不假定官方订阅或官方账号权益；Hermes/OpenHands/SWE-agent/Letta/Mem0/Aider 等作为可选择吸收的机制来源。完成标准必须包含真实 target-repo effect feedback，而不只是新增文档或候选文件。自我演进必须评估现有功能组合，能按证据执行 `add/keep/improve/merge/deprecate/retire/delete_candidate`，而不是只会新增。
 
+最佳工程终态已固化为 `Governance Hub + Reusable Contract + Controlled Evolution loop + outer AI intelligent review/generation capability`，即治理中枢、可复用控制契约、受控演进闭环和外层 AI 智能评审/生成能力，而不是新的宿主产品。
+
+核心原则已强化为 `Automation-first, outer-AI-assisted, gate-controlled evolution`：本项目自身应高度自动化，并可自动触发外层 AI 做智能 review、知识提取、候选生成和演进建议；但外层 AI 输出必须先成为结构化候选，并通过风险分级、机器门禁、证据、回滚和必要 review 边界后才能生效。
+
 ## 现在能否用于其他项目
 可以，但要按当前边界理解。
 
@@ -69,6 +73,7 @@
 - 操作者聚合入口：`scripts/operator.ps1`。它把 readiness、自检、规则漂移/同步、目标仓批量流和 operator UI 生成收成同一个入口；默认 `-Action Help`。
 - Codex 本机优化入口：`scripts/Optimize-CodexLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入本项目当前推荐的 Codex 单默认配置。长期优先级是“综合效率优先”：少打扰、自动连续执行、节省 token / 成本、高效率；当前暂行实现是 `cli_auth_credentials_store = "file"`、`model = "gpt-5.4"`、`model_reasoning_effort = "medium"`、`approval_policy = "never"`、`model_context_window = 272000`、`model_auto_compact_token_limit = 220000`。以后如果模型、参数或技术栈更迭，应先保持这个原则；只有在安全与门禁不退化时，才替换当前实现。脚本同时会安装 `codex-account` 账号切换入口，并把当前仓加入 trusted project。
 - Claude Code 本机优化入口：`scripts/Optimize-ClaudeLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入第三方 Anthropic-compatible provider 推荐配置、安装 `claude-provider` 切换入口；密钥只保留在用户本机 settings/env，不写入仓库 profile。
+- 核心原则变更候选入口：`scripts/operator.ps1 -Action CorePrincipleMaterialize`。默认只 dry-run 报告候选；得到明确允许后加 `-ConfirmCorePrincipleProposalWrite` 才写 reviewable proposal/manifest，仍不直接改 active core-principles policy、spec、verifier 或目标仓。
 - 目标仓日常运行/批量下发总入口：`scripts/runtime-flow-preset.ps1`。它读取 `docs/targets/target-repos-catalog.json`，支持单 target 或所有 active targets。
 - AI 规则文件同步入口：`scripts/sync-agent-rules.ps1`。它读取 `rules/manifest.json`，同步全局与项目级 `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`。
 - 本仓自检入口：`scripts/verify-repo.ps1 -Check All`。它验证 runtime、docs、schema、catalog、脚本和目标仓一致性门禁。

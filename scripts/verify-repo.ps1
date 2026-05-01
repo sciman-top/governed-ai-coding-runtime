@@ -554,6 +554,20 @@ function Invoke-CurrentSourceCompatibilityChecks {
   Write-CheckOk "current-source-compatibility"
 }
 
+function Invoke-CorePrinciplesChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-core-principles.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      $detail = "verify-core-principles.py exited with code $LASTEXITCODE"
+    }
+    throw "Core principles checks failed`n$detail"
+  }
+
+  Write-CheckOk "core-principles"
+}
+
 function Invoke-LtpAutonomousPromotionChecks {
   $python = Resolve-PythonCommand
   $output = & $python.Source "scripts/evaluate-ltp-promotion.py" 2>&1
@@ -622,6 +636,20 @@ function Invoke-RuntimeEvolutionMaterializationChecks {
   }
 
   Write-CheckOk "runtime-evolution-materialization"
+}
+
+function Invoke-CorePrincipleChangeMaterializationChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/materialize-core-principle-change.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Core principle change materialization checks failed"
+    }
+    throw "Core principle change materialization checks failed`n$detail"
+  }
+
+  Write-CheckOk "core-principle-change-materialization"
 }
 
 function Invoke-RuntimeEvolutionPrPreparationChecks {
@@ -798,11 +826,13 @@ function Invoke-DocsChecks {
   Invoke-HostReplacementClaimBoundaryScan
   Invoke-HostFeedbackSurfaceChecks
   Invoke-CurrentSourceCompatibilityChecks
+  Invoke-CorePrinciplesChecks
   Invoke-LtpAutonomousPromotionChecks
   Invoke-AutonomousNextWorkSelectionChecks
   Invoke-RuntimeEvolutionReviewChecks
   Invoke-AiCodingExperienceReviewChecks
   Invoke-RuntimeEvolutionMaterializationChecks
+  Invoke-CorePrincipleChangeMaterializationChecks
   Invoke-RuntimeEvolutionPrPreparationChecks
   Invoke-RuntimeEvolutionRetirementChecks
   Invoke-GapEvidenceSloCheck

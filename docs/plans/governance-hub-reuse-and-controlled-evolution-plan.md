@@ -29,7 +29,22 @@ What this means:
 - Treat Claude Code support in this repository as local Claude Code used with third-party Anthropic-compatible providers such as GLM or DeepSeek. Do not assume official Claude subscription availability, official cloud entitlement, or vendor-hosted account state as a required baseline.
 - Treat Hermes Agent, OpenHands, SWE-agent, Letta, Mem0, LangGraph, Aider, Cline, OPA, MCP gateways, Agent Skills, and similar projects as mechanism sources. Since they are not the user's active daily hosts, the project can absorb useful mechanisms more freely, but only as governed contracts and verifiable runtime capabilities.
 
+## Automation And Outer AI Principle
+Automation-first, outer-AI-assisted, gate-controlled evolution is a core principle.
+
+The project should automate deterministic governance work inside the repository and may automatically trigger outer AI for high-intelligence evolution assistance:
+
+- collect official docs, primary project sources, community practice, runtime evidence, and AI coding experience signals
+- extract knowledge, repeated patterns, failure modes, and skill candidates
+- generate structured evolution proposals and disabled candidates
+- classify capability portfolio decisions
+- analyze target-repo effect feedback
+
+Outer AI output is advisory until it becomes a structured candidate with risk classification, machine gate, evidence ref, rollback ref, and the required review boundary. Automatic triggers do not authorize active policy mutation, skill enablement, target-repo sync, push, merge, reviewed evidence deletion, or active gate deletion.
+
 ## Final-State Architecture
+The best engineering final state is Governance Hub + Reusable Contract + Controlled Evolution loop + outer AI intelligent review/generation capability. This final state remains a governance-control shape, not a replacement for Codex or Claude Code as day-to-day AI coding hosts.
+
 The target shape is:
 
 ```text

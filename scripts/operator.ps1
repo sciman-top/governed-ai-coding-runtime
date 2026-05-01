@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("Help", "Targets", "Readiness", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "OperatorUi")]
+  [ValidateSet("Help", "Targets", "Readiness", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
   [string]$Action = "Help",
 
   [ValidateSet("quick", "full", "l1", "l2", "l3")]
@@ -12,6 +12,7 @@ param(
   [string]$UiLanguage = "zh-CN",
   [switch]$OpenUi,
   [switch]$OnlineSourceCheck,
+  [switch]$ConfirmCorePrincipleProposalWrite,
   [switch]$DryRun,
   [switch]$FailFast
 )
@@ -161,6 +162,7 @@ AI 推荐:
   EvolutionReview        执行 runtime 自我演进 dry-run，只生成候选和证据，不自动改代码。
   ExperienceReview       从 AI 编码证据/指标中生成 dry-run 改进提案和 skill manifest 候选。
   EvolutionMaterialize   将低风险候选物化为 proposal 文件和禁用态 skill candidate 文件，不启用技能。
+  CorePrincipleMaterialize 默认只报告核心原则变更候选；加 -ConfirmCorePrincipleProposalWrite 才写 reviewable proposal/manifest，不改 active policy。
   OperatorUi             只生成本地 operator HTML；加 -OpenUi 会用默认浏览器打开。
 
 UI:
@@ -179,6 +181,8 @@ UI:
   -FailFast
   -OpenUi
   -OnlineSourceCheck      EvolutionReview 时执行轻量在线 source probe；默认不联网。
+  -ConfirmCorePrincipleProposalWrite
+                          CorePrincipleMaterialize 时才允许写 proposal/manifest；仍不改 active policy。
   -UiLanguage <zh-CN|en>
 "@ | Write-Host
 }
@@ -266,6 +270,14 @@ function Invoke-EvolutionMaterialize {
   Invoke-PwshScript -Name "runtime-evolution-materialize" -ScriptPath "scripts/materialize-runtime-evolution.ps1" -ScriptArguments @("-Apply")
 }
 
+function Invoke-CorePrincipleMaterialize {
+  $arguments = @()
+  if ($ConfirmCorePrincipleProposalWrite) {
+    $arguments += "-Apply"
+  }
+  Invoke-PwshScript -Name "core-principle-change-materialize" -ScriptPath "scripts/materialize-core-principle-change.ps1" -ScriptArguments $arguments
+}
+
 Push-Location -LiteralPath $RepoRoot
 try {
   switch ($Action) {
@@ -281,6 +293,7 @@ try {
     "EvolutionReview" { Invoke-EvolutionReview }
     "ExperienceReview" { Invoke-ExperienceReview }
     "EvolutionMaterialize" { Invoke-EvolutionMaterialize }
+    "CorePrincipleMaterialize" { Invoke-CorePrincipleMaterialize }
     "OperatorUi" { Invoke-OperatorUi }
   }
 }

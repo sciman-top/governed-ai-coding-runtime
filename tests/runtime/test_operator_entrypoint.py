@@ -45,6 +45,8 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("AI 推荐", completed.stdout)
         self.assertIn("Readiness", completed.stdout)
         self.assertIn("FeedbackReport", completed.stdout)
+        self.assertIn("CorePrincipleMaterialize", completed.stdout)
+        self.assertIn("ConfirmCorePrincipleProposalWrite", completed.stdout)
         self.assertIn("OperatorUi", completed.stdout)
         self.assertIn("-UiLanguage <zh-CN|en>", completed.stdout)
         self.assertIn("EnableAutoStart", completed.stdout)
