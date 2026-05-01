@@ -78,6 +78,8 @@ The policy must declare:
 - Context budget and instruction minimalism are first-class constraints: core rules, instruction files, repo maps, and memory artifacts must stay bounded, concise, and verifiable.
 - Tool permissions, sandbox scope, credentials, provider secrets, mounted paths, and network access must be least-privilege and auditable.
 - Capability completion claims must be backed by fresh target-run evidence, eval traces, effect feedback, verification commands, and rollback paths.
+- Efficiency must not override safety, least privilege, evidence, rollback, or review boundaries for effective changes.
+- Comparable effect evidence should preserve stable fields such as freshness status, target run identity, gate result, effect metric delta, verification command, and rollback reference when the task surface can provide them.
 - Controlled evolution must evaluate additions, retention, improvement, merge, deprecation, retirement, and deletion candidates.
 - Deterministic governance automation should run inside this project; outer AI may be automatically triggered for high-intelligence analysis and proposal generation, but effective changes remain gate-controlled.
 - Automatic policy mutation, skill enablement, target-repo sync, push, and merge remain disallowed unless a later reviewed implementation explicitly changes the guard.

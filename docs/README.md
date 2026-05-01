@@ -7,15 +7,18 @@
 - `Strategy Alignment Gates / GAP-040` through `GAP-044` are complete on the current branch baseline and remain encoded as satisfied hardening dependencies around the landed `Interactive Session Productization / GAP-035` through `GAP-039` productization slice.
 
 ## Core Operating Principle
-- For local operator workflows and host integration, the long-lived project principle is `efficiency first`.
-- In this repository that means: low interruption, continuous execution, lower token and cost burn, and high throughput.
+- Human-readable summary: `Automation-first, gate-controlled, evidence-measured governance`.
+- This repository is a governance sidecar / control plane, not a replacement host product for Codex or Claude Code.
+- For local operator workflows and host integration, the long-lived optimization target is `efficiency first`: low interruption, continuous execution, lower token and cost burn, and high throughput.
 - Concrete defaults such as a model name, reasoning level, compact threshold, provider mapping, or auth storage choice are implementation details under that principle, not a higher-order rule.
-- Replace a current default only when the new choice preserves safety and gates while serving this principle better.
+- Replace a current default only when the new choice preserves safety, least privilege, gates, evidence, and rollback while serving this principle better.
+- Efficiency never overrides safety, permissions, evidence, rollback, or review boundaries for effective changes.
 - Automation-first, outer-AI-assisted, gate-controlled evolution is also a core principle: the repository should automate deterministic governance work and may automatically trigger outer AI for intelligent review, knowledge extraction, candidate generation, and evolution proposals, while effective changes remain blocked by structured candidates, risk gates, machine gates, evidence, rollback, and required review boundaries.
 - The best engineering final state is Governance Hub + Reusable Contract + Controlled Evolution loop + outer AI intelligent review/generation capability, implemented as governed controls rather than a competing AI coding host.
 - Context budget and instruction minimalism are first-class constraints: core rules, instruction files, repo maps, and memory artifacts must stay bounded, concise, and verifiable.
 - Least-privilege tool and credential boundary is mandatory for permissions, sandbox scope, provider secrets, mounted paths, and network access.
 - Measured effect feedback over claims is mandatory: completion claims require fresh target-run evidence, eval traces, effect feedback, verification commands, and rollback paths.
+- Minimum comparable evidence fields are `freshness_status`, `target_run_id`, `gate_result`, `effect_metric_delta`, `verification_command`, and `rollback_ref` when the task surface can provide them.
 
 ## Current Working Set
 - [Hybrid Final-State Master Outline](./architecture/hybrid-final-state-master-outline.md)

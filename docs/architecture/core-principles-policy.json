@@ -234,6 +234,26 @@
       "contains": "Measured effect feedback over claims"
     },
     {
+      "path": "docs/README.md",
+      "contains": "Automation-first, gate-controlled, evidence-measured governance"
+    },
+    {
+      "path": "docs/README.md",
+      "contains": "Efficiency never overrides safety, permissions, evidence, rollback, or review boundaries"
+    },
+    {
+      "path": "docs/README.md",
+      "contains": "freshness_status"
+    },
+    {
+      "path": "docs/specs/core-principles-spec.md",
+      "contains": "Efficiency must not override safety, least privilege, evidence, rollback, or review boundaries"
+    },
+    {
+      "path": "docs/specs/core-principles-spec.md",
+      "contains": "effect metric delta"
+    },
+    {
       "path": "docs/research/runtime-governance-borrowing-matrix.md",
       "contains": "selective mechanism sources"
     }
@@ -287,7 +307,8 @@
   ],
   "evidence_refs": [
     "docs/change-evidence/20260501-governance-hub-reuse-plan.md",
-    "docs/change-evidence/20260501-core-principle-best-practice-optimization.md"
+    "docs/change-evidence/20260501-core-principle-best-practice-optimization.md",
+    "docs/change-evidence/20260501-core-principle-readable-convergence.md"
   ],
   "rollback_ref": "git revert core-principles policy, schema, verifier, and docs gate wiring"
 }
