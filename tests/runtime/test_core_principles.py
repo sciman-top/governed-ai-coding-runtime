@@ -41,6 +41,9 @@ class CorePrinciplesTests(unittest.TestCase):
         self.assertIn("codex_claude_cooperation_hosts", payload["principle_ids"])
         self.assertIn("governance_hub_reusable_contract_final_state", payload["principle_ids"])
         self.assertIn("automation_first_outer_ai_intelligent_evolution", payload["principle_ids"])
+        self.assertIn("context_budget_and_instruction_minimalism", payload["principle_ids"])
+        self.assertIn("least_privilege_tool_credential_boundary", payload["principle_ids"])
+        self.assertIn("measured_effect_feedback_over_claims", payload["principle_ids"])
         self.assertIn("delete_candidate", payload["portfolio_outcomes"])
         self.assertTrue(payload["outer_ai_automatic_trigger_allowed"])
         self.assertIn("evolution_proposal_generation", payload["outer_ai_allowed_actions"])
@@ -139,6 +142,9 @@ class CorePrinciplesTests(unittest.TestCase):
                     "automation_first_outer_ai_intelligent_evolution",
                     "no_automatic_mutation_without_review",
                     "evidence_and_rollback_required",
+                    "context_budget_and_instruction_minimalism",
+                    "least_privilege_tool_credential_boundary",
+                    "measured_effect_feedback_over_claims",
                     "hard_gate_order",
                 ]
             ],

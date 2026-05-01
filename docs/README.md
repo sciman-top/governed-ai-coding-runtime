@@ -13,6 +13,9 @@
 - Replace a current default only when the new choice preserves safety and gates while serving this principle better.
 - Automation-first, outer-AI-assisted, gate-controlled evolution is also a core principle: the repository should automate deterministic governance work and may automatically trigger outer AI for intelligent review, knowledge extraction, candidate generation, and evolution proposals, while effective changes remain blocked by structured candidates, risk gates, machine gates, evidence, rollback, and required review boundaries.
 - The best engineering final state is Governance Hub + Reusable Contract + Controlled Evolution loop + outer AI intelligent review/generation capability, implemented as governed controls rather than a competing AI coding host.
+- Context budget and instruction minimalism are first-class constraints: core rules, instruction files, repo maps, and memory artifacts must stay bounded, concise, and verifiable.
+- Least-privilege tool and credential boundary is mandatory for permissions, sandbox scope, provider secrets, mounted paths, and network access.
+- Measured effect feedback over claims is mandatory: completion claims require fresh target-run evidence, eval traces, effect feedback, verification commands, and rollback paths.
 
 ## Current Working Set
 - [Hybrid Final-State Master Outline](./architecture/hybrid-final-state-master-outline.md)

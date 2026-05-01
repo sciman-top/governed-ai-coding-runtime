@@ -59,6 +59,15 @@ Governance Kernel
   + Controlled Evolution Queue
 ```
 
+## Core Principle Crosswalk
+The 2026-05-01 core-principle update does not open a new standalone roadmap queue. The added principles are already covered by completed `GAP-130..143` work and should be treated as strengthened acceptance criteria for future gates:
+
+- `context_budget_and_instruction_minimalism` maps to `GAP-137` repo-map/context shaping and earlier context-pack visibility work. Future changes reopen this area only when context artifacts regress, budget metrics disappear, or instruction bloat becomes measurable.
+- `least_privilege_tool_credential_boundary` maps to `GAP-138` policy/tool/credential audit boundary. Future changes reopen this area only when tool identity, credential scope, host action, or override checks can no longer fail closed.
+- `measured_effect_feedback_over_claims` maps to `GAP-134`, `GAP-139`, `GAP-142`, and `GAP-143`. Future changes reopen this area only when target-run evidence, effect metrics, degraded-evidence recovery posture, or selector/host-feedback consistency stops proving the claimed effect.
+
+No `GAP-144+` item is justified by the principle change alone. New work must come from failing verifiers, fresh target-run evidence, drift, or an explicit owner-directed scope fence.
+
 ### Governance Kernel
 Owns stable decisions and invariants:
 
@@ -262,8 +271,8 @@ Join selector output, host-feedback target-run posture, and target-repo reuse ef
 ## Verification Standard
 Planning completion requires:
 
-- backlog entries for `GAP-130..141`
-- machine-readable issue seeds for `GAP-130..141`
+- backlog entries for `GAP-130..143`
+- machine-readable issue seeds for `GAP-130..143`
 - issue-render script support for the new queue
 - source matrix update
 - evidence entry

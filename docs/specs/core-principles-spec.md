@@ -40,6 +40,9 @@ Every principle must include:
 - automation_first_outer_ai_intelligent_evolution
 - no_automatic_mutation_without_review
 - evidence_and_rollback_required
+- context_budget_and_instruction_minimalism
+- least_privilege_tool_credential_boundary
+- measured_effect_feedback_over_claims
 - hard_gate_order
 
 ## Capability Portfolio Outcomes
@@ -72,6 +75,9 @@ The policy must declare:
 - Claude Code support assumes local third-party Anthropic-compatible provider usage such as GLM or DeepSeek, not official subscription entitlement.
 - Hermes Agent, OpenHands, SWE-agent, Letta, Mem0, LangGraph, Aider, Cline, OPA, MCP gateways, and similar projects are mechanism sources only.
 - The best engineering final state is Governance Hub + Reusable Contract + Controlled Evolution loop + outer AI intelligent review/generation capability.
+- Context budget and instruction minimalism are first-class constraints: core rules, instruction files, repo maps, and memory artifacts must stay bounded, concise, and verifiable.
+- Tool permissions, sandbox scope, credentials, provider secrets, mounted paths, and network access must be least-privilege and auditable.
+- Capability completion claims must be backed by fresh target-run evidence, eval traces, effect feedback, verification commands, and rollback paths.
 - Controlled evolution must evaluate additions, retention, improvement, merge, deprecation, retirement, and deletion candidates.
 - Deterministic governance automation should run inside this project; outer AI may be automatically triggered for high-intelligence analysis and proposal generation, but effective changes remain gate-controlled.
 - Automatic policy mutation, skill enablement, target-repo sync, push, and merge remain disallowed unless a later reviewed implementation explicitly changes the guard.
