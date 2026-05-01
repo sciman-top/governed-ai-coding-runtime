@@ -727,11 +727,17 @@ function Invoke-ContractChecks {
   Invoke-SchemaJsonParse
   Invoke-SchemaExampleValidation
   Invoke-SchemaCatalogPairing
+  Invoke-ControlPackInheritanceChecks
+  Invoke-ControlPackExecutionChecks
   Invoke-CorePrincipleChangeArtifactSchemaCheck
   Invoke-DependencyBaselineChecks
   Invoke-TransitionStackConvergenceChecks
   Invoke-TargetRepoRolloutContractChecks
   Invoke-TargetRepoGovernanceConsistencyChecks
+  Invoke-TargetRepoReuseEffectFeedbackChecks
+  Invoke-KnowledgeMemoryLifecycleChecks
+  Invoke-PromotionLifecycleChecks
+  Invoke-RepoMapContextArtifactChecks
   Invoke-TargetRepoPowerShellPolicyChecks
   Invoke-AgentRuleSyncChecks
   Invoke-PreChangeReviewChecks
@@ -802,6 +808,90 @@ function Invoke-TargetRepoPowerShellPolicyChecks {
   }
 
   Write-CheckOk "target-repo-powershell-policy"
+}
+
+function Invoke-TargetRepoReuseEffectFeedbackChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-target-repo-reuse-effect-report.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Target repo reuse effect feedback checks failed"
+    }
+    throw "Target repo reuse effect feedback checks failed`n$detail"
+  }
+
+  Write-CheckOk "target-repo-reuse-effect-feedback"
+}
+
+function Invoke-KnowledgeMemoryLifecycleChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-knowledge-memory-lifecycle.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Knowledge memory lifecycle checks failed"
+    }
+    throw "Knowledge memory lifecycle checks failed`n$detail"
+  }
+
+  Write-CheckOk "knowledge-memory-lifecycle"
+}
+
+function Invoke-PromotionLifecycleChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-promotion-lifecycle.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Promotion lifecycle checks failed"
+    }
+    throw "Promotion lifecycle checks failed`n$detail"
+  }
+
+  Write-CheckOk "promotion-lifecycle"
+}
+
+function Invoke-RepoMapContextArtifactChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-repo-map-context-artifact.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Repo-map context artifact checks failed"
+    }
+    throw "Repo-map context artifact checks failed`n$detail"
+  }
+
+  Write-CheckOk "repo-map-context-artifact"
+}
+
+function Invoke-ControlPackExecutionChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-control-pack-execution.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Control pack execution checks failed"
+    }
+    throw "Control pack execution checks failed`n$detail"
+  }
+
+  Write-CheckOk "control-pack-execution"
+}
+
+function Invoke-ControlPackInheritanceChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-control-pack-inheritance.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Control pack inheritance checks failed"
+    }
+    throw "Control pack inheritance checks failed`n$detail"
+  }
+
+  Write-CheckOk "control-pack-inheritance"
 }
 
 function Invoke-AgentRuleSyncChecks {

@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "strategy_id": "governed-ai-coding-runtime-default",
+  "mode": "hybrid",
+  "max_tokens": 6000,
+  "ranking_signals": [
+    "entrypoint",
+    "import_degree",
+    "test_proximity",
+    "manual_boost"
+  ],
+  "include_rules": [
+    "README.md",
+    "README.en.md",
+    "README.zh-CN.md",
+    "docs/**",
+    "schemas/**",
+    "scripts/**",
+    "packages/**",
+    "tests/**",
+    ".governed-ai/*.json"
+  ],
+  "exclude_rules": [
+    "docs/change-evidence/**",
+    "docs/runtime-*.txt",
+    ".runtime/**",
+    "dist/**",
+    "node_modules/**",
+    "**/__pycache__/**",
+    "**/*.pyc"
+  ],
+  "serialization_format": "json_map",
+  "knowledge_source_refs": [
+    "docs/specs/repo-map-context-shaping-spec.md",
+    "docs/specs/knowledge-source-spec.md"
+  ],
+  "review_status": "approved",
+  "fallback_files": [
+    "README.md",
+    "docs/README.md",
+    "docs/backlog/issue-ready-backlog.md",
+    "scripts/verify-repo.ps1"
+  ],
+  "freshness_policy": "refresh_on_branch_change",
+  "stop_conditions": [
+    "max_tokens",
+    "max_files:40"
+  ],
+  "notes": "Repo-local override for governed repo-map artifact generation. Required governance files must still be present even if broad excludes are tightened later."
+}

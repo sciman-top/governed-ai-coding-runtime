@@ -6,7 +6,7 @@
   "owner": "platform-governance",
   "lifecycle_status": "draft",
   "scope": "kernel",
-  "summary": "Reference metadata pack for the first governed AI coding trial loop.",
+  "summary": "Executable and verifiable reference pack for the first governed AI coding trial loop.",
   "activation": {
     "default_mode": "observe",
     "requires_operator_ack": true,
@@ -81,6 +81,121 @@
     "required_path_policy_refs": [
       "policy.path_scope.default"
     ]
+  },
+  "field_ownership": {
+    "unified_kernel_fields": [
+      "activation.default_mode",
+      "includes.controls",
+      "includes.hooks",
+      "includes.verification_gates",
+      "execution_contract",
+      "compatibility.minimum_kernel_version",
+      "rollback_ref"
+    ],
+    "target_repo_input_fields": [
+      "repo_profile_requirements.required_gate_names",
+      "repo_profile_requirements.required_tool_refs",
+      "repo_profile_requirements.required_path_policy_refs"
+    ]
+  },
+  "execution_contract": {
+    "policies": [
+      {
+        "id": "policy.core_principles",
+        "source_ref": "docs/specs/core-principles-spec.md",
+        "runtime_ref": "docs/architecture/core-principles-policy.json",
+        "verification_ref": "python scripts/verify-core-principles.py",
+        "mode": "verifiable"
+      }
+    ],
+    "gates": [
+      {
+        "id": "gate.repo_contract",
+        "source_ref": "docs/specs/verification-gates-spec.md",
+        "runtime_ref": "scripts/verify-repo.ps1",
+        "verification_ref": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract",
+        "mode": "runnable"
+      }
+    ],
+    "hooks": [
+      {
+        "id": "hook.pre_commit",
+        "source_ref": "docs/specs/hook-contract-spec.md",
+        "runtime_ref": ".githooks/pre-commit",
+        "verification_ref": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/install-repo-hooks.ps1",
+        "mode": "runnable"
+      }
+    ],
+    "evals": [
+      {
+        "id": "eval.host_feedback_surface",
+        "source_ref": "docs/specs/interaction-evidence-spec.md",
+        "runtime_ref": "scripts/host-feedback-summary.py",
+        "verification_ref": "python scripts/host-feedback-summary.py --assert-minimum",
+        "mode": "runnable"
+      }
+    ],
+    "workflows": [
+      {
+        "id": "workflow.operator_entrypoint",
+        "source_ref": "docs/specs/runtime-operator-surface-spec.md",
+        "runtime_ref": "scripts/operator.ps1",
+        "verification_ref": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Help",
+        "mode": "runnable"
+      }
+    ],
+    "skills": [
+      {
+        "id": "skill.repo_map_audit",
+        "source_ref": "docs/specs/skill-manifest-spec.md",
+        "runtime_ref": "schemas/examples/skill-manifest/repo-map-audit.example.json",
+        "verification_ref": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract",
+        "mode": "verifiable"
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "knowledge.docs_index_authoritative",
+        "source_ref": "docs/specs/knowledge-source-spec.md",
+        "runtime_ref": "schemas/examples/knowledge-source/docs-index-authoritative.example.json",
+        "verification_ref": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract",
+        "mode": "verifiable"
+      }
+    ],
+    "memory": [
+      {
+        "id": "memory.ai_coding_experience_review",
+        "source_ref": "docs/plans/runtime-evolution-review-plan.md",
+        "runtime_ref": "scripts/extract-ai-coding-experience.py",
+        "verification_ref": "python scripts/extract-ai-coding-experience.py",
+        "mode": "runnable"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "evidence.interaction_trace",
+        "source_ref": "docs/specs/evidence-bundle-spec.md",
+        "runtime_ref": "docs/change-evidence/20260422-interaction-evidence-trace-and-runtime-projection.md",
+        "verification_ref": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs",
+        "mode": "verifiable"
+      }
+    ],
+    "rollback": [
+      {
+        "id": "rollback.control_pack",
+        "source_ref": "docs/runbooks/control-rollback.md",
+        "runtime_ref": "docs/runbooks/control-rollback.md",
+        "verification_ref": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs",
+        "mode": "verifiable"
+      }
+    ]
+  },
+  "materialization": {
+    "source_template_ref": "schemas/examples/control-pack/minimum-governance-kernel.example.json",
+    "generated_pack_ref": "schemas/control-packs/minimum-governance-kernel.control-pack.json",
+    "verification_command": "python scripts/verify-control-pack-execution.py",
+    "apply_command": "python scripts/materialize-control-pack.py --apply",
+    "fail_closed_if_missing": true
   },
   "compatibility": {
     "minimum_kernel_version": "0.1.0",

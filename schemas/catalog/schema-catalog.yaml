@@ -18,6 +18,9 @@ items:
   - name: control-pack
     path: schemas/jsonschema/control-pack.schema.json
     source_spec: docs/specs/control-pack-spec.md
+  - name: control-pack-inheritance-matrix
+    path: schemas/jsonschema/control-pack-inheritance-matrix.schema.json
+    source_spec: docs/specs/control-pack-inheritance-matrix-spec.md
   - name: capability-portfolio-classifier
     path: schemas/jsonschema/capability-portfolio-classifier.schema.json
     source_spec: docs/specs/capability-portfolio-classifier-spec.md
@@ -48,6 +51,12 @@ items:
   - name: knowledge-source
     path: schemas/jsonschema/knowledge-source.schema.json
     source_spec: docs/specs/knowledge-source-spec.md
+  - name: knowledge-memory-lifecycle
+    path: schemas/jsonschema/knowledge-memory-lifecycle.schema.json
+    source_spec: docs/specs/knowledge-memory-lifecycle-spec.md
+  - name: promotion-lifecycle
+    path: schemas/jsonschema/promotion-lifecycle.schema.json
+    source_spec: docs/specs/promotion-lifecycle-spec.md
   - name: waiver-and-exception
     path: schemas/jsonschema/waiver-and-exception.schema.json
     source_spec: docs/specs/waiver-and-exception-spec.md

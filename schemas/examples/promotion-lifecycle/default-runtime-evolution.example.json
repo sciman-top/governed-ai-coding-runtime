@@ -1,0 +1,69 @@
+{
+  "lifecycle_id": "runtime-evolution-promotion-2026-05-01",
+  "generated_on": "2026-05-01",
+  "source_review": "scripts/operator.ps1 -Action ExperienceReview",
+  "entries": [
+    {
+      "asset_id": "skill.checklist-first-bugfix",
+      "asset_kind": "skill",
+      "status": "disabled",
+      "materialized_path": "skills/candidates/checklist-first-bugfix/skill-manifest.json",
+      "enabled_by_default": false,
+      "review_required": true,
+      "promotion_evidence_refs": [
+        "schemas/examples/interaction-evidence/checklist-first-bugfix.example.json"
+      ],
+      "promotion_gate_refs": [
+        "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime",
+        "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract"
+      ],
+      "effect_metric_refs": [
+        "docs/specs/learning-efficiency-metrics-spec.md",
+        "docs/specs/skill-manifest-spec.md"
+      ],
+      "rollback_ref": "Delete this candidate manifest and directory. No runtime behavior is enabled by this file."
+    },
+    {
+      "asset_id": "proposal.checklist-first-bugfix",
+      "asset_kind": "policy",
+      "status": "review",
+      "materialized_path": "docs/change-evidence/runtime-evolution-proposals/proposal.checklist-first-bugfix.json",
+      "enabled_by_default": false,
+      "review_required": true,
+      "promotion_evidence_refs": [
+        "schemas/examples/learning-efficiency-metrics/baseline.example.json"
+      ],
+      "promotion_gate_refs": [
+        "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime"
+      ],
+      "effect_metric_refs": [
+        "docs/specs/learning-efficiency-metrics-spec.md"
+      ],
+      "rollback_ref": "Remove generated proposal artifacts; no runtime behavior is changed by proposal generation."
+    },
+    {
+      "asset_id": "hook.repo-map-audit",
+      "asset_kind": "hook",
+      "status": "observe",
+      "materialized_path": "schemas/examples/hook-contract/pre-write-path-guard.example.json",
+      "enabled_by_default": false,
+      "review_required": true,
+      "promotion_evidence_refs": [
+        "docs/specs/controlled-improvement-proposal-spec.md"
+      ],
+      "promotion_gate_refs": [
+        "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract"
+      ],
+      "effect_metric_refs": [
+        "docs/specs/interaction-evidence-spec.md"
+      ],
+      "rollback_ref": "Revert the promoted hook asset if observe results regress."
+    }
+  ],
+  "retirement_guard": {
+    "candidate_cleanup_only": true,
+    "preserve_evidence_history": true,
+    "reviewed_asset_delete": false
+  },
+  "rollback_ref": "Delete generated lifecycle manifests and candidate assets; leave reviewed evidence history intact."
+}

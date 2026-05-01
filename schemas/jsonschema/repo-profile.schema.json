@@ -776,6 +776,18 @@
             "teaching"
           ]
         },
+        "communication_language": {
+          "type": "string"
+        },
+        "user_facing_output_language": {
+          "type": "string"
+        },
+        "preserve_technical_tokens_language": {
+          "type": "string"
+        },
+        "commit_message_language": {
+          "type": "string"
+        },
         "term_explain_style": {
           "type": "string",
           "enum": [
@@ -798,8 +810,45 @@
         "summary_template": {
           "type": "string"
         },
+        "multi_option_recommendation_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "minimum_option_count": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "required_label": {
+              "type": "string"
+            },
+            "fallback_label": {
+              "type": "string"
+            },
+            "required_reason": {
+              "type": "string",
+              "enum": [
+                "one_sentence"
+              ]
+            },
+            "applies_to": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
         "handoff_teaching_notes": {
           "type": "string"
+        },
+        "language_guidance": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -886,6 +935,174 @@
                 "ref_only"
               ]
             }
+          }
+        },
+        "guidance": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "rule_file_coordination_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "global_rule_scope": {
+          "type": "string"
+        },
+        "project_rule_scope": {
+          "type": "string"
+        },
+        "synergy_requirement": {
+          "type": "string"
+        },
+        "source_review_basis": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "root_file_quality_rules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "pre_change_review_gate": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "applies_to": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "required_inputs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "blocking_behavior": {
+              "type": "string"
+            },
+            "evidence_required": {
+              "type": "boolean"
+            }
+          }
+        },
+        "tool_specific_loading_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "codex": {
+              "type": "string"
+            },
+            "claude": {
+              "type": "string"
+            },
+            "gemini": {
+              "type": "string"
+            }
+          }
+        },
+        "progressive_disclosure": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "allowed": {
+              "type": "boolean"
+            },
+            "root_file_must_remain_self_contained": {
+              "type": "boolean"
+            },
+            "child_documents_allowed_for": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "child_documents_must_not_define": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "missing_project_rule_behavior": {
+          "type": "string"
+        },
+        "required_project_rule_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "windows_process_environment_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "required_variables": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "inherited_network_variables": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "safe_codex_policy_source": {
+          "type": "string"
+        },
+        "preferred_powershell_executable": {
+          "type": "string"
+        },
+        "fallback_powershell_executable": {
+          "type": "string"
+        },
+        "windows_powershell_escape_hatch_env": {
+          "type": "string"
+        },
+        "required_practice": {
+          "type": "string"
+        },
+        "runtime_runbook": {
+          "type": "string"
+        },
+        "coding_guidance": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "powershell_entrypoint_pattern": {
+          "type": "string"
+        },
+        "verification_commands": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         }
       }

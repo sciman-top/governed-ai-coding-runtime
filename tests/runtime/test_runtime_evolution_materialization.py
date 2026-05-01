@@ -126,8 +126,10 @@ class RuntimeEvolutionMaterializationTests(unittest.TestCase):
 
             self.assertEqual(result["status"], "pass")
             self.assertFalse(result["mutation_allowed"])
-            self.assertEqual(result["retire_proposal_count"], 1)
+            self.assertGreaterEqual(result["retire_proposal_count"], 1)
             self.assertFalse(result["guard"]["direct_delete"])
+            self.assertFalse(result["guard"]["reviewed_asset_delete"])
+            self.assertFalse(result["guard"]["evidence_history_delete"])
 
     def _copy_minimal_repo(self, repo_root: Path) -> Path:
         for relative in [

@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/knowledge-memory-lifecycle.schema.json",
+  "title": "Knowledge Memory Lifecycle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "lifecycle_id",
+    "as_of",
+    "source_policy_ref",
+    "promotion_requirements",
+    "usefulness_filter",
+    "knowledge_candidates",
+    "pattern_candidates",
+    "memory_records",
+    "retirement_records",
+    "rollback_ref"
+  ],
+  "properties": {
+    "lifecycle_id": {
+      "type": "string"
+    },
+    "as_of": {
+      "type": "string",
+      "format": "date"
+    },
+    "source_policy_ref": {
+      "type": "string"
+    },
+    "promotion_requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requires_source_evidence",
+        "requires_verification_refs",
+        "requires_human_review"
+      ],
+      "properties": {
+        "requires_source_evidence": { "type": "boolean" },
+        "requires_verification_refs": { "type": "boolean" },
+        "requires_human_review": { "type": "boolean" }
+      }
+    },
+    "usefulness_filter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dimensions",
+        "promotion_score_floor",
+        "retirement_score_ceiling"
+      ],
+      "properties": {
+        "dimensions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "promotion_score_floor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retirement_score_ceiling": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "knowledge_candidates": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/knowledgeCandidate" }
+    },
+    "pattern_candidates": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/patternCandidate" }
+    },
+    "memory_records": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/memoryRecord" }
+    },
+    "retirement_records": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/retirementRecord" }
+    },
+    "rollback_ref": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "promotionReadiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_evidence_attached",
+        "verification_attached",
+        "human_review_required"
+      ],
+      "properties": {
+        "source_evidence_attached": { "type": "boolean" },
+        "verification_attached": { "type": "boolean" },
+        "human_review_required": { "type": "boolean" }
+      }
+    },
+    "knowledgeCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "knowledge_id",
+        "status",
+        "scope",
+        "promotion_readiness",
+        "source_refs",
+        "verification_refs",
+        "rollback_ref"
+      ],
+      "properties": {
+        "knowledge_id": { "type": "string" },
+        "status": { "type": "string" },
+        "scope": { "type": "string" },
+        "promotion_readiness": { "$ref": "#/$defs/promotionReadiness" },
+        "source_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "verification_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "rollback_ref": { "type": "string" }
+      }
+    },
+    "patternCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pattern_id",
+        "status",
+        "source_refs",
+        "verification_refs",
+        "promotion_target"
+      ],
+      "properties": {
+        "pattern_id": { "type": "string" },
+        "status": { "type": "string" },
+        "source_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "verification_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "promotion_target": { "type": "string" }
+      }
+    },
+    "memoryRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "memory_id",
+        "status",
+        "scope",
+        "provenance",
+        "confidence",
+        "expires_at",
+        "retrieval_evidence",
+        "rollback_ref"
+      ],
+      "properties": {
+        "memory_id": { "type": "string" },
+        "status": { "type": "string" },
+        "scope": { "type": "string" },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source_kind",
+            "source_refs",
+            "captured_on"
+          ],
+          "properties": {
+            "source_kind": { "type": "string" },
+            "source_refs": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string" }
+            },
+            "captured_on": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date"
+        },
+        "retrieval_evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source_refs",
+            "retrieval_reason",
+            "verification_refs"
+          ],
+          "properties": {
+            "source_refs": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string" }
+            },
+            "retrieval_reason": { "type": "string" },
+            "verification_refs": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "rollback_ref": { "type": "string" }
+      }
+    },
+    "retirementRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "retirement_id",
+        "asset_kind",
+        "asset_ref",
+        "reason",
+        "archive_ref",
+        "audit_history_retained",
+        "delete_active_evidence",
+        "recorded_on"
+      ],
+      "properties": {
+        "retirement_id": { "type": "string" },
+        "asset_kind": { "type": "string" },
+        "asset_ref": { "type": "string" },
+        "reason": { "type": "string" },
+        "archive_ref": { "type": "string" },
+        "audit_history_retained": { "type": "boolean" },
+        "delete_active_evidence": { "type": "boolean" },
+        "recorded_on": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    }
+  }
+}

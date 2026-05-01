@@ -1,0 +1,31 @@
+{
+  "schema_version": "0.1-draft",
+  "lifecycle_id": "default-governed-knowledge-memory-lifecycle",
+  "status": "enforced",
+  "reviewed_on": "2026-05-01",
+  "source_policy_ref": "docs/architecture/runtime-evolution-policy.json",
+  "entrypoint": "scripts/operator.ps1 -Action ExperienceReview",
+  "verification_command": "python scripts/verify-knowledge-memory-lifecycle.py",
+  "promotion_requirements": {
+    "requires_source_evidence": true,
+    "requires_verification_refs": true,
+    "requires_human_review": true
+  },
+  "usefulness_filter": {
+    "dimensions": [
+      "recurrence",
+      "transferability",
+      "verification_strength",
+      "freshness",
+      "blast_radius_reduction"
+    ],
+    "promotion_score_floor": 5,
+    "retirement_score_ceiling": 4
+  },
+  "retirement_guard": {
+    "preserve_audit_history": true,
+    "delete_active_evidence": false,
+    "archive_root": "docs/change-evidence/runtime-evolution-knowledge/archive"
+  },
+  "rollback_ref": "Revert the lifecycle contract, verifier, and evidence artifacts introduced by GAP-135."
+}

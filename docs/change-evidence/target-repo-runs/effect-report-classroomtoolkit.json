@@ -1,0 +1,126 @@
+{
+  "schema_version": "1.0",
+  "report_kind": "target_repo_reuse_effect_feedback",
+  "generated_at": "2026-05-01T05:51:33.678696+00:00",
+  "target": "classroomtoolkit",
+  "runs_root": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\target-repo-runs",
+  "baseline_run_ref": "classroomtoolkit-daily-20260420225453.json",
+  "after_run_ref": "classroomtoolkit-daily-20260501004238.json",
+  "baseline_metrics": {
+    "run_ref": "classroomtoolkit-daily-20260420225453.json",
+    "flow": "daily",
+    "timestamp_utc": "2026-04-20T22:54:53+00:00",
+    "overall_status": "fail",
+    "attachment_health": "healthy",
+    "binding_state": "healthy",
+    "required_entrypoint_policy_present": false,
+    "entrypoint_policy_mode": null,
+    "codex_capability_status": "ready",
+    "adapter_tier": "native_attach",
+    "flow_kind": "live_attach",
+    "gate_order": [
+      "test",
+      "contract"
+    ],
+    "gate_results": {
+      "contract": "pass",
+      "test": "pass"
+    },
+    "problem_flag": false,
+    "failure_signature": null,
+    "evidence_ref_count": 4,
+    "evidence_complete": true,
+    "evidence_completeness_ratio": 1.0,
+    "evidence_refs": [
+      "artifacts/task-classroomtoolkit-daily-20260420225453/run-classroomtoolkit-daily-20260420225453/verification-output/contract.txt",
+      "artifacts/task-classroomtoolkit-daily-20260420225453/session-bridge-request/verification-output/contract.txt",
+      "artifacts/task-classroomtoolkit-daily-20260420225453/policy/session-bridge-allow.json",
+      "artifacts/task-classroomtoolkit-daily-20260420225453/run-classroomtoolkit-daily-20260420225453/verification-output/test.txt"
+    ]
+  },
+  "after_metrics": {
+    "run_ref": "classroomtoolkit-daily-20260501004238.json",
+    "flow": "daily",
+    "timestamp_utc": "2026-05-01T00:42:38+00:00",
+    "overall_status": "pass",
+    "attachment_health": "healthy",
+    "binding_state": "healthy",
+    "required_entrypoint_policy_present": true,
+    "entrypoint_policy_mode": "targeted_enforced",
+    "codex_capability_status": "degraded",
+    "adapter_tier": "process_bridge",
+    "flow_kind": "process_bridge",
+    "gate_order": [
+      "test",
+      "contract"
+    ],
+    "gate_results": {
+      "contract": "pass",
+      "test": "pass"
+    },
+    "problem_flag": false,
+    "failure_signature": "none",
+    "evidence_ref_count": 6,
+    "evidence_complete": true,
+    "evidence_completeness_ratio": 1.0,
+    "evidence_refs": [
+      "artifacts/task-20260501003937-classroomtoolkit/run-20260501003937-classroomtoolkit/verification-output/contract.txt",
+      "artifacts/task-20260501003937-classroomtoolkit/session-bridge-request/verification-output/contract.txt",
+      "artifacts/task-20260501003937-classroomtoolkit/policy/session-bridge-allow.json",
+      "artifacts/task-20260501003937-classroomtoolkit/task-20260501003937-classroomtoolkit-session-bridge-request/evidence/adapter-events.json",
+      "artifacts/task-20260501003937-classroomtoolkit/session-bridge-request/verification-output/test.txt",
+      "artifacts/task-20260501003937-classroomtoolkit/run-20260501003937-classroomtoolkit/verification-output/test.txt"
+    ]
+  },
+  "rolling_kpi": {
+    "target": "classroomtoolkit",
+    "total_daily_runs": 4,
+    "onboarding_latency_seconds": 710851,
+    "first_pass_latency_seconds": 710851,
+    "deny_to_success_retries": 0,
+    "fallback_rate": 0.25,
+    "medium_risk_loop_success_ratio": null,
+    "problem_run_rate": 0.25,
+    "problem_recovery_retries": 1,
+    "problem_signature_counts": {
+      "summary:fail": 1
+    },
+    "latest_problem_signature": "summary:fail",
+    "latest_problem_run_ref": "classroomtoolkit-daily-20260420225453.json",
+    "latest_problem_evidence_ref": "artifacts/task-classroomtoolkit-daily-20260420225453/run-classroomtoolkit-daily-20260420225453/verification-output/contract.txt",
+    "window_start_utc": "2026-04-20T22:54:53+00:00",
+    "window_end_utc": "2026-05-01T00:42:38+00:00",
+    "latest_evidence_ref": "artifacts/task-20260501003937-classroomtoolkit/run-20260501003937-classroomtoolkit/verification-output/contract.txt"
+  },
+  "decision": "adjust",
+  "backlog_candidates": [
+    {
+      "candidate_id": "target-repo-reuse-host-capability-gap",
+      "disposition": "adjust",
+      "reason": "Latest target run still depends on degraded host capability posture.",
+      "evidence_refs": [
+        "artifacts/task-20260501003937-classroomtoolkit/run-20260501003937-classroomtoolkit/verification-output/contract.txt",
+        "artifacts/task-20260501003937-classroomtoolkit/session-bridge-request/verification-output/contract.txt",
+        "artifacts/task-20260501003937-classroomtoolkit/policy/session-bridge-allow.json",
+        "artifacts/task-20260501003937-classroomtoolkit/task-20260501003937-classroomtoolkit-session-bridge-request/evidence/adapter-events.json",
+        "artifacts/task-20260501003937-classroomtoolkit/session-bridge-request/verification-output/test.txt",
+        "artifacts/task-20260501003937-classroomtoolkit/run-20260501003937-classroomtoolkit/verification-output/test.txt"
+      ]
+    },
+    {
+      "candidate_id": "target-repo-reuse-historical-problem-trace",
+      "disposition": "adjust",
+      "reason": "Rolling KPI window still records problem runs that must stay tracked as backlog candidates.",
+      "evidence_refs": [
+        "artifacts/task-classroomtoolkit-daily-20260420225453/run-classroomtoolkit-daily-20260420225453/verification-output/contract.txt"
+      ]
+    }
+  ],
+  "comparison": {
+    "overall_status_changed": true,
+    "adapter_tier_changed": true,
+    "entrypoint_policy_added": true,
+    "evidence_completeness_delta": 0.0
+  },
+  "verifier_ref": "python scripts/verify-target-repo-reuse-effect-report.py"
+}

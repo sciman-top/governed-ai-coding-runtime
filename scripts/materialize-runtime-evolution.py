@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 EXTRACTOR_PATH = ROOT / "scripts" / "extract-ai-coding-experience.py"
 DEFAULT_MANIFEST_ROOT = Path("docs/change-evidence/runtime-evolution-patches")
 DEFAULT_PROPOSAL_ROOT = Path("docs/change-evidence/runtime-evolution-proposals")
+DEFAULT_PROMOTION_ROOT = Path("docs/change-evidence/runtime-evolution-promotions")
 DEFAULT_SKILL_ROOT = Path("skills/candidates")
 
 
@@ -89,6 +90,7 @@ def _load_extractor():
 
 def _build_operations(*, root: Path, review: dict, as_of: dt.date) -> list[dict]:
     operations: list[dict] = []
+    promotion_entries: list[dict] = []
     for proposal in review["proposals"]:
         proposal_path = DEFAULT_PROPOSAL_ROOT / f"{proposal['proposal_id']}.json"
         operations.append(
@@ -99,6 +101,7 @@ def _build_operations(*, root: Path, review: dict, as_of: dt.date) -> list[dict]
                 "risk": proposal["risk_posture"],
             }
         )
+        promotion_entries.append(_build_promotion_entry_for_proposal(proposal=proposal, path=proposal_path))
 
     for skill in review["skill_manifest_candidates"]:
         slug = skill["skill_id"].replace("skill.", "", 1)
@@ -113,6 +116,7 @@ def _build_operations(*, root: Path, review: dict, as_of: dt.date) -> list[dict]
                 "risk": skill["risk_tier"],
             }
         )
+        promotion_entries.append(_build_promotion_entry_for_skill(skill=skill, manifest_path=manifest_path))
         operations.append(
             {
                 "operation": "write_skill_candidate_readme",
@@ -143,6 +147,29 @@ def _build_operations(*, root: Path, review: dict, as_of: dt.date) -> list[dict]
             "risk": "low",
         }
     )
+
+    promotion_manifest = {
+        "schema_version": "0.1-draft",
+        "lifecycle_id": f"runtime-evolution-promotion-{as_of.isoformat()}",
+        "generated_on": as_of.isoformat(),
+        "source_review": "scripts/operator.ps1 -Action ExperienceReview",
+        "entries": promotion_entries,
+        "retirement_guard": {
+            "candidate_cleanup_only": True,
+            "preserve_evidence_history": True,
+            "reviewed_asset_delete": False,
+        },
+        "rollback_ref": "Delete generated candidate files and this lifecycle manifest; no enabled runtime behavior is changed.",
+    }
+    promotion_manifest_path = DEFAULT_PROMOTION_ROOT / f"{as_of.strftime('%Y%m%d')}-runtime-evolution-promotion-lifecycle.json"
+    operations.append(
+        {
+            "operation": "write_promotion_lifecycle_manifest",
+            "path": promotion_manifest_path.as_posix(),
+            "content": json.dumps(promotion_manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            "risk": "low",
+        }
+    )
     return operations
 
 
@@ -164,6 +191,48 @@ def _render_skill_doc(skill: dict) -> str:
         "## Rollback\n"
         "Delete this candidate directory. No runtime behavior is enabled by this file.\n"
     )
+
+
+def _build_promotion_entry_for_proposal(*, proposal: dict, path: Path) -> dict:
+    return {
+        "asset_id": proposal["proposal_id"],
+        "asset_kind": proposal["proposal_category"],
+        "status": "disabled",
+        "materialized_path": path.as_posix(),
+        "enabled_by_default": False,
+        "review_required": proposal["human_review"]["required"],
+        "promotion_evidence_refs": proposal["source_refs"],
+        "promotion_gate_refs": [
+            "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime",
+            "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract",
+        ],
+        "effect_metric_refs": [
+            "docs/specs/learning-efficiency-metrics-spec.md",
+            "docs/specs/interaction-evidence-spec.md",
+        ],
+        "rollback_ref": proposal["rollback_ref"],
+    }
+
+
+def _build_promotion_entry_for_skill(*, skill: dict, manifest_path: Path) -> dict:
+    return {
+        "asset_id": skill["skill_id"],
+        "asset_kind": "skill",
+        "status": "disabled",
+        "materialized_path": manifest_path.as_posix(),
+        "enabled_by_default": bool(skill.get("default_enabled")),
+        "review_required": True,
+        "promotion_evidence_refs": [skill["provenance"]["source"]],
+        "promotion_gate_refs": [
+            "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime",
+            "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract",
+        ],
+        "effect_metric_refs": [
+            "docs/specs/learning-efficiency-metrics-spec.md",
+            "docs/specs/skill-manifest-spec.md",
+        ],
+        "rollback_ref": "Delete this candidate manifest and directory. No runtime behavior is enabled by this file.",
+    }
 
 
 def _validate_operations(operations: list[dict]) -> list[str]:

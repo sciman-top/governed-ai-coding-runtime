@@ -49,6 +49,9 @@
     "scope",
     "activation",
     "includes",
+    "field_ownership",
+    "execution_contract",
+    "materialization",
     "compatibility",
     "provenance"
   ],
@@ -194,6 +197,154 @@
         }
       }
     },
+    "field_ownership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unified_kernel_fields",
+        "target_repo_input_fields"
+      ],
+      "properties": {
+        "unified_kernel_fields": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "target_repo_input_fields": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "execution_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policies",
+        "gates",
+        "hooks",
+        "evals",
+        "workflows",
+        "skills",
+        "knowledge",
+        "memory",
+        "evidence",
+        "rollback"
+      ],
+      "properties": {
+        "policies": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/execution_ref"
+          }
+        },
+        "gates": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/execution_ref"
+          }
+        },
+        "hooks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/execution_ref"
+          }
+        },
+        "evals": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/execution_ref"
+          }
+        },
+        "workflows": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/execution_ref"
+          }
+        },
+        "skills": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/execution_ref"
+          }
+        },
+        "knowledge": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/execution_ref"
+          }
+        },
+        "memory": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/execution_ref"
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/execution_ref"
+          }
+        },
+        "rollback": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/execution_ref"
+          }
+        }
+      }
+    },
+    "materialization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_template_ref",
+        "generated_pack_ref",
+        "verification_command",
+        "apply_command",
+        "fail_closed_if_missing"
+      ],
+      "properties": {
+        "source_template_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generated_pack_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verification_command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "apply_command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fail_closed_if_missing": {
+          "type": "boolean"
+        }
+      }
+    },
     "compatibility": {
       "type": "object",
       "additionalProperties": false,
@@ -268,6 +419,42 @@
         },
         "required": {
           "type": "boolean"
+        }
+      }
+    },
+    "execution_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source_ref",
+        "runtime_ref",
+        "verification_ref",
+        "mode"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runtime_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verification_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "runnable",
+            "verifiable"
+          ]
         }
       }
     }

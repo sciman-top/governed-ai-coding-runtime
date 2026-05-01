@@ -11,6 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ARTIFACT_ROOT = ROOT / ".runtime" / "artifacts" / "ai-coding-experience"
 DEFAULT_MIN_PROPOSAL_SCORE = 5
 DEFAULT_MIN_SKILL_SCORE = 8
+DEFAULT_MEMORY_EXPIRY_DAYS = 30
+DEFAULT_RETIREMENT_SCORE_CEILING = 4
 
 
 def main() -> int:
@@ -84,6 +86,14 @@ def inspect_ai_coding_experience(
         min_skill_score=min_skill_score,
     )
     proposals = [_build_proposal(signal=signal, as_of=today) for signal in signals if signal["value_score"] >= min_proposal_score]
+    knowledge_candidates = [_build_knowledge_candidate(signal=signal, as_of=today) for signal in signals]
+    pattern_candidates = [_build_pattern_candidate(signal=signal, as_of=today) for signal in signals]
+    memory_records = [_build_memory_record(signal=signal, as_of=today) for signal in signals if signal["value_score"] >= min_proposal_score]
+    retirement_records = _build_retirement_records(
+        signals=signals,
+        as_of=today,
+        retirement_score_ceiling=DEFAULT_RETIREMENT_SCORE_CEILING,
+    )
     skill_candidates = [
         _build_skill_manifest_candidate(signal=signal, as_of=today)
         for signal in signals
@@ -93,9 +103,14 @@ def inspect_ai_coding_experience(
         root=root,
         signals=signals,
         proposals=proposals,
+        knowledge_candidates=knowledge_candidates,
+        pattern_candidates=pattern_candidates,
+        memory_records=memory_records,
+        retirement_records=retirement_records,
         skill_candidates=skill_candidates,
         min_proposal_score=min_proposal_score,
         min_skill_score=min_skill_score,
+        as_of=today,
     )
     invalid_reasons = _collect_invalid_reasons(quality_checks)
 
@@ -113,8 +128,16 @@ def inspect_ai_coding_experience(
             "interaction_evidence": len(interaction_records),
         },
         "signals": signals,
+        "knowledge_candidate_count": len(knowledge_candidates),
+        "pattern_candidate_count": len(pattern_candidates),
+        "memory_record_count": len(memory_records),
+        "retirement_record_count": len(retirement_records),
         "proposal_count": len(proposals),
         "skill_manifest_candidate_count": len(skill_candidates),
+        "knowledge_candidates": knowledge_candidates,
+        "pattern_candidates": pattern_candidates,
+        "memory_records": memory_records,
+        "retirement_records": retirement_records,
         "proposals": proposals,
         "skill_manifest_candidates": skill_candidates,
         "quality_checks": quality_checks,
@@ -280,9 +303,14 @@ def _build_quality_checks(
     root: Path,
     signals: list[dict],
     proposals: list[dict],
+    knowledge_candidates: list[dict],
+    pattern_candidates: list[dict],
+    memory_records: list[dict],
+    retirement_records: list[dict],
     skill_candidates: list[dict],
     min_proposal_score: int,
     min_skill_score: int,
+    as_of: dt.date,
 ) -> dict:
     return {
         "source_refs_exist": _all_source_refs_exist(root, signals, proposals),
@@ -302,6 +330,18 @@ def _build_quality_checks(
         ),
         "proposals_human_review_required": all(
             proposal.get("human_review", {}).get("required") is True for proposal in proposals
+        ),
+        "knowledge_candidates_have_source_and_verification": all(
+            _has_source_and_verification(candidate) for candidate in knowledge_candidates
+        ),
+        "pattern_candidates_have_source_and_verification": all(
+            _has_source_and_verification(candidate) for candidate in pattern_candidates
+        ),
+        "memory_records_have_required_fields": all(
+            _memory_record_has_required_fields(record, as_of=as_of) for record in memory_records
+        ),
+        "retirement_records_preserve_audit_history": all(
+            _retirement_record_preserves_audit_history(record) for record in retirement_records
         ),
         "skill_candidates_disabled": all(skill.get("default_enabled") is False for skill in skill_candidates),
         "skill_candidates_low_or_medium_risk_only": all(
@@ -398,6 +438,99 @@ def _build_proposal(*, signal: dict, as_of: dt.date) -> dict:
     }
 
 
+def _build_knowledge_candidate(*, signal: dict, as_of: dt.date) -> dict:
+    expires_at = as_of + dt.timedelta(days=DEFAULT_MEMORY_EXPIRY_DAYS)
+    return {
+        "schema_version": "0.1-draft",
+        "knowledge_id": "knowledge." + signal["signal_id"].replace("ai-pattern.", "").replace("_", "-"),
+        "title": signal["pattern"].capitalize(),
+        "status": "candidate" if signal["value_score"] >= DEFAULT_MIN_PROPOSAL_SCORE else "evidence_only",
+        "scope": "unified_governance",
+        "promotion_readiness": {
+            "source_evidence_attached": True,
+            "verification_attached": bool(_verification_refs_for_signal(signal)),
+            "human_review_required": True,
+        },
+        "usefulness_filter": {
+            "recurrence": signal["recurrence"],
+            "transferability": signal["reuse_scope"],
+            "verification_strength": signal["verification_strength"],
+            "freshness_days": 0,
+            "blast_radius_reduction": signal["risk_reduction"],
+            "value_score": signal["value_score"],
+        },
+        "source_refs": signal["source_refs"],
+        "verification_refs": _verification_refs_for_signal(signal),
+        "review_by": expires_at.isoformat(),
+        "rollback_ref": "Retire the candidate record and remove any later promoted asset if downstream gates regress.",
+        "notes": f"Generated on {as_of.isoformat()} from dry-run AI coding experience extraction.",
+    }
+
+
+def _build_pattern_candidate(*, signal: dict, as_of: dt.date) -> dict:
+    return {
+        "schema_version": "0.1-draft",
+        "pattern_id": "pattern." + signal["signal_id"].replace("ai-pattern.", "").replace("_", "-"),
+        "derived_from": "knowledge." + signal["signal_id"].replace("ai-pattern.", "").replace("_", "-"),
+        "status": "candidate" if signal["value_score"] >= DEFAULT_MIN_PROPOSAL_SCORE else "observe_only",
+        "pattern_summary": signal["pattern"],
+        "source_refs": signal["source_refs"],
+        "verification_refs": _verification_refs_for_signal(signal),
+        "promotion_target": signal["suggested_asset"],
+        "promotion_gate": "build -> test -> contract/invariant -> hotspot",
+        "notes": f"Generated on {as_of.isoformat()} from repeated AI coding evidence.",
+    }
+
+
+def _build_memory_record(*, signal: dict, as_of: dt.date) -> dict:
+    expires_at = as_of + dt.timedelta(days=DEFAULT_MEMORY_EXPIRY_DAYS)
+    confidence = round(min(0.95, 0.4 + (signal["verification_strength"] * 0.1) + (signal["recurrence"] * 0.05)), 2)
+    return {
+        "schema_version": "0.1-draft",
+        "memory_id": "memory." + signal["signal_id"].replace("ai-pattern.", "").replace("_", "-"),
+        "status": "active",
+        "scope": "repo_runtime_review",
+        "summary": signal["pattern"],
+        "provenance": {
+            "source_kind": "internal_ai_coding_experience",
+            "source_refs": signal["source_refs"],
+            "captured_on": as_of.isoformat(),
+        },
+        "confidence": confidence,
+        "expires_at": expires_at.isoformat(),
+        "retrieval_evidence": {
+            "source_refs": signal["source_refs"],
+            "retrieval_reason": "Repeated governed AI coding evidence exceeded proposal threshold.",
+            "verification_refs": _verification_refs_for_signal(signal),
+        },
+        "rollback_ref": "Expire or retire the memory record if freshness, verification, or reuse posture degrades.",
+    }
+
+
+def _build_retirement_records(*, signals: list[dict], as_of: dt.date, retirement_score_ceiling: int) -> list[dict]:
+    records: list[dict] = []
+    for signal in signals:
+        if signal["value_score"] > retirement_score_ceiling:
+            continue
+        slug = signal["signal_id"].replace("ai-pattern.", "").replace("_", "-")
+        records.append(
+            {
+                "schema_version": "0.1-draft",
+                "retirement_id": "retire." + slug,
+                "asset_kind": "knowledge_candidate",
+                "asset_ref": "knowledge." + slug,
+                "reason": "Low-value or stale knowledge should leave active posture while preserving traceability.",
+                "source_refs": signal["source_refs"],
+                "status": "retired",
+                "archive_ref": f"docs/change-evidence/runtime-evolution-knowledge/archive/{slug}.json",
+                "audit_history_retained": True,
+                "delete_active_evidence": False,
+                "recorded_on": as_of.isoformat(),
+            }
+        )
+    return records
+
+
 def _build_skill_manifest_candidate(*, signal: dict, as_of: dt.date) -> dict:
     slug = signal["signal_id"].replace("ai-pattern.", "").replace("_", "-")
     return {
@@ -434,6 +567,44 @@ def _build_skill_manifest_candidate(*, signal: dict, as_of: dt.date) -> dict:
     }
 
 
+def _verification_refs_for_signal(signal: dict) -> list[str]:
+    refs = [
+        "docs/specs/learning-efficiency-metrics-spec.md",
+        "docs/specs/interaction-evidence-spec.md",
+    ]
+    if signal.get("suggested_asset") == "skill":
+        refs.append("docs/specs/skill-manifest-spec.md")
+    else:
+        refs.append("docs/specs/controlled-improvement-proposal-spec.md")
+    return refs
+
+
+def _has_source_and_verification(candidate: dict) -> bool:
+    source_refs = candidate.get("source_refs")
+    verification_refs = candidate.get("verification_refs")
+    return bool(source_refs) and bool(verification_refs)
+
+
+def _memory_record_has_required_fields(record: dict, *, as_of: dt.date) -> bool:
+    for field in ["scope", "provenance", "confidence", "expires_at", "retrieval_evidence"]:
+        if field not in record:
+            return False
+    try:
+        expires_at = dt.date.fromisoformat(str(record["expires_at"]))
+    except ValueError:
+        return False
+    return expires_at > as_of and bool(record["retrieval_evidence"].get("verification_refs"))
+
+
+def _retirement_record_preserves_audit_history(record: dict) -> bool:
+    return (
+        record.get("audit_history_retained") is True
+        and record.get("delete_active_evidence") is False
+        and isinstance(record.get("archive_ref"), str)
+        and bool(record.get("archive_ref"))
+    )
+
+
 def _write_artifacts(*, root: Path, result: dict, as_of: dt.date) -> dict[str, str]:
     root.mkdir(parents=True, exist_ok=True)
     json_path = root / f"{as_of.strftime('%Y%m%d')}-ai-coding-experience-review.json"
@@ -455,6 +626,18 @@ def _render_markdown(result: dict) -> str:
         f"- `{item['proposal_id']}`: `{item['proposal_category']}` / `{item['risk_posture']}` / `{item['status']}`"
         for item in result["proposals"]
     ]
+    knowledge_lines = [
+        f"- `{item['knowledge_id']}`: `{item['status']}` / score `{item['usefulness_filter']['value_score']}`"
+        for item in result["knowledge_candidates"]
+    ]
+    memory_lines = [
+        f"- `{item['memory_id']}`: scope `{item['scope']}` / confidence `{item['confidence']}` / expires `{item['expires_at']}`"
+        for item in result["memory_records"]
+    ]
+    retirement_lines = [
+        f"- `{item['retirement_id']}`: `{item['asset_ref']}` archived at `{item['archive_ref']}`"
+        for item in result["retirement_records"]
+    ]
     skill_lines = [
         f"- `{item['skill_id']}`: `{item['risk_tier']}` / default_enabled=`{str(item.get('default_enabled')).lower()}`"
         for item in result["skill_manifest_candidates"]
@@ -465,10 +648,18 @@ def _render_markdown(result: dict) -> str:
         f"- as_of: `{result['as_of']}`\n"
         f"- mode: `{result['mode']}`\n"
         f"- mutation_allowed: `{str(result['mutation_allowed']).lower()}`\n"
+        f"- knowledge_candidate_count: `{result['knowledge_candidate_count']}`\n"
+        f"- memory_record_count: `{result['memory_record_count']}`\n"
         f"- proposal_count: `{result['proposal_count']}`\n"
         f"- skill_manifest_candidate_count: `{result['skill_manifest_candidate_count']}`\n\n"
         "## Signals\n"
         + ("\n".join(signal_lines) if signal_lines else "- none")
+        + "\n\n## Knowledge Candidates\n"
+        + ("\n".join(knowledge_lines) if knowledge_lines else "- none")
+        + "\n\n## Memory Records\n"
+        + ("\n".join(memory_lines) if memory_lines else "- none")
+        + "\n\n## Retirement Records\n"
+        + ("\n".join(retirement_lines) if retirement_lines else "- none")
         + "\n\n## Proposals\n"
         + ("\n".join(proposal_lines) if proposal_lines else "- none")
         + "\n\n## Skill Manifest Candidates\n"

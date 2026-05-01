@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/promotion-lifecycle.schema.json",
+  "title": "Promotion Lifecycle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "lifecycle_id",
+    "generated_on",
+    "source_review",
+    "entries",
+    "retirement_guard",
+    "rollback_ref"
+  ],
+  "properties": {
+    "lifecycle_id": { "type": "string" },
+    "generated_on": { "type": "string", "format": "date" },
+    "source_review": { "type": "string" },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/entry" }
+    },
+    "retirement_guard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_cleanup_only",
+        "preserve_evidence_history",
+        "reviewed_asset_delete"
+      ],
+      "properties": {
+        "candidate_cleanup_only": { "type": "boolean" },
+        "preserve_evidence_history": { "type": "boolean" },
+        "reviewed_asset_delete": { "type": "boolean" }
+      }
+    },
+    "rollback_ref": { "type": "string" }
+  },
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "asset_id",
+        "asset_kind",
+        "status",
+        "materialized_path",
+        "enabled_by_default",
+        "review_required",
+        "promotion_evidence_refs",
+        "promotion_gate_refs",
+        "effect_metric_refs",
+        "rollback_ref"
+      ],
+      "properties": {
+        "asset_id": { "type": "string" },
+        "asset_kind": {
+          "type": "string",
+          "enum": ["skill", "hook", "gate", "eval", "policy", "workflow"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["disabled", "review", "test_ready", "observe", "enforce", "retired"]
+        },
+        "materialized_path": { "type": "string" },
+        "enabled_by_default": { "type": "boolean" },
+        "review_required": { "type": "boolean" },
+        "promotion_evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "promotion_gate_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "effect_metric_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "rollback_ref": { "type": "string" },
+        "replaced_by": { "type": "string" }
+      }
+    }
+  }
+}

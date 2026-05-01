@@ -1,0 +1,94 @@
+{
+  "lifecycle_id": "default-governed-knowledge-memory-lifecycle",
+  "as_of": "2026-05-01",
+  "source_policy_ref": "docs/architecture/runtime-evolution-policy.json",
+  "promotion_requirements": {
+    "requires_source_evidence": true,
+    "requires_verification_refs": true,
+    "requires_human_review": true
+  },
+  "usefulness_filter": {
+    "dimensions": [
+      "recurrence",
+      "transferability",
+      "verification_strength",
+      "freshness",
+      "blast_radius_reduction"
+    ],
+    "promotion_score_floor": 5,
+    "retirement_score_ceiling": 4
+  },
+  "knowledge_candidates": [
+    {
+      "knowledge_id": "knowledge.checklist-first-bugfix",
+      "status": "candidate",
+      "scope": "unified_governance",
+      "promotion_readiness": {
+        "source_evidence_attached": true,
+        "verification_attached": true,
+        "human_review_required": true
+      },
+      "source_refs": [
+        "schemas/examples/interaction-evidence/checklist-first-bugfix.example.json",
+        "schemas/examples/learning-efficiency-metrics/baseline.example.json"
+      ],
+      "verification_refs": [
+        "docs/specs/learning-efficiency-metrics-spec.md",
+        "docs/specs/skill-manifest-spec.md"
+      ],
+      "rollback_ref": "Retire the knowledge candidate and remove any later promoted asset if gates regress."
+    }
+  ],
+  "pattern_candidates": [
+    {
+      "pattern_id": "pattern.checklist-first-bugfix",
+      "status": "candidate",
+      "source_refs": [
+        "schemas/examples/interaction-evidence/checklist-first-bugfix.example.json"
+      ],
+      "verification_refs": [
+        "docs/specs/interaction-evidence-spec.md"
+      ],
+      "promotion_target": "skill"
+    }
+  ],
+  "memory_records": [
+    {
+      "memory_id": "memory.checklist-first-bugfix",
+      "status": "active",
+      "scope": "repo_runtime_review",
+      "provenance": {
+        "source_kind": "internal_ai_coding_experience",
+        "source_refs": [
+          "schemas/examples/interaction-evidence/checklist-first-bugfix.example.json"
+        ],
+        "captured_on": "2026-05-01"
+      },
+      "confidence": 0.75,
+      "expires_at": "2026-05-31",
+      "retrieval_evidence": {
+        "source_refs": [
+          "schemas/examples/learning-efficiency-metrics/baseline.example.json"
+        ],
+        "retrieval_reason": "Repeated bugfix interaction evidence passed the governed usefulness floor.",
+        "verification_refs": [
+          "docs/specs/learning-efficiency-metrics-spec.md"
+        ]
+      },
+      "rollback_ref": "Expire or retire the memory record if verification, freshness, or reuse posture degrades."
+    }
+  ],
+  "retirement_records": [
+    {
+      "retirement_id": "retire.one-off-note",
+      "asset_kind": "knowledge_candidate",
+      "asset_ref": "knowledge.one-off-note",
+      "reason": "One-off local note stayed low-value and should leave active posture while preserving history.",
+      "archive_ref": "docs/change-evidence/runtime-evolution-knowledge/archive/one-off-note.json",
+      "audit_history_retained": true,
+      "delete_active_evidence": false,
+      "recorded_on": "2026-05-01"
+    }
+  ],
+  "rollback_ref": "Retire generated lifecycle records and promoted descendants through reviewable rollback paths."
+}

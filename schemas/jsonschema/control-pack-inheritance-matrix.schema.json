@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/control-pack-inheritance-matrix.schema.json",
+  "title": "Control Pack Inheritance Matrix",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "matrix_id",
+    "control_pack_ref",
+    "target_baseline_ref",
+    "repo_profile_schema_ref",
+    "light_pack_ref",
+    "unified_governance",
+    "target_inherit",
+    "target_override",
+    "forbidden_override"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "matrix_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "control_pack_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target_baseline_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "repo_profile_schema_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "light_pack_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "unified_governance": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "field_path",
+          "reason",
+          "validation_rule"
+        ],
+        "properties": {
+          "field_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "validation_rule": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "target_inherit": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "profile_field",
+          "baseline_field",
+          "control_pack_reference",
+          "schema_path",
+          "reason"
+        ],
+        "properties": {
+          "profile_field": {
+            "type": "string",
+            "minLength": 1
+          },
+          "baseline_field": {
+            "type": "string",
+            "minLength": 1
+          },
+          "control_pack_reference": {
+            "type": "string",
+            "minLength": 1
+          },
+          "schema_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "target_override": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "profile_field",
+          "schema_path",
+          "override_rule",
+          "reason"
+        ],
+        "properties": {
+          "profile_field": {
+            "type": "string",
+            "minLength": 1
+          },
+          "schema_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "override_rule": {
+            "type": "string",
+            "enum": [
+              "bounded_to_schema",
+              "strengthen_only",
+              "additive_only",
+              "repo_local_only",
+              "must_remain_true"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "forbidden_override": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "surface",
+          "blocked_field_names",
+          "reason"
+        ],
+        "properties": {
+          "surface": {
+            "type": "string",
+            "minLength": 1
+          },
+          "blocked_field_names": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "blocked_in": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

@@ -37,6 +37,8 @@ Define the per-repository configuration inherited by governed sessions.
 - auto_commit_policy
 - interaction_profile
 - learning_assistance_policy
+- rule_file_coordination_policy
+- windows_process_environment_policy
 
 ## Inheritance Model
 1. platform defaults
@@ -53,6 +55,8 @@ Repo profiles may override:
 - delivery templates
 - bounded interaction defaults
 - bounded learning-assistance policy
+- rule-file coordination details that stay repo/profile scoped
+- Windows process environment guidance that stays repo/profile scoped
 
 Repo profiles may not override:
 - evidence minimum fields
@@ -63,6 +67,8 @@ Repo profiles may not override:
 - hard budget stop semantics
 - explicit degrade behavior
 - canonical gate order
+- risk taxonomy
+- approval state semantics
 
 ## Rollout Posture
 - `current_mode`: currently active execution posture for this repo
@@ -113,11 +119,17 @@ Repos may declare bounded collaboration defaults through `interaction_profile`.
 
 Supported fields:
 - `default_mode`
+- `communication_language`
+- `user_facing_output_language`
+- `preserve_technical_tokens_language`
+- `commit_message_language`
 - `term_explain_style`
 - `default_checklist_kind`
 - `compaction_preference`
 - `summary_template`
+- `multi_option_recommendation_policy`
 - `handoff_teaching_notes`
+- `language_guidance`
 
 These defaults tune how a repo prefers guidance to be phrased, but they do not weaken the shared clarification, budget, or approval boundaries.
 
@@ -139,10 +151,49 @@ Supported fields:
 - `teaching_style`
 - `token_budget_policy`
 - `degrade_to_handoff_on_budget_pressure`
+- `guidance`
 
 The policy must treat confusion as observable interaction evidence, not as psychological inference. Valid signals include user corrections, repeated failures, missing expected/actual/repro facts, symptom/root-cause confusion, term confusion, intent drift, and budget pressure.
 
 Low-token teaching should explain at most one or two terms per response, prefer `definition + task role + common mistake`, and switch to checklist-first bug observation when runtime symptoms are underspecified.
+
+## Rule File Coordination Policy
+Repos may inherit or declare bounded rule-file coordination defaults through `rule_file_coordination_policy`.
+
+Supported fields:
+- `enabled`
+- `global_rule_scope`
+- `project_rule_scope`
+- `synergy_requirement`
+- `source_review_basis`
+- `root_file_quality_rules`
+- `pre_change_review_gate`
+- `tool_specific_loading_policy`
+- `progressive_disclosure`
+- `missing_project_rule_behavior`
+- `required_project_rule_fields`
+
+The policy may tighten drift review and self-containment requirements, but it may not redefine global precedence, remove evidence, or replace deterministic gate enforcement.
+
+## Windows Process Environment Policy
+Repos may inherit or declare bounded Windows process normalization defaults through `windows_process_environment_policy`.
+
+Supported fields:
+- `enabled`
+- `scope`
+- `required_variables`
+- `inherited_network_variables`
+- `safe_codex_policy_source`
+- `preferred_powershell_executable`
+- `fallback_powershell_executable`
+- `windows_powershell_escape_hatch_env`
+- `required_practice`
+- `runtime_runbook`
+- `coding_guidance`
+- `powershell_entrypoint_pattern`
+- `verification_commands`
+
+The policy may strengthen repo/operator guidance, but it may not weaken the shared approval model, gate order, or rollback requirements.
 
 ## Verification
 A repo profile is valid only if:
@@ -155,4 +206,5 @@ A repo profile is valid only if:
 - compatibility degrade behavior is explicit whenever support is partial or unsupported
 - interaction defaults stay bounded and do not redefine hard clarification or stop-on-budget behavior
 - learning assistance stays evidence-backed, respects the clarification cap, and degrades to summaries or handoff when budget pressure is high
+- inherited and repo-local override fields resolve to explicit schema paths in the inheritance matrix
 - managed workspaces and runtime-local storage roots stay on one machine in the first Full Runtime stage

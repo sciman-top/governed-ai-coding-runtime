@@ -1,0 +1,15 @@
+{
+  "schema_version": "0.1-draft",
+  "retirement_id": "retire.one-off-note",
+  "asset_kind": "knowledge_candidate",
+  "asset_ref": "knowledge.one-off-note",
+  "reason": "Preserve audit history for a low-value one-off note while removing it from active posture.",
+  "source_refs": [
+    "schemas/examples/interaction-evidence/checklist-first-bugfix.example.json"
+  ],
+  "status": "retired",
+  "archive_ref": "docs/change-evidence/runtime-evolution-knowledge/archive/one-off-note.json",
+  "audit_history_retained": true,
+  "delete_active_evidence": false,
+  "recorded_on": "2026-05-01"
+}

@@ -8,6 +8,7 @@ This directory holds the normative contract descriptions that the schema drafts 
 ### Governance kernel
 - [Control Registry Spec](./control-registry-spec.md)
 - [Control Pack Spec](./control-pack-spec.md)
+- [Control Pack Inheritance Matrix Spec](./control-pack-inheritance-matrix-spec.md)
 - [Capability Portfolio Classifier Spec](./capability-portfolio-classifier-spec.md)
 - [Risk Tier And Approval Spec](./risk-tier-and-approval-spec.md)
 - [Task Lifecycle And State Machine Spec](./task-lifecycle-and-state-machine-spec.md)
@@ -27,6 +28,8 @@ This directory holds the normative contract descriptions that the schema drafts 
 - [Tool Contract Spec](./tool-contract-spec.md)
 - [Hook Contract Spec](./hook-contract-spec.md)
 - [Knowledge Source Spec](./knowledge-source-spec.md)
+- [Knowledge Memory Lifecycle Spec](./knowledge-memory-lifecycle-spec.md)
+- [Promotion Lifecycle Spec](./promotion-lifecycle-spec.md)
 - [Repo Map And Context Shaping Spec](./repo-map-context-shaping-spec.md)
 - [Skill Manifest Spec](./skill-manifest-spec.md)
 

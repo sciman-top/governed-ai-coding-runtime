@@ -161,7 +161,7 @@ AI 推荐:
   ApplyAllFeatures       执行全部当前目标仓功能、目标仓一致性检查，并刷新 operator UI。
   FeedbackReport         生成 Codex/Claude 功能反馈汇总报告，并写入 runtime artifacts。
   EvolutionReview        执行 runtime 自我演进 dry-run，只生成候选和证据，不自动改代码。
-  ExperienceReview       从 AI 编码证据/指标中生成 dry-run 改进提案和 skill manifest 候选。
+  ExperienceReview       从 AI 编码证据/指标中生成 dry-run knowledge/memory 记录、改进提案和 skill manifest 候选。
   EvolutionMaterialize   将低风险候选物化为 proposal 文件和禁用态 skill candidate 文件，不启用技能。
   CorePrincipleMaterialize 默认只报告核心原则变更候选；加 -ConfirmCorePrincipleProposalWrite 才写 reviewable proposal/manifest，不改 active policy。
                            加 -WriteCorePrincipleDryRunReport 只写审计用 dry-run report，不写 proposal/manifest。

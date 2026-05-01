@@ -1244,86 +1244,86 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: AFK
 - Blocked by: GAP-131
 - User stories: 7, 8, 11, 13, 18, 21, 23, 31, 44
-- Status: planned
+- Status: complete; closed by `docs/change-evidence/20260501-gap-132-control-pack-execution-contract.md`
 - What to build:
   - executable control-pack contract for `policy`, `gate`, `hook`, `eval`, `workflow`, `skill`, `knowledge`, `memory`, `evidence`, and `rollback`
   - schema or contract tests that fail when a control pack is metadata-only
   - controlled materialization path from source-of-truth docs/schemas into runtime-consumable packs
 - Acceptance criteria:
-  - [ ] control packs include runnable or verifiable references, not only prose
-  - [ ] validation distinguishes unified kernel fields from target-repo fields
-  - [ ] invalid or incomplete packs fail closed before target repo sync
+  - [x] control packs include runnable or verifiable references, not only prose
+  - [x] validation distinguishes unified kernel fields from target-repo fields
+  - [x] invalid or incomplete packs fail closed before target repo sync
 
 ### GAP-133 Inheritance Override And Forbidden Override Verifier
 - Type: AFK
 - Blocked by: GAP-132
 - User stories: 7, 8, 11, 13, 18, 21, 31, 38, 44
-- Status: planned
+- Status: complete
 - What to build:
   - machine-readable matrix for `unified_governance`, `target_inherit`, `target_override`, and `forbidden_override`
   - verifier that compares hub control packs with target repo profiles and emitted light packs
   - clear `platform_na` and `gate_na` output when an override cannot be validated
 - Acceptance criteria:
-  - [ ] target repos cannot weaken unified gate order, evidence, rollback, or risk semantics
-  - [ ] allowed overrides are explicit, typed, and evidence-backed
-  - [ ] drift is visible through the existing verification entrypoint
+  - [x] target repos cannot weaken unified gate order, evidence, rollback, or risk semantics
+  - [x] allowed overrides are explicit, typed, and evidence-backed
+  - [x] drift is visible through the existing verification entrypoint
 
 ### GAP-134 Target Repo Reuse Effect Feedback Harness
 - Type: HITL
 - Blocked by: GAP-133
 - User stories: 11, 13, 14, 15, 21, 31, 38, 39, 44, 45
-- Status: planned
+- Status: complete
 - What to build:
   - one-target proof that a target repo can inherit a control pack, apply allowed overrides, run gates, and emit effect metrics
   - baseline-versus-after comparison for readiness, gate outcomes, drift, repeated failures, and evidence completeness
   - operator-facing effect report that decides keep, adjust, retire, or promote
 - Acceptance criteria:
-  - [ ] at least one target repo run produces baseline and after metrics
-  - [ ] failures become backlog or retirement candidates rather than informal notes
-  - [ ] effect report is written to evidence and referenced by the verifier
+  - [x] at least one target repo run produces baseline and after metrics
+  - [x] failures become backlog or retirement candidates rather than informal notes
+  - [x] effect report is written to evidence and referenced by the verifier
 
 ### GAP-135 Governed Knowledge Memory Lifecycle
 - Type: AFK
 - Blocked by: GAP-131, GAP-134
 - User stories: 13, 18, 21, 22, 23, 29, 31, 44
-- Status: planned
+- Status: complete; closed by `docs/change-evidence/20260501-gap-135-knowledge-memory-lifecycle.md`
 - What to build:
   - lifecycle for AI coding experience notes, knowledge candidates, pattern candidates, and memory records
   - usefulness filter based on recurrence, transferability, verification, freshness, and blast-radius reduction
   - expiry, retirement, and rollback rules for stale or harmful knowledge
 - Acceptance criteria:
-  - [ ] experience can be promoted only after source evidence and verification are attached
-  - [ ] memory records include scope, provenance, confidence, expiry, and retrieval evidence
-  - [ ] stale or low-value knowledge can be retired without deleting audit history
+  - [x] experience can be promoted only after source evidence and verification are attached
+  - [x] memory records include scope, provenance, confidence, expiry, and retrieval evidence
+  - [x] stale or low-value knowledge can be retired without deleting audit history
 
 ### GAP-136 Skill Hook Gate Eval Promotion Lifecycle
 - Type: AFK
 - Blocked by: GAP-132, GAP-134
 - User stories: 7, 8, 11, 13, 14, 21, 23, 31, 44
-- Status: planned
+- Status: complete; closed by `docs/change-evidence/20260501-gap-136-promotion-lifecycle.md`
 - What to build:
   - staged lifecycle for skills, hooks, gates, evals, policies, and workflows
   - disabled-by-default materialization followed by review, test, promotion, observe, enforce, and retirement
   - effect metrics that prove a promoted skill or gate improves the real workflow
   - cleanup path for stale, unreviewed, duplicated, or replaced candidates
 - Acceptance criteria:
-  - [ ] generated skills or hooks never auto-enable without promotion evidence
-  - [ ] promotion requires eval or gate evidence and rollback instructions
-  - [ ] retirement can remove inactive, duplicated, replaced, or harmful candidates without touching reviewed assets or evidence history
+  - [x] generated skills or hooks never auto-enable without promotion evidence
+  - [x] promotion requires eval or gate evidence and rollback instructions
+  - [x] retirement can remove inactive, duplicated, replaced, or harmful candidates without touching reviewed assets or evidence history
 
 ### GAP-137 Repo Map And Context Shaping Integration
 - Type: AFK
 - Blocked by: GAP-133, GAP-134
 - User stories: 11, 13, 14, 15, 20, 31, 39, 44
-- Status: planned
+- Status: complete; closed by `docs/change-evidence/20260501-gap-137-repo-map-context-artifact.md`
 - What to build:
   - repo-map artifact inspired by Aider-style concise repository context
   - context budget and include/exclude rules for target repo profiles
   - effect measurement for token cost, file-selection accuracy, and repeated clarification reduction
 - Acceptance criteria:
-  - [ ] context artifacts are generated or validated rather than manually copied
-  - [ ] target repos can override include/exclude rules without hiding required governance files
-  - [ ] effect metrics decide whether the repo map is kept, adjusted, or retired
+  - [x] context artifacts are generated or validated rather than manually copied
+  - [x] target repos can override include/exclude rules without hiding required governance files
+  - [x] effect metrics decide whether the repo map is kept, adjusted, or retired
 
 ### GAP-138 Policy Tool Credential Audit Boundary
 - Type: HITL

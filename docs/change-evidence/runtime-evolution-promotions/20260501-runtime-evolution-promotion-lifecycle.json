@@ -1,0 +1,55 @@
+{
+  "entries": [
+    {
+      "asset_id": "proposal.checklist-first-bugfix",
+      "asset_kind": "skill",
+      "effect_metric_refs": [
+        "docs/specs/learning-efficiency-metrics-spec.md",
+        "docs/specs/interaction-evidence-spec.md"
+      ],
+      "enabled_by_default": false,
+      "materialized_path": "docs/change-evidence/runtime-evolution-proposals/proposal.checklist-first-bugfix.json",
+      "promotion_evidence_refs": [
+        "schemas/examples/interaction-evidence/checklist-first-bugfix.example.json",
+        "schemas/examples/learning-efficiency-metrics/baseline.example.json"
+      ],
+      "promotion_gate_refs": [
+        "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime",
+        "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract"
+      ],
+      "review_required": true,
+      "rollback_ref": "Remove generated proposal artifacts; no runtime behavior is changed by proposal generation.",
+      "status": "disabled"
+    },
+    {
+      "asset_id": "skill.checklist-first-bugfix",
+      "asset_kind": "skill",
+      "effect_metric_refs": [
+        "docs/specs/learning-efficiency-metrics-spec.md",
+        "docs/specs/skill-manifest-spec.md"
+      ],
+      "enabled_by_default": false,
+      "materialized_path": "skills/candidates/checklist-first-bugfix/skill-manifest.json",
+      "promotion_evidence_refs": [
+        "schemas/examples/interaction-evidence/checklist-first-bugfix.example.json, schemas/examples/learning-efficiency-metrics/baseline.example.json"
+      ],
+      "promotion_gate_refs": [
+        "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime",
+        "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract"
+      ],
+      "review_required": true,
+      "rollback_ref": "Delete this candidate manifest and directory. No runtime behavior is enabled by this file.",
+      "status": "disabled"
+    }
+  ],
+  "generated_on": "2026-05-01",
+  "lifecycle_id": "runtime-evolution-promotion-2026-05-01",
+  "retirement_guard": {
+    "candidate_cleanup_only": true,
+    "preserve_evidence_history": true,
+    "reviewed_asset_delete": false
+  },
+  "rollback_ref": "Delete generated candidate files and this lifecycle manifest; no enabled runtime behavior is changed.",
+  "schema_version": "0.1-draft",
+  "source_review": "scripts/operator.ps1 -Action ExperienceReview"
+}

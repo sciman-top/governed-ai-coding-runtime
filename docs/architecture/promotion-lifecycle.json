@@ -1,0 +1,16 @@
+{
+  "schema_version": "0.1-draft",
+  "lifecycle_id": "runtime-evolution-promotion-default",
+  "status": "enforced",
+  "reviewed_on": "2026-05-01",
+  "source_review": "scripts/operator.ps1 -Action ExperienceReview",
+  "materialization_entrypoint": "python scripts/materialize-runtime-evolution.py --apply",
+  "verification_command": "python scripts/verify-promotion-lifecycle.py",
+  "retirement_entrypoint": "python scripts/review-runtime-evolution-retirements.py",
+  "retirement_guard": {
+    "candidate_cleanup_only": true,
+    "preserve_evidence_history": true,
+    "reviewed_asset_delete": false
+  },
+  "rollback_ref": "Revert the promotion lifecycle contract, verifier, and generated manifests introduced by GAP-136."
+}

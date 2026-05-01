@@ -7,12 +7,15 @@ Provide minimal but realistic JSON instances that exercise the repository's curr
 - `hook-contract/`: hook contract examples
 - `skill-manifest/`: skill manifest examples
 - `knowledge-source/`: knowledge source examples
+- `knowledge-memory-lifecycle/`: governed knowledge and memory lifecycle examples
+- `promotion-lifecycle/`: staged promotion and retirement lifecycle examples
 - `waiver-and-exception/`: waiver record examples
 - `provenance-and-attestation/`: provenance and attestation examples
 - `controlled-improvement-proposal/`: controlled proposal pipeline examples
 - `repo-map-context-shaping/`: repo-map strategy examples
 - `repo-profile/`: sample target-repository profiles
 - `control-pack/`: sample control-pack metadata
+- `control-pack-inheritance-matrix/`: control-pack inheritance and override boundaries
 - `policy-decision/`: policy decision examples
 - `agent-adapter-contract/`: sample adapter posture examples
 - `interaction-signal/`: observable interaction trigger examples
@@ -23,9 +26,12 @@ Provide minimal but realistic JSON instances that exercise the repository's curr
 
 ## Example Files
 - `control-pack/minimum-governance-kernel.example.json`
+- `control-pack-inheritance-matrix/minimum-governance-kernel.example.json`
 - `hook-contract/pre-write-path-guard.example.json`
 - `skill-manifest/repo-map-audit.example.json`
 - `knowledge-source/docs-index-authoritative.example.json`
+- `knowledge-memory-lifecycle/default-governed-lifecycle.example.json`
+- `promotion-lifecycle/default-runtime-evolution.example.json`
 - `waiver-and-exception/temporary-gate-waiver.example.json`
 - `provenance-and-attestation/schema-bundle-release.example.json`
 - `provenance-and-attestation/repo-light-pack.example.json`
@@ -54,6 +60,9 @@ Each example should validate against its matching schema:
 Get-Content -Raw 'schemas/examples/control-pack/minimum-governance-kernel.example.json' |
   Test-Json -SchemaFile 'schemas/jsonschema/control-pack.schema.json'
 
+Get-Content -Raw 'schemas/examples/control-pack-inheritance-matrix/minimum-governance-kernel.example.json' |
+  Test-Json -SchemaFile 'schemas/jsonschema/control-pack-inheritance-matrix.schema.json'
+
 Get-Content -Raw 'schemas/examples/hook-contract/pre-write-path-guard.example.json' |
   Test-Json -SchemaFile 'schemas/jsonschema/hook-contract.schema.json'
 
@@ -62,6 +71,12 @@ Get-Content -Raw 'schemas/examples/skill-manifest/repo-map-audit.example.json' |
 
 Get-Content -Raw 'schemas/examples/knowledge-source/docs-index-authoritative.example.json' |
   Test-Json -SchemaFile 'schemas/jsonschema/knowledge-source.schema.json'
+
+Get-Content -Raw 'schemas/examples/knowledge-memory-lifecycle/default-governed-lifecycle.example.json' |
+  Test-Json -SchemaFile 'schemas/jsonschema/knowledge-memory-lifecycle.schema.json'
+
+Get-Content -Raw 'schemas/examples/promotion-lifecycle/default-runtime-evolution.example.json' |
+  Test-Json -SchemaFile 'schemas/jsonschema/promotion-lifecycle.schema.json'
 
 Get-Content -Raw 'schemas/examples/waiver-and-exception/temporary-gate-waiver.example.json' |
   Test-Json -SchemaFile 'schemas/jsonschema/waiver-and-exception.schema.json'

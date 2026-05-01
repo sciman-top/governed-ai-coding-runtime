@@ -162,9 +162,14 @@ class AiCodingExperienceExtractionTests(unittest.TestCase):
             root=ROOT,
             signals=[signal],
             proposals=[proposal],
+            knowledge_candidates=[],
+            pattern_candidates=[],
+            memory_records=[],
+            retirement_records=[],
             skill_candidates=[],
             min_proposal_score=5,
             min_skill_score=8,
+            as_of=__import__("datetime").date(2026, 5, 1),
         )
 
         self.assertFalse(quality["source_refs_exist"])
