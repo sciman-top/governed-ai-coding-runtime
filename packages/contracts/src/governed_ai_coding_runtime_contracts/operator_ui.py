@@ -1294,6 +1294,7 @@ def _render_codex_panel(text: dict[str, str], *, interactive: bool) -> str:
             "</div>",
             "<div class='codex-grid'>",
             "<div>",
+            f"<div class='status-line' id='codex-cache-state'>{escape(text['panel_cache_state'])}: {escape(text['panel_cache_cold'])}</div>",
             "<div id='codex-accounts' class='codex-list'></div>",
             "</div>",
             "</div>",
@@ -1424,6 +1425,7 @@ def _render_interactive_script(
   const dryRun = document.getElementById('ui-dry-run');
   const historyList = document.getElementById('ui-history');
   const codexAccounts = document.getElementById('codex-accounts');
+  const codexCacheState = document.getElementById('codex-cache-state');
   const claudeProviders = document.getElementById('claude-providers');
   const feedbackStatus = document.getElementById('feedback-status');
   const feedbackCacheState = document.getElementById('feedback-cache-state');
@@ -1455,11 +1457,15 @@ def _render_interactive_script(
   const codexSurfaceActionText = {text['surface_codex_action']!r};
   const claudeSurfaceActionText = {text['surface_claude_action']!r};
   const feedbackSurfaceActionText = {text['surface_feedback_action']!r};
+  const codexAutoRefreshAgeSeconds = 90;
+  const codexRefreshCooldownMs = 15000;
   let codexLoaded = false;
   let claudeLoaded = false;
   let feedbackLoaded = false;
   let nextWorkLoaded = false;
   let lastClaudePayload = null;
+  let lastCodexPayload = null;
+  let lastCodexRefreshEpoch = 0;
   let lastNextWorkPayload = null;
 
   function readHistory() {{
@@ -1505,13 +1511,17 @@ def _render_interactive_script(
   }}
 
   function setPanelCacheState(kind, state, cachedAt) {{
-    const target = kind === 'feedback' ? feedbackCacheState : (kind === 'next-work' ? nextWorkCacheState : null);
+    const target = kind === 'codex'
+      ? codexCacheState
+      : (kind === 'feedback' ? feedbackCacheState : (kind === 'next-work' ? nextWorkCacheState : null));
     if (!target) {{
       return;
     }}
-    const label = kind === 'feedback'
-      ? {text['feedback_status']!r}
-      : (currentUiLanguage() === 'zh-CN' ? 'next-work 状态' : 'next-work state');
+    const label = kind === 'codex'
+      ? (currentUiLanguage() === 'zh-CN' ? 'Codex 状态' : 'Codex state')
+      : (kind === 'feedback'
+        ? {text['feedback_status']!r}
+        : (currentUiLanguage() === 'zh-CN' ? 'next-work 状态' : 'next-work state'));
     const stateLabels = {{
       cold: {text['panel_cache_cold']!r},
       cached: {text['panel_cache_cached']!r},
@@ -1525,6 +1535,34 @@ def _render_interactive_script(
       : `${{label}}: ${{stateLabels[state] || state}}`;
   }}
 
+  function isUsageSnapshotStale(snapshot) {{
+    const freshness = snapshot && snapshot.freshness ? snapshot.freshness : null;
+    if (!freshness) {{
+      return true;
+    }}
+    if (freshness.is_stale) {{
+      return true;
+    }}
+    const ageSeconds = Number(freshness.age_seconds);
+    if (!Number.isFinite(ageSeconds)) {{
+      return true;
+    }}
+    return ageSeconds > codexAutoRefreshAgeSeconds;
+  }}
+
+  function shouldHydrateCodexCache(payload) {{
+    if (!payload || typeof payload !== 'object') {{
+      return false;
+    }}
+    const active = payload.active_account && typeof payload.active_account === 'object'
+      ? payload.active_account
+      : ((Array.isArray(payload.accounts) ? payload.accounts.find((item) => item && item.active) : null) || null);
+    const snapshot = active && active.usage_snapshot && typeof active.usage_snapshot === 'object'
+      ? active.usage_snapshot
+      : null;
+    return !!snapshot && !isUsageSnapshotStale(snapshot);
+  }}
+
   function hydratePanelCache(kind, key) {{
     const cached = readPanelCache(key);
     if (!cached) {{
@@ -1532,6 +1570,10 @@ def _render_interactive_script(
       return false;
     }}
     if (kind === 'codex') {{
+      if (!shouldHydrateCodexCache(cached)) {{
+        setPanelCacheState(kind, 'cold');
+        return false;
+      }}
       renderCodexStatus(cached);
       codexLoaded = true;
     }} else if (kind === 'claude') {{
@@ -2650,6 +2692,7 @@ def _render_interactive_script(
   }}
 
   function renderCodexStatus(payload) {{
+    lastCodexPayload = payload;
     const accounts = Array.isArray(payload.accounts) ? payload.accounts : [];
     codexAccounts.innerHTML = '';
     accounts.forEach((account) => {{
@@ -2764,9 +2807,10 @@ def _render_interactive_script(
     if (!codexAccounts) {{
       return;
     }}
+    lastCodexRefreshEpoch = Date.now();
     setPanelCacheState('codex', codexLoaded ? 'refreshing' : 'cold');
     try {{
-      const response = await fetch('/api/codex/status?refresh_if_stale=1');
+      const response = await fetch('/api/codex/status?refresh_if_stale=1', {{ cache: 'no-store' }});
       const payload = await response.json();
       if (!response.ok) {{
         codexAccounts.innerHTML = `<p class="meta">${{payload.error || response.statusText}}</p>`;
@@ -2788,10 +2832,12 @@ def _render_interactive_script(
       return;
     }}
     setBusy(true);
+    lastCodexRefreshEpoch = Date.now();
     setPanelCacheState('codex', codexLoaded ? 'refreshing' : 'cold');
     try {{
       const response = await fetch('/api/codex/refresh', {{
         method: 'POST',
+        cache: 'no-store',
         headers: {{ 'content-type': 'application/json' }},
         body: JSON.stringify({{}})
       }});
@@ -2811,6 +2857,33 @@ def _render_interactive_script(
     }} finally {{
       setBusy(false);
     }}
+  }}
+
+  function shouldRefreshCodexOnResume() {{
+    if (document.hidden || document.body.dataset.busy === '1') {{
+      return false;
+    }}
+    if (!lastCodexPayload) {{
+      return true;
+    }}
+    const age = Date.now() - lastCodexRefreshEpoch;
+    if (age < codexRefreshCooldownMs) {{
+      return false;
+    }}
+    const active = lastCodexPayload.active_account && typeof lastCodexPayload.active_account === 'object'
+      ? lastCodexPayload.active_account
+      : null;
+    const snapshot = active && active.usage_snapshot && typeof active.usage_snapshot === 'object'
+      ? active.usage_snapshot
+      : null;
+    return isUsageSnapshotStale(snapshot);
+  }}
+
+  function maybeRefreshCodexStatusOnResume() {{
+    if (!shouldRefreshCodexOnResume()) {{
+      return;
+    }}
+    refreshCodexStatus();
   }}
 
   async function switchCodexAccount(name) {{
@@ -3162,6 +3235,17 @@ def _render_interactive_script(
   window.setTimeout(() => {{
     refreshNextWorkSummary();
   }}, 80);
+  document.addEventListener('visibilitychange', () => {{
+    if (!document.hidden) {{
+      maybeRefreshCodexStatusOnResume();
+    }}
+  }});
+  window.addEventListener('focus', () => {{
+    maybeRefreshCodexStatusOnResume();
+  }});
+  window.setInterval(() => {{
+    maybeRefreshCodexStatusOnResume();
+  }}, 60000);
 }})();
 </script>"""
 
