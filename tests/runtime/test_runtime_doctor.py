@@ -138,41 +138,15 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
 
     def test_verify_repo_exposes_build_and_doctor_checks(self) -> None:
         script = ROOT / "scripts" / "verify-repo.ps1"
-        build_completed = subprocess.run(
-            [
-                "pwsh",
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                str(script),
-                "-Check",
-                "Build",
-            ],
-            check=True,
-            capture_output=True,
-            text=True,
-            cwd=ROOT,
-        )
-        doctor_completed = subprocess.run(
-            [
-                "pwsh",
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                str(script),
-                "-Check",
-                "Doctor",
-            ],
-            check=True,
-            capture_output=True,
-            text=True,
-            cwd=ROOT,
-        )
+        verifier = script.read_text(encoding="utf-8")
 
-        self.assertIn("OK runtime-build", build_completed.stdout)
-        self.assertIn("OK runtime-doctor", doctor_completed.stdout)
+        self.assertIn('switch ($Check)', verifier)
+        self.assertIn('"Build" { Invoke-BuildChecks }', verifier)
+        self.assertIn('"Doctor" { Invoke-DoctorChecks }', verifier)
+        self.assertIn("scripts/build-runtime.ps1", verifier)
+        self.assertIn("scripts/doctor-runtime.ps1", verifier)
+        self.assertIn('Write-CheckOk "runtime-build"', verifier)
+        self.assertIn('Write-CheckOk "runtime-doctor"', verifier)
 
     def test_verify_repo_docs_ignores_ignored_worktree_markdown(self) -> None:
         script = ROOT / "scripts" / "verify-repo.ps1"

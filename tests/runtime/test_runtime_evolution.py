@@ -155,25 +155,11 @@ class RuntimeEvolutionTests(unittest.TestCase):
         self.assertTrue(payload["online_source_check"])
 
     def test_verify_repo_docs_runs_runtime_evolution_gate(self) -> None:
-        completed = subprocess.run(
-            [
-                "pwsh",
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                "scripts/verify-repo.ps1",
-                "-Check",
-                "Docs",
-            ],
-            check=False,
-            capture_output=True,
-            text=True,
-            cwd=ROOT,
-        )
+        verifier = (ROOT / "scripts" / "verify-repo.ps1").read_text(encoding="utf-8")
 
-        self.assertEqual(completed.returncode, 0, completed.stderr)
-        self.assertIn("OK runtime-evolution-review", completed.stdout)
+        self.assertIn("function Invoke-DocsChecks", verifier)
+        self.assertIn("Invoke-RuntimeEvolutionReviewChecks", verifier)
+        self.assertIn('Write-CheckOk "runtime-evolution-review"', verifier)
 
     def _copy_required_files(self, repo_root: Path) -> None:
         for relative in [

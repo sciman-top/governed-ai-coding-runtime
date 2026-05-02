@@ -103,6 +103,12 @@ Sync evidence:
 - Backups were written under `docs/change-evidence/rule-sync-backups/20260502-162159/`.
 - `python scripts\sync-agent-rules.py --scope All --fail-on-change` then returned `status=pass`, `changed_count=0`, and `blocked_count=0` without `--force`.
 
+Final gate evidence:
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\build-runtime.ps1`: pass (`OK python-bytecode`, `OK python-import`).
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify-repo.ps1 -Check Runtime` with `GOVERNED_RUNTIME_TEST_TIMEOUT_SECONDS=300`: pass, 95 test files, 0 failures.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify-repo.ps1 -Check Contract`: pass, including `agent-rule-sync`, `pre-change-review`, and `functional-effectiveness`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\doctor-runtime.ps1`: pass with existing `WARN codex-capability-degraded`; all hard checks returned `OK`.
+
 Rollback:
 - Revert `rules/global/codex/AGENTS.md`, `rules/global/claude/CLAUDE.md`, and `rules/global/gemini/GEMINI.md` to the previous git version.
 - Restore user-level deployed rule files from the backup paths emitted by `scripts/sync-agent-rules.py --apply` if the synchronized deployed files need rollback.
