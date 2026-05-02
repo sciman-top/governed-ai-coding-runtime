@@ -1542,8 +1542,10 @@ function Invoke-TargetFeatureBaselineAndMilestoneCommit {
     attachment_root         = $TargetConfig.AttachmentRoot
     runtime_state_root      = $TargetConfig.AttachmentRuntimeStateRoot
     flow_result             = [pscustomobject]@{ exit_code = 0; output = "" }
+    flow_duration_ms        = 0
     flow_payload            = $null
     governance_sync_result  = $syncResult
+    governance_sync_duration_ms = $syncDurationMs
     milestone_commit_result = $milestoneResult
     exit_code               = $exitCode
   }
@@ -1581,43 +1583,53 @@ function Invoke-TargetAllFeatures {
     [bool]$EmitProgress = $false
   )
 
-  $flowResultEnvelope = Invoke-TargetPresetFlow `
+  Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "governance_sync" -Status "start" -Detail "source=all_features_preflight"
+  $syncStartedAt = Get-Date
+  $syncResult = Invoke-GovernanceBaselineSync `
     -TargetName $TargetName `
     -TargetConfig $TargetConfig `
-    -RuntimeFlowPathResolved $RuntimeFlowPathResolved `
     -RepoRoot $RepoRoot `
-    -GovernanceBaselinePathResolved $GovernanceBaselinePathResolved `
-    -ShouldSyncGovernanceBaseline ($FlowMode -eq "onboard") `
-    -IsBatchMode $IsBatchMode `
+    -BaselinePath $GovernanceBaselinePathResolved `
     -PythonCommand $PythonCommand `
-    -RuntimeFlowCommandTimeoutSeconds $RuntimeFlowCommandTimeoutSeconds `
-    -GovernanceSyncCommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds `
-    -EmitProgress $EmitProgress
+    -CommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds
+  $syncDurationMs = [int][Math]::Round(((Get-Date) - $syncStartedAt).TotalMilliseconds)
+  Write-BatchProgressLine `
+    -Enabled $EmitProgress `
+    -TargetName $TargetName `
+    -Stage "governance_sync" `
+    -Status ([string]$syncResult.status) `
+    -Detail ("source=all_features_preflight duration_ms={0} exit_code={1}" -f $syncDurationMs, $syncResult.exit_code)
 
-  $syncResult = $flowResultEnvelope.governance_sync_result
-  if ($flowResultEnvelope.flow_result.exit_code -eq 0) {
-    $flowSyncStatus = if ($null -ne $syncResult -and $syncResult.PSObject.Properties.Name -contains "status") { [string]$syncResult.status } else { "" }
-    if ($flowSyncStatus -ne "pass") {
-      Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "governance_sync" -Status "start" -Detail "source=all_features_fallback"
-      $syncStartedAt = Get-Date
-      $syncResult = Invoke-GovernanceBaselineSync `
-        -TargetName $TargetName `
-        -TargetConfig $TargetConfig `
-        -RepoRoot $RepoRoot `
-        -BaselinePath $GovernanceBaselinePathResolved `
-        -PythonCommand $PythonCommand `
-        -CommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds
-      $syncDurationMs = [int][Math]::Round(((Get-Date) - $syncStartedAt).TotalMilliseconds)
-      Write-BatchProgressLine `
-        -Enabled $EmitProgress `
-        -TargetName $TargetName `
-        -Stage "governance_sync" `
-        -Status ([string]$syncResult.status) `
-        -Detail ("source=all_features_fallback duration_ms={0} exit_code={1}" -f $syncDurationMs, $syncResult.exit_code)
-    }
+  if ($syncResult.status -eq "pass") {
+    $flowResultEnvelope = Invoke-TargetPresetFlow `
+      -TargetName $TargetName `
+      -TargetConfig $TargetConfig `
+      -RuntimeFlowPathResolved $RuntimeFlowPathResolved `
+      -RepoRoot $RepoRoot `
+      -GovernanceBaselinePathResolved $GovernanceBaselinePathResolved `
+      -ShouldSyncGovernanceBaseline $false `
+      -IsBatchMode $IsBatchMode `
+      -PythonCommand $PythonCommand `
+      -RuntimeFlowCommandTimeoutSeconds $RuntimeFlowCommandTimeoutSeconds `
+      -GovernanceSyncCommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds `
+      -EmitProgress $EmitProgress
   }
   else {
-    Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "governance_sync" -Status "skipped" -Detail "reason=runtime_flow_failed"
+    $flowResultEnvelope = [pscustomobject]@{
+      target                 = $TargetName
+      attachment_root        = $TargetConfig.AttachmentRoot
+      runtime_state_root     = $TargetConfig.AttachmentRuntimeStateRoot
+      flow_result            = [pscustomobject]@{
+        exit_code = 1
+        output    = "runtime flow skipped because governance baseline sync failed"
+      }
+      flow_duration_ms       = 0
+      flow_payload           = $null
+      governance_sync_result = $syncResult
+      governance_sync_duration_ms = $syncDurationMs
+      exit_code              = 1
+    }
+    Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "runtime_flow" -Status "skipped" -Detail "reason=baseline_sync_failed"
   }
 
   $milestoneResult = [pscustomobject]@{
@@ -1721,8 +1733,10 @@ function Invoke-TargetAllFeatures {
     attachment_root         = $TargetConfig.AttachmentRoot
     runtime_state_root      = $TargetConfig.AttachmentRuntimeStateRoot
     flow_result             = $flowResultEnvelope.flow_result
+    flow_duration_ms        = if ($flowResultEnvelope.PSObject.Properties.Name -contains "flow_duration_ms") { $flowResultEnvelope.flow_duration_ms } else { 0 }
     flow_payload            = $flowResultEnvelope.flow_payload
     governance_sync_result  = $syncResult
+    governance_sync_duration_ms = $syncDurationMs
     milestone_commit_result = $milestoneResult
     exit_code               = $exitCode
   }
@@ -2441,6 +2455,7 @@ if ($Json) {
           status       = $single.governance_sync_result.status
           reason       = $single.governance_sync_result.reason
           exit_code    = $single.governance_sync_result.exit_code
+          duration_ms  = if ($single.PSObject.Properties.Name -contains "governance_sync_duration_ms") { [int]$single.governance_sync_duration_ms } else { 0 }
           catalog_changed = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_catalog_fields } else { @() }
           catalog_blocked = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.blocked_catalog_fields } else { @() }
           changed      = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_fields } else { @() }
@@ -2498,6 +2513,7 @@ if ($Json) {
             status       = $single.governance_sync_result.status
             reason       = $single.governance_sync_result.reason
             exit_code    = $single.governance_sync_result.exit_code
+            duration_ms  = if ($single.PSObject.Properties.Name -contains "governance_sync_duration_ms") { [int]$single.governance_sync_duration_ms } else { 0 }
             catalog_changed = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_catalog_fields } else { @() }
             catalog_blocked = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.blocked_catalog_fields } else { @() }
             changed      = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_fields } else { @() }

@@ -65,6 +65,41 @@ exit 0
     path.write_text(script, encoding="utf-8")
 
 
+def _write_fake_runtime_flow_requires_synced_profile_script(path: Path) -> None:
+    script = """param(
+  [string]$AttachmentRoot = "",
+  [string]$FlowMode = "daily",
+  [switch]$Json
+)
+
+$profilePath = Join-Path $AttachmentRoot ".governed-ai\\repo-profile.json"
+$profile = Get-Content -LiteralPath $profilePath -Raw | ConvertFrom-Json
+$mode = [string]$profile.required_entrypoint_policy.current_mode
+if ($mode -ne "targeted_enforced") {
+  if ($Json) {
+    @{
+      exit_code = 9
+      overall_status = "fail"
+      reason = "profile_not_synced"
+      current_mode = $mode
+    } | ConvertTo-Json -Depth 8
+  }
+  exit 9
+}
+
+if ($Json) {
+  @{
+    exit_code = 0
+    overall_status = "pass"
+    flow_mode = $FlowMode
+    current_mode = $mode
+  } | ConvertTo-Json -Depth 8
+}
+exit 0
+"""
+    path.write_text(script, encoding="utf-8")
+
+
 def _write_fake_full_check_script(path: Path) -> None:
     script = """param(
   [string]$RepoProfilePath = "",
@@ -998,6 +1033,103 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                 profile = json.loads((repo / ".governed-ai" / "repo-profile.json").read_text(encoding="utf-8"))
                 self.assertEqual(profile["required_entrypoint_policy"]["current_mode"], "targeted_enforced")
                 self.assertEqual(profile["auto_commit_policy"]["enabled"], True)
+
+    def test_runtime_flow_preset_apply_all_features_syncs_baseline_before_daily_flow(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_a = workspace / "repo-a"
+            _write_json(
+                repo_a / ".governed-ai" / "repo-profile.json",
+                {
+                    "repo_id": "repo-a",
+                    "required_entrypoint_policy": {"current_mode": "advisory"},
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": str(repo_a),
+                            "attachment_runtime_state_root": str(workspace / "state" / "repo-a"),
+                            "repo_id": "repo-a",
+                            "display_name": "repo-a",
+                            "primary_language": "python",
+                            "build_command": "python --version",
+                            "test_command": "python --version",
+                            "contract_command": "python --version",
+                        }
+                    },
+                },
+            )
+
+            baseline_path = workspace / "target-repo-governance-baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-05-03.1",
+                    "required_profile_overrides": {
+                        "required_entrypoint_policy": {"current_mode": "targeted_enforced"},
+                        "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                    },
+                },
+            )
+
+            fake_runtime_flow_path = workspace / "fake-runtime-flow-requires-synced-profile.ps1"
+            _write_fake_runtime_flow_requires_synced_profile_script(fake_runtime_flow_path)
+            fake_full_check_path = workspace / "fake-full-check.ps1"
+            _write_fake_full_check_script(fake_full_check_path)
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "runtime-flow-preset.ps1"),
+                    "-Target",
+                    "repo-a",
+                    "-ApplyAllFeatures",
+                    "-FlowMode",
+                    "daily",
+                    "-MilestoneTag",
+                    "milestone",
+                    "-Json",
+                    "-CatalogPath",
+                    str(catalog_path),
+                    "-GovernanceBaselinePath",
+                    str(baseline_path),
+                    "-RuntimeFlowPath",
+                    str(fake_runtime_flow_path),
+                    "-GovernanceFullCheckPath",
+                    str(fake_full_check_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["overall_status"], "pass")
+            self.assertEqual(payload["current_mode"], "targeted_enforced")
+            self.assertEqual(payload["governance_baseline_sync"]["status"], "pass")
+            self.assertEqual(
+                payload["governance_baseline_sync"]["changed"],
+                ["required_entrypoint_policy", "auto_commit_policy"],
+            )
+            self.assertGreaterEqual(payload["governance_baseline_sync"]["duration_ms"], 0)
 
     def test_runtime_flow_preset_all_targets_apply_all_features_supports_fast_milestone_gate_mode(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
