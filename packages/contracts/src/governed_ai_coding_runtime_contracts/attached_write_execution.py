@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
+import hashlib
 import json
 from pathlib import Path
 
@@ -101,6 +102,7 @@ def execute_attached_write_request(
     rollback_reference: str,
     content: str,
     approval_id: str | None = None,
+    expected_sha256: str | None = None,
 ) -> AttachedWriteExecutionResult:
     attachment_root_path = Path(attachment_root)
     runtime_state_root_path = Path(attachment_runtime_state_root)
@@ -287,6 +289,66 @@ def execute_attached_write_request(
         )
     target_abs_path.parent.mkdir(parents=True, exist_ok=True)
     if normalized_tool_name == "write_file":
+        if target_abs_path.exists():
+            expected_hash = _normalize_sha256(expected_sha256)
+            if expected_hash is None:
+                denied = policy_decision_from_write_denial(
+                    task_id=normalized_task_id,
+                    tool_name=normalized_tool_name,
+                    target_path=normalized_target_path,
+                    tier=normalized_tier,
+                    reason="expected_sha256 is required when replacing an existing file",
+                )
+                return AttachedWriteExecutionResult(
+                    repo_id=profile.repo_id,
+                    binding_id=attachment.binding.binding_id,
+                    task_id=normalized_task_id,
+                    target_path=normalized_target_path,
+                    write_tier=normalized_tier,
+                    execution_status="denied",
+                    policy_decision=denied,
+                    approval_id=approval_id,
+                    reason="expected_sha256_required",
+                )
+            actual_hash = _sha256_text(target_abs_path.read_text(encoding="utf-8"))
+            if actual_hash != expected_hash:
+                denied = policy_decision_from_write_denial(
+                    task_id=normalized_task_id,
+                    tool_name=normalized_tool_name,
+                    target_path=normalized_target_path,
+                    tier=normalized_tier,
+                    reason="target file content differs from expected_sha256",
+                )
+                return AttachedWriteExecutionResult(
+                    repo_id=profile.repo_id,
+                    binding_id=attachment.binding.binding_id,
+                    task_id=normalized_task_id,
+                    target_path=normalized_target_path,
+                    write_tier=normalized_tier,
+                    execution_status="denied",
+                    policy_decision=denied,
+                    approval_id=approval_id,
+                    reason="expected_sha256_mismatch",
+                )
+        elif expected_sha256 is not None:
+            denied = policy_decision_from_write_denial(
+                task_id=normalized_task_id,
+                tool_name=normalized_tool_name,
+                target_path=normalized_target_path,
+                tier=normalized_tier,
+                reason="expected_sha256 was supplied but target file is missing",
+            )
+            return AttachedWriteExecutionResult(
+                repo_id=profile.repo_id,
+                binding_id=attachment.binding.binding_id,
+                task_id=normalized_task_id,
+                target_path=normalized_target_path,
+                write_tier=normalized_tier,
+                execution_status="denied",
+                policy_decision=denied,
+                approval_id=approval_id,
+                reason="expected_sha256_target_missing",
+            )
         atomic_write_text(target_abs_path, content, encoding="utf-8")
     else:
         with target_abs_path.open("a", encoding="utf-8") as stream:
@@ -303,6 +365,7 @@ def execute_attached_write_request(
             "target_path": normalized_target_path,
             "tier": normalized_tier,
             "rollback_reference": normalized_rollback_reference,
+            "expected_sha256": expected_sha256,
             "bytes_written": len(content.encode("utf-8")),
         },
     )
@@ -370,6 +433,21 @@ def _require_approved_request(
 def _approval_record_path(runtime_state_root: Path, approval_id: str) -> Path:
     normalized_approval_id = validate_file_component(approval_id, "approval_id")
     return runtime_state_root / _APPROVALS_DIR / f"{normalized_approval_id}.json"
+
+
+def _sha256_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _normalize_sha256(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = value.strip().lower()
+    if normalized.startswith("sha256:"):
+        normalized = normalized.removeprefix("sha256:")
+    if len(normalized) != 64 or any(char not in "0123456789abcdef" for char in normalized):
+        return None
+    return normalized
 
 
 def _ensure_repo_local_write_target(*, attachment_root: Path, target_abs_path: Path, target_path: str) -> None:

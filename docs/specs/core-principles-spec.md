@@ -76,13 +76,13 @@ The policy must declare:
 - Claude Code support assumes local third-party Anthropic-compatible provider usage such as GLM or DeepSeek, not official subscription entitlement.
 - Hermes Agent, OpenHands, SWE-agent, Letta, Mem0, LangGraph, Aider, Cline, OPA, MCP gateways, and similar projects are mechanism sources only.
 - The best engineering final state is Governance Hub + Reusable Contract + Controlled Evolution loop + outer AI intelligent review/generation capability.
-- Context budget and instruction minimalism are first-class constraints: core rules, instruction files, repo maps, and memory artifacts must stay bounded, concise, and verifiable.
-- Tool permissions, sandbox scope, credentials, provider secrets, mounted paths, and network access must be least-privilege and auditable.
-- Capability completion claims must be backed by fresh target-run evidence, eval traces, effect feedback, verification commands, and rollback paths.
+- Context budget and instruction minimalism are first-class constraints: core rules, instruction files, repo maps, memory artifacts, and tool responses must stay bounded, concise, high-signal, and verifiable.
+- Tool permissions, sandbox scope, credentials, provider secrets, mounted paths, network access, and MCP/tool identities must be least-privilege and auditable.
+- Capability completion claims must be backed by fresh target-run evidence, eval traces, trace/replay/trajectory references when available, effect feedback, verification commands, and rollback paths.
 - Efficiency must not override safety, least privilege, evidence, rollback, or review boundaries for effective changes.
 - Efficiency includes necessary explanatory density; concise explanation is part of execution quality, while verbose narration and fixed model tuning are not goals.
 - Model, provider, reasoning level, context window, compact threshold, and host tooling are implementation profiles, not core principles; they may be replaced only under the existing safety, least privilege, evidence, rollback, review, and gate constraints.
-- Comparable effect evidence should preserve stable fields such as freshness status, target run identity, gate result, effect metric delta, verification command, and rollback reference when the task surface can provide them.
+- Comparable effect evidence should preserve stable fields such as freshness status, target run identity, gate result, effect metric delta, verification command, trace/replay/trajectory reference, bounded tool-output summary, and rollback reference when the task surface can provide them.
 - Controlled evolution must evaluate additions, retention, improvement, merge, deprecation, retirement, and deletion candidates.
 - Deterministic governance automation should run inside this project; outer AI may be automatically triggered for high-intelligence analysis and proposal generation, but effective changes remain gate-controlled.
 - Automatic policy mutation, skill enablement, target-repo sync, push, and merge remain disallowed unless a later reviewed implementation explicitly changes the guard.

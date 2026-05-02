@@ -15,7 +15,8 @@ This policy is persisted through the target catalog and one-click governance bas
 - No-op speed guard: `scripts/runtime-flow-preset.ps1 -ApplyAllFeatures -AutoMilestoneGateMode` may skip the milestone gate only when auto mode selected `fast`, governance sync changed nothing, the target is a git repository, and `git status --porcelain` is empty.
 
 The target catalog is also the source of truth for base gate facts (`build_command`, `test_command`, and
-`contract_command`). One-click apply syncs those into target `repo-profile.json` before deriving speed groups.
+`contract_command`). One-click apply may fill missing target `repo-profile.json` gate groups from the catalog, but an
+existing target gate difference is a blocking drift that must be reviewed and integrated before either side is updated.
 
 ## Optional Outer-AI Handoff
 When an outer AI agent is available, it may recommend a target-specific slice by writing:
@@ -56,6 +57,7 @@ Behavior:
 - If the target catalog declares `quick_test_skip_reason`, the catalog skip wins and no outer-AI prompt is emitted.
 - If the recommendation file exists with `status=ready`, one-click apply uses it for `quick_gate_commands.test`.
 - If the recommendation file is missing, one-click apply writes a prompt and exposes an outer-AI recommendation task.
+- If the prompt file already exists with different content, one-click apply blocks instead of overwriting the target-local prompt.
 - If the recommendation file exists with `status=skip`, one-click apply treats that as a completed AI decision and keeps deterministic derived gates.
 - If the recommendation file is malformed, one-click apply fails closed so bad AI output cannot silently change gates.
 

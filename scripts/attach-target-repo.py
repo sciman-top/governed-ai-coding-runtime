@@ -86,7 +86,11 @@ def main() -> int:
         default="native_attach",
     )
     parser.add_argument("--gate-profile", default="default")
-    parser.add_argument("--overwrite", action="store_true", help="Regenerate existing repo-local attachment files.")
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Regenerate runtime-owned attachment files, but fail if repo-profile or dependency baseline has target-local drift.",
+    )
     args = parser.parse_args()
 
     target_repo = Path(args.target_repo).resolve(strict=False)

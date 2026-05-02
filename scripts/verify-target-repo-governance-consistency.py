@@ -14,12 +14,14 @@ from lib.target_repo_speed_profile import (
     normalize_target_config_test_slice,
     select_preferred_command,
 )
+from lib.target_repo_quick_test_prompt import build_quick_test_slice_prompt
 
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CATALOG_PATH = ROOT / "docs" / "targets" / "target-repos-catalog.json"
 DEFAULT_BASELINE_PATH = ROOT / "docs" / "targets" / "target-repo-governance-baseline.json"
 DEFAULT_QUICK_TEST_RECOMMENDATION_RELATIVE_PATH = ".governed-ai/quick-test-slice.recommendation.json"
+DEFAULT_QUICK_TEST_PROMPT_RELATIVE_PATH = ".governed-ai/quick-test-slice.prompt.md"
 DERIVED_RUNTIME_PROFILE_FIELDS = {"quick_gate_commands", "full_gate_commands", "gate_timeout_seconds"}
 CATALOG_PROFILE_FIELDS = {"repo_id", "display_name", "primary_language", "build_commands", "test_commands", "contract_commands"}
 
@@ -48,7 +50,9 @@ def _expand_template(value: str, variables: dict[str, str]) -> str:
     return expanded
 
 
-def _validate_baseline(path: Path) -> tuple[str, dict[str, Any], list[dict[str, Any]], dict[str, Any] | None]:
+def _validate_baseline(
+    path: Path,
+) -> tuple[str, dict[str, Any], list[dict[str, Any]], list[dict[str, Any]], dict[str, Any] | None]:
     baseline = _load_json(path)
     sync_revision = baseline.get("sync_revision")
     overrides = baseline.get("required_profile_overrides")
@@ -73,6 +77,21 @@ def _validate_baseline(path: Path) -> tuple[str, dict[str, Any], list[dict[str, 
             raise ValueError(
                 f"baseline.required_managed_files[{index}].management_mode must be replace, json_merge, or block_on_drift"
             )
+    generated_files = baseline.get("generated_managed_files", [])
+    if not isinstance(generated_files, list):
+        raise ValueError("baseline.generated_managed_files must be a list when present")
+    for index, item in enumerate(generated_files):
+        if not isinstance(item, dict):
+            raise ValueError(f"baseline.generated_managed_files[{index}] must be an object")
+        target_path = item.get("path")
+        generator = item.get("generator")
+        management_mode = item.get("management_mode", "block_on_drift")
+        if not isinstance(target_path, str) or not target_path.strip():
+            raise ValueError(f"baseline.generated_managed_files[{index}].path must be a non-empty string")
+        if generator != "outer_ai_quick_test_prompt":
+            raise ValueError(f"baseline.generated_managed_files[{index}].generator must be outer_ai_quick_test_prompt")
+        if management_mode != "block_on_drift":
+            raise ValueError(f"baseline.generated_managed_files[{index}].management_mode must be block_on_drift")
     ownership = baseline.get("repo_profile_field_ownership")
     if ownership is None:
         ownership = {
@@ -107,7 +126,7 @@ def _validate_baseline(path: Path) -> tuple[str, dict[str, Any], list[dict[str, 
     speed_policy = baseline.get("target_repo_speed_profile_policy")
     if speed_policy is not None:
         speed_policy = normalize_speed_profile_policy(speed_policy)
-    return sync_revision, overrides, managed_files, speed_policy
+    return sync_revision, overrides, managed_files, generated_files, speed_policy
 
 
 def _target_quick_test_skip_reason(target_config: dict[str, Any]) -> str:
@@ -293,7 +312,7 @@ def main() -> int:
     if not baseline_path.exists():
         raise SystemExit(f"baseline file not found: {baseline_path}")
 
-    sync_revision, expected_overrides, managed_files, speed_policy = _validate_baseline(baseline_path)
+    sync_revision, expected_overrides, managed_files, generated_files, speed_policy = _validate_baseline(baseline_path)
     targets = _load_targets(catalog_path)
     variables = {
         "repo_root": str(repo_root),
@@ -364,7 +383,8 @@ def main() -> int:
         target_test_skip_reason = _target_quick_test_skip_reason(target)
         if target_test_slice is not None and target_test_skip_reason:
             raise ValueError(f"target cannot define both quick_test_command and quick_test_skip_reason: {target_name}")
-        if target_test_slice is None and not target_test_skip_reason:
+        recommendation_path = attachment_root / DEFAULT_QUICK_TEST_RECOMMENDATION_RELATIVE_PATH
+        if target_test_slice is None and not target_test_skip_reason and recommendation_path.exists():
             target_test_slice = _load_outer_ai_test_slice_recommendation(attachment_root)
         _, mismatched_speed_profile_fields = apply_speed_profile_policy(
             profile,
@@ -413,6 +433,35 @@ def main() -> int:
                     "target_repo": str(attachment_root),
                     "profile_path": str(profile_path),
                     "mismatched_managed_files": mismatched_managed_files,
+                }
+            )
+
+        mismatched_generated_files: list[dict[str, str]] = []
+        should_have_quick_prompt = target_test_slice is None and not target_test_skip_reason and not recommendation_path.exists()
+        if should_have_quick_prompt:
+            for item in generated_files:
+                if item.get("generator") != "outer_ai_quick_test_prompt":
+                    continue
+                prompt_path = _target_relative_path(attachment_root, str(item["path"]))
+                expected_prompt = build_quick_test_slice_prompt(target_repo=attachment_root, profile=profile)
+                actual_prompt = prompt_path.read_text(encoding="utf-8") if prompt_path.exists() else None
+                if actual_prompt != expected_prompt:
+                    mismatched_generated_files.append(
+                        {
+                            "path": str(prompt_path.relative_to(attachment_root)).replace("\\", "/"),
+                            "generator": "outer_ai_quick_test_prompt",
+                            "management_mode": str(item.get("management_mode", "block_on_drift")),
+                            "reason": "missing" if actual_prompt is None else "content_drift",
+                        }
+                    )
+        if mismatched_generated_files:
+            drift.append(
+                {
+                    "target": target_name,
+                    "reason": "generated_managed_file_drift",
+                    "target_repo": str(attachment_root),
+                    "profile_path": str(profile_path),
+                    "mismatched_generated_files": mismatched_generated_files,
                 }
             )
 

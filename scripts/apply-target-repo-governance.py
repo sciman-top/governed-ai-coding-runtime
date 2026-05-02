@@ -14,6 +14,7 @@ from lib.target_repo_speed_profile import (
     normalize_speed_profile_policy,
     normalize_target_test_slice,
 )
+from lib.target_repo_quick_test_prompt import build_quick_test_slice_prompt
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -100,6 +101,30 @@ def _normalize_baseline(path: Path) -> dict[str, Any]:
             raise ValueError(
                 f"baseline.required_managed_files[{index}].management_mode must be replace, json_merge, or block_on_drift"
             )
+    generated_files = baseline.get("generated_managed_files")
+    if generated_files is None:
+        generated_files = [
+            {
+                "path": DEFAULT_QUICK_TEST_PROMPT_RELATIVE_PATH,
+                "generator": "outer_ai_quick_test_prompt",
+                "management_mode": "block_on_drift",
+            }
+        ]
+        baseline["generated_managed_files"] = generated_files
+    if not isinstance(generated_files, list):
+        raise ValueError("baseline.generated_managed_files must be a list when present")
+    for index, item in enumerate(generated_files):
+        if not isinstance(item, dict):
+            raise ValueError(f"baseline.generated_managed_files[{index}] must be an object")
+        target_path = item.get("path")
+        generator = item.get("generator")
+        management_mode = item.get("management_mode", "block_on_drift")
+        if not isinstance(target_path, str) or not target_path.strip():
+            raise ValueError(f"baseline.generated_managed_files[{index}].path must be a non-empty string")
+        if not isinstance(generator, str) or generator not in {"outer_ai_quick_test_prompt"}:
+            raise ValueError(f"baseline.generated_managed_files[{index}].generator must be outer_ai_quick_test_prompt")
+        if management_mode != "block_on_drift":
+            raise ValueError(f"baseline.generated_managed_files[{index}].management_mode must be block_on_drift")
     ownership = baseline.get("repo_profile_field_ownership")
     if ownership is None:
         ownership = {
@@ -187,64 +212,33 @@ def _write_outer_ai_test_slice_prompt(
     profile: dict[str, Any],
     prompt_path_arg: str | None = None,
     check_only: bool,
-) -> tuple[str, str | None]:
+) -> tuple[str, str | None, list[dict[str, str]], list[dict[str, str]]]:
     prompt_path = (
         Path(prompt_path_arg).resolve(strict=False)
         if prompt_path_arg
         else target_repo / DEFAULT_QUICK_TEST_PROMPT_RELATIVE_PATH
     )
-    test_commands = as_command_list(profile.get("test_commands"))
-    contract_commands = as_command_list(profile.get("contract_commands"))
-    invariant_commands = as_command_list(profile.get("invariant_commands"))
-    full_test = test_commands[0]["command"] if test_commands else ""
-    full_contract = contract_commands[0]["command"] if contract_commands else ""
-    full_invariant = invariant_commands[0]["command"] if invariant_commands else ""
-    prompt = f"""# Quick Test Slice Recommendation Prompt
-
-You are reviewing a target repository for a safe daily fast-test slice.
-
-Target repo: `{target_repo}`
-Repo id: `{profile.get("repo_id", "")}`
-Primary language: `{profile.get("primary_language", "")}`
-Full test command: `{full_test}`
-Full contract command: `{full_contract}`
-Full invariant command: `{full_invariant}`
-
-Task:
-1. Inspect the target repo test structure, markers/categories, and existing fast/smoke scripts.
-2. Recommend a `quick_test_command` only if it is deterministic, materially faster than the full test command, and representative of daily coding risk.
-3. Do not weaken full/release gates. The full test command must remain unchanged.
-4. If no safe slice exists, emit `status=skip`.
-
-Write this JSON to `.governed-ai/quick-test-slice.recommendation.json`:
-
-```json
-{{
-  "schema_version": "1.0",
-  "status": "ready",
-  "quick_test_command": "<command>",
-  "quick_test_reason": "<short reason>",
-  "quick_test_timeout_seconds": 180
-}}
-```
-
-Use this skip form when no safe slice is justified:
-
-```json
-{{
-  "schema_version": "1.0",
-  "status": "skip",
-  "quick_test_reason": "No safe target-specific quick test slice found."
-}}
-```
-"""
-    if check_only:
-        return "prompt_available", str(prompt_path)
-    prompt_path.parent.mkdir(parents=True, exist_ok=True)
+    prompt = build_quick_test_slice_prompt(target_repo=target_repo, profile=profile)
     existing = prompt_path.read_text(encoding="utf-8") if prompt_path.exists() else None
-    if existing != prompt:
-        prompt_path.write_text(prompt, encoding="utf-8")
-    return "prompt_written", str(prompt_path)
+    file_record = {
+        "path": str(prompt_path.relative_to(target_repo)).replace("\\", "/"),
+        "generator": "outer_ai_quick_test_prompt",
+        "management_mode": "block_on_drift",
+        "reason": "missing" if existing is None else "content_drift",
+        "source_sha256": _sha256_text(prompt),
+        "target_sha256": _sha256_text(existing) if existing is not None else "",
+        "expected_sha256": _sha256_text(prompt),
+    }
+    if existing == prompt:
+        return "prompt_current", str(prompt_path), [], []
+    if existing is not None:
+        file_record["blocking_reason"] = "generated file content differs; review and integrate before applying"
+        return "prompt_blocked", str(prompt_path), [], [file_record]
+    if check_only:
+        return "prompt_available", str(prompt_path), [file_record], []
+    prompt_path.parent.mkdir(parents=True, exist_ok=True)
+    prompt_path.write_text(prompt, encoding="utf-8")
+    return "prompt_written", str(prompt_path), [file_record], []
 
 
 def _catalog_gate_entry(gate_id: str, command: str) -> dict[str, Any] | None:
@@ -296,18 +290,32 @@ def _apply_catalog_profile_facts(
     test_command: str | None = None,
     contract_command: str | None = None,
     contract_commands_json: str | None = None,
-) -> tuple[dict[str, Any], list[str]]:
+) -> tuple[dict[str, Any], list[str], list[dict[str, Any]]]:
     updated = copy.deepcopy(profile)
     changed_fields: list[str] = []
+    blocked_fields: list[dict[str, Any]] = []
     for field_name, value in (
         ("repo_id", repo_id),
         ("display_name", display_name),
         ("primary_language", primary_language),
     ):
         normalized = str(value or "").strip()
-        if normalized and updated.get(field_name) != normalized:
+        current = str(updated.get(field_name) or "").strip()
+        if not normalized:
+            continue
+        if not current:
             updated[field_name] = normalized
             changed_fields.append(field_name)
+        elif current != normalized:
+            blocked_fields.append(
+                {
+                    "field": field_name,
+                    "reason": "content_drift",
+                    "target_value": current,
+                    "source_value": normalized,
+                    "blocking_reason": "catalog profile field differs; review and integrate target repo fixes before applying",
+                }
+            )
 
     for group_name, gate_id, command in (
         ("build_commands", "build", build_command),
@@ -317,20 +325,54 @@ def _apply_catalog_profile_facts(
         if entry is None:
             continue
         expected_group = [entry]
-        if updated.get(group_name) != expected_group:
+        actual_group = as_command_list(updated.get(group_name))
+        if not actual_group:
             updated[group_name] = expected_group
             changed_fields.append(group_name)
+        elif not _command_group_satisfies(actual_group, expected_group):
+            blocked_fields.append(_catalog_group_block(group_name, actual_group, expected_group))
 
     expected_contract_commands = _catalog_gate_entries(
         default_gate_id="contract",
         command=contract_command,
         commands_json=contract_commands_json,
     )
-    if expected_contract_commands and updated.get("contract_commands") != expected_contract_commands:
+    actual_contract_commands = as_command_list(updated.get("contract_commands"))
+    if expected_contract_commands and not actual_contract_commands:
         updated["contract_commands"] = expected_contract_commands
         changed_fields.append("contract_commands")
+    elif expected_contract_commands and not _command_group_satisfies(actual_contract_commands, expected_contract_commands):
+        blocked_fields.append(_catalog_group_block("contract_commands", actual_contract_commands, expected_contract_commands))
 
-    return updated, changed_fields
+    return updated, changed_fields, blocked_fields
+
+
+def _command_group_satisfies(actual_group: list[dict[str, Any]], expected_group: list[dict[str, Any]]) -> bool:
+    actual_by_id = {str(item.get("id") or "").strip(): str(item.get("command") or "").strip() for item in actual_group}
+    actual_commands = {str(item.get("command") or "").strip() for item in actual_group}
+    for expected in expected_group:
+        expected_id = str(expected.get("id") or "").strip()
+        expected_command = str(expected.get("command") or "").strip()
+        if expected_id:
+            if actual_by_id.get(expected_id) != expected_command:
+                return False
+        elif expected_command not in actual_commands:
+            return False
+    return True
+
+
+def _catalog_group_block(
+    group_name: str,
+    actual_group: list[dict[str, Any]],
+    expected_group: list[dict[str, Any]],
+) -> dict[str, Any]:
+    return {
+        "field": group_name,
+        "reason": "content_drift",
+        "target_value": copy.deepcopy(actual_group),
+        "source_value": copy.deepcopy(expected_group),
+        "blocking_reason": "catalog gate field differs; review and integrate target repo fixes before applying",
+    }
 
 
 def _target_relative_path(target_repo: Path, raw_path: str) -> Path:
@@ -517,7 +559,7 @@ def main() -> int:
     outer_ai_action = "none"
     quick_test_prompt_path = None
     overrides = baseline["required_profile_overrides"]
-    updated_profile, changed_catalog_fields = _apply_catalog_profile_facts(
+    updated_profile, changed_catalog_fields, blocked_catalog_fields = _apply_catalog_profile_facts(
         profile,
         repo_id=args.repo_id,
         display_name=args.display_name,
@@ -528,36 +570,59 @@ def main() -> int:
         contract_commands_json=args.contract_commands_json,
     )
     updated_profile, changed_fields = _apply_profile_overrides(profile=updated_profile, overrides=overrides)
-    if quick_test_slice_source == "none":
-        outer_ai_action, quick_test_prompt_path = _write_outer_ai_test_slice_prompt(
+    changed_speed_profile_fields: list[str] = []
+    changed_managed_files: list[dict[str, str]] = []
+    blocked_managed_files: list[dict[str, str]] = []
+    changed_generated_files: list[dict[str, str]] = []
+    blocked_generated_files: list[dict[str, str]] = []
+
+    if blocked_catalog_fields:
+        status = "blocked"
+    else:
+        status = "pass"
+
+    if not blocked_catalog_fields and quick_test_slice_source == "none":
+        (
+            outer_ai_action,
+            quick_test_prompt_path,
+            changed_generated_files,
+            blocked_generated_files,
+        ) = _write_outer_ai_test_slice_prompt(
             target_repo=target_repo,
             profile=updated_profile,
             prompt_path_arg=args.quick_test_prompt_path,
             check_only=args.check_only,
         )
-    if {"build_commands", "test_commands", "contract_commands"}.intersection(changed_catalog_fields):
-        updated_profile.pop("quick_gate_commands", None)
-        updated_profile.pop("full_gate_commands", None)
-    updated_profile, changed_speed_profile_fields = apply_speed_profile_policy(
-        profile=updated_profile,
-        policy=baseline.get("target_repo_speed_profile_policy"),
-        target_test_slice=target_test_slice,
-    )
-    changed_managed_files, blocked_managed_files = _sync_managed_files(
-        target_repo=target_repo,
-        baseline_path=baseline_path,
-        managed_files=baseline.get("required_managed_files", []),
-        check_only=args.check_only,
-        backup_root=managed_file_backup_root,
-    )
 
-    status = "pass"
-    if blocked_managed_files:
+    if not blocked_catalog_fields and not blocked_generated_files:
+        if {"build_commands", "test_commands", "contract_commands"}.intersection(changed_catalog_fields):
+            updated_profile.pop("quick_gate_commands", None)
+            updated_profile.pop("full_gate_commands", None)
+        updated_profile, changed_speed_profile_fields = apply_speed_profile_policy(
+            profile=updated_profile,
+            policy=baseline.get("target_repo_speed_profile_policy"),
+            target_test_slice=target_test_slice,
+        )
+        changed_managed_files, blocked_managed_files = _sync_managed_files(
+            target_repo=target_repo,
+            baseline_path=baseline_path,
+            managed_files=baseline.get("required_managed_files", []),
+            check_only=args.check_only,
+            backup_root=managed_file_backup_root,
+        )
+
+    if blocked_catalog_fields or blocked_generated_files or blocked_managed_files:
         status = "blocked"
-    elif changed_catalog_fields or changed_fields or changed_speed_profile_fields or changed_managed_files:
+    elif (
+        changed_catalog_fields
+        or changed_fields
+        or changed_speed_profile_fields
+        or changed_managed_files
+        or changed_generated_files
+    ):
         status = "drift" if args.check_only else "applied"
 
-    if not args.check_only and (changed_catalog_fields or changed_fields or changed_speed_profile_fields):
+    if status != "blocked" and not args.check_only and (changed_catalog_fields or changed_fields or changed_speed_profile_fields):
         profile_path.write_text(
             json.dumps(updated_profile, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
@@ -571,10 +636,13 @@ def main() -> int:
         "managed_file_backup_root": str(managed_file_backup_root),
         "sync_revision": baseline["sync_revision"],
         "changed_catalog_fields": changed_catalog_fields,
+        "blocked_catalog_fields": blocked_catalog_fields,
         "changed_fields": changed_fields,
         "changed_speed_profile_fields": changed_speed_profile_fields,
         "changed_managed_files": changed_managed_files,
         "blocked_managed_files": blocked_managed_files,
+        "changed_generated_files": changed_generated_files,
+        "blocked_generated_files": blocked_generated_files,
         "quick_test_slice_source": quick_test_slice_source,
         "quick_test_skip_reason": quick_test_skip_reason if quick_test_slice_source.endswith("_skip") else "",
         "quick_test_recommendation_path": recommendation_path,
@@ -585,9 +653,15 @@ def main() -> int:
     }
     print(json.dumps(output, ensure_ascii=False, indent=2))
 
-    if blocked_managed_files:
+    if blocked_catalog_fields or blocked_generated_files or blocked_managed_files:
         return 2
-    if args.check_only and (changed_catalog_fields or changed_fields or changed_speed_profile_fields or changed_managed_files):
+    if args.check_only and (
+        changed_catalog_fields
+        or changed_fields
+        or changed_speed_profile_fields
+        or changed_managed_files
+        or changed_generated_files
+    ):
         return 1
     return 0
 

@@ -28,8 +28,8 @@
 - `综合效率优先，安全边界约束`：少打扰、自动连续执行、节省 token / 成本、保留必要解释、高效率；模型、provider、推理档位、context window、compact 阈值、交互方式与自动化细节只是阶段性实现，不是长期原则；效率优化不得绕过既有安全、证据、回滚、review 和门禁约束。
 - `自动优先，外层 AI 辅助，门禁控制演进`：确定性治理工作应自动化；外层 AI 可生成 review、知识、候选和建议，但有效变更必须先经过结构化候选、风险分级、机器门禁、证据、回滚和必要 review。
 - `治理中枢，可复用契约，宿主兼容执行`：本仓是治理 sidecar / control plane，不竞争或替代 Codex、Claude Code 等宿主；外部 agent 项目只作为机制来源。
-- `上下文预算与指令最小化 + 最小权限工具/凭据边界`：根规则保持短而硬；工具权限、凭据、sandbox、mount、network、provider secret 必须可审计并尽量由确定性控制执行。
-- `效果反馈优先于完成声明`：完成声明必须有 fresh target-run evidence、eval trace、effect feedback、verification command 与 rollback；文档、代码存在或候选文件本身不等于完成。
+- `上下文预算与指令最小化 + 最小权限工具/凭据边界`：根规则保持短而硬；工具输出必须保持高信号、可裁剪、可复用；工具权限、凭据、sandbox、mount、network、provider secret 和 MCP/tool identity 必须可审计并尽量由确定性控制执行。
+- `效果反馈优先于完成声明`：完成声明必须有 fresh target-run evidence、eval trace、trace/replay/trajectory refs、effect feedback、verification command 与 rollback；文档、代码存在或候选文件本身不等于完成。
 - 全局规则给风险、语言、N/A 和门禁语义；本文件给本仓目录归宿、真实命令、阻断条件、证据位置和回滚入口。
 - 项目规则只保留本仓不可由代码/CI自动推断且会改变执行、风险或验收的事实；长流程下沉到子文档或工具专属规则。
 - 规则文件、门禁、profile、baseline 或同步脚本修改前，必须先比对控制仓 `governed-ai-coding-runtime/rules/manifest.json`、源文件、用户目录/目标仓已分发副本、目标仓真实 gate/profile/CI/script/README 差异和当前工具官方加载模型；发现漂移先整合再同步，不盲目覆盖。

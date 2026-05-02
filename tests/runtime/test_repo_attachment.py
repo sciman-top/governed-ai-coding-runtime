@@ -293,6 +293,79 @@ class RepoAttachmentBindingTests(unittest.TestCase):
             self.assertTrue(result.context_pack_summary["exists"])
             self.assertIsNone(result.provenance_path)
 
+    def test_attach_target_repo_overwrite_blocks_existing_repo_profile_drift(self) -> None:
+        module = self._module()
+        with tempfile.TemporaryDirectory() as workspace:
+            repo_root = Path(workspace) / "profile-drift-target"
+            governed_dir = repo_root / ".governed-ai"
+            governed_dir.mkdir(parents=True)
+            runtime_root = Path(workspace) / "runtime-state" / "profile-drift-target"
+            local_profile = self._minimal_repo_profile("profile-drift-target")
+            local_profile["test_commands"][0]["command"] = "python -m unittest tests.fast"
+            (governed_dir / "repo-profile.json").write_text(
+                json.dumps(local_profile, indent=2, sort_keys=True),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "repo-profile.json content differs"):
+                module.attach_target_repo(
+                    target_repo_root=str(repo_root),
+                    runtime_state_root=str(runtime_root),
+                    repo_id="profile-drift-target",
+                    display_name="Profile Drift Target",
+                    primary_language="python",
+                    build_command="python -m compileall src",
+                    test_command="python -m unittest discover",
+                    contract_command="python -m unittest discover -s tests/contracts",
+                    overwrite=True,
+                )
+
+            preserved_profile = json.loads((governed_dir / "repo-profile.json").read_text(encoding="utf-8"))
+            self.assertEqual(preserved_profile["test_commands"][0]["command"], "python -m unittest tests.fast")
+
+    def test_attach_target_repo_overwrite_blocks_existing_dependency_baseline_drift(self) -> None:
+        module = self._module()
+        with tempfile.TemporaryDirectory() as workspace:
+            repo_root = Path(workspace) / "dependency-drift-target"
+            governed_dir = repo_root / ".governed-ai"
+            governed_dir.mkdir(parents=True)
+            runtime_root = Path(workspace) / "runtime-state" / "dependency-drift-target"
+            profile = module.build_minimal_repo_profile(
+                repo_id="dependency-drift-target",
+                display_name="Dependency Drift Target",
+                primary_language="python",
+                build_command="python -m compileall src",
+                test_command="python -m unittest discover",
+                contract_command="python -m unittest discover -s tests/contracts",
+            )
+            (governed_dir / "repo-profile.json").write_text(json.dumps(profile, indent=2), encoding="utf-8")
+            local_baseline = {
+                "schema_version": "1.0",
+                "baseline_kind": "target_repo_dependency_baseline",
+                "repo_id": "dependency-drift-target",
+                "local_fix": "preserve",
+            }
+            (governed_dir / "dependency-baseline.json").write_text(
+                json.dumps(local_baseline, indent=2, sort_keys=True),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "dependency-baseline.json content differs"):
+                module.attach_target_repo(
+                    target_repo_root=str(repo_root),
+                    runtime_state_root=str(runtime_root),
+                    repo_id="dependency-drift-target",
+                    display_name="Dependency Drift Target",
+                    primary_language="python",
+                    build_command="python -m compileall src",
+                    test_command="python -m unittest discover",
+                    contract_command="python -m unittest discover -s tests/contracts",
+                    overwrite=True,
+                )
+
+            preserved_baseline = json.loads((governed_dir / "dependency-baseline.json").read_text(encoding="utf-8"))
+            self.assertEqual(preserved_baseline["local_fix"], "preserve")
+
     def test_validate_light_pack_rejects_repo_profile_ref_outside_target_repo(self) -> None:
         module = self._module()
         with tempfile.TemporaryDirectory() as workspace:

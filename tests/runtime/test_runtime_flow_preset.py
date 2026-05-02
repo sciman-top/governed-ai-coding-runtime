@@ -1633,6 +1633,72 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             self.assertEqual(payload["batch_timed_out"], True)
             self.assertEqual(payload["target_count"], 1)
 
+    def test_runtime_flow_preset_all_targets_json_reports_elapsed_without_batch_timeout(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_a = workspace / "repo-a"
+            _write_json(
+                repo_a / ".governed-ai" / "repo-profile.json",
+                {
+                    "repo_id": "repo-a",
+                    "required_entrypoint_policy": {"current_mode": "advisory"},
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": str(repo_a),
+                            "attachment_runtime_state_root": str(workspace / "state" / "repo-a"),
+                            "repo_id": "repo-a",
+                            "display_name": "repo-a",
+                            "primary_language": "python",
+                            "build_command": "python --version",
+                            "test_command": "python --version",
+                            "contract_command": "python --version",
+                        }
+                    },
+                },
+            )
+
+            slow_runtime_flow_path = workspace / "slow-runtime-flow.ps1"
+            _write_fake_slow_runtime_flow_script(slow_runtime_flow_path)
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "runtime-flow-preset.ps1"),
+                    "-AllTargets",
+                    "-FlowMode",
+                    "daily",
+                    "-Json",
+                    "-CatalogPath",
+                    str(catalog_path),
+                    "-RuntimeFlowPath",
+                    str(slow_runtime_flow_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertGreaterEqual(payload["batch_elapsed_seconds"], 1)
+            self.assertGreaterEqual(payload["results"][0]["target_duration_ms"], 1000)
+            self.assertGreaterEqual(payload["results"][0]["flow_duration_ms"], 1000)
+
     def test_runtime_flow_preset_all_targets_json_supports_target_parallelism(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)
@@ -1704,8 +1770,11 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             payload = json.loads(completed.stdout)
             self.assertEqual(payload["target_count"], 3)
             self.assertEqual(payload["failure_count"], 0)
+            self.assertGreaterEqual(payload["batch_elapsed_seconds"], 1)
             self.assertLess(elapsed, 8.0)
             self.assertEqual({item["target"] for item in payload["results"]}, set(targets))
+            self.assertTrue(all(item["target_duration_ms"] > 0 for item in payload["results"]))
+            self.assertTrue(all(item["flow_duration_ms"] > 0 for item in payload["results"]))
 
     def test_runtime_flow_preset_all_targets_apply_all_features_logs_stage_progress(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

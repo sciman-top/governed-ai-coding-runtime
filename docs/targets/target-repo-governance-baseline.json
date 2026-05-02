@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "baseline_id": "active-target-governance-baseline",
-  "sync_revision": "2026-05-02.1",
+  "sync_revision": "2026-05-02.2",
   "required_managed_files": [
     {
       "path": ".governed-ai/verify-powershell-policy.py",
@@ -20,6 +20,14 @@
       "source": "docs/targets/templates/claude-code/governed-pre-tool-use.py",
       "management_mode": "block_on_drift",
       "description": "Claude Code PreToolUse guard that fail-closes direct Windows PowerShell usage and sensitive local file reads with exit code 2, but blocks silent overwrite when a target repo has intentionally extended the hook locally."
+    }
+  ],
+  "generated_managed_files": [
+    {
+      "path": ".governed-ai/quick-test-slice.prompt.md",
+      "generator": "outer_ai_quick_test_prompt",
+      "management_mode": "block_on_drift",
+      "description": "Dynamic prompt emitted only when a target lacks a catalog quick_test_command/skip or recommendation file; existing target-local prompt drift must be reviewed and integrated before sync instead of overwritten."
     }
   ],
   "repo_profile_field_ownership": {

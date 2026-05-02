@@ -96,7 +96,7 @@
     {
       "principle_id": "context_budget_and_instruction_minimalism",
       "category": "execution",
-      "summary": "Core rules, instruction files, repo maps, and memory artifacts must stay bounded, concise, and verifiable so context budget is preserved for the task, code, and evidence.",
+      "summary": "Core rules, instruction files, repo maps, memory artifacts, and tool outputs must stay bounded, concise, high-signal, and verifiable so context budget is preserved for the task, code, and evidence.",
       "required": true,
       "enforcement_level": "docs_gate",
       "machine_gate": "verify-core-principles",
@@ -105,7 +105,7 @@
     {
       "principle_id": "least_privilege_tool_credential_boundary",
       "category": "security",
-      "summary": "Tool permissions, sandbox scope, credentials, provider secrets, mounted paths, and network access must be least-privilege, auditable, and enforced through deterministic controls where possible.",
+      "summary": "Tool permissions, sandbox scope, credentials, provider secrets, mounted paths, network access, and MCP/tool identities must be least-privilege, auditable, and enforced through deterministic controls where possible.",
       "required": true,
       "enforcement_level": "docs_gate",
       "machine_gate": "verify-core-principles",
@@ -114,7 +114,7 @@
     {
       "principle_id": "measured_effect_feedback_over_claims",
       "category": "evidence",
-      "summary": "Capability completion claims must be backed by fresh target-run evidence, eval traces, effect feedback, verification commands, and rollback paths rather than documentation or code existence alone.",
+      "summary": "Capability completion claims must be backed by fresh target-run evidence, eval traces, replay or trajectory references where available, effect feedback, verification commands, and rollback paths rather than documentation or code existence alone.",
       "required": true,
       "enforcement_level": "docs_gate",
       "machine_gate": "verify-core-principles",
@@ -192,11 +192,23 @@
     },
     {
       "path": "AGENTS.md",
+      "contains": "工具输出必须保持高信号、可裁剪、可复用"
+    },
+    {
+      "path": "AGENTS.md",
       "contains": "最小权限工具/凭据边界"
     },
     {
       "path": "AGENTS.md",
+      "contains": "MCP/tool identity"
+    },
+    {
+      "path": "AGENTS.md",
       "contains": "效果反馈优先于完成声明"
+    },
+    {
+      "path": "AGENTS.md",
+      "contains": "trace/replay/trajectory"
     },
     {
       "path": "AGENTS.md",
@@ -240,11 +252,23 @@
     },
     {
       "path": "docs/README.md",
+      "contains": "bounded tool outputs"
+    },
+    {
+      "path": "docs/README.md",
       "contains": "Least-privilege tool and credential boundary"
     },
     {
       "path": "docs/README.md",
+      "contains": "MCP/tool identities"
+    },
+    {
+      "path": "docs/README.md",
       "contains": "Measured effect feedback over claims"
+    },
+    {
+      "path": "docs/README.md",
+      "contains": "trace/replay/trajectory references"
     },
     {
       "path": "docs/README.md",
@@ -273,6 +297,14 @@
     {
       "path": "docs/specs/core-principles-spec.md",
       "contains": "effect metric delta"
+    },
+    {
+      "path": "docs/specs/core-principles-spec.md",
+      "contains": "bounded tool-output summary"
+    },
+    {
+      "path": "docs/specs/core-principles-spec.md",
+      "contains": "trace/replay/trajectory reference"
     },
     {
       "path": "docs/research/runtime-governance-borrowing-matrix.md",
@@ -331,7 +363,8 @@
     "docs/change-evidence/20260501-core-principle-best-practice-optimization.md",
     "docs/change-evidence/20260501-core-principle-readable-convergence.md",
     "docs/change-evidence/20260502-source-target-drift-integration.md",
-    "docs/change-evidence/20260502-core-principles-efficiency-profile-alignment.md"
+    "docs/change-evidence/20260502-core-principles-efficiency-profile-alignment.md",
+    "docs/change-evidence/20260502-core-principle-observability-tooling-convergence.md"
   ],
   "rollback_ref": "git revert core-principles policy, schema, verifier, and docs gate wiring"
 }

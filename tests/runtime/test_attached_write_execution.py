@@ -4,6 +4,7 @@ import unittest
 import os
 from pathlib import Path
 import importlib
+import hashlib
 import json
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -187,6 +188,52 @@ class AttachedWriteExecutionTests(unittest.TestCase):
                 decided_by="operator",
             )
 
+    def test_write_file_denies_existing_file_without_expected_sha256(self) -> None:
+        execution_module = importlib.import_module("governed_ai_coding_runtime_contracts.attached_write_execution")
+        target_repo, runtime_state_root = self._attached_target()
+        target_file = target_repo / "src" / "main.py"
+        target_file.parent.mkdir(parents=True, exist_ok=True)
+        target_file.write_text("print('target-local')\n", encoding="utf-8")
+
+        result = execution_module.execute_attached_write_request(
+            attachment_root=target_repo,
+            attachment_runtime_state_root=runtime_state_root,
+            task_id="task-write-existing-no-if-match",
+            tool_name="write_file",
+            target_path="src/main.py",
+            tier="low",
+            rollback_reference="git diff -- src/main.py",
+            content="print('stale-request')\n",
+        )
+
+        self.assertEqual(result.execution_status, "denied")
+        self.assertEqual(result.reason, "expected_sha256_required")
+        self.assertEqual(target_file.read_text(encoding="utf-8"), "print('target-local')\n")
+
+    def test_write_file_executes_existing_file_when_expected_sha256_matches(self) -> None:
+        execution_module = importlib.import_module("governed_ai_coding_runtime_contracts.attached_write_execution")
+        target_repo, runtime_state_root = self._attached_target()
+        target_file = target_repo / "src" / "main.py"
+        target_file.parent.mkdir(parents=True, exist_ok=True)
+        original = "print('target-local')\n"
+        target_file.write_text(original, encoding="utf-8")
+        expected_sha256 = hashlib.sha256(original.encode("utf-8")).hexdigest()
+
+        result = execution_module.execute_attached_write_request(
+            attachment_root=target_repo,
+            attachment_runtime_state_root=runtime_state_root,
+            task_id="task-write-existing-if-match",
+            tool_name="write_file",
+            target_path="src/main.py",
+            tier="low",
+            rollback_reference="git diff -- src/main.py",
+            content="print('fresh-request')\n",
+            expected_sha256=expected_sha256,
+        )
+
+        self.assertEqual(result.execution_status, "executed")
+        self.assertEqual(target_file.read_text(encoding="utf-8"), "print('fresh-request')\n")
+
     def test_write_file_updates_symlink_target_without_replacing_link(self) -> None:
         execution_module = importlib.import_module("governed_ai_coding_runtime_contracts.attached_write_execution")
         target_repo, runtime_state_root = self._attached_target()
@@ -209,6 +256,7 @@ class AttachedWriteExecutionTests(unittest.TestCase):
             tier="low",
             rollback_reference="git diff -- src/linked.txt",
             content="after\n",
+            expected_sha256=hashlib.sha256("before\n".encode("utf-8")).hexdigest(),
         )
 
         self.assertEqual(result.execution_status, "executed")

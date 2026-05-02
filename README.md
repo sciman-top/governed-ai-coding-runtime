@@ -68,8 +68,8 @@ AI 推荐的日常入口：
   - `Efficiency first, safety bounded`：综合效率优先，安全边界约束；少打扰、自动连续执行、节省 token / 成本、保留必要解释、高效率；模型、provider、推理档位、context window、compact 阈值和交互入口只是阶段性实现；效率优化不得绕过既有安全、证据、回滚、review 和门禁约束。
   - `Automation-first, outer-AI-assisted, gate-controlled evolution`：确定性治理工作应自动化；外层 AI 可自动生成 review、知识、候选和建议，但有效变更必须先成为结构化候选并通过风险分级、机器门禁、证据、回滚和必要 review。
   - `Governance hub, reusable contract, host-compatible execution`：本项目是治理中枢和可复用契约，不竞争或替代 Codex / Claude Code 等宿主；外部 agent 项目只作为机制来源。
-  - `Context budget, instruction minimalism, least privilege`：`context_budget_and_instruction_minimalism` 与 `least_privilege_tool_credential_boundary` 是同一执行边界；根规则保持短而硬，工具权限、凭据、sandbox、mount、network、provider secret 必须可审计并尽量由确定性控制执行。
-  - `Measured effect over claims`：`measured_effect_feedback_over_claims` 要求完成声明必须有 fresh target-run evidence、eval trace、effect feedback、verification command 与 rollback；文档、代码存在或候选文件本身不等于完成。
+  - `Context budget, instruction minimalism, least privilege`：`context_budget_and_instruction_minimalism` 与 `least_privilege_tool_credential_boundary` 是同一执行边界；根规则保持短而硬，工具输出必须保持高信号、可裁剪、可复用；工具权限、凭据、sandbox、mount、network、provider secret 和 MCP/tool identity 必须可审计并尽量由确定性控制执行。
+  - `Measured effect over claims`：`measured_effect_feedback_over_claims` 要求完成声明必须有 fresh target-run evidence、eval trace、trace/replay/trajectory refs、effect feedback、verification command 与 rollback；文档、代码存在或候选文件本身不等于完成。
 
 现在能否用于其他项目？
 - 可以，**但边界是“治理 sidecar / attach-first metadata + runtime-managed gate/write flows + explicit degrade semantics”**。

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "contract_id": "target-repo-rollout-contract",
-  "sync_revision": "2026-05-02.1",
+  "sync_revision": "2026-05-02.2",
   "canonical_one_click_entrypoint": {
     "script": "scripts/runtime-flow-preset.ps1",
     "all_targets_apply_all_features_args": [
@@ -23,6 +23,9 @@
       "apply_coding_speed_profile",
       "apply_feature_baseline_and_milestone_commit",
       "governance_baseline_sync_active",
+      "governance_sync_catalog_blocked",
+      "governance_sync_generated_changed",
+      "governance_sync_generated_blocked",
       "governance_sync_managed_changed",
       "governance_sync_managed_blocked",
       "milestone_gate_mode",
@@ -48,6 +51,13 @@
       {
         "path": ".claude/hooks/governed-pre-tool-use.py",
         "source": "docs/targets/templates/claude-code/governed-pre-tool-use.py",
+        "management_mode": "block_on_drift"
+      }
+    ],
+    "generated_managed_files": [
+      {
+        "path": ".governed-ai/quick-test-slice.prompt.md",
+        "generator": "outer_ai_quick_test_prompt",
         "management_mode": "block_on_drift"
       }
     ]
@@ -217,6 +227,11 @@
       "capability_id": "target-repo-gate-speed-controls",
       "distribution_scope": "runtime_orchestrated",
       "reason": "fast/full、auto milestone gate 和 timeout 仍由一键运行入口编排；baseline 可从目标仓既有 build/test/contract 命令派生 quick/full gate command groups，但不下发固定跨仓命令覆盖。"
+    },
+    {
+      "capability_id": "target-repo-quick-test-prompt",
+      "distribution_scope": "repo_local_artifact",
+      "reason": "quick-test prompt 是按目标仓 profile 动态生成的本地审查提示词；一键应用只能缺失时创建，已存在差异必须阻断整合，不能覆盖目标仓优化。"
     },
     {
       "capability_id": "source-string-contract-guard",

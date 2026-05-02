@@ -121,6 +121,35 @@ function ConvertTo-ProcessArgumentString {
   return ($quoted -join " ")
 }
 
+function Stop-ProcessTree {
+  param(
+    [Parameter(Mandatory = $true)]
+    [int]$ProcessId
+  )
+
+  if ($ProcessId -le 0) {
+    return
+  }
+
+  $children = @()
+  try {
+    $children = @(Get-CimInstance Win32_Process -Filter ("ParentProcessId={0}" -f $ProcessId) -ErrorAction Stop)
+  }
+  catch {
+    $children = @()
+  }
+
+  foreach ($child in $children) {
+    Stop-ProcessTree -ProcessId ([int]$child.ProcessId)
+  }
+
+  try {
+    Stop-Process -Id $ProcessId -Force -ErrorAction Stop
+  }
+  catch {
+  }
+}
+
 function Invoke-CommandCapture {
   param(
     [Parameter(Mandatory = $true)]
@@ -145,6 +174,7 @@ function Invoke-CommandCapture {
   $timedOut = $false
   $exitCode = 0
   $outputText = ""
+  $startedAt = Get-Date
   if ($TimeoutSeconds -gt 0) {
     $stdoutPath = [System.IO.Path]::GetTempFileName()
     $stderrPath = [System.IO.Path]::GetTempFileName()
@@ -165,11 +195,7 @@ function Invoke-CommandCapture {
       $completed = $process.WaitForExit($TimeoutSeconds * 1000)
       if (-not $completed) {
         $timedOut = $true
-        try {
-          Stop-Process -Id $process.Id -Force -ErrorAction Stop
-        }
-        catch {
-        }
+        Stop-ProcessTree -ProcessId ([int]$process.Id)
         $null = $process.WaitForExit(5000)
         $exitCode = 124
       }
@@ -220,6 +246,7 @@ function Invoke-CommandCapture {
     output    = $outputText
     timed_out = [bool]$timedOut
     timeout_seconds = [int]$TimeoutSeconds
+    duration_ms = [int][Math]::Round(((Get-Date) - $startedAt).TotalMilliseconds)
   }
 }
 
@@ -434,7 +461,7 @@ function Test-GovernanceSyncHasChanges {
     return $true
   }
 
-  foreach ($fieldName in @("changed_catalog_fields", "changed_fields", "changed_speed_profile_fields", "changed_managed_files", "blocked_managed_files")) {
+  foreach ($fieldName in @("changed_catalog_fields", "blocked_catalog_fields", "changed_fields", "changed_speed_profile_fields", "changed_managed_files", "blocked_managed_files", "changed_generated_files", "blocked_generated_files")) {
     if (-not ($SyncResult.payload.PSObject.Properties.Name -contains $fieldName)) {
       return $true
     }
@@ -704,6 +731,9 @@ function Export-TargetRunEvidence {
     $payload["exported_at"] = (Get-Date).ToString("o")
     $payload["export_source"] = "runtime-flow-preset"
     $payload["export_target"] = $targetName
+    $payload["target_duration_ms"] = if ($targetRun.PSObject.Properties.Name -contains "target_duration_ms") { [int]$targetRun.target_duration_ms } else { 0 }
+    $payload["flow_duration_ms"] = if ($targetRun.PSObject.Properties.Name -contains "flow_duration_ms") { [int]$targetRun.flow_duration_ms } elseif ($targetRun.flow_result -and ($targetRun.flow_result.PSObject.Properties.Name -contains "duration_ms")) { [int]$targetRun.flow_result.duration_ms } else { 0 }
+    $payload["governance_sync_duration_ms"] = if ($targetRun.PSObject.Properties.Name -contains "governance_sync_duration_ms") { [int]$targetRun.governance_sync_duration_ms } else { 0 }
 
     $fileName = "{0}-{1}-{2}.json" -f $targetName, $FlowModeValue, $stamp
     $path = Join-Path $RunsRoot $fileName
@@ -910,6 +940,12 @@ function Invoke-GovernanceBaselineSync {
   elseif ($result.timed_out) {
     "apply_timed_out"
   }
+  elseif ($payload -and ($payload.PSObject.Properties.Name -contains "blocked_catalog_fields") -and (@(ConvertTo-JsonArrayValue -Value $payload.blocked_catalog_fields).Count -gt 0)) {
+    "catalog_field_blocked"
+  }
+  elseif ($payload -and ($payload.PSObject.Properties.Name -contains "blocked_generated_files") -and (@(ConvertTo-JsonArrayValue -Value $payload.blocked_generated_files).Count -gt 0)) {
+    "generated_file_blocked"
+  }
   elseif ($payload -and ($payload.PSObject.Properties.Name -contains "blocked_managed_files") -and (@(ConvertTo-JsonArrayValue -Value $payload.blocked_managed_files).Count -gt 0)) {
     "managed_file_blocked"
   }
@@ -1029,6 +1065,7 @@ function Invoke-TargetPresetFlow {
     -Detail ("duration_ms={0} exit_code={1}{2}" -f $flowDurationMs, $flowResult.exit_code, $flowTimeoutTag)
   $flowPayload = Try-ParseJson -Raw $flowResult.output
 
+  $syncDurationMs = 0
   $syncResult = [pscustomobject]@{
     target    = $TargetName
     status    = "skipped"
@@ -1093,8 +1130,10 @@ function Invoke-TargetPresetFlow {
     attachment_root        = $TargetConfig.AttachmentRoot
     runtime_state_root     = $TargetConfig.AttachmentRuntimeStateRoot
     flow_result            = $flowResult
+    flow_duration_ms       = $flowDurationMs
     flow_payload           = $flowPayload
     governance_sync_result = $syncResult
+    governance_sync_duration_ms = $syncDurationMs
     milestone_commit_result = [pscustomobject]@{
       target             = $TargetName
       status             = "skipped"
@@ -1130,6 +1169,7 @@ function Invoke-TargetGovernanceBaselineOnly {
     [int]$GovernanceSyncCommandTimeoutSeconds = 0
   )
 
+  $syncStartedAt = Get-Date
   $syncResult = Invoke-GovernanceBaselineSync `
     -TargetName $TargetName `
     -TargetConfig $TargetConfig `
@@ -1137,6 +1177,7 @@ function Invoke-TargetGovernanceBaselineOnly {
     -BaselinePath $GovernanceBaselinePathResolved `
     -PythonCommand $PythonCommand `
     -CommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds
+  $syncDurationMs = [int][Math]::Round(((Get-Date) - $syncStartedAt).TotalMilliseconds)
   $exitCode = if ($syncResult.status -eq "fail") { 1 } else { 0 }
 
   return [pscustomobject]@{
@@ -1144,8 +1185,10 @@ function Invoke-TargetGovernanceBaselineOnly {
     attachment_root        = $TargetConfig.AttachmentRoot
     runtime_state_root     = $TargetConfig.AttachmentRuntimeStateRoot
     flow_result            = [pscustomobject]@{ exit_code = 0; output = "" }
+    flow_duration_ms       = 0
     flow_payload           = $null
     governance_sync_result = $syncResult
+    governance_sync_duration_ms = $syncDurationMs
     milestone_commit_result = [pscustomobject]@{
       target            = $TargetName
       status            = "skipped"
@@ -1816,7 +1859,9 @@ if ($parallelBatchEligible) {
       [Parameter(Mandatory = $true)]
       [string]$OutputText,
       [Parameter(Mandatory = $true)]
-      [bool]$TimedOut
+      [bool]$TimedOut,
+      [Parameter(Mandatory = $true)]
+      [int]$DurationMs
     )
 
     $flowPayload = Try-ParseJson -Raw $OutputText
@@ -1826,12 +1871,15 @@ if ($parallelBatchEligible) {
 
     return [pscustomobject]@{
       target = $TargetName
+      target_duration_ms = $DurationMs
       exit_code = $ExitCode
       flow_result = [pscustomobject]@{
         exit_code = $ExitCode
         output = $OutputText
         timed_out = $TimedOut
+        duration_ms = $DurationMs
       }
+      flow_duration_ms = $DurationMs
       flow_payload = $flowPayload
       governance_sync_result = [pscustomobject]@{
         status = "skipped"
@@ -1840,6 +1888,7 @@ if ($parallelBatchEligible) {
         payload = $null
         output = ""
       }
+      governance_sync_duration_ms = 0
       milestone_commit_result = [pscustomobject]@{
         status = "skipped"
         reason = "not_requested"
@@ -1897,6 +1946,7 @@ if ($parallelBatchEligible) {
     }
 
     foreach ($entry in $completedEntries) {
+      $targetDurationMs = [int][Math]::Round(((Get-Date) - $entry.started_at).TotalMilliseconds)
       $stdoutText = Get-Content -LiteralPath $entry.stdout_path -Raw -ErrorAction SilentlyContinue
       $stderrText = Get-Content -LiteralPath $entry.stderr_path -Raw -ErrorAction SilentlyContinue
       $segments = @()
@@ -1910,7 +1960,8 @@ if ($parallelBatchEligible) {
         -TargetName ([string]$entry.target) `
         -ExitCode ([int]$entry.process.ExitCode) `
         -OutputText (($segments -join [Environment]::NewLine).TrimEnd()) `
-        -TimedOut $false
+        -TimedOut $false `
+        -DurationMs $targetDurationMs
       Remove-Item -LiteralPath $entry.stdout_path -ErrorAction SilentlyContinue
       Remove-Item -LiteralPath $entry.stderr_path -ErrorAction SilentlyContinue
     }
@@ -1920,11 +1971,8 @@ if ($parallelBatchEligible) {
 
   if ($batchTimedOut) {
     foreach ($entry in $activeProcesses) {
-      try {
-        Stop-Process -Id $entry.process.Id -Force -ErrorAction Stop
-      }
-      catch {
-      }
+      $targetDurationMs = [int][Math]::Round(((Get-Date) - $entry.started_at).TotalMilliseconds)
+      Stop-ProcessTree -ProcessId ([int]$entry.process.Id)
       $stdoutText = Get-Content -LiteralPath $entry.stdout_path -Raw -ErrorAction SilentlyContinue
       $stderrText = Get-Content -LiteralPath $entry.stderr_path -Raw -ErrorAction SilentlyContinue
       $segments = @()
@@ -1939,7 +1987,8 @@ if ($parallelBatchEligible) {
         -TargetName ([string]$entry.target) `
         -ExitCode 124 `
         -OutputText (($segments -join [Environment]::NewLine).TrimEnd()) `
-        -TimedOut $true
+        -TimedOut $true `
+        -DurationMs $targetDurationMs
       Remove-Item -LiteralPath $entry.stdout_path -ErrorAction SilentlyContinue
       Remove-Item -LiteralPath $entry.stderr_path -ErrorAction SilentlyContinue
     }
@@ -2060,6 +2109,7 @@ foreach ($targetName in $selectedTargets) {
   $targetRuns += $targetRun
 
   $targetDurationMs = [int][Math]::Round(((Get-Date) - $targetStartedAt).TotalMilliseconds)
+  $targetRun | Add-Member -NotePropertyName "target_duration_ms" -NotePropertyValue $targetDurationMs -Force
   $targetStatus = if ($targetRun.exit_code -eq 0) { "pass" } else { "fail" }
   Write-BatchProgressLine `
     -Enabled $progressEnabled `
@@ -2215,10 +2265,13 @@ if ($Json) {
           reason       = $single.governance_sync_result.reason
           exit_code    = $single.governance_sync_result.exit_code
           catalog_changed = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_catalog_fields } else { @() }
+          catalog_blocked = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.blocked_catalog_fields } else { @() }
           changed      = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_fields } else { @() }
           speed_changed = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_speed_profile_fields } else { @() }
           managed_changed = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_managed_files } else { @() }
           managed_blocked = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.blocked_managed_files } else { @() }
+          generated_changed = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_generated_files } else { @() }
+          generated_blocked = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.blocked_generated_files } else { @() }
           sync_revision = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.sync_revision } else { $null }
           quick_test_slice_source = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.quick_test_slice_source } else { "" }
           outer_ai_action = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.outer_ai_action } else { "" }
@@ -2263,10 +2316,13 @@ if ($Json) {
             reason       = $single.governance_sync_result.reason
             exit_code    = $single.governance_sync_result.exit_code
             catalog_changed = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_catalog_fields } else { @() }
+            catalog_blocked = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.blocked_catalog_fields } else { @() }
             changed      = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_fields } else { @() }
             speed_changed = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_speed_profile_fields } else { @() }
             managed_changed = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_managed_files } else { @() }
             managed_blocked = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.blocked_managed_files } else { @() }
+            generated_changed = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_generated_files } else { @() }
+            generated_blocked = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.blocked_generated_files } else { @() }
             sync_revision = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.sync_revision } else { $null }
             quick_test_slice_source = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.quick_test_slice_source } else { "" }
             outer_ai_action = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.outer_ai_action } else { "" }
@@ -2294,19 +2350,44 @@ if ($Json) {
         if ($_.flow_result -and ($_.flow_result.PSObject.Properties.Name -contains "timed_out")) {
           $flowTimedOut = [bool]$_.flow_result.timed_out
         }
+        $targetDurationMs = if ($_.PSObject.Properties.Name -contains "target_duration_ms") { [int]$_.target_duration_ms } else { 0 }
+        $flowDurationMs = if ($_.PSObject.Properties.Name -contains "flow_duration_ms") {
+          [int]$_.flow_duration_ms
+        }
+        elseif ($_.flow_result -and ($_.flow_result.PSObject.Properties.Name -contains "duration_ms")) {
+          [int]$_.flow_result.duration_ms
+        }
+        else {
+          0
+        }
+        $governanceSyncDurationMs = if ($_.PSObject.Properties.Name -contains "governance_sync_duration_ms") {
+          [int]$_.governance_sync_duration_ms
+        }
+        elseif ($_.governance_sync_result -and ($_.governance_sync_result.PSObject.Properties.Name -contains "duration_ms")) {
+          [int]$_.governance_sync_result.duration_ms
+        }
+        else {
+          0
+        }
         [ordered]@{
           target                   = $_.target
           exit_code                = $_.exit_code
+          target_duration_ms       = $targetDurationMs
           flow_exit_code           = $_.flow_result.exit_code
           flow_timed_out           = $flowTimedOut
+          flow_duration_ms         = $flowDurationMs
           governance_sync_status   = $_.governance_sync_result.status
           governance_sync_reason   = $_.governance_sync_result.reason
           governance_sync_exit_code = $_.governance_sync_result.exit_code
+          governance_sync_duration_ms = $governanceSyncDurationMs
           governance_sync_catalog_changed = if ($_.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $_.governance_sync_result.payload.changed_catalog_fields } else { @() }
+          governance_sync_catalog_blocked = if ($_.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $_.governance_sync_result.payload.blocked_catalog_fields } else { @() }
           governance_sync_changed  = if ($_.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $_.governance_sync_result.payload.changed_fields } else { @() }
           governance_sync_speed_changed = if ($_.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $_.governance_sync_result.payload.changed_speed_profile_fields } else { @() }
           governance_sync_managed_changed = if ($_.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $_.governance_sync_result.payload.changed_managed_files } else { @() }
           governance_sync_managed_blocked = if ($_.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $_.governance_sync_result.payload.blocked_managed_files } else { @() }
+          governance_sync_generated_changed = if ($_.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $_.governance_sync_result.payload.changed_generated_files } else { @() }
+          governance_sync_generated_blocked = if ($_.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $_.governance_sync_result.payload.blocked_generated_files } else { @() }
           governance_sync_quick_test_slice_source = if ($_.governance_sync_result.payload) { $_.governance_sync_result.payload.quick_test_slice_source } else { "" }
           governance_sync_outer_ai_action = if ($_.governance_sync_result.payload) { $_.governance_sync_result.payload.outer_ai_action } else { "" }
           governance_sync_quick_test_prompt_path = if ($_.governance_sync_result.payload) { $_.governance_sync_result.payload.quick_test_prompt_path } else { "" }
@@ -2373,7 +2454,7 @@ if ($Json) {
       governance_sync_timeout_seconds = $GovernanceSyncTimeoutSeconds
       batch_timeout_seconds           = $BatchTimeoutSeconds
       batch_timed_out                 = $batchTimedOut
-      batch_elapsed_seconds           = if ($BatchTimeoutSeconds -gt 0) { [int][Math]::Floor(((Get-Date) - $batchStartedAt).TotalSeconds) } else { 0 }
+      batch_elapsed_seconds           = [int][Math]::Floor(((Get-Date) - $batchStartedAt).TotalSeconds)
       target_count                    = @($targetRuns).Count
       failure_count                   = $failureCount
       exported_target_repo_runs       = $exportedTargetRepoRuns

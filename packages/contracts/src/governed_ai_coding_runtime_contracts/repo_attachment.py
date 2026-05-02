@@ -201,8 +201,15 @@ def attach_target_repo(
             contract_command=contract_command,
         )
         _validate_repo_profile_for_attachment(profile)
-        _write_json(repo_profile_path, profile)
-        written_files.append(str(repo_profile_path))
+        if repo_profile_path.exists():
+            _ensure_json_equivalent_or_missing(
+                repo_profile_path,
+                profile,
+                "repo-profile.json",
+            )
+        else:
+            _write_json(repo_profile_path, profile)
+            written_files.append(str(repo_profile_path))
 
     light_pack = build_light_pack_payload(
         repo_id=repo_id,
@@ -853,7 +860,20 @@ def _sha256_file(path: Path) -> str:
 def _ensure_target_repo_dependency_baseline(*, repo_id: str, baseline_path: Path, overwrite: bool) -> bool:
     if baseline_path.exists() and not overwrite:
         return False
-    baseline_payload = {
+    baseline_payload = _target_repo_dependency_baseline_payload(repo_id)
+    if baseline_path.exists():
+        existing = _load_json_object(baseline_path, "dependency-baseline.json")
+        if _canonical_dependency_baseline(existing) != _canonical_dependency_baseline(baseline_payload):
+            raise ValueError(
+                "dependency-baseline.json content differs; review and integrate before overwriting"
+            )
+        return False
+    _write_json(baseline_path, baseline_payload)
+    return True
+
+
+def _target_repo_dependency_baseline_payload(repo_id: str) -> dict:
+    return {
         "schema_version": DEFAULT_SCHEMA_VERSION,
         "baseline_kind": "target_repo_dependency_baseline",
         "repo_id": _required_string(repo_id, "repo_id"),
@@ -864,8 +884,18 @@ def _ensure_target_repo_dependency_baseline(*, repo_id: str, baseline_path: Path
             "--target-repo-root <target-repo-root> --require-target-repo-baseline"
         ),
     }
-    _write_json(baseline_path, baseline_payload)
-    return True
+
+
+def _canonical_dependency_baseline(payload: dict) -> dict:
+    canonical = dict(payload)
+    canonical.pop("generated_at", None)
+    return canonical
+
+
+def _ensure_json_equivalent_or_missing(path: Path, expected: dict, label: str) -> None:
+    actual = _load_json_object(path, label)
+    if actual != expected:
+        raise ValueError(f"{label} content differs; review and integrate before overwriting")
 
 
 def _validate_repo_profile_for_attachment(raw: dict) -> RepoProfile:

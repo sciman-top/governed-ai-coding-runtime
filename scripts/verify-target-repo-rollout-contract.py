@@ -59,6 +59,33 @@ def _normalize_managed_file_entries(value: Any) -> list[tuple[str, str, str]]:
     return normalized
 
 
+def _normalize_generated_file_entries(value: Any) -> list[tuple[str, str, str]]:
+    if not isinstance(value, list):
+        return []
+
+    normalized: list[tuple[str, str, str]] = []
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        path = item.get("path")
+        generator = item.get("generator")
+        management_mode = item.get("management_mode", "block_on_drift")
+        if not (
+            isinstance(path, str)
+            and path.strip()
+            and isinstance(generator, str)
+            and generator.strip()
+            and isinstance(management_mode, str)
+            and management_mode.strip()
+        ):
+            continue
+        normalized_mode = management_mode.strip()
+        if normalized_mode != "block_on_drift":
+            continue
+        normalized.append((path.strip(), generator.strip(), normalized_mode))
+    return normalized
+
+
 def _has_cjk(text: str) -> bool:
     return any("\u4e00" <= char <= "\u9fff" for char in text)
 
@@ -178,6 +205,23 @@ def _validate_managed_file_rollout(
             errors,
             "managed_file_not_in_baseline",
             f"managed_file_rollout entry is not present in baseline.required_managed_files: {path} <- {source} ({management_mode})",
+        )
+
+    baseline_generated = _normalize_generated_file_entries(baseline.get("generated_managed_files"))
+    contract_generated = _normalize_generated_file_entries(rollout.get("generated_managed_files"))
+    baseline_generated_only = sorted(set(baseline_generated) - set(contract_generated))
+    contract_generated_only = sorted(set(contract_generated) - set(baseline_generated))
+    for path, generator, management_mode in baseline_generated_only:
+        _add_error(
+            errors,
+            "generated_managed_file_not_in_rollout_contract",
+            f"baseline.generated_managed_files entry is not registered in managed_file_rollout: {path} <- {generator} ({management_mode})",
+        )
+    for path, generator, management_mode in contract_generated_only:
+        _add_error(
+            errors,
+            "generated_managed_file_not_in_baseline",
+            f"managed_file_rollout generated entry is not present in baseline.generated_managed_files: {path} <- {generator} ({management_mode})",
         )
 
 
