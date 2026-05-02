@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("All", "Build", "Contract", "Dependency", "Doctor", "Docs", "Runtime", "Scripts")]
+  [ValidateSet("All", "Build", "Contract", "Dependency", "Doctor", "Docs", "Runtime", "RuntimeQuick", "Scripts")]
   [string]$Check = "All"
 )
 
@@ -1057,6 +1057,22 @@ function Invoke-RuntimeChecks {
   Write-CheckOk "runtime-service-wrapper-drift-guard"
 }
 
+function Invoke-RuntimeQuickChecks {
+  $python = Resolve-PythonCommand
+
+  & $python.Source -m unittest `
+    tests.runtime.test_governance_gate_runner `
+    tests.runtime.test_target_repo_governance_consistency `
+    tests.runtime.test_runtime_flow_preset.RuntimeFlowPresetScriptTests.test_runtime_flow_preset_apply_governance_baseline_only_bootstraps_blank_target `
+    tests.runtime.test_target_repo_rollout_contract `
+    tests.runtime.test_target_repo_speed_kpi
+  if ($LASTEXITCODE -ne 0) {
+    throw "Runtime quick slice failed"
+  }
+
+  Write-CheckOk "runtime-quick-slice"
+}
+
 function Invoke-DoctorChecks {
   & pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1
   if ($LASTEXITCODE -ne 0) {
@@ -1073,6 +1089,7 @@ switch ($Check) {
   "Doctor" { Invoke-DoctorChecks }
   "Docs" { Invoke-DocsChecks }
   "Runtime" { Invoke-RuntimeChecks }
+  "RuntimeQuick" { Invoke-RuntimeQuickChecks }
   "Scripts" { Invoke-ScriptChecks }
   "All" {
     Invoke-BuildChecks

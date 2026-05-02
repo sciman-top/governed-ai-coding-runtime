@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import concurrent.futures
 import os
+import json
 import subprocess
 import sys
 import time
@@ -76,20 +77,55 @@ def _resolve_worker_count(requested: int, target_count: int) -> int:
     return max(1, min(4, cpu_count, target_count))
 
 
-def _run_target(target: TestTarget) -> TestResult:
+def _resolve_timeout_seconds(requested: int) -> int:
+    if requested > 0:
+        return requested
+
+    env_value = os.environ.get("GOVERNED_RUNTIME_TEST_TIMEOUT_SECONDS", "").strip()
+    if env_value:
+        try:
+            parsed = int(env_value)
+        except ValueError as exc:
+            raise ValueError("GOVERNED_RUNTIME_TEST_TIMEOUT_SECONDS must be an integer") from exc
+        if parsed < 1:
+            raise ValueError("GOVERNED_RUNTIME_TEST_TIMEOUT_SECONDS must be greater than zero")
+        return parsed
+
+    return 180
+
+
+def _run_target(target: TestTarget, timeout_seconds: int) -> TestResult:
     env = os.environ.copy()
     env.setdefault("PYTHONIOENCODING", "utf-8")
     started = time.perf_counter()
-    completed = subprocess.run(
-        [sys.executable, "-m", "unittest", target.module],
-        check=False,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        cwd=ROOT,
-        env=env,
-    )
+    try:
+        completed = subprocess.run(
+            [sys.executable, "-m", "unittest", target.module],
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+            env=env,
+            timeout=timeout_seconds,
+        )
+    except subprocess.TimeoutExpired as exc:
+        elapsed = time.perf_counter() - started
+        stdout = exc.stdout or ""
+        stderr = exc.stderr or ""
+        if isinstance(stdout, bytes):
+            stdout = stdout.decode("utf-8", errors="replace")
+        if isinstance(stderr, bytes):
+            stderr = stderr.decode("utf-8", errors="replace")
+        timeout_message = f"Timed out after {timeout_seconds}s while running {target.module}"
+        return TestResult(
+            target=target,
+            exit_code=124,
+            duration_seconds=elapsed,
+            stdout=str(stdout),
+            stderr=(str(stderr).rstrip() + "\n" + timeout_message).strip(),
+        )
     return TestResult(
         target=target,
         exit_code=completed.returncode,
@@ -122,6 +158,17 @@ def main() -> int:
     )
     parser.add_argument("--pattern", default="test_*.py")
     parser.add_argument("--workers", type=int, default=0)
+    parser.add_argument(
+        "--timeout-seconds",
+        type=int,
+        default=0,
+        help="Per-test-file timeout. Defaults to GOVERNED_RUNTIME_TEST_TIMEOUT_SECONDS or 180.",
+    )
+    parser.add_argument(
+        "--summary-json",
+        default="",
+        help="Optional path for a machine-readable timing summary.",
+    )
     args = parser.parse_args()
 
     suites = args.suite or [
@@ -130,12 +177,13 @@ def main() -> int:
     ]
     targets = _discover_targets(suites, args.pattern)
     workers = _resolve_worker_count(args.workers, len(targets))
+    timeout_seconds = _resolve_timeout_seconds(args.timeout_seconds)
 
-    print(f"Running {len(targets)} test files with {workers} workers")
+    print(f"Running {len(targets)} test files with {workers} workers; timeout={timeout_seconds}s")
     started = time.perf_counter()
     results: list[TestResult] = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-        future_to_target = {executor.submit(_run_target, target): target for target in targets}
+        future_to_target = {executor.submit(_run_target, target, timeout_seconds): target for target in targets}
         for future in concurrent.futures.as_completed(future_to_target):
             result = future.result()
             results.append(result)
@@ -149,6 +197,42 @@ def main() -> int:
     for result in results[:10]:
         print(f"  {result.target.path.relative_to(ROOT)} {result.duration_seconds:.3f}s")
     print(f"Completed {len(results)} test files in {elapsed:.3f}s; failures={len(failed)}")
+
+    if args.summary_json:
+        summary_path = Path(args.summary_json)
+        if not summary_path.is_absolute():
+            summary_path = ROOT / summary_path
+        summary_path.parent.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "target_count": len(results),
+            "worker_count": workers,
+            "timeout_seconds": timeout_seconds,
+            "elapsed_seconds": elapsed,
+            "failure_count": len(failed),
+            "failures": [
+                {
+                    "suite": result.target.suite,
+                    "module": result.target.module,
+                    "path": str(result.target.path.relative_to(ROOT)),
+                    "exit_code": result.exit_code,
+                    "duration_seconds": result.duration_seconds,
+                }
+                for result in failed
+            ],
+            "slowest": [
+                {
+                    "target": {
+                        "suite": result.target.suite,
+                        "module": result.target.module,
+                        "path": str(result.target.path.relative_to(ROOT)),
+                    },
+                    "exit_code": result.exit_code,
+                    "duration_seconds": result.duration_seconds,
+                }
+                for result in results[:10]
+            ],
+        }
+        summary_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 
     return 1 if failed else 0
 

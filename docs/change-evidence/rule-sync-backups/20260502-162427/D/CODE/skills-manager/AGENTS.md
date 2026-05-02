@@ -1,16 +1,16 @@
-# GEMINI.md — Skills Manager（Gemini 项目级）
+# AGENTS.md — Skills Manager（Codex 项目级）
 **项目**: skills-manager  
 **适用范围**: 项目级（仓库根）  
 **版本**: 3.97
 **最后更新**: 2026-04-28
 
 ## 1. 阅读指引（必读）
-- 本文件承接 `GlobalUser/GEMINI.md v9.47`，仅定义本仓落地动作（WHERE/HOW）。
+- 本文件承接 `GlobalUser/AGENTS.md v9.47`，仅定义本仓落地动作（WHERE/HOW）。
 - 固定结构：`1 / A / B / C / D`。
 - 裁决链：`运行事实/代码 > 项目级文件 > 全局文件 > 临时上下文`。
 - 自包含约束：执行规则以本文件正文为准，不依赖外部子文档或治理脚本作为前置条件。
 - 渐进披露边界：根文件必须保留本仓事实、门禁、阻断、证据和回滚；长 runbook、示例和历史背景可下沉到子文档，但不得成为执行前置条件。
-- 精简原则：根文件只写生成边界、真实入口、硬门禁、证据与回滚；长命令说明、审查模板和运行样例放入 `docs/`、按需 imports 或产物证据。
+- 精简原则：根文件只写生成边界、真实入口、硬门禁、证据与回滚；长命令说明、审查模板和运行样例放入 `docs/` 或产物证据。
 
 ## A. 共性基线（仅本仓）
 ### A.1 事实边界
@@ -40,22 +40,21 @@
 - 澄清上限：一次最多 3 个高价值问题；确认后恢复 `direct_fix` 并清零失败计数。
 - 留痕字段：`issue_id`、`attempt_count`、`clarification_mode`、`clarification_questions`、`clarification_answers`。
 
-## B. Gemini 平台差异（项目内）
+## B. Codex 平台差异（项目内）
 ### B.1 加载与覆盖
-- 用户规则：`~/.gemini/GEMINI.md`；项目/工作区规则按 Gemini CLI 层级加载和按需发现执行。
-- 启用 Trusted Folders 时，未受信目录可能进入 safe mode；遇到项目配置、环境变量、自动记忆或工具自动批准未生效，先记录 trust 状态或替代证据。
-- 可用 `@file.md` imports 组织长内容；只有本机 `settings.json` 明确配置上下文文件名时，才把其他文件名视为 Gemini 上下文文件，具体键名以当前 schema/help 为准。
-- 用 `.geminiignore` 排除 `agent/`、`vendor/`、运行报告、缓存和本机敏感配置；修改后用 `/memory show` 核查完整上下文；来源与刷新命令先看当前 `/memory` help，支持则用 `/memory list` / `/memory refresh`，否则记录版本并用 `/memory reload` 兜底。
-- 不假定 `GEMINI.override.md` 存在；临时排障规则必须记录清理点，结论后删除或恢复并复测。
+- 目录：`~/.codex`（可由 `CODEX_HOME` 覆盖）。
+- 项目链从 Git root 到当前目录逐层加载；同层优先级：`AGENTS.override.md > AGENTS.md > configured fallback`。
+- override 仅用于短期排障，结论后必须清理并复测。
 
 ### B.2 最小诊断矩阵
-- 必做：`gemini --version`、`gemini --help`。
-- 状态/诊断命令采用“help 探测 -> 有则执行 -> 无则 `platform_na` 落证”；交互场景用 `/memory show` 查完整上下文；来源与刷新命令先看当前 `/memory` help，支持则用 `/memory list` / `/memory refresh`，否则记录版本并用 `/memory reload` 兜底；非交互不可用时按 `platform_na` 记录。
+- 必做：`codex --version`、`codex --help`。
+- 状态检查优先 `codex status`；非交互失败（如 `stdin is not a terminal`）时按 `platform_na` 落证。
 - 留痕最低字段：`cmd`、`exit_code`、`key_output`、`timestamp`。
 
 ### B.3 平台异常回退
 - 命令缺失或行为不一致时，必须记录：`platform_na/gate_na`、原因、替代命令、证据位置。
-- `GEMINI.md` 是上下文规则；确定性验证、安全拦截和回滚能力应落到本仓门禁、MCP/扩展、checkpoint/restore 或 CI。
+- `AGENTS.md` 是上下文规则；确定性验证、权限或安全拦截应落到本仓门禁、hooks、CI 或管理脚本。
+- 命令审批、沙箱外执行和 allowlist 应优先写入 `.codex/rules/*.rules`、本仓脚本门禁或 CI；`prefix_rule()` 必须保持精确前缀并配 `match/not_match` 样例。
 - 替代命令仅用于补证据，不得改变门禁顺序与阻断语义。
 
 ## C. 项目差异（领域与技术）
@@ -63,8 +62,6 @@
 - `skills.ps1`：统一命令调度（发现/安装/构建/更新/doctor/MCP）。
 - `build.ps1`：从 `src/*` 生成根目录 `skills.ps1`。
 - `skills.json`：`vendors/mappings/targets/sync_mode/mcp_servers` 的唯一配置源。
-- `skills.json` + `同步MCP` 只托管 MCP 服务清单与其落地产物：各目标根目录 `.mcp.json`、Gemini `settings.json` 中的 MCP 段、Trae `mcp.json`、以及 Codex `config.toml` 中 `[mcp_servers.*]` 段。
-- 非 MCP 的宿主级设置不属于本仓托管边界；如 Codex `windows.sandbox`、approval/model/context、Claude/Gemini 的 auth/provider/model/context/sandbox 等，必须在宿主配置或其各自受控真源中修改，不得误写进 `skills.json` 期待 `同步MCP` 接管。
 - `overrides/`、`imports/`：可维护输入层；`agent/`：分发产物层。
 - `src/Commands/AuditTargets.ps1`：目标仓审查链路与内置外层 AI 提示词源码，负责生成 `ai-brief.md`、`outer-ai-prompt.md` 和 `recommendations.template.json`。
 

@@ -25,6 +25,13 @@ Run them through the repository verifier:
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime
 ```
 
+For inner-loop work on target-governance speed-profile behavior, use the
+bounded quick slice first, then run the full Runtime gate before delivery:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check RuntimeQuick
+```
+
 Direct test commands when the host process environment is already healthy:
 
 ```powershell

@@ -87,10 +87,13 @@ If these criteria are not met for a known target, declare `quick_test_skip_reaso
 - .NET: use `dotnet test --filter ...` for stable categories or traits.
 - Node/Jest/Vitest: use affected/smoke scripts such as `npm run test:fast` when maintained by the target repo.
 - Monorepo tools: use affected-task selection only when the dependency graph and fallback-to-full behavior are reliable.
+- CI: cancel obsolete runs with workflow/job `concurrency`, set job/step timeouts, and only cache dependency manager state when the repo has stable lockfiles or dependency metadata.
+- Slow-test profiling: keep the top slow tests visible in local output; for pytest targets prefer `--durations`, and for framework-agnostic target gates persist machine-readable timing summaries when available.
 
 ## Invariants
 - `quick_test_command` is a daily feedback optimization, not a release gate.
 - Full Runtime/target full gates remain authoritative for completion and release claims.
+- Every generated or hand-written quick/full gate command should have a finite timeout unless the repo explicitly records a timeout N/A reason.
 - One-click apply preserves hand-tuned `quick_gate_commands` unless they match a previously derived baseline group.
 - Generated speed groups with `satisfies_gate_ids` are refreshable; stale generated groups must not preserve obsolete catalog commands.
 - Consistency verification must fail on catalog/profile drift.
@@ -108,6 +111,9 @@ If these criteria are not met for a known target, declare `quick_test_skip_reaso
 - speed KPI export checks.
 
 The full `self-runtime` test command remains `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
+The first-class local entrypoint for that focused slice is `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check RuntimeQuick`.
+
+`scripts/run-runtime-tests.py` is the self-runtime test-file runner. It defaults to up to 4 workers, applies a per-test-file timeout of 180 seconds unless `GOVERNED_RUNTIME_TEST_TIMEOUT_SECONDS` or `--timeout-seconds` overrides it, prints the slowest files, and can persist timing metadata with `--summary-json`.
 
 ## Rollback
 Remove `quick_test_command` and optional companion fields from the target catalog entry, or remove `.governed-ai/quick-test-slice.recommendation.json`, then run:
