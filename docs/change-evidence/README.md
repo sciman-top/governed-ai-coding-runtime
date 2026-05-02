@@ -4,11 +4,12 @@
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
 ## Current And Archive Semantics
-- `docs/change-evidence/` root remains the current authoritative location until archive movement is explicitly authorized.
+- `docs/change-evidence/` root remains the current authoritative location for latest evidence, active summaries, target-run JSON, and current rollback references.
 - `docs/change-evidence/evidence-index.json` is the machine-readable pointer surface for latest authoritative evidence and dry-run archive candidate groups.
 - `docs/change-evidence/current/` is reserved for a future smaller active evidence surface after a later task performs a manifest-backed move.
-- `docs/change-evidence/archive/` is reserved for historical evidence that should stay traceable but leave the default active work surface.
+- `docs/change-evidence/archive/` stores historical evidence that should stay traceable but leave the default active work surface.
 - `python scripts/archive-change-evidence.py --dry-run --json` must be the first step before any later archive move.
+- `python scripts/archive-change-evidence.py --apply --json` may move only manifest-backed archive candidates; target-run JSON is excluded and must use the target-run retention tool instead.
 
 ## Operator UI Screenshot Retention
 - `latest`: root `operator-ui-current-*.png` files are the active operator-facing screenshot surface.
@@ -18,6 +19,8 @@ This directory stores dated evidence for planning, schema, script, and documenta
 ## Current Evidence Baseline
 - [20260503 Repo Slimming Closeout](./20260503-repo-slimming-closeout.md)
   - closeout evidence for the full repo-slimming lane, reporting honest before/after metrics, preserved hard-gate posture, and the executable archive/retention guardrails added without silent evidence movement
+- [20260503 Change Evidence Archive Apply](./20260503-change-evidence-archive-apply.md)
+  - evidence companion for the first manifest-backed archive apply, including target-run restore boundary and rollback manifest
 - [20260503 Operator UI Screenshot Retention](./20260503-operator-ui-screenshot-retention.md)
   - evidence companion for Task 7 of the repo-slimming lane, adding latest/milestone/archive screenshot classification and a manifest-backed archive dry-run/apply contract
 - [20260503 Runtime Gate Timing Split](./20260503-runtime-gate-timing-split.md)

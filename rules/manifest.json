@@ -37,7 +37,7 @@
       "scope": "project",
       "target_repo_id": "self-runtime",
       "tool": "codex",
-      "version": "9.47",
+      "version": "9.49",
       "source": "rules/projects/governed-ai-coding-runtime/codex/AGENTS.md",
       "target_path": "AGENTS.md"
     },
@@ -46,7 +46,7 @@
       "scope": "project",
       "target_repo_id": "self-runtime",
       "tool": "claude",
-      "version": "9.47",
+      "version": "9.49",
       "source": "rules/projects/governed-ai-coding-runtime/claude/CLAUDE.md",
       "target_path": "CLAUDE.md"
     },
@@ -55,7 +55,7 @@
       "scope": "project",
       "target_repo_id": "self-runtime",
       "tool": "gemini",
-      "version": "9.47",
+      "version": "9.49",
       "source": "rules/projects/governed-ai-coding-runtime/gemini/GEMINI.md",
       "target_path": "GEMINI.md"
     },

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -10,15 +11,21 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 CHANGE_EVIDENCE_ROOT = ROOT / "docs" / "change-evidence"
 DEFAULT_INDEX_PATH = CHANGE_EVIDENCE_ROOT / "evidence-index.json"
-KEEP_TARGET_RUN_FILES = {
-    "kpi-latest.json",
-    "kpi-rolling.json",
-    "summary-latest.json",
-    "summary-active-targets-latest.json",
-    "summary-active-targets-rows-20260422191507.json",
-    "summary-active-targets-20260422191507.json",
-    "summary-allowedscope.json",
-    "summary-github-vps.json",
+DEFAULT_ARCHIVE_ROOT = CHANGE_EVIDENCE_ROOT / "archive" / "change-evidence"
+DEFAULT_MANIFEST_ROOT = CHANGE_EVIDENCE_ROOT / "archive" / "change-evidence-manifests"
+LATEST_OPERATOR_UI_SCREENSHOTS = {
+    "operator-ui-current-runtime.png",
+    "operator-ui-current-codex.png",
+    "operator-ui-current-claude.png",
+    "operator-ui-current-feedback.png",
+    "operator-ui-current-mobile.png",
+}
+MILESTONE_OPERATOR_UI_SCREENSHOTS = {
+    "operator-ui-overview-button-aligned.png",
+    "operator-ui-v2-workbench.png",
+    "operator-ui-live-8770-after-stale-fix.png",
+    "operator-ui-run-entry-desktop-20260502.png",
+    "operator-ui-run-entry-mobile-20260502.png",
 }
 
 
@@ -28,9 +35,20 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--write-index", action="store_true")
+    parser.add_argument("--apply", action="store_true")
+    parser.add_argument("--archive-root", default="")
+    parser.add_argument("--manifest-root", default="")
     args = parser.parse_args()
 
-    payload = build_change_evidence_archive_index(repo_root=Path(args.repo_root))
+    if args.dry_run and args.apply:
+        parser.error("--dry-run and --apply are mutually exclusive")
+
+    payload = build_change_evidence_archive_index(
+        repo_root=Path(args.repo_root),
+        apply=bool(args.apply),
+        archive_root=Path(args.archive_root) if args.archive_root else None,
+        manifest_root=Path(args.manifest_root) if args.manifest_root else None,
+    )
     if args.write_index:
         DEFAULT_INDEX_PATH.write_text(json.dumps(payload["index"], ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     if args.json:
@@ -42,12 +60,32 @@ def main() -> int:
     return 0
 
 
-def build_change_evidence_archive_index(*, repo_root: Path) -> dict[str, Any]:
+def build_change_evidence_archive_index(
+    *,
+    repo_root: Path,
+    apply: bool = False,
+    archive_root: Path | None = None,
+    manifest_root: Path | None = None,
+) -> dict[str, Any]:
     root = repo_root.resolve(strict=False)
     change_root = root / "docs" / "change-evidence"
+    resolved_archive_root = _resolve_archive_path(root, archive_root, DEFAULT_ARCHIVE_ROOT)
+    resolved_manifest_root = _resolve_archive_path(root, manifest_root, DEFAULT_MANIFEST_ROOT)
     payload = {
         "dry_run": _build_dry_run(root, change_root),
         "index": _build_index(root, change_root),
+        "apply": _apply_archive_moves(
+            root=root,
+            change_root=change_root,
+            archive_root=resolved_archive_root,
+            manifest_root=resolved_manifest_root,
+        )
+        if apply
+        else {
+            "mode": "dry_run",
+            "moved_file_count": 0,
+            "rollback_ref": "No archive moves were requested.",
+        },
     }
     return payload
 
@@ -70,7 +108,7 @@ def _build_index(root: Path, change_root: Path) -> dict[str, Any]:
         "index_kind": "change_evidence_archive_index",
         "current_policy": {
             "current_semantics": "Latest authoritative evidence, latest summaries, active plan companions, and machine-readable latest pointers stay easy to find.",
-            "archive_semantics": "Historical snapshots, old screenshots, rule-sync backups, and superseded raw run payloads become archive candidates once a later task adds move manifests and rollback.",
+        "archive_semantics": "Historical snapshots, old screenshots, and rule-sync backups become archive candidates once a later task adds move manifests and rollback. Target-repo run JSON remains active evidence and is pruned only through the target-run retention tool.",
             "move_authorization": "No file movement is authorized by this index.",
         },
         "current_refs": {
@@ -100,41 +138,36 @@ def _build_dry_run(root: Path, change_root: Path) -> dict[str, Any]:
 
 
 def _archive_candidate_groups(root: Path, change_root: Path) -> list[dict[str, Any]]:
+    candidates = _archive_candidate_files(root, change_root)
     groups = [
-        _directory_group(root, change_root / "snapshots", "historical_snapshots"),
-        _directory_group(root, change_root / "rule-sync-backups", "rule_sync_backups"),
-        _target_run_group(root, change_root / "target-repo-runs"),
-        _pattern_group(root, change_root, "docs_operator_ui_screenshots", "operator-ui*.png"),
-        _root_pattern_group(root, "root_operator_ui_screenshots", "operator-ui-*.png"),
+        _group_payload(root, group_name, files)
+        for group_name, files in candidates.items()
     ]
     return [group for group in groups if group["candidate_file_count"] > 0]
 
 
-def _directory_group(root: Path, directory: Path, group_name: str) -> dict[str, Any]:
-    files = [path for path in sorted(directory.rglob("*")) if path.is_file()] if directory.exists() else []
-    return _group_payload(root, group_name, files)
+def _archive_candidate_files(root: Path, change_root: Path) -> dict[str, list[Path]]:
+    return {
+        "historical_snapshots": _directory_files(change_root / "snapshots"),
+        "rule_sync_backups": _directory_files(change_root / "rule-sync-backups"),
+        "docs_operator_ui_screenshots": _operator_ui_screenshot_files(change_root, root_level=False),
+        "root_operator_ui_screenshots": _operator_ui_screenshot_files(root, root_level=True),
+    }
 
 
-def _pattern_group(root: Path, directory: Path, group_name: str, pattern: str) -> dict[str, Any]:
-    files = [path for path in sorted(directory.glob(pattern)) if path.is_file()] if directory.exists() else []
-    return _group_payload(root, group_name, files)
+def _directory_files(directory: Path) -> list[Path]:
+    return [path for path in sorted(directory.rglob("*")) if path.is_file()] if directory.exists() else []
 
 
-def _root_pattern_group(root: Path, group_name: str, pattern: str) -> dict[str, Any]:
-    files = [path for path in sorted(root.glob(pattern)) if path.is_file()]
-    return _group_payload(root, group_name, files)
-
-
-def _target_run_group(root: Path, directory: Path) -> dict[str, Any]:
+def _operator_ui_screenshot_files(directory: Path, *, root_level: bool) -> list[Path]:
     if not directory.exists():
-        return _group_payload(root, "target_repo_raw_runs", [])
-    files: list[Path] = []
-    for path in sorted(directory.glob("*.json")):
-        if path.name in KEEP_TARGET_RUN_FILES:
-            continue
-        if "-daily-" in path.name or "-onboard-" in path.name or "effect-report-" in path.name:
-            files.append(path)
-    return _group_payload(root, "target_repo_raw_runs", files)
+        return []
+    keep_names = LATEST_OPERATOR_UI_SCREENSHOTS | MILESTONE_OPERATOR_UI_SCREENSHOTS
+    return [
+        path
+        for path in sorted(directory.glob("operator-ui*.png" if not root_level else "operator-ui-*.png"))
+        if path.is_file() and path.name not in keep_names
+    ]
 
 
 def _group_payload(root: Path, group_name: str, files: list[Path]) -> dict[str, Any]:
@@ -155,6 +188,61 @@ def _latest_markdown_entries(change_root: Path, *, limit: int) -> list[str]:
         if path.is_file() and path.name != "README.md"
     ]
     return [path.relative_to(change_root.parent.parent).as_posix() for path in entries[:limit]]
+
+
+def _apply_archive_moves(*, root: Path, change_root: Path, archive_root: Path, manifest_root: Path) -> dict[str, Any]:
+    candidates = _archive_candidate_files(root, change_root)
+    all_files = [(group_name, path) for group_name, files in candidates.items() for path in files]
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    run_archive_root = archive_root / stamp
+    manifest_path = manifest_root / f"{stamp}.json"
+    moved_files: list[dict[str, str]] = []
+
+    if all_files:
+        run_archive_root.mkdir(parents=True, exist_ok=True)
+        manifest_root.mkdir(parents=True, exist_ok=True)
+
+    for group_name, source in all_files:
+        relative_source = source.relative_to(root).as_posix()
+        destination = run_archive_root / relative_source
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(source), str(destination))
+        moved_files.append(
+            {
+                "group": group_name,
+                "source": relative_source,
+                "destination": destination.relative_to(root).as_posix(),
+            }
+        )
+
+    manifest_payload = {
+        "schema_version": "1.0",
+        "kind": "change_evidence_archive_manifest",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "repo_root": str(root),
+        "archive_root": run_archive_root.relative_to(root).as_posix(),
+        "rollback_instructions": "Rollback by moving each destination file back to its source path recorded in this manifest.",
+        "moved_files": moved_files,
+    }
+    manifest_root.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(json.dumps(manifest_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    return {
+        "mode": "apply",
+        "archive_root": run_archive_root.relative_to(root).as_posix(),
+        "manifest_path": manifest_path.relative_to(root).as_posix(),
+        "moved_file_count": len(moved_files),
+        "moved_files": moved_files,
+        "rollback_ref": manifest_payload["rollback_instructions"],
+    }
+
+
+def _resolve_archive_path(root: Path, value: Path | None, default: Path) -> Path:
+    if value is None:
+        return default
+    if value.is_absolute():
+        return value.resolve(strict=False)
+    return (root / value).resolve(strict=False)
 
 
 if __name__ == "__main__":

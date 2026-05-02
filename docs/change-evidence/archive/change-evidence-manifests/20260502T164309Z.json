@@ -1,0 +1,1145 @@
+{
+  "archive_root": "docs/change-evidence/archive/change-evidence/20260502T164309Z",
+  "generated_at": "2026-05-02T16:43:09.568131+00:00",
+  "kind": "change_evidence_archive_manifest",
+  "moved_files": [
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-contract-family-completion/docs--README.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-contract-family-completion/docs--README.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-contract-family-completion/schemas--catalog--schema-catalog.yaml",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-contract-family-completion/schemas--catalog--schema-catalog.yaml"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-contract-family-completion/schemas--README.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-contract-family-completion/schemas--README.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--backlog--issue-ready-backlog.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--backlog--issue-ready-backlog.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--backlog--issue-seeds.yaml",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--backlog--issue-seeds.yaml"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--backlog--mvp-backlog-seeds.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--backlog--mvp-backlog-seeds.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--README.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--README.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--roadmap--governed-ai-coding-runtime-90-day-plan.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--roadmap--governed-ai-coding-runtime-90-day-plan.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-governance-kernel-realignment/scripts--github--create-roadmap-issues.ps1",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-governance-kernel-realignment/scripts--github--create-roadmap-issues.ps1"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-project-audit-optimization/docs-backlog-issue-ready-backlog.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-project-audit-optimization/docs-backlog-issue-ready-backlog.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-project-audit-optimization/docs-backlog-mvp-backlog-seeds.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-project-audit-optimization/docs-backlog-mvp-backlog-seeds.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-project-audit-optimization/docs-README.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-project-audit-optimization/docs-README.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-project-audit-optimization/docs-roadmap-governed-agent-platform-90-day-plan.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-project-audit-optimization/docs-roadmap-governed-agent-platform-90-day-plan.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-project-audit-optimization/scripts-github-create-roadmap-issues.ps1",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-project-audit-optimization/scripts-github-create-roadmap-issues.ps1"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/AGENTS.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--adrs--0002-no-multi-repo-distribution-in-mvp.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--adrs--0002-no-multi-repo-distribution-in-mvp.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--architecture--governance-boundary-matrix.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--architecture--governance-boundary-matrix.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--architecture--governed-agent-platform-target-architecture.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--architecture--governed-agent-platform-target-architecture.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--backlog--issue-ready-backlog.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--backlog--issue-ready-backlog.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--FinalStateBestPractices.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--FinalStateBestPractices.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--prd--governed-agent-platform-ai-coding-prd.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--prd--governed-agent-platform-ai-coding-prd.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--README.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--README.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--research--benchmark-and-borrowing-notes.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--research--benchmark-and-borrowing-notes.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--research--repo-governance-hub-borrowing-review.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--research--repo-governance-hub-borrowing-review.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--roadmap--governed-agent-platform-90-day-plan.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--roadmap--governed-agent-platform-90-day-plan.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/README.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/README.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--control-registry.schema.json",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--control-registry.schema.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--eval-trace-policy.schema.json",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--eval-trace-policy.schema.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--evidence-bundle.schema.json",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--evidence-bundle.schema.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--repo-profile.schema.json",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--repo-profile.schema.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--risk-tier-approval-policy.schema.json",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--risk-tier-approval-policy.schema.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--task-lifecycle.schema.json",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--task-lifecycle.schema.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--tool-contract.schema.json",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--tool-contract.schema.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--verification-gates.schema.json",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--verification-gates.schema.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--README.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--README.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/scripts--github--create-roadmap-issues.ps1",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/scripts--github--create-roadmap-issues.ps1"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-repo-governance-hub-mechanism-adoption-matrix/docs--README.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-repo-governance-hub-mechanism-adoption-matrix/docs--README.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-repo-governance-hub-mechanism-adoption-matrix/docs--research--repo-governance-hub-borrowing-review.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-repo-governance-hub-mechanism-adoption-matrix/docs--research--repo-governance-hub-borrowing-review.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/docs--backlog--issue-ready-backlog.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/docs--backlog--issue-ready-backlog.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/docs--backlog--mvp-backlog-seeds.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/docs--backlog--mvp-backlog-seeds.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/docs--README.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/docs--README.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/docs--roadmap--governed-ai-coding-runtime-90-day-plan.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/docs--roadmap--governed-ai-coding-runtime-90-day-plan.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/README.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/README.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/schemas--README.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/schemas--README.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-trial-first-roadmap-refresh/docs--backlog--issue-ready-backlog.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-trial-first-roadmap-refresh/docs--backlog--issue-ready-backlog.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-trial-first-roadmap-refresh/docs--backlog--issue-seeds.yaml",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-trial-first-roadmap-refresh/docs--backlog--issue-seeds.yaml"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-trial-first-roadmap-refresh/docs--backlog--mvp-backlog-seeds.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-trial-first-roadmap-refresh/docs--backlog--mvp-backlog-seeds.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-trial-first-roadmap-refresh/docs--roadmap--governed-ai-coding-runtime-90-day-plan.md",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-trial-first-roadmap-refresh/docs--roadmap--governed-ai-coding-runtime-90-day-plan.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-trial-first-roadmap-refresh/scripts--github--create-roadmap-issues.ps1",
+      "group": "historical_snapshots",
+      "source": "docs/change-evidence/snapshots/20260417-trial-first-roadmap-refresh/scripts--github--create-roadmap-issues.ps1"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/C/Users/sciman/.claude/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-190348/C/Users/sciman/.claude/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/C/Users/sciman/.codex/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-190348/C/Users/sciman/.codex/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/C/Users/sciman/.gemini/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-190348/C/Users/sciman/.gemini/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/ClassroomToolkit/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/ClassroomToolkit/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/ClassroomToolkit/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/ClassroomToolkit/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/ClassroomToolkit/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/ClassroomToolkit/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/github-toolkit/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/github-toolkit/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/github-toolkit/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/github-toolkit/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/github-toolkit/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/github-toolkit/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/governed-ai-coding-runtime/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/governed-ai-coding-runtime/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/governed-ai-coding-runtime/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/governed-ai-coding-runtime/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/governed-ai-coding-runtime/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/governed-ai-coding-runtime/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/skills-manager/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/skills-manager/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/skills-manager/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/skills-manager/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/skills-manager/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/skills-manager/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/vps-ssh-launcher/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/vps-ssh-launcher/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/vps-ssh-launcher/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/vps-ssh-launcher/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/vps-ssh-launcher/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/vps-ssh-launcher/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-191107/D/CODE/skills-manager/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-191107/D/CODE/skills-manager/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-191107/D/CODE/skills-manager/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-191107/D/CODE/skills-manager/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-191107/D/CODE/skills-manager/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-191107/D/CODE/skills-manager/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-194113/C/Users/sciman/.claude/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-194113/C/Users/sciman/.claude/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-194113/C/Users/sciman/.codex/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-194113/C/Users/sciman/.codex/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-194113/C/Users/sciman/.gemini/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-194113/C/Users/sciman/.gemini/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-225108/D/CODE/vps-ssh-launcher/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-225108/D/CODE/vps-ssh-launcher/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-225108/D/CODE/vps-ssh-launcher/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260427-225108/D/CODE/vps-ssh-launcher/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/C/Users/sciman/.claude/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001402/C/Users/sciman/.claude/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/C/Users/sciman/.codex/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001402/C/Users/sciman/.codex/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/C/Users/sciman/.gemini/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001402/C/Users/sciman/.gemini/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/ClassroomToolkit/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/ClassroomToolkit/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/ClassroomToolkit/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/ClassroomToolkit/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/ClassroomToolkit/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/ClassroomToolkit/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/github-toolkit/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/github-toolkit/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/github-toolkit/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/github-toolkit/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/github-toolkit/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/github-toolkit/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/governed-ai-coding-runtime/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/governed-ai-coding-runtime/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/governed-ai-coding-runtime/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/governed-ai-coding-runtime/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/governed-ai-coding-runtime/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/governed-ai-coding-runtime/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/skills-manager/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/skills-manager/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/skills-manager/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/skills-manager/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/skills-manager/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/skills-manager/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/vps-ssh-launcher/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/vps-ssh-launcher/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/vps-ssh-launcher/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/vps-ssh-launcher/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/vps-ssh-launcher/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/vps-ssh-launcher/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001951/C/Users/sciman/.claude/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001951/C/Users/sciman/.claude/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001951/C/Users/sciman/.codex/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001951/C/Users/sciman/.codex/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001951/C/Users/sciman/.gemini/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001951/C/Users/sciman/.gemini/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/github-toolkit/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/github-toolkit/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/github-toolkit/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/github-toolkit/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/github-toolkit/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/github-toolkit/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/governed-ai-coding-runtime/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/governed-ai-coding-runtime/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/skills-manager/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/skills-manager/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/skills-manager/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/skills-manager/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/skills-manager/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/skills-manager/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/C/Users/sciman/.claude/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-003004/C/Users/sciman/.claude/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/C/Users/sciman/.codex/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-003004/C/Users/sciman/.codex/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/C/Users/sciman/.gemini/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-003004/C/Users/sciman/.gemini/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/ClassroomToolkit/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/ClassroomToolkit/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/ClassroomToolkit/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/ClassroomToolkit/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/ClassroomToolkit/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/ClassroomToolkit/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/github-toolkit/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/github-toolkit/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/github-toolkit/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/github-toolkit/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/github-toolkit/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/github-toolkit/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/governed-ai-coding-runtime/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/governed-ai-coding-runtime/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/governed-ai-coding-runtime/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/governed-ai-coding-runtime/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/governed-ai-coding-runtime/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/governed-ai-coding-runtime/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/skills-manager/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/skills-manager/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/skills-manager/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/skills-manager/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/skills-manager/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/skills-manager/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/vps-ssh-launcher/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/vps-ssh-launcher/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/vps-ssh-launcher/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/vps-ssh-launcher/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/vps-ssh-launcher/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/vps-ssh-launcher/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/C/Users/sciman/.claude/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-004254/C/Users/sciman/.claude/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/C/Users/sciman/.codex/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-004254/C/Users/sciman/.codex/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/C/Users/sciman/.gemini/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-004254/C/Users/sciman/.gemini/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/ClassroomToolkit/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/ClassroomToolkit/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/ClassroomToolkit/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/ClassroomToolkit/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/ClassroomToolkit/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/ClassroomToolkit/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/github-toolkit/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/github-toolkit/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/github-toolkit/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/github-toolkit/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/github-toolkit/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/github-toolkit/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/governed-ai-coding-runtime/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/governed-ai-coding-runtime/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/governed-ai-coding-runtime/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/governed-ai-coding-runtime/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/governed-ai-coding-runtime/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/governed-ai-coding-runtime/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/skills-manager/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/skills-manager/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/skills-manager/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/skills-manager/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/skills-manager/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/skills-manager/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/vps-ssh-launcher/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/vps-ssh-launcher/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/vps-ssh-launcher/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/vps-ssh-launcher/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/vps-ssh-launcher/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/vps-ssh-launcher/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260501-000050/D/CODE/governed-ai-coding-runtime/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260501-000050/D/CODE/governed-ai-coding-runtime/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260501-000050/D/CODE/governed-ai-coding-runtime/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260501-000050/D/CODE/governed-ai-coding-runtime/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260501-192342/D/CODE/governed-ai-coding-runtime/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260501-192342/D/CODE/governed-ai-coding-runtime/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260501-192342/D/CODE/governed-ai-coding-runtime/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260501-192342/D/CODE/governed-ai-coding-runtime/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260501-212006/D/CODE/governed-ai-coding-runtime/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260501-212006/D/CODE/governed-ai-coding-runtime/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260501-212006/D/CODE/governed-ai-coding-runtime/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260501-212006/D/CODE/governed-ai-coding-runtime/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260501-212006/D/CODE/governed-ai-coding-runtime/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260501-212006/D/CODE/governed-ai-coding-runtime/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-162159/C/Users/sciman/.claude/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260502-162159/C/Users/sciman/.claude/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-162159/C/Users/sciman/.codex/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260502-162159/C/Users/sciman/.codex/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-162159/C/Users/sciman/.gemini/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260502-162159/C/Users/sciman/.gemini/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-162427/D/CODE/skills-manager/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260502-162427/D/CODE/skills-manager/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-162427/D/CODE/skills-manager/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260502-162427/D/CODE/skills-manager/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-162427/D/CODE/skills-manager/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260502-162427/D/CODE/skills-manager/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/rules/projects/governed-ai-coding-runtime/claude/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/rules/projects/governed-ai-coding-runtime/claude/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/rules/projects/governed-ai-coding-runtime/codex/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/rules/projects/governed-ai-coding-runtime/codex/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/rules/projects/governed-ai-coding-runtime/gemini/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/rules/projects/governed-ai-coding-runtime/gemini/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-191519/C/Users/sciman/.claude/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260502-191519/C/Users/sciman/.claude/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-191519/C/Users/sciman/.codex/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260502-191519/C/Users/sciman/.codex/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-191519/C/Users/sciman/.gemini/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260502-191519/C/Users/sciman/.gemini/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-204106/C/Users/sciman/.claude/CLAUDE.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260502-204106/C/Users/sciman/.claude/CLAUDE.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-204106/C/Users/sciman/.codex/AGENTS.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260502-204106/C/Users/sciman/.codex/AGENTS.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-204106/C/Users/sciman/.gemini/GEMINI.md",
+      "group": "rule_sync_backups",
+      "source": "docs/change-evidence/rule-sync-backups/20260502-204106/C/Users/sciman/.gemini/GEMINI.md"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260420225453.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260420225453.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260422191548.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260422191548.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501004238.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501004238.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501182923.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501182923.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501200520.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501200520.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501221521.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501221521.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260502135550.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260502135550.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/classroomtoolkit-daily-allowedscope-20260420230050.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/classroomtoolkit-daily-allowedscope-20260420230050.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/classroomtoolkit-onboard-20260420225453.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/classroomtoolkit-onboard-20260420225453.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/classroomtoolkit-onboard-20260422191507.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/classroomtoolkit-onboard-20260422191507.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/github-toolkit-daily-20260422191633.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/github-toolkit-daily-20260422191633.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/github-toolkit-daily-20260501004238.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/github-toolkit-daily-20260501004238.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/github-toolkit-daily-20260501182923.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/github-toolkit-daily-20260501182923.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/github-toolkit-daily-20260501200520.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/github-toolkit-daily-20260501200520.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/github-toolkit-daily-20260501221521.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/github-toolkit-daily-20260501221521.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/github-toolkit-daily-20260502135550.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/github-toolkit-daily-20260502135550.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/github-toolkit-daily-allow-20260420230743.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/github-toolkit-daily-allow-20260420230743.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/github-toolkit-daily-deny-20260420230743.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/github-toolkit-daily-deny-20260420230743.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/github-toolkit-onboard-20260420230743.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/github-toolkit-onboard-20260420230743.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/github-toolkit-onboard-20260422191627.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/github-toolkit-onboard-20260422191627.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/self-runtime-daily-20260420225616.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/self-runtime-daily-20260420225616.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/self-runtime-daily-20260422191858.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/self-runtime-daily-20260422191858.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/self-runtime-daily-20260501004238.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/self-runtime-daily-20260501004238.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/self-runtime-daily-20260501182923.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/self-runtime-daily-20260501182923.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/self-runtime-daily-20260501200520.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/self-runtime-daily-20260501200520.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/self-runtime-daily-20260501221521.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/self-runtime-daily-20260501221521.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/self-runtime-daily-20260502135550.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/self-runtime-daily-20260502135550.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/self-runtime-daily-allowedscope-20260420230134.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/self-runtime-daily-allowedscope-20260420230134.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/self-runtime-onboard-20260420225616.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/self-runtime-onboard-20260420225616.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/self-runtime-onboard-20260422191639.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/self-runtime-onboard-20260422191639.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/skills-manager-daily-20260420225937.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/skills-manager-daily-20260420225937.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/skills-manager-daily-20260422192117.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/skills-manager-daily-20260422192117.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/skills-manager-daily-20260501004238.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/skills-manager-daily-20260501004238.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/skills-manager-daily-20260501182923.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/skills-manager-daily-20260501182923.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/skills-manager-daily-20260501200520.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/skills-manager-daily-20260501200520.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/skills-manager-daily-20260501221521.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/skills-manager-daily-20260501221521.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/skills-manager-daily-20260502135550.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/skills-manager-daily-20260502135550.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/skills-manager-daily-allowedscope-20260420230317.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/skills-manager-daily-allowedscope-20260420230317.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/skills-manager-onboard-20260420225937.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/skills-manager-onboard-20260420225937.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/skills-manager-onboard-20260422192111.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/skills-manager-onboard-20260422192111.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260422192129.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260422192129.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260501004238.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260501004238.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260501182923.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260501182923.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260501200520.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260501200520.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260501221521.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260501221521.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-allow-20260420230759.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-allow-20260420230759.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-deny-20260420230759.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-deny-20260420230759.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/vps-ssh-launcher-onboard-20260420230759.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/vps-ssh-launcher-onboard-20260420230759.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/vps-ssh-launcher-onboard-20260422192122.json",
+      "group": "target_repo_raw_runs",
+      "source": "docs/change-evidence/target-repo-runs/vps-ssh-launcher-onboard-20260422192122.json"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-claude-polish.png",
+      "group": "docs_operator_ui_screenshots",
+      "source": "docs/change-evidence/operator-ui-after-claude-polish.png"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-claude.png",
+      "group": "docs_operator_ui_screenshots",
+      "source": "docs/change-evidence/operator-ui-after-claude.png"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-codex-polish.png",
+      "group": "docs_operator_ui_screenshots",
+      "source": "docs/change-evidence/operator-ui-after-codex-polish.png"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-codex.png",
+      "group": "docs_operator_ui_screenshots",
+      "source": "docs/change-evidence/operator-ui-after-codex.png"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-entrypoint-integration.png",
+      "group": "docs_operator_ui_screenshots",
+      "source": "docs/change-evidence/operator-ui-after-entrypoint-integration.png"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-feedback-polish.png",
+      "group": "docs_operator_ui_screenshots",
+      "source": "docs/change-evidence/operator-ui-after-feedback-polish.png"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-mobile-polish.png",
+      "group": "docs_operator_ui_screenshots",
+      "source": "docs/change-evidence/operator-ui-after-mobile-polish.png"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-mobile.png",
+      "group": "docs_operator_ui_screenshots",
+      "source": "docs/change-evidence/operator-ui-after-mobile.png"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-runtime-polish.png",
+      "group": "docs_operator_ui_screenshots",
+      "source": "docs/change-evidence/operator-ui-after-runtime-polish.png"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-runtime-v3.png",
+      "group": "docs_operator_ui_screenshots",
+      "source": "docs/change-evidence/operator-ui-after-runtime-v3.png"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-summary-cards.png",
+      "group": "docs_operator_ui_screenshots",
+      "source": "docs/change-evidence/operator-ui-after-summary-cards.png"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-before-entrypoint-integration.png",
+      "group": "docs_operator_ui_screenshots",
+      "source": "docs/change-evidence/operator-ui-before-entrypoint-integration.png"
+    },
+    {
+      "destination": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-before.png",
+      "group": "docs_operator_ui_screenshots",
+      "source": "docs/change-evidence/operator-ui-before.png"
+    }
+  ],
+  "repo_root": "D:\\CODE\\governed-ai-coding-runtime",
+  "rollback_instructions": "Rollback by moving each destination file back to its source path recorded in this manifest.",
+  "schema_version": "1.0"
+}

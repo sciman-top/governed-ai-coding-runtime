@@ -32,7 +32,11 @@ class AgentRuleSyncTests(unittest.TestCase):
         self.assertIn("vps-ssh-launcher", {entry["target_repo_id"] for entry in project_entries})
         global_version = manifest["default_version"]
         for entry in entries:
-            expected_version = global_version if entry["scope"] == "global" else "9.47"
+            expected_version = (
+                global_version
+                if entry["scope"] == "global" or entry.get("target_repo_id") == "self-runtime"
+                else "9.47"
+            )
             self.assertEqual(entry["version"], expected_version)
             self.assertTrue((ROOT / entry["source"]).exists(), entry["source"])
 
