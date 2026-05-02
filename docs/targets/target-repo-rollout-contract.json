@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "contract_id": "target-repo-rollout-contract",
-  "sync_revision": "2026-05-02.2",
+  "sync_revision": "2026-05-02.3",
   "canonical_one_click_entrypoint": {
     "script": "scripts/runtime-flow-preset.ps1",
     "all_targets_apply_all_features_args": [
@@ -32,7 +32,10 @@
       "milestone_gate_mode_source",
       "milestone_gate_mode_reason",
       "milestone_tag",
-      "auto_commit_trigger"
+      "auto_commit_trigger",
+      "prune_retired_managed_files_active",
+      "uninstall_governance_active",
+      "apply_managed_asset_removal"
     ]
   },
   "managed_file_rollout": {
@@ -139,6 +142,21 @@
       ]
     },
     {
+      "capability_id": "target-repo-managed-asset-removal",
+      "required_json_fields": [
+        "prune_retired_managed_files",
+        "uninstall_governance",
+        "prune_retired_managed_files_active",
+        "uninstall_governance_active",
+        "apply_managed_asset_removal"
+      ],
+      "required_script_tokens": [
+        "PruneRetiredManagedFiles",
+        "UninstallGovernance",
+        "ApplyManagedAssetRemoval"
+      ]
+    },
+    {
       "capability_id": "target-repo-gate-speed-controls",
       "required_json_fields": [
         "apply_coding_speed_profile",
@@ -223,6 +241,11 @@
       "capability_id": "target-repo-runs-retention-prune",
       "distribution_scope": "runtime_orchestrated",
       "reason": "保留期清理由 runtime-flow-preset 执行，清理对象是 runtime evidence store，不是目标仓声明。"
+    },
+    {
+      "capability_id": "target-repo-managed-asset-removal",
+      "distribution_scope": "runtime_orchestrated",
+      "reason": "旧托管文件清理和一键卸载必须由 runtime dry-run/apply 编排，先识别托管身份、漂移和备份，再删除或 patch，不能由目标仓 profile 字段触发盲覆盖/盲删除。"
     },
     {
       "capability_id": "target-repo-gate-speed-controls",

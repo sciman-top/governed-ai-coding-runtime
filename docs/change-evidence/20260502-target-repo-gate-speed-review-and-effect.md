@@ -54,6 +54,8 @@
 - `python -m py_compile scripts/audit-target-repo-gate-speed.py scripts/lib/target_repo_speed_profile.py`
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/fast-check.ps1 -RepoProfilePath D:\CODE\vps-ssh-launcher\.governed-ai\repo-profile.json -WorkingDirectory D:\CODE\vps-ssh-launcher -Json`
 - `python -m unittest tests.runtime.test_governance_gate_runner tests.runtime.test_target_repo_governance_consistency tests.runtime.test_runtime_flow_preset.RuntimeFlowPresetScriptTests.test_runtime_flow_preset_apply_governance_baseline_only_bootstraps_blank_target tests.runtime.test_target_repo_rollout_contract tests.runtime.test_target_repo_speed_kpi tests.runtime.test_target_repo_gate_speed_audit`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -Target self-runtime -FlowMode daily -Json -RuntimeFlowTimeoutSeconds 300`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -AllTargets -FlowMode daily -Json -TargetParallelism 3 -RuntimeFlowTimeoutSeconds 300 -BatchTimeoutSeconds 1200`
 
 ## Evidence
 - Focused runtime-flow tests passed: 3 tests in 9.983s.
@@ -81,6 +83,14 @@
 - `vps-ssh-launcher` quick gate passed with `gate_order=["test","contract:powershell-policy","contract"]`; pytest reported 69 passed, 1 skipped, 15 subtests passed, and unittest reported 70 tests OK with 1 skipped.
 - Expanded quick feedback passed: 52 tests in 17.320s.
 - Final Runtime gate passed after the audit/profile fix and retirement-contract worktree convergence: 98 test files in 154.489s, failures=0.
+- Final Contract gate passed.
+- Final Hotspot gate passed with existing `WARN codex-capability-degraded`.
+- After managed-asset evidence was added, `self-runtime` daily passed in 121.699s with `test=pass` and `contract=pass`.
+- Latest all-target parallel daily wrote `docs/change-evidence/target-repo-speed-20260502/daily-parallel-targetparallelism3-after-managed-asset-evidence.json`: measured 108.816s, payload `batch_elapsed_seconds=108`, `target_count=5`, `failure_count=0`.
+- Latest parallel target durations: `github-toolkit=12155ms`, `skills-manager=22029ms`, `vps-ssh-launcher=22122ms`, `classroomtoolkit=83057ms`, `self-runtime=107931ms`.
+- Refreshed `gate-speed-audit.json` passed with `target_count=5`, `error_count=0`, `warn_count=0`, `speedup_ratio=2.8519`, and `wall_time_reduction_ratio=0.6494`.
+- Final focused runtime-flow/audit tests passed: 5 tests in 5.880s.
+- Final Runtime gate passed: 99 test files in 153.290s, failures=0.
 - Final Contract gate passed.
 - Final Hotspot gate passed with existing `WARN codex-capability-degraded`.
 

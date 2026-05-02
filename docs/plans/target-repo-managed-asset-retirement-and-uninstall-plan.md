@@ -3,7 +3,8 @@
 ## Status
 - Created: 2026-05-02.
 - Queue: `GAP-144` through `GAP-151`.
-- Current state: planning baseline only. No target repository file deletion is authorized by this plan.
+- Current state: initial implementation slice complete for inventory, retired-file contract, prune dry-run/apply, uninstall dry-run/apply, and `runtime-flow-preset.ps1` one-click dry-run integration.
+- Safety status: normal apply flows still never remove files. Destructive removal requires explicit prune/uninstall flags, and apply requires `-ApplyManagedAssetRemoval`.
 - Trigger: owner-directed follow-up after target-repo overwrite protection landed. The remaining gap is safe retirement and one-click uninstall for files previously applied to target repositories by this runtime.
 
 ## Goal
@@ -267,6 +268,14 @@ Only after that classification may it propose or execute removal. The deletion p
 4. Implement uninstall after shared-file patch semantics are covered by tests.
 5. Integrate all-target/operator surfaces only after the lower-level safety checks are proven.
 6. Close with active target dry-run evidence and the full gate sequence.
+
+## Implementation Notes 2026-05-02
+- `GAP-145`: added `scripts/inspect-target-repo-managed-assets.py` and shared ownership classification helpers. Explicit `--candidate-path` limits scope; default scan covers active baseline entries and managed roots.
+- `GAP-147`: added `retired_managed_files` to baseline and rollout contract; malformed retired entries fail contract verification unless they include path, previous source/hash, reason, replacement, safe-delete conditions, and backup requirement.
+- `GAP-148`: added `scripts/prune-retired-managed-files.py`. It defaults to dry-run, deletes only retired candidates with hash evidence and no active references, and backs up before apply.
+- `GAP-149`: added `scripts/uninstall-target-repo-governance.py`. It deletes only source/hash-proven whole-file managed assets, patches `json_merge` shared files, blocks drifted files, and blocks generated files unless hash evidence proves exact generated content.
+- `GAP-150`: added `-PruneRetiredManagedFiles`, `-UninstallGovernance`, and `-ApplyManagedAssetRemoval` to `scripts/runtime-flow-preset.ps1`. Dry-run JSON includes candidate, blocked, backup, and apply fields.
+- Remaining improvement: `GAP-146` future provenance/sidecar marker writing is still a follow-up hardening item; current destructive paths fail closed when provenance/hash evidence is absent.
 
 ## Open Questions
 - Exact flag names may change during implementation, but destructive apply must remain explicit and separate from normal `ApplyAllFeatures`.

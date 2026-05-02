@@ -59,6 +59,7 @@ class TargetRepoRolloutContractTests(unittest.TestCase):
         self.assertIn("retired_managed_files", json.loads(DEFAULT_BASELINE_PATH.read_text(encoding="utf-8")))
         runtime_contract_ids = {item["capability_id"] for item in contract["runtime_orchestrated_capability_contracts"]}
         self.assertIn("target-repo-problem-trace-and-kpi", runtime_contract_ids)
+        self.assertIn("target-repo-managed-asset-removal", runtime_contract_ids)
         self.assertIn("native-attach-runtime-flow", runtime_contract_ids)
 
     def test_fails_when_baseline_field_is_not_registered_for_one_click_rollout(self) -> None:

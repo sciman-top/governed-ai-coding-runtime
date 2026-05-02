@@ -1,42 +1,42 @@
 {
   "catalog_path": "D:\\CODE\\governed-ai-coding-runtime\\docs\\targets\\target-repos-catalog.json",
   "effect_summary": {
-    "parallel_batch_elapsed_seconds": 141.0,
+    "parallel_batch_elapsed_seconds": 108.0,
     "parallel_batch_timed_out": false,
     "parallel_failure_count": 0,
-    "parallel_path": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\target-repo-speed-20260502\\daily-parallel-targetparallelism3-after-evidence.json",
+    "parallel_path": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\target-repo-speed-20260502\\daily-parallel-targetparallelism3-after-managed-asset-evidence.json",
     "per_target": [
       {
         "parallel_exit_code": 0,
-        "parallel_target_duration_ms": 137152,
+        "parallel_target_duration_ms": 83057,
         "serial_exit_code": 0,
         "serial_target_duration_ms": 131157,
         "target": "classroomtoolkit"
       },
       {
         "parallel_exit_code": 0,
-        "parallel_target_duration_ms": 18610,
+        "parallel_target_duration_ms": 12155,
         "serial_exit_code": 0,
         "serial_target_duration_ms": 16447,
         "target": "github-toolkit"
       },
       {
         "parallel_exit_code": 0,
-        "parallel_target_duration_ms": 141520,
+        "parallel_target_duration_ms": 107931,
         "serial_exit_code": 0,
         "serial_target_duration_ms": 120818,
         "target": "self-runtime"
       },
       {
         "parallel_exit_code": 0,
-        "parallel_target_duration_ms": 33315,
+        "parallel_target_duration_ms": 22029,
         "serial_exit_code": 0,
         "serial_target_duration_ms": 19459,
         "target": "skills-manager"
       },
       {
         "parallel_exit_code": 0,
-        "parallel_target_duration_ms": 26144,
+        "parallel_target_duration_ms": 22122,
         "serial_exit_code": 0,
         "serial_target_duration_ms": 20038,
         "target": "vps-ssh-launcher"
@@ -46,13 +46,13 @@
     "serial_batch_timed_out": false,
     "serial_failure_count": 0,
     "serial_path": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\target-repo-speed-20260502\\daily-serial-targetparallelism1-after-evidence.json",
-    "speedup_ratio": 2.1844,
-    "wall_time_reduction_ratio": 0.5422
+    "speedup_ratio": 2.8519,
+    "wall_time_reduction_ratio": 0.6494
   },
   "error_count": 0,
   "findings": [],
   "full_timeout_budget_seconds": 600,
-  "generated_at": "2026-05-02T11:01:38.674573+00:00",
+  "generated_at": "2026-05-02T11:23:29.653748+00:00",
   "quick_timeout_budget_seconds": 180,
   "report_kind": "target_repo_gate_speed_audit",
   "schema_version": "1.0",

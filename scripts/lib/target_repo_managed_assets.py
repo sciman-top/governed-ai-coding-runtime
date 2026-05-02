@@ -97,6 +97,8 @@ def expected_managed_text(*, source_text: str, actual_text: str | None, manageme
 
 def collect_candidate_paths(target_repo: Path, explicit_paths: list[str], baseline: dict[str, Any]) -> list[str]:
     paths: set[str] = {normalize_relative_text(path) for path in explicit_paths if str(path).strip()}
+    if explicit_paths:
+        return sorted(paths)
     for item in baseline.get("required_managed_files", []):
         if isinstance(item, dict) and isinstance(item.get("path"), str):
             paths.add(normalize_relative_text(item["path"]))
@@ -106,8 +108,6 @@ def collect_candidate_paths(target_repo: Path, explicit_paths: list[str], baseli
     for item in baseline.get("retired_managed_files", []):
         if isinstance(item, dict) and isinstance(item.get("path"), str):
             paths.add(normalize_relative_text(item["path"]))
-    if explicit_paths:
-        return sorted(paths)
     for folder in (".governed-ai", ".claude"):
         root = target_repo / folder
         if not root.exists():
@@ -211,11 +211,31 @@ def classify_asset(
             "evidence_refs": ["current_baseline.required_managed_files"],
         }
     if generated_entry is not None:
+        expected_hash = normalize_sha256(generated_entry.get("expected_sha256") or generated_entry.get("source_sha256"))
+        if not expected_hash:
+            return base | {
+                "classification": "managed_unverified",
+                "reason": "generated_managed_hash_missing",
+                "generator": str(generated_entry.get("generator", "")),
+                "management_mode": str(generated_entry.get("management_mode", "block_on_drift")),
+                "evidence_refs": ["current_baseline.generated_managed_files"],
+            }
+        if actual_text is None:
+            return base | {
+                "classification": "managed_drifted",
+                "reason": "generated_managed_file_missing",
+                "generator": str(generated_entry.get("generator", "")),
+                "management_mode": str(generated_entry.get("management_mode", "block_on_drift")),
+                "expected_sha256": f"sha256:{expected_hash}",
+                "evidence_refs": ["current_baseline.generated_managed_files"],
+            }
+        matches = target_sha == expected_hash
         return base | {
-            "classification": "active_managed" if actual_text is not None else "managed_drifted",
-            "reason": "generated_managed_file_present" if actual_text is not None else "generated_managed_file_missing",
+            "classification": "active_managed" if matches else "managed_drifted",
+            "reason": "generated_hash_matches" if matches else "generated_hash_differs",
             "generator": str(generated_entry.get("generator", "")),
             "management_mode": str(generated_entry.get("management_mode", "block_on_drift")),
+            "expected_sha256": f"sha256:{expected_hash}",
             "evidence_refs": ["current_baseline.generated_managed_files"],
         }
     if retired_entry is not None:

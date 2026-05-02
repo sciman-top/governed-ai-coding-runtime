@@ -31,7 +31,8 @@ class AgentRuleSyncTests(unittest.TestCase):
         self.assertIn("self-runtime", {entry["target_repo_id"] for entry in project_entries})
         self.assertIn("vps-ssh-launcher", {entry["target_repo_id"] for entry in project_entries})
         for entry in entries:
-            self.assertEqual(entry["version"], "9.47")
+            expected_version = "9.48" if entry["scope"] == "global" else "9.47"
+            self.assertEqual(entry["version"], expected_version)
             self.assertTrue((ROOT / entry["source"]).exists(), entry["source"])
 
     def test_global_sync_skips_when_hashes_match(self) -> None:

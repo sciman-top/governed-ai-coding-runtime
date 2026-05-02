@@ -102,6 +102,54 @@ class TargetRepoManagedAssetInventoryTests(unittest.TestCase):
             self.assertEqual(by_path["tests/target_owned_test.py"]["classification"], "target_owned")
             self.assertFalse(payload["modified"])
 
+    def test_inventory_candidate_path_limits_scope(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target = workspace / "target"
+            source = workspace / "templates" / "managed.py"
+            _write_text(source, "print('managed')\n")
+            _write_text(target / ".governed-ai" / "managed.py", "print('managed')\n")
+            _write_text(target / "tests" / "target_owned_test.py", "def test_target(): pass\n")
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "required_managed_files": [
+                        {
+                            "path": ".governed-ai/managed.py",
+                            "source": str(source),
+                            "management_mode": "block_on_drift",
+                        }
+                    ],
+                    "generated_managed_files": [],
+                    "retired_managed_files": [],
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/inspect-target-repo-managed-assets.py",
+                    "--target-repo",
+                    str(target),
+                    "--baseline-path",
+                    str(baseline_path),
+                    "--candidate-path",
+                    "tests/target_owned_test.py",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual([asset["path"] for asset in payload["assets"]], ["tests/target_owned_test.py"])
+            self.assertEqual(payload["assets"][0]["classification"], "target_owned")
+
 
 if __name__ == "__main__":
     unittest.main()

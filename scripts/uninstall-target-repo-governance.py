@@ -127,16 +127,21 @@ def uninstall_target_repo_governance(
             continue
         path = normalize_relative_text(item["path"])
         target_path = repo_relative_path(root, path)
-        if not target_path.exists():
-            missing.append({"path": path, "reason": "missing_generated_file"})
+        asset = classify_asset(
+            target_repo=root,
+            repo_root=ROOT,
+            relative_path=path,
+            active_entry=None,
+            generated_entry=item,
+            retired_entry=None,
+        )
+        if not asset.get("exists"):
+            missing.append({"path": path, "reason": asset.get("reason", "missing_generated_file")})
             continue
-        record = {
-            "path": path,
-            "classification": "active_managed",
-            "reason": "generated_managed_file",
-            "generator": str(item.get("generator", "")),
-        }
-        delete_candidates.append(record)
+        if asset["classification"] != "active_managed":
+            blocked.append({"path": path, "reason": asset["reason"], "classification": asset["classification"]})
+            continue
+        delete_candidates.append(asset)
         if apply:
             backup_path = _backup_file(target_path=target_path, backup_root=resolved_backup_root, relative_path=path)
             target_path.unlink()
@@ -144,7 +149,7 @@ def uninstall_target_repo_governance(
                 {
                     "path": path,
                     "backup_path": str(backup_path),
-                    "target_sha256": "",
+                    "target_sha256": str(asset.get("target_sha256", "")),
                     "rollback": f"copy {backup_path} back to {target_path}",
                 }
             )
