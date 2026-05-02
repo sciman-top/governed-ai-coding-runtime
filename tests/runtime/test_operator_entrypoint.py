@@ -139,7 +139,8 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("OperatorUi", completed.stdout)
         self.assertIn("-UiLanguage <zh-CN|en>", completed.stdout)
         self.assertIn("EnableAutoStart", completed.stdout)
-        self.assertIn("退役托管文件清理检测", completed.stdout)
+        self.assertIn("默认删除已证明安全的退役托管文件", completed.stdout)
+        self.assertIn("-DisableManagedAssetRemoval", completed.stdout)
 
     def test_operator_apply_all_features_applies_safe_retired_cleanup_by_default(self) -> None:
         env = dict(os.environ)

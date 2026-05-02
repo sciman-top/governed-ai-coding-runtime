@@ -3,8 +3,8 @@
 ## Status
 - Created: 2026-05-02.
 - Queue: `GAP-144` through `GAP-151`.
-- Current state: initial implementation slice complete for inventory, retired-file contract, prune dry-run/apply, uninstall dry-run/apply, and `runtime-flow-preset.ps1` one-click dry-run integration.
-- Safety status: normal apply flows still never remove files. Destructive removal requires explicit prune/uninstall flags, and apply requires `-ApplyManagedAssetRemoval`.
+- Current state: implementation slice complete for inventory, retired-file contract, prune dry-run/apply, uninstall dry-run/apply, and `runtime-flow-preset.ps1` one-click integration.
+- Safety status: `ApplyAllFeatures` defaults to deleting proven-safe retired managed files after hash/reference checks, backup, deletion-time hash recheck, proof output, and backup-local `manifest.json`; `-DisableManagedAssetRemoval` keeps it detection-only. `CleanupTargets` and `UninstallGovernance` still require `-ApplyManagedAssetRemoval` for real deletion or patching.
 - Trigger: owner-directed follow-up after target-repo overwrite protection landed. The remaining gap is safe retirement and one-click uninstall for files previously applied to target repositories by this runtime.
 
 ## Goal
@@ -22,7 +22,7 @@ Only after that classification may it propose or execute removal. The deletion p
 - Do not delete target-owned files automatically.
 - Do not whole-file delete shared configuration files such as `.claude/settings.json` or `.governed-ai/repo-profile.json`.
 - Do not treat a path under `.governed-ai/`, `.claude/`, `tests/`, `.github/`, or script directories as runtime-managed without provenance, baseline, historical-template, or hash evidence.
-- Do not make `ApplyAllFeatures` silently remove files. Removal requires an explicit prune or uninstall action.
+- Do not delete unregistered, unverified, drifted, referenced, unbacked, target-owned, or shared files. `ApplyAllFeatures` may remove only proven-safe retired managed files, and must expose `-DisableManagedAssetRemoval` for detection-only runs.
 - Do not remove active evidence history or reviewed policy files as part of uninstall.
 
 ## Architecture Decisions
@@ -32,7 +32,7 @@ Only after that classification may it propose or execute removal. The deletion p
   - `PruneRetiredManagedFiles`: remove historical runtime-managed files that are no longer active.
   - `UninstallGovernance`: detach runtime governance from a target repo, including active managed files, generated files, shared-file patches, light-pack/provenance, and profile-owned fields.
 - Shared files are patched by ownership scope, not deleted as whole files.
-- All apply modes require a prior dry-run result, backup location, and evidence report.
+- All apply modes require backup location, explicit proof fields, deletion-time recheck, backup-local `manifest.json`, and rollback guidance.
 
 ## Asset Classification Model
 - `active_managed`: declared in current baseline or rollout contract and matching the expected source, generator, or merge result.

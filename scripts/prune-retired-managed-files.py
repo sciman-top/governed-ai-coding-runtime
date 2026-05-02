@@ -6,11 +6,58 @@ import json
 from pathlib import Path
 import shutil
 
-from lib.target_repo_managed_assets import inspect_managed_assets, load_json_object, normalize_relative_text, repo_relative_path
+from lib.target_repo_managed_assets import (
+    inspect_managed_assets,
+    load_json_object,
+    normalize_relative_text,
+    repo_relative_path,
+    sha256_text,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_BASELINE_PATH = ROOT / "docs" / "targets" / "target-repo-governance-baseline.json"
+OPERATION_TYPE = "retired_managed_files_cleanup"
+DELETION_POLICY = "delete_only_registered_hash_matched_unreferenced_retired_managed_files"
+
+
+def _candidate_proof(*, backup_required: bool, backup_written: bool) -> dict[str, bool]:
+    return {
+        "baseline_registered": True,
+        "path_bounded": True,
+        "target_sha256_matches_previous_sha256": True,
+        "no_active_references": True,
+        "backup_required": bool(backup_required),
+        "backup_written": bool(backup_written),
+    }
+
+
+def _safety_contract() -> dict[str, object]:
+    return {
+        "operation_type": OPERATION_TYPE,
+        "deletion_policy": DELETION_POLICY,
+        "delete_requires": [
+            "baseline_registered",
+            "path_bounded",
+            "target_sha256_matches_previous_sha256",
+            "no_active_references",
+            "backup_written",
+            "deletion_time_sha256_recheck",
+        ],
+        "rollback_manifest": "backup_root/manifest.json",
+    }
+
+
+def _target_sha256(path: Path) -> str:
+    try:
+        return f"sha256:{sha256_text(path.read_text(encoding='utf-8', errors='replace'))}"
+    except OSError:
+        return ""
+
+
+def _write_manifest(*, payload: dict, manifest_path: Path) -> None:
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -73,7 +120,15 @@ def prune_retired_managed_files(
                 }
             )
             continue
-        candidates.append(asset)
+        candidates.append(
+            asset
+            | {
+                "proof": _candidate_proof(
+                    backup_required=bool(asset.get("backup_required")),
+                    backup_written=False,
+                )
+            }
+        )
 
     if apply and not blocked:
         for asset in candidates:
@@ -81,24 +136,45 @@ def prune_retired_managed_files(
             backup_path = resolved_backup_root / asset["path"]
             backup_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(target_path, backup_path)
+            current_sha256 = _target_sha256(target_path)
+            if current_sha256 != asset.get("target_sha256"):
+                blocked.append(
+                    {
+                        "path": asset["path"],
+                        "reason": "target_changed_before_delete",
+                        "classification": asset.get("classification", ""),
+                        "expected_sha256": asset.get("target_sha256", ""),
+                        "actual_sha256": current_sha256,
+                        "backup_path": str(backup_path),
+                    }
+                )
+                asset["proof"]["backup_written"] = True
+                break
             target_path.unlink()
+            asset["proof"]["backup_written"] = True
             deleted.append(
                 {
                     "path": asset["path"],
                     "backup_path": str(backup_path),
                     "target_sha256": asset.get("target_sha256", ""),
+                    "proof": dict(asset["proof"]),
                     "rollback": f"copy {backup_path} back to {target_path}",
                 }
             )
 
     status = "blocked" if blocked else "pass"
+    manifest_path = resolved_backup_root / "manifest.json" if apply else None
     payload = {
+        "operation_type": OPERATION_TYPE,
+        "deletion_policy": DELETION_POLICY,
+        "safety_contract": _safety_contract(),
         "target_repo": str(root),
         "status": status,
         "reason": "blocked_retired_files" if blocked else "ok",
         "dry_run": bool(dry_run or not apply),
         "apply": bool(apply),
         "backup_root": str(resolved_backup_root),
+        "manifest_path": str(manifest_path) if manifest_path is not None else "",
         "summary": {
             "retired_files": len(assets),
             "delete_candidates": len(candidates),
@@ -112,6 +188,8 @@ def prune_retired_managed_files(
         "missing_files": missing,
         "modified": bool(deleted),
     }
+    if manifest_path is not None:
+        _write_manifest(payload=payload, manifest_path=manifest_path)
     return payload, (2 if blocked else 0)
 
 

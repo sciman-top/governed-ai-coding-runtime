@@ -2060,6 +2060,12 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             self.assertEqual(payload["prune_retired_managed_files"]["delete_candidates"], 1)
             self.assertEqual(payload["uninstall_governance"]["delete_candidates"], 1)
             self.assertEqual(payload["prune_retired_managed_files"]["dry_run"], True)
+            self.assertEqual(payload["prune_retired_managed_files"]["operation_type"], "retired_managed_files_cleanup")
+            self.assertEqual(
+                payload["prune_retired_managed_files"]["deletion_policy"],
+                "delete_only_registered_hash_matched_unreferenced_retired_managed_files",
+            )
+            self.assertEqual(payload["prune_retired_managed_files"]["manifest_path"], "")
             self.assertEqual(payload["uninstall_governance"]["dry_run"], True)
             self.assertEqual(payload["prune_retired_managed_files"]["delete_candidate_items"][0]["path"], ".governed-ai/old.py")
             self.assertEqual(payload["uninstall_governance"]["delete_candidate_items"][0]["path"], ".governed-ai/managed.py")
