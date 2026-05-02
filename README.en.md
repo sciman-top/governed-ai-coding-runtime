@@ -1,5 +1,24 @@
 # Governed AI Coding Runtime English Guide
 
+## Shortest Path
+If you only need to know what to run next, start with the repository-root shortcut:
+
+```powershell
+.\run.ps1
+```
+
+AI recommended daily entrypoint:
+
+```powershell
+.\run.ps1 readiness -OpenUi
+```
+
+It runs the repository hard-gate order `build -> test -> contract/invariant -> hotspot`, then opens the default Chinese operator UI. `run.ps1` is only a convenience layer; the real implementation remains `scripts/operator.ps1`. For the full action list, run:
+
+```powershell
+.\run.ps1 operator-help
+```
+
 ## Current Status
 `Foundation / GAP-020` through `GAP-023`, `Full Runtime / GAP-024` through `GAP-028`, `Public Usable Release / GAP-029` through `GAP-032`, `Maintenance Baseline / GAP-033` through `GAP-034`, and `Interactive Session Productization / GAP-035` through `GAP-039` are complete.
 
@@ -76,6 +95,7 @@ What you should **not** claim yet:
 - Path C (risky writes): run `govern-attachment-write -> decide-attachment-write -> execute-attachment-write` for medium/high-risk mutations.
 
 ## Current Main Entrypoints And One-Command Apply
+- Repository-root shortcut: `run.ps1`. It compresses common actions into scenario commands such as `.\run.ps1 readiness -OpenUi`, `.\run.ps1 daily -Mode quick`, `.\run.ps1 rules-check`, and `.\run.ps1 feedback`; it still delegates to `scripts/operator.ps1`.
 - Operator aggregate entrypoint: `scripts/operator.ps1`. It collects readiness checks, rule drift/sync, target-repo batch flows, and operator UI rendering behind one action-oriented entrypoint; default `-Action Help`.
 - Core-principle change candidate entrypoint: `scripts/operator.ps1 -Action CorePrincipleMaterialize`. By default it only reports a dry-run candidate; after explicit permission, add `-ConfirmCorePrincipleProposalWrite` to write reviewable proposal/manifest files; for audit-only evidence, add `-WriteCorePrincipleDryRunReport` to write only the dry-run report. These paths still do not directly change active core-principles policy, specs, verifiers, or target repositories.
 - Target-repo daily/batch entrypoint: `scripts/runtime-flow-preset.ps1`. It reads `docs/targets/target-repos-catalog.json` and supports one target or all active targets.
@@ -83,6 +103,14 @@ What you should **not** claim yet:
 - Self-repo verification entrypoint: `scripts/verify-repo.ps1 -Check All`.
 
 Inspect the operator entrypoint and recommended paths:
+
+```powershell
+.\run.ps1
+```
+
+```powershell
+.\run.ps1 readiness -OpenUi
+```
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Help

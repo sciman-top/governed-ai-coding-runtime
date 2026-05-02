@@ -23,6 +23,64 @@ def _load_serve_operator_ui_module():
 
 @unittest.skipUnless(shutil.which("pwsh"), "pwsh is not available")
 class OperatorEntrypointTests(unittest.TestCase):
+    def test_root_run_entrypoint_help_succeeds(self) -> None:
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "run.ps1"),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+        )
+
+        self.assertIn("AI 推荐", completed.stdout)
+        self.assertIn(".\\run.ps1 readiness -OpenUi", completed.stdout)
+        self.assertIn("rules-check", completed.stdout)
+        self.assertIn("operator-help", completed.stdout)
+
+    def test_root_run_entrypoint_forwards_aliases(self) -> None:
+        env = dict(os.environ)
+        env["GOVERNED_RUNTIME_OPERATOR_PREFLIGHT_JSON"] = json.dumps(
+            {
+                "next_action": "default_defer",
+                "why": "No blocking action.",
+                "gate_state": "pass",
+                "source_state": "fresh",
+                "evidence_state": "fresh",
+            }
+        )
+
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "run.ps1"),
+                "readiness",
+                "-DryRun",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+            env=env,
+        )
+
+        self.assertIn("operator-preflight: action=Readiness", completed.stdout)
+        self.assertIn("DRY-RUN build", completed.stdout)
+
     def test_operator_entrypoint_help_succeeds(self) -> None:
         completed = subprocess.run(
             [
@@ -174,6 +232,25 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("no-store, max-age=0", script)
         self.assertIn("x-governed-runtime-ui-stale", script)
 
+    def test_next_work_summary_keeps_daily_available_for_refresh_evidence_first(self) -> None:
+        module = _load_serve_operator_ui_module()
+
+        fake_selector = mock.Mock()
+        fake_selector.inspect_next_work_selection.return_value = {
+            "status": "pass",
+            "next_action": "refresh_evidence_first",
+            "why": "freshness",
+        }
+
+        with mock.patch.object(module, "_load_next_work_module", return_value=fake_selector):
+            payload = module._build_next_work_summary()
+
+        self.assertEqual("refresh_evidence_first", payload["safe_next_action"])
+        self.assertEqual("action_required", payload["ui_status"])
+        self.assertNotIn("daily_all", payload["blocked_actions"])
+        self.assertIn("apply_all_features", payload["blocked_actions"])
+        self.assertIn("evolution_materialize", payload["blocked_actions"])
+
     def test_operator_ui_next_work_panel_does_not_block_initial_html(self) -> None:
         module = _load_serve_operator_ui_module()
 
@@ -220,6 +297,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         )
 
         self.assertEqual(0, result["exit_code"])
+        self.assertIn("run.ps1", " ".join(result["command"]))
         self.assertIn("-Target", result["command"])
         self.assertIn("classroomtoolkit", result["command"])
         self.assertIn("-DryRun", result["command"])

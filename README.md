@@ -5,6 +5,25 @@
 - English guide: [README.en.md](README.en.md)
 - Documentation index / 文档索引: [docs/README.md](docs/README.md)
 
+## Fastest Path / 最短使用路径
+如果只想知道“现在该执行什么”，先从根目录短入口开始：
+
+```powershell
+.\run.ps1
+```
+
+AI 推荐的日常入口：
+
+```powershell
+.\run.ps1 readiness -OpenUi
+```
+
+它会按本仓硬门禁顺序执行 `build -> test -> contract/invariant -> hotspot`，然后打开默认中文 operator UI。`run.ps1` 只是便捷层，真实实现仍在 `scripts/operator.ps1`；需要完整动作说明时运行：
+
+```powershell
+.\run.ps1 operator-help
+```
+
 ## 中文快速结论
 本项目已经完成 `Foundation / GAP-020` 到 `GAP-023`、`Full Runtime / GAP-024` 到 `GAP-028`、`Public Usable Release / GAP-029` 到 `GAP-032`、`Maintenance Baseline / GAP-033` 到 `GAP-034`，以及 `Interactive Session Productization / GAP-035` 到 `GAP-039`。这表示“混合最终形态的第一版产品化边界”已经落地，但仍不等于“已经拥有完整 runtime-owned 的所有宿主真实执行能力”。
 
@@ -58,6 +77,7 @@
 - 仍不能宣称“Codex CLI 在所有外部仓、所有环境下已经被本项目完整接管用于真实高风险编码写入”。
 
 当前总入口与一键应用：
+- 根目录短入口：`run.ps1`。它把常用动作压成场景化短命令，例如 `.\run.ps1 readiness -OpenUi`、`.\run.ps1 daily -Mode quick`、`.\run.ps1 rules-check`、`.\run.ps1 feedback`；底层仍转交 `scripts/operator.ps1`。
 - 操作者聚合入口：`scripts/operator.ps1`。它把 readiness、自检、规则漂移/同步、目标仓批量流和 operator UI 生成收成同一个入口；默认 `-Action Help`，适合日常少记长命令。
 - 宿主反馈汇总入口：`scripts/operator.ps1 -Action FeedbackReport`。它统一汇总 `Codex/Claude` 本机状态、规则同步面、parity 文档面和最新 target-run evidence。
 - Codex 本机优化入口：`scripts/Optimize-CodexLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入本项目当前推荐的 Codex 单默认配置。长期优先级是“综合效率优先，安全边界约束”：少打扰、自动连续执行、节省 token / 成本、高效率，同时不退化安全、最小权限、门禁、证据和回滚；当前暂行实现是 `cli_auth_credentials_store = "file"`、`model = "gpt-5.5"`、`model_reasoning_effort = "medium"`、`approval_policy = "never"`、`model_context_window = 272000`、`model_auto_compact_token_limit = 220000`。以后如果模型、参数或技术栈更迭，应先保持这个原则；只有在安全与门禁不退化时，才替换当前实现。脚本同时会安装 `codex-account` 账号切换入口，并把当前仓加入 trusted project。
@@ -68,6 +88,14 @@
 - 本仓自检入口：`scripts/verify-repo.ps1 -Check All`。它用于验证当前 runtime、文档、schema、catalog、脚本和目标仓一致性门禁。
 
 常用一键命令：
+
+```powershell
+.\run.ps1
+```
+
+```powershell
+.\run.ps1 readiness -OpenUi
+```
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Help

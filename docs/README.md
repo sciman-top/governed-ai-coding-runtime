@@ -109,6 +109,10 @@
 - [Project AGENTS](../AGENTS.md)
 
 ## Main Entrypoints
+- Repository-root shortcut: `run.ps1`
+  - source of truth: delegates to `scripts/operator.ps1`
+  - typical uses: `.\run.ps1`, `.\run.ps1 readiness -OpenUi`, `.\run.ps1 ui`, `.\run.ps1 daily -Mode quick`, `.\run.ps1 rules-check`, `.\run.ps1 feedback`
+  - purpose: first-use and daily-use convenience so operators do not need to remember long PowerShell invocations
 - Operator aggregate entrypoint: `scripts/operator.ps1`
   - source of truth: existing runtime, rule-sync, target-flow, and operator UI scripts
   - typical uses: `-Action Help`, `-Action Readiness`, `-Action RulesDryRun`, `-Action DailyAll`, `-Action OperatorUi -OpenUi`
@@ -169,6 +173,10 @@ Current operator-facing bilingual set includes:
 
 ## Verification Quickstart
 ```powershell
+.\run.ps1 readiness -OpenUi
+```
+
+```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File ../scripts/verify-repo.ps1 -Check All
 ```
 
@@ -209,6 +217,14 @@ python scripts/run-multi-repo-trial.py
 ```
 
 Operator and packaging helpers:
+
+```powershell
+.\run.ps1
+```
+
+```powershell
+.\run.ps1 ui
+```
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Help

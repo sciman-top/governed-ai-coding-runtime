@@ -44,17 +44,17 @@ build_host_feedback_summary = _load_host_feedback_summary_builder()
 
 
 ALLOWED_ACTIONS = {
-    "targets": {"operator_action": "Targets", "timeout_seconds": 300},
-    "readiness": {"operator_action": "Readiness", "timeout_seconds": 1800},
-    "rules_dry_run": {"operator_action": "RulesDryRun", "timeout_seconds": 600},
-    "rules_apply": {"operator_action": "RulesApply", "timeout_seconds": 900},
-    "governance_baseline_all": {"operator_action": "GovernanceBaselineAll", "timeout_seconds": 1800},
-    "daily_all": {"operator_action": "DailyAll", "timeout_seconds": 1800},
-    "apply_all_features": {"operator_action": "ApplyAllFeatures", "timeout_seconds": 2400},
-    "feedback_report": {"operator_action": "FeedbackReport", "timeout_seconds": 600},
-    "evolution_review": {"operator_action": "EvolutionReview", "timeout_seconds": 900},
-    "experience_review": {"operator_action": "ExperienceReview", "timeout_seconds": 900},
-    "evolution_materialize": {"operator_action": "EvolutionMaterialize", "timeout_seconds": 900},
+    "targets": {"operator_action": "Targets", "run_alias": "targets", "timeout_seconds": 300},
+    "readiness": {"operator_action": "Readiness", "run_alias": "readiness", "timeout_seconds": 1800},
+    "rules_dry_run": {"operator_action": "RulesDryRun", "run_alias": "rules-check", "timeout_seconds": 600},
+    "rules_apply": {"operator_action": "RulesApply", "run_alias": "rules-apply", "timeout_seconds": 900},
+    "governance_baseline_all": {"operator_action": "GovernanceBaselineAll", "run_alias": "governance-baseline", "timeout_seconds": 1800},
+    "daily_all": {"operator_action": "DailyAll", "run_alias": "daily", "timeout_seconds": 1800},
+    "apply_all_features": {"operator_action": "ApplyAllFeatures", "run_alias": "apply-all", "timeout_seconds": 2400},
+    "feedback_report": {"operator_action": "FeedbackReport", "run_alias": "feedback", "timeout_seconds": 600},
+    "evolution_review": {"operator_action": "EvolutionReview", "run_alias": "evolution-review", "timeout_seconds": 900},
+    "experience_review": {"operator_action": "ExperienceReview", "run_alias": "experience-review", "timeout_seconds": 900},
+    "evolution_materialize": {"operator_action": "EvolutionMaterialize", "run_alias": "evolution-materialize", "timeout_seconds": 900},
 }
 
 CODEX_STATUS_CACHE_TTL_SECONDS = 10.0
@@ -411,8 +411,11 @@ def _build_next_work_summary() -> dict:
     )
 
     next_action = str(payload.get("next_action", "unknown"))
-    if next_action in {"repair_gate_first", "refresh_evidence_first"}:
+    if next_action == "repair_gate_first":
         blocked_actions = ["daily_all", "apply_all_features", "evolution_materialize"]
+        ui_status = "action_required"
+    elif next_action == "refresh_evidence_first":
+        blocked_actions = ["apply_all_features", "evolution_materialize"]
         ui_status = "action_required"
     elif next_action == "owner_directed_scope_required":
         blocked_actions = ["apply_all_features", "evolution_materialize"]
@@ -570,9 +573,8 @@ def run_operator_action(payload: dict) -> dict:
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        str(ROOT / "scripts" / "operator.ps1"),
-        "-Action",
-        action["operator_action"],
+        str(ROOT / "run.ps1"),
+        action.get("run_alias") or action["operator_action"],
         "-UiLanguage",
         language,
         "-Target",

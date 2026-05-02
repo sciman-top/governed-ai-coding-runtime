@@ -1,5 +1,24 @@
 # Governed AI Coding Runtime 中文使用说明
 
+## 最短使用路径
+如果只想知道“现在该执行什么”，先从根目录短入口开始：
+
+```powershell
+.\run.ps1
+```
+
+AI 推荐的日常入口：
+
+```powershell
+.\run.ps1 readiness -OpenUi
+```
+
+它会按本仓硬门禁顺序执行 `build -> test -> contract/invariant -> hotspot`，然后打开默认中文 operator UI。`run.ps1` 只是便捷层，真实实现仍在 `scripts/operator.ps1`；需要完整动作说明时运行：
+
+```powershell
+.\run.ps1 operator-help
+```
+
 ## 当前状态
 `Foundation / GAP-020` 到 `GAP-023`、`Full Runtime / GAP-024` 到 `GAP-028`、`Public Usable Release / GAP-029` 到 `GAP-032`、`Maintenance Baseline / GAP-033` 到 `GAP-034`、`Interactive Session Productization / GAP-035` 到 `GAP-039` 已完成。
 
@@ -76,6 +95,7 @@
 - 路径 C（中高风险写入）：用 `govern-attachment-write -> decide-attachment-write -> execute-attachment-write` 走审批与回滚引用闭环。
 
 ## 当前总入口与一键应用
+- 根目录短入口：`run.ps1`。它把常用动作压成场景化短命令，例如 `.\run.ps1 readiness -OpenUi`、`.\run.ps1 daily -Mode quick`、`.\run.ps1 rules-check`、`.\run.ps1 feedback`；底层仍转交 `scripts/operator.ps1`。
 - 操作者聚合入口：`scripts/operator.ps1`。它把 readiness、自检、规则漂移/同步、目标仓批量流和 operator UI 生成收成同一个入口；默认 `-Action Help`。
 - Codex 本机优化入口：`scripts/Optimize-CodexLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入本项目当前推荐的 Codex 单默认配置。长期优先级是“综合效率优先，安全边界约束”：少打扰、自动连续执行、节省 token / 成本、高效率，同时不退化安全、最小权限、门禁、证据和回滚；当前暂行实现是 `cli_auth_credentials_store = "file"`、`model = "gpt-5.5"`、`model_reasoning_effort = "medium"`、`approval_policy = "never"`、`model_context_window = 272000`、`model_auto_compact_token_limit = 220000`。以后如果模型、参数或技术栈更迭，应先保持这个原则；只有在安全与门禁不退化时，才替换当前实现。脚本同时会安装 `codex-account` 账号切换入口，并把当前仓加入 trusted project。
 - Claude Code 本机优化入口：`scripts/Optimize-ClaudeLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入第三方 Anthropic-compatible provider 推荐配置、安装 `claude-provider` 切换入口；密钥只保留在用户本机 settings/env，不写入仓库 profile。
@@ -85,6 +105,14 @@
 - 本仓自检入口：`scripts/verify-repo.ps1 -Check All`。它验证 runtime、docs、schema、catalog、脚本和目标仓一致性门禁。
 
 先看操作者入口和 AI 推荐路径：
+
+```powershell
+.\run.ps1
+```
+
+```powershell
+.\run.ps1 readiness -OpenUi
+```
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Help

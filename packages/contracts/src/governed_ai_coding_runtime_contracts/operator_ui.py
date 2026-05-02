@@ -23,7 +23,23 @@ _TRANSLATIONS = {
         "attachments": "已接入仓库",
         "fail_closed_caption": "风险自动阻断",
         "workspace_overview": "控制台总览",
-        "workspace_overview_caption": "首屏只保留决策摘要，详细信息留在各自面板。",
+        "workspace_overview_caption": "先选一个推荐入口，再看执行输出和证据；详情保留在各自面板。",
+        "shortcut_entry": "推荐入口",
+        "shortcut_entry_caption": "日常优先用根目录短入口，页面按钮也会通过同一入口转发。",
+        "shortcut_daily": "日常 readiness",
+        "shortcut_daily_command": ".\\run.ps1 readiness -OpenUi",
+        "shortcut_daily_caption": "检查本仓状态并打开中文控制台。",
+        "shortcut_targets": "目标仓巡检",
+        "shortcut_targets_command": ".\\run.ps1 daily -Mode quick",
+        "shortcut_targets_caption": "对 active targets 执行快速 daily flow。",
+        "shortcut_rules": "规则漂移检查",
+        "shortcut_rules_command": ".\\run.ps1 rules-check",
+        "shortcut_rules_caption": "只检查 Codex/Claude/Gemini 规则漂移。",
+        "shortcut_feedback": "功能反馈汇总",
+        "shortcut_feedback_command": ".\\run.ps1 feedback",
+        "shortcut_feedback_caption": "汇总 Codex/Claude 与 target-run 证据。",
+        "run_now": "执行",
+        "command_label": "命令",
         "open_surface": "打开面板",
         "surface_current": "当前面板",
         "runtime_surface_caption": "任务、执行输出、下一步建议和目标仓状态。",
@@ -68,11 +84,11 @@ _TRANSLATIONS = {
         "none": "无",
         "not_recorded": "未记录",
         "unknown_repo": "未知仓库",
-        "actions": "执行入口",
-        "settings": "运行设置",
+        "actions": "操作台",
+        "settings": "执行参数",
         "common_actions": "常用动作",
         "change_actions": "治理变更",
-        "page_actions": "页面操作",
+        "page_actions": "页面",
         "language": "语言",
         "target": "目标仓",
         "all_targets": "全部目标仓",
@@ -197,9 +213,9 @@ _TRANSLATIONS = {
         "ready": "就绪",
         "running": "执行中",
         "static_snapshot": "只读快照",
-        "targets_action": "查看目标仓",
-        "readiness_action": "检查本仓状态",
-        "rules_dry_run_action": "规则漂移检查",
+        "targets_action": "目标仓列表",
+        "readiness_action": "本仓 readiness",
+        "rules_dry_run_action": "只查规则漂移",
         "rules_apply_action": "同步规则文件",
         "governance_baseline_action": "下发治理基线",
         "daily_all_action": "运行 Daily 巡检",
@@ -224,7 +240,23 @@ _TRANSLATIONS = {
         "attachments": "Attachments",
         "fail_closed_caption": "risk auto-block",
         "workspace_overview": "Workbench Overview",
-        "workspace_overview_caption": "Keep only decision summaries on the first screen; leave detail in each panel.",
+        "workspace_overview_caption": "Choose a recommended entrypoint first, then inspect output and evidence. Details stay in each panel.",
+        "shortcut_entry": "Recommended Entrypoints",
+        "shortcut_entry_caption": "Use the repository-root shortcut for daily work; page buttons delegate through the same entrypoint.",
+        "shortcut_daily": "Daily readiness",
+        "shortcut_daily_command": ".\\run.ps1 readiness -OpenUi",
+        "shortcut_daily_caption": "Check this repo and open the console.",
+        "shortcut_targets": "Target sweep",
+        "shortcut_targets_command": ".\\run.ps1 daily -Mode quick",
+        "shortcut_targets_caption": "Run quick daily flow for active targets.",
+        "shortcut_rules": "Rule drift check",
+        "shortcut_rules_command": ".\\run.ps1 rules-check",
+        "shortcut_rules_caption": "Check Codex/Claude/Gemini rule drift only.",
+        "shortcut_feedback": "Feedback summary",
+        "shortcut_feedback_command": ".\\run.ps1 feedback",
+        "shortcut_feedback_caption": "Summarize Codex/Claude and target-run evidence.",
+        "run_now": "Run",
+        "command_label": "Command",
         "open_surface": "Open panel",
         "surface_current": "Current panel",
         "runtime_surface_caption": "Tasks, execution output, next-work recommendation, and target state.",
@@ -269,11 +301,11 @@ _TRANSLATIONS = {
         "none": "none",
         "not_recorded": "not recorded",
         "unknown_repo": "unknown repo",
-        "actions": "Runbook",
-        "settings": "Run settings",
+        "actions": "Operator Bench",
+        "settings": "Run Parameters",
         "common_actions": "Common Actions",
         "change_actions": "Governance Changes",
-        "page_actions": "Page Actions",
+        "page_actions": "Page",
         "language": "Language",
         "target": "Target repo",
         "all_targets": "All targets",
@@ -528,7 +560,7 @@ def render_runtime_snapshot_html(
     .meta-row {{ display: flex; flex-wrap: wrap; gap: 10px 18px; color: var(--muted); font-size: 0.92rem; }}
     header .meta-row {{ color: #cfe1e2; }}
     header code {{ color: #ffffff; }}
-    .console-layout {{ display: grid; grid-template-columns: minmax(278px, 320px) minmax(0, 1fr); gap: 16px; align-items: start; }}
+    .console-layout {{ display: grid; grid-template-columns: minmax(300px, 352px) minmax(0, 1fr); gap: 16px; align-items: start; }}
     .sidebar {{ position: sticky; top: 14px; display: grid; gap: 12px; align-self: start; }}
     .dashboard {{ min-width: 0; display: grid; gap: 15px; }}
     .summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 12px; margin-bottom: 2px; }}
@@ -605,8 +637,8 @@ def render_runtime_snapshot_html(
     .policy-label {{ display: block; color: var(--muted); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; }}
     .panel {{ background: var(--surface-raised); border: 1px solid var(--line); border-top: 3px solid #c5d5d8; border-radius: 8px; padding: 14px; min-width: 0; box-shadow: var(--shadow-card); backdrop-filter: blur(6px); }}
     .output-panel {{ border-top-color: var(--gold); }}
-    .surface-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }}
-    .surface-card {{ display: grid; grid-template-rows: auto minmax(96px, 1fr) auto; gap: 10px; align-content: start; background: linear-gradient(180deg, #ffffff, #f9fcfb); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; box-shadow: var(--shadow-tight); }}
+    .surface-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }}
+    .surface-card {{ display: grid; grid-template-rows: auto minmax(86px, 1fr) auto; gap: 10px; align-content: start; background: linear-gradient(180deg, #ffffff, #f9fcfb); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; box-shadow: var(--shadow-tight); }}
     .surface-card.active {{ border-color: #bde0da; background: linear-gradient(180deg, #f2fbf8, #ffffff); }}
     .surface-card-head {{ display: flex; align-items: center; justify-content: space-between; gap: 8px; }}
     .surface-card-title {{ font-weight: 760; color: var(--ink-strong); }}
@@ -623,6 +655,15 @@ def render_runtime_snapshot_html(
     .action-group {{ display: grid; gap: 8px; }}
     .action-group + .action-group {{ margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }}
     .action-group-title {{ margin: 0; color: var(--muted); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; }}
+    .shortcut-list {{ display: grid; gap: 9px; margin-top: 10px; }}
+    .shortcut-item {{ display: grid; gap: 8px; min-width: 0; padding: 11px; border: 1px solid var(--line); border-radius: 8px; background: linear-gradient(180deg, #ffffff, #f9fcfb); box-shadow: var(--shadow-tight); }}
+    .shortcut-item.recommended {{ border-color: #bde0da; background: linear-gradient(180deg, #f2fbf8, #ffffff); }}
+    .shortcut-head {{ display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; min-width: 0; }}
+    .shortcut-title {{ font-weight: 760; color: var(--ink-strong); line-height: 1.35; }}
+    .shortcut-command {{ display: block; min-width: 0; width: 100%; padding: 7px 8px; border: 1px solid #dfe9ea; border-radius: 6px; background: #f7fbfa; color: #20333a; overflow-wrap: anywhere; white-space: normal; }}
+    .shortcut-item .meta {{ margin: 0; }}
+    .shortcut-blocked {{ color: var(--warning); font-weight: 650; }}
+    .shortcut-item button {{ text-align: center; min-height: 34px; }}
     button, select, input {{ font: inherit; }}
     button {{ border: 1px solid var(--line); background: linear-gradient(180deg, #ffffff, #f8fbfb); color: var(--ink); border-radius: 7px; padding: 9px 11px; cursor: pointer; text-align: left; transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease, background 140ms ease; }}
     button:hover {{ border-color: var(--accent); box-shadow: 0 7px 16px rgba(11, 118, 110, 0.10); transform: translateY(-1px); }}
@@ -1085,6 +1126,7 @@ def _render_actions(text: dict[str, str], *, language: str, interactive: bool, t
             ]
         )
 
+    shortcuts = _render_shortcut_entrypoints(text)
     action_items = [
         ("targets", text["targets_action"], "primary", ""),
         ("readiness", text["readiness_action"], "primary", ""),
@@ -1113,6 +1155,7 @@ def _render_actions(text: dict[str, str], *, language: str, interactive: bool, t
     return "\n".join(
         [
             "<aside class='sidebar'>",
+            shortcuts,
             "<section class='panel'>",
             f"<h2>{escape(text['actions'])}</h2>",
             "<div class='action-group'>",
@@ -1145,6 +1188,44 @@ def _render_actions(text: dict[str, str], *, language: str, interactive: bool, t
             "</div>",
             "</section>",
             "</aside>",
+        ]
+    )
+
+
+def _render_shortcut_entrypoints(text: dict[str, str]) -> str:
+    items = [
+        ("readiness", text["shortcut_daily"], text["shortcut_daily_command"], text["shortcut_daily_caption"], True),
+        ("daily_all", text["shortcut_targets"], text["shortcut_targets_command"], text["shortcut_targets_caption"], False),
+        ("rules_dry_run", text["shortcut_rules"], text["shortcut_rules_command"], text["shortcut_rules_caption"], False),
+        ("feedback_report", text["shortcut_feedback"], text["shortcut_feedback_command"], text["shortcut_feedback_caption"], False),
+    ]
+    rendered: list[str] = []
+    for action_id, title, command, caption, recommended in items:
+        class_name = "shortcut-item recommended" if recommended else "shortcut-item"
+        rendered.append(
+            "\n".join(
+                [
+                    f"<article class='{class_name}'>",
+                    "<div class='shortcut-head'>",
+                    f"<span class='shortcut-title'>{escape(title)}</span>",
+                    f"<button type='button' class='primary' data-action='{escape(action_id)}'>{escape(text['run_now'])}</button>",
+                    "</div>",
+                    f"<code class='shortcut-command' aria-label='{escape(text['command_label'])}'>{escape(command)}</code>",
+                    f"<p class='meta'>{escape(caption)}</p>",
+                    f"<p class='meta shortcut-blocked' data-action-blocked='{escape(action_id)}'></p>",
+                    "</article>",
+                ]
+            )
+        )
+    return "\n".join(
+        [
+            "<section class='panel'>",
+            f"<h2>{escape(text['shortcut_entry'])}</h2>",
+            f"<p class='meta'>{escape(text['shortcut_entry_caption'])}</p>",
+            "<div class='shortcut-list'>",
+            *rendered,
+            "</div>",
+            "</section>",
         ]
     )
 
@@ -1592,6 +1673,7 @@ def _render_interactive_script(
   }}
 
   function setBusy(isBusy) {{
+    document.body.dataset.busy = isBusy ? '1' : '';
     status.textContent = isBusy ? {text['running']!r} : {text['ready']!r};
     document.querySelectorAll('button[data-action]').forEach((button) => button.disabled = isBusy);
     if (!isBusy) {{
@@ -1655,29 +1737,78 @@ def _render_interactive_script(
     return labels[value] || value || 'unknown';
   }}
 
+  function nextWorkWhyLabel(action, why) {{
+    const raw = String(why || '').trim();
+    const value = String(action || '').trim();
+    const labels = currentUiLanguage() === 'zh-CN'
+      ? {{
+          refresh_evidence_first: '当前证据或来源已过期，先刷新 target-run 证据和来源状态，再决定后续实现动作。',
+          repair_gate_first: '当前仓库门禁未通过，先修复 gate，再继续执行高影响动作。',
+          owner_directed_scope_required: '当前范围需要人工明确，暂不自动推进实现动作。',
+          promote_ltp: '已满足进入 LTP 提升评审的条件，可继续处理选中的 LTP 包。',
+          defer_ltp_and_refresh_evidence: '暂不推进新的实现范围，优先补齐更新证据。',
+          defer_all: '当前不建议自动推进新的实现动作。',
+        }}
+      : {{
+          refresh_evidence_first: 'Evidence or source posture is stale. Refresh target-run evidence and source posture before new implementation work.',
+          repair_gate_first: 'Repository gates are not healthy. Repair gates before higher-impact actions.',
+          owner_directed_scope_required: 'Scope needs explicit owner direction before automatic implementation work can continue.',
+          promote_ltp: 'The selected LTP package is ready for promotion review.',
+          defer_ltp_and_refresh_evidence: 'Do not expand implementation scope yet; refresh evidence first.',
+          defer_all: 'Automatic implementation progression is currently deferred.',
+        }};
+    return labels[value] || raw || (currentUiLanguage() === 'zh-CN' ? '当前被 next-work 阻断。' : 'Blocked by next-work.');
+  }}
+
+  function sanitizeNextWorkPayload(payload) {{
+    const normalized = payload && typeof payload === 'object' ? {{ ...payload }} : {{}};
+    const safeAction = String(normalized.safe_next_action || normalized.next_action || '').trim();
+    const blocked = Array.isArray(normalized.blocked_actions) ? [...normalized.blocked_actions] : [];
+    if (safeAction === 'refresh_evidence_first') {{
+      normalized.blocked_actions = blocked.filter((action) => action !== 'daily_all');
+    }} else {{
+      normalized.blocked_actions = blocked;
+    }}
+    return normalized;
+  }}
+
   function syncNextWorkActionGuards() {{
-    const blocked = new Set(Array.isArray((lastNextWorkPayload || {{}}).blocked_actions) ? lastNextWorkPayload.blocked_actions : []);
-    const why = String((lastNextWorkPayload || {{}}).why || '').trim();
+    const safePayload = sanitizeNextWorkPayload(lastNextWorkPayload || {{}});
+    lastNextWorkPayload = safePayload;
+    const blocked = new Set(Array.isArray(safePayload.blocked_actions) ? safePayload.blocked_actions : []);
+    const why = String(safePayload.why || '').trim();
+    const nextAction = String(safePayload.safe_next_action || safePayload.next_action || '').trim();
+    const localizedWhy = nextWorkWhyLabel(nextAction, why);
     document.querySelectorAll('button[data-action]').forEach((button) => {{
       const action = button.getAttribute('data-action') || '';
       const isBlocked = blocked.has(action);
+      const blockedNote = document.querySelector(`[data-action-blocked="${{action}}"]`);
       if (isBlocked) {{
         button.disabled = true;
-        button.dataset.blockedReason = why || 'blocked by next-work selector';
+        button.dataset.blockedReason = localizedWhy || 'blocked by next-work selector';
         button.title = `${{actionDisplayLabel(action)}}: ${{button.dataset.blockedReason}}`;
+        if (blockedNote) {{
+          blockedNote.textContent = currentUiLanguage() === 'zh-CN'
+            ? `当前被 next-work 阻断: ${{button.dataset.blockedReason}}`
+            : `Currently blocked by next-work: ${{button.dataset.blockedReason}}`;
+        }}
       }} else {{
         if (!document.body.dataset.busy) {{
           button.disabled = false;
         }}
         delete button.dataset.blockedReason;
         button.title = '';
+        if (blockedNote) {{
+          blockedNote.textContent = '';
+        }}
       }}
     }});
   }}
 
   function renderNextWorkSummary(payload) {{
-    lastNextWorkPayload = payload;
-    const safeAction = String(payload.safe_next_action || payload.next_action || 'unknown');
+    const safePayload = sanitizeNextWorkPayload(payload);
+    lastNextWorkPayload = safePayload;
+    const safeAction = String(safePayload.safe_next_action || safePayload.next_action || 'unknown');
     if (nextWorkAction) {{
       nextWorkAction.textContent = nextWorkActionLabel(safeAction);
     }}
@@ -1688,14 +1819,14 @@ def _render_interactive_script(
     }}
     if (nextWorkState) {{
       nextWorkState.textContent = currentUiLanguage() === 'zh-CN'
-        ? `状态: ${{nextWorkStateLabel(payload.ui_status)}}`
-        : `Status: ${{nextWorkStateLabel(payload.ui_status)}}`;
+        ? `状态: ${{nextWorkStateLabel(safePayload.ui_status)}}`
+        : `Status: ${{nextWorkStateLabel(safePayload.ui_status)}}`;
     }}
     if (nextWorkWhy) {{
-      nextWorkWhy.textContent = String(payload.why || '');
+      nextWorkWhy.textContent = nextWorkWhyLabel(safeAction, safePayload.why || '');
     }}
     if (nextWorkJson) {{
-      nextWorkJson.textContent = JSON.stringify(payload, null, 2);
+      nextWorkJson.textContent = JSON.stringify(safePayload, null, 2);
     }}
     syncNextWorkActionGuards();
   }}
