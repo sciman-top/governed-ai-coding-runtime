@@ -42,6 +42,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         )
 
         self.assertIn("AI 推荐", completed.stdout)
+        self.assertIn(".\\run.ps1 fast", completed.stdout)
         self.assertIn(".\\run.ps1 readiness -OpenUi", completed.stdout)
         self.assertIn("rules-check", completed.stdout)
         self.assertIn("operator-help", completed.stdout)
@@ -83,6 +84,30 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("operator-preflight: action=Readiness", completed.stdout)
         self.assertIn("DRY-RUN build", completed.stdout)
 
+    def test_root_run_entrypoint_fast_feedback_alias(self) -> None:
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "run.ps1"),
+                "fast",
+                "-DryRun",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+        )
+
+        self.assertIn("DRY-RUN build", completed.stdout)
+        self.assertIn("DRY-RUN quick-feedback", completed.stdout)
+        self.assertIn("test_target_repo_speed_kpi", completed.stdout)
+
     def test_operator_entrypoint_help_succeeds(self) -> None:
         completed = subprocess.run(
             [
@@ -104,6 +129,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         )
 
         self.assertIn("AI 推荐", completed.stdout)
+        self.assertIn("FastFeedback", completed.stdout)
         self.assertIn("Readiness", completed.stdout)
         self.assertIn("FeedbackReport", completed.stdout)
         self.assertIn("CleanupTargets", completed.stdout)
@@ -442,6 +468,65 @@ class OperatorEntrypointTests(unittest.TestCase):
 
         self.assertNotEqual(0, completed.returncode)
         self.assertIn("operator-preflight blocked: ApplyAllFeatures", completed.stderr)
+
+    def test_next_work_summary_blocks_cleanup_and_uninstall_for_repair_gate_first(self) -> None:
+        module = _load_serve_operator_ui_module()
+
+        fake_selector = mock.Mock()
+        fake_selector.inspect_next_work_selection.return_value = {
+            "status": "pass",
+            "next_action": "repair_gate_first",
+            "why": "gate failure",
+        }
+
+        with mock.patch.object(module, "_load_next_work_module", return_value=fake_selector):
+            payload = module._build_next_work_summary()
+
+        self.assertEqual("repair_gate_first", payload["safe_next_action"])
+        self.assertEqual("action_required", payload["ui_status"])
+        self.assertIn("daily_all", payload["blocked_actions"])
+        self.assertIn("apply_all_features", payload["blocked_actions"])
+        self.assertIn("cleanup_targets", payload["blocked_actions"])
+        self.assertIn("uninstall_governance", payload["blocked_actions"])
+        self.assertIn("evolution_materialize", payload["blocked_actions"])
+
+    def test_operator_preflight_blocks_cleanup_and_uninstall_actions(self) -> None:
+        env = dict(os.environ)
+        env["GOVERNED_RUNTIME_OPERATOR_PREFLIGHT_JSON"] = json.dumps(
+            {
+                "next_action": "repair_gate_first",
+                "why": "Repo gates are not healthy.",
+                "gate_state": "fail",
+                "source_state": "fresh",
+                "evidence_state": "fresh",
+            }
+        )
+
+        for action in ("CleanupTargets", "UninstallGovernance"):
+            with self.subTest(action=action):
+                completed = subprocess.run(
+                    [
+                        "pwsh",
+                        "-NoProfile",
+                        "-ExecutionPolicy",
+                        "Bypass",
+                        "-File",
+                        str(ROOT / "scripts" / "operator.ps1"),
+                        "-Action",
+                        action,
+                        "-DryRun",
+                    ],
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    cwd=ROOT,
+                    env=env,
+                )
+
+                self.assertNotEqual(0, completed.returncode)
+                self.assertIn(f"operator-preflight blocked: {action}", completed.stderr)
 
     def test_operator_preflight_does_not_block_readiness(self) -> None:
         env = dict(os.environ)

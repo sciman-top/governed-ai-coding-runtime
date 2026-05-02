@@ -13,6 +13,10 @@
       "path": ".claude/settings.json",
       "source": "docs/targets/templates/claude-code/settings.json",
       "management_mode": "json_merge",
+      "shared_ownership_evidence": [
+        "permissions.deny entries from docs/targets/templates/claude-code/settings.json",
+        "hooks.PreToolUse entries from docs/targets/templates/claude-code/settings.json"
+      ],
       "description": "Managed Claude Code project settings that bind shared permissions and hooks to runtime-owned governance semantics without touching local-only settings."
     },
     {

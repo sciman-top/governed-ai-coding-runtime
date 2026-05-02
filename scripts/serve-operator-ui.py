@@ -460,7 +460,13 @@ def _build_next_work_summary() -> dict:
 
     next_action = str(payload.get("next_action", "unknown"))
     if next_action == "repair_gate_first":
-        blocked_actions = ["daily_all", "apply_all_features", "evolution_materialize"]
+        blocked_actions = [
+            "daily_all",
+            "apply_all_features",
+            "cleanup_targets",
+            "uninstall_governance",
+            "evolution_materialize",
+        ]
         ui_status = "action_required"
     elif next_action == "refresh_evidence_first":
         blocked_actions = ["apply_all_features", "evolution_materialize"]

@@ -8,6 +8,11 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
+SCRIPTS_ROOT = ROOT / "scripts"
+if str(SCRIPTS_ROOT) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_ROOT))
+
+from lib.target_repo_quick_test_prompt import build_quick_test_slice_prompt
 
 
 def _write_text(path: Path, text: str) -> None:
@@ -152,6 +157,57 @@ class UninstallTargetRepoGovernanceTests(unittest.TestCase):
             self.assertEqual(payload["deleted_files"], [])
             self.assertEqual(payload["patched_shared_files"], [])
 
+    def test_uninstall_governance_blocks_malformed_shared_json_with_structured_reason(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target = workspace / "target"
+            settings_source = workspace / "templates" / "settings.json"
+            _write_json(settings_source, {"permissions": {"deny": ["Bash(powershell:*)"]}})
+            _write_text(target / ".claude" / "settings.json", "{ invalid json")
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "required_managed_files": [
+                        {
+                            "path": ".claude/settings.json",
+                            "source": str(settings_source),
+                            "management_mode": "json_merge",
+                            "shared_ownership_evidence": ["permissions.deny entries from template"],
+                        },
+                    ],
+                    "generated_managed_files": [],
+                    "retired_managed_files": [],
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/uninstall-target-repo-governance.py",
+                    "--target-repo",
+                    str(target),
+                    "--baseline-path",
+                    str(baseline_path),
+                    "--dry-run",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 2, completed.stderr)
+            self.assertNotIn("Traceback", completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["status"], "blocked")
+            self.assertEqual(payload["summary"]["blocked"], 1)
+            self.assertEqual(payload["blocked_files"][0]["path"], ".claude/settings.json")
+            self.assertEqual(payload["blocked_files"][0]["reason"], "invalid_json")
+            self.assertIn("line 1 column", payload["blocked_files"][0]["error"])
+
     def test_uninstall_governance_blocks_generated_files_without_hash_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)
@@ -216,6 +272,64 @@ class UninstallTargetRepoGovernanceTests(unittest.TestCase):
                             "generator": "outer_ai_quick_test_prompt",
                             "management_mode": "block_on_drift",
                             "expected_sha256": f"sha256:{_sha256(prompt_text)}",
+                        }
+                    ],
+                    "retired_managed_files": [],
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/uninstall-target-repo-governance.py",
+                    "--target-repo",
+                    str(target),
+                    "--baseline-path",
+                    str(baseline_path),
+                    "--backup-root",
+                    str(backup_root),
+                    "--apply",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["summary"]["deleted"], 1)
+            self.assertFalse((target / ".governed-ai" / "quick-test-slice.prompt.md").exists())
+            self.assertTrue(Path(payload["deleted_files"][0]["backup_path"]).exists())
+
+    def test_uninstall_governance_deletes_generated_prompt_when_computed_hash_matches(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target = workspace / "target"
+            backup_root = workspace / "backups"
+            profile = {
+                "repo_id": "target",
+                "display_name": "Target",
+                "primary_language": "python",
+                "quick_gate_commands": [{"id": "unit", "command": "python -m unittest"}],
+                "quick_test_command": "python -m unittest",
+                "quick_test_reason": "Focused regression slice.",
+            }
+            _write_json(target / ".governed-ai" / "repo-profile.json", profile)
+            prompt_text = build_quick_test_slice_prompt(target_repo=target, profile=profile)
+            _write_text(target / ".governed-ai" / "quick-test-slice.prompt.md", prompt_text)
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "required_managed_files": [],
+                    "generated_managed_files": [
+                        {
+                            "path": ".governed-ai/quick-test-slice.prompt.md",
+                            "generator": "outer_ai_quick_test_prompt",
+                            "management_mode": "block_on_drift",
                         }
                     ],
                     "retired_managed_files": [],
@@ -359,6 +473,49 @@ class UninstallTargetRepoGovernanceTests(unittest.TestCase):
             self.assertNotIn("full_gate_commands", profile)
             self.assertNotIn("gate_timeout_seconds", profile)
             self.assertTrue(Path(payload["patched_profile_files"][0]["backup_path"]).exists())
+
+    def test_uninstall_governance_blocks_malformed_repo_profile_with_structured_reason(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target = workspace / "target"
+            _write_text(target / ".governed-ai" / "repo-profile.json", "{ invalid json")
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "required_managed_files": [],
+                    "generated_managed_files": [],
+                    "retired_managed_files": [],
+                    "repo_profile_field_ownership": {
+                        "baseline_override_fields": ["required_entrypoint_policy"],
+                    },
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/uninstall-target-repo-governance.py",
+                    "--target-repo",
+                    str(target),
+                    "--baseline-path",
+                    str(baseline_path),
+                    "--apply",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 2, completed.stderr)
+            self.assertNotIn("Traceback", completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["status"], "blocked")
+            self.assertEqual(payload["summary"]["profile_patch_candidates"], 0)
+            self.assertEqual(payload["blocked_files"][0]["reason"], "repo_profile_invalid_json")
 
 
 if __name__ == "__main__":

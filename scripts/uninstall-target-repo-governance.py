@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import json
+from json import JSONDecodeError
 from pathlib import Path
 import shutil
 from typing import Any
@@ -87,8 +88,14 @@ def uninstall_target_repo_governance(
             if not source_file.exists():
                 blocked.append({"path": path, "reason": "shared_source_not_found", "source": str(source_file)})
                 continue
-            actual = json.loads(target_path.read_text(encoding="utf-8"))
-            overlay = json.loads(source_file.read_text(encoding="utf-8"))
+            actual, actual_error = _load_json_for_uninstall(target_path)
+            if actual_error is not None:
+                blocked.append({"path": path, "reason": "invalid_json", "source": str(target_path), "error": actual_error})
+                continue
+            overlay, overlay_error = _load_json_for_uninstall(source_file)
+            if overlay_error is not None:
+                blocked.append({"path": path, "reason": "shared_source_invalid_json", "source": str(source_file), "error": overlay_error})
+                continue
             patched = _remove_json_overlay(actual, overlay)
             if patched == actual:
                 missing.append({"path": path, "reason": "shared_overlay_absent"})
@@ -264,7 +271,9 @@ def _build_profile_patch(*, target_repo: Path, baseline: dict[str, Any]) -> dict
     target_path = repo_relative_path(target_repo, path)
     if not target_path.exists():
         return {"status": "missing", "path": path, "reason": "repo_profile_missing"}
-    actual = json.loads(target_path.read_text(encoding="utf-8"))
+    actual, actual_error = _load_json_for_uninstall(target_path)
+    if actual_error is not None:
+        return {"status": "blocked", "path": path, "reason": "repo_profile_invalid_json", "error": actual_error}
     if not isinstance(actual, dict):
         return {"status": "blocked", "path": path, "reason": "repo_profile_not_object"}
     removed_fields = sorted(field for field in fields if field in actual)
@@ -287,6 +296,15 @@ def _string_list(value: Any) -> list[str]:
     if not isinstance(value, list):
         return []
     return [str(item) for item in value if isinstance(item, str) and item.strip()]
+
+
+def _load_json_for_uninstall(path: Path) -> tuple[Any, str | None]:
+    try:
+        return json.loads(path.read_text(encoding="utf-8")), None
+    except JSONDecodeError as exc:
+        return None, f"{exc.msg}: line {exc.lineno} column {exc.colno}"
+    except OSError as exc:
+        return None, str(exc)
 
 
 def _public_record(record: dict[str, Any]) -> dict[str, Any]:

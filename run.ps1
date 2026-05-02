@@ -17,12 +17,14 @@ function Show-RunHelp {
 Governed runtime short entrypoint
 
 AI 推荐:
-  .\run.ps1 readiness -OpenUi
-  理由: 一条命令完成本仓 readiness 门禁并打开中文 operator UI。
+  日常编码: .\run.ps1 fast
+  交付验收: .\run.ps1 readiness -OpenUi
+  理由: 日常先跑快速反馈，交付前再跑完整 readiness，避免每次编码都触发 full gate。
 
 常用场景:
   .\run.ps1 help                 显示本短指南。
   .\run.ps1 operator-help        显示 scripts/operator.ps1 的完整动作说明。
+  .\run.ps1 fast                 执行 build + quick feedback tests；不替代交付前 readiness。
   .\run.ps1 readiness -OpenUi    执行 build -> test -> contract/invariant -> hotspot，并打开 UI。
   .\run.ps1 ui                   打开本地 operator UI。
   .\run.ps1 targets              列出 active target repos。
@@ -51,6 +53,10 @@ function Resolve-OperatorAction {
   $normalized = $Name.Trim().ToLowerInvariant()
   $aliases = @{
     "operator-help" = "Help"
+    "fast" = "FastFeedback"
+    "quick" = "FastFeedback"
+    "quick-feedback" = "FastFeedback"
+    "qf" = "FastFeedback"
     "readiness" = "Readiness"
     "ready" = "Readiness"
     "ui" = "OperatorUi"

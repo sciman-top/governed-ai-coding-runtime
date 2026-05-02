@@ -1,6 +1,6 @@
-# CLAUDE.md - Universal Agent Protocol v9.48
+# CLAUDE.md - Universal Agent Protocol v9.49
 # Claude Code / Claude CLI - Global User Rules
-**版本**: 9.48
+**版本**: 9.49
 **适用范围**: 全局用户级（GlobalUser/）
 **最后更新**: 2026-05-02
 
@@ -9,6 +9,7 @@
 - 固定结构：`1 / A / B / C / D`；项目级文件只承接，不改写全局 R/E 语义。
 - 裁决链：`运行事实/代码 > 项目级规则 > 全局规则 > 临时上下文`。
 - 渐进披露：根文件只放必执行规则、门禁顺序、N/A 口径、平台差异和协同接口；长 runbook、示例、局部流程下沉到项目文档、skills、hooks、rules 或 CI。
+- 规则文件只承载跨会话稳定判断和入口；能由代码、README、配置、测试、schema、脚本或 CI 表达的细节，只在规则中引用，不全文复述。
 - 修改规则、门禁、profile、baseline 或同步脚本前，先比对源规则、已分发副本、目标仓真实 gate/profile/CI/script/README 和当前官方加载模型；发现漂移先整合再同步。
 
 ## A. 共性基线
@@ -59,11 +60,18 @@
 - 触发后切换 `clarify_required`，最多问 3 个关键问题；确认后恢复 `direct_fix` 并清零失败计数。
 - 证据字段：`issue_id / attempt_count / clarification_mode / scenario / questions / answers`。
 
+### A.7 规则最小化与升级路径
+- 只把“每次都应知道”的事实写进全局规则；单次任务事实进入任务说明、issue、ADR、runbook 或证据报告。
+- 同一纠偏第二次出现才考虑升格为规则；若可由工具强制，应优先迁移到 rules/settings/policy/hooks/CI。
+- 长流程只保留触发条件、入口命令和验收证据；详细步骤下沉到项目 docs、skills、scripts 或 runbook。
+- 新增规则必须能被命令、字段、文件路径、证据路径或明确禁止边界验证。
+
 ## B. Claude 平台差异
 ### B.1 加载链与覆盖
 - 用户规则：`~/.claude/CLAUDE.md`。
 - 项目规则：仓库根 `CLAUDE.md` 或 `./.claude/CLAUDE.md`；个人项目偏好用 `CLAUDE.local.md` 并加入 `.gitignore`。
 - 企业/系统规则可由托管策略注入；实际路径和优先级以当前 Claude Code 文档、`/status` 和本机配置为准。
+- settings 优先级按 managed、命令行、local、project、user 递减；规则冲突时用 `/status`、settings 文件和当前 help 证明实际来源。
 - Claude 会读取当前目录向上的 `CLAUDE.md` / `CLAUDE.local.md`；子目录规则通常在访问相关目录时按需加载。
 - 更具体位置优先解释；多个文件会进入上下文，不要依赖“覆盖”来隐藏上层敏感指令。
 - 若仓库已有 `AGENTS.md`，项目级 `CLAUDE.md` 应优先 `@AGENTS.md` 后追加 Claude 差异，避免复制两份共同规则。
@@ -81,6 +89,7 @@
 - `CLAUDE.md` 是上下文，不是权限配置。
 - 限制工具、禁止读取敏感文件、固定权限模式或注入环境变量，优先使用 `~/.claude/settings.json`、项目 `.claude/settings*.json`、managed settings、hooks、skills、MCP 或 CI。
 - `permissions.deny` 用于阻断 `.env`、凭据、token、私钥和本地账号文件；不要只靠自然语言提醒。
+- 修改 settings、permissions、hooks 或 tool matcher 时，先按当前 schema/help 校验精确语法，不猜测通配符或工具名。
 - 本机 `Claude Code` 日常经 `ANTHROPIC_BASE_URL` 使用 Anthropic-compatible provider；当前 provider/profile 事实以 `settings.json`、环境变量和 `claude --help`/`/status` 为准。
 - provider-aware 基线：`GLM` 档质量优先，`DeepSeek` 档偏长上下文；无新证据不要混用两档模型、窗口和压缩参数。
 - 保留已明确接受的便利例外，但规则、settings、hooks 和门禁必须能证明其余安全边界仍有效。
@@ -91,8 +100,9 @@
 
 ## C. 项目级承接契约
 ### C.1 自包含与边界
-- 项目级 `CLAUDE.md` 必须显式承接 `GlobalUser/CLAUDE.md v9.48`。
+- 项目级 `CLAUDE.md` 必须显式承接 `GlobalUser/CLAUDE.md v9.49`。
 - 项目级只写本仓事实，不复述全局 R/E 正文，不下沉其他仓库私有命令。
+- 项目级不得把 README/PRD/架构文档全文复制进规则；只写读取顺序、裁决边界和当前 slice 所需入口。
 
 ### C.2 必填项
 - 当前仓库状态、模块边界、目标归宿和下一最小可执行里程碑。

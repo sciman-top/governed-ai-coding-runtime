@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "manifest_id": "agent-rule-source-manifest",
-  "sync_revision": "2026-05-02.7",
-  "default_version": "9.47",
+  "sync_revision": "2026-05-02.8",
+  "default_version": "9.49",
   "backup_policy": {
     "enabled": true,
     "root": "docs/change-evidence/rule-sync-backups"
@@ -12,7 +12,7 @@
       "id": "global-codex-agents",
       "scope": "global",
       "tool": "codex",
-      "version": "9.48",
+      "version": "9.49",
       "source": "rules/global/codex/AGENTS.md",
       "target_path": "${user_profile}/.codex/AGENTS.md"
     },
@@ -20,7 +20,7 @@
       "id": "global-claude-claude",
       "scope": "global",
       "tool": "claude",
-      "version": "9.48",
+      "version": "9.49",
       "source": "rules/global/claude/CLAUDE.md",
       "target_path": "${user_profile}/.claude/CLAUDE.md"
     },
@@ -28,7 +28,7 @@
       "id": "global-gemini-gemini",
       "scope": "global",
       "tool": "gemini",
-      "version": "9.48",
+      "version": "9.49",
       "source": "rules/global/gemini/GEMINI.md",
       "target_path": "${user_profile}/.gemini/GEMINI.md"
     },

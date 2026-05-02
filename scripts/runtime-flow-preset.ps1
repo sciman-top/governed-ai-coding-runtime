@@ -715,6 +715,56 @@ function New-ManagedAssetActionSkippedResult {
   }
 }
 
+function New-ManagedAssetActionBlockedResult {
+  param(
+    [Parameter(Mandatory = $true)][string]$TargetRoot,
+    [Parameter(Mandatory = $true)][string]$Reason,
+    [int]$FlowExitCode = 0
+  )
+
+  $payload = [pscustomobject]@{
+    status      = "blocked"
+    reason      = $Reason
+    dry_run     = $true
+    apply       = $false
+    backup_root = ""
+    summary     = [pscustomobject]@{
+      delete_candidates        = 0
+      deleted                  = 0
+      blocked                  = 1
+      missing                  = 0
+      shared_patch_candidates  = 0
+      shared_patched           = 0
+      profile_patch_candidates = 0
+      profile_patched          = 0
+    }
+    delete_candidates        = @()
+    deleted_files            = @()
+    blocked_files            = @(
+      [pscustomobject]@{
+        path           = ""
+        reason         = $Reason
+        flow_exit_code = [int]$FlowExitCode
+      }
+    )
+    missing_files            = @()
+    shared_patch_candidates  = @()
+    patched_shared_files     = @()
+    profile_patch_candidates = @()
+    patched_profile_files    = @()
+    modified                 = $false
+  }
+
+  return [pscustomobject]@{
+    status      = "blocked"
+    reason      = $Reason
+    exit_code   = 2
+    target_root = $TargetRoot
+    payload     = $payload
+    output      = ($payload | ConvertTo-Json -Depth 20)
+  }
+}
+
 function Invoke-ManagedAssetAction {
   param(
     [Parameter(Mandatory = $true)]
@@ -2225,8 +2275,18 @@ foreach ($targetName in $selectedTargets) {
       -EmitProgress $progressEnabled
   }
 
+  $flowFailedBeforeManagedRemoval = ($targetRun.exit_code -ne 0)
+  $blockManagedAssetApplyAfterFlowFailure = ($ApplyManagedAssetRemoval.IsPresent -and $flowFailedBeforeManagedRemoval)
+  $managedAssetBlockedReason = "target_flow_failed_before_managed_asset_apply"
+
   $pruneRetiredManagedFilesResult = New-ManagedAssetActionSkippedResult -TargetRoot $targetConfig.AttachmentRoot
-  if ($PruneRetiredManagedFiles) {
+  if ($PruneRetiredManagedFiles -and $blockManagedAssetApplyAfterFlowFailure) {
+    $pruneRetiredManagedFilesResult = New-ManagedAssetActionBlockedResult `
+      -TargetRoot $targetConfig.AttachmentRoot `
+      -Reason $managedAssetBlockedReason `
+      -FlowExitCode ([int]$targetRun.exit_code)
+  }
+  elseif ($PruneRetiredManagedFiles) {
     $pruneRetiredManagedFilesResult = Invoke-ManagedAssetAction `
       -RepoRoot $repoRoot `
       -ScriptName "prune-retired-managed-files.py" `
@@ -2236,7 +2296,13 @@ foreach ($targetName in $selectedTargets) {
       -Apply $ApplyManagedAssetRemoval.IsPresent
   }
   $uninstallGovernanceResult = New-ManagedAssetActionSkippedResult -TargetRoot $targetConfig.AttachmentRoot
-  if ($UninstallGovernance) {
+  if ($UninstallGovernance -and $blockManagedAssetApplyAfterFlowFailure) {
+    $uninstallGovernanceResult = New-ManagedAssetActionBlockedResult `
+      -TargetRoot $targetConfig.AttachmentRoot `
+      -Reason $managedAssetBlockedReason `
+      -FlowExitCode ([int]$targetRun.exit_code)
+  }
+  elseif ($UninstallGovernance) {
     $uninstallGovernanceResult = Invoke-ManagedAssetAction `
       -RepoRoot $repoRoot `
       -ScriptName "uninstall-target-repo-governance.py" `

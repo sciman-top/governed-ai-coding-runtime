@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from lib.target_repo_quick_test_prompt import build_quick_test_slice_prompt
+
 
 TEXT_SUFFIXES = {
     ".bat",
@@ -73,6 +75,12 @@ def read_text_if_exists(path: Path) -> str | None:
     if not path.exists():
         return None
     return path.read_text(encoding="utf-8", errors="replace")
+
+
+def load_json_if_exists(path: Path) -> Any | None:
+    if not path.exists():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def deep_merge_json(base: Any, overlay: Any) -> Any:
@@ -212,6 +220,13 @@ def classify_asset(
         }
     if generated_entry is not None:
         expected_hash = normalize_sha256(generated_entry.get("expected_sha256") or generated_entry.get("source_sha256"))
+        if not expected_hash and str(generated_entry.get("generator", "")) == "outer_ai_quick_test_prompt":
+            try:
+                profile = load_json_if_exists(repo_relative_path(target_repo, ".governed-ai/repo-profile.json"))
+            except (json.JSONDecodeError, OSError):
+                profile = None
+            if isinstance(profile, dict):
+                expected_hash = sha256_text(build_quick_test_slice_prompt(target_repo=target_repo, profile=profile))
         if not expected_hash:
             return base | {
                 "classification": "managed_unverified",

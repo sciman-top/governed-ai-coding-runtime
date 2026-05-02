@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("Help", "Targets", "Readiness", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
+  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
   [string]$Action = "Help",
 
   [ValidateSet("quick", "full", "l1", "l2", "l3")]
@@ -188,6 +188,8 @@ function Assert-OperatorPreflight {
     "Readiness"            = @()
     "DailyAll"             = @("repair_gate_first")
     "ApplyAllFeatures"     = @("repair_gate_first", "refresh_evidence_first", "owner_directed_scope_required")
+    "CleanupTargets"       = @("repair_gate_first")
+    "UninstallGovernance"  = @("repair_gate_first")
     "EvolutionMaterialize" = @("repair_gate_first", "refresh_evidence_first", "owner_directed_scope_required")
   }
 
@@ -244,6 +246,7 @@ AI 推荐:
 常用动作:
   Help                   显示本指南。
   Targets                列出 target catalog 中的 active target repos。
+  FastFeedback           执行本仓日常编码快速反馈：build + quick feedback tests；不替代交付前 Readiness。
   Readiness              执行 build -> test -> contract/invariant -> hotspot，然后生成 operator UI。
   RulesDryRun            只检查全局/项目级规则漂移，不写入。
   RulesApply             应用规则 manifest 同步，然后复查漂移。
@@ -305,6 +308,23 @@ function Invoke-Readiness {
   Invoke-OperatorUi
 }
 
+function Invoke-FastFeedback {
+  Invoke-PwshScript -Name "build" -ScriptPath "scripts/build-runtime.ps1"
+  $python = Resolve-RequiredCommand -Names @("python", "python3")
+  Invoke-OperatorStep `
+    -Name "quick-feedback" `
+    -Executable $python `
+    -Arguments @(
+      "-m",
+      "unittest",
+      "tests.runtime.test_governance_gate_runner",
+      "tests.runtime.test_target_repo_governance_consistency",
+      "tests.runtime.test_runtime_flow_preset.RuntimeFlowPresetScriptTests.test_runtime_flow_preset_apply_governance_baseline_only_bootstraps_blank_target",
+      "tests.runtime.test_target_repo_rollout_contract",
+      "tests.runtime.test_target_repo_speed_kpi"
+    )
+}
+
 function Invoke-Targets {
   Invoke-PwshScript -Name "target-list" -ScriptPath "scripts/runtime-flow-preset.ps1" -ScriptArguments @("-ListTargets")
 }
@@ -349,6 +369,7 @@ function Invoke-ApplyAllFeatures {
 }
 
 function Invoke-CleanupTargets {
+  Assert-OperatorPreflight -ActionName "CleanupTargets"
   $arguments = Get-BatchFlowArguments -BaseArguments @(
     "-FlowMode",
     "daily",
@@ -365,6 +386,7 @@ function Invoke-CleanupTargets {
 }
 
 function Invoke-UninstallGovernance {
+  Assert-OperatorPreflight -ActionName "UninstallGovernance"
   $arguments = Get-BatchFlowArguments -BaseArguments @(
     "-FlowMode",
     "daily",
@@ -425,6 +447,7 @@ try {
   switch ($Action) {
     "Help" { Show-OperatorHelp }
     "Targets" { Invoke-Targets }
+    "FastFeedback" { Invoke-FastFeedback }
     "Readiness" { Invoke-Readiness }
     "RulesDryRun" { Invoke-RulesDryRun }
     "RulesApply" { Invoke-RulesApply }
