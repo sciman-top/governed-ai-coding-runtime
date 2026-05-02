@@ -139,6 +139,90 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("OperatorUi", completed.stdout)
         self.assertIn("-UiLanguage <zh-CN|en>", completed.stdout)
         self.assertIn("EnableAutoStart", completed.stdout)
+        self.assertIn("退役托管文件清理检测", completed.stdout)
+
+    def test_operator_apply_all_features_includes_retired_cleanup_detection(self) -> None:
+        env = dict(os.environ)
+        env["GOVERNED_RUNTIME_OPERATOR_PREFLIGHT_JSON"] = json.dumps(
+            {
+                "next_action": "default_defer",
+                "why": "No blocking action.",
+                "gate_state": "pass",
+                "source_state": "fresh",
+                "evidence_state": "fresh",
+            }
+        )
+
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "operator.ps1"),
+                "-Action",
+                "ApplyAllFeatures",
+                "-Target",
+                "self-runtime",
+                "-Mode",
+                "quick",
+                "-DryRun",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+            env=env,
+        )
+
+        self.assertIn("DRY-RUN apply-all-features", completed.stdout)
+        self.assertIn("-ApplyAllFeatures", completed.stdout)
+        self.assertIn("-PruneRetiredManagedFiles", completed.stdout)
+        self.assertNotIn("-ApplyManagedAssetRemoval", completed.stdout)
+
+    def test_operator_apply_all_features_can_explicitly_apply_managed_cleanup(self) -> None:
+        env = dict(os.environ)
+        env["GOVERNED_RUNTIME_OPERATOR_PREFLIGHT_JSON"] = json.dumps(
+            {
+                "next_action": "default_defer",
+                "why": "No blocking action.",
+                "gate_state": "pass",
+                "source_state": "fresh",
+                "evidence_state": "fresh",
+            }
+        )
+
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "operator.ps1"),
+                "-Action",
+                "ApplyAllFeatures",
+                "-Target",
+                "self-runtime",
+                "-Mode",
+                "quick",
+                "-ApplyManagedAssetRemoval",
+                "-DryRun",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+            env=env,
+        )
+
+        self.assertIn("-PruneRetiredManagedFiles", completed.stdout)
+        self.assertIn("-ApplyManagedAssetRemoval", completed.stdout)
 
     def test_operator_ui_action_generates_html(self) -> None:
         completed = subprocess.run(
@@ -432,6 +516,34 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("skills-manager", second_command)
         self.assertIn("===== target: classroomtoolkit =====", result["output"])
         self.assertIn("===== target: skills-manager =====", result["output"])
+
+    def test_operator_ui_server_apply_all_can_pass_managed_cleanup_apply(self) -> None:
+        module = _load_serve_operator_ui_module()
+
+        completed = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout='{"status":"pass"}',
+            stderr="",
+        )
+        with mock.patch.object(module.subprocess, "run", return_value=completed) as run_mock:
+            result = module.run_operator_action(
+                {
+                    "action": "apply_all_features",
+                    "target": "self-runtime",
+                    "apply_managed_asset_removal": True,
+                    "dry_run": False,
+                    "language": "zh-CN",
+                    "mode": "quick",
+                }
+            )
+
+        self.assertEqual(0, result["exit_code"])
+        command = run_mock.call_args_list[0].args[0]
+        self.assertIn("apply-all", command)
+        self.assertIn("self-runtime", command)
+        self.assertIn("-ApplyManagedAssetRemoval", command)
+        self.assertNotIn("-DryRun", command)
 
     def test_operator_preflight_blocks_high_impact_actions(self) -> None:
         env = dict(os.environ)

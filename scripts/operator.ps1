@@ -252,7 +252,7 @@ AI 推荐:
   RulesApply             应用规则 manifest 同步，然后复查漂移。
   GovernanceBaselineAll  对所有 active targets 下发治理基线，然后验证目标仓治理一致性。
   DailyAll               对所有 active targets 执行 daily flow，并刷新 operator UI。
-  ApplyAllFeatures       执行全部当前目标仓功能、目标仓一致性检查，并刷新 operator UI。
+  ApplyAllFeatures       执行全部当前目标仓功能、退役托管文件清理检测、目标仓一致性检查，并刷新 operator UI。
   CleanupTargets         预演清理退役治理文件；加 -ApplyManagedAssetRemoval 才实际删除。
   UninstallGovernance    预演卸载目标仓治理资产；加 -ApplyManagedAssetRemoval 才实际删除/修补。
   FeedbackReport         生成 Codex/Claude 功能反馈汇总报告，并写入 runtime artifacts。
@@ -278,7 +278,7 @@ UI:
   -TargetParallelism <n>
   -FailFast
   -ApplyManagedAssetRemoval
-                          CleanupTargets / UninstallGovernance 时才允许真实删除或修补受管文件；不加则只 dry-run。
+                          ApplyAllFeatures / CleanupTargets / UninstallGovernance 时才允许真实删除或修补受管文件；不加则只报告清理/卸载计划。
   -OpenUi
   -OnlineSourceCheck      EvolutionReview 时执行轻量在线 source probe；默认不联网。
   -ConfirmCorePrincipleProposalWrite
@@ -361,8 +361,12 @@ function Invoke-ApplyAllFeatures {
     $Mode,
     "-MilestoneTag",
     $MilestoneTag,
-    "-Json"
+    "-Json",
+    "-PruneRetiredManagedFiles"
   )
+  if ($ApplyManagedAssetRemoval) {
+    $arguments += "-ApplyManagedAssetRemoval"
+  }
   Invoke-PwshScript -Name "apply-all-features" -ScriptPath "scripts/runtime-flow-preset.ps1" -ScriptArguments $arguments
   Invoke-PythonScript -Name "target-governance-consistency" -ScriptPath "scripts/verify-target-repo-governance-consistency.py"
   Invoke-OperatorUi

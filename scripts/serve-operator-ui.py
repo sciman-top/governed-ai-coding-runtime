@@ -51,7 +51,13 @@ ALLOWED_ACTIONS = {
     "rules_apply": {"operator_action": "RulesApply", "run_alias": "rules-apply", "timeout_seconds": 900},
     "governance_baseline_all": {"operator_action": "GovernanceBaselineAll", "run_alias": "governance-baseline", "timeout_seconds": 1800, "allow_multi_target": True},
     "daily_all": {"operator_action": "DailyAll", "run_alias": "daily", "timeout_seconds": 1800, "allow_multi_target": True},
-    "apply_all_features": {"operator_action": "ApplyAllFeatures", "run_alias": "apply-all", "timeout_seconds": 2400, "allow_multi_target": True},
+    "apply_all_features": {
+        "operator_action": "ApplyAllFeatures",
+        "run_alias": "apply-all",
+        "timeout_seconds": 2400,
+        "allow_multi_target": True,
+        "managed_asset_removal_apply": True,
+    },
     "cleanup_targets": {
         "operator_action": "CleanupTargets",
         "run_alias": "cleanup-targets",
@@ -836,11 +842,12 @@ def _build_operator_command(
     ]
     if fail_fast:
         command.append("-FailFast")
-    if action.get("managed_asset_removal"):
-        if apply_managed_asset_removal:
-            command.append("-ApplyManagedAssetRemoval")
-    elif dry_run:
+    if dry_run and not action.get("managed_asset_removal"):
         command.append("-DryRun")
+    if apply_managed_asset_removal and (
+        action.get("managed_asset_removal") or action.get("managed_asset_removal_apply")
+    ):
+        command.append("-ApplyManagedAssetRemoval")
     return command
 
 

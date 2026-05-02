@@ -99,7 +99,7 @@ _TRANSLATIONS = {
         "fail_fast": "失败即停",
         "dry_run": "只预演",
         "apply_removal": "实际删除清理/卸载候选",
-        "apply_removal_hint": "清理/卸载默认只生成计划；勾选后才传入 -ApplyManagedAssetRemoval。",
+        "apply_removal_hint": "全部功能应用、清理、卸载默认只生成退役/卸载计划；勾选后才传入 -ApplyManagedAssetRemoval。",
         "milestone": "里程碑标签",
         "refresh": "刷新状态",
         "run": "执行",
@@ -239,7 +239,7 @@ _TRANSLATIONS = {
         "uninstall_governance_action": "一键卸载治理",
         "feedback_report_action": "功能反馈汇总",
         "view_ref": "查看",
-        "confirm_mutating": "该操作可能修改规则文件、目标仓治理基线或运行证据。继续执行？",
+        "confirm_mutating": "该操作会应用目标仓治理能力并检测退役托管文件；勾选“实际删除”时会删除安全候选。继续执行？",
         "confirm_managed_cleanup": "将对选中的目标仓执行退役治理文件清理；未勾选“实际删除”时只预演。继续执行？",
         "confirm_governance_uninstall": "将对选中的目标仓执行治理卸载；勾选“实际删除”会删除或修补受管文件并写备份。继续执行？",
         "no_target_selected": "至少选择一个目标仓。",
@@ -336,7 +336,7 @@ _TRANSLATIONS = {
         "fail_fast": "Fail fast",
         "dry_run": "Dry run",
         "apply_removal": "Apply cleanup/uninstall deletes",
-        "apply_removal_hint": "Cleanup and uninstall only report a plan by default; this passes -ApplyManagedAssetRemoval.",
+        "apply_removal_hint": "Apply-all, cleanup, and uninstall only report retired/uninstall plans by default; this passes -ApplyManagedAssetRemoval.",
         "milestone": "Milestone tag",
         "refresh": "Refresh status",
         "run": "Run",
@@ -476,7 +476,7 @@ _TRANSLATIONS = {
         "uninstall_governance_action": "Uninstall governance",
         "feedback_report_action": "Feedback summary",
         "view_ref": "View",
-        "confirm_mutating": "This action may modify rule files, target governance baseline, or runtime evidence. Continue?",
+        "confirm_mutating": "This applies target governance and checks retired managed files. With apply removal enabled it deletes safe candidates. Continue?",
         "confirm_managed_cleanup": "Run retired governance file cleanup for the selected targets. It only dry-runs unless apply removal is enabled. Continue?",
         "confirm_governance_uninstall": "Run governance uninstall for the selected targets. Apply removal deletes or patches managed files and writes backups. Continue?",
         "no_target_selected": "Select at least one target repo.",
@@ -1507,7 +1507,7 @@ def _render_interactive_script(
   const codexSurfaceActionText = {text['surface_codex_action']!r};
   const claudeSurfaceActionText = {text['surface_claude_action']!r};
   const feedbackSurfaceActionText = {text['surface_feedback_action']!r};
-  const managedRemovalActions = new Set(['cleanup_targets', 'uninstall_governance']);
+  const managedRemovalActions = new Set(['apply_all_features', 'cleanup_targets', 'uninstall_governance']);
   const codexAutoRefreshAgeSeconds = 90;
   const codexRefreshCooldownMs = 15000;
   let codexLoaded = false;
