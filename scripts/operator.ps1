@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("Help", "Targets", "Readiness", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
+  [ValidateSet("Help", "Targets", "Readiness", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
   [string]$Action = "Help",
 
   [ValidateSet("quick", "full", "l1", "l2", "l3")]
@@ -14,6 +14,7 @@ param(
   [switch]$OnlineSourceCheck,
   [switch]$ConfirmCorePrincipleProposalWrite,
   [switch]$WriteCorePrincipleDryRunReport,
+  [switch]$ApplyManagedAssetRemoval,
   [switch]$DryRun,
   [switch]$FailFast
 )
@@ -249,6 +250,8 @@ AI 推荐:
   GovernanceBaselineAll  对所有 active targets 下发治理基线，然后验证目标仓治理一致性。
   DailyAll               对所有 active targets 执行 daily flow，并刷新 operator UI。
   ApplyAllFeatures       执行全部当前目标仓功能、目标仓一致性检查，并刷新 operator UI。
+  CleanupTargets         预演清理退役治理文件；加 -ApplyManagedAssetRemoval 才实际删除。
+  UninstallGovernance    预演卸载目标仓治理资产；加 -ApplyManagedAssetRemoval 才实际删除/修补。
   FeedbackReport         生成 Codex/Claude 功能反馈汇总报告，并写入 runtime artifacts。
   EvolutionReview        执行 runtime 自我演进 dry-run，只生成候选和证据，不自动改代码。
   ExperienceReview       从 AI 编码证据/指标中生成 dry-run knowledge/memory 记录、改进提案和 skill manifest 候选。
@@ -271,6 +274,8 @@ UI:
   -Mode <quick|full|l1|l2|l3>
   -TargetParallelism <n>
   -FailFast
+  -ApplyManagedAssetRemoval
+                          CleanupTargets / UninstallGovernance 时才允许真实删除或修补受管文件；不加则只 dry-run。
   -OpenUi
   -OnlineSourceCheck      EvolutionReview 时执行轻量在线 source probe；默认不联网。
   -ConfirmCorePrincipleProposalWrite
@@ -343,6 +348,38 @@ function Invoke-ApplyAllFeatures {
   Invoke-OperatorUi
 }
 
+function Invoke-CleanupTargets {
+  $arguments = Get-BatchFlowArguments -BaseArguments @(
+    "-FlowMode",
+    "daily",
+    "-Mode",
+    $Mode,
+    "-Json",
+    "-PruneRetiredManagedFiles"
+  )
+  if ($ApplyManagedAssetRemoval) {
+    $arguments += "-ApplyManagedAssetRemoval"
+  }
+  Invoke-PwshScript -Name "cleanup-retired-managed-files" -ScriptPath "scripts/runtime-flow-preset.ps1" -ScriptArguments $arguments
+  Invoke-OperatorUi
+}
+
+function Invoke-UninstallGovernance {
+  $arguments = Get-BatchFlowArguments -BaseArguments @(
+    "-FlowMode",
+    "daily",
+    "-Mode",
+    $Mode,
+    "-Json",
+    "-UninstallGovernance"
+  )
+  if ($ApplyManagedAssetRemoval) {
+    $arguments += "-ApplyManagedAssetRemoval"
+  }
+  Invoke-PwshScript -Name "uninstall-governance" -ScriptPath "scripts/runtime-flow-preset.ps1" -ScriptArguments $arguments
+  Invoke-OperatorUi
+}
+
 function Invoke-FeedbackReport {
   Invoke-PythonScript -Name "host-feedback-summary" -ScriptPath "scripts/host-feedback-summary.py" -ScriptArguments @(
     "--assert-minimum",
@@ -394,6 +431,8 @@ try {
     "GovernanceBaselineAll" { Invoke-GovernanceBaselineAll }
     "DailyAll" { Invoke-DailyAll }
     "ApplyAllFeatures" { Invoke-ApplyAllFeatures }
+    "CleanupTargets" { Invoke-CleanupTargets }
+    "UninstallGovernance" { Invoke-UninstallGovernance }
     "FeedbackReport" { Invoke-FeedbackReport }
     "EvolutionReview" { Invoke-EvolutionReview }
     "ExperienceReview" { Invoke-ExperienceReview }

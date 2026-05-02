@@ -49,9 +49,23 @@ ALLOWED_ACTIONS = {
     "readiness": {"operator_action": "Readiness", "run_alias": "readiness", "timeout_seconds": 1800},
     "rules_dry_run": {"operator_action": "RulesDryRun", "run_alias": "rules-check", "timeout_seconds": 600},
     "rules_apply": {"operator_action": "RulesApply", "run_alias": "rules-apply", "timeout_seconds": 900},
-    "governance_baseline_all": {"operator_action": "GovernanceBaselineAll", "run_alias": "governance-baseline", "timeout_seconds": 1800},
-    "daily_all": {"operator_action": "DailyAll", "run_alias": "daily", "timeout_seconds": 1800},
-    "apply_all_features": {"operator_action": "ApplyAllFeatures", "run_alias": "apply-all", "timeout_seconds": 2400},
+    "governance_baseline_all": {"operator_action": "GovernanceBaselineAll", "run_alias": "governance-baseline", "timeout_seconds": 1800, "allow_multi_target": True},
+    "daily_all": {"operator_action": "DailyAll", "run_alias": "daily", "timeout_seconds": 1800, "allow_multi_target": True},
+    "apply_all_features": {"operator_action": "ApplyAllFeatures", "run_alias": "apply-all", "timeout_seconds": 2400, "allow_multi_target": True},
+    "cleanup_targets": {
+        "operator_action": "CleanupTargets",
+        "run_alias": "cleanup-targets",
+        "timeout_seconds": 1800,
+        "allow_multi_target": True,
+        "managed_asset_removal": True,
+    },
+    "uninstall_governance": {
+        "operator_action": "UninstallGovernance",
+        "run_alias": "uninstall-governance",
+        "timeout_seconds": 1800,
+        "allow_multi_target": True,
+        "managed_asset_removal": True,
+    },
     "feedback_report": {"operator_action": "FeedbackReport", "run_alias": "feedback", "timeout_seconds": 600},
     "evolution_review": {"operator_action": "EvolutionReview", "run_alias": "evolution-review", "timeout_seconds": 900},
     "experience_review": {"operator_action": "ExperienceReview", "run_alias": "experience-review", "timeout_seconds": 900},
@@ -683,15 +697,118 @@ def run_operator_action(payload: dict) -> dict:
 
     language = _normalize_language(_string(payload.get("language"), "zh-CN"))
     mode = _choice(_string(payload.get("mode"), "quick"), {"quick", "full", "l1", "l2", "l3"}, "quick")
-    target = _string(payload.get("target"), "__all__") or "__all__"
     known_targets = set(load_target_ids())
-    if target not in {"__all__", "all", "*"} and known_targets and target not in known_targets:
-        return {"action": action_id, "exit_code": 2, "elapsed_seconds": 0, "output": f"unsupported target: {target}"}
+    target_values, target_error = _target_values_from_payload(payload, known_targets=known_targets)
+    if target_error:
+        return {"action": action_id, "exit_code": 2, "elapsed_seconds": 0, "output": target_error}
+    if len(target_values) > 1 and not action.get("allow_multi_target"):
+        return {
+            "action": action_id,
+            "exit_code": 2,
+            "elapsed_seconds": 0,
+            "output": f"multiple targets are not supported for action: {action_id}",
+            "targets": target_values,
+        }
     target_parallelism = _int_range(payload.get("target_parallelism"), minimum=1, maximum=16, default=1)
     milestone_tag = _string(payload.get("milestone_tag"), "milestone") or "milestone"
     fail_fast = bool(payload.get("fail_fast", False))
     dry_run = bool(payload.get("dry_run", False))
+    apply_managed_asset_removal = bool(payload.get("apply_managed_asset_removal", False)) and not dry_run
 
+    started = time.monotonic()
+    per_target: list[dict] = []
+    for target_value in target_values:
+        command = _build_operator_command(
+            action=action,
+            language=language,
+            target=target_value,
+            mode=mode,
+            target_parallelism=target_parallelism,
+            milestone_tag=milestone_tag,
+            fail_fast=fail_fast,
+            dry_run=dry_run,
+            apply_managed_asset_removal=apply_managed_asset_removal,
+        )
+        result = _run_operator_command(command, timeout_seconds=int(action["timeout_seconds"]))
+        result["target"] = target_value
+        per_target.append(result)
+        if target_value == "__all__" or (fail_fast and int(result["exit_code"]) != 0):
+            break
+
+    elapsed = round(time.monotonic() - started, 3)
+    exit_codes = [int(item["exit_code"]) for item in per_target]
+    exit_code = next((code for code in exit_codes if code != 0), 0)
+    if len(per_target) == 1:
+        single = per_target[0]
+        return {
+            "action": action_id,
+            "command": single["command"],
+            "elapsed_seconds": elapsed,
+            "exit_code": exit_code,
+            "output": single["output"],
+            "target": single["target"],
+            "targets": target_values,
+            "apply_managed_asset_removal": apply_managed_asset_removal,
+        }
+    output = "\n\n".join(
+        "\n".join(
+            [
+                f"===== target: {item['target']} =====",
+                f"command: {_command_for_display(item['command'])}",
+                f"exit_code: {item['exit_code']}",
+                f"elapsed_seconds: {item['elapsed_seconds']}",
+                "",
+                str(item["output"]),
+            ]
+        )
+        for item in per_target
+    )
+    return {
+        "action": action_id,
+        "commands": [item["command"] for item in per_target],
+        "elapsed_seconds": elapsed,
+        "exit_code": exit_code,
+        "output": output,
+        "targets": [item["target"] for item in per_target],
+        "apply_managed_asset_removal": apply_managed_asset_removal,
+    }
+
+
+def _target_values_from_payload(payload: dict, *, known_targets: set[str]) -> tuple[list[str], str | None]:
+    raw_targets = payload.get("targets")
+    values: list[str] = []
+    if isinstance(raw_targets, list):
+        values = [str(item).strip() for item in raw_targets if str(item).strip()]
+    elif isinstance(raw_targets, str) and raw_targets.strip():
+        values = [part.strip() for part in raw_targets.split(",") if part.strip()]
+    else:
+        values = [_string(payload.get("target"), "__all__") or "__all__"]
+
+    normalized: list[str] = []
+    for value in values:
+        if value in {"__all__", "all", "*"}:
+            return ["__all__"], None
+        if known_targets and value not in known_targets:
+            return [], f"unsupported target: {value}"
+        if value not in normalized:
+            normalized.append(value)
+    if not normalized:
+        return [], "no target selected"
+    return normalized, None
+
+
+def _build_operator_command(
+    *,
+    action: dict,
+    language: str,
+    target: str,
+    mode: str,
+    target_parallelism: int,
+    milestone_tag: str,
+    fail_fast: bool,
+    dry_run: bool,
+    apply_managed_asset_removal: bool,
+) -> list[str]:
     command = [
         "pwsh",
         "-NoProfile",
@@ -713,9 +830,15 @@ def run_operator_action(payload: dict) -> dict:
     ]
     if fail_fast:
         command.append("-FailFast")
-    if dry_run:
+    if action.get("managed_asset_removal"):
+        if apply_managed_asset_removal:
+            command.append("-ApplyManagedAssetRemoval")
+    elif dry_run:
         command.append("-DryRun")
+    return command
 
+
+def _run_operator_command(command: list[str], *, timeout_seconds: int) -> dict:
     started = time.monotonic()
     try:
         completed = subprocess.run(
@@ -725,24 +848,26 @@ def run_operator_action(payload: dict) -> dict:
             text=True,
             encoding="utf-8",
             errors="replace",
-            timeout=action["timeout_seconds"],
+            timeout=timeout_seconds,
         )
         output = "\n".join(segment for segment in [completed.stdout.rstrip(), completed.stderr.rstrip()] if segment)
         exit_code = completed.returncode
     except subprocess.TimeoutExpired as exc:
-        output = "\n".join(segment for segment in [exc.stdout or "", exc.stderr or "", f"timed out after {action['timeout_seconds']}s"] if segment)
+        output = "\n".join(segment for segment in [exc.stdout or "", exc.stderr or "", f"timed out after {timeout_seconds}s"] if segment)
         exit_code = 124
     except OSError as exc:
         output = str(exc)
         exit_code = 127
-    elapsed = round(time.monotonic() - started, 3)
     return {
-        "action": action_id,
         "command": command,
-        "elapsed_seconds": elapsed,
+        "elapsed_seconds": round(time.monotonic() - started, 3),
         "exit_code": exit_code,
         "output": output,
     }
+
+
+def _command_for_display(command: list[str]) -> str:
+    return " ".join(f'"{part}"' if any(ch.isspace() for ch in part) else part for part in command)
 
 
 def read_repo_file(requested: str) -> dict:

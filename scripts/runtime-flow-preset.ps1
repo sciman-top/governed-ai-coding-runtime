@@ -795,6 +795,16 @@ function Convert-ManagedAssetActionForJson {
     missing                 = $(if ($summary -and ($summary.PSObject.Properties.Name -contains "missing")) { [int]$summary.missing } else { 0 })
     shared_patch_candidates = $(if ($summary -and ($summary.PSObject.Properties.Name -contains "shared_patch_candidates")) { [int]$summary.shared_patch_candidates } else { 0 })
     shared_patched          = $(if ($summary -and ($summary.PSObject.Properties.Name -contains "shared_patched")) { [int]$summary.shared_patched } else { 0 })
+    profile_patch_candidates = $(if ($summary -and ($summary.PSObject.Properties.Name -contains "profile_patch_candidates")) { [int]$summary.profile_patch_candidates } else { 0 })
+    profile_patched         = $(if ($summary -and ($summary.PSObject.Properties.Name -contains "profile_patched")) { [int]$summary.profile_patched } else { 0 })
+    delete_candidate_items  = $(if ($ActionResult.payload -and ($ActionResult.payload.PSObject.Properties.Name -contains "delete_candidates")) { ConvertTo-JsonArrayValue -Value $ActionResult.payload.delete_candidates } else { @() })
+    deleted_files           = $(if ($ActionResult.payload -and ($ActionResult.payload.PSObject.Properties.Name -contains "deleted_files")) { ConvertTo-JsonArrayValue -Value $ActionResult.payload.deleted_files } else { @() })
+    blocked_files           = $(if ($ActionResult.payload -and ($ActionResult.payload.PSObject.Properties.Name -contains "blocked_files")) { ConvertTo-JsonArrayValue -Value $ActionResult.payload.blocked_files } else { @() })
+    missing_files           = $(if ($ActionResult.payload -and ($ActionResult.payload.PSObject.Properties.Name -contains "missing_files")) { ConvertTo-JsonArrayValue -Value $ActionResult.payload.missing_files } else { @() })
+    shared_patch_candidate_items = $(if ($ActionResult.payload -and ($ActionResult.payload.PSObject.Properties.Name -contains "shared_patch_candidates")) { ConvertTo-JsonArrayValue -Value $ActionResult.payload.shared_patch_candidates } else { @() })
+    patched_shared_files    = $(if ($ActionResult.payload -and ($ActionResult.payload.PSObject.Properties.Name -contains "patched_shared_files")) { ConvertTo-JsonArrayValue -Value $ActionResult.payload.patched_shared_files } else { @() })
+    profile_patch_candidate_items = $(if ($ActionResult.payload -and ($ActionResult.payload.PSObject.Properties.Name -contains "profile_patch_candidates")) { ConvertTo-JsonArrayValue -Value $ActionResult.payload.profile_patch_candidates } else { @() })
+    patched_profile_files   = $(if ($ActionResult.payload -and ($ActionResult.payload.PSObject.Properties.Name -contains "patched_profile_files")) { ConvertTo-JsonArrayValue -Value $ActionResult.payload.patched_profile_files } else { @() })
   }
 }
 
@@ -2289,6 +2299,18 @@ foreach ($targetName in $selectedTargets) {
       Write-Host ("milestone_commit: status=fail target={0} reason={1}" -f $targetName, $targetRun.milestone_commit_result.reason)
       if (-not [string]::IsNullOrWhiteSpace($targetRun.milestone_commit_result.output)) {
         Write-Host $targetRun.milestone_commit_result.output
+      }
+    }
+    if ($PruneRetiredManagedFiles) {
+      Write-Host ("prune_retired_managed_files: status={0} target={1} reason={2}" -f $pruneRetiredManagedFilesResult.status, $targetName, $pruneRetiredManagedFilesResult.reason)
+      if (-not [string]::IsNullOrWhiteSpace($pruneRetiredManagedFilesResult.output)) {
+        Write-Host $pruneRetiredManagedFilesResult.output
+      }
+    }
+    if ($UninstallGovernance) {
+      Write-Host ("uninstall_governance: status={0} target={1} reason={2}" -f $uninstallGovernanceResult.status, $targetName, $uninstallGovernanceResult.reason)
+      if (-not [string]::IsNullOrWhiteSpace($uninstallGovernanceResult.output)) {
+        Write-Host $uninstallGovernanceResult.output
       }
     }
   }

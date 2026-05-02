@@ -45,6 +45,8 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn(".\\run.ps1 readiness -OpenUi", completed.stdout)
         self.assertIn("rules-check", completed.stdout)
         self.assertIn("operator-help", completed.stdout)
+        self.assertIn("cleanup-targets", completed.stdout)
+        self.assertIn("uninstall-governance", completed.stdout)
 
     def test_root_run_entrypoint_forwards_aliases(self) -> None:
         env = dict(os.environ)
@@ -104,6 +106,8 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("AI 推荐", completed.stdout)
         self.assertIn("Readiness", completed.stdout)
         self.assertIn("FeedbackReport", completed.stdout)
+        self.assertIn("CleanupTargets", completed.stdout)
+        self.assertIn("UninstallGovernance", completed.stdout)
         self.assertIn("CorePrincipleMaterialize", completed.stdout)
         self.assertIn("ConfirmCorePrincipleProposalWrite", completed.stdout)
         self.assertIn("OperatorUi", completed.stdout)
@@ -212,6 +216,8 @@ class OperatorEntrypointTests(unittest.TestCase):
         ):
             self.assertIn("readiness", module.ALLOWED_ACTIONS)
             self.assertIn("feedback_report", module.ALLOWED_ACTIONS)
+            self.assertIn("cleanup_targets", module.ALLOWED_ACTIONS)
+            self.assertIn("uninstall_governance", module.ALLOWED_ACTIONS)
             self.assertIn("evolution_review", module.ALLOWED_ACTIONS)
             self.assertIn("evolution_materialize", module.ALLOWED_ACTIONS)
             self.assertIn("classroomtoolkit", module.load_target_ids())
@@ -365,6 +371,41 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("-DryRun", result["command"])
         self.assertIn("DRY-RUN daily-all-targets", result["output"])
         run_mock.assert_called_once()
+
+    def test_operator_ui_server_batches_selected_targets_for_uninstall(self) -> None:
+        module = _load_serve_operator_ui_module()
+
+        completed = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout='{"status":"pass"}',
+            stderr="",
+        )
+        with mock.patch.object(module.subprocess, "run", return_value=completed) as run_mock:
+            result = module.run_operator_action(
+                {
+                    "action": "uninstall_governance",
+                    "targets": ["classroomtoolkit", "skills-manager"],
+                    "apply_managed_asset_removal": True,
+                    "dry_run": False,
+                    "language": "zh-CN",
+                    "mode": "quick",
+                }
+            )
+
+        self.assertEqual(0, result["exit_code"])
+        self.assertEqual(["classroomtoolkit", "skills-manager"], result["targets"])
+        self.assertTrue(result["apply_managed_asset_removal"])
+        self.assertEqual(2, run_mock.call_count)
+        first_command = run_mock.call_args_list[0].args[0]
+        second_command = run_mock.call_args_list[1].args[0]
+        self.assertIn("uninstall-governance", first_command)
+        self.assertIn("classroomtoolkit", first_command)
+        self.assertIn("-ApplyManagedAssetRemoval", first_command)
+        self.assertNotIn("-DryRun", first_command)
+        self.assertIn("skills-manager", second_command)
+        self.assertIn("===== target: classroomtoolkit =====", result["output"])
+        self.assertIn("===== target: skills-manager =====", result["output"])
 
     def test_operator_preflight_blocks_high_impact_actions(self) -> None:
         env = dict(os.environ)

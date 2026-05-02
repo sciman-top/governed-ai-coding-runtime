@@ -30,6 +30,8 @@ AI 推荐:
   .\run.ps1 rules-apply          同步规则文件，然后复查漂移。
   .\run.ps1 daily                对 active targets 执行 daily flow。
   .\run.ps1 apply-all            执行全部当前目标仓功能。
+  .\run.ps1 cleanup-targets      预演清理退役治理文件；加 -ApplyManagedAssetRemoval 才实际删除。
+  .\run.ps1 uninstall-governance 预演卸载目标仓治理资产；加 -ApplyManagedAssetRemoval 才实际删除/修补。
   .\run.ps1 feedback             生成 Codex/Claude 功能反馈汇总。
 
 示例:
@@ -63,6 +65,11 @@ function Resolve-OperatorAction {
     "daily" = "DailyAll"
     "daily-all" = "DailyAll"
     "apply-all" = "ApplyAllFeatures"
+    "cleanup" = "CleanupTargets"
+    "clean" = "CleanupTargets"
+    "cleanup-targets" = "CleanupTargets"
+    "uninstall" = "UninstallGovernance"
+    "uninstall-governance" = "UninstallGovernance"
     "feedback" = "FeedbackReport"
     "feedback-report" = "FeedbackReport"
     "evolution-review" = "EvolutionReview"

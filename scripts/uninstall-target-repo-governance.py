@@ -52,8 +52,10 @@ def uninstall_target_repo_governance(
     )
     delete_candidates: list[dict[str, Any]] = []
     shared_patch_candidates: list[dict[str, Any]] = []
+    profile_patch_candidates: list[dict[str, Any]] = []
     deleted_files: list[dict[str, str]] = []
     patched_shared_files: list[dict[str, str]] = []
+    patched_profile_files: list[dict[str, str]] = []
     blocked: list[dict[str, Any]] = []
     missing: list[dict[str, str]] = []
 
@@ -66,6 +68,16 @@ def uninstall_target_repo_governance(
         if mode == "json_merge":
             if not target_path.exists():
                 missing.append({"path": path, "reason": "missing_shared_file"})
+                continue
+            if not item.get("shared_ownership_evidence"):
+                blocked.append(
+                    {
+                        "path": path,
+                        "reason": "shared_patch_requires_ownership_evidence",
+                        "classification": "shared_or_field_owned",
+                        "management_mode": mode,
+                    }
+                )
                 continue
             source = item.get("source")
             if not isinstance(source, str) or not source.strip():
@@ -83,16 +95,7 @@ def uninstall_target_repo_governance(
                 continue
             record = {"path": path, "management_mode": mode, "source": str(source_file)}
             shared_patch_candidates.append(record)
-            if apply:
-                backup_path = _backup_file(target_path=target_path, backup_root=resolved_backup_root, relative_path=path)
-                target_path.write_text(json.dumps(patched, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-                patched_shared_files.append(
-                    {
-                        "path": path,
-                        "backup_path": str(backup_path),
-                        "rollback": f"copy {backup_path} back to {target_path}",
-                    }
-                )
+            record["patched_content"] = patched
             continue
 
         asset = classify_asset(
@@ -109,18 +112,17 @@ def uninstall_target_repo_governance(
         if asset["classification"] != "active_managed":
             blocked.append({"path": path, "reason": asset["reason"], "classification": asset["classification"]})
             continue
-        delete_candidates.append(asset)
-        if apply:
-            backup_path = _backup_file(target_path=target_path, backup_root=resolved_backup_root, relative_path=path)
-            target_path.unlink()
-            deleted_files.append(
+        if asset.get("referenced_by"):
+            blocked.append(
                 {
                     "path": path,
-                    "backup_path": str(backup_path),
-                    "target_sha256": str(asset.get("target_sha256", "")),
-                    "rollback": f"copy {backup_path} back to {target_path}",
+                    "reason": "active_references",
+                    "classification": asset["classification"],
+                    "referenced_by": asset["referenced_by"],
                 }
             )
+            continue
+        delete_candidates.append(asset)
 
     for item in baseline.get("generated_managed_files", []):
         if not isinstance(item, dict) or not isinstance(item.get("path"), str):
@@ -141,15 +143,72 @@ def uninstall_target_repo_governance(
         if asset["classification"] != "active_managed":
             blocked.append({"path": path, "reason": asset["reason"], "classification": asset["classification"]})
             continue
+        if asset.get("referenced_by"):
+            blocked.append(
+                {
+                    "path": path,
+                    "reason": "active_references",
+                    "classification": asset["classification"],
+                    "referenced_by": asset["referenced_by"],
+                }
+            )
+            continue
         delete_candidates.append(asset)
-        if apply:
+
+    profile_patch = _build_profile_patch(target_repo=root, baseline=baseline)
+    if profile_patch["status"] == "candidate":
+        profile_patch_candidates.append(profile_patch)
+    elif profile_patch["status"] == "missing":
+        missing.append({"path": profile_patch["path"], "reason": profile_patch["reason"]})
+    elif profile_patch["status"] == "blocked":
+        blocked.append(
+            {
+                "path": profile_patch["path"],
+                "reason": profile_patch["reason"],
+                "classification": "shared_or_field_owned",
+            }
+        )
+
+    if apply and not blocked:
+        for record in shared_patch_candidates:
+            path = record["path"]
+            target_path = repo_relative_path(root, path)
             backup_path = _backup_file(target_path=target_path, backup_root=resolved_backup_root, relative_path=path)
-            target_path.unlink()
-            deleted_files.append(
+            target_path.write_text(
+                json.dumps(record["patched_content"], ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            patched_shared_files.append(
                 {
                     "path": path,
                     "backup_path": str(backup_path),
+                    "rollback": f"copy {backup_path} back to {target_path}",
+                }
+            )
+        for asset in delete_candidates:
+            target_path = repo_relative_path(root, asset["path"])
+            backup_path = _backup_file(target_path=target_path, backup_root=resolved_backup_root, relative_path=asset["path"])
+            target_path.unlink()
+            deleted_files.append(
+                {
+                    "path": asset["path"],
+                    "backup_path": str(backup_path),
                     "target_sha256": str(asset.get("target_sha256", "")),
+                    "rollback": f"copy {backup_path} back to {target_path}",
+                }
+            )
+        for record in profile_patch_candidates:
+            target_path = Path(record["absolute_path"])
+            backup_path = _backup_file(target_path=target_path, backup_root=resolved_backup_root, relative_path=record["path"])
+            target_path.write_text(
+                json.dumps(record["patched_content"], ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            patched_profile_files.append(
+                {
+                    "path": record["path"],
+                    "backup_path": str(backup_path),
+                    "removed_fields": record["removed_fields"],
                     "rollback": f"copy {backup_path} back to {target_path}",
                 }
             )
@@ -165,18 +224,22 @@ def uninstall_target_repo_governance(
         "summary": {
             "delete_candidates": len(delete_candidates),
             "shared_patch_candidates": len(shared_patch_candidates),
+            "profile_patch_candidates": len(profile_patch_candidates),
             "deleted": len(deleted_files),
             "shared_patched": len(patched_shared_files),
+            "profile_patched": len(patched_profile_files),
             "blocked": len(blocked),
             "missing": len(missing),
         },
         "delete_candidates": delete_candidates,
-        "shared_patch_candidates": shared_patch_candidates,
+        "shared_patch_candidates": [_public_record(record) for record in shared_patch_candidates],
+        "profile_patch_candidates": [_public_record(record) for record in profile_patch_candidates],
         "deleted_files": deleted_files,
         "patched_shared_files": patched_shared_files,
+        "patched_profile_files": patched_profile_files,
         "blocked_files": blocked,
         "missing_files": missing,
-        "modified": bool(deleted_files or patched_shared_files),
+        "modified": bool(deleted_files or patched_shared_files or patched_profile_files),
     }
     return payload, (2 if blocked else 0)
 
@@ -186,6 +249,48 @@ def _backup_file(*, target_path: Path, backup_root: Path, relative_path: str) ->
     backup_path.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(target_path, backup_path)
     return backup_path
+
+
+def _build_profile_patch(*, target_repo: Path, baseline: dict[str, Any]) -> dict[str, Any]:
+    path = ".governed-ai/repo-profile.json"
+    ownership = baseline.get("repo_profile_field_ownership")
+    if ownership is None:
+        return {"status": "missing", "path": path, "reason": "repo_profile_ownership_absent"}
+    if not isinstance(ownership, dict):
+        return {"status": "blocked", "path": path, "reason": "repo_profile_ownership_invalid"}
+    fields = set(_string_list(ownership.get("baseline_override_fields"))) | set(_string_list(ownership.get("derived_runtime_fields")))
+    if not fields:
+        return {"status": "missing", "path": path, "reason": "repo_profile_owned_fields_absent"}
+    target_path = repo_relative_path(target_repo, path)
+    if not target_path.exists():
+        return {"status": "missing", "path": path, "reason": "repo_profile_missing"}
+    actual = json.loads(target_path.read_text(encoding="utf-8"))
+    if not isinstance(actual, dict):
+        return {"status": "blocked", "path": path, "reason": "repo_profile_not_object"}
+    removed_fields = sorted(field for field in fields if field in actual)
+    if not removed_fields:
+        return {"status": "missing", "path": path, "reason": "repo_profile_owned_fields_absent"}
+    patched = dict(actual)
+    for field in removed_fields:
+        patched.pop(field, None)
+    return {
+        "status": "candidate",
+        "path": path,
+        "absolute_path": str(target_path),
+        "removed_fields": removed_fields,
+        "patched_content": patched,
+        "evidence_refs": ["current_baseline.repo_profile_field_ownership"],
+    }
+
+
+def _string_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item) for item in value if isinstance(item, str) and item.strip()]
+
+
+def _public_record(record: dict[str, Any]) -> dict[str, Any]:
+    return {key: value for key, value in record.items() if key not in {"patched_content", "absolute_path"}}
 
 
 def _remove_json_overlay(actual: Any, overlay: Any) -> Any:

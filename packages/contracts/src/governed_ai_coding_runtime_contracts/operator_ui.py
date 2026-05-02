@@ -92,10 +92,14 @@ _TRANSLATIONS = {
         "language": "语言",
         "target": "目标仓",
         "all_targets": "全部目标仓",
+        "target_selection": "目标仓选择",
+        "target_selection_hint": "默认全部；取消全部后可勾选多个目标仓。批量卸载只处理勾选目标。",
         "mode": "验证模式",
         "parallelism": "目标并发",
         "fail_fast": "失败即停",
         "dry_run": "只预演",
+        "apply_removal": "实际删除清理/卸载候选",
+        "apply_removal_hint": "清理/卸载默认只生成计划；勾选后才传入 -ApplyManagedAssetRemoval。",
         "milestone": "里程碑标签",
         "refresh": "刷新状态",
         "run": "执行",
@@ -231,9 +235,14 @@ _TRANSLATIONS = {
         "governance_baseline_action": "下发治理基线",
         "daily_all_action": "运行 Daily 巡检",
         "apply_all_action": "应用全部治理能力",
+        "cleanup_targets_action": "一键清理退役文件",
+        "uninstall_governance_action": "一键卸载治理",
         "feedback_report_action": "功能反馈汇总",
         "view_ref": "查看",
         "confirm_mutating": "该操作可能修改规则文件、目标仓治理基线或运行证据。继续执行？",
+        "confirm_managed_cleanup": "将对选中的目标仓执行退役治理文件清理；未勾选“实际删除”时只预演。继续执行？",
+        "confirm_governance_uninstall": "将对选中的目标仓执行治理卸载；勾选“实际删除”会删除或修补受管文件并写备份。继续执行？",
+        "no_target_selected": "至少选择一个目标仓。",
         "interactive_required": "当前是静态快照；启动本地服务后可执行操作。",
     },
     "en": {
@@ -320,10 +329,14 @@ _TRANSLATIONS = {
         "language": "Language",
         "target": "Target repo",
         "all_targets": "All targets",
+        "target_selection": "Target selection",
+        "target_selection_hint": "All targets are selected by default. Clear all to choose multiple specific target repos.",
         "mode": "Mode",
         "parallelism": "Target parallelism",
         "fail_fast": "Fail fast",
         "dry_run": "Dry run",
+        "apply_removal": "Apply cleanup/uninstall deletes",
+        "apply_removal_hint": "Cleanup and uninstall only report a plan by default; this passes -ApplyManagedAssetRemoval.",
         "milestone": "Milestone tag",
         "refresh": "Refresh status",
         "run": "Run",
@@ -459,9 +472,14 @@ _TRANSLATIONS = {
         "governance_baseline_action": "Apply governance baseline",
         "daily_all_action": "Run Daily sweep",
         "apply_all_action": "Apply all governance",
+        "cleanup_targets_action": "Clean retired files",
+        "uninstall_governance_action": "Uninstall governance",
         "feedback_report_action": "Feedback summary",
         "view_ref": "View",
         "confirm_mutating": "This action may modify rule files, target governance baseline, or runtime evidence. Continue?",
+        "confirm_managed_cleanup": "Run retired governance file cleanup for the selected targets. It only dry-runs unless apply removal is enabled. Continue?",
+        "confirm_governance_uninstall": "Run governance uninstall for the selected targets. Apply removal deletes or patches managed files and writes backups. Continue?",
+        "no_target_selected": "Select at least one target repo.",
         "interactive_required": "This is a static snapshot; start the local service to run actions.",
     },
 }
@@ -697,6 +715,12 @@ def render_runtime_snapshot_html(
     select, input[type="number"], input[type="text"] {{ width: 100%; min-width: 0; max-width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 8px 9px; color: var(--ink); background: #fff; box-shadow: var(--shadow-tight); }}
     select:focus, input:focus, button:focus-visible {{ outline: 2px solid rgba(11, 118, 110, 0.24); outline-offset: 2px; }}
     .checkbox-row {{ display: flex; align-items: center; gap: 8px; color: var(--ink); }}
+    .target-picker {{ display: grid; gap: 8px; border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: linear-gradient(180deg, #ffffff, #f9fcfb); box-shadow: var(--shadow-tight); }}
+    .target-picker-head {{ display: grid; gap: 2px; }}
+    .target-picker-title {{ color: var(--ink-strong); font-weight: 760; }}
+    .target-checkbox-list {{ display: grid; gap: 7px; max-height: 180px; overflow: auto; padding-top: 6px; border-top: 1px solid var(--line); }}
+    .target-checkbox-list input:disabled + span {{ color: var(--muted); }}
+    .danger-row {{ padding: 8px 9px; border: 1px solid #efc2bc; border-radius: 8px; background: var(--danger-soft); }}
     .status-line {{ color: var(--muted); font-size: 0.86rem; min-height: 1.2rem; }}
     .output {{
       min-height: 260px;
@@ -1157,6 +1181,8 @@ def _render_actions(text: dict[str, str], *, language: str, interactive: bool, t
         ("governance_baseline_all", text["governance_baseline_action"], "danger", text["confirm_mutating"]),
         ("daily_all", text["daily_all_action"], "", ""),
         ("apply_all_features", text["apply_all_action"], "danger", text["confirm_mutating"]),
+        ("cleanup_targets", text["cleanup_targets_action"], "danger", text["confirm_managed_cleanup"]),
+        ("uninstall_governance", text["uninstall_governance_action"], "danger", text["confirm_governance_uninstall"]),
         ("feedback_report", text["feedback_report_action"], "", ""),
     ]
     buttons = []
@@ -1173,6 +1199,15 @@ def _render_actions(text: dict[str, str], *, language: str, interactive: bool, t
         f"<option value='{escape(value, quote=True)}'>{escape(label)}</option>"
         for value, label in target_choices
     )
+    target_checkboxes = [
+        (
+            "<label class='checkbox-row target-option'>"
+            f"<input type='checkbox' data-ui-target-option='{escape(target, quote=True)}'> "
+            f"<span>{escape(target)}</span>"
+            "</label>"
+        )
+        for target in target_options
+    ]
 
     return "\n".join(
         [
@@ -1201,12 +1236,24 @@ def _render_actions(text: dict[str, str], *, language: str, interactive: bool, t
             f"<h2>{escape(text['settings'])}</h2>",
             "<div class='setting-grid'>",
             f"<label>{escape(text['language'])}<select id='ui-language'><option value='zh-CN' {'selected' if language == 'zh-CN' else ''}>中文</option><option value='en' {'selected' if language == 'en' else ''}>English</option></select></label>",
-            f"<label>{escape(text['target'])}<select id='ui-target'>{target_select_options}</select></label>",
+            f"<label hidden>{escape(text['target'])}<select id='ui-target'>{target_select_options}</select></label>",
+            "<div class='target-picker' role='group' aria-labelledby='ui-target-picker-title'>",
+            "<div class='target-picker-head'>",
+            f"<span class='target-picker-title' id='ui-target-picker-title'>{escape(text['target_selection'])}</span>",
+            f"<span class='meta'>{escape(text['target_selection_hint'])}</span>",
+            "</div>",
+            f"<label class='checkbox-row'><input id='ui-target-all' type='checkbox' checked> {escape(text['all_targets'])}</label>",
+            "<div id='ui-target-list' class='target-checkbox-list'>",
+            *target_checkboxes,
+            "</div>",
+            "</div>",
             f"<label>{escape(text['mode'])}<select id='ui-mode'><option value='quick'>quick</option><option value='full'>full</option><option value='l1'>l1</option><option value='l2'>l2</option><option value='l3'>l3</option></select></label>",
             f"<label>{escape(text['parallelism'])}<input id='ui-parallelism' type='number' min='1' max='16' value='1'></label>",
             f"<label>{escape(text['milestone'])}<input id='ui-milestone' type='text' value='milestone'></label>",
             f"<label class='checkbox-row'><input id='ui-fail-fast' type='checkbox'> {escape(text['fail_fast'])}</label>",
             f"<label class='checkbox-row'><input id='ui-dry-run' type='checkbox'> {escape(text['dry_run'])}</label>",
+            f"<label class='checkbox-row danger-row'><input id='ui-apply-removal' type='checkbox'> {escape(text['apply_removal'])}</label>",
+            f"<p class='meta'>{escape(text['apply_removal_hint'])}</p>",
             "</div>",
             "</section>",
             "</aside>",
@@ -1418,11 +1465,14 @@ def _render_interactive_script(
   const outputPanel = output.closest('.panel');
   const languageSelect = document.getElementById('ui-language');
   const target = document.getElementById('ui-target');
+  const targetAll = document.getElementById('ui-target-all');
+  const targetOptions = Array.from(document.querySelectorAll('input[data-ui-target-option]'));
   const mode = document.getElementById('ui-mode');
   const parallelism = document.getElementById('ui-parallelism');
   const milestone = document.getElementById('ui-milestone');
   const failFast = document.getElementById('ui-fail-fast');
   const dryRun = document.getElementById('ui-dry-run');
+  const applyRemoval = document.getElementById('ui-apply-removal');
   const historyList = document.getElementById('ui-history');
   const codexAccounts = document.getElementById('codex-accounts');
   const codexCacheState = document.getElementById('codex-cache-state');
@@ -1457,6 +1507,7 @@ def _render_interactive_script(
   const codexSurfaceActionText = {text['surface_codex_action']!r};
   const claudeSurfaceActionText = {text['surface_claude_action']!r};
   const feedbackSurfaceActionText = {text['surface_feedback_action']!r};
+  const managedRemovalActions = new Set(['cleanup_targets', 'uninstall_governance']);
   const codexAutoRefreshAgeSeconds = 90;
   const codexRefreshCooldownMs = 15000;
   let codexLoaded = false;
@@ -1749,6 +1800,38 @@ def _render_interactive_script(
     }}
   }}
 
+  function selectedTargetValues() {{
+    if (!targetAll || targetAll.checked) {{
+      return ['__all__'];
+    }}
+    return targetOptions
+      .filter((item) => item.checked)
+      .map((item) => item.getAttribute('data-ui-target-option') || '')
+      .filter(Boolean);
+  }}
+
+  function syncTargetControls() {{
+    const allSelected = !targetAll || targetAll.checked;
+    targetOptions.forEach((item) => {{
+      item.disabled = allSelected;
+    }});
+    const selected = selectedTargetValues();
+    if (target) {{
+      target.value = selected[0] || '';
+    }}
+  }}
+
+  function selectedTargetLabel(values) {{
+    const selected = Array.isArray(values) ? values : selectedTargetValues();
+    if (!selected.length) {{
+      return '';
+    }}
+    if (selected.includes('__all__')) {{
+      return {text['all_targets']!r};
+    }}
+    return selected.join(', ');
+  }}
+
   function setNextWorkStatusLine(text) {{
     if (nextWorkCacheState) {{
       nextWorkCacheState.textContent = text || '';
@@ -1774,6 +1857,8 @@ def _render_interactive_script(
       governance_baseline_all: {text['governance_baseline_action']!r},
       daily_all: {text['daily_all_action']!r},
       apply_all_features: {text['apply_all_action']!r},
+      cleanup_targets: {text['cleanup_targets_action']!r},
+      uninstall_governance: {text['uninstall_governance_action']!r},
       feedback_report: {text['feedback_report_action']!r},
       evolution_review: 'EvolutionReview',
       experience_review: 'ExperienceReview',
@@ -1933,10 +2018,19 @@ def _render_interactive_script(
       setOutput(`${{actionDisplayLabel(action)}}\n\n${{blockedReason}}`);
       return;
     }}
+    const targets = selectedTargetValues();
+    if (!targets.length) {{
+      setOutput({text['no_target_selected']!r});
+      return;
+    }}
     const confirmMessage = button.getAttribute('data-confirm');
     if (confirmMessage && !window.confirm(confirmMessage)) {{
       return;
     }}
+    const applyManagedAssetRemoval = managedRemovalActions.has(action)
+      && applyRemoval
+      && applyRemoval.checked
+      && !dryRun.checked;
     document.body.dataset.busy = 'true';
     setBusy(true);
     setOutput('');
@@ -1947,12 +2041,14 @@ def _render_interactive_script(
         body: JSON.stringify({{
           action,
           language: languageSelect.value,
-          target: target.value,
+          target: targets[0] || '__all__',
+          targets,
           mode: mode.value,
           target_parallelism: Number(parallelism.value || 1),
           milestone_tag: milestone.value || 'milestone',
           fail_fast: failFast.checked,
-          dry_run: dryRun.checked
+          dry_run: dryRun.checked,
+          apply_managed_asset_removal: applyManagedAssetRemoval
         }})
       }});
       const payload = await response.json();
@@ -1966,7 +2062,7 @@ def _render_interactive_script(
       setOutput(rendered);
       addHistory({{
         action: payload.action || action,
-        target: target.value,
+        target: selectedTargetLabel(targets),
         exit_code: payload.exit_code,
         elapsed_seconds: payload.elapsed_seconds,
         at: new Date().toLocaleString(),
@@ -3215,11 +3311,32 @@ def _render_interactive_script(
       }}
     }});
   }});
+  if (targetAll) {{
+    targetAll.addEventListener('change', () => syncTargetControls());
+  }}
+  targetOptions.forEach((item) => {{
+    item.addEventListener('change', () => syncTargetControls());
+  }});
+  if (applyRemoval) {{
+    applyRemoval.addEventListener('change', () => {{
+      if (applyRemoval.checked && dryRun) {{
+        dryRun.checked = false;
+      }}
+    }});
+  }}
+  if (dryRun) {{
+    dryRun.addEventListener('change', () => {{
+      if (dryRun.checked && applyRemoval) {{
+        applyRemoval.checked = false;
+      }}
+    }});
+  }}
   languageSelect.addEventListener('change', () => {{
     const next = new URL(window.location.href);
     next.searchParams.set('lang', languageSelect.value);
     window.location.href = next.toString();
   }});
+  syncTargetControls();
   renderHistory();
   updateRuntimeSurfaceSummary();
   hydratePanelCache('codex', codexCacheKey);

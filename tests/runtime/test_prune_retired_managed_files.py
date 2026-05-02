@@ -129,12 +129,11 @@ class PruneRetiredManagedFilesTests(unittest.TestCase):
             payload = json.loads(completed.stdout)
             self.assertEqual(payload["status"], "blocked")
             self.assertEqual(payload["summary"]["delete_candidates"], 1)
-            self.assertEqual(payload["summary"]["deleted"], 1)
+            self.assertEqual(payload["summary"]["deleted"], 0)
             self.assertEqual(payload["summary"]["blocked"], 1)
-            self.assertFalse((target / ".governed-ai" / "old.py").exists())
+            self.assertTrue((target / ".governed-ai" / "old.py").exists())
             self.assertTrue((target / ".governed-ai" / "drifted.py").exists())
-            self.assertTrue(payload["deleted_files"][0]["backup_path"])
-            self.assertTrue(Path(payload["deleted_files"][0]["backup_path"]).exists())
+            self.assertEqual(payload["deleted_files"], [])
 
 
 if __name__ == "__main__":

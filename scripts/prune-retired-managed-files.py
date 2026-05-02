@@ -75,7 +75,7 @@ def prune_retired_managed_files(
             continue
         candidates.append(asset)
 
-    if apply:
+    if apply and not blocked:
         for asset in candidates:
             target_path = repo_relative_path(root, asset["path"])
             backup_path = resolved_backup_root / asset["path"]
