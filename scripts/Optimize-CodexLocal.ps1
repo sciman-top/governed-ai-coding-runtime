@@ -12,7 +12,7 @@ $ErrorActionPreference = 'Stop'
 $Recommended = [ordered]@{
     cli_auth_credentials_store = '"file"'
     approval_policy = '"never"'
-    model = '"gpt-5.4"'
+    model = '"gpt-5.5"'
     model_reasoning_effort = '"medium"'
     model_verbosity = '"medium"'
     model_context_window = '272000'
@@ -161,7 +161,7 @@ $plan = [ordered]@{
     )
     current_implementation = [ordered]@{
         cli_auth_credentials_store = 'file'
-        model = 'gpt-5.4'
+        model = 'gpt-5.5'
         model_reasoning_effort = 'medium'
         approval_policy = 'never'
         model_context_window = 272000

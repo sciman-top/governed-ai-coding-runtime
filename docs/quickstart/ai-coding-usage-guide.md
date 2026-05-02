@@ -6,7 +6,7 @@ Show how to use this runtime with Codex/Claude Code style host workflows and wha
 ## Root Principle
 - The root operating principle for this repository's host-facing workflow is `efficiency first`.
 - In practice that means: low interruption, continuous execution, lower token and cost burn, necessary explanatory density, and high throughput.
-- Current defaults such as `gpt-5.4 + medium + never` are only temporary implementation choices under that principle.
+- Current defaults such as `gpt-5.5 + medium + never` are only temporary implementation choices under that principle.
 - If future models, reasoning settings, compact thresholds, or host tooling change, keep this principle stable first; existing safety and gate constraints continue to apply.
 
 ## Recommended Modes
