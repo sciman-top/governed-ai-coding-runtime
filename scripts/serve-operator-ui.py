@@ -57,6 +57,7 @@ ALLOWED_ACTIONS = {
         "timeout_seconds": 2400,
         "allow_multi_target": True,
         "managed_asset_removal_apply": True,
+        "managed_asset_removal_default": True,
     },
     "cleanup_targets": {
         "operator_action": "CleanupTargets",
@@ -725,7 +726,9 @@ def run_operator_action(payload: dict) -> dict:
     milestone_tag = _string(payload.get("milestone_tag"), "milestone") or "milestone"
     fail_fast = bool(payload.get("fail_fast", False))
     dry_run = bool(payload.get("dry_run", False))
-    apply_managed_asset_removal = bool(payload.get("apply_managed_asset_removal", False)) and not dry_run
+    apply_managed_asset_removal = bool(
+        payload.get("apply_managed_asset_removal", bool(action.get("managed_asset_removal_default", False)))
+    ) and not dry_run
 
     started = time.monotonic()
     per_target: list[dict] = []

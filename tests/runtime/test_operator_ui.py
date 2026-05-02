@@ -264,10 +264,8 @@ class OperatorUiTests(unittest.TestCase):
         self.assertIn("const nextWorkAction = document.getElementById('next-work-action');", html)
         self.assertIn("const nextWorkCacheKey = 'governed-runtime-operator-next-work';", html)
         self.assertIn("button.getAttribute('data-blocked-reason')", html)
-        self.assertIn(
-            "const managedRemovalActions = new Set(['apply_all_features', 'cleanup_targets', 'uninstall_governance']);",
-            html,
-        )
+        self.assertIn("const managedRemovalActions = new Set(['cleanup_targets', 'uninstall_governance']);", html)
+        self.assertIn("const defaultManagedRemovalActions = new Set(['apply_all_features']);", html)
         self.assertIn("function selectedTargetValues()", html)
         self.assertIn("function syncTargetControls()", html)
         self.assertIn("targets,", html)

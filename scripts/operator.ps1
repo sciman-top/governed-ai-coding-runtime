@@ -15,6 +15,7 @@ param(
   [switch]$ConfirmCorePrincipleProposalWrite,
   [switch]$WriteCorePrincipleDryRunReport,
   [switch]$ApplyManagedAssetRemoval,
+  [switch]$DisableManagedAssetRemoval,
   [switch]$DryRun,
   [switch]$FailFast
 )
@@ -278,7 +279,10 @@ UI:
   -TargetParallelism <n>
   -FailFast
   -ApplyManagedAssetRemoval
-                          ApplyAllFeatures / CleanupTargets / UninstallGovernance 时才允许真实删除或修补受管文件；不加则只报告清理/卸载计划。
+                          CleanupTargets / UninstallGovernance 时才允许真实删除或修补受管文件。
+                          ApplyAllFeatures 默认真实删除已证明安全的退役托管文件。
+  -DisableManagedAssetRemoval
+                          ApplyAllFeatures 时只检测退役托管文件，不真实删除。
   -OpenUi
   -OnlineSourceCheck      EvolutionReview 时执行轻量在线 source probe；默认不联网。
   -ConfirmCorePrincipleProposalWrite
@@ -364,7 +368,7 @@ function Invoke-ApplyAllFeatures {
     "-Json",
     "-PruneRetiredManagedFiles"
   )
-  if ($ApplyManagedAssetRemoval) {
+  if (-not $DisableManagedAssetRemoval) {
     $arguments += "-ApplyManagedAssetRemoval"
   }
   Invoke-PwshScript -Name "apply-all-features" -ScriptPath "scripts/runtime-flow-preset.ps1" -ScriptArguments $arguments
