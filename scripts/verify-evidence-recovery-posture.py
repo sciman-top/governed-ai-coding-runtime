@@ -69,7 +69,6 @@ def inspect_evidence_recovery_posture(*, repo_root: Path, as_of: dt.date | None 
     resolved_root = repo_root.resolve(strict=False)
     today = as_of or dt.date.today()
     selector = _load_module("select_next_work_recovery", resolved_root / "scripts" / "select-next-work.py")
-    host_feedback = _load_module("host_feedback_summary_recovery", resolved_root / "scripts" / "host-feedback-summary.py")
 
     selector_result = selector.assert_next_work_selection(
         repo_root=resolved_root,
@@ -77,12 +76,9 @@ def inspect_evidence_recovery_posture(*, repo_root: Path, as_of: dt.date | None 
         ltp_policy_path=resolved_root / "docs" / "architecture" / "ltp-autonomous-promotion-policy.json",
         as_of=today,
     )
-    feedback = host_feedback.build_host_feedback_summary(repo_root=resolved_root, max_target_runs=5)
-    target_runs = _find_dimension(feedback, "target_runs")
-    target_details = target_runs.get("details", {})
-    degraded_latest_runs = target_details.get("degraded_latest_runs")
-    if not isinstance(degraded_latest_runs, list):
-        degraded_latest_runs = []
+    host_feedback_details = selector_result.get("auto_detected_inputs", {}).get("details", {}).get("host_feedback", {})
+    if not isinstance(host_feedback_details, dict):
+        host_feedback_details = {}
 
     effect_report = _load_json(
         resolved_root
@@ -103,12 +99,10 @@ def inspect_evidence_recovery_posture(*, repo_root: Path, as_of: dt.date | None 
             "ltp_decision": selector_result["ltp_decision"],
         },
         "target_runs": {
-            "status": target_runs.get("status"),
-            "freshness_status": target_details.get("freshness_status"),
-            "degraded_latest_run_count": len(degraded_latest_runs),
-            "degraded_repos": sorted(
-                str(item.get("repo_id")) for item in degraded_latest_runs if isinstance(item, dict)
-            ),
+            "status": host_feedback_details.get("target_runs_status"),
+            "freshness_status": host_feedback_details.get("target_run_freshness"),
+            "degraded_latest_run_count": int(host_feedback_details.get("degraded_latest_run_count") or 0),
+            "degraded_repos": list(host_feedback_details.get("degraded_repos") or []),
         },
         "effect_report": {
             "decision": effect_report.get("decision"),

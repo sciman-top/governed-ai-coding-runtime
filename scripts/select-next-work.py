@@ -428,8 +428,19 @@ def _auto_detect_runtime_inputs(*, repo_root: Path, as_of: dt.date) -> dict:
         result["evidence_state"] = "stale" if evidence_stale else "fresh"
         result["details"]["host_feedback"] = {
             "status": host_feedback["status"],
+            "target_runs_status": next(
+                (
+                    item.get("status")
+                    for item in host_feedback.get("dimensions", [])
+                    if isinstance(item, dict) and item.get("dimension_id") == "target_runs"
+                ),
+                None,
+            ),
             "target_run_freshness": target_runs.get("freshness_status"),
             "degraded_latest_run_count": len(degraded_latest_runs),
+            "degraded_repos": sorted(
+                str(item.get("repo_id")) for item in degraded_latest_runs if isinstance(item, dict)
+            ),
         }
         result["details"]["effect_feedback"] = {
             "status": effect["status"],

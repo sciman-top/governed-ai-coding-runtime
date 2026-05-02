@@ -236,3 +236,37 @@ Final gate evidence:
 Rollback:
 - Revert `tests/runtime/test_run_governed_task_cli.py` and `tests/runtime/test_attached_repo_e2e.py`.
 - Delete `docs/change-evidence/runtime-test-speed-fourth-pass.json` if the timing artifact should not be retained.
+
+## Gate Speed Fifth/Sixth Pass Addendum
+Current landing: `D:\CODE\governed-ai-coding-runtime`.
+Target home: repeated live evidence/source scans in autonomous selection and recovery posture tests.
+Verification path: targeted tests -> full runtime runner -> formal gate closeout.
+
+Changes:
+- Converted `test_autonomous_next_work_selection.py`, `test_runtime_evolution.py`, and `test_evidence_recovery_posture.py` live JSON subprocess tests to direct module calls where the tested script already exposes the same assertion/inspection function.
+- Cached the live evidence-recovery payload inside `test_evidence_recovery_posture.py` so the file does not recompute the same root-level recovery posture twice.
+- Replaced the operator PowerShell `EvolutionReview -OnlineSourceCheck` full-chain test with static operator wiring assertions plus a direct runtime-evolution contract call with `online_source_check=True`.
+- Extended `scripts/select-next-work.py` host-feedback detail output with target-run status, freshness, degraded count, and degraded repos.
+- Updated `scripts/verify-evidence-recovery-posture.py` to reuse selector auto-detected host-feedback details instead of rebuilding host feedback a second time.
+
+Measured fifth/sixth-pass effect:
+- `python -m unittest tests.runtime.test_evidence_recovery_posture`: pass, 2 tests in 12.510 seconds after selector-detail reuse.
+- `python -m unittest tests.runtime.test_autonomous_next_work_selection tests.runtime.test_evidence_recovery_posture`: pass, 9 tests in 59.191 seconds.
+- Fifth full runner: pass, 95 files, 184.644 seconds, 0 failures; host variance dominated the total despite `evidence_recovery_posture.py` dropping to 23.746 seconds.
+- Sixth full runner: pass, 95 files, 167.198 seconds, 0 failures; `evidence_recovery_posture.py` was 14.609 seconds.
+- Formal `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`: pass, 95 files, 173.016 seconds, 0 failures.
+- Formal `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check RuntimeQuick`: pass, 47 tests in 18.344 seconds.
+
+Sixth-pass hotspot profile:
+- Slowest files after this pass: `test_autonomous_next_work_selection.py` 50.032s, `test_runtime_flow_preset.py` 47.086s, `test_attached_repo_e2e.py` 45.012s, `test_runtime_evolution.py` 43.384s, `test_transition_stack_convergence.py` 41.947s.
+- Next safe lane is to split or cache shared live root scans for autonomous/evolution/transition-stack checks. Raising default workers remains rejected due prior 6-worker instability.
+
+Final gate evidence:
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`: pass (`OK python-bytecode`, `OK python-import`).
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`: pass, 173.016 seconds.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`: pass, including `agent-rule-sync`, `pre-change-review`, and `functional-effectiveness`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`: pass with existing `WARN codex-capability-degraded`; all hard checks returned `OK`.
+
+Rollback:
+- Revert `scripts/select-next-work.py`, `scripts/verify-evidence-recovery-posture.py`, `tests/runtime/test_autonomous_next_work_selection.py`, `tests/runtime/test_runtime_evolution.py`, and `tests/runtime/test_evidence_recovery_posture.py`.
+- Delete `docs/change-evidence/runtime-test-speed-fifth-pass.json` and `docs/change-evidence/runtime-test-speed-sixth-pass.json` if the timing artifacts should not be retained.
