@@ -23,6 +23,8 @@ class RepoMapContextArtifactTests(unittest.TestCase):
         payload = json.loads(completed.stdout)
         self.assertEqual(payload["decision"], "keep")
         self.assertEqual(payload["metrics"]["file_selection_accuracy"], 1.0)
+        self.assertGreater(payload["metrics"]["excluded_archive_candidate_count"], 0)
+        self.assertIn("required_file_override_count", payload["metrics"])
         self.assertIn("scripts/verify-repo.ps1", payload["selected_files"])
 
     def test_verifier_passes(self) -> None:
@@ -39,6 +41,7 @@ class RepoMapContextArtifactTests(unittest.TestCase):
         payload = json.loads(completed.stdout)
         self.assertEqual(payload["decision"], "keep")
         self.assertGreaterEqual(payload["metrics"]["clarification_reduction_proxy"], 0.75)
+        self.assertGreater(payload["metrics"]["excluded_archive_candidate_count"], 0)
 
 
 if __name__ == "__main__":

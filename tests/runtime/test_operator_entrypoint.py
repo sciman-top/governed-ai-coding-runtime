@@ -106,7 +106,8 @@ class OperatorEntrypointTests(unittest.TestCase):
 
         self.assertIn("DRY-RUN build", completed.stdout)
         self.assertIn("DRY-RUN quick-feedback", completed.stdout)
-        self.assertIn("test_target_repo_speed_kpi", completed.stdout)
+        self.assertIn("scripts/verify-repo.ps1", completed.stdout)
+        self.assertIn("-Check RuntimeQuick", completed.stdout)
 
     def test_operator_entrypoint_help_succeeds(self) -> None:
         completed = subprocess.run(

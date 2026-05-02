@@ -21,6 +21,11 @@
     ".governed-ai/*.json"
   ],
   "exclude_rules": [
+    "docs/change-evidence/snapshots/**",
+    "docs/change-evidence/rule-sync-backups/**",
+    "docs/change-evidence/target-repo-runs/*.json",
+    "docs/change-evidence/operator-ui*.png",
+    "operator-ui-*.png",
     "docs/change-evidence/**",
     "docs/runtime-*.txt",
     ".runtime/**",

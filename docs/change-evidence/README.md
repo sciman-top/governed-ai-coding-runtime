@@ -3,7 +3,35 @@
 ## Purpose
 This directory stores dated evidence for planning, schema, script, and documentation changes.
 
+## Current And Archive Semantics
+- `docs/change-evidence/` root remains the current authoritative location until archive movement is explicitly authorized.
+- `docs/change-evidence/evidence-index.json` is the machine-readable pointer surface for latest authoritative evidence and dry-run archive candidate groups.
+- `docs/change-evidence/current/` is reserved for a future smaller active evidence surface after a later task performs a manifest-backed move.
+- `docs/change-evidence/archive/` is reserved for historical evidence that should stay traceable but leave the default active work surface.
+- `python scripts/archive-change-evidence.py --dry-run --json` must be the first step before any later archive move.
+
+## Operator UI Screenshot Retention
+- `latest`: root `operator-ui-current-*.png` files are the active operator-facing screenshot surface.
+- `milestone`: named screenshots such as `operator-ui-v2-workbench.png`, run-entry captures, live stale-fix proof, and `operator-ui-overview-button-aligned.png` stay in place as milestone checkpoints.
+- `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
+
 ## Current Evidence Baseline
+- [20260503 Repo Slimming Closeout](./20260503-repo-slimming-closeout.md)
+  - closeout evidence for the full repo-slimming lane, reporting honest before/after metrics, preserved hard-gate posture, and the executable archive/retention guardrails added without silent evidence movement
+- [20260503 Operator UI Screenshot Retention](./20260503-operator-ui-screenshot-retention.md)
+  - evidence companion for Task 7 of the repo-slimming lane, adding latest/milestone/archive screenshot classification and a manifest-backed archive dry-run/apply contract
+- [20260503 Runtime Gate Timing Split](./20260503-runtime-gate-timing-split.md)
+  - evidence companion for Task 6 of the repo-slimming lane, routing `fast` through the shared RuntimeQuick surface and refreshing the latest runtime timing report on successful Runtime gates
+- [20260502 Runtime Flow Target Catalog Split](./20260502-runtime-flow-target-catalog-split.md)
+  - evidence companion for Task 5 of the repo-slimming lane, extracting target catalog parsing out of `runtime-flow-preset.ps1` while keeping the root entrypoint and Runtime gate behavior unchanged
+- [20260502 Root README History Slimming](./20260502-root-readme-history-slimming.md)
+  - evidence companion for moving long completed-history text behind stable archive links while preserving current operator entrypoints and bilingual usage guidance
+- [20260502 Repo Map Archive Routing](./20260502-repo-map-archive-routing.md)
+  - evidence companion for archive-aware repo-map exclusions and the additive repo-map metrics used to bound default context cost
+- [20260502 Change Evidence Archive Index](./20260502-change-evidence-archive-index.md)
+  - evidence companion for defining current versus archive semantics and generating the first dry-run archive candidate index
+- [20260502 Repo Slimming Inventory](./20260502-repo-slimming-inventory.md)
+  - evidence companion for the initial machine-readable repository surface baseline and no-delete safety fence
 - [20260501 GAP-143 Evidence Recovery Posture Contract](./20260501-gap-143-evidence-recovery-posture-contract.md)
   - implementation evidence for joining autonomous next-work selection, host-feedback target-run posture, and target-repo reuse effect feedback into one recovery posture contract
 - [20260501 GAP-142 Degraded Fresh Evidence Next-Work Guard](./20260501-gap-142-degraded-fresh-evidence-next-work-guard.md)

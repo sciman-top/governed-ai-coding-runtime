@@ -15,6 +15,25 @@ REQUIRED_GOVERNANCE_FILES = [
     "docs/backlog/issue-ready-backlog.md",
     "scripts/verify-repo.ps1",
 ]
+ARCHIVE_CANDIDATE_PREFIXES = (
+    "docs/change-evidence/snapshots/",
+    "docs/change-evidence/rule-sync-backups/",
+)
+ARCHIVE_CANDIDATE_PREFIX_FILES = (
+    "docs/change-evidence/operator-ui",
+    "operator-ui-",
+)
+TARGET_REPO_RUNS_PREFIX = "docs/change-evidence/target-repo-runs/"
+TARGET_REPO_RUNS_KEEP = {
+    "kpi-latest.json",
+    "kpi-rolling.json",
+    "summary-latest.json",
+    "summary-active-targets-latest.json",
+    "summary-active-targets-rows-20260422191507.json",
+    "summary-active-targets-20260422191507.json",
+    "summary-allowedscope.json",
+    "summary-github-vps.json",
+}
 
 
 def main() -> int:
@@ -39,6 +58,7 @@ def build_repo_map_context_artifact(*, repo_root: Path, strategy_path: Path, out
     files = _collect_repo_files(root)
     included = [path for path in files if _matches_any(path, strategy.get("include_rules", ["**/*"]))]
     filtered = [path for path in included if not _matches_any(path, strategy.get("exclude_rules", []))]
+    excluded = [path for path in included if path not in filtered]
 
     selected = _rank_files(filtered, strategy.get("fallback_files", []))
     forced_required = [path for path in REQUIRED_GOVERNANCE_FILES if path not in selected and (root / path).exists()]
@@ -71,6 +91,8 @@ def build_repo_map_context_artifact(*, repo_root: Path, strategy_path: Path, out
             "selected_file_count": len(selected),
             "file_selection_accuracy": round(file_selection_accuracy, 2),
             "clarification_reduction_proxy": round(clarification_reduction_proxy, 2),
+            "excluded_archive_candidate_count": len([path for path in excluded if _is_archive_candidate(path)]),
+            "required_file_override_count": len(forced_required),
         },
         "decision": decision,
         "rollback_ref": "Delete the generated artifact and repo-local strategy override; no runtime behavior is enabled by this file.",
@@ -170,6 +192,19 @@ def _decision(*, max_tokens: int, estimated_token_cost: int, file_selection_accu
     if clarification_reduction_proxy < 0.75:
         return "adjust"
     return "keep"
+
+
+def _is_archive_candidate(path: str) -> bool:
+    if path.startswith(ARCHIVE_CANDIDATE_PREFIXES):
+        return True
+    if path.startswith(ARCHIVE_CANDIDATE_PREFIX_FILES):
+        return True
+    if not path.startswith(TARGET_REPO_RUNS_PREFIX):
+        return False
+    filename = path.rsplit("/", 1)[-1]
+    if filename in TARGET_REPO_RUNS_KEEP:
+        return False
+    return filename.endswith(".json")
 
 
 if __name__ == "__main__":

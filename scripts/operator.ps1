@@ -314,19 +314,10 @@ function Invoke-Readiness {
 
 function Invoke-FastFeedback {
   Invoke-PwshScript -Name "build" -ScriptPath "scripts/build-runtime.ps1"
-  $python = Resolve-RequiredCommand -Names @("python", "python3")
-  Invoke-OperatorStep `
+  Invoke-PwshScript `
     -Name "quick-feedback" `
-    -Executable $python `
-    -Arguments @(
-      "-m",
-      "unittest",
-      "tests.runtime.test_governance_gate_runner",
-      "tests.runtime.test_target_repo_governance_consistency",
-      "tests.runtime.test_runtime_flow_preset.RuntimeFlowPresetScriptTests.test_runtime_flow_preset_apply_governance_baseline_only_bootstraps_blank_target",
-      "tests.runtime.test_target_repo_rollout_contract",
-      "tests.runtime.test_target_repo_speed_kpi"
-    )
+    -ScriptPath "scripts/verify-repo.ps1" `
+    -ScriptArguments @("-Check", "RuntimeQuick")
 }
 
 function Invoke-Targets {

@@ -1,0 +1,138 @@
+{
+  "archive_candidate_groups": [
+    {
+      "candidate_byte_count": 289961,
+      "candidate_file_count": 49,
+      "candidate_megabytes": 0.28,
+      "group": "historical_snapshots",
+      "sample_paths": [
+        "docs/change-evidence/snapshots/20260417-contract-family-completion/docs--README.md",
+        "docs/change-evidence/snapshots/20260417-contract-family-completion/schemas--catalog--schema-catalog.yaml",
+        "docs/change-evidence/snapshots/20260417-contract-family-completion/schemas--README.md",
+        "docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--backlog--issue-ready-backlog.md",
+        "docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--backlog--issue-seeds.yaml",
+        "docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--backlog--mvp-backlog-seeds.md",
+        "docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--README.md",
+        "docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--roadmap--governed-ai-coding-runtime-90-day-plan.md",
+        "docs/change-evidence/snapshots/20260417-governance-kernel-realignment/scripts--github--create-roadmap-issues.ps1",
+        "docs/change-evidence/snapshots/20260417-project-audit-optimization/docs-backlog-issue-ready-backlog.md",
+        "docs/change-evidence/snapshots/20260417-project-audit-optimization/docs-backlog-mvp-backlog-seeds.md",
+        "docs/change-evidence/snapshots/20260417-project-audit-optimization/docs-README.md"
+      ]
+    },
+    {
+      "candidate_byte_count": 982645,
+      "candidate_file_count": 115,
+      "candidate_megabytes": 0.94,
+      "group": "rule_sync_backups",
+      "sample_paths": [
+        "docs/change-evidence/rule-sync-backups/20260427-190348/C/Users/sciman/.claude/CLAUDE.md",
+        "docs/change-evidence/rule-sync-backups/20260427-190348/C/Users/sciman/.codex/AGENTS.md",
+        "docs/change-evidence/rule-sync-backups/20260427-190348/C/Users/sciman/.gemini/GEMINI.md",
+        "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/ClassroomToolkit/AGENTS.md",
+        "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/ClassroomToolkit/CLAUDE.md",
+        "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/ClassroomToolkit/GEMINI.md",
+        "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/github-toolkit/AGENTS.md",
+        "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/github-toolkit/CLAUDE.md",
+        "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/github-toolkit/GEMINI.md",
+        "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/governed-ai-coding-runtime/AGENTS.md",
+        "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/governed-ai-coding-runtime/CLAUDE.md",
+        "docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/governed-ai-coding-runtime/GEMINI.md"
+      ]
+    },
+    {
+      "candidate_byte_count": 1494955,
+      "candidate_file_count": 50,
+      "candidate_megabytes": 1.43,
+      "group": "target_repo_raw_runs",
+      "sample_paths": [
+        "docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260420225453.json",
+        "docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260422191548.json",
+        "docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501004238.json",
+        "docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501182923.json",
+        "docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501200520.json",
+        "docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501221521.json",
+        "docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260502135550.json",
+        "docs/change-evidence/target-repo-runs/classroomtoolkit-daily-allowedscope-20260420230050.json",
+        "docs/change-evidence/target-repo-runs/classroomtoolkit-onboard-20260420225453.json",
+        "docs/change-evidence/target-repo-runs/classroomtoolkit-onboard-20260422191507.json",
+        "docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json",
+        "docs/change-evidence/target-repo-runs/github-toolkit-daily-20260422191633.json"
+      ]
+    },
+    {
+      "candidate_byte_count": 4785600,
+      "candidate_file_count": 17,
+      "candidate_megabytes": 4.56,
+      "group": "docs_operator_ui_screenshots",
+      "sample_paths": [
+        "docs/change-evidence/operator-ui-after-claude-polish.png",
+        "docs/change-evidence/operator-ui-after-claude.png",
+        "docs/change-evidence/operator-ui-after-codex-polish.png",
+        "docs/change-evidence/operator-ui-after-codex.png",
+        "docs/change-evidence/operator-ui-after-entrypoint-integration.png",
+        "docs/change-evidence/operator-ui-after-feedback-polish.png",
+        "docs/change-evidence/operator-ui-after-mobile-polish.png",
+        "docs/change-evidence/operator-ui-after-mobile.png",
+        "docs/change-evidence/operator-ui-after-runtime-polish.png",
+        "docs/change-evidence/operator-ui-after-runtime-v3.png",
+        "docs/change-evidence/operator-ui-after-summary-cards.png",
+        "docs/change-evidence/operator-ui-before-entrypoint-integration.png"
+      ]
+    },
+    {
+      "candidate_byte_count": 1626744,
+      "candidate_file_count": 6,
+      "candidate_megabytes": 1.55,
+      "group": "root_operator_ui_screenshots",
+      "sample_paths": [
+        "operator-ui-current-claude.png",
+        "operator-ui-current-codex.png",
+        "operator-ui-current-feedback.png",
+        "operator-ui-current-mobile.png",
+        "operator-ui-current-runtime.png",
+        "operator-ui-overview-button-aligned.png"
+      ]
+    }
+  ],
+  "current_policy": {
+    "archive_semantics": "Historical snapshots, old screenshots, rule-sync backups, and superseded raw run payloads become archive candidates once a later task adds move manifests and rollback.",
+    "current_semantics": "Latest authoritative evidence, latest summaries, active plan companions, and machine-readable latest pointers stay easy to find.",
+    "move_authorization": "No file movement is authorized by this index."
+  },
+  "current_refs": {
+    "latest_machine_readable_refs": [
+      "docs/change-evidence/repo-slimming-surface-audit.json",
+      "docs/change-evidence/repo-map-context-artifact.json",
+      "docs/change-evidence/runtime-test-speed-latest.json",
+      "docs/change-evidence/target-repo-runs/kpi-latest.json",
+      "docs/change-evidence/target-repo-runs/kpi-rolling.json",
+      "docs/change-evidence/target-repo-runs/summary-latest.json",
+      "docs/change-evidence/target-repo-runs/summary-active-targets-latest.json"
+    ],
+    "latest_markdown_entries": [
+      "docs/change-evidence/20260503-repo-slimming-closeout.md",
+      "docs/change-evidence/20260503-operator-ui-screenshot-retention.md",
+      "docs/change-evidence/20260503-runtime-gate-timing-split.md",
+      "docs/change-evidence/20260502-runtime-flow-target-catalog-split.md",
+      "docs/change-evidence/20260502-root-readme-history-slimming.md",
+      "docs/change-evidence/20260502-repo-map-archive-routing.md",
+      "docs/change-evidence/20260502-change-evidence-archive-index.md",
+      "docs/change-evidence/20260502-target-repo-gate-speed-review-and-effect.md",
+      "docs/change-evidence/20260502-target-profile-ownership-and-runtime-contracts.md",
+      "docs/change-evidence/20260502-target-overwrite-safety-followup.md",
+      "docs/change-evidence/20260502-target-managed-asset-retirement-and-uninstall.md",
+      "docs/change-evidence/20260502-source-target-drift-integration.md",
+      "docs/change-evidence/20260502-root-run-entrypoint-ux.md",
+      "docs/change-evidence/20260502-retired-cleanup-delete-contract-hardening.md",
+      "docs/change-evidence/20260502-repo-slimming-inventory.md",
+      "docs/change-evidence/20260502-repo-slimming-and-speed-plan.md",
+      "docs/change-evidence/20260502-operator-ui-cleanup-uninstall-integration.md",
+      "docs/change-evidence/20260502-managed-file-governance-modes.md",
+      "docs/change-evidence/20260502-managed-asset-uninstall-review-fixes.md"
+    ]
+  },
+  "generated_at": "2026-05-02T15:21:45.269885+00:00",
+  "index_kind": "change_evidence_archive_index",
+  "schema_version": "1.0"
+}

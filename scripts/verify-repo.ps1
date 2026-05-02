@@ -1038,8 +1038,9 @@ function Invoke-ScriptChecks {
 
 function Invoke-RuntimeChecks {
   $python = Resolve-PythonCommand
+  $summaryPath = "docs/change-evidence/runtime-test-speed-latest.json"
 
-  & $python.Source "scripts/run-runtime-tests.py" --suite "runtime=tests/runtime" --suite "service=tests/service"
+  & $python.Source "scripts/run-runtime-tests.py" --suite "runtime=tests/runtime" --suite "service=tests/service" --summary-json $summaryPath
   if ($LASTEXITCODE -ne 0) {
     throw "Runtime/service unit tests failed"
   }

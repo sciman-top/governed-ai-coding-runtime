@@ -61,14 +61,14 @@ AI 推荐的交付前 readiness：
 
 当前完整混合终态认证口径：
 - `GAP-104..111` 已在当前分支基线上完成，完整混合终态闭环由 `docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md` 记录。
-- 认证含义是：repo-local contract bundle、machine-local durable governance kernel、attach-first host adapters、same-contract verification/delivery plane 已由当前仓库的 runtime、docs、tests、all-target workload 和 evidence gate 共同证明。
-- 这不表示本项目接管上游宿主 UI；上游认证仍保持 user-owned，`native_attach` 仍按宿主能力显式降级到 `process_bridge` / `manual_handoff`。
-- 不宣称所有未来外部仓、所有未来高风险流程都已被无条件接管；新增 LTP implementation queue 必须使用 `GAP-111` 之后的新 id，并由 scope fence 重新选择。
-- `LTP-01..06` 仍是触发式候选：当前 certification 将部分能力用 transition-stack 方式落地或覆盖，但未引入 Temporal/OPA/event bus/object store/full ops/signing 等重型包。
+- `GAP-104..111` 已在当前分支基线上完成；认证主证据见 [20260427 GAP-111 完整混合终态认证](docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md)。
+- 当前入口只保留认证边界：本项目已证明 repo-local contract bundle、machine-local durable governance kernel、attach-first host adapters 和 same-contract verification/delivery plane，但不宣称接管上游宿主 UI，也不宣称对所有未来外部仓和高风险流程无条件接管。
+- 详细完成历史与后续 `GAP-130..143` 快照见 [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md) / [Completed GAP History](docs/archive/completed-gap-history.md)。
 
 当前受控演进口径：
-- `GAP-120..129` 已把 30 天自我演进 review、AI 编码经验沉淀、低风险 proposal/disabled skill materialization 纳入受控流程；但仍不自动改 policy、不自动启用 skill、不自动同步目标仓、不自动 push/merge。
-- `GAP-130` 已完成范围重基线，`GAP-131` 已完成可机器校验的 capability portfolio classifier 基线，`GAP-132` 已完成 executable control-pack contract 基线，`GAP-133` 已完成 inheritance override verifier 基线，`GAP-134` 已完成 target-repo reuse effect feedback 基线，`GAP-135` 已完成 governed knowledge-memory lifecycle 基线，`GAP-136` 已完成 promotion lifecycle 基线，`GAP-137` 已完成 repo-map context artifact 基线，`GAP-138` 已完成 policy tool credential audit boundary 基线，`GAP-139` 已完成 governance hub certification with effect metrics 基线，`GAP-140` 已完成 bounded host-capability defer 基线，`GAP-141` 已完成 historical problem-trace closure policy 基线，`GAP-142` 已完成 degraded fresh-evidence next-work guard 基线，`GAP-143` 已完成 evidence recovery posture contract 基线。Codex 和 Claude Code 作为日常合作宿主，不与其竞争；本项目里的 Claude Code 默认按本机接入 GLM/DeepSeek 等第三方 Anthropic-compatible provider 处理，不假定官方订阅或官方账号权益；Hermes/OpenHands/SWE-agent/Letta/Mem0/Aider 等作为可选择吸收的机制来源。完成标准必须包含真实 target-repo effect feedback，而不只是新增文档或候选文件。自我演进必须评估现有功能组合，能按证据执行 `add/keep/improve/merge/deprecate/retire/delete_candidate`，而不是只会新增；fresh target-run evidence 如果仍是 degraded/process_bridge，下一步必须先刷新或修复证据 posture。
+- `GAP-120..129` 已把 30 天自我演进 review、AI 编码经验沉淀和低风险 proposal/disabled skill materialization 纳入受控流程；但仍不自动改 policy、不自动启用 skill、不自动同步目标仓、不自动 push/merge。
+- `GAP-130..143` 已形成 governance hub、reusable contract、controlled evolution、repo-map shaping、tool/credential audit 和 evidence recovery 这一组完成基线；详细条目转入 [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md) / [Completed GAP History](docs/archive/completed-gap-history.md)。
+- Codex 和 Claude Code 是合作宿主而不是竞争对象；完成标准仍必须包含真实 target-repo effect feedback，fresh target-run evidence 若仍是 degraded/process_bridge，下一步必须先刷新或修复 evidence posture。
 - 最佳工程终态已固化为 `Governance Hub + Reusable Contract + Controlled Evolution loop + outer AI intelligent review/generation capability`，即治理中枢、可复用控制契约、受控演进闭环和外层 AI 智能评审/生成能力，而不是新的宿主产品。
 - 核心原则已收敛为 5 条人类可读口径，机器细则仍以 `docs/architecture/core-principles-policy.json` 的 enforced principles 为准：
   - `Efficiency first, safety bounded`：综合效率优先，安全边界约束；少打扰、自动连续执行、节省 token / 成本、保留必要解释、高效率；模型、provider、推理档位、context window、compact 阈值和交互入口只是阶段性实现；效率优化不得绕过既有安全、证据、回滚、review 和门禁约束。
@@ -295,15 +295,15 @@ Available now:
 - Python contract primitives under `packages/contracts`
 
 Current complete hybrid final-state certification posture:
-- `GAP-104..111` are complete on the current branch baseline; the certification evidence is `docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md`.
-- Certification means the repo-local contract bundle, machine-local durable governance kernel, attach-first host adapters, and same-contract verification/delivery plane are backed by current runtime code, docs, tests, all-target workload evidence, and claim-drift gates.
-- It does not mean this project takes over upstream host UI ownership. Upstream authentication remains user-owned, and `native_attach` still degrades explicitly to `process_bridge` / `manual_handoff` when host capability is absent.
-- It does not claim unconditional takeover of every future external repo or every future high-risk workflow. New LTP implementation queues must use ids beyond `GAP-111` and pass a scope fence.
-- `LTP-01..06` remain trigger-based candidates: this certification lands or covers the required transition-stack capabilities without introducing Temporal, OPA, event bus, object store, full operations stack, or external signing as mandatory packages.
+- `GAP-104..111` are complete on the current branch baseline; primary evidence is [20260427 GAP-111 Complete Hybrid Final-State Certification](docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md).
+- The root entrypoint keeps only the certification boundary: the repo-local contract bundle, machine-local durable governance kernel, attach-first host adapters, and same-contract verification/delivery plane are proven, but this still does not claim upstream host UI ownership or unconditional takeover of every future external repo or high-risk workflow.
+- Detailed completion history and the `GAP-130..143` snapshot moved to [Completed GAP History](docs/archive/completed-gap-history.md) / [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md).
 
 Current controlled-evolution posture:
-- `GAP-120..129` put 30-day evolution review, AI coding experience capture, and low-risk proposal/disabled-skill materialization under governance. They still do not auto-apply policy, auto-enable skills, sync target repos, push, or merge.
-- `GAP-130` is complete as the scope rebaseline, `GAP-131` is complete as the machine-checkable capability portfolio classifier baseline, `GAP-132` is complete as the executable control-pack contract baseline, `GAP-133` is complete as the inheritance override verifier baseline, `GAP-134` is complete as the target-repo reuse effect feedback baseline, `GAP-135` is complete as the governed knowledge-memory lifecycle baseline, `GAP-136` is complete as the promotion lifecycle baseline, `GAP-137` is complete as the repo-map context artifact baseline, `GAP-138` is complete as the policy tool credential audit boundary baseline, `GAP-139` is complete as the governance hub certification with effect metrics baseline, `GAP-140` is complete as the bounded host-capability defer baseline, `GAP-141` is complete as the historical problem-trace closure policy baseline, `GAP-142` is complete as the degraded fresh-evidence next-work guard baseline, and `GAP-143` is complete as the evidence recovery posture contract baseline. Codex and Claude Code are cooperation hosts, not competitors; Claude Code is treated as local use through third-party Anthropic-compatible providers such as GLM or DeepSeek, not as an official subscription dependency; Hermes/OpenHands/SWE-agent/Letta/Mem0/Aider-style projects are selective mechanism sources. Completion requires real target-repo effect feedback, not only new docs or generated candidates. Self-evolution must evaluate the existing capability portfolio and decide `add/keep/improve/merge/deprecate/retire/delete_candidate` from evidence instead of only adding features; fresh target-run evidence that remains degraded/process_bridge must first refresh or repair evidence posture.
+- `GAP-120..129` put 30-day evolution review, AI coding experience capture, and low-risk proposal or disabled-skill materialization under governance, but they still do not auto-apply policy, auto-enable skills, sync target repos, push, or merge.
+- `GAP-130..143` now represent the completed governance-hub, reusable-contract, controlled-evolution, repo-map shaping, tool or credential audit, and evidence-recovery baseline; the detailed list lives in [Completed GAP History](docs/archive/completed-gap-history.md) / [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md).
+- Codex and Claude Code are cooperation hosts, not competitors.
+- Codex and Claude Code remain cooperation hosts rather than competitors; completion still requires real target-repo effect feedback, and fresh target-run evidence that remains degraded or `process_bridge` must be refreshed or repaired before the next claim.
 
 Primary docs:
 - [Single-Machine Runtime Quickstart](docs/quickstart/single-machine-runtime-quickstart.md)

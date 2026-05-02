@@ -218,6 +218,65 @@ def _init_clean_git_repo(repo: Path) -> None:
 
 
 class RuntimeFlowPresetScriptTests(unittest.TestCase):
+    def test_runtime_flow_preset_list_targets_json_uses_catalog_loader(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_a = workspace / "repo-a"
+            repo_b = workspace / "repo-b"
+            repo_a.mkdir()
+            repo_b.mkdir()
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-b": {
+                            "attachment_root": str(repo_b),
+                            "attachment_runtime_state_root": str(workspace / "state" / "repo-b"),
+                            "repo_id": "repo-b",
+                            "display_name": "repo-b",
+                            "primary_language": "python",
+                            "build_command": "python --version",
+                            "test_command": "python --version",
+                        },
+                        "repo-a": {
+                            "attachment_root": str(repo_a),
+                            "attachment_runtime_state_root": str(workspace / "state" / "repo-a"),
+                            "repo_id": "repo-a",
+                            "display_name": "repo-a",
+                            "primary_language": "python",
+                            "build_command": "python --version",
+                            "test_command": "python --version",
+                        },
+                    },
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "runtime-flow-preset.ps1"),
+                    "-ListTargets",
+                    "-Json",
+                    "-CatalogPath",
+                    str(catalog_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(Path(payload["catalog_path"]), catalog_path)
+            self.assertEqual(payload["targets"], ["repo-a", "repo-b"])
+
     def test_runtime_flow_preset_all_targets_onboard_applies_governance_baseline(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)

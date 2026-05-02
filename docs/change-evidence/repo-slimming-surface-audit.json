@@ -1,0 +1,1016 @@
+{
+  "active_surface_breakdown": {
+    "apps": {
+      "byte_count": 12932,
+      "file_count": 8,
+      "megabytes": 0.01,
+      "text_line_count": 358
+    },
+    "docs": {
+      "byte_count": 1430868,
+      "file_count": 194,
+      "megabytes": 1.36,
+      "text_line_count": 29669
+    },
+    "docs_change_evidence": {
+      "byte_count": 9516948,
+      "file_count": 585,
+      "megabytes": 9.08,
+      "text_line_count": 68054
+    },
+    "packages": {
+      "byte_count": 691838,
+      "file_count": 51,
+      "megabytes": 0.66,
+      "text_line_count": 17309
+    },
+    "rules": {
+      "byte_count": 167856,
+      "file_count": 19,
+      "megabytes": 0.16,
+      "text_line_count": 2136
+    },
+    "schemas": {
+      "byte_count": 362184,
+      "file_count": 89,
+      "megabytes": 0.35,
+      "text_line_count": 13224
+    },
+    "scripts": {
+      "byte_count": 1153392,
+      "file_count": 93,
+      "megabytes": 1.1,
+      "text_line_count": 29365
+    },
+    "tests": {
+      "byte_count": 1074123,
+      "file_count": 104,
+      "megabytes": 1.02,
+      "text_line_count": 23967
+    }
+  },
+  "comparison_keys": {
+    "active_surface_breakdown_path": "active_surface_breakdown",
+    "large_binary_evidence_path": "large_binary_evidence",
+    "text_surface_path": "text_surface",
+    "top_level_directory_path": "top_level_directories",
+    "visible_surface_path": "visible_surface"
+  },
+  "extension_summary": [
+    {
+      "byte_count": 6750541,
+      "extension": ".png",
+      "file_count": 26,
+      "megabytes": 6.44
+    },
+    {
+      "byte_count": 4048501,
+      "extension": ".md",
+      "file_count": 658,
+      "megabytes": 3.86
+    },
+    {
+      "byte_count": 2547527,
+      "extension": ".py",
+      "file_count": 225,
+      "megabytes": 2.43
+    },
+    {
+      "byte_count": 2350127,
+      "extension": ".json",
+      "file_count": 211,
+      "megabytes": 2.24
+    },
+    {
+      "byte_count": 452879,
+      "extension": ".ps1",
+      "file_count": 36,
+      "megabytes": 0.43
+    },
+    {
+      "byte_count": 31594,
+      "extension": ".yaml",
+      "file_count": 5,
+      "megabytes": 0.03
+    },
+    {
+      "byte_count": 2641,
+      "extension": ".yml",
+      "file_count": 3,
+      "megabytes": 0.0
+    },
+    {
+      "byte_count": 2482,
+      "extension": "[none]",
+      "file_count": 4,
+      "megabytes": 0.0
+    },
+    {
+      "byte_count": 304,
+      "extension": ".sql",
+      "file_count": 1,
+      "megabytes": 0.0
+    },
+    {
+      "byte_count": 197,
+      "extension": ".txt",
+      "file_count": 4,
+      "megabytes": 0.0
+    },
+    {
+      "byte_count": 107,
+      "extension": ".log",
+      "file_count": 1,
+      "megabytes": 0.0
+    }
+  ],
+  "generated_at": "2026-05-02T16:26:23.989940+00:00",
+  "hotspots": {
+    "docs_change_evidence_summary": {
+      "byte_count": 9516948,
+      "file_count": 585,
+      "megabytes": 9.08,
+      "text_line_count": 68054
+    },
+    "likely_entrypoint_hotspots": [
+      {
+        "area": "packages",
+        "bytes": 154218,
+        "line_count": 3382,
+        "megabytes": 0.15,
+        "path": "packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui.py"
+      },
+      {
+        "area": "root",
+        "bytes": 4007,
+        "line_count": 115,
+        "megabytes": 0.0,
+        "path": "run.ps1"
+      },
+      {
+        "area": "scripts",
+        "bytes": 17560,
+        "line_count": 468,
+        "megabytes": 0.02,
+        "path": "scripts/operator.ps1"
+      },
+      {
+        "area": "scripts",
+        "bytes": 113067,
+        "line_count": 2681,
+        "megabytes": 0.11,
+        "path": "scripts/runtime-flow-preset.ps1"
+      },
+      {
+        "area": "scripts",
+        "bytes": 39105,
+        "line_count": 1108,
+        "megabytes": 0.04,
+        "path": "scripts/verify-repo.ps1"
+      }
+    ]
+  },
+  "large_binary_evidence": [
+    {
+      "area": "docs/change-evidence",
+      "bytes": 289952,
+      "extension": ".png",
+      "megabytes": 0.28,
+      "path": "docs/change-evidence/operator-ui-after-claude-polish.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 222966,
+      "extension": ".png",
+      "megabytes": 0.21,
+      "path": "docs/change-evidence/operator-ui-after-claude.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 347117,
+      "extension": ".png",
+      "megabytes": 0.33,
+      "path": "docs/change-evidence/operator-ui-after-codex-polish.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 223594,
+      "extension": ".png",
+      "megabytes": 0.21,
+      "path": "docs/change-evidence/operator-ui-after-codex.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 432398,
+      "extension": ".png",
+      "megabytes": 0.41,
+      "path": "docs/change-evidence/operator-ui-after-entrypoint-integration.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 335321,
+      "extension": ".png",
+      "megabytes": 0.32,
+      "path": "docs/change-evidence/operator-ui-after-feedback-polish.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 248407,
+      "extension": ".png",
+      "megabytes": 0.24,
+      "path": "docs/change-evidence/operator-ui-after-mobile-polish.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 208609,
+      "extension": ".png",
+      "megabytes": 0.2,
+      "path": "docs/change-evidence/operator-ui-after-mobile.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 347098,
+      "extension": ".png",
+      "megabytes": 0.33,
+      "path": "docs/change-evidence/operator-ui-after-runtime-polish.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 260431,
+      "extension": ".png",
+      "megabytes": 0.25,
+      "path": "docs/change-evidence/operator-ui-after-runtime-v3.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 456672,
+      "extension": ".png",
+      "megabytes": 0.44,
+      "path": "docs/change-evidence/operator-ui-after-summary-cards.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 366614,
+      "extension": ".png",
+      "megabytes": 0.35,
+      "path": "docs/change-evidence/operator-ui-before-entrypoint-integration.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 345708,
+      "extension": ".png",
+      "megabytes": 0.33,
+      "path": "docs/change-evidence/operator-ui-live-8770-after-stale-fix.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 301707,
+      "extension": ".png",
+      "megabytes": 0.29,
+      "path": "docs/change-evidence/operator-ui-run-entry-desktop-20260502.png"
+    },
+    {
+      "area": "root",
+      "bytes": 253170,
+      "extension": ".png",
+      "megabytes": 0.24,
+      "path": "operator-ui-current-claude.png"
+    },
+    {
+      "area": "root",
+      "bytes": 273556,
+      "extension": ".png",
+      "megabytes": 0.26,
+      "path": "operator-ui-current-codex.png"
+    },
+    {
+      "area": "root",
+      "bytes": 247127,
+      "extension": ".png",
+      "megabytes": 0.24,
+      "path": "operator-ui-current-feedback.png"
+    },
+    {
+      "area": "root",
+      "bytes": 230342,
+      "extension": ".png",
+      "megabytes": 0.22,
+      "path": "operator-ui-current-mobile.png"
+    },
+    {
+      "area": "root",
+      "bytes": 282741,
+      "extension": ".png",
+      "megabytes": 0.27,
+      "path": "operator-ui-current-runtime.png"
+    },
+    {
+      "area": "root",
+      "bytes": 339808,
+      "extension": ".png",
+      "megabytes": 0.32,
+      "path": "operator-ui-overview-button-aligned.png"
+    }
+  ],
+  "largest_files": [
+    {
+      "area": "docs/change-evidence",
+      "bytes": 456672,
+      "extension": ".png",
+      "megabytes": 0.44,
+      "path": "docs/change-evidence/operator-ui-after-summary-cards.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 432398,
+      "extension": ".png",
+      "megabytes": 0.41,
+      "path": "docs/change-evidence/operator-ui-after-entrypoint-integration.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 366614,
+      "extension": ".png",
+      "megabytes": 0.35,
+      "path": "docs/change-evidence/operator-ui-before-entrypoint-integration.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 347117,
+      "extension": ".png",
+      "megabytes": 0.33,
+      "path": "docs/change-evidence/operator-ui-after-codex-polish.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 347098,
+      "extension": ".png",
+      "megabytes": 0.33,
+      "path": "docs/change-evidence/operator-ui-after-runtime-polish.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 345708,
+      "extension": ".png",
+      "megabytes": 0.33,
+      "path": "docs/change-evidence/operator-ui-live-8770-after-stale-fix.png"
+    },
+    {
+      "area": "root",
+      "bytes": 339808,
+      "extension": ".png",
+      "megabytes": 0.32,
+      "path": "operator-ui-overview-button-aligned.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 335321,
+      "extension": ".png",
+      "megabytes": 0.32,
+      "path": "docs/change-evidence/operator-ui-after-feedback-polish.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 301707,
+      "extension": ".png",
+      "megabytes": 0.29,
+      "path": "docs/change-evidence/operator-ui-run-entry-desktop-20260502.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 289952,
+      "extension": ".png",
+      "megabytes": 0.28,
+      "path": "docs/change-evidence/operator-ui-after-claude-polish.png"
+    },
+    {
+      "area": "root",
+      "bytes": 282741,
+      "extension": ".png",
+      "megabytes": 0.27,
+      "path": "operator-ui-current-runtime.png"
+    },
+    {
+      "area": "root",
+      "bytes": 273556,
+      "extension": ".png",
+      "megabytes": 0.26,
+      "path": "operator-ui-current-codex.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 260431,
+      "extension": ".png",
+      "megabytes": 0.25,
+      "path": "docs/change-evidence/operator-ui-after-runtime-v3.png"
+    },
+    {
+      "area": "root",
+      "bytes": 253170,
+      "extension": ".png",
+      "megabytes": 0.24,
+      "path": "operator-ui-current-claude.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 248407,
+      "extension": ".png",
+      "megabytes": 0.24,
+      "path": "docs/change-evidence/operator-ui-after-mobile-polish.png"
+    },
+    {
+      "area": "root",
+      "bytes": 247127,
+      "extension": ".png",
+      "megabytes": 0.24,
+      "path": "operator-ui-current-feedback.png"
+    },
+    {
+      "area": "root",
+      "bytes": 230342,
+      "extension": ".png",
+      "megabytes": 0.22,
+      "path": "operator-ui-current-mobile.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 223594,
+      "extension": ".png",
+      "megabytes": 0.21,
+      "path": "docs/change-evidence/operator-ui-after-codex.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 222966,
+      "extension": ".png",
+      "megabytes": 0.21,
+      "path": "docs/change-evidence/operator-ui-after-claude.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 208609,
+      "extension": ".png",
+      "megabytes": 0.2,
+      "path": "docs/change-evidence/operator-ui-after-mobile.png"
+    },
+    {
+      "area": "packages",
+      "bytes": 154218,
+      "extension": ".py",
+      "megabytes": 0.15,
+      "path": "packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui.py"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 149612,
+      "extension": ".png",
+      "megabytes": 0.14,
+      "path": "docs/change-evidence/operator-ui-before.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 137037,
+      "extension": ".png",
+      "megabytes": 0.13,
+      "path": "docs/change-evidence/operator-ui-v2-workbench.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 120203,
+      "extension": ".png",
+      "megabytes": 0.11,
+      "path": "docs/change-evidence/claude-operator-ui-tabs.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 119798,
+      "extension": ".png",
+      "megabytes": 0.11,
+      "path": "docs/change-evidence/codex-operator-ui.png"
+    }
+  ],
+  "largest_text_files": [
+    {
+      "area": "packages",
+      "bytes": 154218,
+      "line_count": 3382,
+      "megabytes": 0.15,
+      "path": "packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui.py"
+    },
+    {
+      "area": "scripts",
+      "bytes": 113067,
+      "line_count": 2681,
+      "megabytes": 0.11,
+      "path": "scripts/runtime-flow-preset.ps1"
+    },
+    {
+      "area": "packages",
+      "bytes": 106403,
+      "line_count": 2465,
+      "megabytes": 0.1,
+      "path": "packages/contracts/src/governed_ai_coding_runtime_contracts/session_bridge.py"
+    },
+    {
+      "area": "tests",
+      "bytes": 97781,
+      "line_count": 2229,
+      "megabytes": 0.09,
+      "path": "tests/runtime/test_runtime_flow_preset.py"
+    },
+    {
+      "area": "tests",
+      "bytes": 91638,
+      "line_count": 1957,
+      "megabytes": 0.09,
+      "path": "tests/runtime/test_target_repo_governance_consistency.py"
+    },
+    {
+      "area": "docs",
+      "bytes": 108671,
+      "line_count": 1810,
+      "megabytes": 0.1,
+      "path": "docs/backlog/issue-ready-backlog.md"
+    },
+    {
+      "area": "tests",
+      "bytes": 84509,
+      "line_count": 1808,
+      "megabytes": 0.08,
+      "path": "tests/runtime/test_session_bridge.py"
+    },
+    {
+      "area": "packages",
+      "bytes": 45495,
+      "line_count": 1112,
+      "megabytes": 0.04,
+      "path": "packages/contracts/src/governed_ai_coding_runtime_contracts/repo_attachment.py"
+    },
+    {
+      "area": "schemas",
+      "bytes": 25497,
+      "line_count": 1112,
+      "megabytes": 0.02,
+      "path": "schemas/jsonschema/repo-profile.schema.json"
+    },
+    {
+      "area": "scripts",
+      "bytes": 39105,
+      "line_count": 1108,
+      "megabytes": 0.04,
+      "path": "scripts/verify-repo.ps1"
+    },
+    {
+      "area": "scripts",
+      "bytes": 34206,
+      "line_count": 1106,
+      "megabytes": 0.03,
+      "path": "scripts/governance/gate-runner-common.ps1"
+    },
+    {
+      "area": "scripts",
+      "bytes": 34281,
+      "line_count": 1095,
+      "megabytes": 0.03,
+      "path": "scripts/github/create-roadmap-issues.ps1"
+    },
+    {
+      "area": "docs",
+      "bytes": 38613,
+      "line_count": 1085,
+      "megabytes": 0.04,
+      "path": "docs/superpowers/plans/2026-04-20-http-control-plane-postgres-adapter-ingestion-plan.md"
+    },
+    {
+      "area": "scripts",
+      "bytes": 43793,
+      "line_count": 1079,
+      "megabytes": 0.04,
+      "path": "scripts/runtime-check.ps1"
+    },
+    {
+      "area": "scripts",
+      "bytes": 43656,
+      "line_count": 1061,
+      "megabytes": 0.04,
+      "path": "scripts/run-governed-task.py"
+    },
+    {
+      "area": "docs",
+      "bytes": 45514,
+      "line_count": 1032,
+      "megabytes": 0.04,
+      "path": "docs/plans/optimized-hybrid-final-state-long-term-implementation-plan.md"
+    },
+    {
+      "area": "scripts",
+      "bytes": 37225,
+      "line_count": 998,
+      "megabytes": 0.04,
+      "path": "scripts/lib/codex_local.py"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 24920,
+      "line_count": 982,
+      "megabytes": 0.02,
+      "path": "docs/change-evidence/repo-slimming-surface-audit.json"
+    },
+    {
+      "area": "packages",
+      "bytes": 35883,
+      "line_count": 978,
+      "megabytes": 0.03,
+      "path": "packages/contracts/src/governed_ai_coding_runtime_contracts/codex_adapter.py"
+    },
+    {
+      "area": "scripts",
+      "bytes": 40186,
+      "line_count": 967,
+      "megabytes": 0.04,
+      "path": "scripts/serve-operator-ui.py"
+    },
+    {
+      "area": "scripts",
+      "bytes": 37173,
+      "line_count": 850,
+      "megabytes": 0.04,
+      "path": "scripts/verify-target-repo-rollout-contract.py"
+    },
+    {
+      "area": "docs",
+      "bytes": 33136,
+      "line_count": 846,
+      "megabytes": 0.03,
+      "path": "docs/plans/phase-0-runnable-baseline-implementation-plan.md"
+    },
+    {
+      "area": "tests",
+      "bytes": 30793,
+      "line_count": 794,
+      "megabytes": 0.03,
+      "path": "tests/runtime/test_operator_entrypoint.py"
+    },
+    {
+      "area": "docs",
+      "bytes": 22333,
+      "line_count": 787,
+      "megabytes": 0.02,
+      "path": "docs/product/positioning-roadmap-competitive-layers.zh-CN.md"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 34781,
+      "line_count": 756,
+      "megabytes": 0.03,
+      "path": "docs/change-evidence/governance-hub-certification-report.json"
+    }
+  ],
+  "out_of_scope_dirty_worktree": {
+    "adoption_policy": "Existing dirty worktree entries remain out of scope unless explicitly adopted by the current slimming task.",
+    "entries": [
+      " M .governed-ai/repo-map-context-shaping.json",
+      " M README.en.md",
+      " M README.md",
+      " M README.zh-CN.md",
+      " M docs/change-evidence/README.md",
+      " M docs/change-evidence/governance-hub-certification-report.json",
+      " M docs/change-evidence/repo-map-context-artifact.json",
+      " M docs/change-evidence/runtime-test-speed-latest.json",
+      " M docs/plans/README.md",
+      " M scripts/build-repo-map-context-artifact.py",
+      " M scripts/operator.ps1",
+      " M scripts/runtime-flow-preset.ps1",
+      " M scripts/verify-repo.ps1",
+      " M tests/runtime/test_operator_entrypoint.py",
+      " M tests/runtime/test_repo_map_context_artifact.py",
+      " M tests/runtime/test_runtime_flow_preset.py",
+      "?? docs/archive/",
+      "?? docs/change-evidence/20260502-change-evidence-archive-index.md",
+      "?? docs/change-evidence/20260502-repo-map-archive-routing.md",
+      "?? docs/change-evidence/20260502-repo-slimming-and-speed-plan.md",
+      "?? docs/change-evidence/20260502-repo-slimming-inventory.md",
+      "?? docs/change-evidence/20260502-root-readme-history-slimming.md",
+      "?? docs/change-evidence/20260502-runtime-flow-target-catalog-split.md",
+      "?? docs/change-evidence/20260503-operator-ui-screenshot-retention.md",
+      "?? docs/change-evidence/20260503-runtime-gate-timing-split.md",
+      "?? docs/change-evidence/archive/",
+      "?? docs/change-evidence/core-principle-change-patches/20260503-core-principle-change-materialization.json",
+      "?? docs/change-evidence/core-principle-change-proposals/20260503-governance-hub-reusable-contract-final-state.json",
+      "?? docs/change-evidence/current/",
+      "?? docs/change-evidence/evidence-index.json",
+      "?? docs/change-evidence/repo-slimming-surface-audit.json",
+      "?? docs/plans/repo-slimming-and-speed-plan.md",
+      "?? scripts/archive-change-evidence.py",
+      "?? scripts/audit-repo-slimming-surface.py",
+      "?? scripts/lib/RuntimeFlow.Targets.ps1",
+      "?? scripts/prune-operator-ui-screenshots.py",
+      "?? tests/runtime/test_archive_change_evidence.py",
+      "?? tests/runtime/test_operator_ui_evidence_retention.py",
+      "?? tests/runtime/test_repo_slimming_surface.py"
+    ],
+    "entry_count": 39
+  },
+  "repo_id": "governed-ai-coding-runtime",
+  "repo_root": "D:\\CODE\\governed-ai-coding-runtime",
+  "report_kind": "repo_slimming_surface_audit",
+  "safety_fence": {
+    "archive_move_mode": "forbidden_by_default",
+    "delete_mode": "forbidden_by_default",
+    "notes": "Task 1 is inventory-only.",
+    "override_condition": "Task 2 or later must add dry-run proof, rollback, focused verification, and change evidence before archive movement."
+  },
+  "schema_version": "1.0",
+  "text_surface": {
+    "extensions": [
+      ".json",
+      ".md",
+      ".ps1",
+      ".py",
+      ".sql",
+      ".toml",
+      ".txt",
+      ".yaml",
+      ".yml"
+    ],
+    "file_count": 1143,
+    "line_count": 186696
+  },
+  "top_level_directories": [
+    {
+      "byte_count": 10947816,
+      "file_count": 779,
+      "megabytes": 10.44,
+      "text_line_count": 97723,
+      "top_level": "docs"
+    },
+    {
+      "byte_count": 1153392,
+      "file_count": 93,
+      "megabytes": 1.1,
+      "text_line_count": 29365,
+      "top_level": "scripts"
+    },
+    {
+      "byte_count": 1074123,
+      "file_count": 104,
+      "megabytes": 1.02,
+      "text_line_count": 23967,
+      "top_level": "tests"
+    },
+    {
+      "byte_count": 691838,
+      "file_count": 51,
+      "megabytes": 0.66,
+      "text_line_count": 17309,
+      "top_level": "packages"
+    },
+    {
+      "byte_count": 362184,
+      "file_count": 89,
+      "megabytes": 0.35,
+      "text_line_count": 13224,
+      "top_level": "schemas"
+    },
+    {
+      "byte_count": 339808,
+      "file_count": 1,
+      "megabytes": 0.32,
+      "text_line_count": 0,
+      "top_level": "operator-ui-overview-button-aligned.png"
+    },
+    {
+      "byte_count": 282741,
+      "file_count": 1,
+      "megabytes": 0.27,
+      "text_line_count": 0,
+      "top_level": "operator-ui-current-runtime.png"
+    },
+    {
+      "byte_count": 273556,
+      "file_count": 1,
+      "megabytes": 0.26,
+      "text_line_count": 0,
+      "top_level": "operator-ui-current-codex.png"
+    },
+    {
+      "byte_count": 253170,
+      "file_count": 1,
+      "megabytes": 0.24,
+      "text_line_count": 0,
+      "top_level": "operator-ui-current-claude.png"
+    },
+    {
+      "byte_count": 247127,
+      "file_count": 1,
+      "megabytes": 0.24,
+      "text_line_count": 0,
+      "top_level": "operator-ui-current-feedback.png"
+    },
+    {
+      "byte_count": 230342,
+      "file_count": 1,
+      "megabytes": 0.22,
+      "text_line_count": 0,
+      "top_level": "operator-ui-current-mobile.png"
+    },
+    {
+      "byte_count": 167856,
+      "file_count": 19,
+      "megabytes": 0.16,
+      "text_line_count": 2136,
+      "top_level": "rules"
+    },
+    {
+      "byte_count": 31365,
+      "file_count": 1,
+      "megabytes": 0.03,
+      "text_line_count": 405,
+      "top_level": "README.md"
+    },
+    {
+      "byte_count": 25567,
+      "file_count": 1,
+      "megabytes": 0.02,
+      "text_line_count": 464,
+      "top_level": "README.zh-CN.md"
+    },
+    {
+      "byte_count": 24158,
+      "file_count": 1,
+      "megabytes": 0.02,
+      "text_line_count": 454,
+      "top_level": "README.en.md"
+    },
+    {
+      "byte_count": 22225,
+      "file_count": 5,
+      "megabytes": 0.02,
+      "text_line_count": 528,
+      "top_level": ".governed-ai"
+    },
+    {
+      "byte_count": 12932,
+      "file_count": 8,
+      "megabytes": 0.01,
+      "text_line_count": 358,
+      "top_level": "apps"
+    },
+    {
+      "byte_count": 10436,
+      "file_count": 1,
+      "megabytes": 0.01,
+      "text_line_count": 105,
+      "top_level": "GEMINI.md"
+    },
+    {
+      "byte_count": 10366,
+      "file_count": 1,
+      "megabytes": 0.01,
+      "text_line_count": 105,
+      "top_level": "CLAUDE.md"
+    },
+    {
+      "byte_count": 10174,
+      "file_count": 1,
+      "megabytes": 0.01,
+      "text_line_count": 106,
+      "top_level": "AGENTS.md"
+    },
+    {
+      "byte_count": 4007,
+      "file_count": 1,
+      "megabytes": 0.0,
+      "text_line_count": 115,
+      "top_level": "run.ps1"
+    },
+    {
+      "byte_count": 3651,
+      "file_count": 2,
+      "megabytes": 0.0,
+      "text_line_count": 133,
+      "top_level": ".claude"
+    },
+    {
+      "byte_count": 2083,
+      "file_count": 2,
+      "megabytes": 0.0,
+      "text_line_count": 63,
+      "top_level": "skills"
+    },
+    {
+      "byte_count": 1964,
+      "file_count": 3,
+      "megabytes": 0.0,
+      "text_line_count": 68,
+      "top_level": "infra"
+    },
+    {
+      "byte_count": 1537,
+      "file_count": 2,
+      "megabytes": 0.0,
+      "text_line_count": 68,
+      "top_level": ".github"
+    },
+    {
+      "byte_count": 1088,
+      "file_count": 1,
+      "megabytes": 0.0,
+      "text_line_count": 0,
+      "top_level": "LICENSE"
+    },
+    {
+      "byte_count": 572,
+      "file_count": 1,
+      "megabytes": 0.0,
+      "text_line_count": 0,
+      "top_level": ".gitignore"
+    },
+    {
+      "byte_count": 446,
+      "file_count": 1,
+      "megabytes": 0.0,
+      "text_line_count": 0,
+      "top_level": ".githooks"
+    },
+    {
+      "byte_count": 376,
+      "file_count": 1,
+      "megabytes": 0.0,
+      "text_line_count": 0,
+      "top_level": ".geminiignore"
+    }
+  ],
+  "transient_surface_breakdown": {
+    ".git": {
+      "byte_count": 24247146,
+      "directory_count": 1,
+      "file_count": 4120,
+      "megabytes": 23.12
+    },
+    ".playwright-mcp": {
+      "byte_count": 344428,
+      "directory_count": 1,
+      "file_count": 35,
+      "megabytes": 0.33
+    },
+    ".pytest_cache": {
+      "byte_count": 0,
+      "directory_count": 1,
+      "file_count": 0,
+      "megabytes": 0.0
+    },
+    ".runtime": {
+      "byte_count": 21936442,
+      "directory_count": 182,
+      "file_count": 5353,
+      "megabytes": 20.92
+    },
+    ".tmp": {
+      "byte_count": 54790,
+      "directory_count": 1,
+      "file_count": 1,
+      "megabytes": 0.05
+    },
+    ".worktrees": {
+      "byte_count": 0,
+      "directory_count": 1,
+      "file_count": 0,
+      "megabytes": 0.0
+    },
+    "__pycache__": {
+      "byte_count": 3261778,
+      "directory_count": 13,
+      "file_count": 241,
+      "megabytes": 3.11
+    },
+    "dist": {
+      "byte_count": 14302958,
+      "directory_count": 1,
+      "file_count": 1208,
+      "megabytes": 13.64
+    },
+    "node_modules": {
+      "byte_count": 0,
+      "directory_count": 0,
+      "file_count": 0,
+      "megabytes": 0.0
+    }
+  },
+  "visible_surface": {
+    "byte_count": 16186900,
+    "excluded_directory_names": [
+      ".git",
+      ".playwright-mcp",
+      ".pytest_cache",
+      ".runtime",
+      ".tmp",
+      ".worktrees",
+      "__pycache__",
+      "dist",
+      "node_modules"
+    ],
+    "file_count": 1174,
+    "megabytes": 15.44
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "category": "positioning",
+  "change_action": "add",
+  "change_id": "principle.governance_hub_reusable_contract_final_state",
+  "generated_on": "2026-05-03",
+  "guard": {
+    "active_policy_auto_apply": false,
+    "active_spec_auto_apply": false,
+    "merge": false,
+    "push": false,
+    "requires_human_review_before_effective_change": true,
+    "skill_auto_enable": false,
+    "target_repo_sync": false,
+    "verifier_auto_update": false
+  },
+  "principle_id": "governance_hub_reusable_contract_final_state",
+  "rationale": "Make the final-state product posture explicit in core principles so future automation and outer-AI-assisted evolution preserve the governance-center boundary.",
+  "required_controls": [
+    "structured_candidate",
+    "risk_gate",
+    "machine_gate",
+    "evidence_ref",
+    "rollback_ref",
+    "human_review_for_high_risk"
+  ],
+  "rollback": "Delete this proposal and its manifest; no active policy file is changed by materialization.",
+  "schema_version": "0.1-draft",
+  "source_refs": [
+    "docs/architecture/core-principles-policy.json",
+    "docs/specs/core-principles-spec.md",
+    "docs/plans/governance-hub-reuse-and-controlled-evolution-plan.md"
+  ],
+  "summary": "The best engineering final state is Governance Hub + Reusable Contract + Controlled Evolution loop + outer AI intelligent review/generation capability, implemented as governed controls rather than a competing host product.",
+  "target_active_files": [
+    "docs/architecture/core-principles-policy.json",
+    "docs/specs/core-principles-spec.md",
+    "scripts/verify-core-principles.py",
+    "tests/runtime/test_core_principles.py"
+  ]
+}

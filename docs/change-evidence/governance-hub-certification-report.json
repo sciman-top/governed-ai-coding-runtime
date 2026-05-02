@@ -73,7 +73,7 @@
       "status": "pass"
     },
     "current_source_compatibility": {
-      "as_of": "2026-05-02",
+      "as_of": "2026-05-03",
       "expired": false,
       "forbidden_pattern_hits": [],
       "kernel_owned_semantics": [
@@ -120,7 +120,7 @@
       "status": "pass"
     },
     "knowledge_memory_lifecycle": {
-      "as_of": "2026-05-02",
+      "as_of": "2026-05-03",
       "entrypoint": "scripts/operator.ps1 -Action ExperienceReview",
       "knowledge_candidate_count": 1,
       "memory_record_count": 1,
@@ -403,7 +403,7 @@
       "verification_command": "python scripts/verify-policy-tool-credential-audit.py"
     },
     "promotion_lifecycle": {
-      "as_of": "2026-05-02",
+      "as_of": "2026-05-03",
       "entrypoint": "python scripts/materialize-runtime-evolution.py --apply",
       "lifecycle_entry_count": 2,
       "retire_proposal_count": 2,
@@ -413,7 +413,7 @@
     },
     "runtime_evolution": {
       "artifact_refs": {},
-      "as_of": "2026-05-02",
+      "as_of": "2026-05-03",
       "candidate_count": 4,
       "candidates": [
         {
@@ -440,7 +440,7 @@
           "repo_impact": "Keeps self-evolution prompts aligned with real host degradation and stale target workload evidence.",
           "risk_level": "low",
           "rollback_plan": "remove host-feedback-driven candidate wiring if it misclassifies freshness or host posture",
-          "source_checked_on": "2026-05-02",
+          "source_checked_on": "2026-05-03",
           "source_ref": ".runtime/artifacts/host-feedback-summary/latest.md",
           "source_type": "internal_runtime_evidence"
         },
@@ -470,7 +470,7 @@
           "repo_impact": "Turns real target repo effect gaps into explicit evolution work instead of leaving them in report-only form.",
           "risk_level": "medium",
           "rollback_plan": "revert any follow-up change that was justified only by stale or misread target effect feedback",
-          "source_checked_on": "2026-05-02",
+          "source_checked_on": "2026-05-03",
           "source_ref": "docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json",
           "source_type": "internal_runtime_evidence"
         },
@@ -498,7 +498,7 @@
           "repo_impact": "Lets repeated AI coding patterns become governed proposals or cleanup candidates instead of hidden session-only know-how.",
           "risk_level": "low",
           "rollback_plan": "remove generated AI-coding-experience candidates if their reuse value or verification posture regresses",
-          "source_checked_on": "2026-05-02",
+          "source_checked_on": "2026-05-03",
           "source_ref": ".runtime/artifacts/ai-coding-experience/20260501-ai-coding-experience-review.json",
           "source_type": "internal_ai_coding_experience"
         },
@@ -525,7 +525,7 @@
           "repo_impact": "Prevents community or stale assumptions from becoming execution rules without reviewable source evidence.",
           "risk_level": "medium",
           "rollback_plan": "remove the source collection candidate from the evolution dry-run output",
-          "source_checked_on": "2026-05-02",
+          "source_checked_on": "2026-05-03",
           "source_ref": "dry-run source inventory",
           "source_type": "official_doc_or_changelog"
         }
@@ -576,7 +576,7 @@
       "policy_id": "default-runtime-evolution-review",
       "policy_path": "D:/CODE/governed-ai-coding-runtime/docs/architecture/runtime-evolution-policy.json",
       "policy_status": "enforced",
-      "review_age_days": 1,
+      "review_age_days": 2,
       "review_expires_at": "2026-05-31",
       "reviewed_on": "2026-05-01",
       "source_count": 16,
@@ -584,7 +584,7 @@
         {
           "confidence": "high",
           "retrieval_mode": "dry_run_no_network",
-          "source_checked_on": "2026-05-02",
+          "source_checked_on": "2026-05-03",
           "source_id": "policy-source-1",
           "source_ref": "official_doc_or_changelog",
           "source_type": "official_doc_or_changelog",
@@ -593,7 +593,7 @@
         {
           "confidence": "high",
           "retrieval_mode": "dry_run_no_network",
-          "source_checked_on": "2026-05-02",
+          "source_checked_on": "2026-05-03",
           "source_id": "policy-source-2",
           "source_ref": "primary_project_or_reference_implementation",
           "source_type": "primary_project_or_reference_implementation",
@@ -602,7 +602,7 @@
         {
           "confidence": "medium",
           "retrieval_mode": "dry_run_no_network",
-          "source_checked_on": "2026-05-02",
+          "source_checked_on": "2026-05-03",
           "source_id": "policy-source-3",
           "source_ref": "internal_runtime_evidence",
           "source_type": "internal_runtime_evidence",
@@ -611,7 +611,7 @@
         {
           "confidence": "medium",
           "retrieval_mode": "dry_run_no_network",
-          "source_checked_on": "2026-05-02",
+          "source_checked_on": "2026-05-03",
           "source_id": "policy-source-4",
           "source_ref": "internal_ai_coding_experience",
           "source_type": "internal_ai_coding_experience",
@@ -620,7 +620,7 @@
         {
           "confidence": "medium",
           "retrieval_mode": "dry_run_no_network",
-          "source_checked_on": "2026-05-02",
+          "source_checked_on": "2026-05-03",
           "source_id": "policy-source-5",
           "source_ref": "community_best_practice",
           "source_type": "community_best_practice",
@@ -631,7 +631,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-05-02",
+          "source_checked_on": "2026-05-03",
           "source_id": "openai-codex-agents-md",
           "source_ref": "https://developers.openai.com/codex/guides/agents-md",
           "source_type": "official_doc_or_changelog",
@@ -642,7 +642,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-05-02",
+          "source_checked_on": "2026-05-03",
           "source_id": "github-actions-schedule",
           "source_ref": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule",
           "source_type": "official_doc_or_changelog",
@@ -653,7 +653,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-05-02",
+          "source_checked_on": "2026-05-03",
           "source_id": "openai-codex-repository",
           "source_ref": "https://github.com/openai/codex",
           "source_type": "primary_project_or_reference_implementation",
@@ -664,7 +664,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-05-02",
+          "source_checked_on": "2026-05-03",
           "source_id": "google-sre-eliminating-toil",
           "source_ref": "https://sre.google/workbook/eliminating-toil/",
           "source_type": "community_best_practice",
@@ -675,7 +675,7 @@
           "local_ref_exists": true,
           "online_probe": null,
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-05-02",
+          "source_checked_on": "2026-05-03",
           "source_id": "runtime-learning-efficiency-metrics",
           "source_ref": "docs/specs/learning-efficiency-metrics-spec.md",
           "source_type": "internal_ai_coding_experience",
@@ -686,7 +686,7 @@
           "local_ref_exists": true,
           "online_probe": null,
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-05-02",
+          "source_checked_on": "2026-05-03",
           "source_id": "controlled-improvement-proposals",
           "source_ref": "docs/specs/controlled-improvement-proposal-spec.md",
           "source_type": "internal_ai_coding_experience",
@@ -697,7 +697,7 @@
           "local_ref_exists": true,
           "online_probe": null,
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-05-02",
+          "source_checked_on": "2026-05-03",
           "source_id": "skill-manifest-contract",
           "source_ref": "docs/specs/skill-manifest-spec.md",
           "source_type": "internal_ai_coding_experience",
@@ -706,7 +706,7 @@
         {
           "confidence": "high",
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-05-02",
+          "source_checked_on": "2026-05-03",
           "source_id": "internal-current-source-compatibility-policy",
           "source_ref": "docs/architecture/current-source-compatibility-policy.json",
           "source_type": "internal_runtime_evidence",
@@ -715,7 +715,7 @@
         {
           "confidence": "high",
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-05-02",
+          "source_checked_on": "2026-05-03",
           "source_id": "internal-ltp-autonomous-promotion-policy",
           "source_ref": "docs/architecture/ltp-autonomous-promotion-policy.json",
           "source_type": "internal_runtime_evidence",
@@ -724,7 +724,7 @@
         {
           "confidence": "high",
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-05-02",
+          "source_checked_on": "2026-05-03",
           "source_id": "internal-autonomous-next-work-selection-policy",
           "source_ref": "docs/architecture/autonomous-next-work-selection-policy.json",
           "source_type": "internal_runtime_evidence",
@@ -733,7 +733,7 @@
         {
           "confidence": "high",
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-05-02",
+          "source_checked_on": "2026-05-03",
           "source_id": "internal-20260501-runtime-evolution-planning",
           "source_ref": "docs/change-evidence/20260501-runtime-evolution-planning.md",
           "source_type": "internal_runtime_evidence",
