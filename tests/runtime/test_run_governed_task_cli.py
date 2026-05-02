@@ -1,14 +1,30 @@
 import json
+import importlib.util
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACTS_SRC = ROOT / "packages" / "contracts" / "src"
 if str(CONTRACTS_SRC) not in sys.path:
     sys.path.insert(0, str(CONTRACTS_SRC))
+
+
+def _load_run_governed_task_module():
+    module_path = ROOT / "scripts" / "run-governed-task.py"
+    spec = importlib.util.spec_from_file_location("run_governed_task_cli_test_module", module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"unable to load module: {module_path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+RUN_GOVERNED_TASK = _load_run_governed_task_module()
 
 
 class RunGovernedTaskCliTests(unittest.TestCase):
@@ -26,33 +42,19 @@ class RunGovernedTaskCliTests(unittest.TestCase):
 
     def test_run_default_profile_executes_repo_local_quick_gate(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
-            completed = subprocess.run(
-                [
-                    sys.executable,
-                    "scripts/run-governed-task.py",
-                    "--runtime-root",
-                    str(Path(tmp_dir) / "runtime"),
-                    "run",
-                    "--mode",
-                    "quick",
-                    "--task-id",
-                    "task-cli-default-profile",
-                    "--goal",
-                    "CLI default profile smoke",
-                    "--scope",
-                    "runtime cli",
-                    "--repo",
-                    "governed-ai-coding-runtime",
-                    "--json",
-                ],
-                check=False,
-                capture_output=True,
-                text=True,
-                cwd=ROOT,
+            RUN_GOVERNED_TASK._configure_runtime_roots(
+                runtime_root=str(Path(tmp_dir) / "runtime"),
+                compat_runtime_root=False,
+            )
+            payload = RUN_GOVERNED_TASK.run_task(
+                task_id="task-cli-default-profile",
+                goal="CLI default profile smoke",
+                scope="runtime cli",
+                repo="governed-ai-coding-runtime",
+                profile_path=str(ROOT / "schemas" / "examples" / "repo-profile" / "governed-ai-coding-runtime.example.json"),
+                mode="quick",
             )
 
-            self.assertEqual(completed.returncode, 0, completed.stderr)
-            payload = json.loads(completed.stdout)
             self.assertEqual(payload["total_tasks"], 1)
             self.assertEqual(payload["tasks"][0]["task_id"], "task-cli-default-profile")
             self.assertEqual(payload["tasks"][0]["state"], "delivered")
@@ -77,31 +79,14 @@ class RunGovernedTaskCliTests(unittest.TestCase):
                 adapter_preference="process_bridge",
             )
 
-            completed = subprocess.run(
-                [
-                    sys.executable,
-                    "scripts/run-governed-task.py",
-                    "verify-attachment",
-                    "--attachment-root",
-                    str(target_repo),
-                    "--attachment-runtime-state-root",
-                    str(runtime_state_root),
-                    "--mode",
-                    "quick",
-                    "--task-id",
-                    "task-verify-attachment",
-                    "--run-id",
-                    "run-verify-attachment",
-                    "--json",
-                ],
-                check=False,
-                capture_output=True,
-                text=True,
-                cwd=ROOT,
+            payload = RUN_GOVERNED_TASK.run_attachment_verification(
+                attachment_root=str(target_repo),
+                attachment_runtime_state_root=str(runtime_state_root),
+                mode="quick",
+                task_id="task-verify-attachment",
+                run_id="run-verify-attachment",
             )
 
-            self.assertEqual(completed.returncode, 0, completed.stderr)
-            payload = json.loads(completed.stdout)
             self.assertEqual(payload["repo_id"], "target")
             self.assertEqual(payload["gate_order"], ["test", "contract"])
             self.assertEqual(payload["results"], {"test": "pass", "contract": "pass"})
@@ -128,31 +113,14 @@ class RunGovernedTaskCliTests(unittest.TestCase):
                 adapter_preference="process_bridge",
             )
 
-            completed = subprocess.run(
-                [
-                    sys.executable,
-                    "scripts/run-governed-task.py",
-                    "verify-attachment",
-                    "--attachment-root",
-                    str(target_repo),
-                    "--attachment-runtime-state-root",
-                    str(runtime_state_root),
-                    "--mode",
-                    "l2",
-                    "--task-id",
-                    "task-verify-attachment-l2",
-                    "--run-id",
-                    "run-verify-attachment-l2",
-                    "--json",
-                ],
-                check=False,
-                capture_output=True,
-                text=True,
-                cwd=ROOT,
+            payload = RUN_GOVERNED_TASK.run_attachment_verification(
+                attachment_root=str(target_repo),
+                attachment_runtime_state_root=str(runtime_state_root),
+                mode="l2",
+                task_id="task-verify-attachment-l2",
+                run_id="run-verify-attachment-l2",
             )
 
-            self.assertEqual(completed.returncode, 0, completed.stderr)
-            payload = json.loads(completed.stdout)
             self.assertEqual(payload["repo_id"], "target")
             self.assertEqual(payload["mode"], "l2")
             self.assertEqual(payload["gate_order"], ["build", "test", "contract"])
@@ -183,61 +151,24 @@ class RunGovernedTaskCliTests(unittest.TestCase):
             profile["required_entrypoint_policy"]["current_mode"] = "targeted_enforced"
             profile_path.write_text(json.dumps(profile, indent=2, sort_keys=True), encoding="utf-8")
 
-            blocked = subprocess.run(
-                [
-                    sys.executable,
-                    "scripts/run-governed-task.py",
-                    "verify-attachment",
-                    "--attachment-root",
-                    str(target_repo),
-                    "--attachment-runtime-state-root",
-                    str(runtime_state_root),
-                    "--mode",
-                    "quick",
-                    "--task-id",
-                    "task-verify-attachment-policy",
-                    "--run-id",
-                    "run-verify-attachment-policy",
-                    "--json",
-                ],
-                check=False,
-                capture_output=True,
-                text=True,
-                cwd=ROOT,
+            with self.assertRaises(RUN_GOVERNED_TASK.EntrypointPolicyViolation) as blocked:
+                RUN_GOVERNED_TASK.run_attachment_verification(
+                    attachment_root=str(target_repo),
+                    attachment_runtime_state_root=str(runtime_state_root),
+                    mode="quick",
+                    task_id="task-verify-attachment-policy",
+                    run_id="run-verify-attachment-policy",
+                )
+            self.assertTrue(blocked.exception.evaluation["blocked"])
+
+            allowed_payload = RUN_GOVERNED_TASK.run_attachment_verification(
+                attachment_root=str(target_repo),
+                attachment_runtime_state_root=str(runtime_state_root),
+                mode="quick",
+                task_id="task-verify-attachment-policy",
+                run_id="run-verify-attachment-policy",
+                entrypoint_id="runtime-flow",
             )
-
-            self.assertNotEqual(blocked.returncode, 0)
-            blocked_payload = json.loads(blocked.stdout)
-            self.assertEqual(blocked_payload["status"], "entrypoint_policy_denied")
-            self.assertTrue(blocked_payload["entrypoint_policy"]["blocked"])
-
-            allowed = subprocess.run(
-                [
-                    sys.executable,
-                    "scripts/run-governed-task.py",
-                    "verify-attachment",
-                    "--attachment-root",
-                    str(target_repo),
-                    "--attachment-runtime-state-root",
-                    str(runtime_state_root),
-                    "--mode",
-                    "quick",
-                    "--task-id",
-                    "task-verify-attachment-policy",
-                    "--run-id",
-                    "run-verify-attachment-policy",
-                    "--entrypoint-id",
-                    "runtime-flow",
-                    "--json",
-                ],
-                check=False,
-                capture_output=True,
-                text=True,
-                cwd=ROOT,
-            )
-
-            self.assertEqual(allowed.returncode, 0, allowed.stderr)
-            allowed_payload = json.loads(allowed.stdout)
             self.assertEqual(allowed_payload["results"], {"test": "pass", "contract": "pass"})
             self.assertFalse(allowed_payload["entrypoint_policy"]["blocked"])
 
@@ -280,23 +211,19 @@ class RunGovernedTaskCliTests(unittest.TestCase):
     def test_status_json_reports_runtime_roots_and_runtime_root_override(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             runtime_root = Path(tmp_dir) / "machine-runtime"
-            completed = subprocess.run(
-                [
-                    sys.executable,
-                    "scripts/run-governed-task.py",
-                    "--runtime-root",
-                    str(runtime_root),
-                    "status",
-                    "--json",
-                ],
-                check=False,
-                capture_output=True,
-                text=True,
-                cwd=ROOT,
+            RUN_GOVERNED_TASK._configure_runtime_roots(
+                runtime_root=str(runtime_root),
+                compat_runtime_root=False,
             )
-
-            self.assertEqual(completed.returncode, 0, completed.stderr)
-            payload = json.loads(completed.stdout)
+            with (
+                mock.patch.object(RUN_GOVERNED_TASK, "summarize_codex_capability_readiness", return_value=object()),
+                mock.patch.object(
+                    RUN_GOVERNED_TASK,
+                    "codex_capability_readiness_to_dict",
+                    return_value={"status": "ready", "adapter_tier": "test"},
+                ),
+            ):
+                payload = RUN_GOVERNED_TASK.snapshot_payload()
             self.assertEqual(payload["runtime_roots"]["runtime_root"], runtime_root.resolve().as_posix())
             self.assertEqual(payload["runtime_roots"]["compatibility_mode"], False)
             self.assertIn("codex_capability", payload)

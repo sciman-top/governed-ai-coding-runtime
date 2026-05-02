@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +18,7 @@ from lib.target_repo_speed_profile import (
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_BASELINE_PATH = ROOT / "docs" / "targets" / "target-repo-governance-baseline.json"
+DEFAULT_MANAGED_FILE_BACKUP_ROOT = ROOT / "docs" / "change-evidence" / "managed-file-sync-backups"
 DEFAULT_QUICK_TEST_RECOMMENDATION_RELATIVE_PATH = ".governed-ai/quick-test-slice.recommendation.json"
 DEFAULT_QUICK_TEST_PROMPT_RELATIVE_PATH = ".governed-ai/quick-test-slice.prompt.md"
 OUTER_AI_QUICK_TEST_INSTRUCTION = (
@@ -45,6 +48,27 @@ def _as_string_list(value: Any) -> list[str]:
     return []
 
 
+def _sha256_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _backup_existing(target_path: Path, backup_root: Path, target_text: str) -> Path:
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    anchor = target_path.anchor
+    drive = target_path.drive.replace(":", "") if target_path.drive else "relative"
+    safe_parts = [drive]
+    for part in target_path.parts:
+        if part in {target_path.drive, target_path.root, anchor, "\\", "/"}:
+            continue
+        safe_parts.append(part.replace(":", "_"))
+    backup_path = backup_root / timestamp / Path(*safe_parts)
+    if backup_path.resolve(strict=False) == target_path.resolve(strict=False):
+        raise ValueError(f"backup path resolves to target path: {target_path}")
+    backup_path.parent.mkdir(parents=True, exist_ok=True)
+    backup_path.write_text(target_text, encoding="utf-8")
+    return backup_path
+
+
 def _resolve_profile_path(target_repo: Path, profile_path_arg: str | None) -> Path:
     if profile_path_arg:
         return Path(profile_path_arg).resolve(strict=False)
@@ -67,7 +91,7 @@ def _normalize_baseline(path: Path) -> dict[str, Any]:
             raise ValueError(f"baseline.required_managed_files[{index}] must be an object")
         target_path = item.get("path")
         source_path = item.get("source")
-        management_mode = item.get("management_mode", "replace")
+        management_mode = item.get("management_mode", "block_on_drift")
         if not isinstance(target_path, str) or not target_path.strip():
             raise ValueError(f"baseline.required_managed_files[{index}].path must be a non-empty string")
         if not isinstance(source_path, str) or not source_path.strip():
@@ -360,22 +384,26 @@ def _sync_managed_files(
     baseline_path: Path,
     managed_files: list[dict[str, Any]],
     check_only: bool,
+    backup_root: Path,
 ) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
     changed_files: list[dict[str, str]] = []
     blocked_files: list[dict[str, str]] = []
     for item in managed_files:
         target_path = _target_relative_path(target_repo, str(item["path"]))
         source_path = _source_path(baseline_path, str(item["source"]))
-        management_mode = str(item.get("management_mode", "replace"))
+        management_mode = str(item.get("management_mode", "block_on_drift"))
         if not source_path.exists():
             raise ValueError(f"managed file source not found: {source_path}")
         source_text = source_path.read_text(encoding="utf-8")
         actual = target_path.read_text(encoding="utf-8") if target_path.exists() else None
+        source_hash = _sha256_text(source_text)
+        target_hash = _sha256_text(actual) if actual is not None else ""
         expected = _managed_file_expected_text(
             source_text=source_text,
             actual_text=actual,
             management_mode=management_mode,
         )
+        expected_hash = _sha256_text(expected)
         if actual == expected:
             continue
         file_drift = {
@@ -383,13 +411,20 @@ def _sync_managed_files(
             "source": str(source_path),
             "management_mode": management_mode,
             "reason": "missing" if actual is None else "content_drift",
+            "source_sha256": source_hash,
+            "target_sha256": target_hash,
+            "expected_sha256": expected_hash,
         }
-        if management_mode == "block_on_drift" and actual is not None:
+        if management_mode in {"replace", "block_on_drift"} and actual is not None:
+            file_drift["blocking_reason"] = "managed file content differs; review and integrate before applying"
             blocked_files.append(file_drift)
             continue
         changed_files.append(file_drift)
         if not check_only:
             target_path.parent.mkdir(parents=True, exist_ok=True)
+            if actual is not None:
+                backup_path = _backup_existing(target_path, backup_root, actual)
+                file_drift["backup_path"] = str(backup_path)
             target_path.write_text(expected, encoding="utf-8")
     return changed_files, blocked_files
 
@@ -411,6 +446,11 @@ def main() -> int:
         "--check-only",
         action="store_true",
         help="Do not write files; return non-zero when drift is detected.",
+    )
+    parser.add_argument(
+        "--managed-file-backup-root",
+        default=str(DEFAULT_MANAGED_FILE_BACKUP_ROOT),
+        help="Backup root for existing managed files before writing merged content.",
     )
     parser.add_argument("--repo-id", help="Catalog repo id to sync into the target repo profile.")
     parser.add_argument("--display-name", help="Catalog display name to sync into the target repo profile.")
@@ -445,6 +485,7 @@ def main() -> int:
     target_repo = Path(args.target_repo).resolve(strict=False)
     baseline_path = Path(args.baseline_path).resolve(strict=False)
     profile_path = _resolve_profile_path(target_repo=target_repo, profile_path_arg=args.profile_path)
+    managed_file_backup_root = Path(args.managed_file_backup_root).resolve(strict=False)
 
     if not baseline_path.exists():
         raise SystemExit(f"baseline file not found: {baseline_path}")
@@ -507,6 +548,7 @@ def main() -> int:
         baseline_path=baseline_path,
         managed_files=baseline.get("required_managed_files", []),
         check_only=args.check_only,
+        backup_root=managed_file_backup_root,
     )
 
     status = "pass"
@@ -526,6 +568,7 @@ def main() -> int:
         "target_repo": str(target_repo),
         "profile_path": str(profile_path),
         "baseline_path": str(baseline_path),
+        "managed_file_backup_root": str(managed_file_backup_root),
         "sync_revision": baseline["sync_revision"],
         "changed_catalog_fields": changed_catalog_fields,
         "changed_fields": changed_fields,

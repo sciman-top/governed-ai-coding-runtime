@@ -12,7 +12,7 @@ $ErrorActionPreference = 'Stop'
 $Recommended = [ordered]@{
     cli_auth_credentials_store = '"file"'
     approval_policy = '"never"'
-    model = '"gpt-5.5"'
+    model = '"gpt-5.4"'
     model_reasoning_effort = '"medium"'
     model_verbosity = '"medium"'
     model_context_window = '272000'
@@ -156,11 +156,12 @@ $plan = [ordered]@{
         '少打扰',
         '自动连续执行',
         '节省 token / 成本',
+        '保留必要解释',
         '高效率'
     )
     current_implementation = [ordered]@{
         cli_auth_credentials_store = 'file'
-        model = 'gpt-5.5'
+        model = 'gpt-5.4'
         model_reasoning_effort = 'medium'
         approval_policy = 'never'
         model_context_window = 272000

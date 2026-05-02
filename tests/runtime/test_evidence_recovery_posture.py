@@ -1,7 +1,6 @@
 import datetime as dt
 import importlib.util
 import json
-import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -32,16 +31,9 @@ class EvidenceRecoveryPostureTests(unittest.TestCase):
             sys.modules.pop(module_name, None)
 
     def test_live_recovery_posture_requires_refresh_before_implementation(self) -> None:
-        completed = subprocess.run(
-            [sys.executable, "scripts/verify-evidence-recovery-posture.py", "--as-of", "2026-05-01"],
-            check=False,
-            capture_output=True,
-            text=True,
-            cwd=ROOT,
-        )
+        module = _load_script()
 
-        self.assertEqual(completed.returncode, 0, completed.stderr)
-        payload = json.loads(completed.stdout)
+        payload = module.assert_evidence_recovery_posture(repo_root=ROOT, as_of=dt.date(2026, 5, 1))
         self.assertEqual(payload["status"], "pass")
         self.assertEqual(payload["selector"]["next_action"], "refresh_evidence_first")
         self.assertEqual(payload["selector"]["evidence_state"], "stale")

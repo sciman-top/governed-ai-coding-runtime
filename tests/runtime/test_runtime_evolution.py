@@ -27,16 +27,14 @@ class RuntimeEvolutionTests(unittest.TestCase):
         sys.modules.pop("evaluate_runtime_evolution_script", None)
 
     def test_repo_runtime_evolution_dry_run_succeeds(self) -> None:
-        completed = subprocess.run(
-            [sys.executable, "scripts/evaluate-runtime-evolution.py", "--as-of", "2026-05-01"],
-            check=False,
-            capture_output=True,
-            text=True,
-            cwd=ROOT,
+        module = _load_runtime_evolution_script()
+
+        payload = module.assert_runtime_evolution_policy(
+            repo_root=ROOT,
+            policy_path=ROOT / "docs" / "architecture" / "runtime-evolution-policy.json",
+            as_of=dt.date(2026, 5, 1),
         )
 
-        self.assertEqual(completed.returncode, 0, completed.stderr)
-        payload = json.loads(completed.stdout)
         self.assertEqual(payload["status"], "pass")
         self.assertEqual(payload["policy_id"], "default-runtime-evolution-review")
         self.assertFalse(payload["mutation_allowed"])

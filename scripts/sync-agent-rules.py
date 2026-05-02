@@ -320,18 +320,35 @@ def _plan_entry(
         if merged_text is not None:
             integrated_text, integrated_additions = merged_text
             integrated_hash = _sha256_text(integrated_text)
+            source_needs_update = integrated_hash != source_hash
+            target_needs_update = integrated_hash != target_hash
             result["merge_strategy"] = "project_rule_structured_union"
             result["merged_target_additions"] = integrated_additions
-            if integrated_hash == target_hash:
+            result["source_update"] = (
+                ("updated" if apply else "would_update") if source_needs_update else "unchanged"
+            )
+            result["target_update"] = (
+                ("updated" if apply else "would_update") if target_needs_update else "unchanged"
+            )
+            if not source_needs_update and not target_needs_update:
                 result["status"] = "skipped_same_hash"
                 return result
             result["status"] = "merged_same_version_drift" if apply else "would_merge_same_version_drift"
             result["merged_sha256"] = integrated_hash
             if apply:
-                backup_path = _backup_existing(target_path, backup_root, target_text)
-                result["backup_path"] = str(backup_path)
-                target_path.parent.mkdir(parents=True, exist_ok=True)
-                target_path.write_text(integrated_text, encoding="utf-8")
+                same_physical_path = source_path.resolve(strict=False) == target_path.resolve(strict=False)
+                if source_needs_update:
+                    source_backup_path = _backup_existing(source_path, backup_root, source_text)
+                    result["source_backup_path"] = str(source_backup_path)
+                if target_needs_update and not same_physical_path:
+                    backup_path = _backup_existing(target_path, backup_root, target_text)
+                    result["backup_path"] = str(backup_path)
+                if source_needs_update:
+                    source_path.parent.mkdir(parents=True, exist_ok=True)
+                    source_path.write_text(integrated_text, encoding="utf-8")
+                if target_needs_update and not same_physical_path:
+                    target_path.parent.mkdir(parents=True, exist_ok=True)
+                    target_path.write_text(integrated_text, encoding="utf-8")
             return result
 
     if not force and target_version == source_version:
@@ -456,7 +473,15 @@ def main() -> int:
     changed = [
         item
         for item in results
-        if item["status"] in {"would_create", "would_update", "created", "updated"}
+        if item["status"]
+        in {
+            "would_create",
+            "would_update",
+            "would_merge_same_version_drift",
+            "created",
+            "updated",
+            "merged_same_version_drift",
+        }
     ]
     status = "blocked" if blocked else ("applied" if args.apply and changed else ("dry_run_changes" if changed else "pass"))
     output = {

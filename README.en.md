@@ -64,9 +64,9 @@ Complete hybrid final-state certification posture:
 
 The best engineering final state is now fixed as `Governance Hub + Reusable Contract + Controlled Evolution loop + outer AI intelligent review/generation capability`: a governance center, reusable control contract, controlled evolution loop, and outer-AI review/generation capability, not a new host product.
 
-The human-readable core principle is now converged into five statements, while the machine details remain in the 14 enforced principles in `docs/architecture/core-principles-policy.json`:
+The human-readable core principle is now converged into five statements, while the machine details remain in the enforced principles in `docs/architecture/core-principles-policy.json`:
 
-- `Efficiency first, safety bounded`: optimize for low interruption, continuous execution, lower token/cost burn, and high throughput, but never bypass safety, least privilege, evidence, rollback, or review boundaries.
+- `Efficiency first, safety bounded`: optimize for low interruption, continuous execution, lower token/cost burn, necessary explanatory density, and high throughput; model, provider, reasoning level, context window, compact threshold, and host tooling are replaceable implementation details; efficiency optimization must not bypass existing safety, evidence, rollback, review, or gate constraints.
 - `Automation-first, outer-AI-assisted, gate-controlled evolution`: deterministic governance work should be automated, and outer AI may generate reviews, knowledge, candidates, and proposals; effective changes must first become structured candidates and pass risk classification, machine gates, evidence, rollback, and required review.
 - `Governance hub, reusable contract, host-compatible execution`: this project is a governance hub and reusable contract layer, not a competing replacement for Codex, Claude Code, or other AI coding hosts; external agent projects are mechanism sources only.
 - `Context budget, instruction minimalism, least privilege`: `context_budget_and_instruction_minimalism` and `least_privilege_tool_credential_boundary` keep root rules short and hard while tool permissions, credentials, sandbox, mounts, network, and provider secrets stay auditable and deterministic where possible.

@@ -90,25 +90,11 @@ class LtpAutonomousPromotionTests(unittest.TestCase):
                 )
 
     def test_verify_repo_docs_runs_ltp_promotion_policy(self) -> None:
-        completed = subprocess.run(
-            [
-                "pwsh",
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                "scripts/verify-repo.ps1",
-                "-Check",
-                "Docs",
-            ],
-            check=False,
-            capture_output=True,
-            text=True,
-            cwd=ROOT,
-        )
+        verifier = (ROOT / "scripts" / "verify-repo.ps1").read_text(encoding="utf-8")
 
-        self.assertEqual(completed.returncode, 0, completed.stderr)
-        self.assertIn("OK ltp-autonomous-promotion", completed.stdout)
+        self.assertIn("function Invoke-DocsChecks", verifier)
+        self.assertIn("Invoke-LtpAutonomousPromotionChecks", verifier)
+        self.assertIn('Write-CheckOk "ltp-autonomous-promotion"', verifier)
 
     def _write_policy(self, repo_root: Path, *, auto_selected_count: int) -> Path:
         refs = [

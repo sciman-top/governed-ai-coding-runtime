@@ -184,36 +184,62 @@ class OperatorEntrypointTests(unittest.TestCase):
 
     def test_operator_ui_server_helpers_are_bounded_to_repo_actions_and_files(self) -> None:
         module = _load_serve_operator_ui_module()
+        module.invalidate_status_cache()
 
-        self.assertIn("readiness", module.ALLOWED_ACTIONS)
-        self.assertIn("feedback_report", module.ALLOWED_ACTIONS)
-        self.assertIn("evolution_review", module.ALLOWED_ACTIONS)
-        self.assertIn("evolution_materialize", module.ALLOWED_ACTIONS)
-        self.assertIn("classroomtoolkit", module.load_target_ids())
-        self.assertEqual(2, module.run_operator_action({"action": "unsupported"})["exit_code"])
-        self.assertEqual(
-            2,
-            module.run_operator_action({"action": "daily_all", "target": "not-a-target", "dry_run": True})["exit_code"],
-        )
-        self.assertIn("Governed AI Coding Runtime", module.read_repo_file("README.md")["content"])
-        self.assertIn("escapes repository root", module.read_repo_file("../outside.txt")["error"])
-        self.assertIn(module.load_codex_status()["status"], {"ok", "error"})
-        self.assertEqual("error", module.run_codex_switch({"name": ""})["status"])
-        self.assertEqual("error", module.run_codex_sync_active({"name": "missing-profile"})["status"])
-        self.assertIn(module.load_claude_status()["status"], {"ok", "error"})
-        self.assertEqual("error", module.run_claude_switch({"name": ""})["status"])
-        feedback = module.load_feedback_summary()
-        self.assertIn(feedback["status"], {"pass", "attention", "fail"})
-        self.assertEqual("docs/product/host-feedback-loop.zh-CN.md", feedback["guide_path"])
-        self.assertEqual("docs/product/host-feedback-loop.md", feedback["guide_path_en"])
-        next_work = module.load_next_work_summary()
-        self.assertIn(next_work["status"], {"pass", "error"})
-        if next_work["status"] != "error":
-            self.assertIn(next_work["ui_status"], {"healthy", "attention", "action_required"})
-            self.assertIn("next_action", next_work)
-            self.assertIn("blocked_actions", next_work)
-            self.assertIn("cached_at", next_work)
-        process_status = module.operator_ui_process_status()
+        with (
+            mock.patch.object(module, "codex_status", return_value={"sample": "codex"}),
+            mock.patch.object(module, "claude_status", return_value={"sample": "claude"}),
+            mock.patch.object(
+                module,
+                "_build_feedback_summary",
+                return_value={
+                    "overall_status": "pass",
+                    "guide_path": "docs/product/host-feedback-loop.zh-CN.md",
+                    "guide_path_en": "docs/product/host-feedback-loop.md",
+                },
+            ),
+            mock.patch.object(
+                module,
+                "_build_next_work_summary",
+                return_value={
+                    "policy_status": "pass",
+                    "ui_status": "healthy",
+                    "next_action": "refresh_evidence_first",
+                    "blocked_actions": [],
+                    "cached_at": "test",
+                },
+            ),
+        ):
+            self.assertIn("readiness", module.ALLOWED_ACTIONS)
+            self.assertIn("feedback_report", module.ALLOWED_ACTIONS)
+            self.assertIn("evolution_review", module.ALLOWED_ACTIONS)
+            self.assertIn("evolution_materialize", module.ALLOWED_ACTIONS)
+            self.assertIn("classroomtoolkit", module.load_target_ids())
+            self.assertEqual(2, module.run_operator_action({"action": "unsupported"})["exit_code"])
+            self.assertEqual(
+                2,
+                module.run_operator_action({"action": "daily_all", "target": "not-a-target", "dry_run": True})["exit_code"],
+            )
+            self.assertIn("Governed AI Coding Runtime", module.read_repo_file("README.md")["content"])
+            self.assertIn("escapes repository root", module.read_repo_file("../outside.txt")["error"])
+            self.assertIn(module.load_codex_status()["status"], {"ok", "error"})
+            self.assertEqual("error", module.run_codex_switch({"name": ""})["status"])
+            self.assertEqual("error", module.run_codex_sync_active({"name": "missing-profile"})["status"])
+            self.assertIn(module.load_claude_status()["status"], {"ok", "error"})
+            self.assertEqual("error", module.run_claude_switch({"name": ""})["status"])
+            feedback = module.load_feedback_summary()
+            self.assertIn(feedback["status"], {"pass", "attention", "fail"})
+            self.assertEqual("docs/product/host-feedback-loop.zh-CN.md", feedback["guide_path"])
+            self.assertEqual("docs/product/host-feedback-loop.md", feedback["guide_path_en"])
+            next_work = module.load_next_work_summary()
+            self.assertIn(next_work["status"], {"pass", "error"})
+            if next_work["status"] != "error":
+                self.assertIn(next_work["ui_status"], {"healthy", "attention", "action_required"})
+                self.assertIn("next_action", next_work)
+                self.assertIn("blocked_actions", next_work)
+                self.assertIn("cached_at", next_work)
+            process_status = module.operator_ui_process_status()
+
         self.assertEqual("ok", process_status["status"])
         self.assertIn("stale", process_status)
         self.assertIn("process_started_at", process_status)
@@ -315,15 +341,22 @@ class OperatorEntrypointTests(unittest.TestCase):
     def test_operator_ui_server_dry_run_supports_single_target(self) -> None:
         module = _load_serve_operator_ui_module()
 
-        result = module.run_operator_action(
-            {
-                "action": "daily_all",
-                "target": "classroomtoolkit",
-                "dry_run": True,
-                "language": "zh-CN",
-                "mode": "quick",
-            }
+        completed = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout="DRY-RUN daily-all-targets",
+            stderr="",
         )
+        with mock.patch.object(module.subprocess, "run", return_value=completed) as run_mock:
+            result = module.run_operator_action(
+                {
+                    "action": "daily_all",
+                    "target": "classroomtoolkit",
+                    "dry_run": True,
+                    "language": "zh-CN",
+                    "mode": "quick",
+                }
+            )
 
         self.assertEqual(0, result["exit_code"])
         self.assertIn("run.ps1", " ".join(result["command"]))
@@ -331,6 +364,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("classroomtoolkit", result["command"])
         self.assertIn("-DryRun", result["command"])
         self.assertIn("DRY-RUN daily-all-targets", result["output"])
+        run_mock.assert_called_once()
 
     def test_operator_preflight_blocks_high_impact_actions(self) -> None:
         env = dict(os.environ)

@@ -195,7 +195,7 @@ class CodexLocalTests(unittest.TestCase):
                 "\n".join(
                     [
                         'cli_auth_credentials_store = "file"',
-                        'model = "gpt-5.5"',
+                        'model = "gpt-5.4"',
                         'model_reasoning_effort = "medium"',
                         'model_verbosity = "medium"',
                         "model_context_window = 272000",
@@ -218,17 +218,17 @@ class CodexLocalTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)
             _write_auth(home / "auth.json", account_id="account-a")
-            (home / "config.toml").write_text('model = "gpt-5.5"', encoding="utf-8")
+            (home / "config.toml").write_text('model = "gpt-5.4"', encoding="utf-8")
 
             status = codex_local.codex_status(home)
 
             self.assertEqual("efficiency_first", status["recommended_defaults"]["strategy"])
             self.assertEqual("综合效率优先", status["recommended_defaults"]["strategy_label"])
             self.assertEqual(
-                ["少打扰", "自动连续执行", "节省 token / 成本", "高效率"],
+                ["少打扰", "自动连续执行", "节省 token / 成本", "保留必要解释", "高效率"],
                 status["recommended_defaults"]["strategy_principles"],
             )
-            self.assertEqual("gpt-5.5 + medium + never", status["recommended_defaults"]["current_combo"])
+            self.assertEqual("gpt-5.4 + medium + never", status["recommended_defaults"]["current_combo"])
             self.assertEqual("current_temporary_choice", status["recommended_defaults"]["current_combo_status"])
             self.assertEqual("220000 on a 272000 window", status["recommended_defaults"]["compact_policy"])
             self.assertIn("preserve the efficiency-first principle", status["recommended_defaults"]["change_rule"])

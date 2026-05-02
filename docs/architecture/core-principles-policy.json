@@ -6,7 +6,7 @@
     {
       "principle_id": "efficiency_first",
       "category": "execution",
-      "summary": "The long-lived operating principle is low interruption, continuous execution, bounded context, lower token and cost burn, measured throughput, and safe automation.",
+      "summary": "The long-lived operating principle is low interruption, continuous execution, bounded context, lower token and cost burn, necessary explanatory density, measured throughput, and safe automation.",
       "required": true,
       "enforcement_level": "docs_gate",
       "machine_gate": "verify-core-principles",
@@ -128,6 +128,15 @@
       "enforcement_level": "docs_gate",
       "machine_gate": "verify-core-principles",
       "rollback_ref": "git revert core-principles policy change"
+    },
+    {
+      "principle_id": "source_target_drift_integration_before_sync",
+      "category": "verification",
+      "summary": "Same-name source and deployed target files must be compared and either structurally integrated into the canonical source plus target copy, or blocked with evidence; direct blind overwrite is forbidden.",
+      "required": true,
+      "enforcement_level": "contract_gate",
+      "machine_gate": "verify-core-principles",
+      "rollback_ref": "git revert source-target drift integration policy change"
     }
   ],
   "capability_portfolio_outcomes": [
@@ -172,6 +181,10 @@
     {
       "path": "AGENTS.md",
       "contains": "综合效率优先"
+    },
+    {
+      "path": "AGENTS.md",
+      "contains": "必要解释"
     },
     {
       "path": "AGENTS.md",
@@ -239,7 +252,7 @@
     },
     {
       "path": "docs/README.md",
-      "contains": "Efficiency never overrides safety, permissions, evidence, rollback, or review boundaries"
+      "contains": "Efficiency never overrides safety, permissions, evidence, rollback, review, or gate constraints"
     },
     {
       "path": "docs/README.md",
@@ -248,6 +261,14 @@
     {
       "path": "docs/specs/core-principles-spec.md",
       "contains": "Efficiency must not override safety, least privilege, evidence, rollback, or review boundaries"
+    },
+    {
+      "path": "docs/specs/core-principles-spec.md",
+      "contains": "Model, provider, reasoning level, context window, compact threshold, and host tooling are implementation profiles"
+    },
+    {
+      "path": "docs/specs/core-principles-spec.md",
+      "contains": "Same-name source and deployed target files must be compared before synchronization"
     },
     {
       "path": "docs/specs/core-principles-spec.md",
@@ -308,7 +329,9 @@
   "evidence_refs": [
     "docs/change-evidence/20260501-governance-hub-reuse-plan.md",
     "docs/change-evidence/20260501-core-principle-best-practice-optimization.md",
-    "docs/change-evidence/20260501-core-principle-readable-convergence.md"
+    "docs/change-evidence/20260501-core-principle-readable-convergence.md",
+    "docs/change-evidence/20260502-source-target-drift-integration.md",
+    "docs/change-evidence/20260502-core-principles-efficiency-profile-alignment.md"
   ],
   "rollback_ref": "git revert core-principles policy, schema, verifier, and docs gate wiring"
 }

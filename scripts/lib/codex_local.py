@@ -17,7 +17,7 @@ from typing import Any
 
 DEFAULT_CONFIG = {
     "cli_auth_credentials_store": "file",
-    "model": "gpt-5.5",
+    "model": "gpt-5.4",
     "model_reasoning_effort": "medium",
     "model_verbosity": "medium",
     "model_context_window": 272000,
@@ -33,14 +33,15 @@ DEFAULT_CONFIG_PROFILE = {
         "少打扰",
         "自动连续执行",
         "节省 token / 成本",
+        "保留必要解释",
         "高效率",
     ],
-    "current_combo": "gpt-5.5 + medium + never",
+    "current_combo": "gpt-5.4 + medium + never",
     "current_combo_status": "current_temporary_choice",
     "compact_policy": "220000 on a 272000 window",
     "compact_ratio": "81%",
     "manual_upgrade": "Switch to a stronger model or reasoning level manually when a task genuinely needs deeper reasoning.",
-    "change_rule": "Future model or parameter updates should preserve the efficiency-first principle rather than the current combo itself.",
+    "change_rule": "Future model or parameter updates should preserve the efficiency-first principle and necessary explanation rather than the current combo itself; existing safety and gate constraints continue to apply.",
 }
 USAGE_DASHBOARD_URL = "https://chatgpt.com/codex/settings/usage"
 USAGE_STALE_AFTER_SECONDS = 300

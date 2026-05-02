@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("All", "Build", "Contract", "Dependency", "Doctor", "Docs", "Runtime", "RuntimeQuick", "Scripts")]
+  [ValidateSet("All", "Build", "Contract", "Dependency", "Doctor", "Docs", "DocsLinks", "Runtime", "RuntimeQuick", "Scripts")]
   [string]$Check = "All"
 )
 
@@ -1027,6 +1027,10 @@ function Invoke-DocsChecks {
   Invoke-PostCloseoutQueueSyncCheck
 }
 
+function Invoke-DocsLinkChecks {
+  Invoke-ActiveMarkdownLinkCheck
+}
+
 function Invoke-ScriptChecks {
   Invoke-PowerShellParse
   Invoke-IssueSeedingRenderCheck
@@ -1088,6 +1092,7 @@ switch ($Check) {
   "Dependency" { Invoke-DependencyBaselineChecks }
   "Doctor" { Invoke-DoctorChecks }
   "Docs" { Invoke-DocsChecks }
+  "DocsLinks" { Invoke-DocsLinkChecks }
   "Runtime" { Invoke-RuntimeChecks }
   "RuntimeQuick" { Invoke-RuntimeQuickChecks }
   "Scripts" { Invoke-ScriptChecks }

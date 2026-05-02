@@ -1,0 +1,100 @@
+{
+  "elapsed_seconds": 317.7277995000004,
+  "failure_count": 0,
+  "failures": [],
+  "slowest": [
+    {
+      "duration_seconds": 164.20051950000015,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_runtime_doctor",
+        "path": "tests\\runtime\\test_runtime_doctor.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 88.11247559999993,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_operator_entrypoint",
+        "path": "tests\\runtime\\test_operator_entrypoint.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 81.40191110000023,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_ltp_autonomous_promotion",
+        "path": "tests\\runtime\\test_ltp_autonomous_promotion.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 76.37822540000025,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_core_principles",
+        "path": "tests\\runtime\\test_core_principles.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 75.0125278999999,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_runtime_evolution",
+        "path": "tests\\runtime\\test_runtime_evolution.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 74.67287480000005,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_current_source_compatibility",
+        "path": "tests\\runtime\\test_current_source_compatibility.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 64.82155330000023,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_autonomous_next_work_selection",
+        "path": "tests\\runtime\\test_autonomous_next_work_selection.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 62.81919590000007,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_attached_repo_e2e",
+        "path": "tests\\runtime\\test_attached_repo_e2e.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 59.017478299999766,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_runtime_flow_preset",
+        "path": "tests\\runtime\\test_runtime_flow_preset.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 54.751401400000304,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_evidence_recovery_posture",
+        "path": "tests\\runtime\\test_evidence_recovery_posture.py",
+        "suite": "runtime"
+      }
+    }
+  ],
+  "target_count": 95,
+  "timeout_seconds": 180,
+  "worker_count": 4
+}

@@ -190,15 +190,96 @@ class AgentRuleSyncTests(unittest.TestCase):
             )
             manifest = json.loads((ROOT / "rules" / "manifest.json").read_text(encoding="utf-8"))
             manifest["backup_policy"] = {"enabled": True, "root": str(workspace / "backups")}
-            manifest_path = workspace / "manifest.json"
-            _write_json(manifest_path, manifest)
             source_path = ROOT / "rules" / "projects" / "classroomtoolkit" / "codex" / "AGENTS.md"
+            temp_source_root = ROOT / ".tmp"
+            temp_source_root.mkdir(exist_ok=True)
+            with tempfile.TemporaryDirectory(dir=temp_source_root) as source_tmp_dir:
+                temp_source_path = Path(source_tmp_dir) / "AGENTS.md"
+                temp_source_path.write_text(source_path.read_text(encoding="utf-8"), encoding="utf-8")
+                for entry in manifest["entries"]:
+                    if entry["id"] == "classroomtoolkit-codex-agents":
+                        entry["source"] = str(temp_source_path)
+                manifest_path = workspace / "manifest.json"
+                _write_json(manifest_path, manifest)
+                target_path = target_repo / "AGENTS.md"
+                target_text = temp_source_path.read_text(encoding="utf-8").replace(
+                    "- 小步闭环，优先根因修复；止血补丁必须标明回收时点。\n",
+                    "- 小步闭环，优先根因修复；止血补丁必须标明回收时点。\n- 本地补充：投屏环境变更前先记录教室编号。\n",
+                )
+                target_path.write_text(target_text, encoding="utf-8")
+
+                completed = subprocess.run(
+                    [
+                        sys.executable,
+                        "scripts/sync-agent-rules.py",
+                        "--scope",
+                        "Targets",
+                        "--target",
+                        "classroomtoolkit",
+                        "--manifest-path",
+                        str(manifest_path),
+                        "--catalog-path",
+                        str(catalog_path),
+                        "--code-root",
+                        str(code_root),
+                        "--apply",
+                    ],
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                    cwd=ROOT,
+                )
+
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+                payload = json.loads(completed.stdout)
+                merged = [item for item in payload["results"] if item["id"] == "classroomtoolkit-codex-agents"][0]
+                self.assertEqual(merged["status"], "merged_same_version_drift")
+                self.assertEqual(merged["merge_strategy"], "project_rule_structured_union")
+                self.assertEqual(merged["source_update"], "updated")
+                self.assertEqual(merged["target_update"], "updated")
+                self.assertIn("source_backup_path", merged)
+                self.assertGreaterEqual(merged["merged_target_additions"], 1)
+                merged_text = target_path.read_text(encoding="utf-8")
+                source_text = temp_source_path.read_text(encoding="utf-8")
+                self.assertEqual(source_text, merged_text)
+                self.assertIn("<!-- auto-merged target-local additions -->", merged_text)
+                self.assertIn("本地补充：投屏环境变更前先记录教室编号。", merged_text)
+
+    def test_project_sync_dry_run_counts_auto_merge_as_change(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            code_root = workspace / "code"
+            target_repo = code_root / "ClassroomToolkit"
+            target_repo.mkdir(parents=True)
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "classroomtoolkit": {
+                            "attachment_root": "${code_root}/ClassroomToolkit",
+                            "attachment_runtime_state_root": "${runtime_state_base}/classroomtoolkit",
+                        }
+                    },
+                },
+            )
+            manifest = json.loads((ROOT / "rules" / "manifest.json").read_text(encoding="utf-8"))
+            source_path = ROOT / "rules" / "projects" / "classroomtoolkit" / "codex" / "AGENTS.md"
+            for target_name, source in (
+                ("CLAUDE.md", ROOT / "rules" / "projects" / "classroomtoolkit" / "claude" / "CLAUDE.md"),
+                ("GEMINI.md", ROOT / "rules" / "projects" / "classroomtoolkit" / "gemini" / "GEMINI.md"),
+            ):
+                (target_repo / target_name).write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
             target_path = target_repo / "AGENTS.md"
             target_text = source_path.read_text(encoding="utf-8").replace(
                 "- 小步闭环，优先根因修复；止血补丁必须标明回收时点。\n",
                 "- 小步闭环，优先根因修复；止血补丁必须标明回收时点。\n- 本地补充：投屏环境变更前先记录教室编号。\n",
             )
             target_path.write_text(target_text, encoding="utf-8")
+            manifest_path = workspace / "manifest.json"
+            _write_json(manifest_path, manifest)
 
             completed = subprocess.run(
                 [
@@ -214,7 +295,7 @@ class AgentRuleSyncTests(unittest.TestCase):
                     str(catalog_path),
                     "--code-root",
                     str(code_root),
-                    "--apply",
+                    "--fail-on-change",
                 ],
                 check=False,
                 capture_output=True,
@@ -222,15 +303,14 @@ class AgentRuleSyncTests(unittest.TestCase):
                 cwd=ROOT,
             )
 
-            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertEqual(completed.returncode, 1, completed.stderr)
             payload = json.loads(completed.stdout)
+            self.assertEqual(payload["status"], "dry_run_changes")
+            self.assertEqual(payload["changed_count"], 1)
             merged = [item for item in payload["results"] if item["id"] == "classroomtoolkit-codex-agents"][0]
-            self.assertEqual(merged["status"], "merged_same_version_drift")
-            self.assertEqual(merged["merge_strategy"], "project_rule_structured_union")
-            self.assertGreaterEqual(merged["merged_target_additions"], 1)
-            merged_text = target_path.read_text(encoding="utf-8")
-            self.assertIn("<!-- auto-merged target-local additions -->", merged_text)
-            self.assertIn("本地补充：投屏环境变更前先记录教室编号。", merged_text)
+            self.assertEqual(merged["status"], "would_merge_same_version_drift")
+            self.assertEqual(merged["source_update"], "would_update")
+            self.assertEqual(merged["target_update"], "would_update")
 
     def test_project_sync_blocks_same_version_drift_when_structure_is_incompatible(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

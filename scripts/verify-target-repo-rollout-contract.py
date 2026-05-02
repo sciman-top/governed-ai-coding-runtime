@@ -42,7 +42,7 @@ def _normalize_managed_file_entries(value: Any) -> list[tuple[str, str, str]]:
             continue
         path = item.get("path")
         source = item.get("source")
-        management_mode = item.get("management_mode", "replace")
+        management_mode = item.get("management_mode", "block_on_drift")
         if not (
             isinstance(path, str)
             and path.strip()

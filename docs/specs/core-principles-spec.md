@@ -44,6 +44,7 @@ Every principle must include:
 - least_privilege_tool_credential_boundary
 - measured_effect_feedback_over_claims
 - hard_gate_order
+- source_target_drift_integration_before_sync
 
 ## Capability Portfolio Outcomes
 Controlled evolution must classify both proposed mechanisms and existing capabilities with one of:
@@ -79,10 +80,13 @@ The policy must declare:
 - Tool permissions, sandbox scope, credentials, provider secrets, mounted paths, and network access must be least-privilege and auditable.
 - Capability completion claims must be backed by fresh target-run evidence, eval traces, effect feedback, verification commands, and rollback paths.
 - Efficiency must not override safety, least privilege, evidence, rollback, or review boundaries for effective changes.
+- Efficiency includes necessary explanatory density; concise explanation is part of execution quality, while verbose narration and fixed model tuning are not goals.
+- Model, provider, reasoning level, context window, compact threshold, and host tooling are implementation profiles, not core principles; they may be replaced only under the existing safety, least privilege, evidence, rollback, review, and gate constraints.
 - Comparable effect evidence should preserve stable fields such as freshness status, target run identity, gate result, effect metric delta, verification command, and rollback reference when the task surface can provide them.
 - Controlled evolution must evaluate additions, retention, improvement, merge, deprecation, retirement, and deletion candidates.
 - Deterministic governance automation should run inside this project; outer AI may be automatically triggered for high-intelligence analysis and proposal generation, but effective changes remain gate-controlled.
 - Automatic policy mutation, skill enablement, target-repo sync, push, and merge remain disallowed unless a later reviewed implementation explicitly changes the guard.
+- Same-name source and deployed target files must be compared before synchronization; compatible drift must be integrated into the canonical source and deployed copy, while incompatible drift must block with evidence and rollback guidance.
 - Documentation claims must not outgrow implementation, evidence, and rollback.
 - Deletion must be proposal-backed, path-bounded, rollbackable, and must not remove reviewed policy, enabled skills, active gates, target-repo declarations, or evidence history automatically.
 

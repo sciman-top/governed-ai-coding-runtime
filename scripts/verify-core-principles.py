@@ -28,6 +28,7 @@ REQUIRED_PRINCIPLES = {
     "least_privilege_tool_credential_boundary",
     "measured_effect_feedback_over_claims",
     "hard_gate_order",
+    "source_target_drift_integration_before_sync",
 }
 
 REQUIRED_PORTFOLIO_OUTCOMES = {

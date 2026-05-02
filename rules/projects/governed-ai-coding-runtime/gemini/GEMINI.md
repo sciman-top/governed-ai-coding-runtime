@@ -25,7 +25,7 @@
 - 默认中文沟通、中文解释、中文汇报；代码标识符、命令、日志、报错和 schema 字段保留英文原文。
 - 当前权威输入顺序：根 `README.md` -> `docs/README.md` -> PRD -> Architecture -> Roadmap -> Backlog -> Specs -> Schemas。
 - 本仓面向 `Codex / Claude Code / 本机操作者` 的长期核心原则收敛为 5 条人类可读口径，机器细则仍以 `docs/architecture/core-principles-policy.json` 为准。
-- `综合效率优先，安全边界约束`：少打扰、自动连续执行、节省 token / 成本、高效率；具体模型、推理档位、compact 阈值、provider、交互方式与自动化细节只是阶段性实现。
+- `综合效率优先，安全边界约束`：少打扰、自动连续执行、节省 token / 成本、保留必要解释、高效率；模型、provider、推理档位、context window、compact 阈值、交互方式与自动化细节只是阶段性实现，不是长期原则；效率优化不得绕过既有安全、证据、回滚、review 和门禁约束。
 - `自动优先，外层 AI 辅助，门禁控制演进`：确定性治理工作应自动化；外层 AI 可生成 review、知识、候选和建议，但有效变更必须先经过结构化候选、风险分级、机器门禁、证据、回滚和必要 review。
 - `治理中枢，可复用契约，宿主兼容执行`：本仓是治理 sidecar / control plane，不竞争或替代 Codex、Claude Code 等宿主；外部 agent 项目只作为机制来源。
 - `上下文预算与指令最小化 + 最小权限工具/凭据边界`：根规则保持短而硬；工具权限、凭据、sandbox、mount、network、provider secret 必须可审计并尽量由确定性控制执行。

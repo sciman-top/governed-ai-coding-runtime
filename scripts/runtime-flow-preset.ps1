@@ -434,7 +434,7 @@ function Test-GovernanceSyncHasChanges {
     return $true
   }
 
-  foreach ($fieldName in @("changed_catalog_fields", "changed_fields", "changed_speed_profile_fields", "changed_managed_files")) {
+  foreach ($fieldName in @("changed_catalog_fields", "changed_fields", "changed_speed_profile_fields", "changed_managed_files", "blocked_managed_files")) {
     if (-not ($SyncResult.payload.PSObject.Properties.Name -contains $fieldName)) {
       return $true
     }
@@ -909,6 +909,9 @@ function Invoke-GovernanceBaselineSync {
   }
   elseif ($result.timed_out) {
     "apply_timed_out"
+  }
+  elseif ($payload -and ($payload.PSObject.Properties.Name -contains "blocked_managed_files") -and (@(ConvertTo-JsonArrayValue -Value $payload.blocked_managed_files).Count -gt 0)) {
+    "managed_file_blocked"
   }
   else {
     "apply_failed"
@@ -2214,6 +2217,8 @@ if ($Json) {
           catalog_changed = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_catalog_fields } else { @() }
           changed      = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_fields } else { @() }
           speed_changed = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_speed_profile_fields } else { @() }
+          managed_changed = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_managed_files } else { @() }
+          managed_blocked = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.blocked_managed_files } else { @() }
           sync_revision = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.sync_revision } else { $null }
           quick_test_slice_source = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.quick_test_slice_source } else { "" }
           outer_ai_action = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.outer_ai_action } else { "" }
@@ -2260,6 +2265,8 @@ if ($Json) {
             catalog_changed = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_catalog_fields } else { @() }
             changed      = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_fields } else { @() }
             speed_changed = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_speed_profile_fields } else { @() }
+            managed_changed = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.changed_managed_files } else { @() }
+            managed_blocked = if ($single.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $single.governance_sync_result.payload.blocked_managed_files } else { @() }
             sync_revision = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.sync_revision } else { $null }
             quick_test_slice_source = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.quick_test_slice_source } else { "" }
             outer_ai_action = if ($single.governance_sync_result.payload) { $single.governance_sync_result.payload.outer_ai_action } else { "" }
@@ -2298,6 +2305,8 @@ if ($Json) {
           governance_sync_catalog_changed = if ($_.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $_.governance_sync_result.payload.changed_catalog_fields } else { @() }
           governance_sync_changed  = if ($_.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $_.governance_sync_result.payload.changed_fields } else { @() }
           governance_sync_speed_changed = if ($_.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $_.governance_sync_result.payload.changed_speed_profile_fields } else { @() }
+          governance_sync_managed_changed = if ($_.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $_.governance_sync_result.payload.changed_managed_files } else { @() }
+          governance_sync_managed_blocked = if ($_.governance_sync_result.payload) { ConvertTo-JsonArrayValue -Value $_.governance_sync_result.payload.blocked_managed_files } else { @() }
           governance_sync_quick_test_slice_source = if ($_.governance_sync_result.payload) { $_.governance_sync_result.payload.quick_test_slice_source } else { "" }
           governance_sync_outer_ai_action = if ($_.governance_sync_result.payload) { $_.governance_sync_result.payload.outer_ai_action } else { "" }
           governance_sync_quick_test_prompt_path = if ($_.governance_sync_result.payload) { $_.governance_sync_result.payload.quick_test_prompt_path } else { "" }

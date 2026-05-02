@@ -146,3 +146,93 @@ Current blockers:
 Rollback:
 - Revert `scripts/verify-repo.ps1`, `scripts/run-runtime-tests.py`, `.github/workflows/*.yml`, `tests/runtime/test_run_runtime_tests_runner.py`, `docs/targets/target-repo-test-slicing-policy.md`, and `tests/README.md`.
 - Delete `docs/change-evidence/runtime-test-speed-latest.json` if the 8-worker negative benchmark artifact should not be retained.
+
+## Gate Speed Follow-up Addendum
+Current landing: `D:\CODE\governed-ai-coding-runtime`.
+Target home: manifest-managed rule source alignment, focused Docs link feedback, and Runtime test speed profile.
+Verification path: `sync-agent-rules` dry-run -> Contract -> focused Runtime tests -> full runtime runner with timing JSON.
+
+pre_change_review:
+- control_repo_manifest_and_rule_sources: checked `rules/manifest.json`, `rules/global/*`, `rules/projects/*`, and `python scripts/sync-agent-rules.py --scope All --fail-on-change`; after source alignment all 18 entries are same-hash with `blocked_count=0`.
+- user_level_deployed_rule_files: compared `rules/global/codex/AGENTS.md`, `rules/global/claude/CLAUDE.md`, and `rules/global/gemini/GEMINI.md` against `C:\Users\sciman\.codex\AGENTS.md`, `C:\Users\sciman\.claude\CLAUDE.md`, and `C:\Users\sciman\.gemini\GEMINI.md`; same-version drift was integrated into source rather than force-overwriting deployed files.
+- target_repo_deployed_rule_files: the same sync dry-run reported all project target entries as `skipped_same_hash`.
+- target_repo_gate_scripts_and_ci: reviewed changed gate scripts in `scripts/verify-repo.ps1`, existing sensitive sync/apply scripts, and workflow timeout/concurrency changes; `DocsLinks` is a narrow active-link feedback slice and does not replace full `Docs`.
+- target_repo_repo_profile: no repo-profile semantic change is intended in this follow-up; profile-related sensitive paths are only covered by the standard pre-change review token set.
+- target_repo_readme_and_operator_docs: updated `docs/targets/target-repo-test-slicing-policy.md` to document `RuntimeQuick`, runtime runner timeout/summary behavior, and `DocsLinks`.
+- current_official_tool_loading_docs: retained the prior official-doc review from this evidence file; no new loading-model semantics were introduced.
+- drift-integration decision: integrate current deployed global rule content into the control-repo sources, add focused feedback slices, and keep full gates authoritative.
+
+Measured follow-up effect:
+- Full runtime runner after rule-sync cleanup: 95 files, 4 workers, 341.087 seconds, 0 failures.
+- After static verify-repo wiring checks: 317.728 seconds, 0 failures in the runner; `test_runtime_doctor.py` still dominated at 164.201 seconds.
+- After `DocsLinks`: focused `test_runtime_doctor.py` passed in 23.035 seconds; full runtime runner reached 238.278 seconds before failing on this evidence gap and one tight elapsed-time assertion.
+- Final first pass after evidence/threshold fixes: 95 files, 4 workers, 281.003 seconds, 0 failures; formal `verify-repo.ps1 -Check Runtime`, `Contract`, and `RuntimeQuick` also passed.
+- Second pass removes three more duplicated full `Docs` invocations from Runtime tests by converting `core-principles`, `current-source-compatibility`, and `ltp-autonomous-promotion` wiring assertions to static verifier-contract checks.
+- Second pass measured result: 95 files, 4 workers, 163.082 seconds, 0 failures.
+- Third pass replaces heavy operator UI helper calls with mocks for status providers and command execution in contract-focused tests, while retaining separate real entrypoint smoke coverage.
+
+Rollback:
+- Revert `scripts/verify-repo.ps1`, `tests/runtime/test_runtime_doctor.py`, `tests/runtime/test_runtime_flow_preset.py`, and `docs/targets/target-repo-test-slicing-policy.md`.
+- Revert `tests/runtime/test_core_principles.py`, `tests/runtime/test_current_source_compatibility.py`, and `tests/runtime/test_ltp_autonomous_promotion.py`.
+- Revert `tests/runtime/test_operator_entrypoint.py`.
+- Delete `docs/change-evidence/runtime-test-speed-after-*.json` if the timing artifacts should not be retained.
+
+## Gate Speed Closeout Addendum
+Current landing: `D:\CODE\governed-ai-coding-runtime`.
+Target home: final Runtime speed evidence, rule-sync consistency, and hard-gate closeout.
+Verification path: rule sync apply/dry-run -> pre-change review -> build -> Runtime -> Contract -> RuntimeQuick -> doctor.
+
+Rule-sync closeout:
+- `python scripts/sync-agent-rules.py --scope Targets --target self-runtime --apply`: pass; merged same-version project-rule drift for `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` into the manifest-managed sources and the deployed self-runtime files.
+- Backups were written under `docs/change-evidence/rule-sync-backups/20260502-171618/`.
+- `python scripts/sync-agent-rules.py --scope All --fail-on-change`: pass, `changed_count=0`, `blocked_count=0`, all 18 manifest entries same-hash.
+
+Measured closeout effect:
+- Stable post-cleanup baseline: 95 files, 4 workers, 341.087 seconds, 0 failures.
+- Best full-run result after duplicate full-gate invocations were removed from Runtime tests: 95 files, 4 workers, 163.082 seconds, 0 failures.
+- Follow-up full run after operator-entrypoint contract mocking: 95 files, 4 workers, 186.663 seconds, 0 failures; the operator test file itself dropped to 20.517 seconds in that run.
+- Formal `verify-repo.ps1 -Check Runtime` closeout: 95 files, 4 workers, 228.234 seconds, 0 failures. This run is slower than the best direct runner result due normal host variance, but still materially faster than the 341.087-second post-cleanup baseline.
+- 6-worker experiment: 95 files, 179.826 seconds, failed because concurrent rule-sync-sensitive checks observed same-version drift. Decision: keep the default at 4 workers; use `--workers` only for controlled experiments after drift-sensitive state is clean.
+
+Final gate evidence:
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`: pass (`OK python-bytecode`, `OK python-import`).
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`: pass, 95 files, 228.234 seconds, 0 failures.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`: pass, including `agent-rule-sync`, `pre-change-review`, and `functional-effectiveness`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check RuntimeQuick`: pass, 47 tests in 29.384 seconds.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`: pass with existing `WARN codex-capability-degraded`; all hard checks returned `OK`.
+
+Remaining hotspot profile:
+- Slowest closeout Runtime files are still true integration/effectiveness paths: `test_attached_repo_e2e.py`, `test_run_governed_task_cli.py`, `test_runtime_flow_preset.py`, `test_autonomous_next_work_selection.py`, `test_runtime_evolution.py`, and `test_evidence_recovery_posture.py`.
+- Next safe optimization lane is to split those files into contract-smoke and full integration layers with shared fixtures or explicit slow tags, while keeping the existing full Runtime gate authoritative.
+
+## Gate Speed Fourth Pass Addendum
+Current landing: `D:\CODE\governed-ai-coding-runtime`.
+Target home: repeated subprocess reduction in Runtime hotspot tests.
+Verification path: targeted hotspot tests -> full runtime runner -> formal gate closeout.
+
+Changes:
+- Converted functional assertions in `tests/runtime/test_run_governed_task_cli.py` from repeated Python CLI subprocesses to direct calls against the same loaded `run-governed-task.py` module; kept help-text tests as real CLI subprocess coverage.
+- Mocked Codex capability probing in the status-surface unit test while preserving the `codex_capability` output contract.
+- Kept one full `runtime-check.ps1` attached-repo E2E path in `tests/runtime/test_attached_repo_e2e.py`; added `-SkipVerifyAttachment` to repeated write-policy/default-tool/fallback cases that do not need to re-run target repo gates.
+
+Measured fourth-pass effect:
+- `python -m unittest tests.runtime.test_run_governed_task_cli`: pass, 9 tests in 31.714 seconds.
+- `python -m unittest tests.runtime.test_attached_repo_e2e`: pass, 5 tests in 37.803 seconds.
+- `python -m unittest tests.runtime.test_runtime_flow_preset`: pass, 17 tests in 40.383 seconds.
+- `python scripts/run-runtime-tests.py --suite runtime=tests/runtime --suite service=tests/service --summary-json docs/change-evidence/runtime-test-speed-fourth-pass.json`: pass, 95 files, 167.128 seconds, 0 failures.
+- Formal `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`: pass, 95 files, 179.161 seconds, 0 failures.
+- Formal `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check RuntimeQuick`: pass, 47 tests in 20.543 seconds.
+
+Fourth-pass hotspot profile:
+- Slowest files after this pass: `test_autonomous_next_work_selection.py` 48.889s, `test_runtime_flow_preset.py` 45.474s, `test_runtime_evolution.py` 43.695s, `test_attached_repo_e2e.py` 42.870s, `test_evidence_recovery_posture.py` 41.797s.
+- This pass validates the repeated-subprocess reduction lane. The remaining best lane is shared fixture/precomputed evidence for the autonomous/evolution/evidence posture tests, not raising runner worker count.
+
+Final gate evidence:
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`: pass (`OK python-bytecode`, `OK python-import`).
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`: pass, 179.161 seconds.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`: pass, including `agent-rule-sync`, `pre-change-review`, and `functional-effectiveness`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`: pass with existing `WARN codex-capability-degraded`; all hard checks returned `OK`.
+
+Rollback:
+- Revert `tests/runtime/test_run_governed_task_cli.py` and `tests/runtime/test_attached_repo_e2e.py`.
+- Delete `docs/change-evidence/runtime-test-speed-fourth-pass.json` if the timing artifact should not be retained.

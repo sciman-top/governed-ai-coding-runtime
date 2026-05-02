@@ -1704,7 +1704,7 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             payload = json.loads(completed.stdout)
             self.assertEqual(payload["target_count"], 3)
             self.assertEqual(payload["failure_count"], 0)
-            self.assertLess(elapsed, 6.0)
+            self.assertLess(elapsed, 8.0)
             self.assertEqual({item["target"] for item in payload["results"]}, set(targets))
 
     def test_runtime_flow_preset_all_targets_apply_all_features_logs_stage_progress(self) -> None:

@@ -64,7 +64,7 @@ def _validate_baseline(path: Path) -> tuple[str, dict[str, Any], list[dict[str, 
             raise ValueError(f"baseline.required_managed_files[{index}] must be an object")
         target_path = item.get("path")
         source_path = item.get("source")
-        management_mode = item.get("management_mode", "replace")
+        management_mode = item.get("management_mode", "block_on_drift")
         if not isinstance(target_path, str) or not target_path.strip():
             raise ValueError(f"baseline.required_managed_files[{index}].path must be a non-empty string")
         if not isinstance(source_path, str) or not source_path.strip():
@@ -386,7 +386,7 @@ def main() -> int:
         for item in managed_files:
             target_path = _target_relative_path(attachment_root, str(item["path"]))
             source_path = _source_path(str(item["source"]))
-            management_mode = str(item.get("management_mode", "replace"))
+            management_mode = str(item.get("management_mode", "block_on_drift"))
             if not source_path.exists():
                 raise SystemExit(f"managed file source not found: {source_path}")
             source_text = source_path.read_text(encoding="utf-8")

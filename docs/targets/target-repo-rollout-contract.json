@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "contract_id": "target-repo-rollout-contract",
-  "sync_revision": "2026-04-26.4",
+  "sync_revision": "2026-05-02.1",
   "canonical_one_click_entrypoint": {
     "script": "scripts/runtime-flow-preset.ps1",
     "all_targets_apply_all_features_args": [
@@ -23,6 +23,8 @@
       "apply_coding_speed_profile",
       "apply_feature_baseline_and_milestone_commit",
       "governance_baseline_sync_active",
+      "governance_sync_managed_changed",
+      "governance_sync_managed_blocked",
       "milestone_gate_mode",
       "milestone_gate_mode_source",
       "milestone_gate_mode_reason",
@@ -36,7 +38,7 @@
       {
         "path": ".governed-ai/verify-powershell-policy.py",
         "source": "docs/targets/templates/verify-powershell-policy.py",
-        "management_mode": "replace"
+        "management_mode": "block_on_drift"
       },
       {
         "path": ".claude/settings.json",

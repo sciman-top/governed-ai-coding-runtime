@@ -1,7 +1,6 @@
 import datetime as dt
 import importlib.util
 import json
-import subprocess
 import sys
 import tempfile
 import unittest
@@ -28,16 +27,15 @@ class AutonomousNextWorkSelectionTests(unittest.TestCase):
         sys.modules.pop("evaluate_ltp_promotion_script", None)
 
     def test_repo_selector_refreshes_evidence_when_target_runs_are_degraded(self) -> None:
-        completed = subprocess.run(
-            [sys.executable, "scripts/select-next-work.py", "--as-of", "2026-05-01"],
-            check=False,
-            capture_output=True,
-            text=True,
-            cwd=ROOT,
+        module = _load_selector_script()
+
+        payload = module.assert_next_work_selection(
+            repo_root=ROOT,
+            policy_path=ROOT / "docs" / "architecture" / "autonomous-next-work-selection-policy.json",
+            ltp_policy_path=ROOT / "docs" / "architecture" / "ltp-autonomous-promotion-policy.json",
+            as_of=dt.date(2026, 5, 1),
         )
 
-        self.assertEqual(completed.returncode, 0, completed.stderr)
-        payload = json.loads(completed.stdout)
         self.assertEqual(payload["status"], "pass")
         self.assertEqual(payload["policy_id"], "default-autonomous-next-work-selection")
         self.assertEqual(payload["ltp_decision"], "defer_all")

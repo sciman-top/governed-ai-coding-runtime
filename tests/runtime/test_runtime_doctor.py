@@ -165,7 +165,7 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
                     "-File",
                     str(script),
                     "-Check",
-                    "Docs",
+                    "DocsLinks",
                 ],
                 check=True,
                 capture_output=True,
@@ -176,8 +176,6 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             shutil.rmtree(fixture_root, ignore_errors=True)
 
         self.assertIn("OK active-markdown-links", completed.stdout)
-        self.assertIn("OK backlog-yaml-ids", completed.stdout)
-        self.assertIn("OK old-project-name-historical-only", completed.stdout)
 
     def test_verify_repo_docs_handles_non_ascii_markdown_paths(self) -> None:
         script = ROOT / "scripts" / "verify-repo.ps1"
@@ -194,7 +192,7 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
                     "-File",
                     str(script),
                     "-Check",
-                    "Docs",
+                    "DocsLinks",
                 ],
                 check=True,
                 capture_output=True,
@@ -205,8 +203,6 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             fixture_path.unlink(missing_ok=True)
 
         self.assertIn("OK active-markdown-links", completed.stdout)
-        self.assertIn("OK backlog-yaml-ids", completed.stdout)
-        self.assertIn("OK old-project-name-historical-only", completed.stdout)
 
     def test_doctor_runtime_reports_attachment_postures(self) -> None:
         import tempfile

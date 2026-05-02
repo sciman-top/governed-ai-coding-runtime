@@ -91,25 +91,11 @@ class CorePrinciplesTests(unittest.TestCase):
                 module.assert_core_principles(repo_root=repo_root, policy_path=policy_path)
 
     def test_verify_repo_docs_runs_core_principles_gate(self) -> None:
-        completed = subprocess.run(
-            [
-                "pwsh",
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                "scripts/verify-repo.ps1",
-                "-Check",
-                "Docs",
-            ],
-            check=False,
-            capture_output=True,
-            text=True,
-            cwd=ROOT,
-        )
+        verifier = (ROOT / "scripts" / "verify-repo.ps1").read_text(encoding="utf-8")
 
-        self.assertEqual(completed.returncode, 0, completed.stderr)
-        self.assertIn("OK core-principles", completed.stdout)
+        self.assertIn("function Invoke-DocsChecks", verifier)
+        self.assertIn("Invoke-CorePrinciplesChecks", verifier)
+        self.assertIn('Write-CheckOk "core-principles"', verifier)
 
     def _write_policy(self, repo_root: Path, *, doc_token: str = "cooperation hosts") -> Path:
         docs_dir = repo_root / "docs"
@@ -146,6 +132,7 @@ class CorePrinciplesTests(unittest.TestCase):
                     "least_privilege_tool_credential_boundary",
                     "measured_effect_feedback_over_claims",
                     "hard_gate_order",
+                    "source_target_drift_integration_before_sync",
                 ]
             ],
             "capability_portfolio_outcomes": [

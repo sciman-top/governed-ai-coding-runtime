@@ -233,7 +233,7 @@ function Show-OperatorHelp {
 Governed runtime operator entrypoint
 
 长期核心原则:
-  综合效率优先 = 少打扰 / 自动连续执行 / 节省 token / 成本 / 高效率
+  综合效率优先 = 少打扰 / 自动连续执行 / 节省 token / 成本 / 必要解释 / 高效率
   说明: 当前模型、provider、compact 与自动化细节都只是阶段性实现，不高于该原则本身。
 
 AI 推荐:

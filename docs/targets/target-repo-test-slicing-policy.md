@@ -115,6 +115,8 @@ The first-class local entrypoint for that focused slice is `pwsh -NoProfile -Exe
 
 `scripts/run-runtime-tests.py` is the self-runtime test-file runner. It defaults to up to 4 workers, applies a per-test-file timeout of 180 seconds unless `GOVERNED_RUNTIME_TEST_TIMEOUT_SECONDS` or `--timeout-seconds` overrides it, prints the slowest files, and can persist timing metadata with `--summary-json`.
 
+`pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check DocsLinks` is a file-level feedback slice for active markdown link behavior. It exists for focused Runtime tests and does not replace the full `Docs` gate.
+
 ## Rollback
 Remove `quick_test_command` and optional companion fields from the target catalog entry, or remove `.governed-ai/quick-test-slice.recommendation.json`, then run:
 

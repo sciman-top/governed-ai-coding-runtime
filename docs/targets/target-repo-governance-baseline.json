@@ -1,13 +1,13 @@
 {
   "schema_version": "1.0",
   "baseline_id": "active-target-governance-baseline",
-  "sync_revision": "2026-04-28.3",
+  "sync_revision": "2026-05-02.1",
   "required_managed_files": [
     {
       "path": ".governed-ai/verify-powershell-policy.py",
       "source": "docs/targets/templates/verify-powershell-policy.py",
-      "management_mode": "replace",
-      "description": "Repo-local guard that fails on direct normal-path powershell/powershell.exe invocations and keeps target repos pwsh-first."
+      "management_mode": "block_on_drift",
+      "description": "Repo-local guard that fails on direct normal-path powershell/powershell.exe invocations and keeps target repos pwsh-first; existing target-local drift must be reviewed and integrated before sync instead of overwritten."
     },
     {
       "path": ".claude/settings.json",
