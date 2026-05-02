@@ -107,6 +107,7 @@ def main() -> int:
     write_execute_parser.add_argument("--rollback-reference", required=True)
     write_execute_parser.add_argument("--content", required=True)
     write_execute_parser.add_argument("--approval-id")
+    write_execute_parser.add_argument("--expected-sha256")
     write_execute_parser.add_argument("--policy-status", choices=["allow", "escalate", "deny"], default="allow")
     write_execute_parser.add_argument("--policy-decision-ref")
     write_execute_parser.add_argument("--approval-ref")
@@ -189,6 +190,8 @@ def main() -> int:
         }
         if args.approval_id:
             payload["approval_id"] = args.approval_id
+        if args.expected_sha256:
+            payload["expected_sha256"] = args.expected_sha256
         if args.policy_decision_ref:
             payload["policy_decision_ref"] = args.policy_decision_ref
         if args.timeout_seconds is not None:

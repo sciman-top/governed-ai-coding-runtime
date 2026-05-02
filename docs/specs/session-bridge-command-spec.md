@@ -31,6 +31,7 @@ For `run_quick_gate` and `run_full_gate`, `payload` may carry:
 
 For `write_request` and `write_execute`:
 - file-write path: `tool_name`, `target_path`, `tier`, `rollback_reference`, and `content` (execute only)
+- `write_execute` for an existing `write_file` target must include `expected_sha256`; stale or missing hashes fail closed before writing
 - governed tool path: `tool_name` in `shell | git | package`, bounded `command`, `rollback_reference`, and optional `approval_id`
 
 ## Enumerations

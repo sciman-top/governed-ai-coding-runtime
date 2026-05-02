@@ -33,6 +33,7 @@ param(
   [string]$WriteToolCommand = "",
   [string]$RollbackReference = "",
   [string]$WriteContent = "governed runtime write probe",
+  [string]$WriteExpectedSha256 = "",
   [switch]$ExecuteWriteFlow,
 
   [switch]$SkipVerifyAttachment,
@@ -276,6 +277,9 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
     $checkArgs += @("-WriteToolCommand", $WriteToolCommand)
   }
   $checkArgs += @("-WriteContent", $WriteContent)
+  if (-not [string]::IsNullOrWhiteSpace($WriteExpectedSha256)) {
+    $checkArgs += @("-WriteExpectedSha256", $WriteExpectedSha256)
+  }
 }
 if (-not [string]::IsNullOrWhiteSpace($RollbackReference)) {
   $checkArgs += @("-RollbackReference", $RollbackReference)

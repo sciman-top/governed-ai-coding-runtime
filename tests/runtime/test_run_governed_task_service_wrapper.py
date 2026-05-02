@@ -269,6 +269,41 @@ class RunGovernedTaskServiceWrapperTests(unittest.TestCase):
         self.assertEqual(fake_app.calls[0]["payload"]["command_type"], "write_request")
         self.assertEqual(fake_app.calls[1]["payload"]["command_type"], "write_execute")
 
+    def test_execute_attachment_write_passes_expected_sha256_to_execute_payload(self) -> None:
+        module = _load_run_governed_task_module()
+        fake_app = _FakeApp(
+            [
+                {
+                    "payload": {
+                        "execution_id": "task:approval:1",
+                        "continuation_id": "task:approval:1",
+                        "approval_id": "approval-1",
+                        "session_identity": {"session_id": "s-1", "resume_id": "r-1"},
+                    }
+                },
+                {"payload": {"execution_status": "write_executed", "approval_status": "approved"}},
+            ]
+        )
+
+        with patch.object(module, "_build_control_plane_app", return_value=fake_app):
+            module.execute_attachment_write(
+                attachment_root=str(ROOT),
+                attachment_runtime_state_root=str(ROOT / ".runtime"),
+                task_id="task-write",
+                tool_name="write_file",
+                command_text="",
+                target_path="docs/x.txt",
+                tier="medium",
+                rollback_reference="docs/runbooks/control-rollback.md",
+                content="payload",
+                approval_id=None,
+                expected_sha256="sha256:abcd",
+                adapter_id="codex-cli",
+            )
+
+        execute_payload = fake_app.calls[1]["payload"]["payload"]
+        self.assertEqual(execute_payload["expected_sha256"], "sha256:abcd")
+
     def test_run_attachment_verification_uses_service_dispatch(self) -> None:
         module = _load_run_governed_task_module()
         fake_app = _FakeApp(

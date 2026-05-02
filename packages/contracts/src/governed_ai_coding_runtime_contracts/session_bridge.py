@@ -1001,6 +1001,7 @@ def handle_session_bridge_command(
                     rollback_reference=_payload_required_string(command.payload, "rollback_reference"),
                     content=_payload_required_string(command.payload, "content"),
                     approval_id=_payload_optional_string(command.payload, "approval_id"),
+                    expected_sha256=_payload_optional_string(command.payload, "expected_sha256"),
                 )
             except ValueError as exc:
                 return _degraded(command, reason=str(exc))

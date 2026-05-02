@@ -146,6 +146,7 @@ def main() -> int:
     execute_attachment_write_parser.add_argument("--rollback-reference", required=True)
     execute_attachment_write_parser.add_argument("--content", required=True)
     execute_attachment_write_parser.add_argument("--approval-id")
+    execute_attachment_write_parser.add_argument("--expected-sha256")
     execute_attachment_write_parser.add_argument("--adapter-id", default="codex-cli")
     execute_attachment_write_parser.add_argument("--session-id")
     execute_attachment_write_parser.add_argument("--resume-id")
@@ -214,6 +215,7 @@ def main() -> int:
                 rollback_reference=args.rollback_reference,
                 content=args.content,
                 approval_id=args.approval_id,
+                expected_sha256=args.expected_sha256,
                 adapter_id=args.adapter_id,
                 session_id=args.session_id,
                 resume_id=args.resume_id,
@@ -716,6 +718,7 @@ def execute_attachment_write(
     rollback_reference: str,
     content: str,
     approval_id: str | None,
+    expected_sha256: str | None = None,
     adapter_id: str,
     session_id: str | None = None,
     resume_id: str | None = None,
@@ -781,6 +784,8 @@ def execute_attachment_write(
         "continuation_id": resolved_continuation_id,
         "entrypoint_id": entrypoint_id,
     }
+    if expected_sha256:
+        execute_payload["expected_sha256"] = expected_sha256
     if isinstance(resolved_session_id, str) and resolved_session_id.strip():
         execute_payload["session_id"] = resolved_session_id.strip()
     if isinstance(resolved_resume_id, str) and resolved_resume_id.strip():

@@ -31,6 +31,7 @@ param(
   [string]$WriteToolCommand = "",
   [string]$RollbackReference = "",
   [string]$WriteContent = "governed runtime write probe",
+  [string]$WriteExpectedSha256 = "",
   [switch]$ExecuteWriteFlow,
 
   [switch]$SkipSourceStringContractGuard,
@@ -461,6 +462,9 @@ if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
     }
     if (-not [string]::IsNullOrWhiteSpace($resolvedApprovalId)) {
       $executeArgs += @("--approval-id", $resolvedApprovalId)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($WriteExpectedSha256)) {
+      $executeArgs += @("--expected-sha256", $WriteExpectedSha256)
     }
     $executeStep = Invoke-CommandCapture -Label "execute-attachment-write" -Command {
       & $python @executeArgs

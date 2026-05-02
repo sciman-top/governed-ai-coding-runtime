@@ -26,6 +26,7 @@ param(
   [string]$WriteToolCommand = "",
   [string]$RollbackReference = "",
   [string]$WriteContent = "governed runtime write probe",
+  [string]$WriteExpectedSha256 = "",
   [switch]$ExecuteWriteFlow,
   [switch]$SkipVerifyAttachment,
 
@@ -1015,6 +1016,9 @@ function Invoke-TargetPresetFlow {
   }
   if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
     $flowArgs += @("-WriteTargetPath", $WriteTargetPath, "-WriteTier", $WriteTier, "-WriteToolName", $WriteToolName, "-WriteContent", $WriteContent)
+    if (-not [string]::IsNullOrWhiteSpace($WriteExpectedSha256)) {
+      $flowArgs += @("-WriteExpectedSha256", $WriteExpectedSha256)
+    }
     if (-not [string]::IsNullOrWhiteSpace($WriteToolCommand)) {
       $flowArgs += @("-WriteToolCommand", $WriteToolCommand)
     }
@@ -1847,6 +1851,7 @@ if ($parallelBatchEligible) {
   if ($ExecuteWriteFlow.IsPresent) { $parallelArgsBase += "-ExecuteWriteFlow" }
   if (-not [string]::IsNullOrWhiteSpace($RepoBindingId)) { $parallelArgsBase += @("-RepoBindingId", $RepoBindingId) }
   if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) { $parallelArgsBase += @("-WriteTargetPath", $WriteTargetPath) }
+  if (-not [string]::IsNullOrWhiteSpace($WriteExpectedSha256)) { $parallelArgsBase += @("-WriteExpectedSha256", $WriteExpectedSha256) }
   if (-not [string]::IsNullOrWhiteSpace($WriteToolCommand)) { $parallelArgsBase += @("-WriteToolCommand", $WriteToolCommand) }
   if (-not [string]::IsNullOrWhiteSpace($RollbackReference)) { $parallelArgsBase += @("-RollbackReference", $RollbackReference) }
 
