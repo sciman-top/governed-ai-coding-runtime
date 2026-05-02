@@ -64,7 +64,10 @@ param(
   [string]$PruneRunsRoot = "",
   [int]$PruneKeepDays = 30,
   [int]$PruneKeepLatestPerTarget = 30,
-  [switch]$PruneDryRun
+  [switch]$PruneDryRun,
+  [switch]$PruneRetiredManagedFiles,
+  [switch]$UninstallGovernance,
+  [switch]$ApplyManagedAssetRemoval
 )
 
 Set-StrictMode -Version Latest
@@ -696,6 +699,102 @@ function Convert-PruneResultForJson {
     delete_candidates      = $(if ($summary -and ($summary.PSObject.Properties.Name -contains "delete_candidates")) { [int]$summary.delete_candidates } else { 0 })
     deleted                = $(if ($summary -and ($summary.PSObject.Properties.Name -contains "deleted")) { [int]$summary.deleted } else { 0 })
     failed_deletions       = $(if ($summary -and ($summary.PSObject.Properties.Name -contains "failed_deletions")) { [int]$summary.failed_deletions } else { 0 })
+  }
+}
+
+function New-ManagedAssetActionSkippedResult {
+  param([Parameter(Mandatory = $true)][string]$TargetRoot)
+
+  return [pscustomobject]@{
+    status      = "skipped"
+    reason      = "not_requested"
+    exit_code   = 0
+    target_root = $TargetRoot
+    payload     = $null
+    output      = ""
+  }
+}
+
+function Invoke-ManagedAssetAction {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$RepoRoot,
+    [Parameter(Mandatory = $true)]
+    [string]$ScriptName,
+    [Parameter(Mandatory = $true)]
+    [string]$TargetRoot,
+    [Parameter(Mandatory = $true)]
+    [string]$BaselinePath,
+    [Parameter(Mandatory = $true)]
+    [string]$PythonCommand,
+    [Parameter(Mandatory = $true)]
+    [bool]$Apply
+  )
+
+  $scriptPath = Join-Path $RepoRoot ("scripts\{0}" -f $ScriptName)
+  if (-not (Test-Path -LiteralPath $scriptPath)) {
+    return [pscustomobject]@{
+      status      = "fail"
+      reason      = "managed_asset_script_not_found"
+      exit_code   = 1
+      target_root = $TargetRoot
+      payload     = $null
+      output      = ("managed asset script not found: {0}" -f $scriptPath)
+    }
+  }
+
+  $args = @(
+    $scriptPath,
+    "--target-repo", $TargetRoot,
+    "--baseline-path", $BaselinePath
+  )
+  if ($Apply) {
+    $args += "--apply"
+  }
+  else {
+    $args += "--dry-run"
+  }
+
+  $result = Invoke-CommandCapture -Executable $PythonCommand -Arguments $args
+  $payload = Try-ParseJson -Raw $result.output
+  $status = if ($result.exit_code -eq 0) { "pass" } elseif ($result.exit_code -eq 2) { "blocked" } else { "fail" }
+  $reason = if ($status -eq "pass") { "ok" } elseif ($status -eq "blocked") { "blocked" } else { "managed_asset_action_failed" }
+  if ($payload -and ($payload.PSObject.Properties.Name -contains "reason") -and -not [string]::IsNullOrWhiteSpace([string]$payload.reason)) {
+    $reason = [string]$payload.reason
+  }
+
+  return [pscustomobject]@{
+    status      = $status
+    reason      = $reason
+    exit_code   = $result.exit_code
+    target_root = $TargetRoot
+    payload     = $payload
+    output      = $result.output
+  }
+}
+
+function Convert-ManagedAssetActionForJson {
+  param([Parameter(Mandatory = $true)][object]$ActionResult)
+
+  $summary = $null
+  if ($ActionResult.payload -and ($ActionResult.payload.PSObject.Properties.Name -contains "summary")) {
+    $summary = $ActionResult.payload.summary
+  }
+
+  return [ordered]@{
+    status                  = [string]$ActionResult.status
+    reason                  = [string]$ActionResult.reason
+    exit_code               = [int]$ActionResult.exit_code
+    target_root             = [string]$ActionResult.target_root
+    dry_run                 = $(if ($ActionResult.payload -and ($ActionResult.payload.PSObject.Properties.Name -contains "dry_run")) { [bool]$ActionResult.payload.dry_run } else { $true })
+    apply                   = $(if ($ActionResult.payload -and ($ActionResult.payload.PSObject.Properties.Name -contains "apply")) { [bool]$ActionResult.payload.apply } else { $false })
+    backup_root             = $(if ($ActionResult.payload -and ($ActionResult.payload.PSObject.Properties.Name -contains "backup_root")) { [string]$ActionResult.payload.backup_root } else { "" })
+    delete_candidates       = $(if ($summary -and ($summary.PSObject.Properties.Name -contains "delete_candidates")) { [int]$summary.delete_candidates } else { 0 })
+    deleted                 = $(if ($summary -and ($summary.PSObject.Properties.Name -contains "deleted")) { [int]$summary.deleted } else { 0 })
+    blocked                 = $(if ($summary -and ($summary.PSObject.Properties.Name -contains "blocked")) { [int]$summary.blocked } else { 0 })
+    missing                 = $(if ($summary -and ($summary.PSObject.Properties.Name -contains "missing")) { [int]$summary.missing } else { 0 })
+    shared_patch_candidates = $(if ($summary -and ($summary.PSObject.Properties.Name -contains "shared_patch_candidates")) { [int]$summary.shared_patch_candidates } else { 0 })
+    shared_patched          = $(if ($summary -and ($summary.PSObject.Properties.Name -contains "shared_patched")) { [int]$summary.shared_patched } else { 0 })
   }
 }
 
@@ -1677,6 +1776,7 @@ $applyAllFeatures = [bool]$ApplyAllFeatures
 $applyCodingSpeedProfile = [bool]$ApplyCodingSpeedProfile
 $applyFeatureBaselineOnly = ($ApplyGovernanceBaselineOnly -or $ApplyFeatureBaselineOnly -or $applyCodingSpeedProfile)
 $applyFeatureBaselineAndMilestoneCommit = [bool]$ApplyFeatureBaselineAndMilestoneCommit
+$managedAssetRemovalActive = ($PruneRetiredManagedFiles.IsPresent -or $UninstallGovernance.IsPresent)
 if ($applyAllFeatures -and ($applyFeatureBaselineOnly -or $applyFeatureBaselineAndMilestoneCommit)) {
   throw "-ApplyAllFeatures is mutually exclusive with -ApplyCodingSpeedProfile/-ApplyFeatureBaselineOnly/-ApplyGovernanceBaselineOnly and -ApplyFeatureBaselineAndMilestoneCommit."
 }
@@ -1818,6 +1918,7 @@ $parallelBatchEligible = (
   -not $applyFeatureBaselineOnly -and
   -not $applyFeatureBaselineAndMilestoneCommit -and
   -not $PruneTargetRepoRuns.IsPresent
+  -and -not $managedAssetRemovalActive
 )
 
 if ($parallelBatchEligible) {

@@ -104,16 +104,35 @@ def _derived_gate_entry(
     default_id: str,
     timeout_seconds: int,
 ) -> dict[str, Any] | None:
-    source = select_preferred_command(profile, source_group)
-    if source is None:
+    entries = _derived_gate_entries(profile, source_group, default_id, timeout_seconds)
+    if not entries:
         return None
-    entry = copy.deepcopy(source)
-    entry["id"] = str(entry.get("id") or default_id)
-    if "required" not in entry:
-        entry["required"] = True
-    if timeout_seconds > 0 and "timeout_seconds" not in entry:
-        entry["timeout_seconds"] = timeout_seconds
-    return entry
+    return entries[0]
+
+
+def _derived_gate_entries(
+    profile: dict[str, Any],
+    source_group: str,
+    default_id: str,
+    timeout_seconds: int,
+) -> list[dict[str, Any]]:
+    commands = as_command_list(profile.get(source_group))
+    if not commands:
+        return []
+    selected = [item for item in commands if item.get("required", True) is True]
+    if not selected:
+        selected = commands[:1]
+    entries: list[dict[str, Any]] = []
+    for index, source in enumerate(selected, start=1):
+        entry = copy.deepcopy(source)
+        fallback_id = default_id if len(selected) == 1 else f"{default_id}:{index}"
+        entry["id"] = str(entry.get("id") or fallback_id)
+        if "required" not in entry:
+            entry["required"] = True
+        if timeout_seconds > 0 and "timeout_seconds" not in entry:
+            entry["timeout_seconds"] = timeout_seconds
+        entries.append(entry)
+    return entries
 
 
 def _normalized_entry_command(entry: dict[str, Any]) -> str:
@@ -163,39 +182,45 @@ def _build_legacy_speed_groups(
         if reason:
             test_entry["description"] = reason
 
-    quick_commands = [
-        item
-        for item in (
-            test_entry,
-            _derived_gate_entry(profile, "contract_commands", "contract", int(policy["quick_gate_timeout_seconds"])),
-            _derived_gate_entry(profile, "invariant_commands", "invariant", int(policy["quick_gate_timeout_seconds"])),
+    contract_entries = _derived_gate_entries(
+        profile,
+        "contract_commands",
+        "contract",
+        int(policy["quick_gate_timeout_seconds"]),
+    )
+    if not contract_entries:
+        contract_entries = _derived_gate_entries(
+            profile,
+            "invariant_commands",
+            "invariant",
+            int(policy["quick_gate_timeout_seconds"]),
         )
-        if item is not None
-    ]
-    if len(quick_commands) > 2:
-        quick_commands = quick_commands[:2]
 
-    contract_entry = _derived_gate_entry(
+    quick_commands = [item for item in ([test_entry] + contract_entries) if item is not None]
+
+    full_contract_entries = _derived_gate_entries(
         profile,
         "contract_commands",
         "contract",
         int(policy["full_gate_timeout_seconds"]),
     )
-    if contract_entry is None:
-        contract_entry = _derived_gate_entry(
+    if not full_contract_entries:
+        full_contract_entries = _derived_gate_entries(
             profile,
             "invariant_commands",
             "invariant",
             int(policy["full_gate_timeout_seconds"]),
         )
     full_commands = [
-        item
-        for item in (
-            _derived_gate_entry(profile, "build_commands", "build", int(policy["full_gate_timeout_seconds"])),
-            _derived_gate_entry(profile, "test_commands", "test", int(policy["full_gate_timeout_seconds"])),
-            contract_entry,
-        )
-        if item is not None
+        *[
+            item
+            for item in (
+                _derived_gate_entry(profile, "build_commands", "build", int(policy["full_gate_timeout_seconds"])),
+                _derived_gate_entry(profile, "test_commands", "test", int(policy["full_gate_timeout_seconds"])),
+            )
+            if item is not None
+        ],
+        *full_contract_entries,
     ]
     return quick_commands, full_commands
 

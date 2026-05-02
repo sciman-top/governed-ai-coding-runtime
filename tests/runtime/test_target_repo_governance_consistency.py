@@ -610,7 +610,15 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
                 {gate["id"] for gate in updated_profile["quick_gate_commands"]},
             )
             self.assertIn(
+                "contract",
+                {gate["id"] for gate in updated_profile["quick_gate_commands"]},
+            )
+            self.assertIn(
                 "contract:powershell-policy",
+                {gate["id"] for gate in updated_profile["full_gate_commands"]},
+            )
+            self.assertIn(
+                "contract",
                 {gate["id"] for gate in updated_profile["full_gate_commands"]},
             )
 

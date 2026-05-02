@@ -30,6 +30,7 @@
       "description": "Dynamic prompt emitted only when a target lacks a catalog quick_test_command/skip or recommendation file; existing target-local prompt drift must be reviewed and integrated before sync instead of overwritten."
     }
   ],
+  "retired_managed_files": [],
   "repo_profile_field_ownership": {
     "baseline_override_fields": [
       "required_entrypoint_policy",

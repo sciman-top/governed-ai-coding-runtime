@@ -33,6 +33,8 @@
 - Added structured duration evidence: `duration_ms`, `flow_duration_ms`, `target_duration_ms`, `governance_sync_duration_ms`, and nonzero `batch_elapsed_seconds` even without a batch timeout.
 - Added exported target run duration fields so later KPI/effect reports can compare real wall-clock cost.
 - Added regression coverage for elapsed reporting without `-BatchTimeoutSeconds` and per-target duration reporting in all-target JSON.
+- Added `scripts/audit-target-repo-gate-speed.py` as a repeatable quick/full gate profile audit and serial/parallel effect comparison entrypoint.
+- Fixed speed-profile materialization so multiple required `contract_commands` are not truncated when generating quick/full gate groups.
 
 ## Commands
 - `python -m unittest tests.runtime.test_runtime_flow_preset.RuntimeFlowPresetScriptTests.test_runtime_flow_preset_all_targets_json_reports_elapsed_without_batch_timeout tests.runtime.test_runtime_flow_preset.RuntimeFlowPresetScriptTests.test_runtime_flow_preset_all_targets_json_supports_target_parallelism tests.runtime.test_runtime_flow_preset.RuntimeFlowPresetScriptTests.test_runtime_flow_preset_all_targets_batch_timeout_guard`
@@ -45,6 +47,13 @@
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`
+- `python -m unittest tests.runtime.test_target_repo_gate_speed_audit`
+- `python -m unittest tests.runtime.test_target_repo_governance_consistency.TargetRepoGovernanceConsistencyTests.test_apply_target_repo_governance_accepts_catalog_contract_command_array tests.runtime.test_target_repo_governance_consistency.TargetRepoGovernanceConsistencyTests.test_apply_target_repo_governance_catalog_gate_changes_refresh_speed_groups tests.runtime.test_target_repo_gate_speed_audit`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -Target vps-ssh-launcher -ApplyCodingSpeedProfile -Json`
+- `python scripts/audit-target-repo-gate-speed.py --serial-result docs/change-evidence/target-repo-speed-20260502/daily-serial-targetparallelism1-after-evidence.json --parallel-result docs/change-evidence/target-repo-speed-20260502/daily-parallel-targetparallelism3-after-evidence.json --output docs/change-evidence/target-repo-speed-20260502/gate-speed-audit.json`
+- `python -m py_compile scripts/audit-target-repo-gate-speed.py scripts/lib/target_repo_speed_profile.py`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/fast-check.ps1 -RepoProfilePath D:\CODE\vps-ssh-launcher\.governed-ai\repo-profile.json -WorkingDirectory D:\CODE\vps-ssh-launcher -Json`
+- `python -m unittest tests.runtime.test_governance_gate_runner tests.runtime.test_target_repo_governance_consistency tests.runtime.test_runtime_flow_preset.RuntimeFlowPresetScriptTests.test_runtime_flow_preset_apply_governance_baseline_only_bootstraps_blank_target tests.runtime.test_target_repo_rollout_contract tests.runtime.test_target_repo_speed_kpi tests.runtime.test_target_repo_gate_speed_audit`
 
 ## Evidence
 - Focused runtime-flow tests passed: 3 tests in 9.983s.
@@ -63,6 +72,17 @@
 - Runtime gate passed after rerun: 95 test files in 189.713s, failures=0.
 - Contract gate passed: includes `OK pre-change-review` and `OK functional-effectiveness`.
 - Hotspot gate passed with existing `WARN codex-capability-degraded`.
+- New gate-speed audit tests passed: 3 tests in 0.105s.
+- The first real gate-speed audit found 2 errors in `vps-ssh-launcher`: generated quick/full gate groups did not cover the required `contract` command when `contract_commands` contained both `contract:powershell-policy` and `contract`.
+- After fixing speed-profile materialization and applying the coding-speed profile to `vps-ssh-launcher`, `docs/change-evidence/target-repo-speed-20260502/gate-speed-audit.json` passed with `target_count=5`, `error_count=0`, `warn_count=0`.
+- The repeatable audit computed `speedup_ratio=2.1844` and `wall_time_reduction_ratio=0.5422` from the serial/parallel effect files.
+- `python -m py_compile` passed for the new audit script and speed-profile generator.
+- Focused governance/audit tests passed: 5 tests in 0.316s.
+- `vps-ssh-launcher` quick gate passed with `gate_order=["test","contract:powershell-policy","contract"]`; pytest reported 69 passed, 1 skipped, 15 subtests passed, and unittest reported 70 tests OK with 1 skipped.
+- Expanded quick feedback passed: 52 tests in 17.320s.
+- Final Runtime gate passed after the audit/profile fix and retirement-contract worktree convergence: 98 test files in 154.489s, failures=0.
+- Final Contract gate passed.
+- Final Hotspot gate passed with existing `WARN codex-capability-degraded`.
 
 ## Rollback
 - Revert `scripts/runtime-flow-preset.ps1` and `tests/runtime/test_runtime_flow_preset.py`.

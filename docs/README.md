@@ -25,6 +25,7 @@
 - [Claude Code First-Class Entrypoint Plan](./plans/claude-code-first-class-entrypoint-plan.md)
 - [Runtime Evolution Review Plan](./plans/runtime-evolution-review-plan.md)
 - [Governance Hub Reuse And Controlled Evolution Plan](./plans/governance-hub-reuse-and-controlled-evolution-plan.md)
+- [Target Repo Managed Asset Retirement And Uninstall Plan](./plans/target-repo-managed-asset-retirement-and-uninstall-plan.md)
 - [Capability Portfolio Classifier](./architecture/capability-portfolio-classifier.json)
 - [Runtime Evolution Policy](./architecture/runtime-evolution-policy.json)
 - [Long-Term Gap Trigger Audit Plan](./plans/long-term-gap-trigger-audit-plan.md)

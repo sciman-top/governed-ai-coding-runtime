@@ -1963,6 +1963,107 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             self.assertTrue((runs_root / "repo-a-daily-20260103030303.json").exists())
             self.assertTrue((runs_root / "summary-active-targets-latest.json").exists())
 
+    def test_runtime_flow_preset_single_target_dry_runs_managed_asset_prune_and_uninstall(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_a = workspace / "repo-a"
+            source = workspace / "templates" / "managed.py"
+            source.parent.mkdir(parents=True, exist_ok=True)
+            source.write_text("print('managed')\n", encoding="utf-8")
+            (repo_a / ".governed-ai").mkdir(parents=True, exist_ok=True)
+            (repo_a / ".governed-ai" / "old.py").write_text("print('managed')\n", encoding="utf-8")
+            (repo_a / ".governed-ai" / "managed.py").write_text("print('managed')\n", encoding="utf-8")
+            _write_json(
+                repo_a / ".governed-ai" / "repo-profile.json",
+                {
+                    "repo_id": "repo-a",
+                    "required_entrypoint_policy": {"current_mode": "advisory"},
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": str(repo_a),
+                            "attachment_runtime_state_root": str(workspace / "state" / "repo-a"),
+                            "repo_id": "repo-a",
+                            "display_name": "repo-a",
+                            "primary_language": "python",
+                            "build_command": "python --version",
+                            "test_command": "python --version",
+                            "contract_command": "python --version",
+                        }
+                    },
+                },
+            )
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "required_managed_files": [
+                        {"path": ".governed-ai/managed.py", "source": str(source), "management_mode": "block_on_drift"}
+                    ],
+                    "generated_managed_files": [],
+                    "retired_managed_files": [
+                        {
+                            "path": ".governed-ai/old.py",
+                            "previous_source": str(source),
+                            "retire_reason": "obsolete",
+                            "replacement": ".governed-ai/managed.py",
+                            "safe_delete_when": ["target_sha256_matches_previous_sha256", "no_active_references"],
+                            "backup_required": True,
+                        }
+                    ],
+                },
+            )
+            fake_runtime_flow_path = workspace / "fake-runtime-flow.ps1"
+            _write_fake_runtime_flow_script(fake_runtime_flow_path)
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "runtime-flow-preset.ps1"),
+                    "-Target",
+                    "repo-a",
+                    "-FlowMode",
+                    "daily",
+                    "-Mode",
+                    "quick",
+                    "-Json",
+                    "-CatalogPath",
+                    str(catalog_path),
+                    "-RuntimeFlowPath",
+                    str(fake_runtime_flow_path),
+                    "-GovernanceBaselinePath",
+                    str(baseline_path),
+                    "-PruneRetiredManagedFiles",
+                    "-UninstallGovernance",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertIn("prune_retired_managed_files", payload)
+            self.assertIn("uninstall_governance", payload)
+            self.assertEqual(payload["prune_retired_managed_files"]["delete_candidates"], 1)
+            self.assertEqual(payload["uninstall_governance"]["delete_candidates"], 1)
+            self.assertEqual(payload["prune_retired_managed_files"]["dry_run"], True)
+            self.assertEqual(payload["uninstall_governance"]["dry_run"], True)
+            self.assertTrue((repo_a / ".governed-ai" / "old.py").exists())
+            self.assertTrue((repo_a / ".governed-ai" / "managed.py").exists())
+
 
 if __name__ == "__main__":
     unittest.main()

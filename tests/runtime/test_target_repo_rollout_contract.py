@@ -55,6 +55,8 @@ class TargetRepoRolloutContractTests(unittest.TestCase):
             set(ownership["catalog_input_fields"]),
             {"repo_id", "display_name", "primary_language", "build_commands", "test_commands", "contract_commands"},
         )
+        self.assertIn("retired_managed_files", contract["managed_file_rollout"])
+        self.assertIn("retired_managed_files", json.loads(DEFAULT_BASELINE_PATH.read_text(encoding="utf-8")))
         runtime_contract_ids = {item["capability_id"] for item in contract["runtime_orchestrated_capability_contracts"]}
         self.assertIn("target-repo-problem-trace-and-kpi", runtime_contract_ids)
         self.assertIn("native-attach-runtime-flow", runtime_contract_ids)
@@ -105,6 +107,35 @@ class TargetRepoRolloutContractTests(unittest.TestCase):
             payload = json.loads(completed.stdout)
             codes = {error["code"] for error in payload["errors"]}
             self.assertIn("managed_file_not_in_rollout_contract", codes)
+
+    def test_fails_when_retired_managed_file_safety_metadata_is_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            baseline = json.loads(DEFAULT_BASELINE_PATH.read_text(encoding="utf-8"))
+            baseline["retired_managed_files"] = [
+                {
+                    "path": ".governed-ai/old-check.py",
+                    "previous_source": "docs/targets/templates/verify-powershell-policy.py",
+                }
+            ]
+            contract = json.loads(DEFAULT_CONTRACT_PATH.read_text(encoding="utf-8"))
+            contract["managed_file_rollout"]["retired_managed_files"] = baseline["retired_managed_files"]
+            baseline_path = workspace / "baseline.json"
+            contract_path = workspace / "contract.json"
+            _write_json(baseline_path, baseline)
+            _write_json(contract_path, contract)
+
+            completed = _run_rollout_contract_check(
+                "--contract-path",
+                str(contract_path),
+                "--baseline-path",
+                str(baseline_path),
+            )
+
+            self.assertNotEqual(completed.returncode, 0)
+            payload = json.loads(completed.stdout)
+            codes = {error["code"] for error in payload["errors"]}
+            self.assertIn("retired_managed_file_missing_safety_metadata", codes)
 
     def test_fails_when_speed_policy_field_is_not_registered_for_one_click_rollout(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

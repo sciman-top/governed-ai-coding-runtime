@@ -1,0 +1,481 @@
+{
+  "catalog_path": "D:\\CODE\\governed-ai-coding-runtime\\docs\\targets\\target-repos-catalog.json",
+  "effect_summary": {
+    "parallel_batch_elapsed_seconds": 141.0,
+    "parallel_batch_timed_out": false,
+    "parallel_failure_count": 0,
+    "parallel_path": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\target-repo-speed-20260502\\daily-parallel-targetparallelism3-after-evidence.json",
+    "per_target": [
+      {
+        "parallel_exit_code": 0,
+        "parallel_target_duration_ms": 137152,
+        "serial_exit_code": 0,
+        "serial_target_duration_ms": 131157,
+        "target": "classroomtoolkit"
+      },
+      {
+        "parallel_exit_code": 0,
+        "parallel_target_duration_ms": 18610,
+        "serial_exit_code": 0,
+        "serial_target_duration_ms": 16447,
+        "target": "github-toolkit"
+      },
+      {
+        "parallel_exit_code": 0,
+        "parallel_target_duration_ms": 141520,
+        "serial_exit_code": 0,
+        "serial_target_duration_ms": 120818,
+        "target": "self-runtime"
+      },
+      {
+        "parallel_exit_code": 0,
+        "parallel_target_duration_ms": 33315,
+        "serial_exit_code": 0,
+        "serial_target_duration_ms": 19459,
+        "target": "skills-manager"
+      },
+      {
+        "parallel_exit_code": 0,
+        "parallel_target_duration_ms": 26144,
+        "serial_exit_code": 0,
+        "serial_target_duration_ms": 20038,
+        "target": "vps-ssh-launcher"
+      }
+    ],
+    "serial_batch_elapsed_seconds": 308.0,
+    "serial_batch_timed_out": false,
+    "serial_failure_count": 0,
+    "serial_path": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\target-repo-speed-20260502\\daily-serial-targetparallelism1-after-evidence.json",
+    "speedup_ratio": 2.1844,
+    "wall_time_reduction_ratio": 0.5422
+  },
+  "error_count": 0,
+  "findings": [],
+  "full_timeout_budget_seconds": 600,
+  "generated_at": "2026-05-02T11:01:38.674573+00:00",
+  "quick_timeout_budget_seconds": 180,
+  "report_kind": "target_repo_gate_speed_audit",
+  "schema_version": "1.0",
+  "status": "pass",
+  "target_count": 5,
+  "targets": [
+    {
+      "attachment_root": "D:\\CODE\\ClassroomToolkit",
+      "findings": [],
+      "full_gate_summary": {
+        "command_count": 3,
+        "commands": [
+          {
+            "command": "dotnet build ClassroomToolkit.sln -c Debug --no-restore",
+            "index": 1,
+            "satisfies_gate_ids": [
+              "build"
+            ],
+            "timeout_seconds": 600
+          },
+          {
+            "command": "dotnet test tests/ClassroomToolkit.Tests/ClassroomToolkit.Tests.csproj -c Debug --no-restore",
+            "index": 2,
+            "satisfies_gate_ids": [
+              "test"
+            ],
+            "timeout_seconds": 600
+          },
+          {
+            "command": "pwsh -NoProfile -ExecutionPolicy Bypass -Command \". .\\scripts\\env\\Initialize-WindowsProcessEnvironment.ps1; dotnet test tests\\ClassroomToolkit.Tests\\ClassroomToolkit.Tests.csproj -c Debug --no-restore --filter 'FullyQualifiedName~ArchitectureDependencyTests|FullyQualifiedName~InteropHookLifecycleContractTests|FullyQualifiedName~InteropHookEventDispatchContractTests|FullyQualifiedName~GlobalHookServiceLifecycleContractTests|FullyQualifiedName~CrossPageDisplayLifecycleContractTests'\"",
+            "index": 3,
+            "satisfies_gate_ids": [
+              "contract"
+            ],
+            "timeout_seconds": 600
+          }
+        ],
+        "covered_gate_ids": [
+          "build",
+          "contract",
+          "test"
+        ],
+        "duplicate_command_count": 0,
+        "group": "full_gate_commands",
+        "missing_gate_ids": [],
+        "required_gate_ids": [
+          "build",
+          "contract",
+          "test"
+        ]
+      },
+      "gate_timeout_seconds": 300,
+      "primary_language": "csharp",
+      "profile_exists": true,
+      "profile_path": "D:\\CODE\\ClassroomToolkit\\.governed-ai\\repo-profile.json",
+      "quick_gate_summary": {
+        "command_count": 1,
+        "commands": [
+          {
+            "command": "pwsh -NoProfile -ExecutionPolicy Bypass -Command \". .\\scripts\\env\\Initialize-WindowsProcessEnvironment.ps1; dotnet test tests\\ClassroomToolkit.Tests\\ClassroomToolkit.Tests.csproj -c Debug --no-restore --filter 'FullyQualifiedName~ArchitectureDependencyTests|FullyQualifiedName~InteropHookLifecycleContractTests|FullyQualifiedName~InteropHookEventDispatchContractTests|FullyQualifiedName~GlobalHookServiceLifecycleContractTests|FullyQualifiedName~CrossPageDisplayLifecycleContractTests'\"",
+            "index": 1,
+            "satisfies_gate_ids": [
+              "contract",
+              "test"
+            ],
+            "timeout_seconds": 180
+          }
+        ],
+        "covered_gate_ids": [
+          "contract",
+          "test"
+        ],
+        "duplicate_command_count": 0,
+        "group": "quick_gate_commands",
+        "missing_gate_ids": [],
+        "required_gate_ids": [
+          "contract",
+          "test"
+        ]
+      },
+      "quick_slice_source": "catalog_command",
+      "target": "classroomtoolkit"
+    },
+    {
+      "attachment_root": "D:\\CODE\\github-toolkit",
+      "findings": [],
+      "full_gate_summary": {
+        "command_count": 2,
+        "commands": [
+          {
+            "command": "python -m py_compile gh_utils.py list-forks.py sync-forks.py test_toolkit.py test_support.py scripts/benchmark_hotpaths.py .claude/hooks/governed-pre-tool-use.py",
+            "index": 1,
+            "satisfies_gate_ids": [
+              "build"
+            ],
+            "timeout_seconds": 600
+          },
+          {
+            "command": "python -m unittest test_toolkit.py",
+            "index": 2,
+            "satisfies_gate_ids": [
+              "contract",
+              "test"
+            ],
+            "timeout_seconds": 600
+          }
+        ],
+        "covered_gate_ids": [
+          "build",
+          "contract",
+          "test"
+        ],
+        "duplicate_command_count": 0,
+        "group": "full_gate_commands",
+        "missing_gate_ids": [],
+        "required_gate_ids": [
+          "build",
+          "contract",
+          "test"
+        ]
+      },
+      "gate_timeout_seconds": 300,
+      "primary_language": "python",
+      "profile_exists": true,
+      "profile_path": "D:\\CODE\\github-toolkit\\.governed-ai\\repo-profile.json",
+      "quick_gate_summary": {
+        "command_count": 1,
+        "commands": [
+          {
+            "command": "python -m unittest test_toolkit.py",
+            "index": 1,
+            "satisfies_gate_ids": [
+              "contract",
+              "test"
+            ],
+            "timeout_seconds": 180
+          }
+        ],
+        "covered_gate_ids": [
+          "contract",
+          "test"
+        ],
+        "duplicate_command_count": 0,
+        "group": "quick_gate_commands",
+        "missing_gate_ids": [],
+        "required_gate_ids": [
+          "contract",
+          "test"
+        ]
+      },
+      "quick_slice_source": "catalog_skip",
+      "target": "github-toolkit"
+    },
+    {
+      "attachment_root": "D:\\CODE\\governed-ai-coding-runtime",
+      "findings": [],
+      "full_gate_summary": {
+        "command_count": 3,
+        "commands": [
+          {
+            "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1",
+            "index": 1,
+            "satisfies_gate_ids": [
+              "build"
+            ],
+            "timeout_seconds": 600
+          },
+          {
+            "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime",
+            "index": 2,
+            "satisfies_gate_ids": [
+              "test"
+            ],
+            "timeout_seconds": 600
+          },
+          {
+            "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract",
+            "index": 3,
+            "satisfies_gate_ids": [
+              "contract"
+            ],
+            "timeout_seconds": 600
+          }
+        ],
+        "covered_gate_ids": [
+          "build",
+          "contract",
+          "test"
+        ],
+        "duplicate_command_count": 0,
+        "group": "full_gate_commands",
+        "missing_gate_ids": [],
+        "required_gate_ids": [
+          "build",
+          "contract",
+          "test"
+        ]
+      },
+      "gate_timeout_seconds": 300,
+      "primary_language": "python",
+      "profile_exists": true,
+      "profile_path": "D:\\CODE\\governed-ai-coding-runtime\\.governed-ai\\repo-profile.json",
+      "quick_gate_summary": {
+        "command_count": 2,
+        "commands": [
+          {
+            "command": "python -m unittest tests.runtime.test_governance_gate_runner tests.runtime.test_target_repo_governance_consistency tests.runtime.test_runtime_flow_preset.RuntimeFlowPresetScriptTests.test_runtime_flow_preset_apply_governance_baseline_only_bootstraps_blank_target tests.runtime.test_target_repo_rollout_contract tests.runtime.test_target_repo_speed_kpi",
+            "index": 1,
+            "satisfies_gate_ids": [
+              "test"
+            ],
+            "timeout_seconds": 180
+          },
+          {
+            "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract",
+            "index": 2,
+            "satisfies_gate_ids": [
+              "contract"
+            ],
+            "timeout_seconds": 180
+          }
+        ],
+        "covered_gate_ids": [
+          "contract",
+          "test"
+        ],
+        "duplicate_command_count": 0,
+        "group": "quick_gate_commands",
+        "missing_gate_ids": [],
+        "required_gate_ids": [
+          "contract",
+          "test"
+        ]
+      },
+      "quick_slice_source": "catalog_command",
+      "target": "self-runtime"
+    },
+    {
+      "attachment_root": "D:\\CODE\\skills-manager",
+      "findings": [],
+      "full_gate_summary": {
+        "command_count": 3,
+        "commands": [
+          {
+            "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File build.ps1",
+            "index": 1,
+            "satisfies_gate_ids": [
+              "build"
+            ],
+            "timeout_seconds": 600
+          },
+          {
+            "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File skills.ps1 发现",
+            "index": 2,
+            "satisfies_gate_ids": [
+              "test"
+            ],
+            "timeout_seconds": 600
+          },
+          {
+            "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File skills.ps1 doctor --strict --threshold-ms 8000",
+            "index": 3,
+            "satisfies_gate_ids": [
+              "contract"
+            ],
+            "timeout_seconds": 600
+          }
+        ],
+        "covered_gate_ids": [
+          "build",
+          "contract",
+          "test"
+        ],
+        "duplicate_command_count": 0,
+        "group": "full_gate_commands",
+        "missing_gate_ids": [],
+        "required_gate_ids": [
+          "build",
+          "contract",
+          "test"
+        ]
+      },
+      "gate_timeout_seconds": 300,
+      "primary_language": "powershell",
+      "profile_exists": true,
+      "profile_path": "D:\\CODE\\skills-manager\\.governed-ai\\repo-profile.json",
+      "quick_gate_summary": {
+        "command_count": 2,
+        "commands": [
+          {
+            "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File skills.ps1 发现",
+            "index": 1,
+            "satisfies_gate_ids": [
+              "test"
+            ],
+            "timeout_seconds": 180
+          },
+          {
+            "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File skills.ps1 doctor --strict --threshold-ms 8000",
+            "index": 2,
+            "satisfies_gate_ids": [
+              "contract"
+            ],
+            "timeout_seconds": 180
+          }
+        ],
+        "covered_gate_ids": [
+          "contract",
+          "test"
+        ],
+        "duplicate_command_count": 0,
+        "group": "quick_gate_commands",
+        "missing_gate_ids": [],
+        "required_gate_ids": [
+          "contract",
+          "test"
+        ]
+      },
+      "quick_slice_source": "catalog_skip",
+      "target": "skills-manager"
+    },
+    {
+      "attachment_root": "D:\\CODE\\vps-ssh-launcher",
+      "findings": [],
+      "full_gate_summary": {
+        "command_count": 4,
+        "commands": [
+          {
+            "command": "python -m compileall -q ssh_tool.py auto_install.py test_ssh_tool.py test_auto_install.py test_scripts.py test_integration_real_ssh.py",
+            "index": 1,
+            "satisfies_gate_ids": [
+              "build"
+            ],
+            "timeout_seconds": 600
+          },
+          {
+            "command": "python -m pytest -q",
+            "index": 2,
+            "satisfies_gate_ids": [
+              "test"
+            ],
+            "timeout_seconds": 600
+          },
+          {
+            "command": "python .governed-ai/verify-powershell-policy.py",
+            "index": 3,
+            "satisfies_gate_ids": [
+              "contract:powershell-policy"
+            ],
+            "timeout_seconds": 600
+          },
+          {
+            "command": "python -m unittest -q",
+            "index": 4,
+            "satisfies_gate_ids": [
+              "contract"
+            ],
+            "timeout_seconds": 600
+          }
+        ],
+        "covered_gate_ids": [
+          "build",
+          "contract",
+          "contract:powershell-policy",
+          "test"
+        ],
+        "duplicate_command_count": 0,
+        "group": "full_gate_commands",
+        "missing_gate_ids": [],
+        "required_gate_ids": [
+          "build",
+          "contract",
+          "test"
+        ]
+      },
+      "gate_timeout_seconds": 300,
+      "primary_language": "python",
+      "profile_exists": true,
+      "profile_path": "D:\\CODE\\vps-ssh-launcher\\.governed-ai\\repo-profile.json",
+      "quick_gate_summary": {
+        "command_count": 3,
+        "commands": [
+          {
+            "command": "python -m pytest -q",
+            "index": 1,
+            "satisfies_gate_ids": [
+              "test"
+            ],
+            "timeout_seconds": 180
+          },
+          {
+            "command": "python .governed-ai/verify-powershell-policy.py",
+            "index": 2,
+            "satisfies_gate_ids": [
+              "contract:powershell-policy"
+            ],
+            "timeout_seconds": 180
+          },
+          {
+            "command": "python -m unittest -q",
+            "index": 3,
+            "satisfies_gate_ids": [
+              "contract"
+            ],
+            "timeout_seconds": 180
+          }
+        ],
+        "covered_gate_ids": [
+          "contract",
+          "contract:powershell-policy",
+          "test"
+        ],
+        "duplicate_command_count": 0,
+        "group": "quick_gate_commands",
+        "missing_gate_ids": [],
+        "required_gate_ids": [
+          "contract",
+          "test"
+        ]
+      },
+      "quick_slice_source": "catalog_skip",
+      "target": "vps-ssh-launcher"
+    }
+  ],
+  "warn_count": 0
+}

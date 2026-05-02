@@ -86,6 +86,53 @@ def _normalize_generated_file_entries(value: Any) -> list[tuple[str, str, str]]:
     return normalized
 
 
+def _normalize_retired_file_entries(value: Any, errors: list[dict[str, str]] | None = None) -> list[tuple[str, str, str]]:
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        if errors is not None:
+            _add_error(errors, "invalid_retired_managed_files", "retired_managed_files must be a list when present")
+        return []
+
+    normalized: list[tuple[str, str, str]] = []
+    required_safe_delete = {"target_sha256_matches_previous_sha256", "no_active_references"}
+    for index, item in enumerate(value):
+        if not isinstance(item, dict):
+            if errors is not None:
+                _add_error(errors, "invalid_retired_managed_file", f"retired_managed_files[{index}] must be an object")
+            continue
+        path = item.get("path")
+        previous_source = item.get("previous_source")
+        previous_sha256 = item.get("previous_sha256")
+        retire_reason = item.get("retire_reason")
+        replacement = item.get("replacement")
+        safe_delete_when = item.get("safe_delete_when")
+        backup_required = item.get("backup_required")
+        metadata_missing = not (
+            isinstance(path, str)
+            and path.strip()
+            and ((isinstance(previous_source, str) and previous_source.strip()) or (isinstance(previous_sha256, str) and previous_sha256.strip()))
+            and isinstance(retire_reason, str)
+            and retire_reason.strip()
+            and isinstance(replacement, str)
+            and replacement.strip()
+            and isinstance(safe_delete_when, list)
+            and required_safe_delete.issubset({str(value) for value in safe_delete_when})
+            and backup_required is True
+        )
+        if metadata_missing:
+            if errors is not None:
+                _add_error(
+                    errors,
+                    "retired_managed_file_missing_safety_metadata",
+                    f"retired_managed_files[{index}] must include path, previous_source or previous_sha256, retire_reason, replacement, safe_delete_when with target_sha256_matches_previous_sha256/no_active_references, and backup_required=true",
+                )
+            continue
+        previous_ref = str(previous_sha256 or previous_source).strip()
+        normalized.append((path.strip(), previous_ref, "retired"))
+    return normalized
+
+
 def _has_cjk(text: str) -> bool:
     return any("\u4e00" <= char <= "\u9fff" for char in text)
 
@@ -222,6 +269,23 @@ def _validate_managed_file_rollout(
             errors,
             "generated_managed_file_not_in_baseline",
             f"managed_file_rollout generated entry is not present in baseline.generated_managed_files: {path} <- {generator} ({management_mode})",
+        )
+
+    baseline_retired = _normalize_retired_file_entries(baseline.get("retired_managed_files"), errors)
+    contract_retired = _normalize_retired_file_entries(rollout.get("retired_managed_files"), errors)
+    baseline_retired_only = sorted(set(baseline_retired) - set(contract_retired))
+    contract_retired_only = sorted(set(contract_retired) - set(baseline_retired))
+    for path, previous_ref, _mode in baseline_retired_only:
+        _add_error(
+            errors,
+            "retired_managed_file_not_in_rollout_contract",
+            f"baseline.retired_managed_files entry is not registered in managed_file_rollout: {path} <- {previous_ref}",
+        )
+    for path, previous_ref, _mode in contract_retired_only:
+        _add_error(
+            errors,
+            "retired_managed_file_not_in_baseline",
+            f"managed_file_rollout retired entry is not present in baseline.retired_managed_files: {path} <- {previous_ref}",
         )
 
 

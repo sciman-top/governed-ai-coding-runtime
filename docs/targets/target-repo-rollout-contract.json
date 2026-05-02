@@ -60,7 +60,8 @@
         "generator": "outer_ai_quick_test_prompt",
         "management_mode": "block_on_drift"
       }
-    ]
+    ],
+    "retired_managed_files": []
   },
   "repo_profile_ownership_contract": {
     "baseline_override_fields": [
