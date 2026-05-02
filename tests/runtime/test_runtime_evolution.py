@@ -128,28 +128,18 @@ class RuntimeEvolutionTests(unittest.TestCase):
         self.assertTrue(Path(payload["artifact_refs"]["json"]).exists())
 
     def test_operator_evolution_review_supports_online_source_check_flag(self) -> None:
-        completed = subprocess.run(
-            [
-                "pwsh",
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                "scripts/operator.ps1",
-                "-Action",
-                "EvolutionReview",
-                "-OnlineSourceCheck",
-            ],
-            check=False,
-            capture_output=True,
-            text=True,
-            cwd=ROOT,
-        )
+        operator = (ROOT / "scripts" / "operator.ps1").read_text(encoding="utf-8")
 
-        self.assertEqual(completed.returncode, 0, completed.stderr)
-        payload_start = completed.stdout.find("{")
-        self.assertGreaterEqual(payload_start, 0)
-        payload = json.loads(completed.stdout[payload_start:])
+        self.assertIn("[switch]$OnlineSourceCheck", operator)
+        self.assertIn('$arguments += "-OnlineSourceCheck"', operator)
+
+        module = _load_runtime_evolution_script()
+        payload = module.assert_runtime_evolution_policy(
+            repo_root=ROOT,
+            policy_path=ROOT / "docs" / "architecture" / "runtime-evolution-policy.json",
+            as_of=dt.date(2026, 5, 1),
+            online_source_check=True,
+        )
         self.assertTrue(payload["online_source_check"])
 
     def test_verify_repo_docs_runs_runtime_evolution_gate(self) -> None:

@@ -1,6 +1,5 @@
 import datetime as dt
 import importlib.util
-import json
 import sys
 import unittest
 from pathlib import Path
@@ -21,6 +20,8 @@ def _load_script():
 
 
 class EvidenceRecoveryPostureTests(unittest.TestCase):
+    _live_payload: dict | None = None
+
     def tearDown(self) -> None:
         for module_name in (
             "verify_evidence_recovery_posture_script",
@@ -30,10 +31,18 @@ class EvidenceRecoveryPostureTests(unittest.TestCase):
         ):
             sys.modules.pop(module_name, None)
 
-    def test_live_recovery_posture_requires_refresh_before_implementation(self) -> None:
-        module = _load_script()
+    @classmethod
+    def _live_recovery_payload(cls) -> dict:
+        if cls._live_payload is None:
+            module = _load_script()
+            cls._live_payload = module.assert_evidence_recovery_posture(
+                repo_root=ROOT,
+                as_of=dt.date(2026, 5, 1),
+            )
+        return dict(cls._live_payload)
 
-        payload = module.assert_evidence_recovery_posture(repo_root=ROOT, as_of=dt.date(2026, 5, 1))
+    def test_live_recovery_posture_requires_refresh_before_implementation(self) -> None:
+        payload = self._live_recovery_payload()
         self.assertEqual(payload["status"], "pass")
         self.assertEqual(payload["selector"]["next_action"], "refresh_evidence_first")
         self.assertEqual(payload["selector"]["evidence_state"], "stale")
@@ -42,9 +51,7 @@ class EvidenceRecoveryPostureTests(unittest.TestCase):
         self.assertTrue(payload["effect_report"]["host_capability_candidate_present"])
 
     def test_recovery_posture_fails_closed_when_selector_is_not_refreshing_evidence(self) -> None:
-        module = _load_script()
-
-        result = module.inspect_evidence_recovery_posture(repo_root=ROOT, as_of=dt.date(2026, 5, 1))
+        result = self._live_recovery_payload()
         result["selector"]["next_action"] = "promote_ltp"
 
         failures = []
