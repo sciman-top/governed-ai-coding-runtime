@@ -1,7 +1,7 @@
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
     [Parameter(Position = 0)]
-    [ValidateSet('list', 'status', 'switch', 'backup')]
+    [ValidateSet('list', 'status', 'switch', 'backup', 'sync-active')]
     [string] $Action = 'list',
 
     [Parameter(Position = 1)]
@@ -149,6 +149,40 @@ switch ($Action) {
             Copy-Item -LiteralPath $candidate.FullName -Destination $authPath -Force
             Write-Host "Switched active auth to '$($candidate.Name)' ($($candidate.Sha256))."
             Write-Host "Previous active auth backup: $backupPath"
+        }
+        if (-not $NoLoginStatus) {
+            codex login status
+        }
+    }
+    'sync-active' {
+        $activeCandidate = $candidates | Where-Object { $_.File -eq 'auth.json' } | Select-Object -First 1
+        if (-not $activeCandidate) {
+            throw "Active auth file does not exist: $authPath"
+        }
+        if ([string]::IsNullOrWhiteSpace($Name)) {
+            $targetCandidates = $candidates | Where-Object {
+                $_.File -ne 'auth.json' -and $_.AccountHash -and $_.AccountHash -eq $activeCandidate.AccountHash
+            } | Sort-Object LastRefresh, Name -Descending
+            $candidate = $targetCandidates | Select-Object -First 1
+            if (-not $candidate) {
+                throw "No named auth snapshot matched the active account. Pass a profile name explicitly."
+            }
+        }
+        else {
+            $candidate = Resolve-AuthCandidate -Candidates $candidates -Name $Name
+            if ($candidate.File -eq 'auth.json') {
+                throw "Refusing to sync back into auth.json itself. Choose a named auth profile."
+            }
+        }
+        Read-AuthJson -Path $candidate.FullName | Out-Null
+        if ($candidate.Sha256 -eq $activeHash) {
+            Write-Host "Named auth snapshot '$($candidate.Name)' already matches active auth ($($candidate.Sha256))."
+        }
+        elseif ($PSCmdlet.ShouldProcess($candidate.FullName, "Sync active Codex auth.json back into '$($candidate.Name)'")) {
+            $backupPath = Backup-ActiveAuth -AuthPath $candidate.FullName -HomePath $homePath
+            Copy-Item -LiteralPath $authPath -Destination $candidate.FullName -Force
+            Write-Host "Synced active auth.json back into '$($candidate.Name)'."
+            Write-Host "Previous named auth snapshot backup: $backupPath"
         }
         if (-not $NoLoginStatus) {
             codex login status

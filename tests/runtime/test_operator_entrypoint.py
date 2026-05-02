@@ -199,6 +199,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("escapes repository root", module.read_repo_file("../outside.txt")["error"])
         self.assertIn(module.load_codex_status()["status"], {"ok", "error"})
         self.assertEqual("error", module.run_codex_switch({"name": ""})["status"])
+        self.assertEqual("error", module.run_codex_sync_active({"name": "missing-profile"})["status"])
         self.assertIn(module.load_claude_status()["status"], {"ok", "error"})
         self.assertEqual("error", module.run_claude_switch({"name": ""})["status"])
         feedback = module.load_feedback_summary()
@@ -217,6 +218,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("stale", process_status)
         self.assertIn("process_started_at", process_status)
         self.assertIn("source_last_write_utc", process_status)
+        self.assertIn("restart_request", process_status)
         self.assertIn("scripts/serve-operator-ui.py", process_status["source_files"])
 
     def test_operator_ui_server_refuses_stale_content_and_disables_cache(self) -> None:
@@ -228,9 +230,13 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("operator_ui_process_status", script)
         self.assertIn("/api/ui-process", script)
         self.assertIn("render_stale_service_html", script)
+        self.assertIn("maybe_request_operator_ui_restart", script)
+        self.assertIn("meta http-equiv=\"refresh\"", script)
+        self.assertIn("restart_requested_at", script)
         self.assertIn("cache-control", script)
         self.assertIn("no-store, max-age=0", script)
         self.assertIn("x-governed-runtime-ui-stale", script)
+        self.assertIn("refresh_if_stale", script)
 
     def test_next_work_summary_keeps_daily_available_for_refresh_evidence_first(self) -> None:
         module = _load_serve_operator_ui_module()
@@ -282,6 +288,29 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertEqual(1, claude_mock.call_count)
         self.assertEqual(first_codex["cached_at"], second_codex["cached_at"])
         self.assertEqual(first_claude["cached_at"], second_claude["cached_at"])
+
+    def test_load_codex_status_can_refresh_if_stale(self) -> None:
+        module = _load_serve_operator_ui_module()
+        module.invalidate_status_cache("codex")
+
+        with mock.patch.object(module, "codex_status", return_value={"sample": "codex"}) as codex_mock:
+            payload = module.load_codex_status(refresh_if_stale=True)
+
+        self.assertEqual("ok", payload["status"])
+        codex_mock.assert_called_once_with(refresh_online=False, refresh_if_stale=True)
+
+    def test_operator_ui_restart_request_is_throttled(self) -> None:
+        module = _load_serve_operator_ui_module()
+
+        with (
+            mock.patch.object(module, "load_operator_ui_restart_state", return_value={"requested_epoch": 100.0, "requested": True}),
+            mock.patch.object(module.time, "time", return_value=110.0),
+            mock.patch.object(module.subprocess, "Popen") as popen_mock,
+        ):
+            payload = module.maybe_request_operator_ui_restart(language="zh-CN", host="127.0.0.1", port=8770)
+
+        self.assertTrue(payload["requested"])
+        popen_mock.assert_not_called()
 
     def test_operator_ui_server_dry_run_supports_single_target(self) -> None:
         module = _load_serve_operator_ui_module()

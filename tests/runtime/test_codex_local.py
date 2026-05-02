@@ -135,6 +135,59 @@ class CodexLocalTests(unittest.TestCase):
             self.assertEqual("auth3-2", status["active_account"]["name"])
             self.assertTrue(status["accounts"][0]["active"])
 
+    def test_status_reports_drifted_named_snapshot_for_active_auth(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_auth(
+                home / "auth.json",
+                account_id="account-a",
+                email="same@example.com",
+                plan_type="team",
+                last_refresh="2026-05-02T03:00:00Z",
+            )
+            _write_auth(
+                home / "auth2.json",
+                account_id="account-a",
+                email="same@example.com",
+                plan_type="team",
+                last_refresh="2026-04-29T21:01:17Z",
+            )
+
+            status = codex_local.codex_status(home)
+
+            self.assertEqual("drifted", status["snapshot_status"]["status"])
+            self.assertEqual("auth2", status["snapshot_status"]["profile_name"])
+            self.assertEqual("drifted", status["active_account"]["snapshot_status"]["status"])
+
+    def test_sync_active_snapshot_overwrites_named_profile_and_keeps_backup(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_auth(
+                home / "auth.json",
+                account_id="account-a",
+                email="same@example.com",
+                plan_type="team",
+                last_refresh="2026-05-02T03:00:00Z",
+            )
+            _write_auth(
+                home / "auth2.json",
+                account_id="account-a",
+                email="same@example.com",
+                plan_type="team",
+                last_refresh="2026-04-29T21:01:17Z",
+            )
+
+            result = codex_local.sync_active_auth_snapshot(home, target_name="auth2")
+
+            self.assertEqual("ok", result["status"])
+            self.assertTrue(result["changed"])
+            self.assertTrue((home / "auth-backups").exists())
+            self.assertEqual(
+                (home / "auth.json").read_text(encoding="utf-8"),
+                (home / "auth2.json").read_text(encoding="utf-8"),
+            )
+            self.assertEqual("synced", codex_local.codex_status(home)["snapshot_status"]["status"])
+
     def test_config_health_reports_recommended_defaults_without_secret_values(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)
@@ -187,7 +240,7 @@ class CodexLocalTests(unittest.TestCase):
             try:
                 connection.execute("CREATE TABLE logs (id INTEGER PRIMARY KEY, ts REAL, feedback_log_body TEXT)")
                 connection.execute(
-                    "INSERT INTO logs (id, ts, feedback_log_body) VALUES (1, 0, ?)",
+                    "INSERT INTO logs (id, ts, feedback_log_body) VALUES (1, 1777544937, ?)",
                     (
                         'websocket event: {"type":"codex.rate_limits","plan_type":"prolite",'
                         '"rate_limits":{"allowed":true,"limit_reached":false,'
@@ -201,12 +254,15 @@ class CodexLocalTests(unittest.TestCase):
             finally:
                 connection.close()
 
-            usage = codex_local.codex_status(home)["usage"]
+            with mock.patch("lib.codex_local.time.time", return_value=1_777_544_000.0):
+                usage = codex_local.codex_status(home)["usage"]
 
             self.assertEqual("codex_logs_2_sqlite", usage["source"])
             self.assertEqual("prolite", usage["plan_type"])
             self.assertEqual(["5h", "7d"], [item["window"] for item in usage["windows"]])
             self.assertEqual([100, 97], [item["remaining_percent"] for item in usage["windows"]])
+            self.assertEqual("2026-04-30T10:28:57Z", usage["captured_at"])
+            self.assertFalse(usage["freshness"]["is_stale"])
 
     def test_status_attaches_cached_usage_snapshot_to_active_account(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -309,6 +365,48 @@ class CodexLocalTests(unittest.TestCase):
             self.assertEqual("fallback", status["usage_refresh"]["status"])
             self.assertIn("network unavailable", status["usage_refresh"]["error"])
             self.assertEqual("codex_logs_2_sqlite", status["usage"]["source"])
+
+    def test_status_refreshes_online_when_local_usage_snapshot_is_stale(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            connection = sqlite3.connect(home / "logs_2.sqlite")
+            try:
+                connection.execute("CREATE TABLE logs (id INTEGER PRIMARY KEY, ts REAL, feedback_log_body TEXT)")
+                connection.execute(
+                    "INSERT INTO logs (id, ts, feedback_log_body) VALUES (1, 0, ?)",
+                    (
+                        'websocket event: {"type":"codex.rate_limits","plan_type":"prolite",'
+                        '"rate_limits":{"allowed":true,"limit_reached":false,'
+                        '"primary":{"used_percent":60,"window_minutes":300,"reset_at":1777562537},'
+                        '"secondary":{"used_percent":30,"window_minutes":10080,"reset_at":1778073182}}}',
+                    ),
+                )
+                connection.commit()
+            finally:
+                connection.close()
+
+            with mock.patch("lib.codex_local._refresh_codex_usage_online") as refresh_mock:
+                refresh_mock.return_value = (
+                    {
+                        "source": "codex_exec_stdout",
+                        "plan_type": "prolite",
+                        "windows": [],
+                        "captured_at": "2026-05-02T04:55:00Z",
+                        "freshness": {
+                            "captured_at": "2026-05-02T04:55:00Z",
+                            "age_seconds": 0,
+                            "stale_after_seconds": 300,
+                            "is_stale": False,
+                        },
+                    },
+                    {"attempted": True, "status": "ok", "mode": "online_exec", "consumes_quota": True},
+                )
+                with mock.patch("lib.codex_local.time.time", return_value=1_777_786_000.0):
+                    status = codex_local.codex_status(home, refresh_if_stale=True)
+
+            refresh_mock.assert_called_once()
+            self.assertEqual("ok", status["usage_refresh"]["status"])
+            self.assertEqual("codex_exec_stdout", status["usage"]["source"])
 
 
 if __name__ == "__main__":

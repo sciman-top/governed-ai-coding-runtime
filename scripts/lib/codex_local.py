@@ -43,6 +43,7 @@ DEFAULT_CONFIG_PROFILE = {
     "change_rule": "Future model or parameter updates should preserve the efficiency-first principle rather than the current combo itself.",
 }
 USAGE_DASHBOARD_URL = "https://chatgpt.com/codex/settings/usage"
+USAGE_STALE_AFTER_SECONDS = 300
 
 
 @dataclass(frozen=True)
@@ -164,9 +165,15 @@ def backup_active_auth(home: Path | None = None) -> Path:
     return backup_path
 
 
-def codex_status(home: Path | None = None, *, refresh_online: bool = False) -> dict[str, Any]:
+def codex_status(
+    home: Path | None = None,
+    *,
+    refresh_online: bool = False,
+    refresh_if_stale: bool = False,
+) -> dict[str, Any]:
     home = codex_home(str(home) if home else None)
-    accounts = _display_auth_profiles(list_auth_profiles(home))
+    profiles = list_auth_profiles(home)
+    accounts = _display_auth_profiles(profiles)
     usage_refresh = {
         "attempted": False,
         "status": "idle",
@@ -174,10 +181,13 @@ def codex_status(home: Path | None = None, *, refresh_online: bool = False) -> d
         "consumes_quota": False,
     }
     usage = _codex_usage_status(home)
-    if refresh_online:
+    if refresh_online or (refresh_if_stale and _usage_is_stale(usage)):
         usage, usage_refresh = _refresh_codex_usage_online(home, fallback_usage=usage)
     usage_cache = _load_usage_cache(home)
     active_account = next((account for account in accounts if account.get("active")), None)
+    snapshot_status = active_auth_snapshot_status(home, profiles=profiles)
+    if active_account:
+        active_account["snapshot_status"] = snapshot_status
     if active_account and usage.get("source") != "unknown":
         usage_cache = _update_usage_cache(usage_cache, active_account, usage)
         _save_usage_cache(home, usage_cache)
@@ -190,10 +200,109 @@ def codex_status(home: Path | None = None, *, refresh_online: bool = False) -> d
         "recommended_defaults": DEFAULT_CONFIG_PROFILE,
         "usage": usage,
         "usage_refresh": usage_refresh,
+        "snapshot_status": snapshot_status,
     }
     payload["active_account"] = next((account for account in accounts if account.get("active")), None)
     payload["login_status"] = _run_codex_login_status()
     return payload
+
+
+def active_auth_snapshot_status(home: Path | None = None, *, profiles: list[CodexAuthProfile] | None = None) -> dict[str, Any]:
+    home = codex_home(str(home) if home else None)
+    profiles = profiles or list_auth_profiles(home)
+    active_profile = next((profile for profile in profiles if profile.file == "auth.json"), None)
+    if active_profile is None:
+        return {"status": "missing_active_auth"}
+
+    named_profiles = [profile for profile in profiles if profile.file != "auth.json" and profile.name != "auth"]
+    matched = _find_named_snapshot_match(active_profile, named_profiles)
+    if matched is None:
+        return {
+            "status": "missing_named_snapshot",
+            "active_name": active_profile.name,
+            "active_file": active_profile.file,
+            "active_full_name": active_profile.full_name,
+            "account_label": active_profile.account_label,
+        }
+    if matched.sha256 == active_profile.sha256:
+        return {
+            "status": "synced",
+            "profile_name": matched.name,
+            "profile_file": matched.file,
+            "profile_full_name": matched.full_name,
+            "account_label": active_profile.account_label,
+        }
+    return {
+        "status": "drifted",
+        "profile_name": matched.name,
+        "profile_file": matched.file,
+        "profile_full_name": matched.full_name,
+        "active_last_refresh": active_profile.last_refresh,
+        "saved_last_refresh": matched.last_refresh,
+        "account_label": active_profile.account_label,
+    }
+
+
+def sync_active_auth_snapshot(
+    home: Path | None = None,
+    *,
+    target_name: str | None = None,
+    dry_run: bool = False,
+) -> dict[str, Any]:
+    home = codex_home(str(home) if home else None)
+    profiles = list_auth_profiles(home)
+    active_profile = next((profile for profile in profiles if profile.file == "auth.json"), None)
+    if active_profile is None:
+        return {"status": "error", "error": f"missing active auth: {home / 'auth.json'}"}
+
+    named_profiles = [profile for profile in profiles if profile.file != "auth.json" and profile.name != "auth"]
+    target: CodexAuthProfile | None = None
+    if target_name:
+        normalized = str(target_name).strip()
+        matches = [
+            profile
+            for profile in named_profiles
+            if profile.name == normalized or profile.file == normalized or profile.full_name == normalized
+        ]
+        if not matches:
+            return {"status": "error", "error": f"unknown auth profile: {normalized}"}
+        if len(matches) > 1:
+            return {"status": "error", "error": f"ambiguous auth profile: {normalized}"}
+        target = matches[0]
+    else:
+        target = _find_named_snapshot_match(active_profile, named_profiles)
+        if target is None:
+            return {"status": "error", "error": "no named snapshot matches the active auth account"}
+
+    if target.sha256 == active_profile.sha256:
+        return {
+            "status": "ok",
+            "changed": False,
+            "target_profile": target.to_dict(),
+            "active_profile": active_profile.to_dict(),
+        }
+    if dry_run:
+        return {
+            "status": "ok",
+            "changed": False,
+            "dry_run": True,
+            "target_profile": target.to_dict(),
+            "active_profile": active_profile.to_dict(),
+        }
+
+    target_path = Path(target.full_name)
+    backup_path = backup_saved_auth_snapshot(target_path, home)
+    shutil.copyfile(home / "auth.json", target_path)
+    refreshed_profiles = list_auth_profiles(home)
+    refreshed_target = next((profile for profile in refreshed_profiles if profile.full_name == str(target_path)), None)
+    refreshed_active = next((profile for profile in refreshed_profiles if profile.file == "auth.json"), None)
+    return {
+        "status": "ok",
+        "changed": True,
+        "backup_path": str(backup_path),
+        "target_profile": refreshed_target.to_dict() if refreshed_target else target.to_dict(),
+        "active_profile": refreshed_active.to_dict() if refreshed_active else active_profile.to_dict(),
+    }
 
 
 def config_health(home: Path | None = None) -> dict[str, Any]:
@@ -241,6 +350,18 @@ def install_account_switcher(home: Path | None = None, bin_dir: Path | None = No
         encoding="utf-8",
     )
     return {"status": "ok", "script": str(target), "shim": str(shim)}
+
+
+def backup_saved_auth_snapshot(path: Path, home: Path | None = None) -> Path:
+    home = codex_home(str(home) if home else None)
+    if not path.exists():
+        raise FileNotFoundError(f"saved auth profile does not exist: {path}")
+    backup_dir = home / "auth-backups"
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    backup_path = backup_dir / f"{path.stem}-{timestamp}.json"
+    shutil.copyfile(path, backup_path)
+    return backup_path
 
 
 def _auth_profile_from_path(path: Path, active_hash: str) -> CodexAuthProfile:
@@ -297,6 +418,24 @@ def _display_profile_rank(profile: CodexAuthProfile) -> tuple[int, int, str]:
     )
 
 
+def _find_named_snapshot_match(active_profile: CodexAuthProfile, named_profiles: list[CodexAuthProfile]) -> CodexAuthProfile | None:
+    exact_hash = [profile for profile in named_profiles if profile.sha256 == active_profile.sha256]
+    if exact_hash:
+        return min(exact_hash, key=_display_profile_rank)
+
+    if active_profile.account_hash:
+        same_account = [profile for profile in named_profiles if profile.account_hash == active_profile.account_hash]
+        if same_account:
+            return max(same_account, key=lambda profile: (profile.last_refresh or "", profile.name))
+
+    if active_profile.email:
+        same_email = [profile for profile in named_profiles if profile.email and profile.email == active_profile.email]
+        if same_email:
+            return max(same_email, key=lambda profile: (profile.last_refresh or "", profile.name))
+
+    return None
+
+
 def _usage_cache_path(home: Path) -> Path:
     return home / "account-usage-cache.json"
 
@@ -332,6 +471,7 @@ def _update_usage_cache(cache: dict[str, Any], account: dict[str, Any], usage: d
         "source": _first_string(usage.get("source")),
         "captured_at": _first_string(usage.get("captured_at")) or datetime.now().astimezone().isoformat(),
         "windows": usage.get("windows") if isinstance(usage.get("windows"), list) else [],
+        "freshness": usage.get("freshness") if isinstance(usage.get("freshness"), dict) else None,
     }
     updated[account_hash] = entry
     return updated
@@ -480,6 +620,7 @@ def _codex_usage_status(home: Path) -> dict[str, Any]:
         allowed=event.get("allowed", rate_limits.get("allowed")),
         limit_reached=event.get("limit_reached", rate_limits.get("limit_reached")),
         note="Best-effort local reading from recent Codex rate limit events.",
+        captured_at=_claim_time_iso(event.get("captured_at")) or _timestamp_iso(event.get("captured_at")),
     )
 
 
@@ -530,7 +671,7 @@ def _refresh_codex_usage_online(home: Path, *, fallback_usage: dict[str, Any]) -
 
 
 def _unknown_usage_status(note: str) -> dict[str, Any]:
-    return {
+    return _with_usage_freshness({
         "source": "unknown",
         "dashboard_url": USAGE_DASHBOARD_URL,
         "windows": [
@@ -538,7 +679,8 @@ def _unknown_usage_status(note: str) -> dict[str, Any]:
             {"window": "7d", "remaining": None, "remaining_percent": None, "reset_at": None},
         ],
         "note": note,
-    }
+        "captured_at": "",
+    })
 
 
 def _usage_status_from_exec_output(text: str) -> dict[str, Any] | None:
@@ -558,6 +700,7 @@ def _usage_status_from_exec_output(text: str) -> dict[str, Any] | None:
             plan_type=_first_string(rate_limits.get("plan_type"), payload.get("plan_type")),
             limit_reached=bool(rate_limits.get("rate_limit_reached_type")) if rate_limits.get("rate_limit_reached_type") else False,
             note="Fresh online reading from a minimal Codex exec request.",
+            captured_at=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         )
         if usage.get("source") != "unknown":
             return usage
@@ -606,13 +749,11 @@ def _latest_session_usage(home: Path, *, min_mtime: float | None = None) -> dict
                 plan_type=_first_string(rate_limits.get("plan_type")),
                 limit_reached=bool(rate_limits.get("rate_limit_reached_type")) if rate_limits.get("rate_limit_reached_type") else False,
                 note="Fresh online reading from the latest Codex session snapshot.",
+                captured_at=_first_string(entry.get("timestamp")),
             )
             if usage.get("source") == "unknown":
                 continue
             usage["evidence_path"] = str(path)
-            timestamp = entry.get("timestamp")
-            if isinstance(timestamp, str) and timestamp.strip():
-                usage["captured_at"] = timestamp.strip()
             return usage
     return None
 
@@ -625,6 +766,7 @@ def _usage_status_from_rate_limits(
     allowed: Any = None,
     limit_reached: Any = None,
     note: str,
+    captured_at: str = "",
 ) -> dict[str, Any]:
     windows = []
     for key in ("primary", "secondary"):
@@ -650,7 +792,7 @@ def _usage_status_from_rate_limits(
         )
     if not windows:
         return _unknown_usage_status("Latest rate limit payload did not contain usage windows.")
-    return {
+    payload = {
         "source": source,
         "dashboard_url": USAGE_DASHBOARD_URL,
         "plan_type": _first_string(plan_type),
@@ -658,7 +800,9 @@ def _usage_status_from_rate_limits(
         "limit_reached": limit_reached,
         "windows": windows,
         "note": note,
+        "captured_at": _first_string(captured_at),
     }
+    return _with_usage_freshness(payload)
 
 
 def _latest_rate_limit_event(home: Path) -> dict[str, Any] | None:
@@ -672,7 +816,7 @@ def _latest_rate_limit_event(home: Path) -> dict[str, Any] | None:
     try:
         rows = connection.execute(
             """
-            SELECT feedback_log_body
+            SELECT ts, feedback_log_body
             FROM logs
             WHERE feedback_log_body LIKE '%"type":"codex.rate_limits"%'
             ORDER BY id DESC
@@ -683,8 +827,9 @@ def _latest_rate_limit_event(home: Path) -> dict[str, Any] | None:
         return None
     finally:
         connection.close()
-    for (body,) in rows:
+    for ts, body in rows:
         for event in _extract_rate_limit_events(str(body or "")):
+            event.setdefault("captured_at", ts)
             return event
     return None
 
@@ -772,6 +917,40 @@ def _first_non_empty_line(text: str) -> str:
         if line:
             return line
     return ""
+
+
+def _with_usage_freshness(payload: dict[str, Any]) -> dict[str, Any]:
+    enriched = dict(payload)
+    captured_at = _first_string(enriched.get("captured_at"))
+    captured_epoch = _iso_to_epoch_seconds(captured_at)
+    age_seconds = None if captured_epoch is None else max(0, int(time.time() - captured_epoch))
+    enriched["freshness"] = {
+        "captured_at": captured_at or None,
+        "age_seconds": age_seconds,
+        "stale_after_seconds": USAGE_STALE_AFTER_SECONDS,
+        "is_stale": True if age_seconds is None else age_seconds > USAGE_STALE_AFTER_SECONDS,
+    }
+    return enriched
+
+
+def _usage_is_stale(usage: dict[str, Any]) -> bool:
+    freshness = usage.get("freshness")
+    if not isinstance(freshness, dict):
+        return True
+    return bool(freshness.get("is_stale", True))
+
+
+def _iso_to_epoch_seconds(value: str) -> float | None:
+    raw = _first_string(value)
+    if not raw:
+        return None
+    try:
+        parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.timestamp()
 
 
 def _find_top_level_value(text: str, key: str) -> Any:

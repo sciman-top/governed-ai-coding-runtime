@@ -419,7 +419,7 @@ class RunGovernedTaskServiceWrapperTests(unittest.TestCase):
             verification_artifact_refs=[],
         )
 
-        with tempfile.TemporaryDirectory() as tmp_dir:
+        with tempfile.TemporaryDirectory(dir=str(ROOT.parent)) as tmp_dir:
             runtime_root = Path(tmp_dir) / "runtime"
             replay_root = runtime_root / "replay"
             with patch.object(module, "RUNTIME_ROOT", runtime_root), patch.object(module, "REPLAY_ROOT", replay_root):

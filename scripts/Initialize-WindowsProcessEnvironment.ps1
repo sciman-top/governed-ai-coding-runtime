@@ -171,4 +171,16 @@ function Initialize-WindowsProcessEnvironment {
     Add-WindowsProcessPathEntry (Join-Path $env:ProgramFiles "GitHub CLI")
   }
   Add-WindowsProcessPathEntry (Join-Path $windowsRoot "System32\WindowsPowerShell\v1.0")
+
+  $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
+  $runtimeTmp = Join-Path $repoRoot ".runtime\tmp"
+  New-Item -ItemType Directory -Path $runtimeTmp -Force -ErrorAction SilentlyContinue | Out-Null
+  if (Test-Path -LiteralPath $runtimeTmp) {
+    [Environment]::SetEnvironmentVariable("TMP", $runtimeTmp, "Process")
+    [Environment]::SetEnvironmentVariable("TEMP", $runtimeTmp, "Process")
+    [Environment]::SetEnvironmentVariable("TMPDIR", $runtimeTmp, "Process")
+    $env:TMP = $runtimeTmp
+    $env:TEMP = $runtimeTmp
+    $env:TMPDIR = $runtimeTmp
+  }
 }

@@ -6,6 +6,7 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import importlib.util
 import json
+import shutil
 import subprocess
 import sys
 import time
@@ -25,7 +26,7 @@ if str(SCRIPTS_SRC) not in sys.path:
 from governed_ai_coding_runtime_contracts.operator_ui import render_runtime_snapshot_html
 from governed_ai_coding_runtime_contracts.runtime_status import RuntimeStatusStore, runtime_snapshot_to_dict
 from lib.claude_local import claude_home, claude_status, optimize_claude_local, provider_profiles_path, settings_path, switch_provider
-from lib.codex_local import codex_status, switch_auth_profile
+from lib.codex_local import codex_status, switch_auth_profile, sync_active_auth_snapshot
 
 
 def _load_host_feedback_summary_builder():
@@ -62,6 +63,9 @@ CLAUDE_STATUS_CACHE_TTL_SECONDS = 15.0
 FEEDBACK_SUMMARY_CACHE_TTL_SECONDS = 30.0
 NEXT_WORK_CACHE_TTL_SECONDS = 60.0
 SERVER_STARTED_AT = time.time()
+UI_RUNTIME_DIR = ROOT / ".runtime" / "operator-ui"
+UI_RESTART_REQUEST_PATH = UI_RUNTIME_DIR / "restart-requested.json"
+UI_RESTART_COOLDOWN_SECONDS = 20.0
 UI_SOURCE_FILES = (
     ROOT / "scripts" / "serve-operator-ui.py",
     ROOT / "scripts" / "operator-ui-service.ps1",
@@ -146,8 +150,9 @@ def _build_handler(*, default_language: str):
                 params = parse_qs(parsed.query)
                 language = _normalize_language(params.get("lang", [default_language])[0])
                 if is_operator_ui_process_stale():
+                    restart_state = maybe_request_operator_ui_restart(language=language, host=host, port=port)
                     self._send_text(
-                        render_stale_service_html(language),
+                        render_stale_service_html(language, restart_state=restart_state),
                         content_type="text/html; charset=utf-8",
                         status=HTTPStatus.CONFLICT,
                     )
@@ -168,7 +173,8 @@ def _build_handler(*, default_language: str):
                 self._send_json({"targets": load_target_ids()})
                 return
             if parsed.path == "/api/codex/status":
-                result = load_codex_status()
+                params = parse_qs(parsed.query)
+                result = load_codex_status(refresh_if_stale=_truthy(params.get("refresh_if_stale", [""])[0]))
                 status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.INTERNAL_SERVER_ERROR
                 self._send_json(result, status=status)
                 return
@@ -213,6 +219,11 @@ def _build_handler(*, default_language: str):
             if parsed.path != "/api/run":
                 if parsed.path == "/api/codex/switch":
                     result = run_codex_switch(self._read_json_body())
+                    status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
+                    self._send_json(result, status=status)
+                    return
+                if parsed.path == "/api/codex/sync-active":
+                    result = run_codex_sync_active(self._read_json_body())
                     status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
                     self._send_json(result, status=status)
                     return
@@ -297,32 +308,49 @@ def is_operator_ui_process_stale() -> bool:
 
 def operator_ui_process_status() -> dict:
     source_last_write = operator_ui_source_last_write_epoch()
+    stale = is_operator_ui_process_stale()
+    restart_state = load_operator_ui_restart_state()
+    if not stale and UI_RESTART_REQUEST_PATH.exists():
+        try:
+            UI_RESTART_REQUEST_PATH.unlink()
+        except OSError:
+            pass
+        restart_state = None
     return {
         "status": "ok",
-        "stale": is_operator_ui_process_stale(),
+        "stale": stale,
         "process_started_at": epoch_to_iso(SERVER_STARTED_AT),
         "source_last_write_utc": epoch_to_iso(source_last_write) if source_last_write else None,
         "source_files": [path.relative_to(ROOT).as_posix() for path in UI_SOURCE_FILES],
+        "restart_request": restart_state,
     }
 
 
-def render_stale_service_html(language: str) -> str:
+def render_stale_service_html(language: str, *, restart_state: dict | None = None) -> str:
     status = operator_ui_process_status()
     command = "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator-ui-service.ps1 -Action Start -UiLanguage zh-CN -Port 8770"
     if language == "en":
         title = "Operator UI service is stale"
         message = "The running UI process is older than the UI source files, so this page refuses to serve stale content."
-        action = "Restart through the managed service entrypoint, then refresh this page."
+        action = "A managed restart has been requested automatically. This page will retry shortly."
+        manual = "If it still does not recover, run the managed service entrypoint manually:"
     else:
         title = "Operator UI 服务已过期"
         message = "当前运行中的 UI 进程早于 UI 源文件，本页已拒绝继续展示旧内容。"
-        action = "请通过受管服务入口重启，然后刷新页面。"
+        action = "已经自动请求受管重启；本页会稍后自动重试。"
+        manual = "若仍未恢复，再手动执行受管服务入口："
+    restart_requested_at = ""
+    restart_error = ""
+    if isinstance(restart_state, dict):
+        restart_requested_at = escape(str(restart_state.get("requested_at") or ""))
+        restart_error = escape(str(restart_state.get("error") or ""))
     return f"""<!doctype html>
 <html lang="{escape(language)}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{escape(title)}</title>
+  <meta http-equiv="refresh" content="3">
   <style>
     body {{ margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f6f4ef; color: #1f2933; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; }}
     main {{ width: min(760px, calc(100vw - 40px)); background: #fffdfa; border: 1px solid #ded7c8; border-radius: 8px; box-shadow: 0 20px 60px rgba(39, 33, 24, .14); padding: 28px; }}
@@ -339,21 +367,27 @@ def render_stale_service_html(language: str) -> str:
     <h1>{escape(title)}</h1>
     <p>{escape(message)}</p>
     <p>{escape(action)}</p>
+    <p>{escape(manual)}</p>
     <code>{escape(command)}</code>
     <dl>
       <dt>stale</dt><dd>{str(status["stale"]).lower()}</dd>
       <dt>process_started_at</dt><dd>{escape(str(status["process_started_at"]))}</dd>
       <dt>source_last_write_utc</dt><dd>{escape(str(status["source_last_write_utc"]))}</dd>
+      <dt>restart_requested_at</dt><dd>{restart_requested_at or '-'}</dd>
+      <dt>restart_error</dt><dd>{restart_error or '-'}</dd>
     </dl>
   </main>
 </body>
 </html>"""
 
 
-def load_codex_status(*, refresh_online: bool = False) -> dict:
-    if refresh_online:
+def load_codex_status(*, refresh_online: bool = False, refresh_if_stale: bool = False) -> dict:
+    if refresh_online or refresh_if_stale:
         invalidate_status_cache("codex")
-        return _load_status_payload("codex", lambda: codex_status(refresh_online=True))
+        return _load_status_payload(
+            "codex",
+            lambda: codex_status(refresh_online=refresh_online, refresh_if_stale=refresh_if_stale),
+        )
     return _load_status_cached("codex", ttl_seconds=CODEX_STATUS_CACHE_TTL_SECONDS, loader=lambda: codex_status(refresh_online=False))
 
 
@@ -484,6 +518,20 @@ def run_codex_switch(payload: dict) -> dict:
     return result
 
 
+def run_codex_sync_active(payload: dict) -> dict:
+    if "_json_error" in payload:
+        return {"status": "error", "error": payload["_json_error"]}
+    name = _string(payload.get("name"), "") or None
+    dry_run = bool(payload.get("dry_run", False))
+    try:
+        result = sync_active_auth_snapshot(target_name=name, dry_run=dry_run)
+    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
+        return {"status": "error", "error": str(exc)}
+    if result.get("status") == "ok" and result.get("changed"):
+        invalidate_status_cache("codex")
+    return result
+
+
 def run_claude_switch(payload: dict) -> dict:
     if "_json_error" in payload:
         return {"status": "error", "error": payload["_json_error"]}
@@ -548,6 +596,83 @@ def datetime_now_iso() -> str:
 
 def epoch_to_iso(epoch_seconds: float) -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(epoch_seconds))
+
+
+def load_operator_ui_restart_state() -> dict | None:
+    if not UI_RESTART_REQUEST_PATH.exists():
+        return None
+    try:
+        payload = json.loads(UI_RESTART_REQUEST_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def save_operator_ui_restart_state(payload: dict) -> None:
+    try:
+        UI_RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
+        UI_RESTART_REQUEST_PATH.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+    except OSError:
+        return
+
+
+def maybe_request_operator_ui_restart(*, language: str, host: str, port: int) -> dict:
+    now = time.time()
+    state = load_operator_ui_restart_state() or {}
+    requested_epoch = float(state.get("requested_epoch", 0.0) or 0.0)
+    if requested_epoch and now - requested_epoch < UI_RESTART_COOLDOWN_SECONDS:
+        return dict(state)
+
+    payload = {
+        "requested": False,
+        "requested_at": datetime_now_iso(),
+        "requested_epoch": now,
+        "host": host,
+        "port": port,
+        "language": language,
+    }
+    pwsh = shutil.which("pwsh")
+    if not pwsh:
+        payload["error"] = "pwsh not found"
+        save_operator_ui_restart_state(payload)
+        return payload
+
+    command = [
+        pwsh,
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        str(ROOT / "scripts" / "operator-ui-service.ps1"),
+        "-Action",
+        "Restart",
+        "-UiLanguage",
+        language,
+        "-HostAddress",
+        host,
+        "-Port",
+        str(port),
+    ]
+    try:
+        subprocess.Popen(
+            command,
+            cwd=str(ROOT),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+    except OSError as exc:
+        payload["error"] = str(exc)
+        save_operator_ui_restart_state(payload)
+        return payload
+
+    payload["requested"] = True
+    payload["command"] = command
+    save_operator_ui_restart_state(payload)
+    return payload
 
 
 def run_operator_action(payload: dict) -> dict:

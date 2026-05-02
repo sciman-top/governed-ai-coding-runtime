@@ -106,6 +106,13 @@ _TRANSLATIONS = {
         "codex_usage": "额度",
         "codex_usage_note": "额度说明",
         "codex_switch": "切换",
+        "codex_sync_active": "同步快照",
+        "codex_snapshot": "快照",
+        "codex_snapshot_synced": "已与 {name} 同步",
+        "codex_snapshot_drifted": "{name} 仍是旧快照，建议用当前登录状态回写",
+        "codex_snapshot_missing": "当前活动账号还没有命名快照",
+        "codex_sync_confirm": "将把当前 auth.json 覆盖回对应命名快照。继续执行？",
+        "codex_sync_ok": "已同步当前账号快照。",
         "codex_open_usage": "打开官方 Usage",
         "codex_refresh": "刷新 Codex 状态",
         "codex_refresh_online": "强制在线刷新",
@@ -113,7 +120,11 @@ _TRANSLATIONS = {
         "codex_refresh_idle": "当前显示本机最新快照。",
         "codex_refresh_ok": "在线刷新成功；当前显示最新在线快照。",
         "codex_refresh_fallback": "在线刷新失败；已回退到本机最新快照。",
+        "codex_refresh_if_stale": "检测到额度快照过期时，会自动尝试在线刷新。",
         "codex_unknown_usage": "暂时无法读取额度信息",
+        "codex_usage_freshness_stale": "额度快照已过期",
+        "codex_usage_freshness_fresh": "额度快照较新",
+        "codex_usage_freshness_unknown": "未记录刷新时间",
         "codex_config": "配置健康",
         "codex_recommended": "核心原则",
         "codex_current_choice": "当前实现",
@@ -323,6 +334,13 @@ _TRANSLATIONS = {
         "codex_usage": "Usage",
         "codex_usage_note": "Usage details",
         "codex_switch": "Switch",
+        "codex_sync_active": "Sync snapshot",
+        "codex_snapshot": "Snapshot",
+        "codex_snapshot_synced": "Synced with {name}",
+        "codex_snapshot_drifted": "{name} is stale; save the current login back into it",
+        "codex_snapshot_missing": "The current active account has no named snapshot yet",
+        "codex_sync_confirm": "This will overwrite the named auth snapshot with the current auth.json. Continue?",
+        "codex_sync_ok": "Saved the current account snapshot.",
         "codex_open_usage": "Open Usage",
         "codex_refresh": "Refresh Codex",
         "codex_refresh_online": "Force online refresh",
@@ -330,7 +348,11 @@ _TRANSLATIONS = {
         "codex_refresh_idle": "Showing the latest local snapshot.",
         "codex_refresh_ok": "Online refresh succeeded; showing the latest online snapshot.",
         "codex_refresh_fallback": "Online refresh failed; fell back to the latest local snapshot.",
+        "codex_refresh_if_stale": "Automatically tries an online refresh when the usage snapshot is stale.",
         "codex_unknown_usage": "Usage information is not available yet",
+        "codex_usage_freshness_stale": "Usage snapshot is stale",
+        "codex_usage_freshness_fresh": "Usage snapshot is fresh",
+        "codex_usage_freshness_unknown": "Refresh time not recorded",
         "codex_config": "Config health",
         "codex_recommended": "Core principle",
         "codex_current_choice": "Current implementation",
@@ -1266,7 +1288,7 @@ def _render_codex_panel(text: dict[str, str], *, interactive: bool) -> str:
             "<section class='panel'>",
             f"<h2>{escape(text['codex_console'])}</h2>",
             "<div class='codex-toolbar'>",
-            f"<button type='button' data-codex-refresh='1'>{escape(text['codex_refresh'])}</button>",
+            f"<button type='button' data-codex-refresh='1' title='{escape(text['codex_refresh_if_stale'])}'>{escape(text['codex_refresh'])}</button>",
             f"<button type='button' data-codex-refresh-online='1' title='{escape(text['codex_refresh_online_hint'])}'>{escape(text['codex_refresh_online'])}</button>",
             f"<button type='button' data-codex-usage='1'>{escape(text['codex_open_usage'])}</button>",
             "</div>",
@@ -1562,10 +1584,14 @@ def _render_interactive_script(
     const active = accounts.find((item) => item && item.active) || accounts[0] || null;
     const usage = payload && payload.usage ? payload.usage : {{}};
     const config = payload && payload.config ? payload.config : {{}};
+    const snapshot = active && active.snapshot_status ? active.snapshot_status : (payload && payload.snapshot_status ? payload.snapshot_status : null);
     setSurfaceSummary('codex', [
       active ? codexAccountLabel(active) : (currentUiLanguage() === 'zh-CN' ? '未识别当前账号' : 'No active account'),
       formatConfigHealth(config),
-      usage && usage.source ? formatUsageSourceLabel(usage.source) : codexSurfaceActionText,
+      formatCodexSnapshotStatus(snapshot),
+      usage && usage.source
+        ? [formatUsageSourceLabel(usage.source), formatUsageFreshnessLabel(usage)].filter(Boolean).join(' · ')
+        : codexSurfaceActionText,
     ]);
   }}
 
@@ -1950,6 +1976,24 @@ def _render_interactive_script(
     return account.account_label || account.email || account.display_name || account.account_hash || account.name || 'unknown';
   }}
 
+  function formatCodexSnapshotStatus(snapshot) {{
+    if (!snapshot || typeof snapshot !== 'object') {{
+      return '';
+    }}
+    const name = snapshot.profile_name || snapshot.profile_file || 'auth';
+    const status = String(snapshot.status || '').trim();
+    if (status === 'synced') {{
+      return {text['codex_snapshot_synced']!r}.replace('{{name}}', name);
+    }}
+    if (status === 'drifted') {{
+      return {text['codex_snapshot_drifted']!r}.replace('{{name}}', name);
+    }}
+    if (status === 'missing_named_snapshot') {{
+      return {text['codex_snapshot_missing']!r};
+    }}
+    return '';
+  }}
+
   function formatPlanLabel(planType) {{
     const value = String(planType || '').trim().toLowerCase();
     if (!value) {{
@@ -2163,8 +2207,37 @@ def _render_interactive_script(
           codex_sessions_jsonl: 'latest refreshed session',
           codex_exec_stdout: 'online response',
           unknown: 'unknown source',
-        }};
+    }};
     return labels[value] || value;
+  }}
+
+  function formatRelativeAgeLabel(ageSeconds) {{
+    const seconds = Number(ageSeconds);
+    if (!Number.isFinite(seconds) || seconds < 0) {{
+      return '';
+    }}
+    if (seconds < 60) {{
+      return currentUiLanguage() === 'zh-CN' ? '刚刚' : 'just now';
+    }}
+    if (seconds < 3600) {{
+      const minutes = Math.max(1, Math.round(seconds / 60));
+      return currentUiLanguage() === 'zh-CN' ? `${{minutes}} 分钟前` : `${{minutes}} min ago`;
+    }}
+    const hours = Math.max(1, Math.round(seconds / 3600));
+    return currentUiLanguage() === 'zh-CN' ? `${{hours}} 小时前` : `${{hours}} h ago`;
+  }}
+
+  function formatUsageFreshnessLabel(usage) {{
+    const freshness = usage && usage.freshness ? usage.freshness : null;
+    if (!freshness) {{
+      return {text['codex_usage_freshness_unknown']!r};
+    }}
+    const age = formatRelativeAgeLabel(freshness.age_seconds);
+    const captured = formatCompactTimestamp(freshness.captured_at);
+    const prefix = freshness.is_stale
+      ? {text['codex_usage_freshness_stale']!r}
+      : {text['codex_usage_freshness_fresh']!r};
+    return [prefix, age || captured].filter(Boolean).join(currentUiLanguage() === 'zh-CN' ? ' · ' : ' - ');
   }}
 
   function formatTokenExpirySummary(account) {{
@@ -2643,23 +2716,40 @@ def _render_interactive_script(
       actions.appendChild(switchButton);
       row.appendChild(actions);
       if (account.active) {{
+        const snapshot = account.snapshot_status || payload.snapshot_status || null;
         infoList.append(
           createInfoLine(
             currentUiLanguage() === 'zh-CN' ? '配置' : 'config',
             formatConfigHealth(payload.config || {{}})
           ),
           createInfoLine(
+            {text['codex_snapshot']!r},
+            formatCodexSnapshotStatus(snapshot)
+          ),
+          createInfoLine(
             currentUiLanguage() === 'zh-CN' ? '来源' : 'source',
-            [
-              formatPlanLabel((payload.usage || {{}}).plan_type)
-                ? (currentUiLanguage() === 'zh-CN'
-                    ? `${{formatPlanLabel((payload.usage || {{}}).plan_type)}} 账号`
-                    : `${{formatPlanLabel((payload.usage || {{}}).plan_type)}} account`)
-                : '',
-              formatUsageSourceLabel((payload.usage || {{}}).source || 'unknown'),
-            ].filter(Boolean).join(' · ')
+            createMultilineInfoValue([
+              [
+                formatPlanLabel((payload.usage || {{}}).plan_type)
+                  ? (currentUiLanguage() === 'zh-CN'
+                      ? `${{formatPlanLabel((payload.usage || {{}}).plan_type)}} 账号`
+                      : `${{formatPlanLabel((payload.usage || {{}}).plan_type)}} account`)
+                  : '',
+                formatUsageSourceLabel((payload.usage || {{}}).source || 'unknown'),
+              ].filter(Boolean).join(' · '),
+              formatUsageFreshnessLabel(payload.usage || {{}}),
+            ].filter(Boolean).join('\\n'))
           )
         );
+        if (snapshot && snapshot.status === 'drifted' && snapshot.profile_name) {{
+          const syncButton = document.createElement('button');
+          syncButton.type = 'button';
+          syncButton.className = 'codex-account-switch';
+          syncButton.textContent = {text['codex_sync_active']!r};
+          syncButton.dataset.codexSyncName = snapshot.profile_name;
+          syncButton.dataset.confirm = {text['codex_sync_confirm']!r};
+          actions.appendChild(syncButton);
+        }}
       }}
       codexAccounts.appendChild(row);
     }});
@@ -2676,7 +2766,7 @@ def _render_interactive_script(
     }}
     setPanelCacheState('codex', codexLoaded ? 'refreshing' : 'cold');
     try {{
-      const response = await fetch('/api/codex/status');
+      const response = await fetch('/api/codex/status?refresh_if_stale=1');
       const payload = await response.json();
       if (!response.ok) {{
         codexAccounts.innerHTML = `<p class="meta">${{payload.error || response.statusText}}</p>`;
@@ -2730,6 +2820,27 @@ def _render_interactive_script(
     setBusy(true);
     try {{
       const response = await fetch('/api/codex/switch', {{
+        method: 'POST',
+        headers: {{ 'content-type': 'application/json' }},
+        body: JSON.stringify({{ name }})
+      }});
+      const payload = await response.json();
+      setOutput(JSON.stringify(payload, null, 2));
+      await refreshCodexStatus();
+    }} catch (error) {{
+      setOutput(String(error));
+    }} finally {{
+      setBusy(false);
+    }}
+  }}
+
+  async function syncCodexActiveSnapshot(name, confirmMessage) {{
+    if (confirmMessage && !window.confirm(confirmMessage)) {{
+      return;
+    }}
+    setBusy(true);
+    try {{
+      const response = await fetch('/api/codex/sync-active', {{
         method: 'POST',
         headers: {{ 'content-type': 'application/json' }},
         body: JSON.stringify({{ name }})
@@ -2977,6 +3088,14 @@ def _render_interactive_script(
   document.querySelector('[data-codex-refresh-online]').addEventListener('click', () => refreshCodexStatusOnline());
   document.querySelector('[data-codex-usage]').addEventListener('click', () => window.open('https://chatgpt.com/codex/settings/usage', '_blank', 'noopener'));
   codexAccounts.addEventListener('click', (event) => {{
+    const syncButton = event.target.closest('button[data-codex-sync-name]');
+    if (syncButton) {{
+      syncCodexActiveSnapshot(
+        syncButton.getAttribute('data-codex-sync-name') || '',
+        syncButton.getAttribute('data-confirm') || ''
+      );
+      return;
+    }}
     const button = event.target.closest('button[data-codex-switch-name]');
     if (!button) {{
       return;
