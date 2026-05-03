@@ -17,6 +17,10 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260503 Operator UI Screenshot Archive Apply](./20260503-operator-ui-screenshot-archive-apply.md)
+  - evidence companion for moving remaining historical operator UI screenshot candidates behind a manifest-backed archive while leaving target-run deletion candidates untouched
+- [20260503 Runtime Runner Parallel Scheduling](./20260503-runtime-runner-parallel-scheduling.md)
+  - evidence companion for starting known slow runtime test files first and raising the automatic runner worker cap with a rollback environment knob
 - [20260503 Repo Slimming Closeout](./20260503-repo-slimming-closeout.md)
   - closeout evidence for the full repo-slimming lane, reporting honest before/after metrics, preserved hard-gate posture, and the executable archive/retention guardrails added without silent evidence movement
 - [20260503 Change Evidence Archive Apply](./20260503-change-evidence-archive-apply.md)

@@ -115,7 +115,7 @@ If these criteria are not met for a known target, declare `quick_test_skip_reaso
 The full `self-runtime` test command remains `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`.
 The first-class local entrypoint for that focused slice is `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check RuntimeQuick`.
 
-`scripts/run-runtime-tests.py` is the self-runtime test-file runner. It defaults to up to 4 workers, applies a per-test-file timeout of 180 seconds unless `GOVERNED_RUNTIME_TEST_TIMEOUT_SECONDS` or `--timeout-seconds` overrides it, prints the slowest files, and can persist timing metadata with `--summary-json`.
+`scripts/run-runtime-tests.py` is the self-runtime test-file runner. It defaults to up to 8 workers, can lower that automatic cap with `GOVERNED_RUNTIME_TEST_AUTO_WORKER_CAP`, can explicitly set workers with `GOVERNED_RUNTIME_TEST_WORKERS` or `--workers`, applies a per-test-file timeout of 180 seconds unless `GOVERNED_RUNTIME_TEST_TIMEOUT_SECONDS` or `--timeout-seconds` overrides it, starts known slow files first from the previous timing summary, prints the slowest files, and can persist timing metadata with `--summary-json`.
 
 `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check DocsLinks` is a file-level feedback slice for active markdown link behavior. It exists for focused Runtime tests and does not replace the full `Docs` gate.
 

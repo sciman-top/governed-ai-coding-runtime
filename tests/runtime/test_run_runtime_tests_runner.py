@@ -6,6 +6,7 @@ import tempfile
 import textwrap
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -26,7 +27,72 @@ class RunRuntimeTestsRunnerTests(unittest.TestCase):
     def test_default_worker_count_stays_conservative(self) -> None:
         runner = _load_runner_module()
 
-        self.assertEqual(runner._resolve_worker_count(0, 20), min(4, runner.os.cpu_count() or 2))
+        self.assertEqual(runner._resolve_worker_count(0, 20), min(8, runner.os.cpu_count() or 2))
+
+    def test_auto_worker_cap_can_reduce_default_parallelism(self) -> None:
+        runner = _load_runner_module()
+
+        with mock.patch.dict(runner.os.environ, {"GOVERNED_RUNTIME_TEST_AUTO_WORKER_CAP": "3"}, clear=False):
+            self.assertEqual(runner._resolve_worker_count(0, 20), 3)
+
+    def test_explicit_worker_env_overrides_auto_worker_cap(self) -> None:
+        runner = _load_runner_module()
+
+        with mock.patch.dict(
+            runner.os.environ,
+            {
+                "GOVERNED_RUNTIME_TEST_WORKERS": "5",
+                "GOVERNED_RUNTIME_TEST_AUTO_WORKER_CAP": "3",
+            },
+            clear=False,
+        ):
+            self.assertEqual(runner._resolve_worker_count(0, 20), 5)
+
+    def test_prioritize_targets_starts_known_slow_files_first(self) -> None:
+        runner = _load_runner_module()
+        fast = runner.TestTarget(
+            suite="runtime",
+            module="tests.runtime.test_fast",
+            path=ROOT / "tests" / "runtime" / "test_fast.py",
+        )
+        slow = runner.TestTarget(
+            suite="runtime",
+            module="tests.runtime.test_slow",
+            path=ROOT / "tests" / "runtime" / "test_slow.py",
+        )
+
+        ordered = runner._prioritize_targets(
+            [fast, slow],
+            {"tests.runtime.test_slow": 30.0},
+        )
+
+        self.assertEqual([target.module for target in ordered], ["tests.runtime.test_slow", "tests.runtime.test_fast"])
+
+    def test_load_timing_history_accepts_windows_paths(self) -> None:
+        runner = _load_runner_module()
+        with tempfile.TemporaryDirectory(prefix="tmp_runtime_runner_", dir=ROOT) as tmp_dir:
+            history_path = Path(tmp_dir) / "history.json"
+            history_path.write_text(
+                json.dumps(
+                    {
+                        "slowest": [
+                            {
+                                "duration_seconds": 12.5,
+                                "target": {
+                                    "module": "tests.runtime.test_slow",
+                                    "path": "tests\\runtime\\test_slow.py",
+                                },
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            history = runner._load_timing_history(history_path)
+
+        self.assertEqual(history["tests.runtime.test_slow"], 12.5)
+        self.assertEqual(history["tests/runtime/test_slow.py"], 12.5)
 
     def test_per_file_timeout_returns_timeout_exit(self) -> None:
         runner = _load_runner_module()
@@ -100,6 +166,8 @@ class RunRuntimeTestsRunnerTests(unittest.TestCase):
             self.assertEqual(payload["target_count"], 1)
             self.assertEqual(payload["worker_count"], 1)
             self.assertEqual(payload["timeout_seconds"], 30)
+            self.assertIn("prioritized_target_count", payload)
+            self.assertIn("timing_history_path", payload)
             self.assertEqual(payload["failure_count"], 0)
             self.assertEqual(payload["slowest"][0]["target"]["path"], str((package_dir / "test_ok.py").relative_to(ROOT)))
 
