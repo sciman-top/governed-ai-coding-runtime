@@ -12,6 +12,7 @@ if str(SCRIPTS_SRC) not in sys.path:
 
 from lib.claude_local import (
     claude_status,
+    delete_provider_profile,
     install_provider_switcher,
     load_provider_profiles,
     optimize_claude_local,
@@ -32,6 +33,9 @@ def main(argv: list[str] | None = None) -> int:
     switch_parser = subparsers.add_parser("switch", help="Switch active Claude Code provider profile.")
     switch_parser.add_argument("name")
     switch_parser.add_argument("--dry-run", action="store_true")
+    delete_parser = subparsers.add_parser("delete", help="Back up and delete a non-active provider profile.")
+    delete_parser.add_argument("name")
+    delete_parser.add_argument("--dry-run", action="store_true")
     optimize_parser = subparsers.add_parser("optimize", help="Apply the recommended local Claude Code third-party provider setup.")
     optimize_parser.add_argument("--provider", default="bigmodel-glm")
     optimize_parser.add_argument("--apply", action="store_true")
@@ -51,8 +55,13 @@ def main(argv: list[str] | None = None) -> int:
             "switcher": install_provider_switcher(home),
         }
     elif args.command == "switch":
-        write_default_provider_profiles()
+        if not args.dry_run:
+            write_default_provider_profiles()
         payload = switch_provider(args.name, dry_run=args.dry_run)
+    elif args.command == "delete":
+        if not args.dry_run:
+            write_default_provider_profiles()
+        payload = delete_provider_profile(args.name, dry_run=args.dry_run)
     elif args.command == "optimize":
         payload = optimize_claude_local(
             provider_name=args.provider,

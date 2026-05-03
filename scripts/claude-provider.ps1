@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [ValidateSet('list', 'status', 'install', 'switch', 'optimize')]
+    [ValidateSet('list', 'status', 'install', 'switch', 'delete', 'optimize')]
     [string] $Command = 'status',
 
     [Parameter(Position = 1)]
@@ -28,6 +28,13 @@ switch ($Command) {
     'switch' {
         if ([string]::IsNullOrWhiteSpace($Name)) {
             throw 'Provider profile name is required for switch.'
+        }
+        $arguments += $Name
+        if ($DryRun) { $arguments += '--dry-run' }
+    }
+    'delete' {
+        if ([string]::IsNullOrWhiteSpace($Name)) {
+            throw 'Provider profile name is required for delete.'
         }
         $arguments += $Name
         if ($DryRun) { $arguments += '--dry-run' }

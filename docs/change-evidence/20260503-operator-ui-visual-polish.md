@@ -1,0 +1,32 @@
+# 2026-05-03 operator UI visual polish
+
+- rule_id: `R6/R8`
+- risk: low
+- scope: `packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui.py`
+- goal: improve the local operator UI visual quality, density, and readability without adding runtime dependencies or heavier animation.
+- commands:
+  - `python -m unittest tests.runtime.test_operator_ui`
+  - `python scripts\serve-operator-ui.py --output .runtime\artifacts\operator-ui\index.html --lang zh-CN`
+  - `python scripts\serve-operator-ui.py --output .runtime\artifacts\operator-ui\index.en.html --lang en`
+  - Playwright desktop and mobile screenshot checks against `http://127.0.0.1:8772/?lang=zh-CN`
+- evidence:
+  - `docs/change-evidence/operator-ui-polish-desktop.png`
+  - `docs/change-evidence/operator-ui-polish-mobile.png`
+  - `docs/change-evidence/operator-ui-polish-codex.png`
+  - `docs/change-evidence/operator-ui-polish-claude.png`
+  - `docs/change-evidence/operator-ui-polish-feedback.png`
+- key_output:
+  - `Ran 6 tests in 0.195s OK`
+  - desktop viewport `1440x1100`: `overflowCount=0`
+  - mobile viewport `390x1200`: `overflowCount=0`
+- compatibility: existing HTML structure, data attributes, and interactive action contract retained.
+- pre_change_review: completed for this low-risk UI-only slice; no rule/profile/baseline/sync script semantics changed.
+- control_repo_manifest_and_rule_sources: not modified by this slice; existing dirty rule files belong to the broader in-progress rule/provider change set.
+- user_level_deployed_rule_files: not modified by this slice.
+- target_repo_deployed_rule_files: not modified by this slice.
+- target_repo_gate_scripts_and_ci: not modified by this slice.
+- target_repo_repo_profile: not modified by this slice.
+- target_repo_readme_and_operator_docs: not modified by this slice.
+- current_official_tool_loading_docs: no loading-model assumption changed.
+- drift-integration decision: N/A for visual polish; no rule sync drift was integrated or overwritten.
+- rollback: `git restore packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui.py docs/change-evidence/20260503-operator-ui-visual-polish.md docs/change-evidence/operator-ui-polish-*.png`

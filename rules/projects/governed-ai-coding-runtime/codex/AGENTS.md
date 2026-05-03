@@ -1,6 +1,6 @@
 # AGENTS.md — governed-ai-coding-runtime（Codex 项目级）
 **项目**: governed-ai-coding-runtime
-**承接来源**: `GlobalUser/AGENTS.md v9.49`
+**承接来源**: `GlobalUser/AGENTS.md v9.50`
 **适用范围**: 项目级（仓库根）
 **最后更新**: `2026-05-03`
 
@@ -95,6 +95,7 @@
 - 仅落地本仓事实，不复述全局规则正文。
 - 与全局职责互补，不重叠、不缺失。
 - 协同链完整：`规则 -> 落点 -> 命令 -> 证据 -> 回滚`。
+- 协同有效性抽查：仅凭全局 + 项目规则，必须能推出本仓当前落点、目标归宿、硬门禁、证据路径和回滚入口。
 - `Global Rule -> Repo Action`：
   - `R6`: 本仓门禁命令是硬门禁；quick/fast 只能作为已声明的日常反馈切片，交付前仍按 full gate 或固定顺序收口。
   - `R8`: 证据与回滚字段是最小留痕；缺字段必须按 N/A 口径说明。

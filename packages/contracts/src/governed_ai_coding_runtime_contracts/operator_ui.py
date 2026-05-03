@@ -164,6 +164,8 @@ _TRANSLATIONS = {
         "claude_provider": "Provider",
         "claude_active": "当前",
         "claude_switch": "切换",
+        "claude_delete": "删除",
+        "claude_delete_confirm": "将先备份 provider-profiles.json，再删除这个本地 Claude Provider 配置。当前 Provider 不能删除，凭据不会被删除。继续执行？",
         "claude_refresh": "刷新 Claude 状态",
         "claude_optimize_preview": "预演推荐配置",
         "claude_optimize_apply": "应用推荐配置",
@@ -415,6 +417,8 @@ _TRANSLATIONS = {
         "claude_provider": "Provider",
         "claude_active": "Active",
         "claude_switch": "Switch",
+        "claude_delete": "Delete",
+        "claude_delete_confirm": "This backs up provider-profiles.json and deletes the local Claude provider profile. The active provider cannot be deleted and credentials are not removed. Continue?",
         "claude_refresh": "Refresh Claude",
         "claude_optimize_preview": "Preview recommended config",
         "claude_optimize_apply": "Apply recommended config",
@@ -563,54 +567,53 @@ def render_runtime_snapshot_html(
   <style>
     :root {{
       color-scheme: light;
-      --bg: #eef3f3;
-      --bg-deep: #0e1c20;
+      --bg: #f3f6f6;
+      --bg-deep: #0b171b;
       --surface: #ffffff;
-      --surface-raised: rgba(255, 255, 255, 0.94);
-      --surface-muted: #eef4f3;
-      --ink: #152125;
-      --ink-strong: #091316;
-      --muted: #5d6b70;
-      --line: #d4dfe0;
-      --line-strong: #aebfc2;
-      --accent: #0b766e;
-      --accent-strong: #064f49;
-      --accent-soft: #e7f5f2;
-      --gold: #b8872d;
-      --gold-soft: #fff5df;
+      --surface-raised: rgba(255, 255, 255, 0.965);
+      --surface-muted: #edf3f3;
+      --ink: #132126;
+      --ink-strong: #071216;
+      --muted: #5b6a71;
+      --line: #cddadc;
+      --line-strong: #a9bdc1;
+      --accent: #08796f;
+      --accent-strong: #034f49;
+      --accent-soft: #e4f5f2;
+      --gold: #a8751e;
+      --gold-soft: #fff3da;
       --warning: #9a5b08;
       --danger: #b42318;
       --danger-soft: #fff0ee;
-      --shadow-soft: 0 22px 54px rgba(8, 22, 26, 0.13);
-      --shadow-card: 0 10px 28px rgba(12, 31, 36, 0.08);
-      --shadow-tight: 0 2px 0 rgba(255, 255, 255, 0.84) inset, 0 1px 2px rgba(12, 31, 36, 0.04);
+      --shadow-soft: 0 22px 56px rgba(7, 18, 22, 0.14);
+      --shadow-card: 0 12px 30px rgba(10, 28, 34, 0.085);
+      --shadow-tight: 0 1px 0 rgba(255, 255, 255, 0.88) inset, 0 1px 2px rgba(10, 28, 34, 0.045);
     }}
     * {{ box-sizing: border-box; }}
     body {{
       margin: 0;
       font-family: "Segoe UI Variable", "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
       background:
-        linear-gradient(90deg, rgba(15, 35, 39, 0.035) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(15, 35, 39, 0.035) 1px, transparent 1px),
-        linear-gradient(145deg, rgba(11, 118, 110, 0.16), transparent 360px),
-        linear-gradient(180deg, #fbfcfb 0, var(--bg) 460px);
-      background-size: 42px 42px, 42px 42px, auto, auto;
+        linear-gradient(90deg, rgba(9, 28, 33, 0.024) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(9, 28, 33, 0.024) 1px, transparent 1px),
+        linear-gradient(180deg, #fbfcfb 0, #f7faf9 260px, var(--bg) 620px);
+      background-size: 40px 40px, 40px 40px, auto;
       color: var(--ink);
       font-size: 14px;
       letter-spacing: 0;
     }}
-    main {{ width: 100%; max-width: 1600px; margin: 0 auto; padding: 20px 20px 36px; }}
+    main {{ width: 100%; max-width: 1500px; margin: 0 auto; padding: 20px 20px 38px; }}
     header {{
       position: relative;
       overflow: hidden;
-      border: 1px solid rgba(236, 245, 243, 0.1);
+      border: 1px solid rgba(236, 245, 243, 0.14);
       border-radius: 8px;
-      padding: 20px 22px;
+      padding: 22px 24px;
       margin-bottom: 16px;
       background:
-        linear-gradient(120deg, rgba(255, 255, 255, 0.08), transparent 34%),
-        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 14px),
-        linear-gradient(135deg, #0c171b 0, #173136 54%, #075e58 150%);
+        linear-gradient(90deg, rgba(255, 255, 255, 0.105), transparent 38%),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.036) 0 1px, transparent 1px 16px),
+        linear-gradient(135deg, #071216 0, #10282e 58%, #075b55 150%);
       color: #f6fbfb;
       box-shadow: var(--shadow-soft);
     }}
@@ -621,17 +624,17 @@ def render_runtime_snapshot_html(
       height: 1px;
       background: linear-gradient(90deg, transparent, rgba(239, 209, 142, 0.72), transparent);
     }}
-    h1 {{ font-size: 1.58rem; line-height: 1.18; margin: 0 0 10px; font-weight: 760; }}
+    h1 {{ font-size: 1.54rem; line-height: 1.18; margin: 0 0 9px; font-weight: 780; }}
     h2 {{ display: flex; align-items: center; gap: 8px; font-size: 0.98rem; line-height: 1.3; margin: 0 0 12px; color: var(--ink-strong); }}
-    h2::before {{ content: ""; width: 4px; height: 1.05em; border-radius: 99px; background: linear-gradient(180deg, var(--gold), var(--accent)); }}
+    h2::before {{ content: ""; width: 4px; height: 1.05em; border-radius: 99px; background: linear-gradient(180deg, var(--gold), var(--accent)); box-shadow: 0 0 0 3px rgba(8, 121, 111, 0.08); }}
     h3 {{ margin: 0 0 10px; font-size: 0.95rem; line-height: 1.35; color: var(--ink-strong); }}
     .meta-row {{ display: flex; flex-wrap: wrap; gap: 10px 18px; color: var(--muted); font-size: 0.92rem; }}
     header .meta-row {{ color: #cfe1e2; }}
     header code {{ color: #ffffff; }}
-    .console-layout {{ display: grid; grid-template-columns: minmax(300px, 352px) minmax(0, 1fr); gap: 16px; align-items: start; }}
+    .console-layout {{ display: grid; grid-template-columns: minmax(292px, 336px) minmax(0, 1fr); gap: 18px; align-items: start; }}
     .sidebar {{ position: sticky; top: 14px; display: grid; gap: 12px; align-self: start; }}
     .dashboard {{ min-width: 0; display: grid; gap: 15px; }}
-    .summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 12px; margin-bottom: 2px; }}
+    .summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 12px; margin-bottom: 4px; }}
     .feedback-grid {{ display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr); gap: 14px; align-items: start; }}
     .runtime-shell {{ display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.9fr); gap: 14px; align-items: start; }}
     .runtime-main, .runtime-side {{ display: grid; gap: 14px; min-width: 0; }}
@@ -641,7 +644,7 @@ def render_runtime_snapshot_html(
     .feedback-shell {{ display: grid; grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.1fr); gap: 14px; align-items: start; }}
     .feedback-column {{ display: grid; gap: 12px; min-width: 0; }}
     .feedback-list, .feedback-links, .feedback-latest-runs {{ display: grid; gap: 8px; }}
-    .feedback-run {{ border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px; background: linear-gradient(180deg, #ffffff, #f9fcfc); box-shadow: var(--shadow-tight); }}
+    .feedback-run {{ border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px; background: linear-gradient(180deg, #ffffff, #f8fbfb); box-shadow: var(--shadow-tight); }}
     .feedback-run strong {{ display: block; margin-bottom: 6px; }}
     .status-pill-list {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }}
     .status-pill {{ display: inline-flex; flex: 0 0 auto; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface-muted); font-size: 0.82rem; white-space: nowrap; max-width: 100%; box-shadow: var(--shadow-tight); }}
@@ -670,7 +673,7 @@ def render_runtime_snapshot_html(
     .table-wrap {{ background: var(--surface-raised); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; box-shadow: var(--shadow-card); backdrop-filter: blur(6px); }}
     table {{ width: 100%; border-collapse: collapse; min-width: 720px; }}
     th, td {{ padding: 11px 13px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }}
-    th {{ background: linear-gradient(180deg, #f2f6f6, #e7eeee); color: #314253; font-size: 0.76rem; text-transform: uppercase; }}
+    th {{ background: linear-gradient(180deg, #f3f7f7, #e8f0ef); color: #34464d; font-size: 0.76rem; text-transform: uppercase; }}
     tr:last-child td {{ border-bottom: 0; }}
     tbody tr:hover {{ background: #fbfdfd; }}
     .task-id {{ font-weight: 700; }}
@@ -703,11 +706,12 @@ def render_runtime_snapshot_html(
     .policy-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }}
     .policy-item {{ background: linear-gradient(180deg, #ffffff, #f9fcfb); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; box-shadow: var(--shadow-tight); }}
     .policy-label {{ display: block; color: var(--muted); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; }}
-    .panel {{ background: var(--surface-raised); border: 1px solid var(--line); border-top: 3px solid #c5d5d8; border-radius: 8px; padding: 14px; min-width: 0; box-shadow: var(--shadow-card); backdrop-filter: blur(6px); }}
+    .panel {{ background: var(--surface-raised); border: 1px solid var(--line); border-top: 3px solid #c2d2d6; border-radius: 8px; padding: 15px; min-width: 0; box-shadow: var(--shadow-card); backdrop-filter: blur(6px); }}
+    .sidebar .panel {{ background: linear-gradient(180deg, rgba(255, 255, 255, 0.985), rgba(248, 251, 250, 0.965)); }}
     .output-panel {{ border-top-color: var(--gold); }}
     .surface-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }}
-    .surface-card {{ display: grid; grid-template-rows: auto minmax(86px, 1fr) auto; gap: 10px; align-content: start; background: linear-gradient(180deg, #ffffff, #f9fcfb); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; box-shadow: var(--shadow-tight); }}
-    .surface-card.active {{ border-color: #bde0da; background: linear-gradient(180deg, #f2fbf8, #ffffff); }}
+    .surface-card {{ display: grid; grid-template-rows: auto minmax(86px, 1fr) auto; gap: 10px; align-content: start; background: linear-gradient(180deg, #ffffff, #f8fbfb); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; box-shadow: var(--shadow-tight); }}
+    .surface-card.active {{ border-color: #acd9d2; background: linear-gradient(180deg, #eff9f6, #ffffff); box-shadow: 0 0 0 1px rgba(8, 121, 111, 0.08), var(--shadow-tight); }}
     .surface-card-head {{ display: flex; align-items: center; justify-content: space-between; gap: 8px; }}
     .surface-card-title {{ font-weight: 760; color: var(--ink-strong); }}
     .surface-summary {{ display: grid; align-content: start; gap: 4px; min-width: 0; }}
@@ -722,13 +726,13 @@ def render_runtime_snapshot_html(
     .action-list {{ display: grid; gap: 8px; }}
     .action-group {{ display: grid; gap: 8px; }}
     .action-group + .action-group {{ margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }}
-    .action-group-title {{ margin: 0; color: var(--muted); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; }}
+    .action-group-title {{ margin: 0; color: #42565d; font-size: 0.76rem; font-weight: 760; text-transform: uppercase; }}
     .foldout {{ border-top: 1px solid var(--line); margin-top: 12px; padding-top: 10px; }}
     .foldout > summary {{ cursor: pointer; color: var(--ink-strong); font-weight: 760; line-height: 1.4; list-style-position: inside; }}
     .foldout[open] > summary {{ margin-bottom: 9px; }}
     .shortcut-list {{ display: grid; gap: 9px; margin-top: 10px; }}
-    .shortcut-item {{ display: grid; gap: 8px; min-width: 0; padding: 11px; border: 1px solid var(--line); border-radius: 8px; background: linear-gradient(180deg, #ffffff, #f9fcfb); box-shadow: var(--shadow-tight); }}
-    .shortcut-item.recommended {{ border-color: #bde0da; background: linear-gradient(180deg, #f2fbf8, #ffffff); }}
+    .shortcut-item {{ display: grid; gap: 8px; min-width: 0; padding: 11px; border: 1px solid var(--line); border-radius: 8px; background: linear-gradient(180deg, #ffffff, #f8fbfb); box-shadow: var(--shadow-tight); }}
+    .shortcut-item.recommended {{ border-color: #acd9d2; background: linear-gradient(180deg, #eff9f6, #ffffff); box-shadow: 0 0 0 1px rgba(8, 121, 111, 0.08), var(--shadow-tight); }}
     .shortcut-head {{ display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; min-width: 0; }}
     .shortcut-title {{ font-weight: 760; color: var(--ink-strong); line-height: 1.35; }}
     .shortcut-command {{ display: block; min-width: 0; width: 100%; padding: 7px 8px; border: 1px solid #dfe9ea; border-radius: 6px; background: #f7fbfa; color: #20333a; overflow-wrap: anywhere; white-space: normal; }}
@@ -736,9 +740,9 @@ def render_runtime_snapshot_html(
     .shortcut-blocked {{ color: var(--warning); font-weight: 650; }}
     .shortcut-item button {{ text-align: center; min-height: 34px; }}
     button, select, input {{ font: inherit; }}
-    button {{ border: 1px solid var(--line); background: linear-gradient(180deg, #ffffff, #f8fbfb); color: var(--ink); border-radius: 7px; padding: 9px 11px; cursor: pointer; text-align: left; transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease, background 140ms ease; }}
-    button:hover {{ border-color: var(--accent); box-shadow: 0 7px 16px rgba(11, 118, 110, 0.10); transform: translateY(-1px); }}
-    button.primary {{ background: linear-gradient(135deg, var(--accent), var(--accent-strong)); border-color: var(--accent-strong); color: #fff; font-weight: 760; }}
+    button {{ border: 1px solid var(--line); background: linear-gradient(180deg, #ffffff, #f8fbfb); color: var(--ink); border-radius: 7px; padding: 9px 11px; cursor: pointer; text-align: left; transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease; }}
+    button:hover {{ border-color: var(--accent); box-shadow: 0 7px 16px rgba(8, 121, 111, 0.10); }}
+    button.primary {{ background: linear-gradient(135deg, var(--accent), var(--accent-strong)); border-color: var(--accent-strong); color: #fff; font-weight: 760; box-shadow: 0 8px 18px rgba(3, 79, 73, 0.16); }}
     button.danger {{ border-color: #efb8b2; color: var(--danger); background: linear-gradient(180deg, #fff, var(--danger-soft)); }}
     button:disabled {{ cursor: not-allowed; opacity: 0.55; }}
     .setting-grid {{ display: grid; gap: 10px; }}
@@ -761,7 +765,7 @@ def render_runtime_snapshot_html(
       background:
         linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
         linear-gradient(180deg, rgba(255,255,255,0.025) 1px, transparent 1px),
-        linear-gradient(180deg, #111d23, #071015);
+        linear-gradient(180deg, #101d23, #071015);
       background-size: 18px 18px, 18px 18px, auto;
       color: #dce8ea;
       border: 1px solid #1e2f36;
@@ -776,9 +780,9 @@ def render_runtime_snapshot_html(
     .codex-toolbar select {{ width: min(100%, 260px); }}
     .codex-grid {{ display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: start; }}
     .codex-list {{ display: grid; gap: 8px; }}
-    .codex-account {{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: start; border: 1px solid var(--line); border-radius: 8px; padding: 13px; background: linear-gradient(180deg, #ffffff, #f9fcfb); box-shadow: var(--shadow-tight); }}
+    .codex-account {{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: start; border: 1px solid var(--line); border-radius: 8px; padding: 13px; background: linear-gradient(180deg, #ffffff, #f8fbfb); box-shadow: var(--shadow-tight); }}
     .codex-account-body {{ min-width: 0; display: grid; gap: 3px; }}
-    .codex-account-actions {{ display: flex; align-items: flex-start; justify-content: flex-end; }}
+    .codex-account-actions {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; justify-content: flex-end; }}
     .codex-account strong, .codex-account small {{ display: block; overflow-wrap: anywhere; }}
     .codex-badge {{ display: inline-flex; align-items: center; align-self: start; border: 1px solid #bde0da; border-radius: 999px; padding: 4px 10px; color: var(--accent-strong); background: var(--accent-soft); font-size: 0.78rem; font-weight: 760; white-space: nowrap; }}
     .codex-account-switch {{ display: inline-flex; align-items: center; justify-content: center; min-width: 68px; min-height: 34px; padding: 8px 14px; border-radius: 7px; text-align: center; font-weight: 700; }}
@@ -788,7 +792,7 @@ def render_runtime_snapshot_html(
     .claude-toolbar {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }}
     .claude-console-grid {{ display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(290px, 0.65fr); gap: 12px; align-items: start; }}
     .claude-summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }}
-    .claude-summary-card {{ background: linear-gradient(180deg, #ffffff, #f9fcfb); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; box-shadow: var(--shadow-tight); }}
+    .claude-summary-card {{ background: linear-gradient(180deg, #ffffff, #f8fbfb); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; box-shadow: var(--shadow-tight); }}
     .claude-summary-card .meta {{ margin: 0; }}
     .claude-side-panel {{ display: grid; gap: 12px; min-width: 0; }}
     .claude-file-actions {{ display: grid; gap: 8px; }}
@@ -805,12 +809,14 @@ def render_runtime_snapshot_html(
       header {{ padding: 14px; margin-bottom: 12px; }}
       h1 {{ font-size: 1.2rem; }}
       .console-layout, .summary-grid, .policy-grid, .feedback-grid, .runtime-shell, .details-grid, .codex-grid, .codex-account, .claude-console-grid, .feedback-shell, .feedback-runs-grid, .surface-grid {{ grid-template-columns: 1fr; }}
+      .dashboard {{ gap: 12px; }}
       .view-tabs {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; }}
       .view-tab {{ text-align: center; padding: 8px 7px; }}
       .feedback-preview {{ height: 300px; }}
       .info-list {{ grid-template-columns: 1fr; }}
       .sidebar {{ position: static; }}
       .output {{ min-height: 220px; }}
+      .codex-account-actions {{ justify-content: flex-start; }}
       .panel, .metric, .policy-item, .table-wrap {{ box-shadow: 0 4px 16px rgba(12, 31, 36, 0.06); }}
       .table-wrap {{ overflow-x: visible; }}
       table, thead, tbody, tr, th, td {{ display: block; min-width: 0; width: 100%; }}
@@ -3197,6 +3203,15 @@ def _render_interactive_script(
         switchButton.dataset.claudeSwitchName = provider.name || '';
       }}
       actions.appendChild(switchButton);
+      if (!provider.active) {{
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'codex-account-switch danger';
+        deleteButton.textContent = {text['claude_delete']!r};
+        deleteButton.dataset.claudeDeleteName = provider.name || '';
+        deleteButton.dataset.confirm = {text['claude_delete_confirm']!r};
+        actions.appendChild(deleteButton);
+      }}
       row.appendChild(actions);
       if (provider.active) {{
         infoList.append(
@@ -3279,6 +3294,31 @@ def _render_interactive_script(
     setBusy(true);
     try {{
       const response = await fetch('/api/claude/switch', {{
+        method: 'POST',
+        headers: {{ 'content-type': 'application/json' }},
+        body: JSON.stringify({{ name: targetName }})
+      }});
+      const payload = await response.json();
+      setOutput(JSON.stringify(payload, null, 2));
+      await refreshClaudeStatus();
+    }} catch (error) {{
+      setOutput(String(error));
+    }} finally {{
+      setBusy(false);
+    }}
+  }}
+
+  async function deleteClaudeProvider(name, confirmMessage) {{
+    const targetName = String(name || '').trim();
+    if (!targetName) {{
+      return;
+    }}
+    if (confirmMessage && !window.confirm(confirmMessage)) {{
+      return;
+    }}
+    setBusy(true);
+    try {{
+      const response = await fetch('/api/claude/delete', {{
         method: 'POST',
         headers: {{ 'content-type': 'application/json' }},
         body: JSON.stringify({{ name: targetName }})
@@ -3400,6 +3440,14 @@ def _render_interactive_script(
     button.addEventListener('click', () => viewClaudeLocalFile(button.getAttribute('data-claude-file') || ''));
   }});
   claudeProviders.addEventListener('click', (event) => {{
+    const deleteButton = event.target.closest('button[data-claude-delete-name]');
+    if (deleteButton) {{
+      deleteClaudeProvider(
+        deleteButton.getAttribute('data-claude-delete-name') || '',
+        deleteButton.getAttribute('data-confirm') || ''
+      );
+      return;
+    }}
     const button = event.target.closest('button[data-claude-switch-name]');
     if (!button) {{
       return;

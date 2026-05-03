@@ -348,6 +348,7 @@ class OperatorEntrypointTests(unittest.TestCase):
             self.assertEqual("error", module.run_codex_delete({"name": ""})["status"])
             self.assertIn(module.load_claude_status()["status"], {"ok", "error"})
             self.assertEqual("error", module.run_claude_switch({"name": ""})["status"])
+            self.assertEqual("error", module.run_claude_delete({"name": ""})["status"])
             feedback = module.load_feedback_summary()
             self.assertIn(feedback["status"], {"pass", "attention", "fail"})
             self.assertEqual("docs/product/host-feedback-loop.zh-CN.md", feedback["guide_path"])

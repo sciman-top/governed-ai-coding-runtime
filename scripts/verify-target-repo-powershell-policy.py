@@ -22,6 +22,7 @@ DIRECT_WINDOWS_POWERSHELL_PATTERNS = (
 TEXT_SUFFIXES = {".ps1", ".psm1", ".cmd", ".bat", ".yml", ".yaml"}
 SKIP_PARTS = {
     ".git",
+    ".playwright-mcp",
     ".runtime",
     ".worktrees",
     "artifacts",
@@ -72,7 +73,10 @@ def _scan_repo(target: str, repo_root: Path) -> list[dict[str, str]]:
     violations: list[dict[str, str]] = []
     for path in _iter_policy_files(repo_root):
         relative = path.relative_to(repo_root)
-        text = path.read_text(encoding="utf-8", errors="ignore")
+        try:
+            text = path.read_text(encoding="utf-8", errors="ignore")
+        except FileNotFoundError:
+            continue
         for line_number, line in enumerate(text.splitlines(), start=1):
             if _line_is_comment(line):
                 continue

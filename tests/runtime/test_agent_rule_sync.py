@@ -32,12 +32,7 @@ class AgentRuleSyncTests(unittest.TestCase):
         self.assertIn("vps-ssh-launcher", {entry["target_repo_id"] for entry in project_entries})
         global_version = manifest["default_version"]
         for entry in entries:
-            expected_version = (
-                global_version
-                if entry["scope"] == "global" or entry.get("target_repo_id") == "self-runtime"
-                else "9.47"
-            )
-            self.assertEqual(entry["version"], expected_version)
+            self.assertEqual(entry["version"], global_version)
             self.assertTrue((ROOT / entry["source"]).exists(), entry["source"])
 
     def test_global_sync_skips_when_hashes_match(self) -> None:
@@ -166,7 +161,7 @@ class AgentRuleSyncTests(unittest.TestCase):
             self.assertEqual(payload["status"], "applied")
             self.assertTrue((target_repo / "CLAUDE.md").exists())
             self.assertTrue((target_repo / "GEMINI.md").exists())
-            self.assertIn("GlobalUser/AGENTS.md v9.47", existing.read_text(encoding="utf-8"))
+            self.assertIn("GlobalUser/AGENTS.md v9.50", existing.read_text(encoding="utf-8"))
             updated = [item for item in payload["results"] if item["id"] == "classroomtoolkit-codex-agents"][0]
             self.assertEqual(updated["status"], "updated")
             backup_path = Path(updated["backup_path"])

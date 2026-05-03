@@ -1,12 +1,20 @@
 {
-  "elapsed_seconds": 111.96350190000021,
-  "failure_count": 0,
-  "failures": [],
+  "elapsed_seconds": 167.85050179999962,
+  "failure_count": 1,
+  "failures": [
+    {
+      "duration_seconds": 146.1694238,
+      "exit_code": 1,
+      "module": "tests.runtime.test_runtime_flow_preset",
+      "path": "tests\\runtime\\test_runtime_flow_preset.py",
+      "suite": "runtime"
+    }
+  ],
   "prioritized_target_count": 10,
   "slowest": [
     {
-      "duration_seconds": 90.36056640000015,
-      "exit_code": 0,
+      "duration_seconds": 146.1694238,
+      "exit_code": 1,
       "target": {
         "module": "tests.runtime.test_runtime_flow_preset",
         "path": "tests\\runtime\\test_runtime_flow_preset.py",
@@ -14,7 +22,7 @@
       }
     },
     {
-      "duration_seconds": 69.9133952000002,
+      "duration_seconds": 131.14370690000032,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_attached_repo_e2e",
@@ -23,7 +31,7 @@
       }
     },
     {
-      "duration_seconds": 61.520742000000155,
+      "duration_seconds": 114.84602799999993,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_autonomous_next_work_selection",
@@ -32,7 +40,7 @@
       }
     },
     {
-      "duration_seconds": 54.69783940000025,
+      "duration_seconds": 95.22714129999986,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_run_governed_task_cli",
@@ -41,43 +49,7 @@
       }
     },
     {
-      "duration_seconds": 46.00576149999961,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_transition_stack_convergence",
-        "path": "tests\\runtime\\test_transition_stack_convergence.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 45.90576389999978,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_dependency_baseline",
-        "path": "tests\\runtime\\test_dependency_baseline.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 45.77811700000029,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_runtime_evolution",
-        "path": "tests\\runtime\\test_runtime_evolution.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 45.49581799999987,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_functional_effectiveness",
-        "path": "tests\\runtime\\test_functional_effectiveness.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 40.849311599999965,
+      "duration_seconds": 85.9619359999997,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_doctor",
@@ -86,11 +58,47 @@
       }
     },
     {
-      "duration_seconds": 33.56927940000014,
+      "duration_seconds": 83.8726385,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_runtime_evolution",
+        "path": "tests\\runtime\\test_runtime_evolution.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 73.35852150000028,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_dependency_baseline",
+        "path": "tests\\runtime\\test_dependency_baseline.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 64.53227180000067,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_operator_entrypoint",
         "path": "tests\\runtime\\test_operator_entrypoint.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 63.81939220000004,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_transition_stack_convergence",
+        "path": "tests\\runtime\\test_transition_stack_convergence.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 60.04601579999962,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_functional_effectiveness",
+        "path": "tests\\runtime\\test_functional_effectiveness.py",
         "suite": "runtime"
       }
     }

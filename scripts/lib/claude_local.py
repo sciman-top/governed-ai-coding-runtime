@@ -187,10 +187,9 @@ def load_provider_profiles(home: Path | None = None) -> list[ClaudeProviderProfi
     settings = load_settings(home)
     active_name = _detect_active_provider_name(settings)
     payload = _load_provider_profiles_payload(home)
-    raw_profiles = payload.get("profiles") if isinstance(payload.get("profiles"), list) else DEFAULT_PROVIDER_PROFILES
     if isinstance(payload.get("active"), str) and payload["active"]:
         active_name = payload["active"]
-    profiles = [_provider_from_payload(profile, settings, active_name) for profile in raw_profiles if isinstance(profile, dict)]
+    profiles = [_provider_from_payload(profile, settings, active_name) for profile in _provider_payloads(payload)]
     return profiles
 
 
@@ -199,23 +198,15 @@ def write_default_provider_profiles(home: Path | None = None, *, active: str | N
     path = provider_profiles_path(home)
     if path.exists() and not overwrite:
         payload = _load_provider_profiles_payload(home)
-        changed = False
-        expected_active = active or payload.get("active") or _detect_active_provider_name(load_settings(home)) or DEFAULT_PROVIDER_PROFILES[0]["name"]
-        if payload.get("active") != expected_active:
-            payload["active"] = expected_active
-            changed = True
-        merged_profiles = _merge_provider_profiles(payload.get("profiles"))
-        if payload.get("profiles") != merged_profiles:
-            payload["profiles"] = merged_profiles
-            changed = True
+        updated = _default_provider_profiles_payload(home, payload, active=active)
+        changed = payload != updated
         if changed:
-            _write_json(path, payload)
+            _write_json(path, updated)
         return {"status": "ok", "changed": changed, "path": str(path)}
-    payload = {
+    payload = _default_provider_profiles_payload(home, {
         "schema_version": 1,
-        "active": active or _detect_active_provider_name(load_settings(home)) or DEFAULT_PROVIDER_PROFILES[0]["name"],
         "profiles": DEFAULT_PROVIDER_PROFILES,
-    }
+    }, active=active)
     _write_json(path, payload)
     return {"status": "ok", "changed": True, "path": str(path)}
 
@@ -357,6 +348,54 @@ def switch_provider(name: str, home: Path | None = None, *, dry_run: bool = Fals
     }
 
 
+def delete_provider_profile(name: str, home: Path | None = None, *, dry_run: bool = False) -> dict[str, Any]:
+    normalized = str(name or "").strip()
+    if not normalized:
+        return {"status": "error", "error": "missing provider profile name"}
+    home = claude_home(str(home) if home else None)
+    profiles = load_provider_profiles(home)
+    matches = [profile for profile in profiles if profile.name == normalized or profile.provider == normalized or profile.label == normalized]
+    if not matches:
+        return {"status": "error", "error": f"unknown provider profile: {normalized}"}
+    if len(matches) > 1:
+        return {"status": "error", "error": f"ambiguous provider profile: {normalized}"}
+    target = matches[0]
+    if target.active:
+        return {"status": "error", "error": "refusing to delete the active Claude provider profile; switch away first"}
+
+    payload = _load_provider_profiles_payload(home)
+    raw_profiles = payload.get("profiles") if isinstance(payload.get("profiles"), list) else DEFAULT_PROVIDER_PROFILES
+    kept_profiles = [
+        deepcopy(profile)
+        for profile in raw_profiles
+        if isinstance(profile, dict) and str(profile.get("name") or "") != target.name
+    ]
+    if len(kept_profiles) == len([profile for profile in raw_profiles if isinstance(profile, dict)]):
+        return {"status": "error", "error": f"provider profile is not persisted by name: {target.name}"}
+    if not kept_profiles:
+        return {"status": "error", "error": "refusing to delete the last Claude provider profile"}
+    updated = dict(payload)
+    updated["schema_version"] = updated.get("schema_version") or 1
+    updated["profiles"] = kept_profiles
+    retired_profiles = _retired_provider_names(payload)
+    retired_profiles.add(target.name)
+    updated["retired_profiles"] = sorted(retired_profiles)
+    if updated.get("active") == target.name:
+        return {"status": "error", "error": "refusing to delete the active Claude provider profile; switch away first"}
+    if dry_run:
+        return {"status": "ok", "changed": False, "dry_run": True, "provider": target.to_dict()}
+
+    path = provider_profiles_path(home)
+    backup_path = backup_provider_profiles(home) if path.exists() else None
+    _write_json(path, updated)
+    return {
+        "status": "ok",
+        "changed": True,
+        "backup_path": str(backup_path) if backup_path else "",
+        "provider": target.to_dict(),
+    }
+
+
 def optimize_claude_local(
     home: Path | None = None,
     *,
@@ -365,7 +404,11 @@ def optimize_claude_local(
     install_switcher: bool = True,
 ) -> dict[str, Any]:
     home = claude_home(str(home) if home else None)
-    profile_result = write_default_provider_profiles(home, active=provider_name)
+    profile_result = (
+        write_default_provider_profiles(home, active=provider_name)
+        if apply
+        else preview_default_provider_profiles(home, active=provider_name)
+    )
     plan: dict[str, Any] = {
         "status": "dry_run",
         "apply": apply,
@@ -390,6 +433,26 @@ def optimize_claude_local(
     return plan
 
 
+def preview_default_provider_profiles(home: Path | None = None, *, active: str | None = None) -> dict[str, Any]:
+    home = claude_home(str(home) if home else None)
+    path = provider_profiles_path(home)
+    if path.exists():
+        payload = _load_provider_profiles_payload(home)
+    else:
+        payload = {
+            "schema_version": 1,
+            "profiles": DEFAULT_PROVIDER_PROFILES,
+        }
+    updated = _default_provider_profiles_payload(home, payload, active=active)
+    return {
+        "status": "dry_run",
+        "changed": (not path.exists()) or payload != updated,
+        "path": str(path),
+        "active": updated.get("active"),
+        "profile_count": len(_provider_payloads(updated)),
+    }
+
+
 def backup_settings(home: Path | None = None) -> Path:
     home = claude_home(str(home) if home else None)
     path = settings_path(home)
@@ -398,6 +461,18 @@ def backup_settings(home: Path | None = None) -> Path:
     backup_dir = home / "settings-backups"
     backup_dir.mkdir(parents=True, exist_ok=True)
     backup_path = backup_dir / f"settings-{datetime.now().strftime('%Y%m%d-%H%M%S')}.json"
+    shutil.copyfile(path, backup_path)
+    return backup_path
+
+
+def backup_provider_profiles(home: Path | None = None) -> Path:
+    home = claude_home(str(home) if home else None)
+    path = provider_profiles_path(home)
+    if not path.exists():
+        raise FileNotFoundError(f"missing Claude provider profiles: {path}")
+    backup_dir = home / "provider-profiles-backups"
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    backup_path = backup_dir / f"provider-profiles-{datetime.now().strftime('%Y%m%d-%H%M%S')}.json"
     shutil.copyfile(path, backup_path)
     return backup_path
 
@@ -457,11 +532,29 @@ def _load_provider_profiles_payload(home: Path) -> dict[str, Any]:
     return payload
 
 
+def _default_provider_profiles_payload(home: Path, payload: dict[str, Any], *, active: str | None = None) -> dict[str, Any]:
+    updated = dict(payload)
+    retired_profiles = _retired_provider_names(updated)
+    if active and active in retired_profiles:
+        retired_profiles.remove(active)
+        updated["retired_profiles"] = sorted(retired_profiles)
+    expected_active = active or updated.get("active") or _detect_active_provider_name(load_settings(home)) or DEFAULT_PROVIDER_PROFILES[0]["name"]
+    updated["active"] = expected_active
+    updated["schema_version"] = updated.get("schema_version") or 1
+    updated["profiles"] = _merge_provider_profiles(updated.get("profiles"), retired_names=retired_profiles)
+    return updated
+
+
 def _set_active_provider_name(home: Path, name: str) -> None:
     payload = _load_provider_profiles_payload(home)
     payload["active"] = name
     if "profiles" not in payload:
         payload["profiles"] = DEFAULT_PROVIDER_PROFILES
+    retired_profiles = _retired_provider_names(payload)
+    if name in retired_profiles:
+        retired_profiles.remove(name)
+        payload["retired_profiles"] = sorted(retired_profiles)
+        payload["profiles"] = _merge_provider_profiles(payload.get("profiles"), retired_names=retired_profiles)
     _write_json(provider_profiles_path(home), payload)
 
 
@@ -474,16 +567,36 @@ def _detect_active_provider_name(settings: dict[str, Any]) -> str:
     return ""
 
 
-def _merge_provider_profiles(existing: Any) -> list[dict[str, Any]]:
+def _retired_provider_names(payload: dict[str, Any]) -> set[str]:
+    raw = payload.get("retired_profiles")
+    if not isinstance(raw, list):
+        return set()
+    return {name for name in (str(item).strip() for item in raw) if name}
+
+
+def _provider_payloads(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    raw_profiles = payload.get("profiles") if isinstance(payload.get("profiles"), list) else DEFAULT_PROVIDER_PROFILES
+    retired_names = _retired_provider_names(payload)
+    return [
+        profile
+        for profile in raw_profiles
+        if isinstance(profile, dict) and str(profile.get("name") or "") not in retired_names
+    ]
+
+
+def _merge_provider_profiles(existing: Any, *, retired_names: set[str] | None = None) -> list[dict[str, Any]]:
+    retired_names = set(retired_names or set())
     existing_list = existing if isinstance(existing, list) else []
     existing_by_name = {
         str(item.get("name")): deepcopy(item)
         for item in existing_list
-        if isinstance(item, dict) and item.get("name")
+        if isinstance(item, dict) and item.get("name") and str(item.get("name")) not in retired_names
     }
     merged: list[dict[str, Any]] = []
     for default_profile in DEFAULT_PROVIDER_PROFILES:
         name = str(default_profile["name"])
+        if name in retired_names:
+            continue
         current = existing_by_name.pop(name, {})
         merged_profile = deepcopy(default_profile)
         if isinstance(current, dict):

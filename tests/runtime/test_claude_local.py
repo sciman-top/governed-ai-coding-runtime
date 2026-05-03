@@ -1,4 +1,6 @@
 import json
+import os
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -70,6 +72,20 @@ class ClaudeLocalTests(unittest.TestCase):
             self.assertNotIn("deepseek-secret", json.dumps(profiles))
             self.assertEqual("ok", claude_local.config_health(home)["status"])
 
+    def test_optimize_dry_run_does_not_write_provider_profiles_or_settings(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            settings_path = home / "settings.json"
+            _write_settings(settings_path)
+            original_settings = settings_path.read_text(encoding="utf-8")
+
+            result = claude_local.optimize_claude_local(home, provider_name="bigmodel-glm", apply=False, install_switcher=False)
+
+            self.assertEqual("dry_run", result["status"])
+            self.assertEqual("dry_run", result["provider_profiles"]["status"])
+            self.assertFalse((home / "provider-profiles.json").exists())
+            self.assertEqual(original_settings, settings_path.read_text(encoding="utf-8"))
+
     def test_switch_requires_matching_provider_credential(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)
@@ -80,6 +96,98 @@ class ClaudeLocalTests(unittest.TestCase):
 
             self.assertEqual("error", result["status"])
             self.assertIn("ANTHROPIC_API_KEY", result["error"])
+
+    def test_delete_provider_profile_backs_up_and_removes_inactive_profile(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_settings(home / "settings.json")
+            claude_local.write_default_provider_profiles(home, active="bigmodel-glm")
+
+            result = claude_local.delete_provider_profile("deepseek-v4", home)
+            payload = json.loads((home / "provider-profiles.json").read_text(encoding="utf-8"))
+            names = [profile["name"] for profile in payload["profiles"]]
+
+            self.assertEqual("ok", result["status"])
+            self.assertTrue(result["changed"])
+            self.assertTrue(Path(result["backup_path"]).exists())
+            self.assertNotIn("deepseek-v4", names)
+            self.assertEqual("bigmodel-glm", payload["active"])
+            self.assertEqual("secret-value", json.loads((home / "settings.json").read_text(encoding="utf-8"))["env"]["ANTHROPIC_AUTH_TOKEN"])
+
+    def test_delete_provider_profile_refuses_active_profile(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_settings(home / "settings.json")
+            claude_local.write_default_provider_profiles(home, active="bigmodel-glm")
+
+            result = claude_local.delete_provider_profile("bigmodel-glm", home)
+
+            self.assertEqual("error", result["status"])
+            self.assertIn("active", result["error"])
+            names = [profile.name for profile in claude_local.load_provider_profiles(home)]
+            self.assertIn("bigmodel-glm", names)
+
+    def test_delete_provider_profile_survives_default_profile_refresh(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_settings(home / "settings.json")
+            claude_local.write_default_provider_profiles(home, active="bigmodel-glm")
+            claude_local.delete_provider_profile("deepseek-v4", home)
+
+            refresh = claude_local.write_default_provider_profiles(home)
+            payload = json.loads((home / "provider-profiles.json").read_text(encoding="utf-8"))
+            names = [profile["name"] for profile in payload["profiles"]]
+
+            self.assertEqual("ok", refresh["status"])
+            self.assertNotIn("deepseek-v4", names)
+            self.assertIn("deepseek-v4", payload["retired_profiles"])
+            self.assertNotIn("deepseek-v4", [profile.name for profile in claude_local.load_provider_profiles(home)])
+
+    def test_explicit_active_provider_restores_retired_default_profile(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_settings(home / "settings.json")
+            claude_local.write_default_provider_profiles(home, active="bigmodel-glm")
+            claude_local.delete_provider_profile("deepseek-v4", home)
+
+            refresh = claude_local.write_default_provider_profiles(home, active="deepseek-v4")
+            payload = json.loads((home / "provider-profiles.json").read_text(encoding="utf-8"))
+            names = [profile["name"] for profile in payload["profiles"]]
+
+            self.assertEqual("ok", refresh["status"])
+            self.assertIn("deepseek-v4", names)
+            self.assertNotIn("deepseek-v4", payload["retired_profiles"])
+            self.assertEqual("deepseek-v4", payload["active"])
+
+    def test_cli_delete_dry_run_does_not_write_default_profiles(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_settings(home / "settings.json")
+            env = dict(os.environ)
+            env["CLAUDE_CONFIG_DIR"] = str(home)
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "scripts" / "claude-provider.py"),
+                    "delete",
+                    "deepseek-v4",
+                    "--dry-run",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=ROOT,
+                env=env,
+            )
+
+            self.assertEqual(0, completed.returncode, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual("ok", payload["status"])
+            self.assertTrue(payload["dry_run"])
+            self.assertFalse((home / "provider-profiles.json").exists())
 
 
 if __name__ == "__main__":
