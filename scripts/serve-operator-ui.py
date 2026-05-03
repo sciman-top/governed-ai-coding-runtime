@@ -46,6 +46,7 @@ build_host_feedback_summary = _load_host_feedback_summary_builder()
 
 ALLOWED_ACTIONS = {
     "targets": {"operator_action": "Targets", "run_alias": "targets", "timeout_seconds": 300},
+    "fast_feedback": {"operator_action": "FastFeedback", "run_alias": "fast", "timeout_seconds": 900},
     "readiness": {"operator_action": "Readiness", "run_alias": "readiness", "timeout_seconds": 1800},
     "rules_dry_run": {"operator_action": "RulesDryRun", "run_alias": "rules-check", "timeout_seconds": 600},
     "rules_apply": {"operator_action": "RulesApply", "run_alias": "rules-apply", "timeout_seconds": 900},
@@ -77,6 +78,7 @@ ALLOWED_ACTIONS = {
     "evolution_review": {"operator_action": "EvolutionReview", "run_alias": "evolution-review", "timeout_seconds": 900},
     "experience_review": {"operator_action": "ExperienceReview", "run_alias": "experience-review", "timeout_seconds": 900},
     "evolution_materialize": {"operator_action": "EvolutionMaterialize", "run_alias": "evolution-materialize", "timeout_seconds": 900},
+    "core_principle_materialize": {"operator_action": "CorePrincipleMaterialize", "run_alias": "core-principle", "timeout_seconds": 900},
 }
 
 CODEX_STATUS_CACHE_TTL_SECONDS = 10.0

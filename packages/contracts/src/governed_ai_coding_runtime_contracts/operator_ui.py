@@ -23,12 +23,15 @@ _TRANSLATIONS = {
         "attachments": "已接入仓库",
         "fail_closed_caption": "风险自动阻断",
         "workspace_overview": "控制台总览",
-        "workspace_overview_caption": "先选一个推荐入口，再看执行输出和证据；详情保留在各自面板。",
+        "workspace_overview_caption": "所有日常入口集中在左侧操作台；这里只保留当前状态、账号配置和反馈证据的决策摘要。",
         "shortcut_entry": "推荐入口",
-        "shortcut_entry_caption": "日常优先用根目录短入口，页面按钮也会通过同一入口转发。",
-        "shortcut_daily": "日常 readiness",
+        "shortcut_entry_caption": "优先用这些入口完成日常闭环；页面按钮会通过同一个根目录入口执行。",
+        "shortcut_fast": "日常快速反馈",
+        "shortcut_fast_command": ".\\run.ps1 fast",
+        "shortcut_fast_caption": "编码中先跑 build + quick feedback tests；不替代交付前 readiness。",
+        "shortcut_daily": "交付 readiness",
         "shortcut_daily_command": ".\\run.ps1 readiness -OpenUi",
-        "shortcut_daily_caption": "检查本仓状态并打开中文控制台。",
+        "shortcut_daily_caption": "按 build -> test -> contract/invariant -> hotspot 收口并打开中文控制台。",
         "shortcut_targets": "目标仓巡检",
         "shortcut_targets_command": ".\\run.ps1 daily -Mode quick",
         "shortcut_targets_caption": "对 active targets 执行快速 daily flow。",
@@ -84,10 +87,13 @@ _TRANSLATIONS = {
         "none": "无",
         "not_recorded": "未记录",
         "unknown_repo": "未知仓库",
-        "actions": "操作台",
+        "actions": "统一操作台",
         "settings": "执行参数",
-        "common_actions": "常用动作",
-        "change_actions": "治理变更",
+        "recommended_next": "AI 推荐下一步",
+        "quick_actions": "本仓验证",
+        "target_actions": "目标仓治理",
+        "rule_actions": "规则与演进",
+        "advanced_settings": "高级参数",
         "page_actions": "页面",
         "language": "语言",
         "target": "目标仓",
@@ -229,6 +235,7 @@ _TRANSLATIONS = {
         "running": "执行中",
         "static_snapshot": "只读快照",
         "targets_action": "目标仓列表",
+        "fast_feedback_action": "快速反馈",
         "readiness_action": "本仓 readiness",
         "rules_dry_run_action": "只查规则漂移",
         "rules_apply_action": "同步规则文件",
@@ -238,8 +245,13 @@ _TRANSLATIONS = {
         "cleanup_targets_action": "一键清理退役文件",
         "uninstall_governance_action": "一键卸载治理",
         "feedback_report_action": "功能反馈汇总",
+        "evolution_review_action": "演进候选预演",
+        "experience_review_action": "经验沉淀预演",
+        "evolution_materialize_action": "物化演进候选",
+        "core_principle_action": "核心原则候选",
         "view_ref": "查看",
         "confirm_mutating": "该操作会应用目标仓治理能力，并默认删除已证明安全的退役托管文件；不安全候选会阻断。继续执行？",
+        "confirm_evolution_materialize": "将把低风险演进候选物化为 proposal 或禁用态 skill candidate，不启用技能。继续执行？",
         "confirm_managed_cleanup": "将对选中的目标仓执行退役治理文件清理；未勾选“实际删除”时只预演。继续执行？",
         "confirm_governance_uninstall": "将对选中的目标仓执行治理卸载；勾选“实际删除”会删除或修补受管文件并写备份。继续执行？",
         "no_target_selected": "至少选择一个目标仓。",
@@ -260,12 +272,15 @@ _TRANSLATIONS = {
         "attachments": "Attachments",
         "fail_closed_caption": "risk auto-block",
         "workspace_overview": "Workbench Overview",
-        "workspace_overview_caption": "Choose a recommended entrypoint first, then inspect output and evidence. Details stay in each panel.",
+        "workspace_overview_caption": "All daily entrypoints live in the left operator bench; this overview keeps only decision-grade status, account config, and feedback evidence.",
         "shortcut_entry": "Recommended Entrypoints",
-        "shortcut_entry_caption": "Use the repository-root shortcut for daily work; page buttons delegate through the same entrypoint.",
-        "shortcut_daily": "Daily readiness",
+        "shortcut_entry_caption": "Use these entrypoints for routine closure; page buttons delegate through the same repository-root command.",
+        "shortcut_fast": "Daily fast feedback",
+        "shortcut_fast_command": ".\\run.ps1 fast",
+        "shortcut_fast_caption": "Run build plus quick feedback tests while coding; delivery still needs readiness.",
+        "shortcut_daily": "Delivery readiness",
         "shortcut_daily_command": ".\\run.ps1 readiness -OpenUi",
-        "shortcut_daily_caption": "Check this repo and open the console.",
+        "shortcut_daily_caption": "Close with build -> test -> contract/invariant -> hotspot and open the console.",
         "shortcut_targets": "Target sweep",
         "shortcut_targets_command": ".\\run.ps1 daily -Mode quick",
         "shortcut_targets_caption": "Run quick daily flow for active targets.",
@@ -321,10 +336,13 @@ _TRANSLATIONS = {
         "none": "none",
         "not_recorded": "not recorded",
         "unknown_repo": "unknown repo",
-        "actions": "Operator Bench",
+        "actions": "Unified Operator Bench",
         "settings": "Run Parameters",
-        "common_actions": "Common Actions",
-        "change_actions": "Governance Changes",
+        "recommended_next": "AI Recommended Next Step",
+        "quick_actions": "Repo Verification",
+        "target_actions": "Target Governance",
+        "rule_actions": "Rules and Evolution",
+        "advanced_settings": "Advanced Parameters",
         "page_actions": "Page",
         "language": "Language",
         "target": "Target repo",
@@ -466,6 +484,7 @@ _TRANSLATIONS = {
         "running": "Running",
         "static_snapshot": "Read-only snapshot",
         "targets_action": "View targets",
+        "fast_feedback_action": "Fast feedback",
         "readiness_action": "Check repo status",
         "rules_dry_run_action": "Rule drift check",
         "rules_apply_action": "Sync rules",
@@ -475,8 +494,13 @@ _TRANSLATIONS = {
         "cleanup_targets_action": "Clean retired files",
         "uninstall_governance_action": "Uninstall governance",
         "feedback_report_action": "Feedback summary",
+        "evolution_review_action": "Evolution dry run",
+        "experience_review_action": "Experience dry run",
+        "evolution_materialize_action": "Materialize evolution candidates",
+        "core_principle_action": "Core-principle candidates",
         "view_ref": "View",
         "confirm_mutating": "This applies target governance and deletes proven-safe retired managed files by default; unsafe candidates are blocked. Continue?",
+        "confirm_evolution_materialize": "This materializes low-risk evolution candidates as proposals or disabled skill candidates. It does not enable skills. Continue?",
         "confirm_managed_cleanup": "Run retired governance file cleanup for the selected targets. It only dry-runs unless apply removal is enabled. Continue?",
         "confirm_governance_uninstall": "Run governance uninstall for the selected targets. Apply removal deletes or patches managed files and writes backups. Continue?",
         "no_target_selected": "Select at least one target repo.",
@@ -695,6 +719,9 @@ def render_runtime_snapshot_html(
     .action-group {{ display: grid; gap: 8px; }}
     .action-group + .action-group {{ margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }}
     .action-group-title {{ margin: 0; color: var(--muted); font-size: 0.76rem; font-weight: 700; text-transform: uppercase; }}
+    .foldout {{ border-top: 1px solid var(--line); margin-top: 12px; padding-top: 10px; }}
+    .foldout > summary {{ cursor: pointer; color: var(--ink-strong); font-weight: 760; line-height: 1.4; list-style-position: inside; }}
+    .foldout[open] > summary {{ margin-bottom: 9px; }}
     .shortcut-list {{ display: grid; gap: 9px; margin-top: 10px; }}
     .shortcut-item {{ display: grid; gap: 8px; min-width: 0; padding: 11px; border: 1px solid var(--line); border-radius: 8px; background: linear-gradient(180deg, #ffffff, #f9fcfb); box-shadow: var(--shadow-tight); }}
     .shortcut-item.recommended {{ border-color: #bde0da; background: linear-gradient(180deg, #f2fbf8, #ffffff); }}
@@ -1172,28 +1199,74 @@ def _render_actions(text: dict[str, str], *, language: str, interactive: bool, t
             ]
         )
 
-    shortcuts = _render_shortcut_entrypoints(text)
-    action_items = [
-        ("targets", text["targets_action"], "primary", ""),
-        ("readiness", text["readiness_action"], "primary", ""),
-        ("rules_dry_run", text["rules_dry_run_action"], "", ""),
-        ("rules_apply", text["rules_apply_action"], "danger", text["confirm_mutating"]),
-        ("governance_baseline_all", text["governance_baseline_action"], "danger", text["confirm_mutating"]),
-        ("daily_all", text["daily_all_action"], "", ""),
-        ("apply_all_features", text["apply_all_action"], "danger", text["confirm_mutating"]),
-        ("cleanup_targets", text["cleanup_targets_action"], "danger", text["confirm_managed_cleanup"]),
-        ("uninstall_governance", text["uninstall_governance_action"], "danger", text["confirm_governance_uninstall"]),
-        ("feedback_report", text["feedback_report_action"], "", ""),
+    action_groups = [
+        (
+            text["quick_actions"],
+            True,
+            [
+                ("fast_feedback", text["fast_feedback_action"], "primary", ""),
+                ("readiness", text["readiness_action"], "primary", ""),
+                ("feedback_report", text["feedback_report_action"], "", ""),
+            ],
+        ),
+        (
+            text["target_actions"],
+            False,
+            [
+                ("targets", text["targets_action"], "", ""),
+                ("daily_all", text["daily_all_action"], "", ""),
+                ("governance_baseline_all", text["governance_baseline_action"], "danger", text["confirm_mutating"]),
+                ("apply_all_features", text["apply_all_action"], "danger", text["confirm_mutating"]),
+                ("cleanup_targets", text["cleanup_targets_action"], "danger", text["confirm_managed_cleanup"]),
+                ("uninstall_governance", text["uninstall_governance_action"], "danger", text["confirm_governance_uninstall"]),
+            ],
+        ),
+        (
+            text["rule_actions"],
+            False,
+            [
+                ("rules_dry_run", text["rules_dry_run_action"], "", ""),
+                ("rules_apply", text["rules_apply_action"], "danger", text["confirm_mutating"]),
+                ("evolution_review", text["evolution_review_action"], "", ""),
+                ("experience_review", text["experience_review_action"], "", ""),
+                ("evolution_materialize", text["evolution_materialize_action"], "danger", text["confirm_evolution_materialize"]),
+                ("core_principle_materialize", text["core_principle_action"], "", ""),
+            ],
+        ),
     ]
-    buttons = []
-    for action_id, label, class_name, confirm in action_items:
-        class_attr = f" class='{class_name}'" if class_name else ""
-        confirm_attr = f" data-confirm='{escape(confirm, quote=True)}'" if confirm else ""
-        buttons.append(
-            f"<button type='button'{class_attr} data-action='{escape(action_id)}'{confirm_attr}>{escape(label)}</button>"
-        )
-    common_buttons = buttons[0:4]
-    change_buttons = buttons[4:]
+
+    rendered_groups: list[str] = []
+    for group_title, expanded, action_items in action_groups:
+        buttons = []
+        for action_id, label, class_name, confirm in action_items:
+            class_attr = f" class='{class_name}'" if class_name else ""
+            confirm_attr = f" data-confirm='{escape(confirm, quote=True)}'" if confirm else ""
+            buttons.append(
+                f"<button type='button'{class_attr} data-action='{escape(action_id)}'{confirm_attr}>{escape(label)}</button>"
+            )
+            buttons.append(f"<p class='meta shortcut-blocked' data-action-blocked='{escape(action_id)}'></p>")
+        if expanded:
+            rendered_groups.extend(
+                [
+                    "<div class='action-group'>",
+                    f"<p class='action-group-title'>{escape(group_title)}</p>",
+                    "<div class='action-list'>",
+                    *buttons,
+                    "</div>",
+                    "</div>",
+                ]
+            )
+        else:
+            rendered_groups.extend(
+                [
+                    "<details class='foldout'>",
+                    f"<summary>{escape(group_title)}</summary>",
+                    "<div class='action-list'>",
+                    *buttons,
+                    "</div>",
+                    "</details>",
+                ]
+            )
     target_choices = [("__all__", text["all_targets"])] + [(target, target) for target in target_options]
     target_select_options = "".join(
         f"<option value='{escape(value, quote=True)}'>{escape(label)}</option>"
@@ -1212,25 +1285,14 @@ def _render_actions(text: dict[str, str], *, language: str, interactive: bool, t
     return "\n".join(
         [
             "<aside class='sidebar'>",
-            shortcuts,
             "<section class='panel'>",
             f"<h2>{escape(text['actions'])}</h2>",
+            _render_shortcut_entrypoints(text),
             "<div class='action-group'>",
             f"<p class='action-group-title'>{escape(text['page_actions'])}</p>",
             f"<button type='button' data-refresh='1'>{escape(text['refresh'])}</button>",
             "</div>",
-            "<div class='action-group'>",
-            f"<p class='action-group-title'>{escape(text['common_actions'])}</p>",
-            "<div class='action-list'>",
-            *common_buttons,
-            "</div>",
-            "</div>",
-            "<div class='action-group'>",
-            f"<p class='action-group-title'>{escape(text['change_actions'])}</p>",
-            "<div class='action-list'>",
-            *change_buttons,
-            "</div>",
-            "</div>",
+            *rendered_groups,
             "</section>",
             "<section class='panel'>",
             f"<h2>{escape(text['settings'])}</h2>",
@@ -1248,12 +1310,15 @@ def _render_actions(text: dict[str, str], *, language: str, interactive: bool, t
             "</div>",
             "</div>",
             f"<label>{escape(text['mode'])}<select id='ui-mode'><option value='quick'>quick</option><option value='full'>full</option><option value='l1'>l1</option><option value='l2'>l2</option><option value='l3'>l3</option></select></label>",
+            f"<label class='checkbox-row'><input id='ui-dry-run' type='checkbox'> {escape(text['dry_run'])}</label>",
+            "<details class='foldout'>",
+            f"<summary>{escape(text['advanced_settings'])}</summary>",
             f"<label>{escape(text['parallelism'])}<input id='ui-parallelism' type='number' min='1' max='16' value='1'></label>",
             f"<label>{escape(text['milestone'])}<input id='ui-milestone' type='text' value='milestone'></label>",
             f"<label class='checkbox-row'><input id='ui-fail-fast' type='checkbox'> {escape(text['fail_fast'])}</label>",
-            f"<label class='checkbox-row'><input id='ui-dry-run' type='checkbox'> {escape(text['dry_run'])}</label>",
             f"<label class='checkbox-row danger-row'><input id='ui-apply-removal' type='checkbox'> {escape(text['apply_removal'])}</label>",
             f"<p class='meta'>{escape(text['apply_removal_hint'])}</p>",
+            "</details>",
             "</div>",
             "</section>",
             "</aside>",
@@ -1263,10 +1328,8 @@ def _render_actions(text: dict[str, str], *, language: str, interactive: bool, t
 
 def _render_shortcut_entrypoints(text: dict[str, str]) -> str:
     items = [
-        ("readiness", text["shortcut_daily"], text["shortcut_daily_command"], text["shortcut_daily_caption"], True),
-        ("daily_all", text["shortcut_targets"], text["shortcut_targets_command"], text["shortcut_targets_caption"], False),
-        ("rules_dry_run", text["shortcut_rules"], text["shortcut_rules_command"], text["shortcut_rules_caption"], False),
-        ("feedback_report", text["shortcut_feedback"], text["shortcut_feedback_command"], text["shortcut_feedback_caption"], False),
+        ("fast_feedback", text["shortcut_fast"], text["shortcut_fast_command"], text["shortcut_fast_caption"], True),
+        ("readiness", text["shortcut_daily"], text["shortcut_daily_command"], text["shortcut_daily_caption"], False),
     ]
     rendered: list[str] = []
     for action_id, title, command, caption, recommended in items:
@@ -1288,13 +1351,13 @@ def _render_shortcut_entrypoints(text: dict[str, str]) -> str:
         )
     return "\n".join(
         [
-            "<section class='panel'>",
-            f"<h2>{escape(text['shortcut_entry'])}</h2>",
+            "<div class='action-group'>",
+            f"<p class='action-group-title'>{escape(text['recommended_next'])}</p>",
             f"<p class='meta'>{escape(text['shortcut_entry_caption'])}</p>",
             "<div class='shortcut-list'>",
             *rendered,
             "</div>",
-            "</section>",
+            "</div>",
         ]
     )
 
@@ -1852,6 +1915,7 @@ def _render_interactive_script(
 
   function actionDisplayLabel(action) {{
     const labels = {{
+      fast_feedback: {text['fast_feedback_action']!r},
       readiness: {text['readiness_action']!r},
       rules_dry_run: {text['rules_dry_run_action']!r},
       rules_apply: {text['rules_apply_action']!r},
@@ -1861,9 +1925,10 @@ def _render_interactive_script(
       cleanup_targets: {text['cleanup_targets_action']!r},
       uninstall_governance: {text['uninstall_governance_action']!r},
       feedback_report: {text['feedback_report_action']!r},
-      evolution_review: 'EvolutionReview',
-      experience_review: 'ExperienceReview',
-      evolution_materialize: 'EvolutionMaterialize',
+      evolution_review: {text['evolution_review_action']!r},
+      experience_review: {text['experience_review_action']!r},
+      evolution_materialize: {text['evolution_materialize_action']!r},
+      core_principle_materialize: {text['core_principle_action']!r},
       targets: {text['targets_action']!r},
     }};
     return labels[action] || action || 'unknown';

@@ -327,11 +327,13 @@ class OperatorEntrypointTests(unittest.TestCase):
             ),
         ):
             self.assertIn("readiness", module.ALLOWED_ACTIONS)
+            self.assertIn("fast_feedback", module.ALLOWED_ACTIONS)
             self.assertIn("feedback_report", module.ALLOWED_ACTIONS)
             self.assertIn("cleanup_targets", module.ALLOWED_ACTIONS)
             self.assertIn("uninstall_governance", module.ALLOWED_ACTIONS)
             self.assertIn("evolution_review", module.ALLOWED_ACTIONS)
             self.assertIn("evolution_materialize", module.ALLOWED_ACTIONS)
+            self.assertIn("core_principle_materialize", module.ALLOWED_ACTIONS)
             self.assertIn("classroomtoolkit", module.load_target_ids())
             self.assertEqual(2, module.run_operator_action({"action": "unsupported"})["exit_code"])
             self.assertEqual(
