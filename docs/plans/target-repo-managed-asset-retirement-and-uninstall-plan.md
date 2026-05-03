@@ -3,9 +3,9 @@
 ## Status
 - Created: 2026-05-02.
 - Queue: `GAP-144` through `GAP-151`.
-- Current state: implementation slice complete for inventory, retired-file contract, prune dry-run/apply, uninstall dry-run/apply, and `runtime-flow-preset.ps1` one-click integration.
+- Current state: implementation slice complete for inventory, provenance sidecar policy, retired-file contract, prune dry-run/apply, uninstall dry-run/apply, and `runtime-flow-preset.ps1` one-click integration.
 - Safety status: `ApplyAllFeatures` defaults to deleting proven-safe retired managed files after hash/reference checks, backup, deletion-time hash recheck, proof output, and backup-local `manifest.json`; `-DisableManagedAssetRemoval` keeps it detection-only. `CleanupTargets` and `UninstallGovernance` still require `-ApplyManagedAssetRemoval` for real deletion or patching.
-- Trigger: owner-directed follow-up after target-repo overwrite protection landed. The remaining gap is safe retirement and one-click uninstall for files previously applied to target repositories by this runtime.
+- Trigger: owner-directed follow-up after target-repo overwrite protection landed. The remaining gap is closeout evidence from fresh target-repo dry-runs and hard gates.
 
 ## Goal
 Add a governed removal path that is as explicit and safe as the existing one-click apply path.
@@ -90,13 +90,13 @@ Only after that classification may it propose or execute removal. The deletion p
 **Description:** Add provenance for future managed files so later prune/uninstall does not depend only on path guesses.
 
 **Acceptance criteria:**
-- [ ] Text files can carry a safe header marker when the file format allows comments.
-- [ ] JSON or third-party config files that cannot safely accept extra fields use sidecar provenance under `.governed-ai/managed-files/`.
-- [ ] Apply sync writes or refreshes provenance without overwriting target-local drift.
+- [x] Text/comment-capable marker support is bounded to sidecar-first provenance until per-format marker syntax is explicitly proven safe.
+- [x] JSON or third-party config files that cannot safely accept extra fields use sidecar provenance under `.governed-ai/managed-files/`.
+- [x] Apply sync writes or refreshes provenance without overwriting target-local drift.
 
 **Verification:**
-- [ ] Tests prove schema-sensitive files are not polluted with unsupported fields.
-- [ ] Tests prove provenance records include source path, sync revision, management mode, and source hash.
+- [x] Tests prove schema-sensitive files are not polluted with unsupported fields.
+- [x] Tests prove provenance records include source path, sync revision, management mode, and source hash.
 
 **Dependencies:** `GAP-144`, `GAP-145`.
 
@@ -236,7 +236,7 @@ Only after that classification may it propose or execute removal. The deletion p
 - [ ] Unknown ownership blocks destructive actions.
 
 ### Checkpoint B: Retired Contract And Prune
-- [ ] `GAP-146` through `GAP-148` complete.
+- [x] `GAP-146` through `GAP-148` complete.
 - [ ] Retired managed files can be proposed and pruned only with evidence.
 - [ ] Referenced, drifted, and target-owned files are preserved.
 
@@ -275,7 +275,7 @@ Only after that classification may it propose or execute removal. The deletion p
 - `GAP-148`: added `scripts/prune-retired-managed-files.py`. It defaults to dry-run, deletes only retired candidates with hash evidence and no active references, and backs up before apply.
 - `GAP-149`: added `scripts/uninstall-target-repo-governance.py`. It deletes only source/hash-proven whole-file managed assets, patches `json_merge` shared files, blocks drifted files, and blocks generated files unless hash evidence proves exact generated content.
 - `GAP-150`: added `-PruneRetiredManagedFiles`, `-UninstallGovernance`, and `-ApplyManagedAssetRemoval` to `scripts/runtime-flow-preset.ps1`. Dry-run JSON includes candidate, blocked, backup, and apply fields.
-- Remaining improvement: `GAP-146` future provenance/sidecar marker writing is still a follow-up hardening item; current destructive paths fail closed when provenance/hash evidence is absent.
+- `GAP-146`: added observe-mode `managed_file_provenance_policy` and deterministic sidecar records under `.governed-ai/managed-files/` for active managed files. The policy does not inject unsupported marker fields into JSON or third-party config files, and target-local drift remains block-on-drift.
 
 ## Open Questions
 - Exact flag names may change during implementation, but destructive apply must remain explicit and separate from normal `ApplyAllFeatures`.

@@ -1,4 +1,4 @@
-issue_seed_version: "5.3"
+issue_seed_version: "5.4"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment
@@ -605,3 +605,78 @@ issues:
     type: AFK
     blocked_by: [GAP-142]
     user_stories: [13, 14, 18, 21, 23, 31, 44, 45]
+  - id: GAP-144
+    title: Managed Asset Identity Contract
+    type: AFK
+    blocked_by: [GAP-143]
+    user_stories: [7, 8, 13, 21, 23, 31, 44]
+  - id: GAP-145
+    title: Target Repo Managed Asset Inventory Dry Run
+    type: AFK
+    blocked_by: [GAP-144]
+    user_stories: [7, 8, 13, 21, 23, 31, 44]
+  - id: GAP-146
+    title: Managed File Provenance And Marker Policy
+    type: AFK
+    blocked_by: [GAP-144, GAP-145]
+    user_stories: [7, 8, 13, 21, 23, 31, 44]
+  - id: GAP-147
+    title: Retired Managed Files Contract
+    type: AFK
+    blocked_by: [GAP-144]
+    user_stories: [7, 8, 13, 21, 23, 31, 44]
+  - id: GAP-148
+    title: Prune Retired Managed Files
+    type: HITL
+    blocked_by: [GAP-145, GAP-147]
+    user_stories: [7, 8, 13, 21, 23, 31, 44]
+  - id: GAP-149
+    title: One Click Governance Uninstall
+    type: HITL
+    blocked_by: [GAP-144, GAP-145, GAP-146, GAP-148]
+    user_stories: [7, 8, 13, 21, 23, 31, 44]
+  - id: GAP-150
+    title: Operator And All Target Managed Asset Integration
+    type: HITL
+    blocked_by: [GAP-148, GAP-149]
+    user_stories: [7, 8, 13, 21, 23, 31, 44]
+  - id: GAP-151
+    title: Managed Asset Removal Closeout Gates And Target Evidence
+    type: AFK
+    blocked_by: [GAP-146, GAP-150]
+    user_stories: [7, 8, 13, 21, 23, 31, 44, 45]
+  - id: GAP-152
+    title: Repo Slimming Baseline Inventory And Safety Fence
+    type: AFK
+    blocked_by: [GAP-151]
+    user_stories: [13, 18, 20, 21, 23, 31, 44]
+  - id: GAP-153
+    title: Evidence Archive Layout And Index
+    type: AFK
+    blocked_by: [GAP-152]
+    user_stories: [13, 18, 20, 21, 23, 31, 44]
+  - id: GAP-154
+    title: Context Routing And Repo Map Defaults
+    type: AFK
+    blocked_by: [GAP-153]
+    user_stories: [11, 13, 18, 20, 21, 23, 31, 44]
+  - id: GAP-155
+    title: Root README And Plan Index Slimming
+    type: AFK
+    blocked_by: [GAP-154]
+    user_stories: [13, 18, 20, 21, 23, 31, 44]
+  - id: GAP-156
+    title: Runtime Flow Preset Responsibility Split
+    type: AFK
+    blocked_by: [GAP-155]
+    user_stories: [11, 13, 18, 20, 21, 23, 31, 44]
+  - id: GAP-157
+    title: Verify Repo And Gate Timing Split
+    type: AFK
+    blocked_by: [GAP-156]
+    user_stories: [11, 13, 18, 20, 21, 23, 31, 44]
+  - id: GAP-158
+    title: Operator Screenshot Retention And Repo Slimming Closeout
+    type: AFK
+    blocked_by: [GAP-157]
+    user_stories: [13, 18, 20, 21, 23, 31, 44, 45]

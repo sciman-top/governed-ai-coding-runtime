@@ -23,6 +23,7 @@ DEFAULT_CATALOG_PATH = ROOT / "docs" / "targets" / "target-repos-catalog.json"
 DEFAULT_BASELINE_PATH = ROOT / "docs" / "targets" / "target-repo-governance-baseline.json"
 DEFAULT_QUICK_TEST_RECOMMENDATION_RELATIVE_PATH = ".governed-ai/quick-test-slice.recommendation.json"
 DEFAULT_QUICK_TEST_PROMPT_RELATIVE_PATH = ".governed-ai/quick-test-slice.prompt.md"
+DEFAULT_MANAGED_FILE_PROVENANCE_ROOT = ".governed-ai/managed-files"
 DERIVED_RUNTIME_PROFILE_FIELDS = {"quick_gate_commands", "full_gate_commands", "gate_timeout_seconds"}
 CATALOG_PROFILE_FIELDS = {"repo_id", "display_name", "primary_language", "build_commands", "test_commands", "contract_commands"}
 
@@ -138,6 +139,22 @@ def _validate_baseline(
     speed_policy = baseline.get("target_repo_speed_profile_policy")
     if speed_policy is not None:
         speed_policy = normalize_speed_profile_policy(speed_policy)
+    provenance_policy = baseline.get("managed_file_provenance_policy")
+    if provenance_policy is not None:
+        if not isinstance(provenance_policy, dict):
+            raise ValueError("baseline.managed_file_provenance_policy must be an object when present")
+        if provenance_policy.get("status") not in {"observe", "enforced", "disabled"}:
+            raise ValueError("baseline.managed_file_provenance_policy.status must be observe, enforced, or disabled")
+        if provenance_policy.get("strategy") != "sidecar":
+            raise ValueError("baseline.managed_file_provenance_policy.strategy must be sidecar")
+        if provenance_policy.get("sidecar_root") != DEFAULT_MANAGED_FILE_PROVENANCE_ROOT:
+            raise ValueError(
+                f"baseline.managed_file_provenance_policy.sidecar_root must be {DEFAULT_MANAGED_FILE_PROVENANCE_ROOT}"
+            )
+        if not isinstance(provenance_policy.get("write_on_apply"), bool):
+            raise ValueError("baseline.managed_file_provenance_policy.write_on_apply must be boolean")
+        if not isinstance(provenance_policy.get("require_in_consistency"), bool):
+            raise ValueError("baseline.managed_file_provenance_policy.require_in_consistency must be boolean")
     return sync_revision, overrides, managed_files, generated_files, speed_policy
 
 

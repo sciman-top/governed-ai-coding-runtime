@@ -1413,6 +1413,221 @@ The entries below record the executed queue for complete hybrid final-state and 
   - [x] `verify-repo.ps1 -Check Docs` includes the recovery posture contract
   - [x] claim catalog records the recovery posture as a drift-checked product claim
 
+## Target Repo Managed Asset Retirement And Uninstall Queue
+
+### GAP-144 Managed Asset Identity Contract
+- Type: AFK
+- Blocked by: GAP-143
+- User stories: 7, 8, 13, 21, 23, 31, 44
+- Status: complete in managed asset classification baseline
+- What to build:
+  - define the target-repo managed asset classes used before prune or uninstall
+  - distinguish whole-file runtime ownership from shared file or field ownership
+  - fail closed when ownership is unknown, drifted, or target-owned
+- Acceptance criteria:
+  - [x] classification helpers identify active, retired, drifted, shared, target-owned, and unknown files
+  - [x] destructive actions require runtime ownership evidence before apply
+  - [x] unknown ownership blocks removal and reports the reason
+
+### GAP-145 Target Repo Managed Asset Inventory Dry Run
+- Type: AFK
+- Blocked by: GAP-144
+- User stories: 7, 8, 13, 21, 23, 31, 44
+- Status: complete; closed by `docs/change-evidence/20260502-target-managed-asset-retirement-and-uninstall.md`
+- What to build:
+  - add a read-only inventory command for active target repos and candidate paths
+  - report ownership class, hashes, evidence refs, and target references without modifying target repos
+  - keep scan scope explicit for candidate-path reviews
+- Acceptance criteria:
+  - [x] inventory dry-run is available through `scripts/inspect-target-repo-managed-assets.py`
+  - [x] tests cover mixed active, retired, drifted, shared, target-owned, and unknown classifications
+  - [x] the command emits JSON suitable for later prune and uninstall decisions
+
+### GAP-146 Managed File Provenance And Marker Policy
+- Type: AFK
+- Blocked by: GAP-144, GAP-145
+- User stories: 7, 8, 13, 21, 23, 31, 44
+- Status: complete; closed by `docs/change-evidence/20260503-gap-146-managed-file-provenance-sidecar.md`
+- What to build:
+  - add a provenance policy for future managed files so removal does not depend only on path or historical hash guesses
+  - keep comment markers bounded-deferred unless a file format is explicitly proven safe
+  - use sidecar provenance under `.governed-ai/managed-files/` for JSON or third-party configuration files
+- Acceptance criteria:
+  - [x] schema-sensitive files are not polluted with unsupported marker fields
+  - [x] provenance records include source path, sync revision, management mode, and source hash
+  - [x] apply and consistency checks can refresh provenance without overwriting target-local drift
+
+### GAP-147 Retired Managed Files Contract
+- Type: AFK
+- Blocked by: GAP-144
+- User stories: 7, 8, 13, 21, 23, 31, 44
+- Status: complete; closed by `docs/change-evidence/20260502-target-managed-asset-retirement-and-uninstall.md`
+- What to build:
+  - add `retired_managed_files` to the target repo governance baseline and rollout contract
+  - require each retired entry to carry path, previous source or hash, retire reason, replacement, safe-delete conditions, and backup requirement
+  - make malformed retired entries fail contract verification
+- Acceptance criteria:
+  - [x] baseline and rollout contract support retired managed files
+  - [x] malformed retired entries fail `verify-target-repo-rollout-contract.py`
+  - [x] valid retired entries remain separate from active managed files
+
+### GAP-148 Prune Retired Managed Files
+- Type: HITL
+- Blocked by: GAP-145, GAP-147
+- User stories: 7, 8, 13, 21, 23, 31, 44
+- Status: complete; hardened by `docs/change-evidence/20260502-retired-cleanup-delete-contract-hardening.md`
+- What to build:
+  - implement a dry-run-first prune command for retired runtime-managed files
+  - delete only registered, hash-matched, unreferenced retired files in apply mode
+  - emit proof, backup, rollback manifest, and blocked-state evidence
+- Acceptance criteria:
+  - [x] dry-run reports candidates without modifying target repos
+  - [x] apply blocks drifted, referenced, unknown, and target-owned files
+  - [x] backup and deletion-time hash recheck are part of apply output
+
+### GAP-149 One Click Governance Uninstall
+- Type: HITL
+- Blocked by: GAP-144, GAP-145, GAP-146, GAP-148
+- User stories: 7, 8, 13, 21, 23, 31, 44
+- Status: complete for current hash/provenance-backed uninstall baseline
+- What to build:
+  - add a target-repo detach path that removes runtime governance assets without deleting target-owned work
+  - patch shared files by owned field or block instead of deleting whole files
+  - block generated, drifted, referenced, or unproven files
+- Acceptance criteria:
+  - [x] uninstall defaults to dry-run
+  - [x] shared `.claude/settings.json` and `.governed-ai/repo-profile.json` paths are patched by ownership scope
+  - [x] drifted or unproven assets are blocked with rollback guidance
+
+### GAP-150 Operator And All Target Managed Asset Integration
+- Type: HITL
+- Blocked by: GAP-148, GAP-149
+- User stories: 7, 8, 13, 21, 23, 31, 44
+- Status: complete; closed by `docs/change-evidence/20260503-managed-cleanup-applyall-direct-entrypoint.md`
+- What to build:
+  - expose prune and uninstall through canonical runtime-flow/operator surfaces
+  - keep destructive apply flags explicit and separate from ordinary detection paths
+  - report candidate, blocked, backup, and apply fields in all-target JSON
+- Acceptance criteria:
+  - [x] `runtime-flow-preset.ps1` reports managed asset cleanup fields for single and all-target runs
+  - [x] `ApplyAllFeatures` cleanup remains hash/reference guarded and can be disabled for detection-only mode
+  - [x] cleanup and uninstall actions are blocked when repair-gate-first posture applies
+
+### GAP-151 Managed Asset Removal Closeout Gates And Target Evidence
+- Type: AFK
+- Blocked by: GAP-146, GAP-150
+- User stories: 7, 8, 13, 21, 23, 31, 44, 45
+- Status: active for fresh all-target dry-run evidence and hard-gate closeout
+- What to build:
+  - close the managed-asset queue with fresh all-target dry-run or apply evidence
+  - record whether richer future provenance is implemented or explicitly deferred
+  - prove no target repo is modified outside registered, hash-matched, backed-up removal candidates
+- Acceptance criteria:
+  - [ ] closeout evidence cites build, runtime, contract, and hotspot gates
+  - [ ] active target catalog evidence shows candidate, deleted, blocked, backup, and rollback fields
+  - [x] the queue does not claim complete provenance-marker support unless `GAP-146` is implemented
+
+## Repo Slimming And Coding Speed Queue
+
+### GAP-152 Repo Slimming Baseline Inventory And Safety Fence
+- Type: AFK
+- Blocked by: GAP-151
+- User stories: 13, 18, 20, 21, 23, 31, 44
+- Status: complete in repo-slimming inventory baseline
+- What to build:
+  - produce a machine-readable repository surface inventory before moving or deleting evidence
+  - record file count, byte count, text lines, top directories, top files, and binary evidence weight
+  - keep the lane no-delete until archive tooling has rollback evidence
+- Acceptance criteria:
+  - [x] inventory JSON separates active runtime, docs, evidence, rules, tests, schemas, and transient surfaces
+  - [x] safety fence says existing dirty worktree entries are out of scope unless adopted
+  - [x] Docs verification covers the inventory baseline
+
+### GAP-153 Evidence Archive Layout And Index
+- Type: AFK
+- Blocked by: GAP-152
+- User stories: 13, 18, 20, 21, 23, 31, 44
+- Status: complete in archive-index baseline
+- What to build:
+  - define current, latest, and archive evidence semantics
+  - add archive dry-run tooling and an evidence index
+  - keep active rollback refs discoverable before any movement
+- Acceptance criteria:
+  - [x] archive tooling can dry-run screenshot, target-run, rule-sync backup, and snapshot candidates separately
+  - [x] no active evidence is moved without updated references
+  - [x] rollback manifest semantics are documented before apply mode
+
+### GAP-154 Context Routing And Repo Map Defaults
+- Type: AFK
+- Blocked by: GAP-153
+- User stories: 11, 13, 18, 20, 21, 23, 31, 44
+- Status: complete in repo-map archive routing baseline
+- What to build:
+  - make low-token context routing the default repo-map behavior
+  - exclude archive-heavy evidence, screenshots, backups, and generated run payloads
+  - preserve required governance files through explicit include overrides
+- Acceptance criteria:
+  - [x] repo-map artifact reports selected files, token estimate, archive exclusions, and override count
+  - [x] token budget stays within the configured ceiling
+  - [x] Contract verification includes the repo-map context artifact
+
+### GAP-155 Root README And Plan Index Slimming
+- Type: AFK
+- Blocked by: GAP-154
+- User stories: 13, 18, 20, 21, 23, 31, 44
+- Status: complete in root README history-slimming baseline
+- What to build:
+  - keep root README files focused on current purpose, entrypoints, daily commands, readiness, and links
+  - move long completed GAP history behind stable archive links
+  - preserve Chinese and English operator-facing usage
+- Acceptance criteria:
+  - [x] root docs keep safety, gate, rollback, and rule-sync semantics
+  - [x] completed GAP history is routed to `docs/archive/completed-gap-history*.md`
+  - [x] Docs verification passes after slimming
+
+### GAP-156 Runtime Flow Preset Responsibility Split
+- Type: AFK
+- Blocked by: GAP-155
+- User stories: 11, 13, 18, 20, 21, 23, 31, 44
+- Status: complete for target catalog responsibility split
+- What to build:
+  - reduce the maintenance cost of `scripts/runtime-flow-preset.ps1` one responsibility at a time
+  - keep public CLI parameters and JSON output backward compatible
+  - preserve the root script as the canonical entrypoint
+- Acceptance criteria:
+  - [x] target catalog parsing is extracted to `scripts/lib/RuntimeFlow.Targets.ps1`
+  - [x] `-ListTargets -Json` and target selection remain backward compatible
+  - [x] focused runtime-flow tests and Runtime gate pass
+
+### GAP-157 Verify Repo And Gate Timing Split
+- Type: AFK
+- Blocked by: GAP-156
+- User stories: 11, 13, 18, 20, 21, 23, 31, 44
+- Status: complete in gate timing split and runner scheduling baseline
+- What to build:
+  - keep `.\run.ps1 fast` as the daily coding feedback path
+  - keep readiness as the delivery path for `build -> test -> contract/invariant -> hotspot`
+  - refresh machine-readable runtime timing after successful Runtime gates
+  - improve full Runtime feedback time without changing `RuntimeQuick` membership
+- Acceptance criteria:
+  - [x] fast feedback routes through shared `verify-repo.ps1 -Check RuntimeQuick`
+  - [x] runtime timing evidence refreshes in `docs/change-evidence/runtime-test-speed-latest.json`
+  - [x] full Runtime runner prioritizes known slow tests and keeps explicit worker override controls
+
+### GAP-158 Operator Screenshot Retention And Repo Slimming Closeout
+- Type: AFK
+- Blocked by: GAP-157
+- User stories: 13, 18, 20, 21, 23, 31, 44, 45
+- Status: complete; closed by `docs/change-evidence/20260503-repo-slimming-closeout.md`
+- What to build:
+  - add executable retention for operator UI screenshots and root current screenshots
+  - close the bounded repo-slimming lane with before/after metrics and guardrails
+  - avoid claiming physical repository shrinkage before archive moves are applied
+- Acceptance criteria:
+  - [x] screenshot retention classifies latest, milestone, and archive-candidate files
+  - [x] closeout reports repository surface, context budget, timing, evidence movement, and rollback posture
+  - [x] the lane remains dry-run-first for future archive movement and does not weaken hard gates
+
 ## Vision
 
 ### GAP-018 Final Product Lifecycle Alignment

@@ -826,7 +826,9 @@ function Get-TaskLabels {
     '^GAP-09[3-9]$|^GAP-10[0-3]$' { return @("task", "phase:optimized-hybrid-long-term", "platform", "backend", "docs", "product") }
     '^GAP-10[4-9]$|^GAP-11[0-9]$' { return @("task", "phase:hybrid-final-state-realization", "platform", "backend", "product", "contracts") }
     '^GAP-12[0-9]$' { return @("task", "phase:runtime-evolution", "platform", "docs", "product", "contracts") }
-    '^GAP-13[0-9]$|^GAP-14[0-1]$' { return @("task", "phase:governance-hub-reuse", "platform", "docs", "product", "contracts", "eval") }
+    '^GAP-13[0-9]$|^GAP-14[0-3]$' { return @("task", "phase:governance-hub-reuse", "platform", "docs", "product", "contracts", "eval") }
+    '^GAP-14[4-9]$|^GAP-15[0-1]$' { return @("task", "phase:managed-asset-removal", "platform", "docs", "product", "contracts", "security") }
+    '^GAP-15[2-8]$' { return @("task", "phase:repo-slimming-speed", "platform", "docs", "product", "devops") }
     default { throw "No task label mapping defined for $IssueId" }
   }
 }
@@ -1052,6 +1054,8 @@ $labels = @(
   @{ Name = "phase:hybrid-final-state-realization"; Color = "D4C5F9"; Description = "Post-GAP-103 complete hybrid final-state realization queue" }
   @{ Name = "phase:runtime-evolution"; Color = "C5DEF5"; Description = "Runtime evolution review and materialization queue" }
   @{ Name = "phase:governance-hub-reuse"; Color = "BFD4F2"; Description = "Governance hub reuse and controlled evolution queue" }
+  @{ Name = "phase:managed-asset-removal"; Color = "B60205"; Description = "Target repo managed asset retirement and uninstall queue" }
+  @{ Name = "phase:repo-slimming-speed"; Color = "C2E0C6"; Description = "Repo slimming and coding speed optimization queue" }
   @{ Name = "backend"; Color = "0052CC"; Description = "Backend work" }
   @{ Name = "platform"; Color = "6F42C1"; Description = "Platform work" }
   @{ Name = "security"; Color = "B60205"; Description = "Security and policy" }

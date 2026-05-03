@@ -25,6 +25,7 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
         managed_files = baseline["required_managed_files"]
         ownership = baseline["repo_profile_field_ownership"]
         speed_policy = baseline["target_repo_speed_profile_policy"]
+        provenance_policy = baseline["managed_file_provenance_policy"]
 
         self.assertEqual(interaction["communication_language"], "zh-CN")
         self.assertEqual(interaction["user_facing_output_language"], "zh-CN")
@@ -141,6 +142,11 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
         self.assertTrue(speed_policy["refresh_existing_derived_gate_commands"])
         self.assertGreaterEqual(speed_policy["quick_gate_timeout_seconds"], 1)
         self.assertGreaterEqual(speed_policy["full_gate_timeout_seconds"], speed_policy["quick_gate_timeout_seconds"])
+        self.assertEqual(provenance_policy["status"], "observe")
+        self.assertEqual(provenance_policy["strategy"], "sidecar")
+        self.assertEqual(provenance_policy["sidecar_root"], ".governed-ai/managed-files")
+        self.assertTrue(provenance_policy["write_on_apply"])
+        self.assertFalse(provenance_policy["require_in_consistency"])
         generated_managed_files = baseline["generated_managed_files"]
         generated_modes = {item["path"]: item["management_mode"] for item in generated_managed_files}
         self.assertEqual(
@@ -203,6 +209,25 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             self.assertEqual(updated_profile["required_entrypoint_policy"]["current_mode"], "targeted_enforced")
             self.assertEqual(updated_profile["auto_commit_policy"]["enabled"], True)
             self.assertTrue((target_repo / ".governed-ai" / "verify-powershell-policy.py").exists())
+            provenance_path = (
+                target_repo
+                / ".governed-ai"
+                / "managed-files"
+                / ".governed-ai"
+                / "verify-powershell-policy.py.provenance.json"
+            )
+            self.assertTrue(provenance_path.exists())
+            provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+            self.assertEqual(provenance["record_kind"], "target_repo_managed_file_provenance")
+            self.assertEqual(provenance["path"], ".governed-ai/verify-powershell-policy.py")
+            self.assertEqual(provenance["management_mode"], "block_on_drift")
+            self.assertEqual(provenance["ownership_scope"], "whole_file")
+            self.assertEqual(provenance["marker_strategy"], "sidecar")
+            self.assertEqual(provenance["sync_revision"], "2026-04-23.1")
+            self.assertEqual(
+                payload["changed_managed_file_provenance"][0]["provenance_path"],
+                ".governed-ai/managed-files/.governed-ai/verify-powershell-policy.py.provenance.json",
+            )
 
     def test_apply_target_repo_governance_rejects_overlapping_repo_profile_ownership(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -380,6 +405,76 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             self.assertEqual(merged_settings["permissions"]["allow"], ["Read(**/notes.md)"])
             self.assertEqual(merged_settings["local_only"]["keep"], True)
             self.assertIn("PreToolUse", merged_settings["hooks"])
+            provenance_path = (
+                target_repo / ".governed-ai" / "managed-files" / ".claude" / "settings.json.provenance.json"
+            )
+            self.assertTrue(provenance_path.exists())
+            provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+            self.assertEqual(provenance["path"], ".claude/settings.json")
+            self.assertEqual(provenance["management_mode"], "json_merge")
+            self.assertEqual(provenance["ownership_scope"], "field_or_block")
+            self.assertEqual(provenance["marker_strategy"], "sidecar")
+
+    def test_apply_target_repo_governance_respects_disabled_managed_file_provenance_policy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "repo-a"
+            profile_path = target_repo / ".governed-ai" / "repo-profile.json"
+            _write_json(profile_path, {"repo_id": "repo-a"})
+            template_path = workspace / "verify-powershell-policy.py"
+            template_path.write_text("print('runtime-owned')\n", encoding="utf-8")
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-05-03.1",
+                    "managed_file_provenance_policy": {
+                        "status": "disabled",
+                        "strategy": "sidecar",
+                        "sidecar_root": ".governed-ai/managed-files",
+                        "write_on_apply": True,
+                        "require_in_consistency": False,
+                    },
+                    "required_managed_files": [
+                        {
+                            "path": ".governed-ai/verify-powershell-policy.py",
+                            "source": str(template_path),
+                            "management_mode": "block_on_drift",
+                        }
+                    ],
+                    "required_profile_overrides": {"auto_commit_policy": {"enabled": True}},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/apply-target-repo-governance.py",
+                    "--target-repo",
+                    str(target_repo),
+                    "--baseline-path",
+                    str(baseline_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["status"], "applied")
+            self.assertEqual(payload["changed_managed_file_provenance"], [])
+            provenance_path = (
+                target_repo
+                / ".governed-ai"
+                / "managed-files"
+                / ".governed-ai"
+                / "verify-powershell-policy.py.provenance.json"
+            )
+            self.assertFalse(provenance_path.exists())
 
     def test_apply_target_repo_governance_block_on_drift_managed_file_refuses_overwrite(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

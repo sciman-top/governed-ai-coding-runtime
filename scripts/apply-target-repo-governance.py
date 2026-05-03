@@ -20,6 +20,7 @@ from lib.target_repo_quick_test_prompt import build_quick_test_slice_prompt
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_BASELINE_PATH = ROOT / "docs" / "targets" / "target-repo-governance-baseline.json"
 DEFAULT_MANAGED_FILE_BACKUP_ROOT = ROOT / "docs" / "change-evidence" / "managed-file-sync-backups"
+DEFAULT_MANAGED_FILE_PROVENANCE_ROOT = ".governed-ai/managed-files"
 DEFAULT_QUICK_TEST_RECOMMENDATION_RELATIVE_PATH = ".governed-ai/quick-test-slice.recommendation.json"
 DEFAULT_QUICK_TEST_PROMPT_RELATIVE_PATH = ".governed-ai/quick-test-slice.prompt.md"
 OUTER_AI_QUICK_TEST_INSTRUCTION = (
@@ -68,6 +69,61 @@ def _backup_existing(target_path: Path, backup_root: Path, target_text: str) -> 
     backup_path.parent.mkdir(parents=True, exist_ok=True)
     backup_path.write_text(target_text, encoding="utf-8")
     return backup_path
+
+
+def _managed_file_provenance_relative_path(relative_path: str) -> str:
+    normalized = Path(relative_path).as_posix()
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
+    if normalized.startswith("/") or ".." in Path(normalized).parts:
+        raise ValueError(f"managed file provenance path must be repo-relative: {relative_path}")
+    return f"{DEFAULT_MANAGED_FILE_PROVENANCE_ROOT}/{normalized}.provenance.json"
+
+
+def _write_managed_file_provenance(
+    *,
+    target_repo: Path,
+    relative_path: str,
+    source_path: Path,
+    sync_revision: str,
+    management_mode: str,
+    source_sha256: str,
+    target_sha256: str,
+    expected_sha256: str,
+    check_only: bool,
+) -> dict[str, str] | None:
+    provenance_relative = _managed_file_provenance_relative_path(relative_path)
+    provenance_path = _target_relative_path(target_repo, provenance_relative)
+    ownership_scope = "field_or_block" if management_mode == "json_merge" else "whole_file"
+    record = {
+        "schema_version": "1.0",
+        "record_kind": "target_repo_managed_file_provenance",
+        "path": relative_path,
+        "source": str(source_path),
+        "sync_revision": sync_revision,
+        "management_mode": management_mode,
+        "ownership_scope": ownership_scope,
+        "marker_strategy": "sidecar",
+        "source_sha256": source_sha256,
+        "target_sha256": target_sha256,
+        "expected_sha256": expected_sha256,
+    }
+    record_text = json.dumps(record, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    existing = provenance_path.read_text(encoding="utf-8") if provenance_path.exists() else None
+    if existing == record_text:
+        return None
+    result = {
+        "path": relative_path,
+        "provenance_path": provenance_relative,
+        "reason": "missing" if existing is None else "content_drift",
+        "record_sha256": _sha256_text(record_text),
+        "marker_strategy": "sidecar",
+        "ownership_scope": ownership_scope,
+    }
+    if not check_only:
+        provenance_path.parent.mkdir(parents=True, exist_ok=True)
+        provenance_path.write_text(record_text, encoding="utf-8")
+    return result
 
 
 def _resolve_profile_path(target_repo: Path, profile_path_arg: str | None) -> Path:
@@ -159,6 +215,28 @@ def _normalize_baseline(path: Path) -> dict[str, Any]:
     speed_policy = baseline.get("target_repo_speed_profile_policy")
     if speed_policy is not None:
         normalize_speed_profile_policy(speed_policy)
+    provenance_policy = baseline.get("managed_file_provenance_policy")
+    if provenance_policy is None:
+        provenance_policy = {
+            "status": "observe",
+            "strategy": "sidecar",
+            "sidecar_root": DEFAULT_MANAGED_FILE_PROVENANCE_ROOT,
+            "write_on_apply": True,
+            "require_in_consistency": False,
+        }
+        baseline["managed_file_provenance_policy"] = provenance_policy
+    if not isinstance(provenance_policy, dict):
+        raise ValueError("baseline.managed_file_provenance_policy must be an object when present")
+    if provenance_policy.get("status") not in {"observe", "enforced", "disabled"}:
+        raise ValueError("baseline.managed_file_provenance_policy.status must be observe, enforced, or disabled")
+    if provenance_policy.get("strategy") != "sidecar":
+        raise ValueError("baseline.managed_file_provenance_policy.strategy must be sidecar")
+    if provenance_policy.get("sidecar_root") != DEFAULT_MANAGED_FILE_PROVENANCE_ROOT:
+        raise ValueError(f"baseline.managed_file_provenance_policy.sidecar_root must be {DEFAULT_MANAGED_FILE_PROVENANCE_ROOT}")
+    if not isinstance(provenance_policy.get("write_on_apply"), bool):
+        raise ValueError("baseline.managed_file_provenance_policy.write_on_apply must be boolean")
+    if not isinstance(provenance_policy.get("require_in_consistency"), bool):
+        raise ValueError("baseline.managed_file_provenance_policy.require_in_consistency must be boolean")
     return baseline
 
 
@@ -442,11 +520,14 @@ def _sync_managed_files(
     target_repo: Path,
     baseline_path: Path,
     managed_files: list[dict[str, Any]],
+    sync_revision: str,
+    write_provenance: bool,
     check_only: bool,
     backup_root: Path,
-) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
+) -> tuple[list[dict[str, str]], list[dict[str, str]], list[dict[str, str]]]:
     changed_files: list[dict[str, str]] = []
     blocked_files: list[dict[str, str]] = []
+    changed_provenance_files: list[dict[str, str]] = []
     for item in managed_files:
         target_path = _target_relative_path(target_repo, str(item["path"]))
         source_path = _source_path(baseline_path, str(item["source"]))
@@ -463,10 +544,25 @@ def _sync_managed_files(
             management_mode=management_mode,
         )
         expected_hash = _sha256_text(expected)
+        relative_path = str(target_path.relative_to(target_repo)).replace("\\", "/")
         if actual == expected:
+            if write_provenance:
+                provenance_change = _write_managed_file_provenance(
+                    target_repo=target_repo,
+                    relative_path=relative_path,
+                    source_path=source_path,
+                    sync_revision=sync_revision,
+                    management_mode=management_mode,
+                    source_sha256=source_hash,
+                    target_sha256=target_hash,
+                    expected_sha256=expected_hash,
+                    check_only=check_only,
+                )
+                if provenance_change is not None and not check_only:
+                    changed_provenance_files.append(provenance_change)
             continue
         file_drift = {
-            "path": str(target_path.relative_to(target_repo)).replace("\\", "/"),
+            "path": relative_path,
             "source": str(source_path),
             "management_mode": management_mode,
             "reason": "missing" if actual is None else "content_drift",
@@ -474,6 +570,8 @@ def _sync_managed_files(
             "target_sha256": target_hash,
             "expected_sha256": expected_hash,
         }
+        if write_provenance:
+            file_drift["provenance_path"] = _managed_file_provenance_relative_path(relative_path)
         if management_mode in {"replace", "block_on_drift"} and actual is not None:
             file_drift["blocking_reason"] = "managed file content differs; review and integrate before applying"
             file_drift.update(
@@ -491,7 +589,21 @@ def _sync_managed_files(
                 backup_path = _backup_existing(target_path, backup_root, actual)
                 file_drift["backup_path"] = str(backup_path)
             target_path.write_text(expected, encoding="utf-8")
-    return changed_files, blocked_files
+            if write_provenance:
+                provenance_change = _write_managed_file_provenance(
+                    target_repo=target_repo,
+                    relative_path=relative_path,
+                    source_path=source_path,
+                    sync_revision=sync_revision,
+                    management_mode=management_mode,
+                    source_sha256=source_hash,
+                    target_sha256=expected_hash,
+                    expected_sha256=expected_hash,
+                    check_only=False,
+                )
+                if provenance_change is not None:
+                    changed_provenance_files.append(provenance_change)
+    return changed_files, blocked_files, changed_provenance_files
 
 
 def main() -> int:
@@ -596,6 +708,7 @@ def main() -> int:
     changed_speed_profile_fields: list[str] = []
     changed_managed_files: list[dict[str, str]] = []
     blocked_managed_files: list[dict[str, str]] = []
+    changed_managed_file_provenance: list[dict[str, str]] = []
     changed_generated_files: list[dict[str, str]] = []
     blocked_generated_files: list[dict[str, str]] = []
 
@@ -626,10 +739,15 @@ def main() -> int:
             policy=baseline.get("target_repo_speed_profile_policy"),
             target_test_slice=target_test_slice,
         )
-        changed_managed_files, blocked_managed_files = _sync_managed_files(
+        provenance_policy = baseline["managed_file_provenance_policy"]
+        changed_managed_files, blocked_managed_files, changed_managed_file_provenance = _sync_managed_files(
             target_repo=target_repo,
             baseline_path=baseline_path,
             managed_files=baseline.get("required_managed_files", []),
+            sync_revision=baseline["sync_revision"],
+            write_provenance=(
+                provenance_policy["status"] != "disabled" and provenance_policy["write_on_apply"]
+            ),
             check_only=args.check_only,
             backup_root=managed_file_backup_root,
         )
@@ -641,6 +759,7 @@ def main() -> int:
         or changed_fields
         or changed_speed_profile_fields
         or changed_managed_files
+        or changed_managed_file_provenance
         or changed_generated_files
     ):
         status = "drift" if args.check_only else "applied"
@@ -664,6 +783,7 @@ def main() -> int:
         "changed_speed_profile_fields": changed_speed_profile_fields,
         "changed_managed_files": changed_managed_files,
         "blocked_managed_files": blocked_managed_files,
+        "changed_managed_file_provenance": changed_managed_file_provenance,
         "changed_generated_files": changed_generated_files,
         "blocked_generated_files": blocked_generated_files,
         "quick_test_slice_source": quick_test_slice_source,

@@ -1,29 +1,11 @@
 {
-  "elapsed_seconds": 95.72457679999934,
+  "elapsed_seconds": 133.27489720000085,
   "failure_count": 0,
   "failures": [],
   "prioritized_target_count": 10,
   "slowest": [
     {
-      "duration_seconds": 82.27256330000091,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_runtime_flow_preset",
-        "path": "tests\\runtime\\test_runtime_flow_preset.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 59.14769720000186,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_attached_repo_e2e",
-        "path": "tests\\runtime\\test_attached_repo_e2e.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 55.52583080000113,
+      "duration_seconds": 133.27079329999833,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_autonomous_next_work_selection",
@@ -32,16 +14,7 @@
       }
     },
     {
-      "duration_seconds": 47.12582320000001,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_run_governed_task_cli",
-        "path": "tests\\runtime\\test_run_governed_task_cli.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 43.76207620000059,
+      "duration_seconds": 84.13712079999823,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_evolution",
@@ -50,25 +23,16 @@
       }
     },
     {
-      "duration_seconds": 40.18549010000061,
+      "duration_seconds": 72.92933279999852,
       "exit_code": 0,
       "target": {
-        "module": "tests.runtime.test_dependency_baseline",
-        "path": "tests\\runtime\\test_dependency_baseline.py",
+        "module": "tests.runtime.test_runtime_flow_preset",
+        "path": "tests\\runtime\\test_runtime_flow_preset.py",
         "suite": "runtime"
       }
     },
     {
-      "duration_seconds": 40.15046490000168,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_transition_stack_convergence",
-        "path": "tests\\runtime\\test_transition_stack_convergence.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 39.20670640000026,
+      "duration_seconds": 60.799139300001116,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_functional_effectiveness",
@@ -77,20 +41,56 @@
       }
     },
     {
-      "duration_seconds": 38.741753899998,
+      "duration_seconds": 60.40608659999998,
       "exit_code": 0,
       "target": {
-        "module": "tests.runtime.test_runtime_doctor",
-        "path": "tests\\runtime\\test_runtime_doctor.py",
+        "module": "tests.runtime.test_transition_stack_convergence",
+        "path": "tests\\runtime\\test_transition_stack_convergence.py",
         "suite": "runtime"
       }
     },
     {
-      "duration_seconds": 36.06583580000006,
+      "duration_seconds": 55.46011180000278,
       "exit_code": 0,
       "target": {
-        "module": "tests.runtime.test_session_bridge",
-        "path": "tests\\runtime\\test_session_bridge.py",
+        "module": "tests.runtime.test_attached_repo_e2e",
+        "path": "tests\\runtime\\test_attached_repo_e2e.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 54.64700509999966,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_governance_hub_certification",
+        "path": "tests\\runtime\\test_governance_hub_certification.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 45.30221750000055,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_run_governed_task_cli",
+        "path": "tests\\runtime\\test_run_governed_task_cli.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 39.617502400000376,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_dependency_baseline",
+        "path": "tests\\runtime\\test_dependency_baseline.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 33.61178939999809,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_host_feedback_summary",
+        "path": "tests\\runtime\\test_host_feedback_summary.py",
         "suite": "runtime"
       }
     }

@@ -35,6 +35,14 @@
     }
   ],
   "retired_managed_files": [],
+  "managed_file_provenance_policy": {
+    "status": "observe",
+    "strategy": "sidecar",
+    "sidecar_root": ".governed-ai/managed-files",
+    "write_on_apply": true,
+    "require_in_consistency": false,
+    "reason": "GAP-146 uses deterministic sidecar provenance for target-repo managed files without injecting marker fields into JSON or third-party configuration files."
+  },
   "repo_profile_field_ownership": {
     "baseline_override_fields": [
       "required_entrypoint_policy",
