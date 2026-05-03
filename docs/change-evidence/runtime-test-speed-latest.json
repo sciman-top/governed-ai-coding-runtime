@@ -1,10 +1,10 @@
 {
-  "elapsed_seconds": 153.7199615999998,
+  "elapsed_seconds": 162.44395650000115,
   "failure_count": 0,
   "failures": [],
   "slowest": [
     {
-      "duration_seconds": 61.189735399999336,
+      "duration_seconds": 64.19551800000045,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_flow_preset",
@@ -13,7 +13,7 @@
       }
     },
     {
-      "duration_seconds": 51.38067779999983,
+      "duration_seconds": 51.24352209999961,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_autonomous_next_work_selection",
@@ -22,7 +22,7 @@
       }
     },
     {
-      "duration_seconds": 46.48786889999974,
+      "duration_seconds": 48.6724037999993,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_attached_repo_e2e",
@@ -31,7 +31,7 @@
       }
     },
     {
-      "duration_seconds": 41.03634629999942,
+      "duration_seconds": 44.40303480000148,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_evolution",
@@ -40,7 +40,7 @@
       }
     },
     {
-      "duration_seconds": 34.68657940000048,
+      "duration_seconds": 36.62649489999967,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_run_governed_task_cli",
@@ -49,7 +49,7 @@
       }
     },
     {
-      "duration_seconds": 32.52852659999917,
+      "duration_seconds": 34.7905709000006,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_dependency_baseline",
@@ -58,7 +58,7 @@
       }
     },
     {
-      "duration_seconds": 31.23441020000064,
+      "duration_seconds": 31.66016749999835,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_functional_effectiveness",
@@ -67,7 +67,7 @@
       }
     },
     {
-      "duration_seconds": 27.843624199998885,
+      "duration_seconds": 29.250868700000865,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_transition_stack_convergence",
@@ -76,20 +76,20 @@
       }
     },
     {
-      "duration_seconds": 26.34741849999955,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_runtime_doctor",
-        "path": "tests\\runtime\\test_runtime_doctor.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 25.119556799998463,
+      "duration_seconds": 27.371573099999296,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_session_bridge",
         "path": "tests\\runtime\\test_session_bridge.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 27.274467499999446,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_runtime_doctor",
+        "path": "tests\\runtime\\test_runtime_doctor.py",
         "suite": "runtime"
       }
     }
