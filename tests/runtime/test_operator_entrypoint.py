@@ -227,7 +227,54 @@ class OperatorEntrypointTests(unittest.TestCase):
         )
 
         self.assertIn("-PruneRetiredManagedFiles", completed.stdout)
+        self.assertIn("-DisableManagedAssetRemoval", completed.stdout)
         self.assertNotIn("-ApplyManagedAssetRemoval", completed.stdout)
+
+    def test_operator_apply_all_features_is_available_while_waiting_for_host_recovery(self) -> None:
+        env = dict(os.environ)
+        env["GOVERNED_RUNTIME_OPERATOR_PREFLIGHT_JSON"] = json.dumps(
+            {
+                "next_action": "wait_for_host_capability_recovery",
+                "why": "Host native attach is still degraded.",
+                "gate_state": "pass",
+                "source_state": "fresh",
+                "evidence_state": "stale",
+            }
+        )
+
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "operator.ps1"),
+                "-Action",
+                "ApplyAllFeatures",
+                "-Target",
+                "self-runtime",
+                "-Mode",
+                "quick",
+                "-DisableManagedAssetRemoval",
+                "-DryRun",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+            env=env,
+        )
+
+        self.assertIn(
+            "operator-preflight: action=ApplyAllFeatures next_action=wait_for_host_capability_recovery",
+            completed.stdout,
+        )
+        self.assertIn("DRY-RUN apply-all-features", completed.stdout)
+        self.assertIn("-ApplyAllFeatures", completed.stdout)
+        self.assertIn("-DisableManagedAssetRemoval", completed.stdout)
 
     def test_operator_ui_action_generates_html(self) -> None:
         completed = subprocess.run(
@@ -436,7 +483,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("apply_all_features", payload["blocked_actions"])
         self.assertIn("evolution_materialize", payload["blocked_actions"])
 
-    def test_next_work_summary_blocks_feature_apply_while_waiting_for_host_recovery(self) -> None:
+    def test_next_work_summary_keeps_feature_apply_available_while_waiting_for_host_recovery(self) -> None:
         module = _load_serve_operator_ui_module()
 
         fake_selector = mock.Mock()
@@ -452,7 +499,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertEqual("wait_for_host_capability_recovery", payload["safe_next_action"])
         self.assertEqual("attention", payload["ui_status"])
         self.assertNotIn("daily_all", payload["blocked_actions"])
-        self.assertIn("apply_all_features", payload["blocked_actions"])
+        self.assertNotIn("apply_all_features", payload["blocked_actions"])
         self.assertIn("evolution_materialize", payload["blocked_actions"])
 
     def test_operator_ui_next_work_panel_does_not_block_initial_html(self) -> None:

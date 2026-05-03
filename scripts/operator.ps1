@@ -188,7 +188,7 @@ function Assert-OperatorPreflight {
   $blockingActions = @{
     "Readiness"            = @()
     "DailyAll"             = @("repair_gate_first")
-    "ApplyAllFeatures"     = @("repair_gate_first", "refresh_evidence_first", "wait_for_host_capability_recovery", "owner_directed_scope_required")
+    "ApplyAllFeatures"     = @("repair_gate_first", "refresh_evidence_first", "owner_directed_scope_required")
     "CleanupTargets"       = @("repair_gate_first")
     "UninstallGovernance"  = @("repair_gate_first")
     "EvolutionMaterialize" = @("repair_gate_first", "refresh_evidence_first", "wait_for_host_capability_recovery", "owner_directed_scope_required")
@@ -361,6 +361,9 @@ function Invoke-ApplyAllFeatures {
   )
   if (-not $DisableManagedAssetRemoval) {
     $arguments += "-ApplyManagedAssetRemoval"
+  }
+  else {
+    $arguments += "-DisableManagedAssetRemoval"
   }
   Invoke-PwshScript -Name "apply-all-features" -ScriptPath "scripts/runtime-flow-preset.ps1" -ScriptArguments $arguments
   Invoke-PythonScript -Name "target-governance-consistency" -ScriptPath "scripts/verify-target-repo-governance-consistency.py"
