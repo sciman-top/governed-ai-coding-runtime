@@ -1,0 +1,17 @@
+Loading ignore patterns from: D:\CODE\governed-ai-coding-runtime\.geminiignore
+[DEBUG] [MemoryDiscovery] Loading server hierarchical memory for CWD: D:\CODE\governed-ai-coding-runtime (importFormat: tree)
+[DEBUG] [MemoryDiscovery] Found readable global GEMINI.md: c:/users/sciman/.gemini/gemini.md
+[DEBUG] [MemoryDiscovery] Searching for GEMINI.md starting from CWD: d:/code/governed-ai-coding-runtime
+[DEBUG] [MemoryDiscovery] Determined project root: d:/code/governed-ai-coding-runtime
+[WARN] Skipping unreadable directory: d:\code\governed-ai-coding-runtime\.pytest_cache (EPERM: operation not permitted, scandir 'd:\code\governed-ai-coding-runtime\.pytest_cache')
+[DEBUG] [MemoryDiscovery] deduplication: keeping c:/users/sciman/.gemini/gemini.md (dev: 288321394, ino: 97671816918600180)
+[DEBUG] [MemoryDiscovery] deduplication: keeping d:/code/governed-ai-coding-runtime/gemini.md (dev: 147111326, ino: 5910974511652816)
+[DEBUG] [MemoryDiscovery] Successfully read and processed imports: d:/code/governed-ai-coding-runtime/gemini.md (Length: 6313)
+[DEBUG] [MemoryDiscovery] Successfully read and processed imports: c:/users/sciman/.gemini/gemini.md (Length: 6071)
+Configured MCP servers:
+
+✓ context7: npx -y @upstash/context7-mcp (stdio) - Connected
+✗ github: https://api.githubcopilot.com/mcp/ (http) - Disconnected
+✓ microsoft-learn: https://learn.microsoft.com/api/mcp (http) - Connected
+✓ openaiDeveloperDocs: https://developers.openai.com/mcp (http) - Connected
+✓ playwright: npx @playwright/mcp@latest --isolated (stdio) - Connected

@@ -1,0 +1,61 @@
+[WARN] Skipping unreadable directory: d:\code\governed-ai-coding-runtime\.pytest_cache (EPERM: operation not permitted, scandir 'd:\code\governed-ai-coding-runtime\.pytest_cache')
+[WARN] Skipping unreadable directory: d:\code\governed-ai-coding-runtime\.pytest_cache (EPERM: operation not permitted, scandir 'd:\code\governed-ai-coding-runtime\.pytest_cache')
+[WARN] Skipping unreadable directory: d:\code\governed-ai-coding-runtime\.pytest_cache (EPERM: operation not permitted, scandir 'd:\code\governed-ai-coding-runtime\.pytest_cache')
+Skill "skill-creator" from "C:\Users\sciman\.agents\skills\anthropics-skills-skills-skill-creator\SKILL.md" is overriding the built-in skill.
+MCP issues detected. Run /mcp list for status.{
+  "session_id": "d5992dca-1728-4fc4-aac5-0acc6b2bd135",
+  "response": "loaded-rule-version: v9.51\nfixed-order: build -> test -> contract/invariant -> hotspot",
+  "stats": {
+    "models": {
+      "gemini-3-flash-preview": {
+        "api": {
+          "totalRequests": 1,
+          "totalErrors": 0,
+          "totalLatencyMs": 19350
+        },
+        "tokens": {
+          "input": 30683,
+          "prompt": 30683,
+          "candidates": 25,
+          "total": 31077,
+          "cached": 0,
+          "thoughts": 369,
+          "tool": 0
+        },
+        "roles": {
+          "main": {
+            "totalRequests": 1,
+            "totalErrors": 0,
+            "totalLatencyMs": 19350,
+            "tokens": {
+              "input": 30683,
+              "prompt": 30683,
+              "candidates": 25,
+              "total": 31077,
+              "cached": 0,
+              "thoughts": 369,
+              "tool": 0
+            }
+          }
+        }
+      }
+    },
+    "tools": {
+      "totalCalls": 0,
+      "totalSuccess": 0,
+      "totalFail": 0,
+      "totalDurationMs": 0,
+      "totalDecisions": {
+        "accept": 0,
+        "reject": 0,
+        "modify": 0,
+        "auto_accept": 0
+      },
+      "byName": {}
+    },
+    "files": {
+      "totalLinesAdded": 0,
+      "totalLinesRemoved": 0
+    }
+  }
+}

@@ -17,6 +17,12 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260504 Host Readiness Fixes](./20260504-host-readiness-fixes.md)
+  - evidence companion for fixing Gemini skill conflicts and MCP disconnected status after the v9.51 rule sync, with the remaining `.pytest_cache` ACL warning recorded as platform N/A
+- [20260504 Agent Rule Follow-up Continuous Execution](./20260504-agent-rule-followup-continuous-execution.md)
+  - evidence companion for adding target worktree change classification and fresh Codex/Claude/Gemini rule-load checks after v9.51 sync
+- [20260504 Agent Rule v9.51 k12 Sync And Wrapper Boundary](./20260504-agent-rule-v951-k12-sync.md)
+  - evidence companion for adding k12 project rules to the managed Codex/Claude/Gemini rule family and tightening import-wrapper coordination boundaries
 - [20260503 AI Feature Source Catalog Coverage](./20260503-ai-feature-source-catalog-coverage.md)
   - evidence companion for turning the latest official AI coding docs and primary reference-project signals into a required runtime-evolution source catalog coverage gate
 - [20260503 Runtime State Prune Apply](./20260503-runtime-state-prune-apply.md)

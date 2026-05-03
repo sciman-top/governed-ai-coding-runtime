@@ -1,0 +1,492 @@
+{
+  "status": "attention",
+  "catalog_path": "D:\\CODE\\governed-ai-coding-runtime\\docs\\targets\\target-repos-catalog.json",
+  "manifest_path": "D:\\CODE\\governed-ai-coding-runtime\\rules\\manifest.json",
+  "target_count": 6,
+  "failed_count": 0,
+  "unrelated_change_count": 2,
+  "results": [
+    {
+      "target": "classroomtoolkit",
+      "repo": "D:\\CODE\\ClassroomToolkit",
+      "status": "managed_only",
+      "change_count": 3,
+      "managed_change_count": 3,
+      "unrelated_change_count": 0,
+      "category_counts": {
+        "managed_rule_file": 3
+      },
+      "changes": [
+        {
+          "status": " M",
+          "path": "AGENTS.md",
+          "category": "managed_rule_file"
+        },
+        {
+          "status": " M",
+          "path": "CLAUDE.md",
+          "category": "managed_rule_file"
+        },
+        {
+          "status": " M",
+          "path": "GEMINI.md",
+          "category": "managed_rule_file"
+        }
+      ]
+    },
+    {
+      "target": "github-toolkit",
+      "repo": "D:\\CODE\\github-toolkit",
+      "status": "managed_only",
+      "change_count": 7,
+      "managed_change_count": 7,
+      "unrelated_change_count": 0,
+      "category_counts": {
+        "managed_file_provenance": 3,
+        "managed_repo_profile": 1,
+        "managed_rule_file": 3
+      },
+      "changes": [
+        {
+          "status": " M",
+          "path": ".governed-ai/managed-files/.claude/hooks/governed-pre-tool-use.py.provenance.json",
+          "category": "managed_file_provenance"
+        },
+        {
+          "status": " M",
+          "path": ".governed-ai/managed-files/.claude/settings.json.provenance.json",
+          "category": "managed_file_provenance"
+        },
+        {
+          "status": " M",
+          "path": ".governed-ai/managed-files/.governed-ai/verify-powershell-policy.py.provenance.json",
+          "category": "managed_file_provenance"
+        },
+        {
+          "status": " M",
+          "path": ".governed-ai/repo-profile.json",
+          "category": "managed_repo_profile"
+        },
+        {
+          "status": " M",
+          "path": "AGENTS.md",
+          "category": "managed_rule_file"
+        },
+        {
+          "status": " M",
+          "path": "CLAUDE.md",
+          "category": "managed_rule_file"
+        },
+        {
+          "status": " M",
+          "path": "GEMINI.md",
+          "category": "managed_rule_file"
+        }
+      ]
+    },
+    {
+      "target": "k12-question-graph",
+      "repo": "D:\\CODE\\k12-question-graph",
+      "status": "attention",
+      "change_count": 2,
+      "managed_change_count": 0,
+      "unrelated_change_count": 2,
+      "category_counts": {
+        "target_local_unrelated": 2
+      },
+      "changes": [
+        {
+          "status": " M",
+          "path": "tools/run-gates.ps1",
+          "category": "target_local_unrelated"
+        },
+        {
+          "status": "??",
+          "path": "docs/evidence/g004-pgpass-installer-dry-run-report.json",
+          "category": "target_local_unrelated"
+        }
+      ]
+    },
+    {
+      "target": "self-runtime",
+      "repo": "D:\\CODE\\governed-ai-coding-runtime",
+      "status": "managed_only",
+      "change_count": 55,
+      "managed_change_count": 55,
+      "unrelated_change_count": 0,
+      "category_counts": {
+        "managed_file_provenance": 3,
+        "managed_repo_profile": 1,
+        "managed_rule_file": 3,
+        "control_repo_current_change": 48
+      },
+      "changes": [
+        {
+          "status": " M",
+          "path": ".governed-ai/managed-files/.claude/hooks/governed-pre-tool-use.py.provenance.json",
+          "category": "managed_file_provenance"
+        },
+        {
+          "status": " M",
+          "path": ".governed-ai/managed-files/.claude/settings.json.provenance.json",
+          "category": "managed_file_provenance"
+        },
+        {
+          "status": " M",
+          "path": ".governed-ai/managed-files/.governed-ai/verify-powershell-policy.py.provenance.json",
+          "category": "managed_file_provenance"
+        },
+        {
+          "status": " M",
+          "path": ".governed-ai/repo-profile.json",
+          "category": "managed_repo_profile"
+        },
+        {
+          "status": " M",
+          "path": "AGENTS.md",
+          "category": "managed_rule_file"
+        },
+        {
+          "status": " M",
+          "path": "CLAUDE.md",
+          "category": "managed_rule_file"
+        },
+        {
+          "status": " M",
+          "path": "GEMINI.md",
+          "category": "managed_rule_file"
+        },
+        {
+          "status": " M",
+          "path": "docs/change-evidence/README.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "docs/change-evidence/repo-map-context-artifact.json",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "docs/change-evidence/runtime-test-speed-latest.json",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "docs/targets/target-repo-governance-baseline.json",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "rules/global/claude/CLAUDE.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "rules/global/codex/AGENTS.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "rules/global/gemini/GEMINI.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "rules/manifest.json",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "rules/projects/classroomtoolkit/claude/CLAUDE.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "rules/projects/classroomtoolkit/codex/AGENTS.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "rules/projects/classroomtoolkit/gemini/GEMINI.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "rules/projects/github-toolkit/claude/CLAUDE.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "rules/projects/github-toolkit/codex/AGENTS.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "rules/projects/github-toolkit/gemini/GEMINI.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "rules/projects/governed-ai-coding-runtime/claude/CLAUDE.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "rules/projects/governed-ai-coding-runtime/codex/AGENTS.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "rules/projects/governed-ai-coding-runtime/gemini/GEMINI.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "rules/projects/skills-manager/claude/CLAUDE.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "rules/projects/skills-manager/codex/AGENTS.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "rules/projects/skills-manager/gemini/GEMINI.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "rules/projects/vps-ssh-launcher/claude/CLAUDE.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "rules/projects/vps-ssh-launcher/codex/AGENTS.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "rules/projects/vps-ssh-launcher/gemini/GEMINI.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "tests/runtime/test_agent_rule_sync.py",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": " M",
+          "path": "tests/runtime/test_target_repo_governance_consistency.py",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "docs/change-evidence/20260504-agent-rule-v951-k12-sync.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "docs/change-evidence/rule-sync-backups/20260504-035643/C/Users/sciman/.claude/CLAUDE.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "docs/change-evidence/rule-sync-backups/20260504-035643/C/Users/sciman/.gemini/GEMINI.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "docs/change-evidence/rule-sync-backups/20260504-035643/D/CODE/ClassroomToolkit/AGENTS.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "docs/change-evidence/rule-sync-backups/20260504-035643/D/CODE/ClassroomToolkit/CLAUDE.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "docs/change-evidence/rule-sync-backups/20260504-035643/D/CODE/ClassroomToolkit/GEMINI.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "docs/change-evidence/rule-sync-backups/20260504-035643/D/CODE/skills-manager/AGENTS.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "docs/change-evidence/rule-sync-backups/20260504-035644/D/CODE/github-toolkit/AGENTS.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "docs/change-evidence/rule-sync-backups/20260504-035644/D/CODE/github-toolkit/CLAUDE.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "docs/change-evidence/rule-sync-backups/20260504-035644/D/CODE/github-toolkit/GEMINI.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "docs/change-evidence/rule-sync-backups/20260504-035644/D/CODE/k12-question-graph/AGENTS.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "docs/change-evidence/rule-sync-backups/20260504-035644/D/CODE/k12-question-graph/CLAUDE.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "docs/change-evidence/rule-sync-backups/20260504-035644/D/CODE/k12-question-graph/GEMINI.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "docs/change-evidence/rule-sync-backups/20260504-035644/D/CODE/skills-manager/CLAUDE.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "docs/change-evidence/rule-sync-backups/20260504-035644/D/CODE/skills-manager/GEMINI.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "docs/change-evidence/rule-sync-backups/20260504-035644/D/CODE/vps-ssh-launcher/AGENTS.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "docs/change-evidence/rule-sync-backups/20260504-035644/D/CODE/vps-ssh-launcher/CLAUDE.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "docs/change-evidence/rule-sync-backups/20260504-035644/D/CODE/vps-ssh-launcher/GEMINI.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "rules/projects/k12-question-graph/claude/CLAUDE.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "rules/projects/k12-question-graph/codex/AGENTS.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "rules/projects/k12-question-graph/gemini/GEMINI.md",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "scripts/classify-target-repo-worktree-changes.py",
+          "category": "control_repo_current_change"
+        },
+        {
+          "status": "??",
+          "path": "tests/runtime/test_target_repo_worktree_change_classification.py",
+          "category": "control_repo_current_change"
+        }
+      ]
+    },
+    {
+      "target": "skills-manager",
+      "repo": "D:\\CODE\\skills-manager",
+      "status": "managed_only",
+      "change_count": 7,
+      "managed_change_count": 7,
+      "unrelated_change_count": 0,
+      "category_counts": {
+        "managed_file_provenance": 3,
+        "managed_repo_profile": 1,
+        "managed_rule_file": 3
+      },
+      "changes": [
+        {
+          "status": " M",
+          "path": ".governed-ai/managed-files/.claude/hooks/governed-pre-tool-use.py.provenance.json",
+          "category": "managed_file_provenance"
+        },
+        {
+          "status": " M",
+          "path": ".governed-ai/managed-files/.claude/settings.json.provenance.json",
+          "category": "managed_file_provenance"
+        },
+        {
+          "status": " M",
+          "path": ".governed-ai/managed-files/.governed-ai/verify-powershell-policy.py.provenance.json",
+          "category": "managed_file_provenance"
+        },
+        {
+          "status": " M",
+          "path": ".governed-ai/repo-profile.json",
+          "category": "managed_repo_profile"
+        },
+        {
+          "status": " M",
+          "path": "AGENTS.md",
+          "category": "managed_rule_file"
+        },
+        {
+          "status": " M",
+          "path": "CLAUDE.md",
+          "category": "managed_rule_file"
+        },
+        {
+          "status": " M",
+          "path": "GEMINI.md",
+          "category": "managed_rule_file"
+        }
+      ]
+    },
+    {
+      "target": "vps-ssh-launcher",
+      "repo": "D:\\CODE\\vps-ssh-launcher",
+      "status": "managed_only",
+      "change_count": 5,
+      "managed_change_count": 5,
+      "unrelated_change_count": 0,
+      "category_counts": {
+        "managed_file_provenance": 1,
+        "managed_repo_profile": 1,
+        "managed_rule_file": 3
+      },
+      "changes": [
+        {
+          "status": " M",
+          "path": ".governed-ai/managed-files/.governed-ai/verify-powershell-policy.py.provenance.json",
+          "category": "managed_file_provenance"
+        },
+        {
+          "status": " M",
+          "path": ".governed-ai/repo-profile.json",
+          "category": "managed_repo_profile"
+        },
+        {
+          "status": " M",
+          "path": "AGENTS.md",
+          "category": "managed_rule_file"
+        },
+        {
+          "status": " M",
+          "path": "CLAUDE.md",
+          "category": "managed_rule_file"
+        },
+        {
+          "status": " M",
+          "path": "GEMINI.md",
+          "category": "managed_rule_file"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+[WARN] Skipping unreadable directory: d:\code\governed-ai-coding-runtime\.pytest_cache (EPERM: operation not permitted, scandir 'd:\code\governed-ai-coding-runtime\.pytest_cache')
+[WARN] Skipping unreadable directory: d:\code\governed-ai-coding-runtime\.pytest_cache (EPERM: operation not permitted, scandir 'd:\code\governed-ai-coding-runtime\.pytest_cache')
+[WARN] Skipping unreadable directory: d:\code\governed-ai-coding-runtime\.pytest_cache (EPERM: operation not permitted, scandir 'd:\code\governed-ai-coding-runtime\.pytest_cache')
+Skill "skill-creator" from "C:\Users\sciman\.agents\skills\anthropics-skills-skills-skill-creator\SKILL.md" is overriding the built-in skill.
+MCP issues detected. Run /mcp list for status.

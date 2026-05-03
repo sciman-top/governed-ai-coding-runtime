@@ -1,0 +1,1 @@
+[WARN] Skipping unreadable directory: d:\code\governed-ai-coding-runtime\.pytest_cache (EPERM: operation not permitted, scandir 'd:\code\governed-ai-coding-runtime\.pytest_cache')

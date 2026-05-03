@@ -1,0 +1,5 @@
+当前项目级规则承接的 `GlobalUser` 版本号是：`v9.51`。
+
+本仓 hard gate 固定顺序是：
+
+`build -> test -> contract/invariant -> hotspot`。

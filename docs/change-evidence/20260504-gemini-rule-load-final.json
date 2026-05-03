@@ -1,0 +1,60 @@
+[WARN] Skipping unreadable directory: d:\code\governed-ai-coding-runtime\.pytest_cache (EPERM: operation not permitted, scandir 'd:\code\governed-ai-coding-runtime\.pytest_cache')
+[WARN] Skipping unreadable directory: d:\code\governed-ai-coding-runtime\.pytest_cache (EPERM: operation not permitted, scandir 'd:\code\governed-ai-coding-runtime\.pytest_cache')
+[WARN] Skipping unreadable directory: d:\code\governed-ai-coding-runtime\.pytest_cache (EPERM: operation not permitted, scandir 'd:\code\governed-ai-coding-runtime\.pytest_cache')
+{
+  "session_id": "1cedbd2c-15b4-47d4-95b5-cfed2d39f4c3",
+  "response": "loaded-rule-version: 9.51\nfixed-order: build -> test -> contract/invariant -> hotspot",
+  "stats": {
+    "models": {
+      "gemini-3-flash-preview": {
+        "api": {
+          "totalRequests": 1,
+          "totalErrors": 0,
+          "totalLatencyMs": 6683
+        },
+        "tokens": {
+          "input": 30687,
+          "prompt": 30687,
+          "candidates": 25,
+          "total": 31695,
+          "cached": 0,
+          "thoughts": 983,
+          "tool": 0
+        },
+        "roles": {
+          "main": {
+            "totalRequests": 1,
+            "totalErrors": 0,
+            "totalLatencyMs": 6683,
+            "tokens": {
+              "input": 30687,
+              "prompt": 30687,
+              "candidates": 25,
+              "total": 31695,
+              "cached": 0,
+              "thoughts": 983,
+              "tool": 0
+            }
+          }
+        }
+      }
+    },
+    "tools": {
+      "totalCalls": 0,
+      "totalSuccess": 0,
+      "totalFail": 0,
+      "totalDurationMs": 0,
+      "totalDecisions": {
+        "accept": 0,
+        "reject": 0,
+        "modify": 0,
+        "auto_accept": 0
+      },
+      "byName": {}
+    },
+    "files": {
+      "totalLinesAdded": 0,
+      "totalLinesRemoved": 0
+    }
+  }
+}

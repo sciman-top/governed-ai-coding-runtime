@@ -1,8 +1,8 @@
 # AGENTS.md — governed-ai-coding-runtime（Codex 项目级）
 **项目**: governed-ai-coding-runtime
-**承接来源**: `GlobalUser/AGENTS.md v9.50`
+**承接来源**: `GlobalUser/AGENTS.md v9.51`
 **适用范围**: 项目级（仓库根）
-**最后更新**: `2026-05-03`
+**最后更新**: `2026-05-04`
 
 ## 1. 阅读指引
 - 本文件只写本仓事实、门禁命令、证据位置和回滚入口，不重写全局 `R/E` 语义。
@@ -16,7 +16,7 @@
 ### A.1 事实边界
 - 本仓是 governed AI coding runtime 的控制仓；当前核心目录为 `docs/`、`schemas/`、`scripts/`、`packages/`、`tests/`。
 - 文档、决策、审查结论归 `docs/`；机器可读契约归 `schemas/`；GitHub/规划/同步脚本归 `scripts/`；运行时契约代码归 `packages/`；验证归 `tests/`。
-- 规则文件家族由 `rules/manifest.json` 管理，目标包括 3 个全局用户级文件与 15 个目标仓项目级文件。
+- 规则文件家族由 `rules/manifest.json` 管理，目标包括 3 个全局用户级文件与 18 个目标仓项目级文件。
 - `docs/specs/*` 定义语义，`schemas/jsonschema/*` 是配套机器可读草案；修改其一必须同步检查另一侧。
 - `scripts/github/create-roadmap-issues.ps1` 只负责 backlog/issue 种子生成，不代表运行时实现已经存在。
 

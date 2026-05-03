@@ -1,8 +1,8 @@
 # GEMINI.md — governed-ai-coding-runtime（Gemini 项目级）
 **项目**: governed-ai-coding-runtime
-**承接来源**: `GlobalUser/GEMINI.md v9.50`
+**承接来源**: `GlobalUser/GEMINI.md v9.51`
 **适用范围**: 项目级（仓库根）
-**最后更新**: `2026-05-03`
+**最后更新**: `2026-05-04`
 
 ## 1. 阅读指引
 - 本文件只写本仓事实、门禁命令、证据位置和回滚入口，不重写全局 `R/E` 语义。
@@ -16,7 +16,7 @@
 ### A.1 事实边界
 - 本仓是 governed AI coding runtime 的控制仓；当前核心目录为 `docs/`、`schemas/`、`scripts/`、`packages/`、`tests/`。
 - 文档、决策、审查结论归 `docs/`；机器可读契约归 `schemas/`；GitHub/规划/同步脚本归 `scripts/`；运行时契约代码归 `packages/`；验证归 `tests/`。
-- 规则文件家族由 `rules/manifest.json` 管理，目标包括 3 个全局用户级文件与 15 个目标仓项目级文件。
+- 规则文件家族由 `rules/manifest.json` 管理，目标包括 3 个全局用户级文件与 18 个目标仓项目级文件。
 - `docs/specs/*` 定义语义，`schemas/jsonschema/*` 是配套机器可读草案；修改其一必须同步检查另一侧。
 - `scripts/github/create-roadmap-issues.ps1` 只负责 backlog/issue 种子生成，不代表运行时实现已经存在。
 
@@ -52,7 +52,7 @@
 - 启用 Trusted Folders 时，未受信目录可能进入 safe mode；遇到项目配置、环境变量、自动记忆或工具自动批准未生效，先记录 trust 状态或替代证据。
 - 可用 `@file.md` imports 组织长内容；只有本机 `settings.json` 明确配置上下文文件名时，才把其他文件名视为 Gemini 上下文文件，具体键名以当前 schema/help 为准。
 - 大仓或生成目录用 `.geminiignore` 排除缓存、构建产物、日志和敏感本地配置；修改后用 `/memory show` 核查完整上下文。
-- 来源与刷新命令先看当前 `/memory` help，支持则用 `/memory list` / `/memory refresh`，否则记录版本并用 `/memory reload` 兜底；非交互不可用时按 `platform_na` 记录。
+- 来源与刷新命令先看当前 `/memory` help，支持则用 `/memory refresh`；其他来源命令只在当前 help 可见时调用，否则记录版本与替代证据；非交互不可用时按 `platform_na` 记录。
 - 不假定 `GEMINI.override.md` 存在；临时排障规则必须记录清理点，结论后删除或恢复并复测。
 - `GEMINI.md` 是上下文规则；确定性验证、安全拦截和回滚能力应落到本仓门禁、MCP/扩展、checkpoint/restore 或 CI。
 

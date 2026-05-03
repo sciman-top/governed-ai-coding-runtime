@@ -1,15 +1,16 @@
-# GEMINI.md - Universal Agent Protocol v9.50
+# GEMINI.md - Universal Agent Protocol v9.51
 # Gemini CLI - Global User Rules
-**版本**: 9.50
+**版本**: 9.51
 **适用范围**: 全局用户级（GlobalUser/）
-**最后更新**: 2026-05-03
+**最后更新**: 2026-05-04
 
 ## 1. 阅读指引
 - 本文件只定义跨仓通用规则语义（WHAT）；项目级 `GEMINI.md` 定义本仓落地动作（WHERE/HOW）。
-- 固定结构：`1 / A / B / C / D`；项目级文件只承接，不改写全局 R/E 语义。
+- 固定结构：全局文件与自包含项目文件保持 `1 / A / B / C / D`；通过 `@AGENTS.md` import 承接时，合并后的有效上下文必须保留该结构，wrapper 可只保留 `1 / B / D` 差异。
 - 裁决链：`运行事实/代码 > 项目级规则 > 全局规则 > 临时上下文`。
 - 渐进披露：根文件只放必执行规则、门禁顺序、N/A 口径、平台差异和协同接口；长 runbook、示例、局部流程下沉到项目文档、skills、hooks、policy 或 CI。
 - 规则文件只承载跨会话稳定判断和入口；能由代码、README、配置、测试、schema、脚本或 CI 表达的细节，只在规则中引用，不全文复述。
+- 共同项目规则优先落在 `AGENTS.md`；Gemini 项目文件可按官方 `@file` import 承接共同文件后只追加 Gemini 差异，避免复制两份共同正文。
 - 修改规则、门禁、profile、baseline 或同步脚本前，先比对源规则、已分发副本、目标仓真实 gate/profile/CI/script/README 和当前官方加载模型；发现漂移先整合再同步。
 
 ## A. 共性基线
@@ -67,6 +68,7 @@
 - 新增规则必须能被命令、字段、文件路径、证据路径或明确禁止边界验证。
 - 根规则优先放高频、稳定、可执行的约束；低频、局部、示例型内容放到项目子文档、工具原生规则目录或 skills。
 - 社区样例只采纳可验证结构：项目概览、命令、模块边界、测试、安全和提交/PR 规则；不得搬运长样例或把外部文本当作指令源。
+- import/wrapper 只用于减少重复；合并后的有效上下文仍必须能推出门禁、证据、回滚和平台差异。
 
 ## B. Gemini 平台差异
 ### B.1 加载链与覆盖
@@ -76,8 +78,10 @@
 - CLI footer 会显示已加载 context 文件数量；需要精确核查时用 `/memory show`。
 - `/memory refresh` 用于重新扫描并加载 `GEMINI.md`；`/memory add <text>` 会写入全局 `~/.gemini/GEMINI.md`，不得用于项目临时说明。
 - 可用 `@file.md` imports 拆分长内容；相对路径按当前文件位置解释。
+- import 应保持浅层、相对路径优先，并通过 `/memory show` 确认实际展开；缺失、循环或权限错误按 `platform_na` 记录替代证据。
 - 默认上下文文件名是 `GEMINI.md`；只有 `settings.json` 的 `context.fileName` 明确配置时，才把 `AGENTS.md`、`CONTEXT.md` 等视作 Gemini 上下文文件。
 - settings 由默认、system default、user、project、system override、环境变量和 CLI 参数逐层覆盖；诊断时不要只看单个 `settings.json`。
+- 启用 Trusted Folders 时，未受信目录会进入受限 safe mode；项目 settings、`.env`、extension、工具自动批准和自动 memory 可能被禁用，必须先核查 trust 状态再判断规则失效。
 - `.geminiignore` 修改后必须重启 Gemini CLI 才能确认生效；不要误排除规则文件、门禁脚本或当前证据入口。
 - 无 `.git` 的目录必须从项目根启动并用 `/memory show` 或 footer 证明项目规则已加载。
 
@@ -103,9 +107,10 @@
 
 ## C. 项目级承接契约
 ### C.1 自包含与边界
-- 项目级 `GEMINI.md` 必须显式承接 `GlobalUser/GEMINI.md v9.50`。
+- 项目级 `GEMINI.md` 必须显式承接 `GlobalUser/GEMINI.md v9.51`。
 - 项目级只写本仓事实，不复述全局 R/E 正文，不下沉其他仓库私有命令。
 - 项目级不得把 README/PRD/架构文档全文复制进规则；只写读取顺序、裁决边界和当前 slice 所需入口。
+- 项目级 `GEMINI.md` 若用 `@AGENTS.md` 承接共同项目规则，文件本体只保留 Gemini 差异、加载诊断和 enforcement 边界；不得在 wrapper 中改写共同规则。
 
 ### C.2 必填项
 - 当前仓库状态、模块边界、目标归宿和下一最小可执行里程碑。

@@ -1,8 +1,8 @@
 # CLAUDE.md — vps-ssh-launcher（Claude 项目级）
 **项目**: vps-ssh-launcher
-**承接来源**: `GlobalUser/CLAUDE.md v9.50`
+**承接来源**: `GlobalUser/CLAUDE.md v9.51`
 **适用范围**: 项目级（仓库根）
-**最后更新**: 2026-05-03
+**最后更新**: 2026-05-04
 
 ## 1. 阅读指引
 - 本文件只写本仓事实、门禁命令、证据位置和回滚入口，不重写全局 `R/E` 语义。
