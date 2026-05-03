@@ -305,6 +305,8 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                 check=False,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 cwd=ROOT,
             )
             self.assertEqual(completed.returncode, 0, completed.stderr)
@@ -413,6 +415,8 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                 check=False,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 cwd=ROOT,
             )
             self.assertEqual(completed.returncode, 0, completed.stderr)
@@ -504,6 +508,8 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                 check=False,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 cwd=ROOT,
             )
             self.assertEqual(completed.returncode, 0, completed.stderr)
@@ -589,6 +595,8 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                 check=False,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 cwd=ROOT,
             )
             self.assertEqual(completed.returncode, 0, completed.stderr)
@@ -886,6 +894,8 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                 check=False,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 cwd=ROOT,
             )
             self.assertEqual(completed.returncode, 0, completed.stderr)
@@ -1005,6 +1015,8 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                 check=False,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 cwd=ROOT,
             )
             self.assertEqual(completed.returncode, 0, completed.stderr)
@@ -2264,6 +2276,228 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             self.assertEqual(payload["uninstall_governance"]["deleted_files"], [])
             self.assertTrue((repo_a / ".governed-ai" / "old.py").exists())
             self.assertTrue((repo_a / ".governed-ai" / "managed.py").exists())
+
+    def test_runtime_flow_preset_apply_all_features_defaults_to_retired_managed_file_apply(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_a = workspace / "repo-a"
+            source = workspace / "templates" / "managed.py"
+            source.parent.mkdir(parents=True, exist_ok=True)
+            source.write_text("print('managed')\n", encoding="utf-8")
+            (repo_a / ".governed-ai").mkdir(parents=True, exist_ok=True)
+            (repo_a / ".governed-ai" / "old.py").write_text("print('managed')\n", encoding="utf-8")
+            (repo_a / ".governed-ai" / "managed.py").write_text("print('managed')\n", encoding="utf-8")
+            _write_json(
+                repo_a / ".governed-ai" / "repo-profile.json",
+                {
+                    "repo_id": "repo-a",
+                    "required_entrypoint_policy": {"current_mode": "advisory"},
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": str(repo_a),
+                            "attachment_runtime_state_root": str(workspace / "state" / "repo-a"),
+                            "repo_id": "repo-a",
+                            "display_name": "repo-a",
+                            "primary_language": "python",
+                            "build_command": "python --version",
+                            "test_command": "python --version",
+                            "contract_command": "python --version",
+                        }
+                    },
+                },
+            )
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-05-02.2",
+                    "required_profile_overrides": {
+                        "required_entrypoint_policy": {"current_mode": "targeted_enforced"},
+                        "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                    },
+                    "required_managed_files": [
+                        {"path": ".governed-ai/managed.py", "source": str(source), "management_mode": "block_on_drift"}
+                    ],
+                    "generated_managed_files": [],
+                    "retired_managed_files": [
+                        {
+                            "path": ".governed-ai/old.py",
+                            "previous_source": str(source),
+                            "retire_reason": "obsolete",
+                            "replacement": ".governed-ai/managed.py",
+                            "safe_delete_when": ["target_sha256_matches_previous_sha256", "no_active_references"],
+                            "backup_required": True,
+                        }
+                    ],
+                },
+            )
+            fake_runtime_flow_path = workspace / "fake-runtime-flow.ps1"
+            _write_fake_runtime_flow_script(fake_runtime_flow_path)
+            fake_full_check_path = workspace / "fake-full-check.ps1"
+            _write_fake_full_check_script(fake_full_check_path)
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "runtime-flow-preset.ps1"),
+                    "-AllTargets",
+                    "-ApplyAllFeatures",
+                    "-FlowMode",
+                    "daily",
+                    "-Mode",
+                    "quick",
+                    "-Json",
+                    "-CatalogPath",
+                    str(catalog_path),
+                    "-RuntimeFlowPath",
+                    str(fake_runtime_flow_path),
+                    "-GovernanceBaselinePath",
+                    str(baseline_path),
+                    "-GovernanceFullCheckPath",
+                    str(fake_full_check_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=ROOT,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertTrue(payload["apply_all_features"])
+            self.assertTrue(payload["prune_retired_managed_files_active"])
+            self.assertTrue(payload["apply_managed_asset_removal"])
+            result = payload["results"][0]
+            self.assertEqual(result["prune_retired_managed_files"]["apply"], True)
+            self.assertEqual(result["prune_retired_managed_files"]["deleted"], 1)
+            self.assertFalse((repo_a / ".governed-ai" / "old.py").exists())
+
+    def test_runtime_flow_preset_apply_all_features_disable_managed_asset_removal_is_dry_run(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_a = workspace / "repo-a"
+            source = workspace / "templates" / "managed.py"
+            source.parent.mkdir(parents=True, exist_ok=True)
+            source.write_text("print('managed')\n", encoding="utf-8")
+            (repo_a / ".governed-ai").mkdir(parents=True, exist_ok=True)
+            (repo_a / ".governed-ai" / "old.py").write_text("print('managed')\n", encoding="utf-8")
+            (repo_a / ".governed-ai" / "managed.py").write_text("print('managed')\n", encoding="utf-8")
+            _write_json(
+                repo_a / ".governed-ai" / "repo-profile.json",
+                {
+                    "repo_id": "repo-a",
+                    "required_entrypoint_policy": {"current_mode": "advisory"},
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": str(repo_a),
+                            "attachment_runtime_state_root": str(workspace / "state" / "repo-a"),
+                            "repo_id": "repo-a",
+                            "display_name": "repo-a",
+                            "primary_language": "python",
+                            "build_command": "python --version",
+                            "test_command": "python --version",
+                            "contract_command": "python --version",
+                        }
+                    },
+                },
+            )
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-05-02.2",
+                    "required_profile_overrides": {
+                        "required_entrypoint_policy": {"current_mode": "targeted_enforced"},
+                        "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                    },
+                    "required_managed_files": [
+                        {"path": ".governed-ai/managed.py", "source": str(source), "management_mode": "block_on_drift"}
+                    ],
+                    "generated_managed_files": [],
+                    "retired_managed_files": [
+                        {
+                            "path": ".governed-ai/old.py",
+                            "previous_source": str(source),
+                            "retire_reason": "obsolete",
+                            "replacement": ".governed-ai/managed.py",
+                            "safe_delete_when": ["target_sha256_matches_previous_sha256", "no_active_references"],
+                            "backup_required": True,
+                        }
+                    ],
+                },
+            )
+            fake_runtime_flow_path = workspace / "fake-runtime-flow.ps1"
+            _write_fake_runtime_flow_script(fake_runtime_flow_path)
+            fake_full_check_path = workspace / "fake-full-check.ps1"
+            _write_fake_full_check_script(fake_full_check_path)
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "runtime-flow-preset.ps1"),
+                    "-AllTargets",
+                    "-ApplyAllFeatures",
+                    "-DisableManagedAssetRemoval",
+                    "-FlowMode",
+                    "daily",
+                    "-Mode",
+                    "quick",
+                    "-Json",
+                    "-CatalogPath",
+                    str(catalog_path),
+                    "-RuntimeFlowPath",
+                    str(fake_runtime_flow_path),
+                    "-GovernanceBaselinePath",
+                    str(baseline_path),
+                    "-GovernanceFullCheckPath",
+                    str(fake_full_check_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=ROOT,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr + completed.stdout)
+            payload = json.loads(completed.stdout)
+            self.assertTrue(payload["prune_retired_managed_files_active"])
+            self.assertFalse(payload["apply_managed_asset_removal"])
+            result = payload["results"][0]
+            self.assertEqual(result["prune_retired_managed_files"]["dry_run"], True)
+            self.assertEqual(result["prune_retired_managed_files"]["delete_candidates"], 1)
+            self.assertTrue((repo_a / ".governed-ai" / "old.py").exists())
 
     def test_runtime_flow_preset_blocks_managed_asset_apply_after_flow_failure(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

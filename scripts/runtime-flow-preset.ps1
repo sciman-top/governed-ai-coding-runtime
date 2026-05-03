@@ -67,6 +67,7 @@ param(
   [switch]$PruneDryRun,
   [switch]$PruneRetiredManagedFiles,
   [switch]$UninstallGovernance,
+  [switch]$DisableManagedAssetRemoval,
   [switch]$ApplyManagedAssetRemoval
 )
 
@@ -1785,12 +1786,18 @@ $applyAllFeatures = [bool]$ApplyAllFeatures
 $applyCodingSpeedProfile = [bool]$ApplyCodingSpeedProfile
 $applyFeatureBaselineOnly = ($ApplyGovernanceBaselineOnly -or $ApplyFeatureBaselineOnly -or $applyCodingSpeedProfile)
 $applyFeatureBaselineAndMilestoneCommit = [bool]$ApplyFeatureBaselineAndMilestoneCommit
-$managedAssetRemovalActive = ($PruneRetiredManagedFiles.IsPresent -or $UninstallGovernance.IsPresent)
+$pruneRetiredManagedFilesActive = [bool]($PruneRetiredManagedFiles.IsPresent -or $applyAllFeatures)
+$uninstallGovernanceActive = [bool]$UninstallGovernance.IsPresent
+$applyManagedAssetRemovalActive = [bool]($ApplyManagedAssetRemoval.IsPresent -or ($applyAllFeatures -and -not $DisableManagedAssetRemoval.IsPresent))
+$managedAssetRemovalActive = ($pruneRetiredManagedFilesActive -or $uninstallGovernanceActive)
 if ($applyAllFeatures -and ($applyFeatureBaselineOnly -or $applyFeatureBaselineAndMilestoneCommit)) {
   throw "-ApplyAllFeatures is mutually exclusive with -ApplyCodingSpeedProfile/-ApplyFeatureBaselineOnly/-ApplyGovernanceBaselineOnly and -ApplyFeatureBaselineAndMilestoneCommit."
 }
 if ($applyFeatureBaselineOnly -and $applyFeatureBaselineAndMilestoneCommit) {
   throw "-ApplyCodingSpeedProfile/-ApplyFeatureBaselineOnly/-ApplyGovernanceBaselineOnly and -ApplyFeatureBaselineAndMilestoneCommit are mutually exclusive."
+}
+if ($DisableManagedAssetRemoval.IsPresent -and $ApplyManagedAssetRemoval.IsPresent) {
+  throw "-DisableManagedAssetRemoval and -ApplyManagedAssetRemoval are mutually exclusive."
 }
 if ($PruneKeepDays -lt 0) {
   throw "-PruneKeepDays must be >= 0."
@@ -2225,40 +2232,40 @@ foreach ($targetName in $selectedTargets) {
   }
 
   $flowFailedBeforeManagedRemoval = ($targetRun.exit_code -ne 0)
-  $blockManagedAssetApplyAfterFlowFailure = ($ApplyManagedAssetRemoval.IsPresent -and $flowFailedBeforeManagedRemoval)
+  $blockManagedAssetApplyAfterFlowFailure = ($applyManagedAssetRemovalActive -and $flowFailedBeforeManagedRemoval)
   $managedAssetBlockedReason = "target_flow_failed_before_managed_asset_apply"
 
   $pruneRetiredManagedFilesResult = New-ManagedAssetActionSkippedResult -TargetRoot $targetConfig.AttachmentRoot
-  if ($PruneRetiredManagedFiles -and $blockManagedAssetApplyAfterFlowFailure) {
+  if ($pruneRetiredManagedFilesActive -and $blockManagedAssetApplyAfterFlowFailure) {
     $pruneRetiredManagedFilesResult = New-ManagedAssetActionBlockedResult `
       -TargetRoot $targetConfig.AttachmentRoot `
       -Reason $managedAssetBlockedReason `
       -FlowExitCode ([int]$targetRun.exit_code)
   }
-  elseif ($PruneRetiredManagedFiles) {
+  elseif ($pruneRetiredManagedFilesActive) {
     $pruneRetiredManagedFilesResult = Invoke-ManagedAssetAction `
       -RepoRoot $repoRoot `
       -ScriptName "prune-retired-managed-files.py" `
       -TargetRoot $targetConfig.AttachmentRoot `
       -BaselinePath $governanceBaselinePathResolved `
       -PythonCommand $pythonCommand `
-      -Apply $ApplyManagedAssetRemoval.IsPresent
+      -Apply $applyManagedAssetRemovalActive
   }
   $uninstallGovernanceResult = New-ManagedAssetActionSkippedResult -TargetRoot $targetConfig.AttachmentRoot
-  if ($UninstallGovernance -and $blockManagedAssetApplyAfterFlowFailure) {
+  if ($uninstallGovernanceActive -and $blockManagedAssetApplyAfterFlowFailure) {
     $uninstallGovernanceResult = New-ManagedAssetActionBlockedResult `
       -TargetRoot $targetConfig.AttachmentRoot `
       -Reason $managedAssetBlockedReason `
       -FlowExitCode ([int]$targetRun.exit_code)
   }
-  elseif ($UninstallGovernance) {
+  elseif ($uninstallGovernanceActive) {
     $uninstallGovernanceResult = Invoke-ManagedAssetAction `
       -RepoRoot $repoRoot `
       -ScriptName "uninstall-target-repo-governance.py" `
       -TargetRoot $targetConfig.AttachmentRoot `
       -BaselinePath $governanceBaselinePathResolved `
       -PythonCommand $pythonCommand `
-      -Apply $ApplyManagedAssetRemoval.IsPresent
+      -Apply $applyManagedAssetRemovalActive
   }
   $targetRun | Add-Member -NotePropertyName "prune_retired_managed_files_result" -NotePropertyValue $pruneRetiredManagedFilesResult -Force
   $targetRun | Add-Member -NotePropertyName "uninstall_governance_result" -NotePropertyValue $uninstallGovernanceResult -Force
@@ -2316,13 +2323,13 @@ foreach ($targetName in $selectedTargets) {
         Write-Host $targetRun.milestone_commit_result.output
       }
     }
-    if ($PruneRetiredManagedFiles) {
+    if ($pruneRetiredManagedFilesActive) {
       Write-Host ("prune_retired_managed_files: status={0} target={1} reason={2}" -f $pruneRetiredManagedFilesResult.status, $targetName, $pruneRetiredManagedFilesResult.reason)
       if (-not [string]::IsNullOrWhiteSpace($pruneRetiredManagedFilesResult.output)) {
         Write-Host $pruneRetiredManagedFilesResult.output
       }
     }
-    if ($UninstallGovernance) {
+    if ($uninstallGovernanceActive) {
       Write-Host ("uninstall_governance: status={0} target={1} reason={2}" -f $uninstallGovernanceResult.status, $targetName, $uninstallGovernanceResult.reason)
       if (-not [string]::IsNullOrWhiteSpace($uninstallGovernanceResult.output)) {
         Write-Host $uninstallGovernanceResult.output
@@ -2391,10 +2398,10 @@ if ($Json) {
               $wrappedFlowOnly[$property.Name] = $property.Value
             }
             $wrappedFlowOnly["prune_target_repo_runs"] = $pruneForJson
-            if ($PruneRetiredManagedFiles) {
+            if ($pruneRetiredManagedFilesActive) {
               $wrappedFlowOnly["prune_retired_managed_files"] = $singlePruneRetiredForJson
             }
-            if ($UninstallGovernance) {
+            if ($uninstallGovernanceActive) {
               $wrappedFlowOnly["uninstall_governance"] = $singleUninstallForJson
             }
             Write-Host ($wrappedFlowOnly | ConvertTo-Json -Depth 20)
@@ -2407,10 +2414,10 @@ if ($Json) {
               flow_output            = $single.flow_result.output
               prune_target_repo_runs = $pruneForJson
             }
-            if ($PruneRetiredManagedFiles) {
+            if ($pruneRetiredManagedFilesActive) {
               $flowOnlyFallback["prune_retired_managed_files"] = $singlePruneRetiredForJson
             }
-            if ($UninstallGovernance) {
+            if ($uninstallGovernanceActive) {
               $flowOnlyFallback["uninstall_governance"] = $singleUninstallForJson
             }
             Write-Host ($flowOnlyFallback | ConvertTo-Json -Depth 20)
@@ -2425,10 +2432,10 @@ if ($Json) {
           flow_output            = ""
           prune_target_repo_runs = $pruneForJson
         }
-        if ($PruneRetiredManagedFiles) {
+        if ($pruneRetiredManagedFilesActive) {
           $flowOnlyEmpty["prune_retired_managed_files"] = $singlePruneRetiredForJson
         }
-        if ($UninstallGovernance) {
+        if ($uninstallGovernanceActive) {
           $flowOnlyEmpty["uninstall_governance"] = $singleUninstallForJson
         }
         Write-Host ($flowOnlyEmpty | ConvertTo-Json -Depth 20)
@@ -2495,10 +2502,10 @@ if ($Json) {
         if ($PruneTargetRepoRuns) {
           $wrapped["prune_target_repo_runs"] = $pruneForJson
         }
-        if ($PruneRetiredManagedFiles) {
+        if ($pruneRetiredManagedFilesActive) {
           $wrapped["prune_retired_managed_files"] = $singlePruneRetiredForJson
         }
-        if ($UninstallGovernance) {
+        if ($uninstallGovernanceActive) {
           $wrapped["uninstall_governance"] = $singleUninstallForJson
         }
         Write-Host ($wrapped | ConvertTo-Json -Depth 20)
@@ -2538,10 +2545,10 @@ if ($Json) {
         if ($PruneTargetRepoRuns) {
           $fallback["prune_target_repo_runs"] = $pruneForJson
         }
-        if ($PruneRetiredManagedFiles) {
+        if ($pruneRetiredManagedFilesActive) {
           $fallback["prune_retired_managed_files"] = $singlePruneRetiredForJson
         }
-        if ($UninstallGovernance) {
+        if ($uninstallGovernanceActive) {
           $fallback["uninstall_governance"] = $singleUninstallForJson
         }
         Write-Host ($fallback | ConvertTo-Json -Depth 20)
@@ -2612,8 +2619,8 @@ if ($Json) {
           auto_commit_reason       = $_.milestone_commit_result.auto_commit_reason
           auto_commit_commit_hash  = $_.milestone_commit_result.commit_hash
           auto_commit_trigger      = $_.milestone_commit_result.trigger
-          prune_retired_managed_files = if ($PruneRetiredManagedFiles) { $pruneRetiredForJson } else { $null }
-          uninstall_governance     = if ($UninstallGovernance) { $uninstallForJson } else { $null }
+          prune_retired_managed_files = if ($pruneRetiredManagedFilesActive) { $pruneRetiredForJson } else { $null }
+          uninstall_governance     = if ($uninstallGovernanceActive) { $uninstallForJson } else { $null }
         }
       }
     )
@@ -2647,9 +2654,9 @@ if ($Json) {
       apply_feature_baseline_only     = [bool]$applyFeatureBaselineOnly
       apply_governance_baseline_only  = [bool]$ApplyGovernanceBaselineOnly
       apply_feature_baseline_and_milestone_commit = [bool]$applyFeatureBaselineAndMilestoneCommit
-      prune_retired_managed_files_active = [bool]$PruneRetiredManagedFiles
-      uninstall_governance_active     = [bool]$UninstallGovernance
-      apply_managed_asset_removal     = [bool]$ApplyManagedAssetRemoval
+      prune_retired_managed_files_active = [bool]$pruneRetiredManagedFilesActive
+      uninstall_governance_active     = [bool]$uninstallGovernanceActive
+      apply_managed_asset_removal     = [bool]$applyManagedAssetRemovalActive
       governance_baseline_sync_active = ($applyAllFeatures -or $applyFeatureBaselineOnly -or $applyFeatureBaselineAndMilestoneCommit -or (($FlowMode -eq "onboard") -and -not $SkipGovernanceBaselineSync.IsPresent))
       milestone_gate_mode             = if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) { $effectiveMilestoneGateMode } else { "" }
       milestone_gate_mode_source      = if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) { $milestoneGateModeSource } else { "" }

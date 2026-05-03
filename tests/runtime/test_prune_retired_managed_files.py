@@ -169,6 +169,42 @@ class PruneRetiredManagedFilesTests(unittest.TestCase):
             self.assertEqual(manifest["deleted_files"][0]["path"], ".governed-ai/old.py")
             self.assertEqual(payload["manifest_path"], str(manifest_path))
 
+    def test_prune_retired_managed_files_apply_noop_does_not_create_empty_backup_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target = workspace / "target"
+            target.mkdir(parents=True)
+            baseline_path = workspace / "baseline.json"
+            backup_root = workspace / "backups"
+            _write_json(baseline_path, {"retired_managed_files": []})
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/prune-retired-managed-files.py",
+                    "--target-repo",
+                    str(target),
+                    "--baseline-path",
+                    str(baseline_path),
+                    "--backup-root",
+                    str(backup_root),
+                    "--apply",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["summary"]["delete_candidates"], 0)
+            self.assertEqual(payload["summary"]["deleted"], 0)
+            self.assertEqual(payload["manifest_path"], "")
+            self.assertFalse(backup_root.exists())
+
     def test_prune_retired_managed_files_deletes_hash_matched_file_and_blocks_drift(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)

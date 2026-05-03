@@ -163,7 +163,8 @@ def prune_retired_managed_files(
             )
 
     status = "blocked" if blocked else "pass"
-    manifest_path = resolved_backup_root / "manifest.json" if apply else None
+    manifest_required = bool(apply and (deleted or any("backup_path" in item for item in blocked)))
+    manifest_path = resolved_backup_root / "manifest.json" if manifest_required else None
     payload = {
         "operation_type": OPERATION_TYPE,
         "deletion_policy": DELETION_POLICY,
