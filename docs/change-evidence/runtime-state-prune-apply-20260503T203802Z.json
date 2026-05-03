@@ -1,0 +1,949 @@
+{
+  "apply": true,
+  "artifact_delete_candidates": [
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-30T16:33:12.583505+00:00",
+      "name": "task-20260501003041-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 11724
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-30T16:29:17.660164+00:00",
+      "name": "task-20260501002809",
+      "referenced_by_target_runs": false,
+      "size_bytes": 23554
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-30T16:27:16.368991+00:00",
+      "name": "task-20260501002445-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 24477
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-30T16:15:24.263769+00:00",
+      "name": "task-20260501001258-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 10333
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-30T16:11:28.597698+00:00",
+      "name": "task-20260501000837-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 10333
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-27T17:31:09.919082+00:00",
+      "name": "task-20260428012802-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 10233
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-27T17:30:42.353332+00:00",
+      "name": "task-20260428012634-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 10233
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-27T12:11:32.468023+00:00",
+      "name": "task-20260427201022",
+      "referenced_by_target_runs": false,
+      "size_bytes": 9436
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-27T12:01:59.138217+00:00",
+      "name": "task-20260427195931-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 10125
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-27T09:46:53.302179+00:00",
+      "name": "task-20260427174550",
+      "referenced_by_target_runs": false,
+      "size_bytes": 9372
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-27T09:37:58.377807+00:00",
+      "name": "task-20260427173515-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 10061
+    },
+    {
+      "file_count": 8,
+      "last_write_utc": "2026-04-27T09:34:38.624773+00:00",
+      "name": "task-20260427172527-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 13627
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-27T09:24:40.269937+00:00",
+      "name": "task-20260427172227-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 10061
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-27T09:12:53.643505+00:00",
+      "name": "task-20260427171036-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 10061
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-27T08:22:55.366242+00:00",
+      "name": "task-20260427162037-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 10003
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-27T06:16:22.515211+00:00",
+      "name": "gap-110-sustained-window-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 10255
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-27T04:16:56.025638+00:00",
+      "name": "task-20260427121429-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 9973
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-26T15:14:08.084377+00:00",
+      "name": "task-20260426231149-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 9907
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-26T15:05:07.785132+00:00",
+      "name": "task-20260426230259-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 9907
+    },
+    {
+      "file_count": 2,
+      "last_write_utc": "2026-04-25T10:10:42.857170+00:00",
+      "name": "task-20260425180831",
+      "referenced_by_target_runs": false,
+      "size_bytes": 8046
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-24T12:09:05.941817+00:00",
+      "name": "task-20260424200257-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 17001
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-24T11:47:07.423203+00:00",
+      "name": "task-20260424194314-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 17001
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-24T11:41:20.808327+00:00",
+      "name": "task-20260424193734",
+      "referenced_by_target_runs": false,
+      "size_bytes": 15727
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-24T11:37:39.287652+00:00",
+      "name": "task-20260424193352",
+      "referenced_by_target_runs": false,
+      "size_bytes": 15727
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-23T17:00:45.124633+00:00",
+      "name": "task-20260424005450-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 10705
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-23T16:04:55.063317+00:00",
+      "name": "task-20260423235935-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 10693
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-23T15:41:05.357202+00:00",
+      "name": "task-20260423233558-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 10687
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-23T15:04:01.503268+00:00",
+      "name": "task-20260423225909-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 10687
+    },
+    {
+      "file_count": 3,
+      "last_write_utc": "2026-04-23T14:29:09.446933+00:00",
+      "name": "task-20260423222733",
+      "referenced_by_target_runs": false,
+      "size_bytes": 5014
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-23T14:12:23.570609+00:00",
+      "name": "task-20260423220658-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 10682
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-23T13:56:09.890984+00:00",
+      "name": "task-20260423215058-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 10681
+    },
+    {
+      "file_count": 3,
+      "last_write_utc": "2026-04-23T11:42:14.381648+00:00",
+      "name": "task-all-target-sync-skipverify-20260423-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 5824
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-23T11:36:59.297113+00:00",
+      "name": "task-self-runtime-sync-20260423",
+      "referenced_by_target_runs": false,
+      "size_bytes": 26431
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-23T11:32:44.131344+00:00",
+      "name": "task-all-target-sync-20260423-self-runtime",
+      "referenced_by_target_runs": false,
+      "size_bytes": 27211
+    },
+    {
+      "file_count": 10,
+      "last_write_utc": "2026-04-22T14:57:13.363933+00:00",
+      "name": "task-20260422225408",
+      "referenced_by_target_runs": false,
+      "size_bytes": 14922
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-22T14:53:16.722434+00:00",
+      "name": "task-20260422225004",
+      "referenced_by_target_runs": false,
+      "size_bytes": 9858
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-22T14:48:43.860048+00:00",
+      "name": "task-20260422224532",
+      "referenced_by_target_runs": false,
+      "size_bytes": 9858
+    },
+    {
+      "file_count": 3,
+      "last_write_utc": "2026-04-22T14:43:48.840764+00:00",
+      "name": "test-self-direct",
+      "referenced_by_target_runs": false,
+      "size_bytes": 4911
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-22T14:39:33.685011+00:00",
+      "name": "task-20260422223618",
+      "referenced_by_target_runs": false,
+      "size_bytes": 9858
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-22T10:55:19.461658+00:00",
+      "name": "task-daily-self-runtime-20260422185252",
+      "referenced_by_target_runs": false,
+      "size_bytes": 7631
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-22T10:52:40.050641+00:00",
+      "name": "task-onboard-self-runtime-20260422185018",
+      "referenced_by_target_runs": false,
+      "size_bytes": 7737
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-21T19:13:30.743840+00:00",
+      "name": "task-daily-self-runtime-20260422031117",
+      "referenced_by_target_runs": false,
+      "size_bytes": 7631
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-21T19:11:16.793452+00:00",
+      "name": "task-onboard-self-runtime-20260422030904",
+      "referenced_by_target_runs": false,
+      "size_bytes": 7737
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-21T19:06:59.767712+00:00",
+      "name": "task-daily-self-runtime-20260422030445",
+      "referenced_by_target_runs": false,
+      "size_bytes": 7631
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-21T19:04:45.634578+00:00",
+      "name": "task-onboard-self-runtime-20260422030234",
+      "referenced_by_target_runs": false,
+      "size_bytes": 7737
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-21T18:59:40.805945+00:00",
+      "name": "task-onboard-self-runtime-1",
+      "referenced_by_target_runs": false,
+      "size_bytes": 9007
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-21T18:59:38.987930+00:00",
+      "name": "task-daily-self-runtime-1",
+      "referenced_by_target_runs": false,
+      "size_bytes": 11500
+    },
+    {
+      "file_count": 6,
+      "last_write_utc": "2026-04-21T17:04:33.202869+00:00",
+      "name": "task-20260422010218",
+      "referenced_by_target_runs": false,
+      "size_bytes": 6574
+    },
+    {
+      "file_count": 8,
+      "last_write_utc": "2026-04-21T14:39:14.313785+00:00",
+      "name": "task-20260421223704",
+      "referenced_by_target_runs": false,
+      "size_bytes": 8510
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T12:50:08.877683+00:00",
+      "name": "task-gap081-generic-trial2-20260421",
+      "referenced_by_target_runs": false,
+      "size_bytes": 4130
+    },
+    {
+      "file_count": 4,
+      "last_write_utc": "2026-04-21T12:40:09.448961+00:00",
+      "name": "task-gap081-generic-trial-20260421",
+      "referenced_by_target_runs": false,
+      "size_bytes": 914
+    },
+    {
+      "file_count": 11,
+      "last_write_utc": "2026-04-21T12:33:22.196490+00:00",
+      "name": "task-gap080-live-full4-20260421",
+      "referenced_by_target_runs": false,
+      "size_bytes": 10949
+    },
+    {
+      "file_count": 7,
+      "last_write_utc": "2026-04-21T12:29:59.615106+00:00",
+      "name": "task-gap080-live-full3-20260421",
+      "referenced_by_target_runs": false,
+      "size_bytes": 5359
+    },
+    {
+      "file_count": 10,
+      "last_write_utc": "2026-04-21T12:28:24.567317+00:00",
+      "name": "task-gap080-live-full2-20260421",
+      "referenced_by_target_runs": false,
+      "size_bytes": 9718
+    },
+    {
+      "file_count": 10,
+      "last_write_utc": "2026-04-21T12:26:19.585224+00:00",
+      "name": "task-gap080-live-full-20260421",
+      "referenced_by_target_runs": false,
+      "size_bytes": 9850
+    },
+    {
+      "file_count": 7,
+      "last_write_utc": "2026-04-21T12:23:14.867975+00:00",
+      "name": "task-20260421202212",
+      "referenced_by_target_runs": false,
+      "size_bytes": 5011
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:25.116806+00:00",
+      "name": "task-writeprobe-self-20260420",
+      "referenced_by_target_runs": false,
+      "size_bytes": 6209
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:25.079212+00:00",
+      "name": "task-writepass-self-20260420",
+      "referenced_by_target_runs": false,
+      "size_bytes": 6178
+    },
+    {
+      "file_count": 8,
+      "last_write_utc": "2026-04-21T11:54:25.042210+00:00",
+      "name": "task-writefile-self-20260420",
+      "referenced_by_target_runs": false,
+      "size_bytes": 7364
+    },
+    {
+      "file_count": 9,
+      "last_write_utc": "2026-04-21T11:54:24.979212+00:00",
+      "name": "task-write-self-20260420200936",
+      "referenced_by_target_runs": false,
+      "size_bytes": 8390
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.909124+00:00",
+      "name": "task-stab-self-runtime-20260420204351",
+      "referenced_by_target_runs": false,
+      "size_bytes": 3371
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.836043+00:00",
+      "name": "task-self-runtime-onboard-20260420225100",
+      "referenced_by_target_runs": false,
+      "size_bytes": 3423
+    },
+    {
+      "file_count": 8,
+      "last_write_utc": "2026-04-21T11:54:24.650199+00:00",
+      "name": "task-self-runtime-daily-20260420225100",
+      "referenced_by_target_runs": false,
+      "size_bytes": 7381
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.603178+00:00",
+      "name": "task-self-pass-20260420190439",
+      "referenced_by_target_runs": false,
+      "size_bytes": 3843
+    },
+    {
+      "file_count": 2,
+      "last_write_utc": "2026-04-21T11:54:24.563177+00:00",
+      "name": "task-self-onboard-001",
+      "referenced_by_target_runs": false,
+      "size_bytes": 405
+    },
+    {
+      "file_count": 2,
+      "last_write_utc": "2026-04-21T11:54:24.549176+00:00",
+      "name": "task-relative-001",
+      "referenced_by_target_runs": false,
+      "size_bytes": 405
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.535969+00:00",
+      "name": "task-onboard-self-20260420200035",
+      "referenced_by_target_runs": false,
+      "size_bytes": 3285
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.498967+00:00",
+      "name": "task-native-tier-self-20260420192821",
+      "referenced_by_target_runs": false,
+      "size_bytes": 3349
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.461967+00:00",
+      "name": "task-daily-self-runtime-20260420200648",
+      "referenced_by_target_runs": false,
+      "size_bytes": 3381
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.423966+00:00",
+      "name": "task-continue-self-runtime-20260420201949",
+      "referenced_by_target_runs": false,
+      "size_bytes": 3431
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.387965+00:00",
+      "name": "task-auto2-self-20260420195538",
+      "referenced_by_target_runs": false,
+      "size_bytes": 3253
+    },
+    {
+      "file_count": 8,
+      "last_write_utc": "2026-04-21T11:54:24.350964+00:00",
+      "name": "task-auto-write-self-20260420191516",
+      "referenced_by_target_runs": false,
+      "size_bytes": 5263
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.285675+00:00",
+      "name": "task-auto-self-20260420195249",
+      "referenced_by_target_runs": false,
+      "size_bytes": 3237
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.247675+00:00",
+      "name": "task-auto-self-20260420195216",
+      "referenced_by_target_runs": false,
+      "size_bytes": 3237
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.209674+00:00",
+      "name": "task-apply-self-20260420",
+      "referenced_by_target_runs": false,
+      "size_bytes": 6054
+    },
+    {
+      "file_count": 9,
+      "last_write_utc": "2026-04-21T11:54:24.172671+00:00",
+      "name": "task-adapter-events-self-20260420192331",
+      "referenced_by_target_runs": false,
+      "size_bytes": 9038
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.102757+00:00",
+      "name": "task-20260420014718",
+      "referenced_by_target_runs": false,
+      "size_bytes": 5899
+    },
+    {
+      "file_count": 2,
+      "last_write_utc": "2026-04-21T11:54:24.061752+00:00",
+      "name": "task-20260419204951",
+      "referenced_by_target_runs": false,
+      "size_bytes": 544
+    },
+    {
+      "file_count": 2,
+      "last_write_utc": "2026-04-21T11:54:24.045774+00:00",
+      "name": "task-20260419000831",
+      "referenced_by_target_runs": false,
+      "size_bytes": 405
+    }
+  ],
+  "backup_root": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z",
+  "deleted_artifacts": [
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260501003041-self-runtime",
+      "name": "task-20260501003041-self-runtime",
+      "size_bytes": 11724
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260501002809",
+      "name": "task-20260501002809",
+      "size_bytes": 23554
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260501002445-self-runtime",
+      "name": "task-20260501002445-self-runtime",
+      "size_bytes": 24477
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260501001258-self-runtime",
+      "name": "task-20260501001258-self-runtime",
+      "size_bytes": 10333
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260501000837-self-runtime",
+      "name": "task-20260501000837-self-runtime",
+      "size_bytes": 10333
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260428012802-self-runtime",
+      "name": "task-20260428012802-self-runtime",
+      "size_bytes": 10233
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260428012634-self-runtime",
+      "name": "task-20260428012634-self-runtime",
+      "size_bytes": 10233
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260427201022",
+      "name": "task-20260427201022",
+      "size_bytes": 9436
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260427195931-self-runtime",
+      "name": "task-20260427195931-self-runtime",
+      "size_bytes": 10125
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260427174550",
+      "name": "task-20260427174550",
+      "size_bytes": 9372
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260427173515-self-runtime",
+      "name": "task-20260427173515-self-runtime",
+      "size_bytes": 10061
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260427172527-self-runtime",
+      "name": "task-20260427172527-self-runtime",
+      "size_bytes": 13627
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260427172227-self-runtime",
+      "name": "task-20260427172227-self-runtime",
+      "size_bytes": 10061
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260427171036-self-runtime",
+      "name": "task-20260427171036-self-runtime",
+      "size_bytes": 10061
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260427162037-self-runtime",
+      "name": "task-20260427162037-self-runtime",
+      "size_bytes": 10003
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\gap-110-sustained-window-self-runtime",
+      "name": "gap-110-sustained-window-self-runtime",
+      "size_bytes": 10255
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260427121429-self-runtime",
+      "name": "task-20260427121429-self-runtime",
+      "size_bytes": 9973
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260426231149-self-runtime",
+      "name": "task-20260426231149-self-runtime",
+      "size_bytes": 9907
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260426230259-self-runtime",
+      "name": "task-20260426230259-self-runtime",
+      "size_bytes": 9907
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260425180831",
+      "name": "task-20260425180831",
+      "size_bytes": 8046
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260424200257-self-runtime",
+      "name": "task-20260424200257-self-runtime",
+      "size_bytes": 17001
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260424194314-self-runtime",
+      "name": "task-20260424194314-self-runtime",
+      "size_bytes": 17001
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260424193734",
+      "name": "task-20260424193734",
+      "size_bytes": 15727
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260424193352",
+      "name": "task-20260424193352",
+      "size_bytes": 15727
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260424005450-self-runtime",
+      "name": "task-20260424005450-self-runtime",
+      "size_bytes": 10705
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260423235935-self-runtime",
+      "name": "task-20260423235935-self-runtime",
+      "size_bytes": 10693
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260423233558-self-runtime",
+      "name": "task-20260423233558-self-runtime",
+      "size_bytes": 10687
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260423225909-self-runtime",
+      "name": "task-20260423225909-self-runtime",
+      "size_bytes": 10687
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260423222733",
+      "name": "task-20260423222733",
+      "size_bytes": 5014
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260423220658-self-runtime",
+      "name": "task-20260423220658-self-runtime",
+      "size_bytes": 10682
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260423215058-self-runtime",
+      "name": "task-20260423215058-self-runtime",
+      "size_bytes": 10681
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-all-target-sync-skipverify-20260423-self-runtime",
+      "name": "task-all-target-sync-skipverify-20260423-self-runtime",
+      "size_bytes": 5824
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-self-runtime-sync-20260423",
+      "name": "task-self-runtime-sync-20260423",
+      "size_bytes": 26431
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-all-target-sync-20260423-self-runtime",
+      "name": "task-all-target-sync-20260423-self-runtime",
+      "size_bytes": 27211
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260422225408",
+      "name": "task-20260422225408",
+      "size_bytes": 14922
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260422225004",
+      "name": "task-20260422225004",
+      "size_bytes": 9858
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260422224532",
+      "name": "task-20260422224532",
+      "size_bytes": 9858
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\test-self-direct",
+      "name": "test-self-direct",
+      "size_bytes": 4911
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260422223618",
+      "name": "task-20260422223618",
+      "size_bytes": 9858
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-daily-self-runtime-20260422185252",
+      "name": "task-daily-self-runtime-20260422185252",
+      "size_bytes": 7631
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-onboard-self-runtime-20260422185018",
+      "name": "task-onboard-self-runtime-20260422185018",
+      "size_bytes": 7737
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-daily-self-runtime-20260422031117",
+      "name": "task-daily-self-runtime-20260422031117",
+      "size_bytes": 7631
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-onboard-self-runtime-20260422030904",
+      "name": "task-onboard-self-runtime-20260422030904",
+      "size_bytes": 7737
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-daily-self-runtime-20260422030445",
+      "name": "task-daily-self-runtime-20260422030445",
+      "size_bytes": 7631
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-onboard-self-runtime-20260422030234",
+      "name": "task-onboard-self-runtime-20260422030234",
+      "size_bytes": 7737
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-onboard-self-runtime-1",
+      "name": "task-onboard-self-runtime-1",
+      "size_bytes": 9007
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-daily-self-runtime-1",
+      "name": "task-daily-self-runtime-1",
+      "size_bytes": 11500
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260422010218",
+      "name": "task-20260422010218",
+      "size_bytes": 6574
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260421223704",
+      "name": "task-20260421223704",
+      "size_bytes": 8510
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-gap081-generic-trial2-20260421",
+      "name": "task-gap081-generic-trial2-20260421",
+      "size_bytes": 4130
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-gap081-generic-trial-20260421",
+      "name": "task-gap081-generic-trial-20260421",
+      "size_bytes": 914
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-gap080-live-full4-20260421",
+      "name": "task-gap080-live-full4-20260421",
+      "size_bytes": 10949
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-gap080-live-full3-20260421",
+      "name": "task-gap080-live-full3-20260421",
+      "size_bytes": 5359
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-gap080-live-full2-20260421",
+      "name": "task-gap080-live-full2-20260421",
+      "size_bytes": 9718
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-gap080-live-full-20260421",
+      "name": "task-gap080-live-full-20260421",
+      "size_bytes": 9850
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\artifacts\\task-20260421202212",
+      "name": "task-20260421202212",
+      "size_bytes": 5011
+    }
+  ],
+  "deleted_doctor_remediations": [],
+  "deletion_policy": "delete_only_unreferenced_artifacts_and_old_doctor_remediations_after_backup",
+  "doctor_remediation_delete_candidates": [
+    "remediation-20260502T161239342.json",
+    "remediation-20260502T161004971.json",
+    "remediation-20260502T113902094.json",
+    "remediation-20260501T221314370.json",
+    "remediation-20260501T200308500.json",
+    "remediation-20260501T182705041.json",
+    "remediation-20260501T004101292.json",
+    "remediation-20260501T003207736.json",
+    "remediation-20260501T002815809.json",
+    "remediation-20260501T002611459.json",
+    "remediation-20260501T001420582.json",
+    "remediation-20260501T001023243.json",
+    "remediation-20260428T012955361.json",
+    "remediation-20260428T012930163.json",
+    "remediation-20260427T201027765.json",
+    "remediation-20260427T200102586.json",
+    "remediation-20260427T174554836.json",
+    "remediation-20260427T173659177.json",
+    "remediation-20260427T172659393.json",
+    "remediation-20260427T172343623.json",
+    "remediation-20260427T171155317.json",
+    "remediation-20260427T162156051.json",
+    "remediation-20260427T141525690.json",
+    "remediation-20260427T121553000.json",
+    "remediation-20260426T231308778.json",
+    "remediation-20260426T230409334.json",
+    "remediation-20260425T180837006.json",
+    "remediation-20260424T200452171.json",
+    "remediation-20260424T194341222.json",
+    "remediation-20260424T193737037.json",
+    "remediation-20260424T193355235.json",
+    "remediation-20260424T193241611.json",
+    "remediation-20260424T193219420.json",
+    "remediation-20260424T005648535.json",
+    "remediation-20260424T000137228.json",
+    "remediation-20260423T233800568.json",
+    "remediation-20260423T230055642.json",
+    "remediation-20260423T222736660.json",
+    "remediation-20260423T220901144.json",
+    "remediation-20260423T215257290.json",
+    "remediation-20260423T194039157.json",
+    "remediation-20260423T193318961.json",
+    "remediation-20260423T192931351.json",
+    "remediation-20260422T225412156.json",
+    "remediation-20260422T225008870.json",
+    "remediation-20260422T224536630.json",
+    "remediation-20260422T223623808.json",
+    "remediation-20260422T191901998.json",
+    "remediation-20260422T191643165.json",
+    "remediation-20260422T185255425.json",
+    "remediation-20260422T185022882.json",
+    "remediation-20260422T031120677.json",
+    "remediation-20260422T030908039.json",
+    "remediation-20260422T030449158.json",
+    "remediation-20260422T030237872.json",
+    "remediation-20260422T025724057.json",
+    "remediation-20260422T025723548.json",
+    "remediation-20260422T010222612.json",
+    "remediation-20260421T223706992.json"
+  ],
+  "dry_run": false,
+  "failed_deletions": [
+    {
+      "error": "[WinError 5] �ܾ����ʡ�: 'D:\\\\CODE\\\\governed-ai-runtime-state\\\\self-runtime\\\\artifacts\\\\task-writeprobe-self-20260420\\\\run-writeprobe-self-20260420\\\\verification-output'",
+      "path": "D:\\CODE\\governed-ai-runtime-state\\self-runtime"
+    }
+  ],
+  "manifest_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203802Z\\manifest.json",
+  "operation_type": "runtime_state_prune",
+  "reason": "delete_failed",
+  "retention_policy": {
+    "apply_requires": [
+      "--apply",
+      "backup_root",
+      "manifest.json"
+    ],
+    "artifact_keep_all_target_run_refs": true,
+    "artifact_keep_latest_dirs": 30,
+    "doctor_keep_latest_remediation_files": 30,
+    "preserve_approvals": true,
+    "preserve_context": true,
+    "preserve_latest_remediation_alias": true,
+    "strategy": "keep_latest_or_target_run_referenced"
+  },
+  "rollback_instructions": "Rollback by restoring deleted files from backup_root using manifest.json if this prune is rejected.",
+  "runtime_state_root": "D:\\CODE\\governed-ai-runtime-state\\self-runtime",
+  "status": "fail",
+  "summary": {
+    "approvals_total": 6,
+    "artifact_delete_candidate_size_bytes": 700170,
+    "artifact_dirs_delete_candidates": 79,
+    "artifact_dirs_deleted": 56,
+    "artifact_dirs_kept_by_latest_window": 30,
+    "artifact_dirs_referenced_by_target_runs": 14,
+    "artifact_dirs_total": 118,
+    "context_files_total": 1,
+    "doctor_remediation_candidate_size_bytes": 34633,
+    "doctor_remediation_delete_candidates": 59,
+    "doctor_remediation_files_deleted": 0,
+    "doctor_remediation_files_total": 89,
+    "failed_deletions": 1,
+    "total_files": 453,
+    "total_size_bytes": 1110748
+  },
+  "target_run_root": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\target-repo-runs"
+}

@@ -17,6 +17,10 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260503 Runtime State Prune Apply](./20260503-runtime-state-prune-apply.md)
+  - evidence companion for adding `scripts/prune-runtime-state.py`, pruning external `self-runtime` runtime state with backup manifests, and verifying candidate-zero retention
+- [20260503 Runtime State Retention Dry Run](./20260503-runtime-state-retention-dry-run.md)
+  - dry-run evidence for classifying `D:\CODE\governed-ai-runtime-state\self-runtime` as machine-local runtime state and identifying protected versus candidate cleanup surfaces without deleting files
 - [20260503 Operator UI Screenshot Archive Apply](./20260503-operator-ui-screenshot-archive-apply.md)
   - evidence companion for moving remaining historical operator UI screenshot candidates behind a manifest-backed archive while leaving target-run deletion candidates untouched
 - [20260503 Runtime Runner Parallel Scheduling](./20260503-runtime-runner-parallel-scheduling.md)
