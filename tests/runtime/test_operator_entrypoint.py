@@ -3,7 +3,10 @@ import importlib.util
 import os
 import shutil
 import subprocess
+import threading
 import unittest
+import urllib.error
+import urllib.request
 from unittest import mock
 from pathlib import Path
 
@@ -385,6 +388,34 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("no-store, max-age=0", script)
         self.assertIn("x-governed-runtime-ui-stale", script)
         self.assertIn("refresh_if_stale", script)
+
+    def test_operator_ui_stale_handler_returns_conflict_without_dropping_connection(self) -> None:
+        module = _load_serve_operator_ui_module()
+        handler = module._build_handler(default_language="zh-CN", host="127.0.0.1", port=0)
+        server = module.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+        port = server.server_address[1]
+        thread = threading.Thread(target=server.handle_request, daemon=True)
+
+        try:
+            with (
+                mock.patch.object(module, "is_operator_ui_process_stale", return_value=True),
+                mock.patch.object(
+                    module,
+                    "maybe_request_operator_ui_restart",
+                    return_value={"requested": False, "requested_at": "2026-05-04T00:00:00Z"},
+                ) as restart_mock,
+            ):
+                thread.start()
+                with self.assertRaises(urllib.error.HTTPError) as raised:
+                    urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=10)
+
+            self.assertEqual(409, raised.exception.code)
+            body = raised.exception.read().decode("utf-8")
+            self.assertIn("Operator UI 服务已过期", body)
+            restart_mock.assert_called_once_with(language="zh-CN", host="127.0.0.1", port=0)
+        finally:
+            server.server_close()
+            thread.join(timeout=5)
 
     def test_next_work_summary_keeps_daily_available_for_refresh_evidence_first(self) -> None:
         module = _load_serve_operator_ui_module()

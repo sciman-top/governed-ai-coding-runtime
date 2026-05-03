@@ -150,7 +150,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def serve_operator_ui(*, host: str, port: int, language: str, open_browser: bool) -> int:
-    server = ThreadingHTTPServer((host, port), _build_handler(default_language=language))
+    server = ThreadingHTTPServer((host, port), _build_handler(default_language=language, host=host, port=port))
     url = f"http://{host}:{port}/?lang={language}"
     payload = {"url": url, "language": language, "status": "serving"}
     print(json.dumps(payload, indent=2, sort_keys=True), flush=True)
@@ -165,7 +165,7 @@ def serve_operator_ui(*, host: str, port: int, language: str, open_browser: bool
     return 0
 
 
-def _build_handler(*, default_language: str):
+def _build_handler(*, default_language: str, host: str, port: int):
     class OperatorUiHandler(BaseHTTPRequestHandler):
         def do_GET(self) -> None:
             parsed = urlparse(self.path)
