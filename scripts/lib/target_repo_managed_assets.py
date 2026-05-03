@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from lib.target_repo_managed_file_modes import managed_file_mode_contract
 from lib.target_repo_quick_test_prompt import build_quick_test_slice_prompt
 
 
@@ -213,6 +214,7 @@ def classify_asset(
             "classification": classification,
             "reason": reason,
             "management_mode": management_mode,
+            **managed_file_mode_contract(management_mode),
             "source": str(source_file),
             "source_sha256": f"sha256:{sha256_text(source_text)}",
             "expected_sha256": f"sha256:{expected_sha}",
@@ -233,6 +235,7 @@ def classify_asset(
                 "reason": "generated_managed_hash_missing",
                 "generator": str(generated_entry.get("generator", "")),
                 "management_mode": str(generated_entry.get("management_mode", "block_on_drift")),
+                **managed_file_mode_contract(str(generated_entry.get("management_mode", "block_on_drift"))),
                 "evidence_refs": ["current_baseline.generated_managed_files"],
             }
         if actual_text is None:
@@ -241,6 +244,7 @@ def classify_asset(
                 "reason": "generated_managed_file_missing",
                 "generator": str(generated_entry.get("generator", "")),
                 "management_mode": str(generated_entry.get("management_mode", "block_on_drift")),
+                **managed_file_mode_contract(str(generated_entry.get("management_mode", "block_on_drift"))),
                 "expected_sha256": f"sha256:{expected_hash}",
                 "evidence_refs": ["current_baseline.generated_managed_files"],
             }
@@ -250,6 +254,7 @@ def classify_asset(
             "reason": "generated_hash_matches" if matches else "generated_hash_differs",
             "generator": str(generated_entry.get("generator", "")),
             "management_mode": str(generated_entry.get("management_mode", "block_on_drift")),
+            **managed_file_mode_contract(str(generated_entry.get("management_mode", "block_on_drift"))),
             "expected_sha256": f"sha256:{expected_hash}",
             "evidence_refs": ["current_baseline.generated_managed_files"],
         }

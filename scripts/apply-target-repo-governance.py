@@ -8,13 +8,19 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from lib.target_repo_managed_file_modes import (
+    ALLOWED_MANAGEMENT_MODES,
+    managed_file_drift_recommended_action,
+    managed_file_mode_contract,
+    managed_file_mode_error_text,
+)
+from lib.target_repo_quick_test_prompt import build_quick_test_slice_prompt
 from lib.target_repo_speed_profile import (
     apply_speed_profile_policy,
     as_command_list,
     normalize_speed_profile_policy,
     normalize_target_test_slice,
 )
-from lib.target_repo_quick_test_prompt import build_quick_test_slice_prompt
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -108,6 +114,7 @@ def _write_managed_file_provenance(
         "target_sha256": target_sha256,
         "expected_sha256": expected_sha256,
     }
+    record.update(managed_file_mode_contract(management_mode))
     record_text = json.dumps(record, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     existing = provenance_path.read_text(encoding="utf-8") if provenance_path.exists() else None
     if existing == record_text:
@@ -120,6 +127,7 @@ def _write_managed_file_provenance(
         "marker_strategy": "sidecar",
         "ownership_scope": ownership_scope,
     }
+    result.update(managed_file_mode_contract(management_mode))
     if not check_only:
         provenance_path.parent.mkdir(parents=True, exist_ok=True)
         provenance_path.write_text(record_text, encoding="utf-8")
@@ -153,9 +161,9 @@ def _normalize_baseline(path: Path) -> dict[str, Any]:
             raise ValueError(f"baseline.required_managed_files[{index}].path must be a non-empty string")
         if not isinstance(source_path, str) or not source_path.strip():
             raise ValueError(f"baseline.required_managed_files[{index}].source must be a non-empty string")
-        if management_mode not in {"replace", "json_merge", "block_on_drift"}:
+        if management_mode not in ALLOWED_MANAGEMENT_MODES:
             raise ValueError(
-                f"baseline.required_managed_files[{index}].management_mode must be replace, json_merge, or block_on_drift"
+                f"baseline.required_managed_files[{index}].management_mode must be {managed_file_mode_error_text()}"
             )
     generated_files = baseline.get("generated_managed_files")
     if generated_files is None:
@@ -570,6 +578,7 @@ def _sync_managed_files(
             "target_sha256": target_hash,
             "expected_sha256": expected_hash,
         }
+        file_drift.update(managed_file_mode_contract(management_mode))
         if write_provenance:
             file_drift["provenance_path"] = _managed_file_provenance_relative_path(relative_path)
         if management_mode in {"replace", "block_on_drift"} and actual is not None:
@@ -577,7 +586,10 @@ def _sync_managed_files(
             file_drift.update(
                 _blocked_resolution_metadata(
                     conflict_policy="block_on_drift",
-                    recommended_action="diff target file against source, integrate target-local fixes into the control-repo source or explicitly retire the target change, then rerun apply",
+                    recommended_action=managed_file_drift_recommended_action(
+                        management_mode=management_mode,
+                        verifier="apply",
+                    ),
                 )
             )
             blocked_files.append(file_drift)

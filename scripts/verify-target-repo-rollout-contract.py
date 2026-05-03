@@ -5,12 +5,13 @@ import json
 from pathlib import Path
 from typing import Any
 
+from lib.target_repo_managed_file_modes import ALLOWED_MANAGEMENT_MODES
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONTRACT_PATH = ROOT / "docs" / "targets" / "target-repo-rollout-contract.json"
 DEFAULT_BASELINE_PATH = ROOT / "docs" / "targets" / "target-repo-governance-baseline.json"
 DEFAULT_RUNTIME_FLOW_PRESET_PATH = ROOT / "scripts" / "runtime-flow-preset.ps1"
-ALLOWED_MANAGEMENT_MODES = {"replace", "json_merge", "block_on_drift"}
 DERIVED_RUNTIME_PROFILE_FIELDS = {"quick_gate_commands", "full_gate_commands", "gate_timeout_seconds"}
 CATALOG_PROFILE_FIELDS = {"repo_id", "display_name", "primary_language", "build_commands", "test_commands", "contract_commands"}
 

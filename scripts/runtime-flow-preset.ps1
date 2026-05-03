@@ -1,6 +1,7 @@
 param(
   [string]$Target = "classroomtoolkit",
   [switch]$AllTargets,
+  [switch]$Help,
 
   [ValidateSet("onboard", "daily")]
   [string]$FlowMode = "daily",
@@ -70,6 +71,31 @@ param(
   [switch]$DisableManagedAssetRemoval,
   [switch]$ApplyManagedAssetRemoval
 )
+
+function Show-RuntimeFlowPresetHelp {
+  @'
+Usage:
+  pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 [options]
+
+Common options:
+  -Help                         Show this help and exit without running a target flow.
+  -ListTargets [-Json]          List configured target repositories.
+  -Target <id>                  Run one target from the catalog.
+  -AllTargets                   Run all configured targets.
+  -FlowMode onboard|daily       Select onboarding or daily flow behavior.
+  -Mode quick|full|l1|l2|l3     Select runtime gate depth for the target flow.
+
+Governance apply options:
+  -ApplyGovernanceBaselineOnly  Apply target governance baseline without runtime flow.
+  -ApplyCodingSpeedProfile      Refresh derived coding speed profile fields.
+  -ApplyAllFeatures             Apply the full target governance feature bundle.
+'@
+}
+
+if ($Help) {
+  Show-RuntimeFlowPresetHelp
+  exit 0
+}
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"

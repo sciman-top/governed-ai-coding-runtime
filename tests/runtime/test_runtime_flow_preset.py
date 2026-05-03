@@ -253,6 +253,40 @@ def _init_clean_git_repo(repo: Path) -> None:
 
 
 class RuntimeFlowPresetScriptTests(unittest.TestCase):
+    def test_runtime_flow_preset_help_does_not_run_default_target(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            marker_path = Path(tmp_dir) / "runtime-flow-ran.txt"
+            fake_runtime_flow_path = Path(tmp_dir) / "runtime-flow.ps1"
+            fake_runtime_flow_path.write_text(
+                f"Set-Content -LiteralPath '{marker_path}' -Value ran\nexit 99\n",
+                encoding="utf-8",
+            )
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "runtime-flow-preset.ps1"),
+                    "-Help",
+                    "-RuntimeFlowPath",
+                    str(fake_runtime_flow_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertIn("Usage:", completed.stdout)
+            self.assertIn("-ListTargets", completed.stdout)
+            self.assertFalse(marker_path.exists())
+
     def test_runtime_flow_preset_list_targets_json_uses_catalog_loader(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)

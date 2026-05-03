@@ -7,6 +7,13 @@ import json
 from pathlib import Path
 from typing import Any
 
+from lib.target_repo_managed_file_modes import (
+    ALLOWED_MANAGEMENT_MODES,
+    managed_file_drift_recommended_action,
+    managed_file_mode_contract,
+    managed_file_mode_error_text,
+)
+from lib.target_repo_quick_test_prompt import build_quick_test_slice_prompt
 from lib.target_repo_speed_profile import (
     apply_speed_profile_policy,
     as_command_list,
@@ -15,7 +22,6 @@ from lib.target_repo_speed_profile import (
     normalize_target_config_test_slice,
     select_preferred_command,
 )
-from lib.target_repo_quick_test_prompt import build_quick_test_slice_prompt
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -86,9 +92,9 @@ def _validate_baseline(
             raise ValueError(f"baseline.required_managed_files[{index}].path must be a non-empty string")
         if not isinstance(source_path, str) or not source_path.strip():
             raise ValueError(f"baseline.required_managed_files[{index}].source must be a non-empty string")
-        if management_mode not in {"replace", "json_merge", "block_on_drift"}:
+        if management_mode not in ALLOWED_MANAGEMENT_MODES:
             raise ValueError(
-                f"baseline.required_managed_files[{index}].management_mode must be replace, json_merge, or block_on_drift"
+                f"baseline.required_managed_files[{index}].management_mode must be {managed_file_mode_error_text()}"
             )
     generated_files = baseline.get("generated_managed_files", [])
     if not isinstance(generated_files, list):
@@ -448,23 +454,26 @@ def main() -> int:
                 management_mode=management_mode,
             )
             if actual != expected:
-                mismatched_managed_files.append(
-                    {
-                        "path": str(target_path.relative_to(attachment_root)).replace("\\", "/"),
-                        "source": str(source_path),
-                        "management_mode": management_mode,
-                        "reason": "missing" if actual is None else "content_drift",
-                        "source_sha256": _sha256_text(source_text),
-                        "target_sha256": _sha256_text(actual) if actual is not None else "",
-                        "expected_sha256": _sha256_text(expected),
-                        "conflict_policy": "create_missing" if actual is None else "block_on_drift",
-                        "recommended_action": (
-                            "create the missing managed file from the control-repo source"
-                            if actual is None
-                            else "diff target file against source, integrate target-local fixes into the control-repo source or explicitly retire the target change, then rerun consistency verification"
-                        ),
-                    }
-                )
+                managed_file_drift = {
+                    "path": str(target_path.relative_to(attachment_root)).replace("\\", "/"),
+                    "source": str(source_path),
+                    "management_mode": management_mode,
+                    "reason": "missing" if actual is None else "content_drift",
+                    "source_sha256": _sha256_text(source_text),
+                    "target_sha256": _sha256_text(actual) if actual is not None else "",
+                    "expected_sha256": _sha256_text(expected),
+                    "conflict_policy": "create_missing" if actual is None else "block_on_drift",
+                    "recommended_action": (
+                        "create the missing managed file from the control-repo source"
+                        if actual is None
+                        else managed_file_drift_recommended_action(
+                            management_mode=management_mode,
+                            verifier="consistency",
+                        )
+                    ),
+                }
+                managed_file_drift.update(managed_file_mode_contract(management_mode))
+                mismatched_managed_files.append(managed_file_drift)
         if mismatched_managed_files:
             drift.append(
                 {

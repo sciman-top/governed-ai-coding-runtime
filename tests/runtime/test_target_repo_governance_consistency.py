@@ -414,6 +414,8 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             self.assertEqual(provenance["management_mode"], "json_merge")
             self.assertEqual(provenance["ownership_scope"], "field_or_block")
             self.assertEqual(provenance["marker_strategy"], "sidecar")
+            self.assertEqual(provenance["mode_status"], "active")
+            self.assertEqual(provenance["overwrite_policy"], "json_merge_overlay_preserve_target_local_keys")
 
     def test_apply_target_repo_governance_respects_disabled_managed_file_provenance_policy(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -582,9 +584,12 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             self.assertEqual(payload["status"], "blocked")
             blocked = payload["blocked_managed_files"][0]
             self.assertEqual(blocked["management_mode"], "replace")
+            self.assertEqual(blocked["mode_status"], "legacy_fail_closed")
+            self.assertEqual(blocked["overwrite_policy"], "create_missing_block_existing_drift")
             self.assertEqual(blocked["reason"], "content_drift")
             self.assertIn("blocking_reason", blocked)
             self.assertEqual(blocked["conflict_policy"], "block_on_drift")
+            self.assertIn("legacy fail-closed alias", blocked["recommended_action"])
             self.assertIn("rerun apply", blocked["recommended_action"])
             self.assertEqual(target_guard_path.read_text(encoding="utf-8"), "print('target-local')\n")
 
@@ -2067,6 +2072,92 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             self.assertTrue(mismatch["source_sha256"])
             self.assertTrue(mismatch["target_sha256"])
             self.assertTrue(mismatch["expected_sha256"])
+
+    def test_verify_target_repo_governance_consistency_marks_replace_as_legacy_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_root = workspace / "runtime"
+            code_root = workspace / "code"
+            runtime_state_base = repo_root / ".runtime" / "attachments"
+            repo_root.mkdir(parents=True)
+            code_root.mkdir(parents=True)
+
+            template_path = workspace / "guard-template.py"
+            template_path.write_text("print('runtime-owned')\n", encoding="utf-8")
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-05-04.1",
+                    "required_managed_files": [
+                        {
+                            "path": ".governed-ai/legacy-guard.py",
+                            "source": str(template_path),
+                            "management_mode": "replace",
+                        }
+                    ],
+                    "required_profile_overrides": {
+                        "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                    },
+                },
+            )
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": "${code_root}/repo-a",
+                            "attachment_runtime_state_root": "${runtime_state_base}/repo-a",
+                        }
+                    },
+                },
+            )
+            _write_json(
+                code_root / "repo-a" / ".governed-ai" / "repo-profile.json",
+                {
+                    "repo_id": "repo-a",
+                    "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                },
+            )
+            target_guard_path = code_root / "repo-a" / ".governed-ai" / "legacy-guard.py"
+            target_guard_path.parent.mkdir(parents=True, exist_ok=True)
+            target_guard_path.write_text("print('target-local')\n", encoding="utf-8")
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/verify-target-repo-governance-consistency.py",
+                    "--catalog-path",
+                    str(catalog_path),
+                    "--baseline-path",
+                    str(baseline_path),
+                    "--repo-root",
+                    str(repo_root),
+                    "--code-root",
+                    str(code_root),
+                    "--runtime-state-base",
+                    str(runtime_state_base),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertNotEqual(completed.returncode, 0)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["status"], "fail")
+            mismatch = payload["drift"][0]["mismatched_managed_files"][0]
+            self.assertEqual(mismatch["management_mode"], "replace")
+            self.assertEqual(mismatch["mode_status"], "legacy_fail_closed")
+            self.assertEqual(mismatch["overwrite_policy"], "create_missing_block_existing_drift")
+            self.assertEqual(mismatch["conflict_policy"], "block_on_drift")
+            self.assertIn("legacy fail-closed alias", mismatch["recommended_action"])
 
 
 if __name__ == "__main__":
