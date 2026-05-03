@@ -26,6 +26,19 @@
       "contract_command": "python -m unittest test_toolkit.py",
       "quick_test_skip_reason": "Full test command is already a single deterministic unittest file; no materially faster representative slice is justified."
     },
+    "k12-question-graph": {
+      "attachment_root": "${code_root}/k12-question-graph",
+      "attachment_runtime_state_root": "${runtime_state_base}/k12-question-graph",
+      "repo_id": "k12-question-graph",
+      "display_name": "k12-question-graph",
+      "primary_language": "csharp",
+      "build_command": "dotnet build apps/api/K12QuestionGraph.Api.csproj",
+      "test_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-gates.ps1",
+      "quick_test_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-c002-dry-run-suite.ps1",
+      "quick_test_reason": "Database-free C002 dynamic-asset dry-run suite for daily feedback; full tools/run-gates.ps1 remains the full test gate because it covers API, frontend, worker, PostgreSQL-backed contracts, and broader product invariants.",
+      "quick_test_timeout_seconds": 180,
+      "contract_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File tools/run-roadmap-guard.ps1"
+    },
     "self-runtime": {
       "attachment_root": "${repo_root}",
       "attachment_runtime_state_root": "${code_root}/governed-ai-runtime-state/self-runtime",
