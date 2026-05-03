@@ -206,6 +206,13 @@ def _load_outer_ai_test_slice_recommendation(
     return slice_config, "recommendation_file", str(recommendation_path)
 
 
+def _blocked_resolution_metadata(*, conflict_policy: str, recommended_action: str) -> dict[str, str]:
+    return {
+        "conflict_policy": conflict_policy,
+        "recommended_action": recommended_action,
+    }
+
+
 def _write_outer_ai_test_slice_prompt(
     *,
     target_repo: Path,
@@ -233,6 +240,12 @@ def _write_outer_ai_test_slice_prompt(
         return "prompt_current", str(prompt_path), [], []
     if existing is not None:
         file_record["blocking_reason"] = "generated file content differs; review and integrate before applying"
+        file_record.update(
+            _blocked_resolution_metadata(
+                conflict_policy="block_on_drift",
+                recommended_action="compare generated prompt with target-local content, update the generator or accept the target recommendation, then rerun apply",
+            )
+        )
         return "prompt_blocked", str(prompt_path), [], [file_record]
     if check_only:
         return "prompt_available", str(prompt_path), [file_record], []
@@ -314,6 +327,8 @@ def _apply_catalog_profile_facts(
                     "target_value": current,
                     "source_value": normalized,
                     "blocking_reason": "catalog profile field differs; review and integrate target repo fixes before applying",
+                    "conflict_policy": "block_on_drift",
+                    "recommended_action": "compare target repo profile field with catalog source, update the catalog or target profile intentionally, then rerun apply",
                 }
             )
 
@@ -372,6 +387,8 @@ def _catalog_group_block(
         "target_value": copy.deepcopy(actual_group),
         "source_value": copy.deepcopy(expected_group),
         "blocking_reason": "catalog gate field differs; review and integrate target repo fixes before applying",
+        "conflict_policy": "block_on_drift",
+        "recommended_action": "compare target gate command with catalog command, integrate the correct command into the catalog or profile, then rerun apply",
     }
 
 
@@ -459,6 +476,12 @@ def _sync_managed_files(
         }
         if management_mode in {"replace", "block_on_drift"} and actual is not None:
             file_drift["blocking_reason"] = "managed file content differs; review and integrate before applying"
+            file_drift.update(
+                _blocked_resolution_metadata(
+                    conflict_policy="block_on_drift",
+                    recommended_action="diff target file against source, integrate target-local fixes into the control-repo source or explicitly retire the target change, then rerun apply",
+                )
+            )
             blocked_files.append(file_drift)
             continue
         changed_files.append(file_drift)

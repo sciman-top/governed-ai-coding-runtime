@@ -428,8 +428,14 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             self.assertEqual(completed.returncode, 2, completed.stderr)
             payload = json.loads(completed.stdout)
             self.assertEqual(payload["status"], "blocked")
-            self.assertEqual(payload["blocked_managed_files"][0]["management_mode"], "block_on_drift")
-            self.assertEqual(payload["blocked_managed_files"][0]["reason"], "content_drift")
+            blocked = payload["blocked_managed_files"][0]
+            self.assertEqual(blocked["management_mode"], "block_on_drift")
+            self.assertEqual(blocked["reason"], "content_drift")
+            self.assertEqual(blocked["conflict_policy"], "block_on_drift")
+            self.assertIn("integrate target-local fixes", blocked["recommended_action"])
+            self.assertTrue(blocked["source_sha256"])
+            self.assertTrue(blocked["target_sha256"])
+            self.assertTrue(blocked["expected_sha256"])
             self.assertEqual(target_hook_path.read_text(encoding="utf-8"), "print('target-local')\n")
 
     def test_apply_target_repo_governance_replace_managed_file_refuses_existing_drift(self) -> None:
@@ -479,9 +485,12 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             self.assertEqual(completed.returncode, 2, completed.stderr)
             payload = json.loads(completed.stdout)
             self.assertEqual(payload["status"], "blocked")
-            self.assertEqual(payload["blocked_managed_files"][0]["management_mode"], "replace")
-            self.assertEqual(payload["blocked_managed_files"][0]["reason"], "content_drift")
-            self.assertIn("blocking_reason", payload["blocked_managed_files"][0])
+            blocked = payload["blocked_managed_files"][0]
+            self.assertEqual(blocked["management_mode"], "replace")
+            self.assertEqual(blocked["reason"], "content_drift")
+            self.assertIn("blocking_reason", blocked)
+            self.assertEqual(blocked["conflict_policy"], "block_on_drift")
+            self.assertIn("rerun apply", blocked["recommended_action"])
             self.assertEqual(target_guard_path.read_text(encoding="utf-8"), "print('target-local')\n")
 
     def test_apply_target_repo_governance_block_on_drift_managed_file_creates_missing_file(self) -> None:
@@ -1772,7 +1781,13 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             payload = json.loads(completed.stdout)
             self.assertEqual(payload["status"], "fail")
             self.assertEqual(payload["drift"][0]["reason"], "managed_file_drift")
-            self.assertEqual(payload["drift"][0]["mismatched_managed_files"][0]["reason"], "missing")
+            mismatch = payload["drift"][0]["mismatched_managed_files"][0]
+            self.assertEqual(mismatch["reason"], "missing")
+            self.assertEqual(mismatch["conflict_policy"], "create_missing")
+            self.assertIn("create the missing managed file", mismatch["recommended_action"])
+            self.assertTrue(mismatch["source_sha256"])
+            self.assertEqual(mismatch["target_sha256"], "")
+            self.assertTrue(mismatch["expected_sha256"])
 
     def test_verify_target_repo_governance_consistency_allows_json_merge_managed_file_local_keys(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -1949,8 +1964,14 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             payload = json.loads(completed.stdout)
             self.assertEqual(payload["status"], "fail")
             self.assertEqual(payload["drift"][0]["reason"], "managed_file_drift")
-            self.assertEqual(payload["drift"][0]["mismatched_managed_files"][0]["management_mode"], "block_on_drift")
-            self.assertEqual(payload["drift"][0]["mismatched_managed_files"][0]["reason"], "content_drift")
+            mismatch = payload["drift"][0]["mismatched_managed_files"][0]
+            self.assertEqual(mismatch["management_mode"], "block_on_drift")
+            self.assertEqual(mismatch["reason"], "content_drift")
+            self.assertEqual(mismatch["conflict_policy"], "block_on_drift")
+            self.assertIn("integrate target-local fixes", mismatch["recommended_action"])
+            self.assertTrue(mismatch["source_sha256"])
+            self.assertTrue(mismatch["target_sha256"])
+            self.assertTrue(mismatch["expected_sha256"])
 
 
 if __name__ == "__main__":

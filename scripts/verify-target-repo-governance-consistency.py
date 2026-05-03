@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -41,6 +42,17 @@ def _as_string_list(value: Any) -> list[str]:
     if isinstance(value, list):
         return [item for item in value if isinstance(item, str)]
     return []
+
+
+def _sha256_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _drift_resolution_metadata(*, conflict_policy: str, recommended_action: str) -> dict[str, str]:
+    return {
+        "conflict_policy": conflict_policy,
+        "recommended_action": recommended_action,
+    }
 
 
 def _expand_template(value: str, variables: dict[str, str]) -> str:
@@ -376,6 +388,8 @@ def main() -> int:
                     "target_repo": str(attachment_root),
                     "profile_path": str(profile_path),
                     "mismatched_catalog_fields": mismatched_catalog_fields,
+                    "conflict_policy": "block_on_drift",
+                    "recommended_action": "compare target repo profile gate facts with docs/targets/target-repos-catalog.json, integrate the correct command source, then rerun consistency verification",
                 }
             )
 
@@ -423,6 +437,15 @@ def main() -> int:
                         "source": str(source_path),
                         "management_mode": management_mode,
                         "reason": "missing" if actual is None else "content_drift",
+                        "source_sha256": _sha256_text(source_text),
+                        "target_sha256": _sha256_text(actual) if actual is not None else "",
+                        "expected_sha256": _sha256_text(expected),
+                        "conflict_policy": "create_missing" if actual is None else "block_on_drift",
+                        "recommended_action": (
+                            "create the missing managed file from the control-repo source"
+                            if actual is None
+                            else "diff target file against source, integrate target-local fixes into the control-repo source or explicitly retire the target change, then rerun consistency verification"
+                        ),
                     }
                 )
         if mismatched_managed_files:
@@ -452,6 +475,14 @@ def main() -> int:
                             "generator": "outer_ai_quick_test_prompt",
                             "management_mode": str(item.get("management_mode", "block_on_drift")),
                             "reason": "missing" if actual_prompt is None else "content_drift",
+                            "target_sha256": _sha256_text(actual_prompt) if actual_prompt is not None else "",
+                            "expected_sha256": _sha256_text(expected_prompt),
+                            "conflict_policy": "create_missing" if actual_prompt is None else "block_on_drift",
+                            "recommended_action": (
+                                "create the missing generated prompt from the current generator"
+                                if actual_prompt is None
+                                else "compare generated prompt with target-local content, update the generator or accept the target recommendation, then rerun consistency verification"
+                            ),
                         }
                     )
         if mismatched_generated_files:
