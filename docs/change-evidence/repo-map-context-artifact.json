@@ -4,7 +4,7 @@
   "metrics": {
     "clarification_reduction_proxy": 1.0,
     "estimated_token_cost": 5985,
-    "excluded_archive_candidate_count": 64,
+    "excluded_archive_candidate_count": 69,
     "file_selection_accuracy": 1.0,
     "max_tokens": 6000,
     "required_file_override_count": 0,

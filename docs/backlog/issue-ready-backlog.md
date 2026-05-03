@@ -1517,14 +1517,14 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: AFK
 - Blocked by: GAP-146, GAP-150
 - User stories: 7, 8, 13, 21, 23, 31, 44, 45
-- Status: active for fresh all-target dry-run evidence and hard-gate closeout
+- Status: complete with fresh all-target dry-run evidence and hard-gate closeout
 - What to build:
   - close the managed-asset queue with fresh all-target dry-run or apply evidence
   - record whether richer future provenance is implemented or explicitly deferred
   - prove no target repo is modified outside registered, hash-matched, backed-up removal candidates
 - Acceptance criteria:
-  - [ ] closeout evidence cites build, runtime, contract, and hotspot gates
-  - [ ] active target catalog evidence shows candidate, deleted, blocked, backup, and rollback fields
+  - [x] closeout evidence cites build, runtime, contract, and hotspot gates
+  - [x] active target catalog evidence shows candidate, deleted, blocked, backup, and rollback fields
   - [x] the queue does not claim complete provenance-marker support unless `GAP-146` is implemented
 
 ## Repo Slimming And Coding Speed Queue

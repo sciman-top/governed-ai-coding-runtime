@@ -206,18 +206,18 @@ Only after that classification may it propose or execute removal. The deletion p
 **Description:** Close the queue with fresh evidence from active target repos and hard gates.
 
 **Acceptance criteria:**
-- [ ] Active target catalog dry-run reports are generated for prune and uninstall.
-- [ ] No target repo is modified by closeout dry-run evidence.
-- [ ] Full repo gates pass after implementation.
-- [ ] Evidence documents record commands, key output, compatibility, and rollback.
+- [x] Active target catalog dry-run reports are generated for prune and uninstall.
+- [x] No target repo is modified by closeout dry-run evidence.
+- [x] Full repo gates pass after implementation.
+- [x] Evidence documents record commands, key output, compatibility, and rollback.
 
 **Verification:**
-- [ ] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`
-- [ ] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`
-- [ ] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`
-- [ ] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`
-- [ ] `python scripts/verify-target-repo-rollout-contract.py`
-- [ ] `python scripts/verify-target-repo-governance-consistency.py`
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`
+- [x] `python scripts/verify-target-repo-rollout-contract.py`
+- [x] `python scripts/verify-target-repo-governance-consistency.py`
 
 **Dependencies:** `GAP-150`.
 
@@ -231,24 +231,24 @@ Only after that classification may it propose or execute removal. The deletion p
 ## Checkpoints
 
 ### Checkpoint A: Identity And Inventory
-- [ ] `GAP-144` and `GAP-145` complete.
-- [ ] Inventory dry-run classifies fixture targets without mutation.
-- [ ] Unknown ownership blocks destructive actions.
+- [x] `GAP-144` and `GAP-145` complete.
+- [x] Inventory dry-run classifies fixture targets without mutation.
+- [x] Unknown ownership blocks destructive actions.
 
 ### Checkpoint B: Retired Contract And Prune
 - [x] `GAP-146` through `GAP-148` complete.
-- [ ] Retired managed files can be proposed and pruned only with evidence.
-- [ ] Referenced, drifted, and target-owned files are preserved.
+- [x] Retired managed files can be proposed and pruned only with evidence.
+- [x] Referenced, drifted, and target-owned files are preserved.
 
 ### Checkpoint C: One-Click Uninstall
-- [ ] `GAP-149` and `GAP-150` complete.
-- [ ] Single-target and all-target dry-runs are available from the canonical one-click entrypoint.
-- [ ] Apply mode requires explicit destructive intent and produces backups.
+- [x] `GAP-149` and `GAP-150` complete.
+- [x] Single-target and all-target dry-runs are available from the canonical one-click entrypoint.
+- [x] Apply mode requires explicit destructive intent and produces backups.
 
 ### Checkpoint D: Closeout
-- [ ] `GAP-151` complete.
-- [ ] Full hard-gate chain passes.
-- [ ] Active target dry-run evidence proves no accidental target modifications.
+- [x] `GAP-151` complete.
+- [x] Full hard-gate chain passes.
+- [x] Active target dry-run evidence proves no accidental target modifications.
 
 ## Risks And Mitigations
 
