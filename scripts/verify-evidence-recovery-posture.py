@@ -40,8 +40,8 @@ def main() -> int:
 def assert_evidence_recovery_posture(*, repo_root: Path, as_of: dt.date | None = None) -> dict:
     result = inspect_evidence_recovery_posture(repo_root=repo_root, as_of=as_of)
     failures: list[str] = []
-    if result["selector"]["next_action"] != "refresh_evidence_first":
-        failures.append("selector must keep choosing refresh_evidence_first while latest target runs are degraded")
+    if result["selector"]["next_action"] != "wait_for_host_capability_recovery":
+        failures.append("selector must wait for host capability recovery while fresh target runs remain degraded under bounded defer")
     if result["selector"]["evidence_state"] != "stale":
         failures.append("selector evidence_state must remain stale while latest target runs are degraded")
     if result["target_runs"]["status"] != "attention":
@@ -96,6 +96,7 @@ def inspect_evidence_recovery_posture(*, repo_root: Path, as_of: dt.date | None 
         "selector": {
             "next_action": selector_result["next_action"],
             "evidence_state": selector_result["evidence_state"],
+            "evidence_blocker": selector_result.get("evidence_blocker"),
             "ltp_decision": selector_result["ltp_decision"],
         },
         "target_runs": {

@@ -1,0 +1,683 @@
+{
+  "apply": true,
+  "artifact_delete_candidates": [
+    {
+      "file_count": 3,
+      "last_write_utc": "2026-04-21T11:54:25.116806+00:00",
+      "name": "task-writeprobe-self-20260420",
+      "referenced_by_target_runs": false,
+      "size_bytes": 5763
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:25.079212+00:00",
+      "name": "task-writepass-self-20260420",
+      "referenced_by_target_runs": false,
+      "size_bytes": 6178
+    },
+    {
+      "file_count": 8,
+      "last_write_utc": "2026-04-21T11:54:25.042210+00:00",
+      "name": "task-writefile-self-20260420",
+      "referenced_by_target_runs": false,
+      "size_bytes": 7364
+    },
+    {
+      "file_count": 9,
+      "last_write_utc": "2026-04-21T11:54:24.979212+00:00",
+      "name": "task-write-self-20260420200936",
+      "referenced_by_target_runs": false,
+      "size_bytes": 8390
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.909124+00:00",
+      "name": "task-stab-self-runtime-20260420204351",
+      "referenced_by_target_runs": false,
+      "size_bytes": 3371
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.836043+00:00",
+      "name": "task-self-runtime-onboard-20260420225100",
+      "referenced_by_target_runs": false,
+      "size_bytes": 3423
+    },
+    {
+      "file_count": 8,
+      "last_write_utc": "2026-04-21T11:54:24.650199+00:00",
+      "name": "task-self-runtime-daily-20260420225100",
+      "referenced_by_target_runs": false,
+      "size_bytes": 7381
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.603178+00:00",
+      "name": "task-self-pass-20260420190439",
+      "referenced_by_target_runs": false,
+      "size_bytes": 3843
+    },
+    {
+      "file_count": 2,
+      "last_write_utc": "2026-04-21T11:54:24.563177+00:00",
+      "name": "task-self-onboard-001",
+      "referenced_by_target_runs": false,
+      "size_bytes": 405
+    },
+    {
+      "file_count": 2,
+      "last_write_utc": "2026-04-21T11:54:24.549176+00:00",
+      "name": "task-relative-001",
+      "referenced_by_target_runs": false,
+      "size_bytes": 405
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.535969+00:00",
+      "name": "task-onboard-self-20260420200035",
+      "referenced_by_target_runs": false,
+      "size_bytes": 3285
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.498967+00:00",
+      "name": "task-native-tier-self-20260420192821",
+      "referenced_by_target_runs": false,
+      "size_bytes": 3349
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.461967+00:00",
+      "name": "task-daily-self-runtime-20260420200648",
+      "referenced_by_target_runs": false,
+      "size_bytes": 3381
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.423966+00:00",
+      "name": "task-continue-self-runtime-20260420201949",
+      "referenced_by_target_runs": false,
+      "size_bytes": 3431
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.387965+00:00",
+      "name": "task-auto2-self-20260420195538",
+      "referenced_by_target_runs": false,
+      "size_bytes": 3253
+    },
+    {
+      "file_count": 8,
+      "last_write_utc": "2026-04-21T11:54:24.350964+00:00",
+      "name": "task-auto-write-self-20260420191516",
+      "referenced_by_target_runs": false,
+      "size_bytes": 5263
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.285675+00:00",
+      "name": "task-auto-self-20260420195249",
+      "referenced_by_target_runs": false,
+      "size_bytes": 3237
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.247675+00:00",
+      "name": "task-auto-self-20260420195216",
+      "referenced_by_target_runs": false,
+      "size_bytes": 3237
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.209674+00:00",
+      "name": "task-apply-self-20260420",
+      "referenced_by_target_runs": false,
+      "size_bytes": 6054
+    },
+    {
+      "file_count": 9,
+      "last_write_utc": "2026-04-21T11:54:24.172671+00:00",
+      "name": "task-adapter-events-self-20260420192331",
+      "referenced_by_target_runs": false,
+      "size_bytes": 9038
+    },
+    {
+      "file_count": 5,
+      "last_write_utc": "2026-04-21T11:54:24.102757+00:00",
+      "name": "task-20260420014718",
+      "referenced_by_target_runs": false,
+      "size_bytes": 5899
+    },
+    {
+      "file_count": 2,
+      "last_write_utc": "2026-04-21T11:54:24.061752+00:00",
+      "name": "task-20260419204951",
+      "referenced_by_target_runs": false,
+      "size_bytes": 544
+    },
+    {
+      "file_count": 2,
+      "last_write_utc": "2026-04-21T11:54:24.045774+00:00",
+      "name": "task-20260419000831",
+      "referenced_by_target_runs": false,
+      "size_bytes": 405
+    }
+  ],
+  "backup_root": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z",
+  "deleted_artifacts": [
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-writeprobe-self-20260420",
+      "name": "task-writeprobe-self-20260420",
+      "size_bytes": 5763
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-writepass-self-20260420",
+      "name": "task-writepass-self-20260420",
+      "size_bytes": 6178
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-writefile-self-20260420",
+      "name": "task-writefile-self-20260420",
+      "size_bytes": 7364
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-write-self-20260420200936",
+      "name": "task-write-self-20260420200936",
+      "size_bytes": 8390
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-stab-self-runtime-20260420204351",
+      "name": "task-stab-self-runtime-20260420204351",
+      "size_bytes": 3371
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-self-runtime-onboard-20260420225100",
+      "name": "task-self-runtime-onboard-20260420225100",
+      "size_bytes": 3423
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-self-runtime-daily-20260420225100",
+      "name": "task-self-runtime-daily-20260420225100",
+      "size_bytes": 7381
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-self-pass-20260420190439",
+      "name": "task-self-pass-20260420190439",
+      "size_bytes": 3843
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-self-onboard-001",
+      "name": "task-self-onboard-001",
+      "size_bytes": 405
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-relative-001",
+      "name": "task-relative-001",
+      "size_bytes": 405
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-onboard-self-20260420200035",
+      "name": "task-onboard-self-20260420200035",
+      "size_bytes": 3285
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-native-tier-self-20260420192821",
+      "name": "task-native-tier-self-20260420192821",
+      "size_bytes": 3349
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-daily-self-runtime-20260420200648",
+      "name": "task-daily-self-runtime-20260420200648",
+      "size_bytes": 3381
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-continue-self-runtime-20260420201949",
+      "name": "task-continue-self-runtime-20260420201949",
+      "size_bytes": 3431
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-auto2-self-20260420195538",
+      "name": "task-auto2-self-20260420195538",
+      "size_bytes": 3253
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-auto-write-self-20260420191516",
+      "name": "task-auto-write-self-20260420191516",
+      "size_bytes": 5263
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-auto-self-20260420195249",
+      "name": "task-auto-self-20260420195249",
+      "size_bytes": 3237
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-auto-self-20260420195216",
+      "name": "task-auto-self-20260420195216",
+      "size_bytes": 3237
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-apply-self-20260420",
+      "name": "task-apply-self-20260420",
+      "size_bytes": 6054
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-adapter-events-self-20260420192331",
+      "name": "task-adapter-events-self-20260420192331",
+      "size_bytes": 9038
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-20260420014718",
+      "name": "task-20260420014718",
+      "size_bytes": 5899
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-20260419204951",
+      "name": "task-20260419204951",
+      "size_bytes": 544
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\artifacts\\task-20260419000831",
+      "name": "task-20260419000831",
+      "size_bytes": 405
+    }
+  ],
+  "deleted_doctor_remediations": [
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260502T161239342.json",
+      "name": "remediation-20260502T161239342.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260502T161004971.json",
+      "name": "remediation-20260502T161004971.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260502T113902094.json",
+      "name": "remediation-20260502T113902094.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260501T221314370.json",
+      "name": "remediation-20260501T221314370.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260501T200308500.json",
+      "name": "remediation-20260501T200308500.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260501T182705041.json",
+      "name": "remediation-20260501T182705041.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260501T004101292.json",
+      "name": "remediation-20260501T004101292.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260501T003207736.json",
+      "name": "remediation-20260501T003207736.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260501T002815809.json",
+      "name": "remediation-20260501T002815809.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260501T002611459.json",
+      "name": "remediation-20260501T002611459.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260501T001420582.json",
+      "name": "remediation-20260501T001420582.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260501T001023243.json",
+      "name": "remediation-20260501T001023243.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260428T012955361.json",
+      "name": "remediation-20260428T012955361.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260428T012930163.json",
+      "name": "remediation-20260428T012930163.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260427T201027765.json",
+      "name": "remediation-20260427T201027765.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260427T200102586.json",
+      "name": "remediation-20260427T200102586.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260427T174554836.json",
+      "name": "remediation-20260427T174554836.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260427T173659177.json",
+      "name": "remediation-20260427T173659177.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260427T172659393.json",
+      "name": "remediation-20260427T172659393.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260427T172343623.json",
+      "name": "remediation-20260427T172343623.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260427T171155317.json",
+      "name": "remediation-20260427T171155317.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260427T162156051.json",
+      "name": "remediation-20260427T162156051.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260427T141525690.json",
+      "name": "remediation-20260427T141525690.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260427T121553000.json",
+      "name": "remediation-20260427T121553000.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260426T231308778.json",
+      "name": "remediation-20260426T231308778.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260426T230409334.json",
+      "name": "remediation-20260426T230409334.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260425T180837006.json",
+      "name": "remediation-20260425T180837006.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260424T200452171.json",
+      "name": "remediation-20260424T200452171.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260424T194341222.json",
+      "name": "remediation-20260424T194341222.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260424T193737037.json",
+      "name": "remediation-20260424T193737037.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260424T193355235.json",
+      "name": "remediation-20260424T193355235.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260424T193241611.json",
+      "name": "remediation-20260424T193241611.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260424T193219420.json",
+      "name": "remediation-20260424T193219420.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260424T005648535.json",
+      "name": "remediation-20260424T005648535.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260424T000137228.json",
+      "name": "remediation-20260424T000137228.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260423T233800568.json",
+      "name": "remediation-20260423T233800568.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260423T230055642.json",
+      "name": "remediation-20260423T230055642.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260423T222736660.json",
+      "name": "remediation-20260423T222736660.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260423T220901144.json",
+      "name": "remediation-20260423T220901144.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260423T215257290.json",
+      "name": "remediation-20260423T215257290.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260423T194039157.json",
+      "name": "remediation-20260423T194039157.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260423T193318961.json",
+      "name": "remediation-20260423T193318961.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260423T192931351.json",
+      "name": "remediation-20260423T192931351.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260422T225412156.json",
+      "name": "remediation-20260422T225412156.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260422T225008870.json",
+      "name": "remediation-20260422T225008870.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260422T224536630.json",
+      "name": "remediation-20260422T224536630.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260422T223623808.json",
+      "name": "remediation-20260422T223623808.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260422T191901998.json",
+      "name": "remediation-20260422T191901998.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260422T191643165.json",
+      "name": "remediation-20260422T191643165.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260422T185255425.json",
+      "name": "remediation-20260422T185255425.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260422T185022882.json",
+      "name": "remediation-20260422T185022882.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260422T031120677.json",
+      "name": "remediation-20260422T031120677.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260422T030908039.json",
+      "name": "remediation-20260422T030908039.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260422T030449158.json",
+      "name": "remediation-20260422T030449158.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260422T030237872.json",
+      "name": "remediation-20260422T030237872.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260422T025724057.json",
+      "name": "remediation-20260422T025724057.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260422T025723548.json",
+      "name": "remediation-20260422T025723548.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260422T010222612.json",
+      "name": "remediation-20260422T010222612.json",
+      "size_bytes": 587
+    },
+    {
+      "backup_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\doctor\\remediation-20260421T223706992.json",
+      "name": "remediation-20260421T223706992.json",
+      "size_bytes": 587
+    }
+  ],
+  "deletion_policy": "delete_only_unreferenced_artifacts_and_old_doctor_remediations_after_backup",
+  "doctor_remediation_delete_candidates": [
+    "remediation-20260502T161239342.json",
+    "remediation-20260502T161004971.json",
+    "remediation-20260502T113902094.json",
+    "remediation-20260501T221314370.json",
+    "remediation-20260501T200308500.json",
+    "remediation-20260501T182705041.json",
+    "remediation-20260501T004101292.json",
+    "remediation-20260501T003207736.json",
+    "remediation-20260501T002815809.json",
+    "remediation-20260501T002611459.json",
+    "remediation-20260501T001420582.json",
+    "remediation-20260501T001023243.json",
+    "remediation-20260428T012955361.json",
+    "remediation-20260428T012930163.json",
+    "remediation-20260427T201027765.json",
+    "remediation-20260427T200102586.json",
+    "remediation-20260427T174554836.json",
+    "remediation-20260427T173659177.json",
+    "remediation-20260427T172659393.json",
+    "remediation-20260427T172343623.json",
+    "remediation-20260427T171155317.json",
+    "remediation-20260427T162156051.json",
+    "remediation-20260427T141525690.json",
+    "remediation-20260427T121553000.json",
+    "remediation-20260426T231308778.json",
+    "remediation-20260426T230409334.json",
+    "remediation-20260425T180837006.json",
+    "remediation-20260424T200452171.json",
+    "remediation-20260424T194341222.json",
+    "remediation-20260424T193737037.json",
+    "remediation-20260424T193355235.json",
+    "remediation-20260424T193241611.json",
+    "remediation-20260424T193219420.json",
+    "remediation-20260424T005648535.json",
+    "remediation-20260424T000137228.json",
+    "remediation-20260423T233800568.json",
+    "remediation-20260423T230055642.json",
+    "remediation-20260423T222736660.json",
+    "remediation-20260423T220901144.json",
+    "remediation-20260423T215257290.json",
+    "remediation-20260423T194039157.json",
+    "remediation-20260423T193318961.json",
+    "remediation-20260423T192931351.json",
+    "remediation-20260422T225412156.json",
+    "remediation-20260422T225008870.json",
+    "remediation-20260422T224536630.json",
+    "remediation-20260422T223623808.json",
+    "remediation-20260422T191901998.json",
+    "remediation-20260422T191643165.json",
+    "remediation-20260422T185255425.json",
+    "remediation-20260422T185022882.json",
+    "remediation-20260422T031120677.json",
+    "remediation-20260422T030908039.json",
+    "remediation-20260422T030449158.json",
+    "remediation-20260422T030237872.json",
+    "remediation-20260422T025724057.json",
+    "remediation-20260422T025723548.json",
+    "remediation-20260422T010222612.json",
+    "remediation-20260421T223706992.json"
+  ],
+  "dry_run": false,
+  "failed_deletions": [],
+  "manifest_path": "D:\\CODE\\governed-ai-runtime-state\\_prune-backups\\self-runtime-20260503T203844Z\\manifest.json",
+  "operation_type": "runtime_state_prune",
+  "reason": "ok",
+  "retention_policy": {
+    "apply_requires": [
+      "--apply",
+      "backup_root",
+      "manifest.json"
+    ],
+    "artifact_keep_all_target_run_refs": true,
+    "artifact_keep_latest_dirs": 30,
+    "doctor_keep_latest_remediation_files": 30,
+    "preserve_approvals": true,
+    "preserve_context": true,
+    "preserve_latest_remediation_alias": true,
+    "strategy": "keep_latest_or_target_run_referenced"
+  },
+  "rollback_instructions": "Rollback by restoring deleted files from backup_root using manifest.json if this prune is rejected.",
+  "runtime_state_root": "D:\\CODE\\governed-ai-runtime-state\\self-runtime",
+  "status": "pass",
+  "summary": {
+    "approvals_total": 6,
+    "artifact_delete_candidate_size_bytes": 96899,
+    "artifact_dirs_delete_candidates": 23,
+    "artifact_dirs_deleted": 23,
+    "artifact_dirs_kept_by_latest_window": 30,
+    "artifact_dirs_referenced_by_target_runs": 14,
+    "artifact_dirs_total": 62,
+    "context_files_total": 1,
+    "doctor_remediation_candidate_size_bytes": 34633,
+    "doctor_remediation_delete_candidates": 59,
+    "doctor_remediation_files_deleted": 59,
+    "doctor_remediation_files_total": 89,
+    "failed_deletions": 0,
+    "total_files": 276,
+    "total_size_bytes": 979216
+  },
+  "target_run_root": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\target-repo-runs"
+}

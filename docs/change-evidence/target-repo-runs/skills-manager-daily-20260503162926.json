@@ -1,0 +1,474 @@
+{
+  "next_actions": [],
+  "runtime_check": {
+    "payload": {
+      "write_status": null,
+      "write_approval": null,
+      "write_preflight": null,
+      "inspect_handoff": null,
+      "write_governance": null,
+      "status": {
+        "attachments": [
+          {
+            "adapter_preference": "native_attach",
+            "binding_id": "binding-skills-manager",
+            "binding_state": "healthy",
+            "fail_closed": false,
+            "gate_profile": "default",
+            "light_pack_path": "D:\\CODE\\skills-manager\\.governed-ai\\light-pack.json",
+            "reason": null,
+            "remediation": null,
+            "repo_id": "skills-manager",
+            "required_entrypoint_policy": {
+              "allow_direct_entrypoints": [
+                "run-governed-task.status",
+                "session-bridge.inspect_status",
+                "session-bridge.inspect_evidence",
+                "session-bridge.inspect_handoff",
+                "verify-repo"
+              ],
+              "canonical_entrypoints": [
+                "runtime-flow",
+                "runtime-flow-preset"
+              ],
+              "current_mode": "targeted_enforced",
+              "promotion_condition_ref": "docs/governance/entrypoint-promotion.md",
+              "target_mode": "repo_wide_enforced",
+              "targeted_enforcement_scopes": [
+                "run_quick_gate",
+                "run_full_gate",
+                "verify_attachment",
+                "govern_attachment_write",
+                "write_request",
+                "write_execute",
+                "execute_attachment_write"
+              ]
+            }
+          }
+        ],
+        "codex_capability": {
+          "adapter_tier": "process_bridge",
+          "evidence_export_available": true,
+          "failure_stage": "live_attach_probe_unsupported_status_command_missing",
+          "flow_kind": "process_bridge",
+          "live_attach_available": false,
+          "probe_attempts": 2,
+          "remediation_hint": "Treat `codex exec resume --help` as supporting evidence only. Native attach requires a build that exposes a status handshake command.",
+          "resume_available": true,
+          "stability_state": "degraded_after_retry",
+          "status": "degraded",
+          "structured_events_available": true,
+          "unsupported_capabilities": [
+            "native_attach"
+          ]
+        },
+        "maintenance": {
+          "compatibility_policy_ref": "docs/product/runtime-compatibility-and-upgrade-policy.md",
+          "deprecation_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+          "retirement_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+          "stage": "completed",
+          "triage_policy_ref": "docs/product/maintenance-deprecation-and-retirement-policy.md",
+          "upgrade_policy_ref": "docs/product/runtime-compatibility-and-upgrade-policy.md"
+        },
+        "runtime_roots": {
+          "artifacts_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/artifacts",
+          "compatibility_mode": false,
+          "replay_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/replay",
+          "runtime_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime",
+          "tasks_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/tasks",
+          "workspaces_root": "C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/workspaces"
+        },
+        "tasks": [],
+        "total_tasks": 0
+      },
+      "verify_attachment": {
+        "binding_id": "binding-skills-manager",
+        "blocking_gate_ids": [
+          "test",
+          "contract"
+        ],
+        "entrypoint_policy": {
+          "allow_direct_entrypoints": [
+            "run-governed-task.status",
+            "session-bridge.inspect_status",
+            "session-bridge.inspect_evidence",
+            "session-bridge.inspect_handoff",
+            "verify-repo"
+          ],
+          "blocked": false,
+          "canonical_entrypoints": [
+            "runtime-flow",
+            "runtime-flow-preset"
+          ],
+          "current_mode": "targeted_enforced",
+          "drift_detected": false,
+          "entrypoint_id": "runtime-flow-preset",
+          "is_allowed_direct": false,
+          "is_canonical": true,
+          "reason": null,
+          "remediation_hint": null,
+          "scope": "verify_attachment",
+          "target_mode": "repo_wide_enforced",
+          "targeted_enforcement_scopes": [
+            "run_quick_gate",
+            "run_full_gate",
+            "verify_attachment",
+            "govern_attachment_write",
+            "write_request",
+            "write_execute",
+            "execute_attachment_write"
+          ]
+        },
+        "evidence_link": "artifacts/task-20260503162550-skills-manager/run-20260503162550-skills-manager/verification-output/contract.txt",
+        "gate_order": [
+          "test",
+          "contract"
+        ],
+        "mode": "quick",
+        "outcome": "pass",
+        "repo_id": "skills-manager",
+        "required_gate_ids": [
+          "test",
+          "contract"
+        ],
+        "result_artifact_refs": {
+          "contract": "artifacts/task-20260503162550-skills-manager/run-20260503162550-skills-manager/verification-output/contract.txt",
+          "test": "artifacts/task-20260503162550-skills-manager/run-20260503162550-skills-manager/verification-output/test.txt"
+        },
+        "results": {
+          "contract": "pass",
+          "test": "pass"
+        },
+        "run_id": "run-20260503162550-skills-manager",
+        "service_boundary": "control-plane",
+        "task_id": "task-20260503162550-skills-manager"
+      },
+      "inspect_evidence": null,
+      "request_gate": {
+        "command_id": "cmd-20260503162550-skills-manager",
+        "command_type": "run_quick_gate",
+        "payload": {
+          "adapter_event_ref": "artifacts/task-20260503162550-skills-manager/task-20260503162550-skills-manager-session-bridge-request/evidence/adapter-events.json",
+          "adapter_event_summary": {
+            "approval_event_count": 0,
+            "file_change_count": 0,
+            "gate_run_count": 2,
+            "handoff_ref_count": 0,
+            "live_event_count": 0,
+            "manual_event_count": 0,
+            "task_id": "task-20260503162550-skills-manager",
+            "tool_call_count": 0,
+            "unsupported_event_count": 1
+          },
+          "adapter_id": "codex-cli",
+          "blocking_gate_ids": [
+            "test",
+            "contract"
+          ],
+          "commands": [
+            "pwsh -NoProfile -ExecutionPolicy Bypass -File skills.ps1 发现",
+            "pwsh -NoProfile -ExecutionPolicy Bypass -File skills.ps1 doctor --strict --threshold-ms 8000"
+          ],
+          "continuation_id": "task-20260503162550-skills-manager:run-20260503162550-skills-manager",
+          "entrypoint_policy": {
+            "allow_direct_entrypoints": [
+              "run-governed-task.status",
+              "session-bridge.inspect_status",
+              "session-bridge.inspect_evidence",
+              "session-bridge.inspect_handoff",
+              "verify-repo"
+            ],
+            "blocked": false,
+            "canonical_entrypoints": [
+              "runtime-flow",
+              "runtime-flow-preset"
+            ],
+            "current_mode": "targeted_enforced",
+            "drift_detected": false,
+            "entrypoint_id": "runtime-flow-preset",
+            "is_allowed_direct": false,
+            "is_canonical": true,
+            "reason": null,
+            "remediation_hint": null,
+            "scope": "run_quick_gate",
+            "target_mode": "repo_wide_enforced",
+            "targeted_enforcement_scopes": [
+              "run_quick_gate",
+              "run_full_gate",
+              "verify_attachment",
+              "govern_attachment_write",
+              "write_request",
+              "write_execute",
+              "execute_attachment_write"
+            ]
+          },
+          "evidence_link": "artifacts/task-20260503162550-skills-manager/session-bridge-request/verification-output/contract.txt",
+          "execution_id": "task-20260503162550-skills-manager:session-bridge-request",
+          "gate_order": [
+            "test",
+            "contract"
+          ],
+          "mode": "quick",
+          "outcome": "pass",
+          "plan_only": false,
+          "required_gate_ids": [
+            "test",
+            "contract"
+          ],
+          "result_artifact_refs": {
+            "contract": "artifacts/task-20260503162550-skills-manager/session-bridge-request/verification-output/contract.txt",
+            "test": "artifacts/task-20260503162550-skills-manager/session-bridge-request/verification-output/test.txt"
+          },
+          "results": {
+            "contract": "pass",
+            "test": "pass"
+          },
+          "risky_artifact_refs": [],
+          "run_id": "session-bridge-request",
+          "session_identity": {
+            "adapter_id": "codex-cli",
+            "adapter_tier": "process_bridge",
+            "continuation_id": "task-20260503162550-skills-manager:run-20260503162550-skills-manager",
+            "flow_kind": "process_bridge",
+            "live_attach_available": false,
+            "posture_reason": "codex status command is unavailable; keep process bridge and treat resume command surface as supporting evidence only",
+            "resume_id": "resume-task-20260503162550-skills-manager",
+            "session_id": "session-task-20260503162550-skills-manager",
+            "unsupported_capabilities": [
+              "native_attach"
+            ]
+          }
+        },
+        "policy_decision_ref": "artifacts/task-20260503162550-skills-manager/policy/session-bridge-allow.json",
+        "reason": null,
+        "status": "verification_completed",
+        "unsupported_capability_behavior": null
+      },
+      "summary": {
+        "attachment_health": "healthy",
+        "mode": "quick",
+        "attachment_root": "D:\\CODE\\skills-manager",
+        "entrypoint_drift": false,
+        "task_id": "task-20260503162550-skills-manager",
+        "run_id": "run-20260503162550-skills-manager",
+        "overall_status": "pass",
+        "entrypoint_policy_mode": "targeted_enforced",
+        "entrypoint_id": "runtime-flow-preset",
+        "session_id": "session-task-20260503162550-skills-manager",
+        "flow_kind": "process_bridge",
+        "resume_id": "resume-task-20260503162550-skills-manager",
+        "repo_binding_id": "binding-skills-manager",
+        "entrypoint_blocked": false,
+        "closure_state": "fallback_explicit",
+        "continuation_id": "task-20260503162550-skills-manager:run-20260503162550-skills-manager",
+        "command_id": "cmd-20260503162550-skills-manager",
+        "attachment_runtime_state_root": "D:\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\skills-manager"
+      },
+      "write_execute": null,
+      "dependency_baseline": {
+        "allowed_external_modules": [],
+        "allowed_local_modules": [
+          "governed_ai_coding_runtime_contracts",
+          "lib"
+        ],
+        "baseline_path": "D:/CODE/governed-ai-coding-runtime/docs/dependency-baseline.json",
+        "host_tooling": [
+          {
+            "found": true,
+            "name": "python",
+            "required": true
+          },
+          {
+            "found": true,
+            "name": "pwsh",
+            "required": true
+          },
+          {
+            "found": true,
+            "name": "git",
+            "required": false
+          },
+          {
+            "found": true,
+            "name": "codex",
+            "required": false
+          }
+        ],
+        "missing_required_tools": [],
+        "observed_external_modules": [],
+        "observed_import_roots": [
+          "__future__",
+          "argparse",
+          "ast",
+          "base64",
+          "binascii",
+          "collections",
+          "concurrent",
+          "contextlib",
+          "copy",
+          "dataclasses",
+          "datetime",
+          "fnmatch",
+          "functools",
+          "governed_ai_coding_runtime_contracts",
+          "hashlib",
+          "html",
+          "http",
+          "importlib",
+          "json",
+          "lib",
+          "os",
+          "pathlib",
+          "re",
+          "shutil",
+          "sqlite3",
+          "subprocess",
+          "sys",
+          "sysconfig",
+          "tempfile",
+          "textwrap",
+          "threading",
+          "time",
+          "tomllib",
+          "types",
+          "typing",
+          "unittest",
+          "urllib",
+          "uuid",
+          "webbrowser",
+          "winreg"
+        ],
+        "scan_roots": [
+          "apps",
+          "packages",
+          "scripts",
+          "tests"
+        ],
+        "status": "pass",
+        "target_repo_baseline": {
+          "checked": true,
+          "expected_paths": [
+            "docs/dependency-baseline.md",
+            ".governed-ai/dependency-baseline.json"
+          ],
+          "matched_paths": [
+            ".governed-ai/dependency-baseline.json"
+          ],
+          "present": true,
+          "required": true,
+          "target_repo_root": "D:/CODE/skills-manager"
+        },
+        "undeclared_imports": {}
+      },
+      "next_actions": [],
+      "steps": [
+        {
+          "label": "dependency-baseline-target-repo",
+          "exit_code": 0,
+          "output": "{\n  \"allowed_external_modules\": [],\n  \"allowed_local_modules\": [\n    \"governed_ai_coding_runtime_contracts\",\n    \"lib\"\n  ],\n  \"baseline_path\": \"D:/CODE/governed-ai-coding-runtime/docs/dependency-baseline.json\",\n  \"host_tooling\": [\n    {\n      \"found\": true,\n      \"name\": \"python\",\n      \"required\": true\n    },\n    {\n      \"found\": true,\n      \"name\": \"pwsh\",\n      \"required\": true\n    },\n    {\n      \"found\": true,\n      \"name\": \"git\",\n      \"required\": false\n    },\n    {\n      \"found\": true,\n      \"name\": \"codex\",\n      \"required\": false\n    }\n  ],\n  \"missing_required_tools\": [],\n  \"observed_external_modules\": [],\n  \"observed_import_roots\": [\n    \"__future__\",\n    \"argparse\",\n    \"ast\",\n    \"base64\",\n    \"binascii\",\n    \"collections\",\n    \"concurrent\",\n    \"contextlib\",\n    \"copy\",\n    \"dataclasses\",\n    \"datetime\",\n    \"fnmatch\",\n    \"functools\",\n    \"governed_ai_coding_runtime_contracts\",\n    \"hashlib\",\n    \"html\",\n    \"http\",\n    \"importlib\",\n    \"json\",\n    \"lib\",\n    \"os\",\n    \"pathlib\",\n    \"re\",\n    \"shutil\",\n    \"sqlite3\",\n    \"subprocess\",\n    \"sys\",\n    \"sysconfig\",\n    \"tempfile\",\n    \"textwrap\",\n    \"threading\",\n    \"time\",\n    \"tomllib\",\n    \"types\",\n    \"typing\",\n    \"unittest\",\n    \"urllib\",\n    \"uuid\",\n    \"webbrowser\",\n    \"winreg\"\n  ],\n  \"scan_roots\": [\n    \"apps\",\n    \"packages\",\n    \"scripts\",\n    \"tests\"\n  ],\n  \"status\": \"pass\",\n  \"target_repo_baseline\": {\n    \"checked\": true,\n    \"expected_paths\": [\n      \"docs/dependency-baseline.md\",\n      \".governed-ai/dependency-baseline.json\"\n    ],\n    \"matched_paths\": [\n      \".governed-ai/dependency-baseline.json\"\n    ],\n    \"present\": true,\n    \"required\": true,\n    \"target_repo_root\": \"D:/CODE/skills-manager\"\n  },\n  \"undeclared_imports\": {}\n}"
+        },
+        {
+          "label": "status",
+          "exit_code": 0,
+          "output": "{\n  \"attachments\": [\n    {\n      \"adapter_preference\": \"native_attach\",\n      \"binding_id\": \"binding-skills-manager\",\n      \"binding_state\": \"healthy\",\n      \"fail_closed\": false,\n      \"gate_profile\": \"default\",\n      \"light_pack_path\": \"D:\\\\CODE\\\\skills-manager\\\\.governed-ai\\\\light-pack.json\",\n      \"reason\": null,\n      \"remediation\": null,\n      \"repo_id\": \"skills-manager\",\n      \"required_entrypoint_policy\": {\n        \"allow_direct_entrypoints\": [\n          \"run-governed-task.status\",\n          \"session-bridge.inspect_status\",\n          \"session-bridge.inspect_evidence\",\n          \"session-bridge.inspect_handoff\",\n          \"verify-repo\"\n        ],\n        \"canonical_entrypoints\": [\n          \"runtime-flow\",\n          \"runtime-flow-preset\"\n        ],\n        \"current_mode\": \"targeted_enforced\",\n        \"promotion_condition_ref\": \"docs/governance/entrypoint-promotion.md\",\n        \"target_mode\": \"repo_wide_enforced\",\n        \"targeted_enforcement_scopes\": [\n          \"run_quick_gate\",\n          \"run_full_gate\",\n          \"verify_attachment\",\n          \"govern_attachment_write\",\n          \"write_request\",\n          \"write_execute\",\n          \"execute_attachment_write\"\n        ]\n      }\n    }\n  ],\n  \"codex_capability\": {\n    \"adapter_tier\": \"process_bridge\",\n    \"evidence_export_available\": true,\n    \"failure_stage\": \"live_attach_probe_unsupported_status_command_missing\",\n    \"flow_kind\": \"process_bridge\",\n    \"live_attach_available\": false,\n    \"probe_attempts\": 2,\n    \"remediation_hint\": \"Treat `codex exec resume --help` as supporting evidence only. Native attach requires a build that exposes a status handshake command.\",\n    \"resume_available\": true,\n    \"stability_state\": \"degraded_after_retry\",\n    \"status\": \"degraded\",\n    \"structured_events_available\": true,\n    \"unsupported_capabilities\": [\n      \"native_attach\"\n    ]\n  },\n  \"maintenance\": {\n    \"compatibility_policy_ref\": \"docs/product/runtime-compatibility-and-upgrade-policy.md\",\n    \"deprecation_policy_ref\": \"docs/product/maintenance-deprecation-and-retirement-policy.md\",\n    \"retirement_policy_ref\": \"docs/product/maintenance-deprecation-and-retirement-policy.md\",\n    \"stage\": \"completed\",\n    \"triage_policy_ref\": \"docs/product/maintenance-deprecation-and-retirement-policy.md\",\n    \"upgrade_policy_ref\": \"docs/product/runtime-compatibility-and-upgrade-policy.md\"\n  },\n  \"runtime_roots\": {\n    \"artifacts_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/artifacts\",\n    \"compatibility_mode\": false,\n    \"replay_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/replay\",\n    \"runtime_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime\",\n    \"tasks_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/tasks\",\n    \"workspaces_root\": \"C:/Users/sciman/AppData/Local/governed-ai-coding-runtime/governed-ai-coding-runtime/workspaces\"\n  },\n  \"tasks\": [],\n  \"total_tasks\": 0\n}"
+        },
+        {
+          "label": "doctor",
+          "exit_code": 0,
+          "output": "OK python-command\nOK windows-process-environment\nOK python-asyncio\nOK windows-node-csprng\nOK runtime-path-contracts\nOK runtime-path-schema-catalog\nOK runtime-path-specs\nOK runtime-path-tests\nOK dependency-baseline-doc\nOK dependency-baseline-manifest\nOK dependency-baseline-script\nOK runtime-policy-compatibility\nOK runtime-policy-maintenance\nOK schema-catalog-visible\nOK gate-command-build\nOK gate-command-test\nOK gate-command-contract\nOK gate-command-doctor\nOK gate-command-operator\nOK repo-hook-pre-commit\nOK repo-hook-script\nOK repo-hook-installer\nOK repo-hooks-path\nOK runtime-status-surface\nOK maintenance-policy-visible\nWARN codex-capability-degraded\nHINT Treat `codex exec resume --help` as supporting evidence only. Native attach requires a build that exposes a status handshake command.\nOK adapter-posture-visible\nREMEDIATE-EVIDENCE D:\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\skills-manager\\doctor\\remediation-20260503T162856069.json\nWARN attachment-light-pack-provenance-unsupported\nOK attachment-target-repo-dependency-baseline\nOK attachment-posture-healthy"
+        },
+        {
+          "label": "session-bridge-request-gate",
+          "exit_code": 0,
+          "output": "{\n  \"command_id\": \"cmd-20260503162550-skills-manager\",\n  \"command_type\": \"run_quick_gate\",\n  \"payload\": {\n    \"adapter_event_ref\": \"artifacts/task-20260503162550-skills-manager/task-20260503162550-skills-manager-session-bridge-request/evidence/adapter-events.json\",\n    \"adapter_event_summary\": {\n      \"approval_event_count\": 0,\n      \"file_change_count\": 0,\n      \"gate_run_count\": 2,\n      \"handoff_ref_count\": 0,\n      \"live_event_count\": 0,\n      \"manual_event_count\": 0,\n      \"task_id\": \"task-20260503162550-skills-manager\",\n      \"tool_call_count\": 0,\n      \"unsupported_event_count\": 1\n    },\n    \"adapter_id\": \"codex-cli\",\n    \"blocking_gate_ids\": [\n      \"test\",\n      \"contract\"\n    ],\n    \"commands\": [\n      \"pwsh -NoProfile -ExecutionPolicy Bypass -File skills.ps1 \\u53d1\\u73b0\",\n      \"pwsh -NoProfile -ExecutionPolicy Bypass -File skills.ps1 doctor --strict --threshold-ms 8000\"\n    ],\n    \"continuation_id\": \"task-20260503162550-skills-manager:run-20260503162550-skills-manager\",\n    \"entrypoint_policy\": {\n      \"allow_direct_entrypoints\": [\n        \"run-governed-task.status\",\n        \"session-bridge.inspect_status\",\n        \"session-bridge.inspect_evidence\",\n        \"session-bridge.inspect_handoff\",\n        \"verify-repo\"\n      ],\n      \"blocked\": false,\n      \"canonical_entrypoints\": [\n        \"runtime-flow\",\n        \"runtime-flow-preset\"\n      ],\n      \"current_mode\": \"targeted_enforced\",\n      \"drift_detected\": false,\n      \"entrypoint_id\": \"runtime-flow-preset\",\n      \"is_allowed_direct\": false,\n      \"is_canonical\": true,\n      \"reason\": null,\n      \"remediation_hint\": null,\n      \"scope\": \"run_quick_gate\",\n      \"target_mode\": \"repo_wide_enforced\",\n      \"targeted_enforcement_scopes\": [\n        \"run_quick_gate\",\n        \"run_full_gate\",\n        \"verify_attachment\",\n        \"govern_attachment_write\",\n        \"write_request\",\n        \"write_execute\",\n        \"execute_attachment_write\"\n      ]\n    },\n    \"evidence_link\": \"artifacts/task-20260503162550-skills-manager/session-bridge-request/verification-output/contract.txt\",\n    \"execution_id\": \"task-20260503162550-skills-manager:session-bridge-request\",\n    \"gate_order\": [\n      \"test\",\n      \"contract\"\n    ],\n    \"mode\": \"quick\",\n    \"outcome\": \"pass\",\n    \"plan_only\": false,\n    \"required_gate_ids\": [\n      \"test\",\n      \"contract\"\n    ],\n    \"result_artifact_refs\": {\n      \"contract\": \"artifacts/task-20260503162550-skills-manager/session-bridge-request/verification-output/contract.txt\",\n      \"test\": \"artifacts/task-20260503162550-skills-manager/session-bridge-request/verification-output/test.txt\"\n    },\n    \"results\": {\n      \"contract\": \"pass\",\n      \"test\": \"pass\"\n    },\n    \"risky_artifact_refs\": [],\n    \"run_id\": \"session-bridge-request\",\n    \"session_identity\": {\n      \"adapter_id\": \"codex-cli\",\n      \"adapter_tier\": \"process_bridge\",\n      \"continuation_id\": \"task-20260503162550-skills-manager:run-20260503162550-skills-manager\",\n      \"flow_kind\": \"process_bridge\",\n      \"live_attach_available\": false,\n      \"posture_reason\": \"codex status command is unavailable; keep process bridge and treat resume command surface as supporting evidence only\",\n      \"resume_id\": \"resume-task-20260503162550-skills-manager\",\n      \"session_id\": \"session-task-20260503162550-skills-manager\",\n      \"unsupported_capabilities\": [\n        \"native_attach\"\n      ]\n    }\n  },\n  \"policy_decision_ref\": \"artifacts/task-20260503162550-skills-manager/policy/session-bridge-allow.json\",\n  \"reason\": null,\n  \"status\": \"verification_completed\",\n  \"unsupported_capability_behavior\": null\n}"
+        },
+        {
+          "label": "verify-attachment",
+          "exit_code": 0,
+          "output": "{\n  \"binding_id\": \"binding-skills-manager\",\n  \"blocking_gate_ids\": [\n    \"test\",\n    \"contract\"\n  ],\n  \"entrypoint_policy\": {\n    \"allow_direct_entrypoints\": [\n      \"run-governed-task.status\",\n      \"session-bridge.inspect_status\",\n      \"session-bridge.inspect_evidence\",\n      \"session-bridge.inspect_handoff\",\n      \"verify-repo\"\n    ],\n    \"blocked\": false,\n    \"canonical_entrypoints\": [\n      \"runtime-flow\",\n      \"runtime-flow-preset\"\n    ],\n    \"current_mode\": \"targeted_enforced\",\n    \"drift_detected\": false,\n    \"entrypoint_id\": \"runtime-flow-preset\",\n    \"is_allowed_direct\": false,\n    \"is_canonical\": true,\n    \"reason\": null,\n    \"remediation_hint\": null,\n    \"scope\": \"verify_attachment\",\n    \"target_mode\": \"repo_wide_enforced\",\n    \"targeted_enforcement_scopes\": [\n      \"run_quick_gate\",\n      \"run_full_gate\",\n      \"verify_attachment\",\n      \"govern_attachment_write\",\n      \"write_request\",\n      \"write_execute\",\n      \"execute_attachment_write\"\n    ]\n  },\n  \"evidence_link\": \"artifacts/task-20260503162550-skills-manager/run-20260503162550-skills-manager/verification-output/contract.txt\",\n  \"gate_order\": [\n    \"test\",\n    \"contract\"\n  ],\n  \"mode\": \"quick\",\n  \"outcome\": \"pass\",\n  \"repo_id\": \"skills-manager\",\n  \"required_gate_ids\": [\n    \"test\",\n    \"contract\"\n  ],\n  \"result_artifact_refs\": {\n    \"contract\": \"artifacts/task-20260503162550-skills-manager/run-20260503162550-skills-manager/verification-output/contract.txt\",\n    \"test\": \"artifacts/task-20260503162550-skills-manager/run-20260503162550-skills-manager/verification-output/test.txt\"\n  },\n  \"results\": {\n    \"contract\": \"pass\",\n    \"test\": \"pass\"\n  },\n  \"run_id\": \"run-20260503162550-skills-manager\",\n  \"service_boundary\": \"control-plane\",\n  \"task_id\": \"task-20260503162550-skills-manager\"\n}"
+        },
+        {
+          "label": "source-string-contract-guard",
+          "exit_code": 0,
+          "output": "{\n  \"detected_classes\": [],\n  \"detected_files\": [],\n  \"executed_batches\": [],\n  \"failed_classes\": [],\n  \"reason\": \"no_source_string_contract_tests_detected\",\n  \"status\": \"skip\",\n  \"target_repo_root\": \"D:\\\\CODE\\\\skills-manager\",\n  \"test_project\": null\n}"
+        }
+      ],
+      "source_string_contract_guard": {
+        "detected_classes": [],
+        "detected_files": [],
+        "executed_batches": [],
+        "failed_classes": [],
+        "reason": "no_source_string_contract_tests_detected",
+        "status": "skip",
+        "target_repo_root": "D:\\CODE\\skills-manager",
+        "test_project": null
+      },
+      "live_loop": {
+        "fallback_explicit": true,
+        "flow_kind": "process_bridge",
+        "runtime_refs": [
+          "artifacts/task-20260503162550-skills-manager/task-20260503162550-skills-manager-session-bridge-request/evidence/adapter-events.json",
+          "artifacts/task-20260503162550-skills-manager/session-bridge-request/verification-output/contract.txt",
+          "artifacts/task-20260503162550-skills-manager/session-bridge-request/verification-output/test.txt"
+        ],
+        "resume_identity_continuity": true,
+        "fallback_reason": "codex status command is unavailable; keep process bridge and treat resume command surface as supporting evidence only",
+        "continuation_continuity": true,
+        "is_live_attach": false,
+        "closure_state": "fallback_explicit",
+        "session_identity_continuity": true,
+        "evidence_linkage_complete": true
+      },
+      "problem_trace": {
+        "problem_kind": "none",
+        "target_context": {
+          "flow_kind": "process_bridge",
+          "run_id": "run-20260503162550-skills-manager",
+          "command_id": "cmd-20260503162550-skills-manager",
+          "entrypoint_id": "runtime-flow-preset",
+          "mode": "quick",
+          "repo_binding_id": "binding-skills-manager",
+          "closure_state": "fallback_explicit",
+          "task_id": "task-20260503162550-skills-manager",
+          "attachment_root": "D:\\CODE\\skills-manager"
+        },
+        "failure_stage": "none",
+        "next_actions": [],
+        "failed_steps": [],
+        "failure_signature": "none",
+        "gate_failure_ids": [],
+        "evidence_refs": [
+          "artifacts/task-20260503162550-skills-manager/task-20260503162550-skills-manager-session-bridge-request/evidence/adapter-events.json",
+          "artifacts/task-20260503162550-skills-manager/session-bridge-request/verification-output/contract.txt",
+          "artifacts/task-20260503162550-skills-manager/session-bridge-request/verification-output/test.txt",
+          "artifacts/task-20260503162550-skills-manager/run-20260503162550-skills-manager/verification-output/contract.txt"
+        ],
+        "has_problem": false,
+        "write_issue": {
+          "policy_status": null,
+          "target_path": null,
+          "reason": null,
+          "governance_status": null,
+          "execution_status": null,
+          "preflight_blocked": false,
+          "retry_command": null
+        },
+        "failure_reason": null
+      }
+    },
+    "exit_code": 0
+  },
+  "onboard_attach": null,
+  "overall_status": "pass",
+  "flow_mode": "daily",
+  "governance_baseline_sync": {
+    "payload": null,
+    "exit_code": 0
+  },
+  "exported_at": "2026-05-03T16:29:26.6909457+08:00",
+  "export_source": "runtime-flow-preset",
+  "export_target": "skills-manager",
+  "target_duration_ms": 18355,
+  "flow_duration_ms": 18352,
+  "governance_sync_duration_ms": 0
+}

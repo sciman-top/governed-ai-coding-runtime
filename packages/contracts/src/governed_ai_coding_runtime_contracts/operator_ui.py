@@ -1874,6 +1874,7 @@ def _render_interactive_script(
     const labels = currentUiLanguage() === 'zh-CN'
       ? {{
           refresh_evidence_first: '先刷新证据',
+          wait_for_host_capability_recovery: '等待宿主能力恢复',
           repair_gate_first: '先修门禁',
           owner_directed_scope_required: '需要人工定范围',
           promote_ltp: '进入 LTP 提升评审',
@@ -1882,6 +1883,7 @@ def _render_interactive_script(
         }}
       : {{
           refresh_evidence_first: 'Refresh evidence first',
+          wait_for_host_capability_recovery: 'Wait for host recovery',
           repair_gate_first: 'Repair gates first',
           owner_directed_scope_required: 'Owner scope required',
           promote_ltp: 'Promote LTP',
@@ -1897,6 +1899,7 @@ def _render_interactive_script(
     const labels = currentUiLanguage() === 'zh-CN'
       ? {{
           refresh_evidence_first: '当前证据或来源已过期，先刷新 target-run 证据和来源状态，再决定后续实现动作。',
+          wait_for_host_capability_recovery: '最新 target-run 证据仍证明宿主能力退化且已有有界暂缓，等待新的 Codex/宿主姿态证明 native_attach 恢复。',
           repair_gate_first: '当前仓库门禁未通过，先修复 gate，再继续执行高影响动作。',
           owner_directed_scope_required: '当前范围需要人工明确，暂不自动推进实现动作。',
           promote_ltp: '已满足进入 LTP 提升评审的条件，可继续处理选中的 LTP 包。',
@@ -1905,6 +1908,7 @@ def _render_interactive_script(
         }}
       : {{
           refresh_evidence_first: 'Evidence or source posture is stale. Refresh target-run evidence and source posture before new implementation work.',
+          wait_for_host_capability_recovery: 'Fresh target-run evidence still proves bounded host degradation. Wait for a new Codex or host posture that proves native_attach recovery.',
           repair_gate_first: 'Repository gates are not healthy. Repair gates before higher-impact actions.',
           owner_directed_scope_required: 'Scope needs explicit owner direction before automatic implementation work can continue.',
           promote_ltp: 'The selected LTP package is ready for promotion review.',

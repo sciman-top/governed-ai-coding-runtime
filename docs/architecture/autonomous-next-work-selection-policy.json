@@ -8,6 +8,7 @@
   "allowed_next_actions": [
     "repair_gate_first",
     "refresh_evidence_first",
+    "wait_for_host_capability_recovery",
     "promote_ltp",
     "owner_directed_scope_required",
     "defer_ltp_and_refresh_evidence"
@@ -21,24 +22,30 @@
     },
     {
       "priority": 2,
+      "condition": "source_state == fresh && evidence_state == stale && evidence_blocker == host_capability_degraded_bounded_defer",
+      "next_action": "wait_for_host_capability_recovery",
+      "why": "Fresh target-run evidence still proves a bounded host capability defer; wait for a Codex build or host posture that can prove native_attach recovery instead of repeating evidence refresh."
+    },
+    {
+      "priority": 3,
       "condition": "source_state == stale || evidence_state == stale",
       "next_action": "refresh_evidence_first",
       "why": "Claims and source assumptions must be fresh before selecting implementation work."
     },
     {
-      "priority": 3,
+      "priority": 4,
       "condition": "ltp_decision == auto_select",
       "next_action": "promote_ltp",
       "why": "Exactly one LTP package has trigger evidence and a scope fence."
     },
     {
-      "priority": 4,
+      "priority": 5,
       "condition": "ltp_decision == owner_directed_scope_required",
       "next_action": "owner_directed_scope_required",
       "why": "Owner-directed heavy-stack work is allowed only with explicit labeling and scope."
     },
     {
-      "priority": 5,
+      "priority": 6,
       "condition": "ltp_decision == defer_all",
       "next_action": "defer_ltp_and_refresh_evidence",
       "why": "No heavy LTP package is currently trigger-selected; continue with evidence freshness and gate posture."

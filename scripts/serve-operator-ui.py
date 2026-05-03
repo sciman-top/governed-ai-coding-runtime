@@ -478,6 +478,9 @@ def _build_next_work_summary() -> dict:
     elif next_action == "refresh_evidence_first":
         blocked_actions = ["apply_all_features", "evolution_materialize"]
         ui_status = "action_required"
+    elif next_action == "wait_for_host_capability_recovery":
+        blocked_actions = ["apply_all_features", "evolution_materialize"]
+        ui_status = "attention"
     elif next_action == "owner_directed_scope_required":
         blocked_actions = ["apply_all_features", "evolution_materialize"]
         ui_status = "action_required"

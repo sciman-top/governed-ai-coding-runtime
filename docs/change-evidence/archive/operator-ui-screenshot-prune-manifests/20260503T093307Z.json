@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "kind": "operator_ui_screenshot_prune_manifest",
+  "generated_at": "2026-05-03T09:33:07.577702+00:00",
+  "repo_root": "D:\\CODE\\governed-ai-coding-runtime",
+  "archive_root": "docs/change-evidence/archive/operator-ui-screenshots/20260503T093307Z",
+  "rollback_instructions": "Rollback by moving each destination file back to its source path recorded in this manifest.",
+  "moved_files": [
+    {
+      "source": "docs/change-evidence/claude-operator-ui-tabs.png",
+      "destination": "docs/change-evidence/archive/operator-ui-screenshots/20260503T093307Z/docs__change-evidence__claude-operator-ui-tabs.png"
+    },
+    {
+      "source": "docs/change-evidence/codex-operator-ui-tabs.png",
+      "destination": "docs/change-evidence/archive/operator-ui-screenshots/20260503T093307Z/docs__change-evidence__codex-operator-ui-tabs.png"
+    },
+    {
+      "source": "docs/change-evidence/codex-operator-ui.png",
+      "destination": "docs/change-evidence/archive/operator-ui-screenshots/20260503T093307Z/docs__change-evidence__codex-operator-ui.png"
+    }
+  ]
+}
