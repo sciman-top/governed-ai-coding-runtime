@@ -401,6 +401,25 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("apply_all_features", payload["blocked_actions"])
         self.assertIn("evolution_materialize", payload["blocked_actions"])
 
+    def test_next_work_summary_blocks_feature_apply_while_waiting_for_host_recovery(self) -> None:
+        module = _load_serve_operator_ui_module()
+
+        fake_selector = mock.Mock()
+        fake_selector.inspect_next_work_selection.return_value = {
+            "status": "pass",
+            "next_action": "wait_for_host_capability_recovery",
+            "why": "bounded host defer",
+        }
+
+        with mock.patch.object(module, "_load_next_work_module", return_value=fake_selector):
+            payload = module._build_next_work_summary()
+
+        self.assertEqual("wait_for_host_capability_recovery", payload["safe_next_action"])
+        self.assertEqual("attention", payload["ui_status"])
+        self.assertNotIn("daily_all", payload["blocked_actions"])
+        self.assertIn("apply_all_features", payload["blocked_actions"])
+        self.assertIn("evolution_materialize", payload["blocked_actions"])
+
     def test_operator_ui_next_work_panel_does_not_block_initial_html(self) -> None:
         module = _load_serve_operator_ui_module()
 

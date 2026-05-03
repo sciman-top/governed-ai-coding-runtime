@@ -126,6 +126,7 @@ def inspect_next_work_selection(
         gate_state=selected_gate_state,
         source_state=selected_source_state,
         evidence_state=selected_evidence_state,
+        evidence_blocker=auto_inputs.get("evidence_blocker"),
         ltp=ltp,
     )
     refs = _collect_refs(policy)
@@ -145,6 +146,7 @@ def inspect_next_work_selection(
         "gate_state": selected_gate_state,
         "source_state": selected_source_state,
         "evidence_state": selected_evidence_state,
+        "evidence_blocker": auto_inputs.get("evidence_blocker"),
         "auto_detected_inputs": auto_inputs,
         "ltp_decision": ltp["decision"],
         "ltp_should_promote": bool(ltp["should_promote"]),
@@ -163,10 +165,17 @@ def _select_action(
     gate_state: str,
     source_state: str,
     evidence_state: str,
+    evidence_blocker: str | None,
     ltp: dict,
 ) -> tuple[str, str, str | None]:
     if gate_state == "fail":
         return "repair_gate_first", _why(policy, "repair_gate_first"), None
+    if (
+        source_state == "fresh"
+        and evidence_state == "stale"
+        and evidence_blocker == "host_capability_degraded_bounded_defer"
+    ):
+        return "wait_for_host_capability_recovery", _why(policy, "wait_for_host_capability_recovery"), None
     if source_state in {"stale", "unknown"} or evidence_state in {"stale", "unknown"}:
         return "refresh_evidence_first", _why(policy, "refresh_evidence_first"), None
     if ltp["decision"] == "auto_select":
@@ -310,6 +319,7 @@ def _auto_detect_runtime_inputs(*, repo_root: Path, as_of: dt.date) -> dict:
         "gate_state": "unknown",
         "source_state": "unknown",
         "evidence_state": "unknown",
+        "evidence_blocker": None,
         "details": {},
     }
 
@@ -417,14 +427,22 @@ def _auto_detect_runtime_inputs(*, repo_root: Path, as_of: dt.date) -> dict:
             "extract_ai_coding_experience_selector",
         )
         ai_experience = ai_experience_module.inspect_ai_coding_experience(repo_root=repo_root, as_of=as_of)
-        evidence_stale = (
-            host_feedback["status"] == "fail"
-            or target_runs.get("freshness_status") != "fresh"
-            or bool(degraded_latest_runs)
-            or effect["status"] != "pass"
-            or ai_experience["status"] != "pass"
-            or bool(ai_experience["invalid_reasons"])
-        )
+        evidence_stale_reasons: list[str] = []
+        if host_feedback["status"] == "fail":
+            evidence_stale_reasons.append("host_feedback_failed")
+        if target_runs.get("freshness_status") != "fresh":
+            evidence_stale_reasons.append("target_runs_not_fresh")
+        if degraded_latest_runs:
+            evidence_stale_reasons.append("host_capability_degraded")
+        if effect["status"] != "pass":
+            evidence_stale_reasons.append("effect_feedback_failed")
+        if ai_experience["status"] != "pass" or bool(ai_experience["invalid_reasons"]):
+            evidence_stale_reasons.append("ai_coding_experience_invalid")
+        evidence_stale = bool(evidence_stale_reasons)
+        if evidence_stale_reasons == ["host_capability_degraded"] and _has_bounded_host_capability_defer(
+            repo_root=repo_root
+        ):
+            result["evidence_blocker"] = "host_capability_degraded_bounded_defer"
         result["evidence_state"] = "stale" if evidence_stale else "fresh"
         result["details"]["host_feedback"] = {
             "status": host_feedback["status"],
@@ -442,6 +460,7 @@ def _auto_detect_runtime_inputs(*, repo_root: Path, as_of: dt.date) -> dict:
                 str(item.get("repo_id")) for item in degraded_latest_runs if isinstance(item, dict)
             ),
         }
+        result["details"]["evidence_stale_reasons"] = evidence_stale_reasons
         result["details"]["effect_feedback"] = {
             "status": effect["status"],
             "decision": effect.get("decision"),
@@ -457,6 +476,32 @@ def _auto_detect_runtime_inputs(*, repo_root: Path, as_of: dt.date) -> dict:
         result["details"]["evidence_detection"] = {"status": "error", "error": str(exc)}
 
     return result
+
+
+def _has_bounded_host_capability_defer(*, repo_root: Path) -> bool:
+    report_path = repo_root / "docs" / "change-evidence" / "target-repo-runs" / "effect-report-classroomtoolkit.json"
+    defer_evidence = repo_root / "docs" / "change-evidence" / "20260501-gap-140-bounded-defer.md"
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    has_candidate = False
+    for item in report.get("backlog_candidates", []):
+        if not isinstance(item, dict):
+            continue
+        if item.get("candidate_id") != "target-repo-reuse-host-capability-gap":
+            continue
+        boundary = item.get("remediation_boundary", {})
+        if not isinstance(boundary, dict):
+            continue
+        if (
+            boundary.get("required_recovery_evidence")
+            == "fresh target run with codex_capability_status=ready and adapter_tier=native_attach"
+            and boundary.get("claim_guard") == "do not claim native_attach recovery until a fresh target repo run proves it"
+        ):
+            has_candidate = True
+            break
+    return has_candidate and defer_evidence.exists()
 
 
 def _validate_runtime_state(field_name: str, value: object, allowed: set[str]) -> None:

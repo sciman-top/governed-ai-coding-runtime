@@ -35,6 +35,8 @@ This directory stores dated evidence for planning, schema, script, and documenta
   - evidence companion for moving long completed-history text behind stable archive links while preserving current operator entrypoints and bilingual usage guidance
 - [20260502 Repo Map Archive Routing](./20260502-repo-map-archive-routing.md)
   - evidence companion for archive-aware repo-map exclusions and the additive repo-map metrics used to bound default context cost
+- [20260503 Host Capability Wait Action](./20260503-host-capability-wait-action.md)
+  - implementation evidence for splitting bounded host capability degradation from generic evidence refresh
 - [20260502 Change Evidence Archive Index](./20260502-change-evidence-archive-index.md)
   - evidence companion for defining current versus archive semantics and generating the first dry-run archive candidate index
 - [20260502 Repo Slimming Inventory](./20260502-repo-slimming-inventory.md)
@@ -42,7 +44,7 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - [20260501 GAP-143 Evidence Recovery Posture Contract](./20260501-gap-143-evidence-recovery-posture-contract.md)
   - implementation evidence for joining autonomous next-work selection, host-feedback target-run posture, and target-repo reuse effect feedback into one recovery posture contract
 - [20260501 GAP-142 Degraded Fresh Evidence Next-Work Guard](./20260501-gap-142-degraded-fresh-evidence-next-work-guard.md)
-  - implementation evidence for making fresh but degraded target-run evidence force `refresh_evidence_first`
+  - implementation evidence for making fresh but degraded target-run evidence block implementation work
 - [20260501 GAP-141 Historical Problem-Trace Closure Policy](./20260501-gap-141-historical-problem-trace-closure-policy.md)
   - implementation evidence for formalizing the rolling-window retention and closure rule behind the `GAP-141` historical problem-trace backlog candidate
 - [20260501 GAP-140 Bounded Host-Capability Defer](./20260501-gap-140-bounded-defer.md)

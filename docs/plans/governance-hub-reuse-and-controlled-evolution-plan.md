@@ -3,7 +3,7 @@
 ## Status
 - Created: 2026-05-01.
 - Queue: `GAP-130` through `GAP-143`.
-- Current state: `GAP-130..143` are complete on the current branch baseline. `GAP-140` closes as a bounded defer because the current local `codex-cli` command surface still lacks the native attach handshake command required by this repository contract, `GAP-141` closes by formalizing the historical problem-trace retention and exit rule for rolling KPI windows, `GAP-142` closes by making fresh-but-degraded target-run evidence force `refresh_evidence_first` before any further implementation, and `GAP-143` closes by making that recovery posture machine-checkable across selector, host-feedback, and target-repo effect feedback. This plan does not enable automatic policy mutation, automatic skill installation, target-repo sync, push, or merge.
+- Current state: `GAP-130..143` are complete on the current branch baseline. `GAP-140` closes as a bounded defer because the current local `codex-cli` command surface still lacks the native attach handshake command required by this repository contract, `GAP-141` closes by formalizing the historical problem-trace retention and exit rule for rolling KPI windows, `GAP-142` closes by making fresh-but-degraded target-run evidence block implementation work, and `GAP-143` closes by making that recovery posture machine-checkable across selector, host-feedback, and target-repo effect feedback. With bounded defer evidence present, the selector now waits on `wait_for_host_capability_recovery` instead of repeating evidence refresh. This plan does not enable automatic policy mutation, automatic skill installation, target-repo sync, push, or merge.
 - Prior dependency: `GAP-120..129` established runtime evolution review and controlled materialization. This plan turns the clarified product direction into the next implementation queue.
 
 ## Goal
@@ -263,7 +263,7 @@ Translate the live `target-repo-reuse-host-capability-gap` candidate into bounde
 Turn the live `target-repo-reuse-historical-problem-trace` candidate into a governed closure rule for rolling KPI windows and effect reports, separating historical problem visibility from current pass-state claims.
 
 ### GAP-142 Degraded Fresh Evidence Next Work Guard
-Turn fresh but degraded target-run evidence into an `attention` signal and force the autonomous selector to choose `refresh_evidence_first`.
+Turn fresh but degraded target-run evidence into an `attention` signal and force the autonomous selector to block implementation work; bounded host-capability degradation waits on `wait_for_host_capability_recovery` instead of repeating evidence refresh.
 
 ### GAP-143 Evidence Recovery Posture Contract
 Join selector output, host-feedback target-run posture, and target-repo reuse effect feedback into one recovery contract so new implementation or LTP work remains blocked until the same evidence proves recovery.

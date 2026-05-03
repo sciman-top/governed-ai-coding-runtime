@@ -163,7 +163,7 @@
     },
     {
       "claim_id": "CLM-011",
-      "claim_text": "Fresh target-run evidence is not sufficient when the latest host capability posture is degraded; degraded fresh evidence must surface as attention and force refresh_evidence_first before implementation work.",
+      "claim_text": "Fresh target-run evidence is not sufficient when the latest host capability posture is degraded; degraded fresh evidence must surface as attention and block implementation work, using wait_for_host_capability_recovery when bounded host-capability defer evidence is present.",
       "proof_command": "python scripts/select-next-work.py --as-of 2026-05-01",
       "evidence_link": "docs/change-evidence/20260501-gap-142-degraded-fresh-evidence-next-work-guard.md",
       "source_refs": [
