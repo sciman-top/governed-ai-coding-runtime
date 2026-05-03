@@ -16,6 +16,23 @@ DEFAULT_ARTIFACT_ROOT = ROOT / ".runtime" / "artifacts" / "runtime-evolution"
 VALID_STATUS = {"draft", "observe", "enforced", "waived"}
 VALID_ACTIONS = {"add", "modify", "delete", "defer", "no_action"}
 VALID_RISKS = {"low", "medium", "high"}
+LOCAL_SOURCE_TYPES = {"internal_runtime_evidence", "internal_ai_coding_experience"}
+REQUIRED_SOURCE_CATALOG_IDS = {
+    "aider-repo-map",
+    "anthropic-claude-code-hooks",
+    "anthropic-claude-code-settings",
+    "google-gemini-cli-mcp-server",
+    "google-gemini-cli-plan-mode",
+    "google-gemini-cli-settings",
+    "mcp-security-best-practices",
+    "openai-agents-sdk-evolution",
+    "openai-agents-sdk-guardrails-human-review",
+    "openai-agents-sdk-sandboxes",
+    "openai-codex-sandboxing",
+    "openai-codex-subagents",
+    "openhands-sandbox-runtimes",
+    "swe-agent-aci",
+}
 
 
 def main() -> int:
@@ -186,6 +203,8 @@ def _load_policy(path: Path) -> dict:
     ):
         if not isinstance(payload.get(field), list) or not payload[field]:
             raise ValueError(f"{field} must be a non-empty list")
+    source_types = _validate_source_priority(payload["source_priority"])
+    _validate_source_catalog(payload["source_catalog"], allowed_source_types=source_types)
     for action in payload["candidate_actions"]:
         if action not in VALID_ACTIONS:
             raise ValueError(f"candidate action is invalid: {action}")
@@ -194,6 +213,48 @@ def _load_policy(path: Path) -> dict:
     for risk in VALID_RISKS:
         _require_string(payload["risk_automation_boundaries"], risk, prefix="risk_automation_boundaries")
     return payload
+
+
+def _validate_source_priority(items: list[dict]) -> set[str]:
+    seen_priorities: set[int] = set()
+    source_types: set[str] = set()
+    for item in items:
+        if not isinstance(item, dict):
+            raise ValueError("source_priority[] must be an object")
+        priority = item.get("priority")
+        if not isinstance(priority, int) or priority < 1:
+            raise ValueError("source_priority[].priority must be a positive integer")
+        if priority in seen_priorities:
+            raise ValueError(f"source_priority priority is duplicated: {priority}")
+        seen_priorities.add(priority)
+        source_type = _require_string(item, "source_type", prefix="source_priority[]")
+        _require_string(item, "use", prefix="source_priority[]")
+        if source_type in source_types:
+            raise ValueError(f"source_priority source_type is duplicated: {source_type}")
+        source_types.add(source_type)
+    return source_types
+
+
+def _validate_source_catalog(items: list[dict], *, allowed_source_types: set[str]) -> None:
+    source_ids: set[str] = set()
+    for item in items:
+        if not isinstance(item, dict):
+            raise ValueError("source_catalog[] must be an object")
+        source_id = _require_string(item, "source_id", prefix="source_catalog[]")
+        source_type = _require_string(item, "source_type", prefix="source_catalog[]")
+        source_ref = _require_string(item, "source_ref", prefix="source_catalog[]")
+        _require_string(item, "summary", prefix="source_catalog[]")
+        if source_id in source_ids:
+            raise ValueError(f"source_catalog source_id is duplicated: {source_id}")
+        source_ids.add(source_id)
+        if source_type not in allowed_source_types:
+            raise ValueError(f"source_catalog[{source_id}].source_type is not in source_priority")
+        if source_type not in LOCAL_SOURCE_TYPES and not source_ref.startswith("https://"):
+            raise ValueError(f"source_catalog[{source_id}].source_ref must be an https URL")
+
+    missing = sorted(REQUIRED_SOURCE_CATALOG_IDS - source_ids)
+    if missing:
+        raise ValueError("source_catalog missing required source ids: " + ", ".join(missing))
 
 
 def _build_source_records(
@@ -219,15 +280,14 @@ def _build_source_records(
             }
         )
 
-    local_source_types = {"internal_ai_coding_experience"}
     for item in policy["source_catalog"]:
         for field in ("source_id", "source_type", "source_ref", "summary"):
             _require_string(item, field, prefix="source_catalog[]")
         source_ref = item["source_ref"]
-        local_ref_exists = (repo_root / source_ref).exists() if item["source_type"] in local_source_types else None
+        local_ref_exists = (repo_root / source_ref).exists() if item["source_type"] in LOCAL_SOURCE_TYPES else None
         online_probe = (
             _probe_online_source(source_ref)
-            if online_source_check and item["source_type"] not in local_source_types
+            if online_source_check and item["source_type"] not in LOCAL_SOURCE_TYPES
             else None
         )
         records.append(
@@ -240,7 +300,7 @@ def _build_source_records(
                 "confidence": _source_confidence(item["source_type"], local_ref_exists),
                 "retrieval_mode": (
                     "local_file_check"
-                    if item["source_type"] in local_source_types
+                    if item["source_type"] in LOCAL_SOURCE_TYPES
                     else "online_probe"
                     if online_source_check
                     else "dry_run_catalog"

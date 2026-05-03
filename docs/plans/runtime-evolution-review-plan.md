@@ -58,10 +58,12 @@ Acceptance criteria:
 - [x] collected sources record URL/path, checked date, source type, summary, and confidence in dry-run mode
 - [x] external content remains candidate evidence only and cannot override repo policy or code facts
 - [x] AI coding experience is represented as local, reviewable evidence rather than hidden memory authority
+- [x] minimum source catalog covers current official host docs for OpenAI, Claude Code, Gemini CLI, and MCP security, plus primary reference signals for sandboxed agents, repository context shaping, and agent-computer-interface workflows
 
 Verification:
 - [x] source artifact example validates against the policy fields
 - [x] docs explain `platform_na` behavior for unavailable online sources
+- [x] `tests.runtime.test_runtime_evolution` pins required source IDs and fails the runtime-evolution gate when mandatory AI feature sources are removed
 
 Dependencies: `GAP-120`
 

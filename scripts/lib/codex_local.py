@@ -153,6 +153,61 @@ def switch_auth_profile(name: str, home: Path | None = None, *, dry_run: bool = 
     }
 
 
+def delete_auth_profile(name: str, home: Path | None = None, *, dry_run: bool = False) -> dict[str, Any]:
+    normalized_name = str(name or "").strip()
+    if not normalized_name:
+        return {"status": "error", "error": "missing auth profile name"}
+    home = codex_home(str(home) if home else None)
+    profiles = list_auth_profiles(home)
+    matches = [
+        profile
+        for profile in profiles
+        if profile.name == normalized_name or profile.file == normalized_name or profile.full_name == normalized_name
+    ]
+    if not matches:
+        return {"status": "error", "error": f"unknown auth profile: {normalized_name}"}
+    if len(matches) > 1:
+        return {"status": "error", "error": f"ambiguous auth profile: {normalized_name}"}
+
+    target = matches[0]
+    target_path = Path(target.full_name).resolve()
+    home_path = home.resolve()
+    try:
+        relative = target_path.relative_to(home_path)
+    except ValueError:
+        return {"status": "error", "error": f"auth profile escapes Codex home: {target.full_name}"}
+    if relative.parts[:1] == ("auth-backups",):
+        return {"status": "error", "error": "refusing to delete an auth backup through profile deletion"}
+    if target.file == "auth.json" or target.name == "auth":
+        return {"status": "error", "error": "refusing to delete the active auth.json profile"}
+    if target.active:
+        return {"status": "error", "error": "refusing to delete the currently active Codex auth snapshot; switch away first"}
+    if not target_path.exists():
+        return {"status": "error", "error": f"auth profile does not exist: {target.full_name}"}
+    if dry_run:
+        return {"status": "ok", "changed": False, "dry_run": True, "target_profile": target.to_dict()}
+
+    backup_path = backup_saved_auth_snapshot(target_path, home)
+    target_path.unlink()
+    usage_cache_removed = False
+    if target.account_hash:
+        remaining_profiles = list_auth_profiles(home)
+        if not any(profile.account_hash == target.account_hash for profile in remaining_profiles):
+            usage_cache = _load_usage_cache(home)
+            if target.account_hash in usage_cache:
+                usage_cache = dict(usage_cache)
+                usage_cache.pop(target.account_hash, None)
+                _save_usage_cache(home, usage_cache)
+                usage_cache_removed = True
+    return {
+        "status": "ok",
+        "changed": True,
+        "backup_path": str(backup_path),
+        "deleted_profile": target.to_dict(),
+        "usage_cache_removed": usage_cache_removed,
+    }
+
+
 def backup_active_auth(home: Path | None = None) -> Path:
     home = codex_home(str(home) if home else None)
     active_path = home / "auth.json"

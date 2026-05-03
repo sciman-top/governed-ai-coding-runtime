@@ -116,6 +116,8 @@ _TRANSLATIONS = {
         "codex_usage": "额度",
         "codex_usage_note": "额度说明",
         "codex_switch": "切换",
+        "codex_delete": "删除",
+        "codex_delete_confirm": "将先备份再删除这个本地 Codex 账号快照。不能删除当前正在使用的账号。继续执行？",
         "codex_sync_active": "同步快照",
         "codex_snapshot": "快照",
         "codex_snapshot_synced": "已与 {name} 同步",
@@ -365,6 +367,8 @@ _TRANSLATIONS = {
         "codex_usage": "Usage",
         "codex_usage_note": "Usage details",
         "codex_switch": "Switch",
+        "codex_delete": "Delete",
+        "codex_delete_confirm": "This backs up and deletes the local Codex auth snapshot. The active account cannot be deleted. Continue?",
         "codex_sync_active": "Sync snapshot",
         "codex_snapshot": "Snapshot",
         "codex_snapshot_synced": "Synced with {name}",
@@ -779,6 +783,7 @@ def render_runtime_snapshot_html(
     .codex-badge {{ display: inline-flex; align-items: center; align-self: start; border: 1px solid #bde0da; border-radius: 999px; padding: 4px 10px; color: var(--accent-strong); background: var(--accent-soft); font-size: 0.78rem; font-weight: 760; white-space: nowrap; }}
     .codex-account-switch {{ display: inline-flex; align-items: center; justify-content: center; min-width: 68px; min-height: 34px; padding: 8px 14px; border-radius: 7px; text-align: center; font-weight: 700; }}
     .codex-account-switch.is-current {{ border-color: #bde0da; color: var(--accent-strong); background: var(--accent-soft); }}
+    .codex-account-switch.danger {{ border-color: #f0b8b8; color: #9f2020; background: #fff5f5; }}
     .codex-account-switch[disabled] {{ opacity: 1; cursor: default; box-shadow: none; transform: none; }}
     .claude-toolbar {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }}
     .claude-console-grid {{ display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(290px, 0.65fr); gap: 12px; align-items: start; }}
@@ -2923,6 +2928,15 @@ def _render_interactive_script(
         switchButton.dataset.codexSwitchName = account.name || '';
       }}
       actions.appendChild(switchButton);
+      if (!account.active) {{
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'codex-account-switch danger';
+        deleteButton.textContent = {text['codex_delete']!r};
+        deleteButton.dataset.codexDeleteName = account.name || account.file || '';
+        deleteButton.dataset.confirm = {text['codex_delete_confirm']!r};
+        actions.appendChild(deleteButton);
+      }}
       row.appendChild(actions);
       if (account.active) {{
         const snapshot = account.snapshot_status || payload.snapshot_status || null;
@@ -3080,6 +3094,30 @@ def _render_interactive_script(
     setBusy(true);
     try {{
       const response = await fetch('/api/codex/sync-active', {{
+        method: 'POST',
+        headers: {{ 'content-type': 'application/json' }},
+        body: JSON.stringify({{ name }})
+      }});
+      const payload = await response.json();
+      setOutput(JSON.stringify(payload, null, 2));
+      await refreshCodexStatus();
+    }} catch (error) {{
+      setOutput(String(error));
+    }} finally {{
+      setBusy(false);
+    }}
+  }}
+
+  async function deleteCodexAccount(name, confirmMessage) {{
+    if (!name) {{
+      return;
+    }}
+    if (confirmMessage && !window.confirm(confirmMessage)) {{
+      return;
+    }}
+    setBusy(true);
+    try {{
+      const response = await fetch('/api/codex/delete', {{
         method: 'POST',
         headers: {{ 'content-type': 'application/json' }},
         body: JSON.stringify({{ name }})
@@ -3327,6 +3365,14 @@ def _render_interactive_script(
   document.querySelector('[data-codex-refresh-online]').addEventListener('click', () => refreshCodexStatusOnline());
   document.querySelector('[data-codex-usage]').addEventListener('click', () => window.open('https://chatgpt.com/codex/settings/usage', '_blank', 'noopener'));
   codexAccounts.addEventListener('click', (event) => {{
+    const deleteButton = event.target.closest('button[data-codex-delete-name]');
+    if (deleteButton) {{
+      deleteCodexAccount(
+        deleteButton.getAttribute('data-codex-delete-name') || '',
+        deleteButton.getAttribute('data-confirm') || ''
+      );
+      return;
+    }}
     const syncButton = event.target.closest('button[data-codex-sync-name]');
     if (syncButton) {{
       syncCodexActiveSnapshot(

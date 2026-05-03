@@ -1,11 +1,11 @@
 {
-  "elapsed_seconds": 108.94549420000021,
+  "elapsed_seconds": 111.96350190000021,
   "failure_count": 0,
   "failures": [],
   "prioritized_target_count": 10,
   "slowest": [
     {
-      "duration_seconds": 76.86647800000014,
+      "duration_seconds": 90.36056640000015,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_flow_preset",
@@ -14,16 +14,7 @@
       }
     },
     {
-      "duration_seconds": 54.307769200000166,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_run_governed_task_cli",
-        "path": "tests\\runtime\\test_run_governed_task_cli.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 51.98506950000001,
+      "duration_seconds": 69.9133952000002,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_attached_repo_e2e",
@@ -32,7 +23,7 @@
       }
     },
     {
-      "duration_seconds": 51.236278300000095,
+      "duration_seconds": 61.520742000000155,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_autonomous_next_work_selection",
@@ -41,16 +32,16 @@
       }
     },
     {
-      "duration_seconds": 49.28638099999989,
+      "duration_seconds": 54.69783940000025,
       "exit_code": 0,
       "target": {
-        "module": "tests.runtime.test_dependency_baseline",
-        "path": "tests\\runtime\\test_dependency_baseline.py",
+        "module": "tests.runtime.test_run_governed_task_cli",
+        "path": "tests\\runtime\\test_run_governed_task_cli.py",
         "suite": "runtime"
       }
     },
     {
-      "duration_seconds": 49.27401039999995,
+      "duration_seconds": 46.00576149999961,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_transition_stack_convergence",
@@ -59,16 +50,16 @@
       }
     },
     {
-      "duration_seconds": 49.27322159999994,
+      "duration_seconds": 45.90576389999978,
       "exit_code": 0,
       "target": {
-        "module": "tests.runtime.test_functional_effectiveness",
-        "path": "tests\\runtime\\test_functional_effectiveness.py",
+        "module": "tests.runtime.test_dependency_baseline",
+        "path": "tests\\runtime\\test_dependency_baseline.py",
         "suite": "runtime"
       }
     },
     {
-      "duration_seconds": 42.224709000000075,
+      "duration_seconds": 45.77811700000029,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_evolution",
@@ -77,7 +68,16 @@
       }
     },
     {
-      "duration_seconds": 38.32847020000008,
+      "duration_seconds": 45.49581799999987,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_functional_effectiveness",
+        "path": "tests\\runtime\\test_functional_effectiveness.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 40.849311599999965,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_doctor",
@@ -86,7 +86,7 @@
       }
     },
     {
-      "duration_seconds": 33.087076100000104,
+      "duration_seconds": 33.56927940000014,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_operator_entrypoint",

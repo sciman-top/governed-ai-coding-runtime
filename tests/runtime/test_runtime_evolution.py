@@ -49,8 +49,37 @@ class RuntimeEvolutionTests(unittest.TestCase):
         self.assertTrue(any(item["candidate_id"] == "EVOL-EFFECT-FEEDBACK" for item in payload["candidates"]))
         self.assertTrue(all(item["patch_plan"] for item in payload["candidates"]))
 
+    def test_source_catalog_covers_required_ai_feature_sources(self) -> None:
+        module = _load_runtime_evolution_script()
+        policy = json.loads((ROOT / "docs/architecture/runtime-evolution-policy.json").read_text(encoding="utf-8"))
+        catalog_by_id = {item["source_id"]: item for item in policy["source_catalog"]}
+
+        self.assertLessEqual(module.REQUIRED_SOURCE_CATALOG_IDS, set(catalog_by_id))
+        required_refs = [catalog_by_id[source_id]["source_ref"] for source_id in module.REQUIRED_SOURCE_CATALOG_IDS]
+        for expected_host in (
+            "openai.com",
+            "developers.openai.com",
+            "docs.anthropic.com",
+            "github.com/google-gemini",
+            "modelcontextprotocol.io",
+            "docs.openhands.dev",
+            "aider.chat",
+            "swe-agent.com",
+        ):
+            self.assertTrue(
+                any(expected_host in source_ref for source_ref in required_refs),
+                f"missing required source host: {expected_host}",
+            )
+
     def test_internal_ai_coding_experience_sources_are_local_checks(self) -> None:
         module = _load_runtime_evolution_script()
+        original_probe = module._probe_online_source
+        module._probe_online_source = lambda source_ref: {
+            "status": "ok",
+            "http_status": 200,
+            "content_type": "stubbed",
+        }
+        self.addCleanup(setattr, module, "_probe_online_source", original_probe)
 
         result = module.inspect_runtime_evolution_policy(
             repo_root=ROOT,
@@ -102,6 +131,27 @@ class RuntimeEvolutionTests(unittest.TestCase):
                     as_of=dt.date(2026, 5, 1),
                 )
 
+    def test_runtime_evolution_rejects_missing_required_source_catalog_id(self) -> None:
+        module = _load_runtime_evolution_script()
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            self._copy_required_files(repo_root)
+            policy_path = repo_root / "docs/architecture/runtime-evolution-policy.json"
+            policy = json.loads(policy_path.read_text(encoding="utf-8"))
+            removed_source_id = sorted(module.REQUIRED_SOURCE_CATALOG_IDS)[0]
+            policy["source_catalog"] = [
+                item for item in policy["source_catalog"] if item["source_id"] != removed_source_id
+            ]
+            policy_path.write_text(json.dumps(policy), encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "source_catalog missing required source ids"):
+                module.assert_runtime_evolution_policy(
+                    repo_root=repo_root,
+                    policy_path=policy_path,
+                    as_of=dt.date(2026, 5, 1),
+                )
+
     def test_evolve_runtime_wrapper_writes_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             completed = subprocess.run(
@@ -134,6 +184,13 @@ class RuntimeEvolutionTests(unittest.TestCase):
         self.assertIn('$arguments += "-OnlineSourceCheck"', operator)
 
         module = _load_runtime_evolution_script()
+        original_probe = module._probe_online_source
+        module._probe_online_source = lambda source_ref: {
+            "status": "ok",
+            "http_status": 200,
+            "content_type": "stubbed",
+        }
+        self.addCleanup(setattr, module, "_probe_online_source", original_probe)
         payload = module.assert_runtime_evolution_policy(
             repo_root=ROOT,
             policy_path=ROOT / "docs" / "architecture" / "runtime-evolution-policy.json",

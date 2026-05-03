@@ -345,6 +345,7 @@ class OperatorEntrypointTests(unittest.TestCase):
             self.assertIn(module.load_codex_status()["status"], {"ok", "error"})
             self.assertEqual("error", module.run_codex_switch({"name": ""})["status"])
             self.assertEqual("error", module.run_codex_sync_active({"name": "missing-profile"})["status"])
+            self.assertEqual("error", module.run_codex_delete({"name": ""})["status"])
             self.assertIn(module.load_claude_status()["status"], {"ok", "error"})
             self.assertEqual("error", module.run_claude_switch({"name": ""})["status"])
             feedback = module.load_feedback_summary()

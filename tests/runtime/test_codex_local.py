@@ -188,6 +188,34 @@ class CodexLocalTests(unittest.TestCase):
             )
             self.assertEqual("synced", codex_local.codex_status(home)["snapshot_status"]["status"])
 
+    def test_delete_auth_profile_backs_up_and_removes_inactive_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_auth(home / "auth.json", account_id="account-a")
+            _write_auth(home / "auth1.json", account_id="account-b")
+
+            result = codex_local.delete_auth_profile("auth1", home)
+
+            self.assertEqual("ok", result["status"])
+            self.assertTrue(result["changed"])
+            self.assertFalse((home / "auth1.json").exists())
+            self.assertTrue(Path(result["backup_path"]).exists())
+            self.assertEqual("auth1", result["deleted_profile"]["name"])
+
+    def test_delete_auth_profile_refuses_current_auth_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_auth(home / "auth.json", account_id="account-a")
+            (home / "auth3-2.json").write_text((home / "auth.json").read_text(encoding="utf-8"), encoding="utf-8")
+
+            active_result = codex_local.delete_auth_profile("auth", home)
+            mirrored_result = codex_local.delete_auth_profile("auth3-2", home)
+
+            self.assertEqual("error", active_result["status"])
+            self.assertEqual("error", mirrored_result["status"])
+            self.assertTrue((home / "auth.json").exists())
+            self.assertTrue((home / "auth3-2.json").exists())
+
     def test_config_health_reports_recommended_defaults_without_secret_values(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)

@@ -1,7 +1,7 @@
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
     [Parameter(Position = 0)]
-    [ValidateSet('list', 'status', 'switch', 'backup', 'sync-active')]
+    [ValidateSet('list', 'status', 'switch', 'backup', 'sync-active', 'delete')]
     [string] $Action = 'list',
 
     [Parameter(Position = 1)]
@@ -186,6 +186,27 @@ switch ($Action) {
         }
         if (-not $NoLoginStatus) {
             codex login status
+        }
+    }
+    'delete' {
+        $candidate = Resolve-AuthCandidate -Candidates $candidates -Name $Name
+        Read-AuthJson -Path $candidate.FullName | Out-Null
+        if ($candidate.File -eq 'auth.json' -or $candidate.Name -eq 'auth') {
+            throw "Refusing to delete the active auth.json profile."
+        }
+        if ($candidate.Sha256 -eq $activeHash) {
+            throw "Refusing to delete the currently active Codex auth snapshot. Switch away first."
+        }
+        $resolvedCandidate = (Resolve-Path -LiteralPath $candidate.FullName).Path
+        $resolvedHome = (Resolve-Path -LiteralPath $homePath).Path
+        if (-not $resolvedCandidate.StartsWith($resolvedHome, [System.StringComparison]::OrdinalIgnoreCase)) {
+            throw "Refusing to delete an auth profile outside Codex home: $resolvedCandidate"
+        }
+        if ($PSCmdlet.ShouldProcess($candidate.FullName, "Back up and delete Codex auth snapshot '$($candidate.Name)'")) {
+            $backupPath = Backup-ActiveAuth -AuthPath $candidate.FullName -HomePath $homePath
+            Remove-Item -LiteralPath $candidate.FullName -Force
+            Write-Host "Deleted Codex auth snapshot '$($candidate.Name)'."
+            Write-Host "Deleted snapshot backup: $backupPath"
         }
     }
 }

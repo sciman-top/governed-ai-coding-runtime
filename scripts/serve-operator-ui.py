@@ -26,7 +26,7 @@ if str(SCRIPTS_SRC) not in sys.path:
 from governed_ai_coding_runtime_contracts.operator_ui import render_runtime_snapshot_html
 from governed_ai_coding_runtime_contracts.runtime_status import RuntimeStatusStore, runtime_snapshot_to_dict
 from lib.claude_local import claude_home, claude_status, optimize_claude_local, provider_profiles_path, settings_path, switch_provider
-from lib.codex_local import codex_status, switch_auth_profile, sync_active_auth_snapshot
+from lib.codex_local import codex_status, delete_auth_profile, switch_auth_profile, sync_active_auth_snapshot
 
 
 def _load_host_feedback_summary_builder():
@@ -247,6 +247,11 @@ def _build_handler(*, default_language: str):
                     return
                 if parsed.path == "/api/codex/sync-active":
                     result = run_codex_sync_active(self._read_json_body())
+                    status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
+                    self._send_json(result, status=status)
+                    return
+                if parsed.path == "/api/codex/delete":
+                    result = run_codex_delete(self._read_json_body())
                     status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
                     self._send_json(result, status=status)
                     return
@@ -557,6 +562,20 @@ def run_codex_sync_active(payload: dict) -> dict:
     dry_run = bool(payload.get("dry_run", False))
     try:
         result = sync_active_auth_snapshot(target_name=name, dry_run=dry_run)
+    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
+        return {"status": "error", "error": str(exc)}
+    if result.get("status") == "ok" and result.get("changed"):
+        invalidate_status_cache("codex")
+    return result
+
+
+def run_codex_delete(payload: dict) -> dict:
+    if "_json_error" in payload:
+        return {"status": "error", "error": payload["_json_error"]}
+    name = _string(payload.get("name"), "")
+    dry_run = bool(payload.get("dry_run", False))
+    try:
+        result = delete_auth_profile(name, dry_run=dry_run)
     except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
         return {"status": "error", "error": str(exc)}
     if result.get("status") == "ok" and result.get("changed"):

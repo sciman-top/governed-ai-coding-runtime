@@ -579,7 +579,7 @@
       "review_age_days": 2,
       "review_expires_at": "2026-05-31",
       "reviewed_on": "2026-05-01",
-      "source_count": 16,
+      "source_count": 30,
       "source_records": [
         {
           "confidence": "high",
@@ -643,6 +643,127 @@
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
           "source_checked_on": "2026-05-03",
+          "source_id": "openai-agents-sdk-evolution",
+          "source_ref": "https://openai.com/index/the-next-evolution-of-the-agents-sdk/",
+          "source_type": "official_doc_or_changelog",
+          "summary": "OpenAI Agents SDK evolution guidance around eval-driven agent iteration, builder workflows, and optimization loops."
+        },
+        {
+          "confidence": "high",
+          "local_ref_exists": null,
+          "online_probe": null,
+          "retrieval_mode": "dry_run_catalog",
+          "source_checked_on": "2026-05-03",
+          "source_id": "openai-agents-sdk-sandboxes",
+          "source_ref": "https://developers.openai.com/api/docs/guides/agents/sandboxes",
+          "source_type": "official_doc_or_changelog",
+          "summary": "OpenAI hosted sandbox guidance for agent execution isolation and environment control."
+        },
+        {
+          "confidence": "high",
+          "local_ref_exists": null,
+          "online_probe": null,
+          "retrieval_mode": "dry_run_catalog",
+          "source_checked_on": "2026-05-03",
+          "source_id": "openai-agents-sdk-guardrails-human-review",
+          "source_ref": "https://developers.openai.com/api/docs/guides/agents/guardrails-approvals",
+          "source_type": "official_doc_or_changelog",
+          "summary": "OpenAI guardrail and approval guidance for risk-aware human review in agent workflows."
+        },
+        {
+          "confidence": "high",
+          "local_ref_exists": null,
+          "online_probe": null,
+          "retrieval_mode": "dry_run_catalog",
+          "source_checked_on": "2026-05-03",
+          "source_id": "openai-codex-subagents",
+          "source_ref": "https://developers.openai.com/codex/concepts/subagents",
+          "source_type": "official_doc_or_changelog",
+          "summary": "OpenAI Codex subagent concept surface for delegated parallel work while preserving reviewable parent control."
+        },
+        {
+          "confidence": "high",
+          "local_ref_exists": null,
+          "online_probe": null,
+          "retrieval_mode": "dry_run_catalog",
+          "source_checked_on": "2026-05-03",
+          "source_id": "openai-codex-sandboxing",
+          "source_ref": "https://developers.openai.com/codex/concepts/sandboxing",
+          "source_type": "official_doc_or_changelog",
+          "summary": "OpenAI Codex sandbox and approval-mode semantics for local execution boundaries."
+        },
+        {
+          "confidence": "high",
+          "local_ref_exists": null,
+          "online_probe": null,
+          "retrieval_mode": "dry_run_catalog",
+          "source_checked_on": "2026-05-03",
+          "source_id": "anthropic-claude-code-settings",
+          "source_ref": "https://docs.anthropic.com/en/docs/claude-code/settings",
+          "source_type": "official_doc_or_changelog",
+          "summary": "Claude Code hierarchical settings model and project/user/managed configuration precedence."
+        },
+        {
+          "confidence": "high",
+          "local_ref_exists": null,
+          "online_probe": null,
+          "retrieval_mode": "dry_run_catalog",
+          "source_checked_on": "2026-05-03",
+          "source_id": "anthropic-claude-code-hooks",
+          "source_ref": "https://docs.anthropic.com/en/docs/claude-code/hooks",
+          "source_type": "official_doc_or_changelog",
+          "summary": "Claude Code hook lifecycle for deterministic shell-command controls around agent tool use."
+        },
+        {
+          "confidence": "high",
+          "local_ref_exists": null,
+          "online_probe": null,
+          "retrieval_mode": "dry_run_catalog",
+          "source_checked_on": "2026-05-03",
+          "source_id": "google-gemini-cli-settings",
+          "source_ref": "https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/settings.md",
+          "source_type": "official_doc_or_changelog",
+          "summary": "Gemini CLI settings precedence, project configuration, and host-level operator controls."
+        },
+        {
+          "confidence": "high",
+          "local_ref_exists": null,
+          "online_probe": null,
+          "retrieval_mode": "dry_run_catalog",
+          "source_checked_on": "2026-05-03",
+          "source_id": "google-gemini-cli-plan-mode",
+          "source_ref": "https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/plan-mode.md",
+          "source_type": "official_doc_or_changelog",
+          "summary": "Gemini CLI plan-mode semantics for read-only planning before implementation."
+        },
+        {
+          "confidence": "high",
+          "local_ref_exists": null,
+          "online_probe": null,
+          "retrieval_mode": "dry_run_catalog",
+          "source_checked_on": "2026-05-03",
+          "source_id": "google-gemini-cli-mcp-server",
+          "source_ref": "https://google-gemini.github.io/gemini-cli/docs/tools/mcp-server.html",
+          "source_type": "official_doc_or_changelog",
+          "summary": "Gemini CLI MCP server support across stdio, SSE, and streamable HTTP transports."
+        },
+        {
+          "confidence": "high",
+          "local_ref_exists": null,
+          "online_probe": null,
+          "retrieval_mode": "dry_run_catalog",
+          "source_checked_on": "2026-05-03",
+          "source_id": "mcp-security-best-practices",
+          "source_ref": "https://modelcontextprotocol.io/specification/2025-11-25/basic/security_best_practices",
+          "source_type": "official_doc_or_changelog",
+          "summary": "MCP security best practices for consent, control, tool safety, and prompt-injection boundaries."
+        },
+        {
+          "confidence": "high",
+          "local_ref_exists": null,
+          "online_probe": null,
+          "retrieval_mode": "dry_run_catalog",
+          "source_checked_on": "2026-05-03",
           "source_id": "github-actions-schedule",
           "source_ref": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule",
           "source_type": "official_doc_or_changelog",
@@ -658,6 +779,39 @@
           "source_ref": "https://github.com/openai/codex",
           "source_type": "primary_project_or_reference_implementation",
           "summary": "Primary Codex project surface for release and instruction-loading drift signals."
+        },
+        {
+          "confidence": "medium",
+          "local_ref_exists": null,
+          "online_probe": null,
+          "retrieval_mode": "dry_run_catalog",
+          "source_checked_on": "2026-05-03",
+          "source_id": "openhands-sandbox-runtimes",
+          "source_ref": "https://docs.openhands.dev/openhands/usage/runtimes/overview",
+          "source_type": "primary_project_or_reference_implementation",
+          "summary": "OpenHands runtime documentation as a reference implementation signal for sandboxed agent execution."
+        },
+        {
+          "confidence": "medium",
+          "local_ref_exists": null,
+          "online_probe": null,
+          "retrieval_mode": "dry_run_catalog",
+          "source_checked_on": "2026-05-03",
+          "source_id": "aider-repo-map",
+          "source_ref": "https://aider.chat/docs/repomap.html",
+          "source_type": "primary_project_or_reference_implementation",
+          "summary": "Aider repo map as a reference pattern for compact repository context shaping."
+        },
+        {
+          "confidence": "medium",
+          "local_ref_exists": null,
+          "online_probe": null,
+          "retrieval_mode": "dry_run_catalog",
+          "source_checked_on": "2026-05-03",
+          "source_id": "swe-agent-aci",
+          "source_ref": "https://swe-agent.com/latest/",
+          "source_type": "primary_project_or_reference_implementation",
+          "summary": "SWE-agent agent-computer-interface documentation as a reference signal for inspect/edit/test workflows."
         },
         {
           "confidence": "medium",

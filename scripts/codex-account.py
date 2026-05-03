@@ -10,7 +10,14 @@ SCRIPTS_SRC = ROOT / "scripts"
 if str(SCRIPTS_SRC) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_SRC))
 
-from lib.codex_local import codex_status, install_account_switcher, list_auth_profiles, switch_auth_profile, sync_active_auth_snapshot
+from lib.codex_local import (
+    codex_status,
+    delete_auth_profile,
+    install_account_switcher,
+    list_auth_profiles,
+    switch_auth_profile,
+    sync_active_auth_snapshot,
+)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -26,6 +33,9 @@ def main(argv: list[str] | None = None) -> int:
     sync_parser = subparsers.add_parser("sync-active", help="Save the current auth.json back into its named auth snapshot.")
     sync_parser.add_argument("--name", default=None, help="Optional named auth profile to overwrite.")
     sync_parser.add_argument("--dry-run", action="store_true")
+    delete_parser = subparsers.add_parser("delete", help="Back up and delete a non-active local auth profile.")
+    delete_parser.add_argument("name")
+    delete_parser.add_argument("--dry-run", action="store_true")
 
     args = parser.parse_args(argv)
     if args.command == "list":
@@ -38,6 +48,8 @@ def main(argv: list[str] | None = None) -> int:
         payload = switch_auth_profile(args.name, dry_run=args.dry_run)
     elif args.command == "sync-active":
         payload = sync_active_auth_snapshot(target_name=args.name, dry_run=args.dry_run)
+    elif args.command == "delete":
+        payload = delete_auth_profile(args.name, dry_run=args.dry_run)
     else:
         parser.error("unsupported command")
     print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))

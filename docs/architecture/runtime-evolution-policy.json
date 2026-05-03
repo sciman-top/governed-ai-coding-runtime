@@ -55,6 +55,72 @@
       "summary": "OpenAI Codex AGENTS.md loading and project instruction semantics."
     },
     {
+      "source_id": "openai-agents-sdk-evolution",
+      "source_type": "official_doc_or_changelog",
+      "source_ref": "https://openai.com/index/the-next-evolution-of-the-agents-sdk/",
+      "summary": "OpenAI Agents SDK evolution guidance around eval-driven agent iteration, builder workflows, and optimization loops."
+    },
+    {
+      "source_id": "openai-agents-sdk-sandboxes",
+      "source_type": "official_doc_or_changelog",
+      "source_ref": "https://developers.openai.com/api/docs/guides/agents/sandboxes",
+      "summary": "OpenAI hosted sandbox guidance for agent execution isolation and environment control."
+    },
+    {
+      "source_id": "openai-agents-sdk-guardrails-human-review",
+      "source_type": "official_doc_or_changelog",
+      "source_ref": "https://developers.openai.com/api/docs/guides/agents/guardrails-approvals",
+      "summary": "OpenAI guardrail and approval guidance for risk-aware human review in agent workflows."
+    },
+    {
+      "source_id": "openai-codex-subagents",
+      "source_type": "official_doc_or_changelog",
+      "source_ref": "https://developers.openai.com/codex/concepts/subagents",
+      "summary": "OpenAI Codex subagent concept surface for delegated parallel work while preserving reviewable parent control."
+    },
+    {
+      "source_id": "openai-codex-sandboxing",
+      "source_type": "official_doc_or_changelog",
+      "source_ref": "https://developers.openai.com/codex/concepts/sandboxing",
+      "summary": "OpenAI Codex sandbox and approval-mode semantics for local execution boundaries."
+    },
+    {
+      "source_id": "anthropic-claude-code-settings",
+      "source_type": "official_doc_or_changelog",
+      "source_ref": "https://docs.anthropic.com/en/docs/claude-code/settings",
+      "summary": "Claude Code hierarchical settings model and project/user/managed configuration precedence."
+    },
+    {
+      "source_id": "anthropic-claude-code-hooks",
+      "source_type": "official_doc_or_changelog",
+      "source_ref": "https://docs.anthropic.com/en/docs/claude-code/hooks",
+      "summary": "Claude Code hook lifecycle for deterministic shell-command controls around agent tool use."
+    },
+    {
+      "source_id": "google-gemini-cli-settings",
+      "source_type": "official_doc_or_changelog",
+      "source_ref": "https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/settings.md",
+      "summary": "Gemini CLI settings precedence, project configuration, and host-level operator controls."
+    },
+    {
+      "source_id": "google-gemini-cli-plan-mode",
+      "source_type": "official_doc_or_changelog",
+      "source_ref": "https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/plan-mode.md",
+      "summary": "Gemini CLI plan-mode semantics for read-only planning before implementation."
+    },
+    {
+      "source_id": "google-gemini-cli-mcp-server",
+      "source_type": "official_doc_or_changelog",
+      "source_ref": "https://google-gemini.github.io/gemini-cli/docs/tools/mcp-server.html",
+      "summary": "Gemini CLI MCP server support across stdio, SSE, and streamable HTTP transports."
+    },
+    {
+      "source_id": "mcp-security-best-practices",
+      "source_type": "official_doc_or_changelog",
+      "source_ref": "https://modelcontextprotocol.io/specification/2025-11-25/basic/security_best_practices",
+      "summary": "MCP security best practices for consent, control, tool safety, and prompt-injection boundaries."
+    },
+    {
       "source_id": "github-actions-schedule",
       "source_type": "official_doc_or_changelog",
       "source_ref": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule",
@@ -65,6 +131,24 @@
       "source_type": "primary_project_or_reference_implementation",
       "source_ref": "https://github.com/openai/codex",
       "summary": "Primary Codex project surface for release and instruction-loading drift signals."
+    },
+    {
+      "source_id": "openhands-sandbox-runtimes",
+      "source_type": "primary_project_or_reference_implementation",
+      "source_ref": "https://docs.openhands.dev/openhands/usage/runtimes/overview",
+      "summary": "OpenHands runtime documentation as a reference implementation signal for sandboxed agent execution."
+    },
+    {
+      "source_id": "aider-repo-map",
+      "source_type": "primary_project_or_reference_implementation",
+      "source_ref": "https://aider.chat/docs/repomap.html",
+      "summary": "Aider repo map as a reference pattern for compact repository context shaping."
+    },
+    {
+      "source_id": "swe-agent-aci",
+      "source_type": "primary_project_or_reference_implementation",
+      "source_ref": "https://swe-agent.com/latest/",
+      "summary": "SWE-agent agent-computer-interface documentation as a reference signal for inspect/edit/test workflows."
     },
     {
       "source_id": "google-sre-eliminating-toil",

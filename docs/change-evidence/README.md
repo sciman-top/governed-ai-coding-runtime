@@ -17,6 +17,8 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260503 AI Feature Source Catalog Coverage](./20260503-ai-feature-source-catalog-coverage.md)
+  - evidence companion for turning the latest official AI coding docs and primary reference-project signals into a required runtime-evolution source catalog coverage gate
 - [20260503 Runtime State Prune Apply](./20260503-runtime-state-prune-apply.md)
   - evidence companion for adding `scripts/prune-runtime-state.py`, pruning external `self-runtime` runtime state with backup manifests, and verifying candidate-zero retention
 - [20260503 Runtime State Retention Dry Run](./20260503-runtime-state-retention-dry-run.md)
