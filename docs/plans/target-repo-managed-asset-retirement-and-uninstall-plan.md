@@ -48,13 +48,13 @@ Only after that classification may it propose or execute removal. The deletion p
 **Description:** Define the machine-readable contract for classifying target-repo files and fields before prune or uninstall.
 
 **Acceptance criteria:**
-- [ ] A spec defines the six asset classes above and the evidence required for each class.
-- [ ] The contract distinguishes whole-file ownership from field/block ownership.
-- [ ] Unknown ownership fails closed for destructive actions.
+- [x] A spec defines the six asset classes above and the evidence required for each class.
+- [x] The contract distinguishes whole-file ownership from field/block ownership.
+- [x] Unknown ownership fails closed for destructive actions.
 
 **Verification:**
-- [ ] Contract tests cover active, retired, drifted, shared, target-owned, and unknown classifications.
-- [ ] `python scripts/verify-target-repo-rollout-contract.py` still passes.
+- [x] Contract tests cover active, retired, drifted, shared, target-owned, and unknown classifications.
+- [x] `python scripts/verify-target-repo-rollout-contract.py` still passes.
 
 **Dependencies:** None.
 
@@ -69,13 +69,13 @@ Only after that classification may it propose or execute removal. The deletion p
 **Description:** Add a read-only inventory command that scans active targets and emits ownership classification without modifying target repos.
 
 **Acceptance criteria:**
-- [ ] The inventory command reads current baseline, rollout contract, historical templates, existing target files, and available provenance.
-- [ ] The command reports `active_managed`, `managed_drifted`, `retired_managed_candidate`, `target_owned`, `shared_or_field_owned`, and `unknown`.
-- [ ] The command includes `source_sha256`, `target_sha256`, `evidence_refs`, and `referenced_by` when available.
+- [x] The inventory command reads current baseline, rollout contract, historical templates, existing target files, and available provenance.
+- [x] The command reports `active_managed`, `managed_drifted`, `retired_managed_candidate`, `target_owned`, `shared_or_field_owned`, and `unknown`.
+- [x] The command includes `source_sha256`, `target_sha256`, `evidence_refs`, and `referenced_by` when available.
 
 **Verification:**
-- [ ] Unit tests prove dry-run does not modify files.
-- [ ] A fixture target with mixed owned and target-owned files is classified correctly.
+- [x] Unit tests prove dry-run does not modify files.
+- [x] A fixture target with mixed owned and target-owned files is classified correctly.
 
 **Dependencies:** `GAP-144`.
 
@@ -112,13 +112,13 @@ Only after that classification may it propose or execute removal. The deletion p
 **Description:** Add an explicit retired-file contract for old runtime-managed files that are no longer part of the active baseline.
 
 **Acceptance criteria:**
-- [ ] Baseline and rollout contract support `retired_managed_files`.
-- [ ] Each retired entry records path, previous source, previous hash or evidence ref, retire reason, replacement, safe-delete conditions, and backup requirement.
-- [ ] Contract verification fails if retired entries are missing safety metadata.
+- [x] Baseline and rollout contract support `retired_managed_files`.
+- [x] Each retired entry records path, previous source, previous hash or evidence ref, retire reason, replacement, safe-delete conditions, and backup requirement.
+- [x] Contract verification fails if retired entries are missing safety metadata.
 
 **Verification:**
-- [ ] `python scripts/verify-target-repo-rollout-contract.py` fails on malformed retired entries and passes on valid entries.
-- [ ] Tests cover retired entries for whole-file and shared-file retirement.
+- [x] `python scripts/verify-target-repo-rollout-contract.py` fails on malformed retired entries and passes on valid entries.
+- [x] Tests cover retired entries for whole-file and shared-file retirement.
 
 **Dependencies:** `GAP-144`.
 
@@ -134,15 +134,15 @@ Only after that classification may it propose or execute removal. The deletion p
 **Description:** Implement the explicit prune path for historical runtime-managed files that are no longer needed.
 
 **Acceptance criteria:**
-- [ ] Default mode is dry-run and reports candidates only.
-- [ ] Apply mode deletes only retired candidates with matching provenance or hash evidence.
-- [ ] Apply mode blocks files with target-local drift, unknown ownership, or active target references.
-- [ ] Deleted files are backed up and reported with rollback instructions.
+- [x] Default mode is dry-run and reports candidates only.
+- [x] Apply mode deletes only retired candidates with matching provenance or hash evidence.
+- [x] Apply mode blocks files with target-local drift, unknown ownership, or active target references.
+- [x] Deleted files are backed up and reported with rollback instructions.
 
 **Verification:**
-- [ ] Tests prove matching retired files can be removed.
-- [ ] Tests prove drifted, referenced, unknown, and target-owned files are not removed.
-- [ ] `runtime-flow-preset.ps1` exposes a JSON field for prune results.
+- [x] Tests prove matching retired files can be removed.
+- [x] Tests prove drifted, referenced, unknown, and target-owned files are not removed.
+- [x] `runtime-flow-preset.ps1` exposes a JSON field for prune results.
 
 **Dependencies:** `GAP-145`, `GAP-147`.
 
@@ -158,16 +158,16 @@ Only after that classification may it propose or execute removal. The deletion p
 **Description:** Add a target-repo detach/uninstall path that removes runtime governance assets without deleting target-owned work.
 
 **Acceptance criteria:**
-- [ ] Default uninstall mode is dry-run.
-- [ ] Apply mode removes active whole-file managed assets only when provenance or expected hash proves runtime ownership.
-- [ ] Apply mode patches shared files by field or block ownership instead of deleting whole files.
-- [ ] Apply mode can remove runtime light-pack/provenance files while preserving target evidence and target-owned files.
-- [ ] Uninstall emits an evidence report and rollback instructions.
+- [x] Default uninstall mode is dry-run.
+- [x] Apply mode removes active whole-file managed assets only when provenance or expected hash proves runtime ownership.
+- [x] Apply mode patches shared files by field or block ownership instead of deleting whole files.
+- [x] Apply mode can remove runtime light-pack/provenance files while preserving target evidence and target-owned files.
+- [x] Uninstall emits an evidence report and rollback instructions.
 
 **Verification:**
-- [ ] Tests prove `.claude/settings.json` is patched, not deleted.
-- [ ] Tests prove `.governed-ai/repo-profile.json` removes runtime-owned fields only.
-- [ ] Tests prove uninstall blocks drifted or referenced files.
+- [x] Tests prove `.claude/settings.json` is patched, not deleted.
+- [x] Tests prove `.governed-ai/repo-profile.json` removes runtime-owned fields only.
+- [x] Tests prove uninstall blocks drifted or referenced files.
 
 **Dependencies:** `GAP-144`, `GAP-145`, `GAP-146`, `GAP-148`.
 
@@ -183,14 +183,14 @@ Only after that classification may it propose or execute removal. The deletion p
 **Description:** Expose prune and uninstall through the same one-click surfaces used for apply.
 
 **Acceptance criteria:**
-- [ ] `runtime-flow-preset.ps1` supports all-target and single-target dry-run for prune and uninstall.
-- [ ] Apply requires explicit destructive-action flags and cannot be triggered by normal `ApplyAllFeatures`.
-- [ ] JSON output includes candidate counts, blocked counts, backup paths, and evidence refs.
-- [ ] Operator surfaces can invoke dry-run and display blocked reasons.
+- [x] `runtime-flow-preset.ps1` supports all-target and single-target dry-run for prune and uninstall.
+- [x] Apply requires explicit destructive-action flags and cannot be triggered by normal `ApplyAllFeatures`.
+- [x] JSON output includes candidate counts, blocked counts, backup paths, and evidence refs.
+- [x] Operator surfaces can invoke dry-run and display blocked reasons.
 
 **Verification:**
-- [ ] Runtime-flow preset tests cover all-target dry-run and single-target apply fixture behavior.
-- [ ] Operator tests cover action visibility without enabling accidental destructive defaults.
+- [x] Runtime-flow preset tests cover all-target dry-run and single-target apply fixture behavior.
+- [x] Operator tests cover action visibility without enabling accidental destructive defaults.
 
 **Dependencies:** `GAP-148`, `GAP-149`.
 

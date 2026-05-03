@@ -1367,9 +1367,9 @@ The entries below record the executed queue for complete hybrid final-state and 
   - keep Codex and Claude Code as cooperation hosts while making degraded host posture, adapter tier downgrade, and remediation hints explicit
   - refresh target-run and host-feedback evidence without claiming `native_attach` recovery until a fresh target repo run proves it
 - Acceptance criteria:
-  - [ ] backlog, issue seeds, plan, and evidence all carry the same `GAP-140` intent and dependency
-  - [ ] host-feedback summary, effect report, and backlog use the same degraded host capability explanation and expected remediation boundary
-  - [ ] completion requires fresh target-run evidence or an explicit bounded defer decision with rollback wording
+  - [x] backlog, issue seeds, plan, and evidence all carry the same `GAP-140` intent and dependency
+  - [x] host-feedback summary, effect report, and backlog use the same degraded host capability explanation and expected remediation boundary
+  - [x] completion requires fresh target-run evidence or an explicit bounded defer decision with rollback wording
 
 ### GAP-141 Historical Problem Trace Closure Window
 - Type: AFK
@@ -1381,9 +1381,9 @@ The entries below record the executed queue for complete hybrid final-state and 
   - define when historical problem runs stay visible, when they downgrade to background evidence, and when they can stop emitting backlog pressure
   - keep the closure rule evidence-backed, reversible, and separate from claims about current pass/fail state
 - Acceptance criteria:
-  - [ ] rolling KPI, effect report, and backlog define the same retention and closure rule for historical problem traces
-  - [ ] current success evidence and historical failure evidence are reported as separate claims rather than collapsed into one health statement
-  - [ ] completion updates the effect-feedback path so historical traces either remain explicitly open or exit the backlog with documented criteria
+  - [x] rolling KPI, effect report, and backlog define the same retention and closure rule for historical problem traces
+  - [x] current success evidence and historical failure evidence are reported as separate claims rather than collapsed into one health statement
+  - [x] completion updates the effect-feedback path so historical traces either remain explicitly open or exit the backlog with documented criteria
 
 ### GAP-142 Degraded Fresh Evidence Next Work Guard
 - Type: AFK
