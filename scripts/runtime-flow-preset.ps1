@@ -885,6 +885,125 @@ function Export-TargetRunEvidence {
   return $exported
 }
 
+function Export-TargetRepoSpeedKpiSnapshots {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$RepoRoot,
+    [Parameter(Mandatory = $true)]
+    [string]$RunsRoot,
+    [Parameter(Mandatory = $true)]
+    [string]$PythonCommand
+  )
+
+  $scriptPath = Join-Path $RepoRoot "scripts\export-target-repo-speed-kpi.py"
+  if (-not (Test-Path -LiteralPath $scriptPath)) {
+    return [ordered]@{
+      status    = "fail"
+      reason    = "speed_kpi_script_not_found"
+      latest    = $null
+      rolling   = $null
+    }
+  }
+
+  $results = [ordered]@{}
+  $overallStatus = "pass"
+  $overallReason = "ok"
+  foreach ($windowKind in @("latest", "rolling")) {
+    $outputPath = Join-Path $RunsRoot ("kpi-{0}.json" -f $windowKind)
+    $result = Invoke-CommandCapture -Executable $PythonCommand -Arguments @(
+      $scriptPath,
+      "--runs-root", $RunsRoot,
+      "--window-kind", $windowKind,
+      "--output", $outputPath
+    )
+    $payload = Try-ParseJson -Raw $result.output
+    $status = if ($result.exit_code -eq 0) { "pass" } else { "fail" }
+    if ($status -ne "pass") {
+      $overallStatus = "fail"
+      $overallReason = "speed_kpi_export_failed"
+    }
+    $results[$windowKind] = [ordered]@{
+      status    = $status
+      exit_code = [int]$result.exit_code
+      output    = $outputPath
+      payload   = $payload
+    }
+  }
+
+  return [ordered]@{
+    status  = $overallStatus
+    reason  = $overallReason
+    latest  = $results["latest"]
+    rolling = $results["rolling"]
+  }
+}
+
+function Update-TargetRepoReuseEffectReports {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$RepoRoot,
+    [Parameter(Mandatory = $true)]
+    [string]$RunsRoot,
+    [Parameter(Mandatory = $true)]
+    [string]$PythonCommand
+  )
+
+  $scriptPath = Join-Path $RepoRoot "scripts\build-target-repo-reuse-effect-report.py"
+  if (-not (Test-Path -LiteralPath $scriptPath)) {
+    return [ordered]@{
+      status  = "fail"
+      reason  = "effect_report_script_not_found"
+      reports = @()
+    }
+  }
+
+  $reportFiles = @(Get-ChildItem -LiteralPath $RunsRoot -Filter "effect-report-*.json" -File -ErrorAction SilentlyContinue)
+  if (@($reportFiles).Count -eq 0) {
+    return [ordered]@{
+      status  = "skipped"
+      reason  = "no_existing_effect_reports"
+      reports = @()
+    }
+  }
+
+  $reports = @()
+  $overallStatus = "pass"
+  $overallReason = "ok"
+  foreach ($reportFile in $reportFiles) {
+    $targetName = [System.IO.Path]::GetFileNameWithoutExtension($reportFile.Name)
+    if ($targetName.StartsWith("effect-report-")) {
+      $targetName = $targetName.Substring("effect-report-".Length)
+    }
+    if ([string]::IsNullOrWhiteSpace($targetName)) {
+      continue
+    }
+
+    $result = Invoke-CommandCapture -Executable $PythonCommand -Arguments @(
+      $scriptPath,
+      "--target", $targetName,
+      "--runs-root", $RunsRoot,
+      "--output", $reportFile.FullName
+    )
+    $status = if ($result.exit_code -eq 0) { "pass" } else { "fail" }
+    if ($status -ne "pass") {
+      $overallStatus = "fail"
+      $overallReason = "effect_report_refresh_failed"
+    }
+    $reports += [ordered]@{
+      target    = $targetName
+      status    = $status
+      exit_code = [int]$result.exit_code
+      output    = $reportFile.FullName
+    }
+  }
+
+  return [ordered]@{
+    status  = $overallStatus
+    reason  = $overallReason
+    reports = $reports
+  }
+}
+
 function Invoke-GovernanceBaselineSync {
   param(
     [Parameter(Mandatory = $true)]
@@ -2351,6 +2470,29 @@ if ($ExportTargetRepoRuns) {
     -RunsRoot $pruneRunsRootResolved `
     -FlowModeValue $FlowMode
 }
+$targetRepoSpeedKpi = [ordered]@{
+  status  = "skipped"
+  reason  = "target_run_export_not_requested"
+  latest  = $null
+  rolling = $null
+}
+if ($ExportTargetRepoRuns) {
+  $targetRepoSpeedKpi = Export-TargetRepoSpeedKpiSnapshots `
+    -RepoRoot $repoRoot `
+    -RunsRoot $pruneRunsRootResolved `
+    -PythonCommand $pythonCommand
+}
+$targetRepoEffectReports = [ordered]@{
+  status  = "skipped"
+  reason  = "target_run_export_not_requested"
+  reports = @()
+}
+if ($ExportTargetRepoRuns) {
+  $targetRepoEffectReports = Update-TargetRepoReuseEffectReports `
+    -RepoRoot $repoRoot `
+    -RunsRoot $pruneRunsRootResolved `
+    -PythonCommand $pythonCommand
+}
 $pruneResult = [pscustomobject]@{
   status    = "skipped"
   reason    = "not_requested"
@@ -2376,7 +2518,8 @@ $pruneForJson = Convert-PruneResultForJson `
   -DryRun $PruneDryRun.IsPresent
 
 $hasPruneFailure = ($PruneTargetRepoRuns -and $pruneResult.status -eq "fail")
-$overallExitCode = if (($failureCount -gt 0) -or $hasPruneFailure -or $batchTimedOut) { 1 } else { 0 }
+$hasEvidenceRefreshFailure = ($ExportTargetRepoRuns -and (($targetRepoSpeedKpi.status -eq "fail") -or ($targetRepoEffectReports.status -eq "fail")))
+$overallExitCode = if (($failureCount -gt 0) -or $hasPruneFailure -or $hasEvidenceRefreshFailure -or $batchTimedOut) { 1 } else { 0 }
 
 if ($Json) {
   if (-not $AllTargets -and @($targetRuns).Count -eq 1) {
@@ -2502,6 +2645,11 @@ if ($Json) {
         if ($PruneTargetRepoRuns) {
           $wrapped["prune_target_repo_runs"] = $pruneForJson
         }
+        if ($ExportTargetRepoRuns) {
+          $wrapped["exported_target_repo_runs"] = $exportedTargetRepoRuns
+          $wrapped["target_repo_speed_kpi"] = $targetRepoSpeedKpi
+          $wrapped["target_repo_effect_reports"] = $targetRepoEffectReports
+        }
         if ($pruneRetiredManagedFilesActive) {
           $wrapped["prune_retired_managed_files"] = $singlePruneRetiredForJson
         }
@@ -2544,6 +2692,11 @@ if ($Json) {
         }
         if ($PruneTargetRepoRuns) {
           $fallback["prune_target_repo_runs"] = $pruneForJson
+        }
+        if ($ExportTargetRepoRuns) {
+          $fallback["exported_target_repo_runs"] = $exportedTargetRepoRuns
+          $fallback["target_repo_speed_kpi"] = $targetRepoSpeedKpi
+          $fallback["target_repo_effect_reports"] = $targetRepoEffectReports
         }
         if ($pruneRetiredManagedFilesActive) {
           $fallback["prune_retired_managed_files"] = $singlePruneRetiredForJson
@@ -2677,6 +2830,8 @@ if ($Json) {
       target_count                    = @($targetRuns).Count
       failure_count                   = $failureCount
       exported_target_repo_runs       = $exportedTargetRepoRuns
+      target_repo_speed_kpi           = $targetRepoSpeedKpi
+      target_repo_effect_reports      = $targetRepoEffectReports
       outer_ai_recommendation_action  = if (@($outerAiRecommendationTasks).Count -gt 0) { "read_prompt_and_write_recommendation" } else { "none" }
       outer_ai_recommendation_tasks   = $outerAiRecommendationTasks
       results                         = $results

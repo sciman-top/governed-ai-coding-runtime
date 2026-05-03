@@ -380,6 +380,14 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             fake_runtime_flow_path = workspace / "fake-runtime-flow.ps1"
             _write_fake_runtime_flow_script(fake_runtime_flow_path)
             runs_root = workspace / "target-repo-runs"
+            _write_json(
+                runs_root / "repo-a-daily-20260101000000.json",
+                {
+                    "overall_status": "pass",
+                    "runtime_check": {"payload": {"summary": {"overall_status": "pass"}}},
+                },
+            )
+            _write_json(runs_root / "effect-report-repo-a.json", {"target": "repo-a", "stale": True})
 
             completed = subprocess.run(
                 [
@@ -425,6 +433,11 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             self.assertEqual(payload["failure_count"], 0)
             self.assertEqual(payload["target_count"], 2)
             self.assertEqual(len(payload["exported_target_repo_runs"]), 2)
+            self.assertEqual(payload["target_repo_speed_kpi"]["status"], "pass")
+            self.assertEqual(payload["target_repo_speed_kpi"]["latest"]["status"], "pass")
+            self.assertEqual(payload["target_repo_speed_kpi"]["rolling"]["status"], "pass")
+            self.assertEqual(payload["target_repo_effect_reports"]["status"], "pass")
+            self.assertEqual(payload["target_repo_effect_reports"]["reports"][0]["target"], "repo-a")
             self.assertEqual(payload["outer_ai_recommendation_action"], "none")
             self.assertEqual(payload["outer_ai_recommendation_tasks"], [])
             sources = {result["target"]: result["governance_sync_quick_test_slice_source"] for result in payload["results"]}
@@ -438,6 +451,13 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                 self.assertEqual(profile["required_entrypoint_policy"]["current_mode"], "targeted_enforced")
                 self.assertEqual(profile["auto_commit_policy"]["enabled"], True)
             self.assertEqual(len(list(runs_root.glob("*-onboard-*.json"))), 2)
+            self.assertTrue((runs_root / "kpi-latest.json").exists())
+            self.assertTrue((runs_root / "kpi-rolling.json").exists())
+            latest_kpi = json.loads((runs_root / "kpi-latest.json").read_text(encoding="utf-8"))
+            self.assertEqual(latest_kpi["record_count"], 2)
+            effect_report = json.loads((runs_root / "effect-report-repo-a.json").read_text(encoding="utf-8"))
+            self.assertEqual(effect_report["report_kind"], "target_repo_reuse_effect_feedback")
+            self.assertEqual(effect_report["target"], "repo-a")
 
     def test_runtime_flow_preset_single_target_json_keeps_runtime_payload_when_sync_skipped(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

@@ -1,10 +1,10 @@
 {
-  "elapsed_seconds": 154.1375312,
+  "elapsed_seconds": 151.59558160000051,
   "failure_count": 0,
   "failures": [],
   "slowest": [
     {
-      "duration_seconds": 59.535705999998754,
+      "duration_seconds": 61.56381340000007,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_flow_preset",
@@ -13,7 +13,7 @@
       }
     },
     {
-      "duration_seconds": 48.02752689999943,
+      "duration_seconds": 48.856581000000006,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_autonomous_next_work_selection",
@@ -22,7 +22,7 @@
       }
     },
     {
-      "duration_seconds": 45.35600970000087,
+      "duration_seconds": 44.64251089999925,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_attached_repo_e2e",
@@ -31,7 +31,7 @@
       }
     },
     {
-      "duration_seconds": 40.96964549999939,
+      "duration_seconds": 41.59445650000089,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_evolution",
@@ -40,7 +40,7 @@
       }
     },
     {
-      "duration_seconds": 35.246124999999665,
+      "duration_seconds": 34.48860689999856,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_run_governed_task_cli",
@@ -49,7 +49,7 @@
       }
     },
     {
-      "duration_seconds": 32.35257190000084,
+      "duration_seconds": 31.31580550000035,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_dependency_baseline",
@@ -58,7 +58,7 @@
       }
     },
     {
-      "duration_seconds": 30.211586100000204,
+      "duration_seconds": 29.63228270000036,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_functional_effectiveness",
@@ -67,7 +67,7 @@
       }
     },
     {
-      "duration_seconds": 28.478656199999023,
+      "duration_seconds": 27.415879800000766,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_transition_stack_convergence",
@@ -76,7 +76,7 @@
       }
     },
     {
-      "duration_seconds": 25.72548700000152,
+      "duration_seconds": 25.829454499998974,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_doctor",
@@ -85,7 +85,7 @@
       }
     },
     {
-      "duration_seconds": 24.588471900000513,
+      "duration_seconds": 25.112794799999392,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_session_bridge",
