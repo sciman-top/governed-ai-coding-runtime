@@ -2246,6 +2246,7 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             )
             fake_runtime_flow_path = workspace / "fake-runtime-flow.ps1"
             _write_fake_runtime_flow_script(fake_runtime_flow_path)
+            runs_root = workspace / "target-repo-runs"
 
             completed = subprocess.run(
                 [
@@ -2270,6 +2271,9 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                     str(baseline_path),
                     "-PruneRetiredManagedFiles",
                     "-UninstallGovernance",
+                    "-ExportTargetRepoRuns",
+                    "-PruneRunsRoot",
+                    str(runs_root),
                 ],
                 check=False,
                 capture_output=True,
@@ -2294,6 +2298,16 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             self.assertEqual(payload["uninstall_governance"]["delete_candidate_items"][0]["path"], ".governed-ai/managed.py")
             self.assertEqual(payload["prune_retired_managed_files"]["deleted_files"], [])
             self.assertEqual(payload["uninstall_governance"]["deleted_files"], [])
+            exported_files = list(runs_root.glob("repo-a-daily-*.json"))
+            self.assertEqual(len(exported_files), 1)
+            exported = json.loads(exported_files[0].read_text(encoding="utf-8-sig"))
+            self.assertEqual(exported["prune_retired_managed_files"]["dry_run"], True)
+            self.assertEqual(exported["uninstall_governance"]["dry_run"], True)
+            self.assertEqual(
+                exported["prune_retired_managed_files"]["operation_type"],
+                "retired_managed_files_cleanup",
+            )
+            self.assertEqual(exported["uninstall_governance"]["delete_candidate_items"][0]["path"], ".governed-ai/managed.py")
             self.assertTrue((repo_a / ".governed-ai" / "old.py").exists())
             self.assertTrue((repo_a / ".governed-ai" / "managed.py").exists())
 

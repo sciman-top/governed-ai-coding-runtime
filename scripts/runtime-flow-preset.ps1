@@ -871,6 +871,12 @@ function Export-TargetRunEvidence {
     $payload["target_duration_ms"] = if ($targetRun.PSObject.Properties.Name -contains "target_duration_ms") { [int]$targetRun.target_duration_ms } else { 0 }
     $payload["flow_duration_ms"] = if ($targetRun.PSObject.Properties.Name -contains "flow_duration_ms") { [int]$targetRun.flow_duration_ms } elseif ($targetRun.flow_result -and ($targetRun.flow_result.PSObject.Properties.Name -contains "duration_ms")) { [int]$targetRun.flow_result.duration_ms } else { 0 }
     $payload["governance_sync_duration_ms"] = if ($targetRun.PSObject.Properties.Name -contains "governance_sync_duration_ms") { [int]$targetRun.governance_sync_duration_ms } else { 0 }
+    if ($targetRun.PSObject.Properties.Name -contains "prune_retired_managed_files_result") {
+      $payload["prune_retired_managed_files"] = Convert-ManagedAssetActionForJson -ActionResult $targetRun.prune_retired_managed_files_result
+    }
+    if ($targetRun.PSObject.Properties.Name -contains "uninstall_governance_result") {
+      $payload["uninstall_governance"] = Convert-ManagedAssetActionForJson -ActionResult $targetRun.uninstall_governance_result
+    }
 
     $fileName = "{0}-{1}-{2}.json" -f $targetName, $FlowModeValue, $stamp
     $path = Join-Path $RunsRoot $fileName
