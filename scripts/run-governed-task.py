@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
-import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -32,7 +31,7 @@ from governed_ai_coding_runtime_contracts.repo_attachment import validate_light_
 from governed_ai_coding_runtime_contracts.repo_profile import load_repo_profile
 from governed_ai_coding_runtime_contracts.replay import build_replay_reference
 from governed_ai_coding_runtime_contracts.runtime_roots import ensure_runtime_roots, resolve_runtime_roots
-from governed_ai_coding_runtime_contracts.subprocess_guard import parse_optional_positive_timeout, run_subprocess
+from governed_ai_coding_runtime_contracts.subprocess_guard import run_governed_gate_command
 from governed_ai_coding_runtime_contracts.task_intake import TaskIntake, apply_interaction_profile_defaults
 from governed_ai_coding_runtime_contracts.task_store import FileTaskStore, TaskRecord, TaskRunRecord
 from governed_ai_coding_runtime_contracts.verification_runner import (
@@ -51,7 +50,6 @@ ARTIFACT_ROOT = Path(_RUNTIME_ROOTS.artifacts_root)
 REPLAY_ROOT = Path(_RUNTIME_ROOTS.replay_root)
 WORKSPACES_ROOT = Path(_RUNTIME_ROOTS.workspaces_root)
 VERIFICATION_MODE_CHOICES = ["quick", "full", "l1", "l2", "l3"]
-_GATE_TIMEOUT_ENV_KEY = "GOVERNED_GATE_TIMEOUT_SECONDS"
 
 
 def main() -> int:
@@ -865,15 +863,7 @@ def _gate_command_type_for_mode(mode: str) -> str:
 
 
 def _execute_gate_at_root(command: str, *, cwd: Path) -> tuple[int, str]:
-    timeout_seconds = parse_optional_positive_timeout(os.environ.get(_GATE_TIMEOUT_ENV_KEY), _GATE_TIMEOUT_ENV_KEY)
-    completed = run_subprocess(
-        command=command,
-        shell=True,
-        cwd=cwd,
-        timeout_seconds=timeout_seconds,
-    )
-    output = "\n".join(part for part in [completed.stdout, completed.stderr] if part).strip()
-    return completed.returncode, output
+    return run_governed_gate_command(command=command, cwd=cwd)
 
 
 def _active_run(record: TaskRecord) -> TaskRunRecord:

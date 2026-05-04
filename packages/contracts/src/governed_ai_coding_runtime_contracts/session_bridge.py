@@ -3,7 +3,6 @@
 from dataclasses import asdict
 import hashlib
 import json
-import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -34,6 +33,7 @@ from governed_ai_coding_runtime_contracts.runtime_status import RuntimeStatusSto
 from governed_ai_coding_runtime_contracts.subprocess_guard import (
     parse_optional_positive_timeout,
     resolve_timeout_policy,
+    run_governed_gate_command,
     run_subprocess,
 )
 from governed_ai_coding_runtime_contracts.task_store import FileTaskStore
@@ -129,7 +129,6 @@ _RUNTIME_PREF_LAUNCH_SNAPSHOT_MODE = "launch_snapshot_mode"
 _RUNTIME_PREF_LAUNCH_TIMEOUT_SECONDS = "launch_timeout_seconds"
 _RUNTIME_PREF_SUBPROCESS_TIMEOUT_SECONDS = "subprocess_timeout_seconds"
 _RUNTIME_PREF_TIMEOUT_EXEMPT_ALLOWLIST = "timeout_exempt_allowlist"
-_GATE_TIMEOUT_ENV_KEY = "GOVERNED_GATE_TIMEOUT_SECONDS"
 
 
 @dataclass(frozen=True, slots=True)
@@ -2299,15 +2298,7 @@ def _payload_optional_bool(payload: dict, field_name: str) -> bool:
 
 
 def _execute_gate_at_root(command: str, *, cwd: Path) -> tuple[int, str]:
-    gate_timeout = _env_optional_timeout(_GATE_TIMEOUT_ENV_KEY)
-    completed = run_subprocess(
-        command=command,
-        shell=True,
-        cwd=cwd,
-        timeout_seconds=gate_timeout,
-    )
-    output = "\n".join(part for part in [completed.stdout, completed.stderr] if part).strip()
-    return completed.returncode, output
+    return run_governed_gate_command(command=command, cwd=cwd)
 
 
 def _resolved_launch_snapshot_mode(
@@ -2388,10 +2379,6 @@ def _runtime_pref_optional_string_list(runtime_preferences: dict, key: str) -> l
             raise ValueError(f"{key}[{index}] must be a non-empty string")
         normalized.append(item.strip())
     return normalized
-
-
-def _env_optional_timeout(env_key: str) -> float | None:
-    return parse_optional_positive_timeout(os.environ.get(env_key), env_key)
 
 
 def _required_enum(value: str, field_name: str, valid_values: set[str]) -> str:

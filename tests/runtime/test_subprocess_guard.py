@@ -27,6 +27,37 @@ class SubprocessGuardTests(unittest.TestCase):
         self.assertIn("guard-ok", completed.stdout)
         self.assertFalse(completed.timed_out)
 
+    def test_run_governed_gate_command_merges_stdout_and_stderr(self) -> None:
+        from governed_ai_coding_runtime_contracts.subprocess_guard import run_governed_gate_command
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            exit_code, output = run_governed_gate_command(
+                command=f"\"{sys.executable}\" -c \"import sys; print('gate-out'); print('gate-err', file=sys.stderr)\"",
+                cwd=tmp_dir,
+            )
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("gate-out", output)
+        self.assertIn("gate-err", output)
+
+    def test_run_governed_gate_command_honors_timeout_environment(self) -> None:
+        from governed_ai_coding_runtime_contracts.subprocess_guard import run_governed_gate_command
+
+        original_env = os.environ.copy()
+        try:
+            os.environ["GOVERNED_GATE_TIMEOUT_SECONDS"] = "1"
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                exit_code, output = run_governed_gate_command(
+                    command=f"\"{sys.executable}\" -c \"import time; time.sleep(2)\"",
+                    cwd=tmp_dir,
+                )
+        finally:
+            os.environ.clear()
+            os.environ.update(original_env)
+
+        self.assertEqual(exit_code, 124)
+        self.assertIn("timed out after 1s", output)
+
     @unittest.skipUnless(os.name == "nt", "Windows environment normalization")
     def test_normalizes_programdata_for_windows_subprocesses(self) -> None:
         import governed_ai_coding_runtime_contracts.subprocess_guard as guard

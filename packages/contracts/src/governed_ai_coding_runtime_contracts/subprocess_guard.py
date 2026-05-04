@@ -17,6 +17,7 @@ DEFAULT_TIMEOUT_EXEMPT_ALLOWLIST = (
     "*pip list*",
     "*pip check*",
 )
+DEFAULT_GATE_TIMEOUT_ENV_KEY = "GOVERNED_GATE_TIMEOUT_SECONDS"
 _TIMEOUT_EXPIRED_EXIT_CODE = 124
 _SAFE_CODEX_ENV_POLICY_KEYS = (
     "WINDIR",
@@ -125,6 +126,22 @@ def run_subprocess(
     )
 
 
+def run_governed_gate_command(
+    *,
+    command: str,
+    cwd: str | Path,
+    timeout_env_key: str = DEFAULT_GATE_TIMEOUT_ENV_KEY,
+) -> tuple[int, str]:
+    timeout_seconds = parse_optional_positive_timeout(os.environ.get(timeout_env_key), timeout_env_key)
+    completed = run_subprocess(
+        command=command,
+        shell=True,
+        cwd=cwd,
+        timeout_seconds=timeout_seconds,
+    )
+    return completed.returncode, _merge_output(completed.stdout, completed.stderr)
+
+
 def parse_optional_positive_timeout(value: object, field_name: str) -> float | None:
     return _optional_positive_number(value, field_name)
 
@@ -182,6 +199,10 @@ def _coerce_output_text(value: object) -> str:
     if isinstance(value, str):
         return value
     return ""
+
+
+def _merge_output(stdout: str, stderr: str) -> str:
+    return "\n".join(part for part in [stdout, stderr] if part).strip()
 
 
 def _subprocess_environment() -> dict[str, str]:
