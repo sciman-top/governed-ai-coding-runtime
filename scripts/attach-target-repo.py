@@ -89,7 +89,10 @@ def main() -> int:
     parser.add_argument(
         "--overwrite",
         action="store_true",
-        help="Regenerate runtime-owned attachment files, but fail if repo-profile or dependency baseline has target-local drift.",
+        help=(
+            "Regenerate runtime-owned attachment files, but fail if repo-profile core fields "
+            "or dependency baseline has target-local drift."
+        ),
     )
     args = parser.parse_args()
 

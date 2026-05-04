@@ -1,4 +1,5 @@
 import importlib
+import hashlib
 import json
 import subprocess
 import sys
@@ -323,6 +324,55 @@ class RepoAttachmentBindingTests(unittest.TestCase):
             preserved_profile = json.loads((governed_dir / "repo-profile.json").read_text(encoding="utf-8"))
             self.assertEqual(preserved_profile["test_commands"][0]["command"], "python -m unittest tests.fast")
 
+    def test_attach_target_repo_overwrite_refreshes_light_pack_with_enriched_profile(self) -> None:
+        module = self._module()
+        with tempfile.TemporaryDirectory() as workspace:
+            repo_root = Path(workspace) / "enriched-profile-target"
+            governed_dir = repo_root / ".governed-ai"
+            governed_dir.mkdir(parents=True)
+            runtime_root = Path(workspace) / "runtime-state" / "enriched-profile-target"
+            profile = module.build_minimal_repo_profile(
+                repo_id="enriched-profile-target",
+                display_name="enriched-profile-target",
+                primary_language="python",
+                build_command="python -m compileall src",
+                test_command="python -m unittest discover",
+                contract_command="python -m unittest discover -s tests/contracts",
+            )
+            profile["required_entrypoint_policy"]["current_mode"] = "targeted_enforced"
+            profile["interaction_profile"] = {"communication_language": "zh-CN"}
+            (governed_dir / "repo-profile.json").write_text(
+                json.dumps(profile, indent=2, sort_keys=True),
+                encoding="utf-8",
+            )
+            light_pack_path = governed_dir / "light-pack.json"
+            light_pack = self._light_pack_payload("enriched-profile-target")
+            light_pack["binding_id"] = "binding-stale"
+            light_pack_path.write_text(json.dumps(light_pack, indent=2, sort_keys=True), encoding="utf-8")
+
+            result = module.attach_target_repo(
+                target_repo_root=str(repo_root),
+                runtime_state_root=str(runtime_root),
+                repo_id="enriched-profile-target",
+                display_name="enriched-profile-target",
+                primary_language="python",
+                build_command="python -m compileall src",
+                test_command="python -m unittest discover",
+                contract_command="python -m unittest discover -s tests/contracts",
+                overwrite=True,
+            )
+
+            preserved_profile = json.loads((governed_dir / "repo-profile.json").read_text(encoding="utf-8"))
+            self.assertEqual(preserved_profile["required_entrypoint_policy"]["current_mode"], "targeted_enforced")
+            self.assertEqual(preserved_profile["interaction_profile"]["communication_language"], "zh-CN")
+            refreshed_light_pack = json.loads(light_pack_path.read_text(encoding="utf-8"))
+            self.assertEqual(refreshed_light_pack["binding_id"], "binding-enriched-profile-target")
+            provenance = json.loads((governed_dir / "light-pack.provenance.json").read_text(encoding="utf-8"))
+            expected_digest = "sha256:" + hashlib.sha256(light_pack_path.read_bytes()).hexdigest()
+            self.assertEqual(provenance["subject_digest"], expected_digest)
+            self.assertEqual(provenance["output_digest"], expected_digest)
+            self.assertEqual(result.operation, "created")
+
     def test_attach_target_repo_overwrite_blocks_existing_dependency_baseline_drift(self) -> None:
         module = self._module()
         with tempfile.TemporaryDirectory() as workspace:
@@ -444,6 +494,16 @@ class RepoAttachmentBindingTests(unittest.TestCase):
                     light_pack_path=".governed-ai/light-pack.json",
                     runtime_state_root=str(runtime_root),
                 )
+
+            posture = module.inspect_attachment_posture(
+                target_repo_root=str(repo_root),
+                runtime_state_root=str(runtime_root),
+            )
+            self.assertEqual(posture.binding_state, "invalid_light_pack")
+            self.assertTrue(posture.fail_closed)
+            self.assertIn("subject_digest", posture.reason)
+            self.assertEqual(posture.provenance_summary["state"], "invalid")
+            self.assertIn("attach-target-repo.py", posture.remediation)
 
     def test_attachment_posture_reports_remediation_and_fail_closed_states(self) -> None:
         module = self._module()

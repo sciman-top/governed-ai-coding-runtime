@@ -202,7 +202,7 @@ def attach_target_repo(
         )
         _validate_repo_profile_for_attachment(profile)
         if repo_profile_path.exists():
-            _ensure_json_equivalent_or_missing(
+            _ensure_repo_profile_compatible_or_missing(
                 repo_profile_path,
                 profile,
                 "repo-profile.json",
@@ -583,11 +583,35 @@ def inspect_attachment_posture(
             provenance_summary={"state": "not_checked", "reason": "stale_binding"},
         )
 
-    provenance_summary = inspect_light_pack_provenance(
-        target_repo_root=target_root,
-        light_pack=light_pack,
-        light_pack_path=resolved_light_pack_path,
-    )
+    try:
+        provenance_summary = inspect_light_pack_provenance(
+            target_repo_root=target_root,
+            light_pack=light_pack,
+            light_pack_path=resolved_light_pack_path,
+        )
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        return RepoAttachmentPosture(
+            repo_id=profile.repo_id,
+            binding_id=binding.binding_id,
+            binding_state="invalid_light_pack",
+            light_pack_path=binding.light_pack_path,
+            adapter_preference=binding.adapter_preference,
+            gate_profile=binding.gate_profile,
+            reason=str(exc),
+            remediation=_remediation_for_posture(
+                binding_state="invalid_light_pack",
+                target_root=target_root,
+                runtime_root=runtime_root,
+            ),
+            fail_closed=True,
+            context_pack_summary=inspect_attachment_context_pack(
+                target_repo_root=target_root,
+                runtime_state_root=runtime_root,
+                repo_profile_path=Path(binding.repo_profile_ref),
+                light_pack_path=Path(binding.light_pack_path),
+            ),
+            provenance_summary={"state": "invalid", "reason": str(exc)},
+        )
 
     return RepoAttachmentPosture(
         repo_id=profile.repo_id,
@@ -896,6 +920,27 @@ def _ensure_json_equivalent_or_missing(path: Path, expected: dict, label: str) -
     actual = _load_json_object(path, label)
     if actual != expected:
         raise ValueError(f"{label} content differs; review and integrate before overwriting")
+
+
+def _ensure_repo_profile_compatible_or_missing(path: Path, expected: dict, label: str) -> None:
+    actual = _load_json_object(path, label)
+    _validate_repo_profile_for_attachment(actual)
+
+    attachment_core_fields = (
+        "schema_version",
+        "repo_id",
+        "display_name",
+        "primary_language",
+        "repo_root_locator",
+        "build_commands",
+        "test_commands",
+        "contract_commands",
+        "invariant_commands",
+        "path_policies",
+    )
+    for field_name in attachment_core_fields:
+        if actual.get(field_name) != expected.get(field_name):
+            raise ValueError(f"{label} content differs; review and integrate before overwriting")
 
 
 def _validate_repo_profile_for_attachment(raw: dict) -> RepoProfile:

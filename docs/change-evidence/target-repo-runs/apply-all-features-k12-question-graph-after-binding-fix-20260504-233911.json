@@ -1,0 +1,312 @@
+{
+  "governance_baseline_sync": {
+    "status": "pass",
+    "reason": "ok",
+    "exit_code": 0,
+    "duration_ms": 182,
+    "catalog_changed": [],
+    "catalog_blocked": [],
+    "changed": [],
+    "speed_changed": [],
+    "managed_changed": [],
+    "managed_blocked": [],
+    "generated_changed": [],
+    "generated_blocked": [],
+    "sync_revision": "2026-05-04.2",
+    "quick_test_slice_source": "argument",
+    "outer_ai_action": "none",
+    "quick_test_prompt_path": null,
+    "outer_ai_instruction": "",
+    "bootstrap": {
+      "status": "skipped",
+      "reason": "repo_profile_exists",
+      "exit_code": 0,
+      "payload": null,
+      "output": ""
+    }
+  },
+  "runtime_check": {
+    "exit_code": 1,
+    "payload": {
+      "problem_trace": {
+        "failure_stage": "status",
+        "failure_signature": "status",
+        "problem_kind": "runtime_status",
+        "target_context": {
+          "mode": "quick",
+          "attachment_root": "D:\\CODE\\k12-question-graph",
+          "task_id": "task-20260504233912",
+          "command_id": "cmd-20260504233912",
+          "run_id": "run-20260504233912",
+          "repo_binding_id": "binding-k12-question-graph",
+          "flow_kind": "unknown",
+          "closure_state": "incomplete",
+          "entrypoint_id": "runtime-flow-preset"
+        },
+        "failed_steps": [
+          "status",
+          "doctor",
+          "verify-attachment"
+        ],
+        "failure_reason": "status_failed",
+        "write_issue": {
+          "policy_status": null,
+          "target_path": null,
+          "preflight_blocked": false,
+          "governance_status": null,
+          "reason": null,
+          "execution_status": null,
+          "retry_command": null
+        },
+        "evidence_refs": [],
+        "has_problem": true,
+        "gate_failure_ids": [],
+        "next_actions": []
+      },
+      "steps": [
+        {
+          "exit_code": 0,
+          "output": "{\n  \"allowed_external_modules\": [],\n  \"allowed_local_modules\": [\n    \"governed_ai_coding_runtime_contracts\",\n    \"lib\"\n  ],\n  \"baseline_path\": \"D:/CODE/governed-ai-coding-runtime/docs/dependency-baseline.json\",\n  \"host_tooling\": [\n    {\n      \"found\": true,\n      \"name\": \"python\",\n      \"required\": true\n    },\n    {\n      \"found\": true,\n      \"name\": \"pwsh\",\n      \"required\": true\n    },\n    {\n      \"found\": true,\n      \"name\": \"git\",\n      \"required\": false\n    },\n    {\n      \"found\": true,\n      \"name\": \"codex\",\n      \"required\": false\n    }\n  ],\n  \"missing_required_tools\": [],\n  \"observed_external_modules\": [],\n  \"observed_import_roots\": [\n    \"__future__\",\n    \"argparse\",\n    \"ast\",\n    \"base64\",\n    \"binascii\",\n    \"collections\",\n    \"concurrent\",\n    \"contextlib\",\n    \"copy\",\n    \"dataclasses\",\n    \"datetime\",\n    \"fnmatch\",\n    \"functools\",\n    \"governed_ai_coding_runtime_contracts\",\n    \"hashlib\",\n    \"html\",\n    \"http\",\n    \"importlib\",\n    \"json\",\n    \"lib\",\n    \"os\",\n    \"pathlib\",\n    \"re\",\n    \"shutil\",\n    \"sqlite3\",\n    \"stat\",\n    \"subprocess\",\n    \"sys\",\n    \"sysconfig\",\n    \"tempfile\",\n    \"textwrap\",\n    \"threading\",\n    \"time\",\n    \"tomllib\",\n    \"types\",\n    \"typing\",\n    \"unittest\",\n    \"urllib\",\n    \"uuid\",\n    \"webbrowser\",\n    \"winreg\"\n  ],\n  \"scan_roots\": [\n    \"apps\",\n    \"packages\",\n    \"scripts\",\n    \"tests\"\n  ],\n  \"status\": \"pass\",\n  \"target_repo_baseline\": {\n    \"checked\": true,\n    \"expected_paths\": [\n      \"docs/dependency-baseline.md\",\n      \".governed-ai/dependency-baseline.json\"\n    ],\n    \"matched_paths\": [\n      \".governed-ai/dependency-baseline.json\"\n    ],\n    \"present\": true,\n    \"required\": true,\n    \"target_repo_root\": \"D:/CODE/k12-question-graph\"\n  },\n  \"undeclared_imports\": {}\n}",
+          "label": "dependency-baseline-target-repo"
+        },
+        {
+          "exit_code": 1,
+          "output": "Traceback (most recent call last):\n  File \"D:\\CODE\\governed-ai-coding-runtime\\scripts\\run-governed-task.py\", line 1051, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"D:\\CODE\\governed-ai-coding-runtime\\scripts\\run-governed-task.py\", line 224, in main\n    payload = snapshot_payload(\n        attachment_root=args.attachment_root,\n        attachment_runtime_state_root=args.attachment_runtime_state_root,\n    )\n  File \"D:\\CODE\\governed-ai-coding-runtime\\scripts\\run-governed-task.py\", line 435, in snapshot_payload\n    response = _dispatch_session_command(\n        command_type=\"inspect_status\",\n    ...<7 lines>...\n        attachment_runtime_state_root=attachment_runtime_state_root,\n    )\n  File \"D:\\CODE\\governed-ai-coding-runtime\\scripts\\run-governed-task.py\", line 992, in _dispatch_session_command\n    return app.dispatch(\n           ~~~~~~~~~~~~^\n        route=\"/session\",\n        ^^^^^^^^^^^^^^^^^\n    ...<12 lines>...\n        },\n        ^^\n    )\n    ^\n  File \"D:\\CODE\\governed-ai-coding-runtime\\apps\\control-plane\\app.py\", line 33, in dispatch\n    return self._session_route.handle_session_route(self._facade, body)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\CODE\\governed-ai-coding-runtime\\apps\\control-plane\\routes\\session.py\", line 9, in handle_session_route\n    return facade.session_command(\n           ~~~~~~~~~~~~~~~~~~~~~~^\n        command_type=_required_string(payload.get(\"command_type\"), \"command_type\"),\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ...<8 lines>...\n        attachment_runtime_state_root=_string_or_none(payload.get(\"attachment_runtime_state_root\")),\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"D:\\CODE\\governed-ai-coding-runtime\\packages\\agent-runtime\\service_facade.py\", line 64, in session_command\n    return self._execute_session_command(\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^\n        command_type=command_type,\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ...<8 lines>...\n        attachment_runtime_state_root=attachment_runtime_state_root,\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"D:\\CODE\\governed-ai-coding-runtime\\packages\\agent-runtime\\service_facade.py\", line 198, in _execute_session_command\n    result = handle_session_bridge_command(\n        command,\n    ...<3 lines>...\n        attachment_runtime_state_root=attachment_runtime_state_root,\n    )\n  File \"D:\\CODE\\governed-ai-coding-runtime\\packages\\contracts\\src\\governed_ai_coding_runtime_contracts\\session_bridge.py\", line 338, in handle_session_bridge_command\n    ).snapshot()\n      ~~~~~~~~^^\n  File \"D:\\CODE\\governed-ai-coding-runtime\\packages\\contracts\\src\\governed_ai_coding_runtime_contracts\\runtime_status.py\", line 129, in snapshot\n    attachments = self._attachment_statuses()\n  File \"D:\\CODE\\governed-ai-coding-runtime\\packages\\contracts\\src\\governed_ai_coding_runtime_contracts\\runtime_status.py\", line 182, in _attachment_statuses\n    posture = inspect_attachment_posture(\n        target_repo_root=str(attachment_root),\n        runtime_state_root=str(runtime_state_root),\n    )\n  File \"D:\\CODE\\governed-ai-coding-runtime\\packages\\contracts\\src\\governed_ai_coding_runtime_contracts\\repo_attachment.py\", line 586, in inspect_attachment_posture\n    provenance_summary = inspect_light_pack_provenance(\n        target_repo_root=target_root,\n        light_pack=light_pack,\n        light_pack_path=resolved_light_pack_path,\n    )\n  File \"D:\\CODE\\governed-ai-coding-runtime\\packages\\contracts\\src\\governed_ai_coding_runtime_contracts\\repo_attachment.py\", line 462, in inspect_light_pack_provenance\n    provenance_path = _validate_light_pack_provenance_if_declared(\n        target_root=target_root,\n        light_pack=light_pack,\n        light_pack_path=resolved_light_pack_path,\n    )\n  File \"D:\\CODE\\governed-ai-coding-runtime\\packages\\contracts\\src\\governed_ai_coding_runtime_contracts\\repo_attachment.py\", line 844, in _validate_light_pack_provenance_if_declared\n    raise ValueError(\"provenance subject_digest does not match light_pack_path\")\nValueError: provenance subject_digest does not match light_pack_path",
+          "label": "status"
+        },
+        {
+          "exit_code": 1,
+          "output": "OK python-command\nOK windows-process-environment\nOK python-asyncio\nOK windows-node-csprng\nOK runtime-path-contracts\nOK runtime-path-schema-catalog\nOK runtime-path-specs\nOK runtime-path-tests\nOK dependency-baseline-doc\nOK dependency-baseline-manifest\nOK dependency-baseline-script\nOK runtime-policy-compatibility\nOK runtime-policy-maintenance\nOK schema-catalog-visible\nOK gate-command-build\nOK gate-command-test\nOK gate-command-contract\nOK gate-command-doctor\nOK gate-command-operator\nOK repo-hook-pre-commit\nOK repo-hook-script\nOK repo-hook-installer\nOK repo-hooks-path\nOK runtime-status-surface\nOK maintenance-policy-visible\nWARN codex-capability-degraded\nHINT Treat `codex exec resume --help` as supporting evidence only. Native attach requires a build that exposes a status handshake command.\nOK adapter-posture-visible\nTraceback (most recent call last):\n  File \"<stdin>\", line 11, in <module>\n  File \"D:\\CODE\\governed-ai-coding-runtime\\packages\\contracts\\src\\governed_ai_coding_runtime_contracts\\repo_attachment.py\", line 586, in inspect_attachment_posture\n    provenance_summary = inspect_light_pack_provenance(\n        target_repo_root=target_root,\n        light_pack=light_pack,\n        light_pack_path=resolved_light_pack_path,\n    )\n  File \"D:\\CODE\\governed-ai-coding-runtime\\packages\\contracts\\src\\governed_ai_coding_runtime_contracts\\repo_attachment.py\", line 462, in inspect_light_pack_provenance\n    provenance_path = _validate_light_pack_provenance_if_declared(\n        target_root=target_root,\n        light_pack=light_pack,\n        light_pack_path=resolved_light_pack_path,\n    )\n  File \"D:\\CODE\\governed-ai-coding-runtime\\packages\\contracts\\src\\governed_ai_coding_runtime_contracts\\repo_attachment.py\", line 844, in _validate_light_pack_provenance_if_declared\n    raise ValueError(\"provenance subject_digest does not match light_pack_path\")\nValueError: provenance subject_digest does not match light_pack_path\n\u001b[31;1mException: \u001b[0mD:\\CODE\\governed-ai-coding-runtime\\scripts\\doctor-runtime.ps1:368\u001b[0m\n\u001b[31;1m\u001b[0m\u001b[36;1mLine |\u001b[0m\n\u001b[31;1m\u001b[0m\u001b[36;1m\u001b[36;1m 368 | \u001b[0m     \u001b[36;1mthrow \"Attachment posture check failed\"\u001b[0m\n\u001b[31;1m\u001b[0m\u001b[36;1m\u001b[36;1m\u001b[0m\u001b[36;1m\u001b[0m\u001b[36;1m     | \u001b[31;1m     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\u001b[0m\n\u001b[31;1m\u001b[0m\u001b[36;1m\u001b[36;1m\u001b[0m\u001b[36;1m\u001b[0m\u001b[36;1m\u001b[31;1m\u001b[31;1m\u001b[36;1m     | \u001b[31;1mAttachment posture check failed\u001b[0m",
+          "label": "doctor"
+        },
+        {
+          "exit_code": 0,
+          "output": "{\n  \"command_id\": \"cmd-20260504233912\",\n  \"command_type\": \"run_quick_gate\",\n  \"payload\": {},\n  \"policy_decision_ref\": \"artifacts/task-20260504233912/policy/session-bridge-allow.json\",\n  \"reason\": \"contract_reader_error: provenance subject_digest does not match light_pack_path\",\n  \"status\": \"degraded\",\n  \"unsupported_capability_behavior\": \"manual_handoff\"\n}",
+          "label": "session-bridge-request-gate"
+        },
+        {
+          "exit_code": 1,
+          "output": "Traceback (most recent call last):\n  File \"D:\\CODE\\governed-ai-coding-runtime\\scripts\\run-governed-task.py\", line 1051, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"D:\\CODE\\governed-ai-coding-runtime\\scripts\\run-governed-task.py\", line 168, in main\n    payload = run_attachment_verification(\n        attachment_root=args.attachment_root,\n    ...<4 lines>...\n        entrypoint_id=args.entrypoint_id,\n    )\n  File \"D:\\CODE\\governed-ai-coding-runtime\\scripts\\run-governed-task.py\", line 598, in run_attachment_verification\n    \"gate_order\": payload[\"gate_order\"],\n                  ~~~~~~~^^^^^^^^^^^^^^\nKeyError: 'gate_order'",
+          "label": "verify-attachment"
+        },
+        {
+          "exit_code": 0,
+          "output": "{\n  \"detected_classes\": [],\n  \"detected_files\": [],\n  \"executed_batches\": [],\n  \"failed_classes\": [],\n  \"reason\": \"no_source_string_contract_tests_detected\",\n  \"status\": \"skip\",\n  \"target_repo_root\": \"D:\\\\CODE\\\\k12-question-graph\",\n  \"test_project\": null\n}",
+          "label": "source-string-contract-guard"
+        }
+      ],
+      "verify_attachment": null,
+      "dependency_baseline": {
+        "allowed_external_modules": [],
+        "allowed_local_modules": [
+          "governed_ai_coding_runtime_contracts",
+          "lib"
+        ],
+        "baseline_path": "D:/CODE/governed-ai-coding-runtime/docs/dependency-baseline.json",
+        "host_tooling": [
+          {
+            "found": true,
+            "name": "python",
+            "required": true
+          },
+          {
+            "found": true,
+            "name": "pwsh",
+            "required": true
+          },
+          {
+            "found": true,
+            "name": "git",
+            "required": false
+          },
+          {
+            "found": true,
+            "name": "codex",
+            "required": false
+          }
+        ],
+        "missing_required_tools": [],
+        "observed_external_modules": [],
+        "observed_import_roots": [
+          "__future__",
+          "argparse",
+          "ast",
+          "base64",
+          "binascii",
+          "collections",
+          "concurrent",
+          "contextlib",
+          "copy",
+          "dataclasses",
+          "datetime",
+          "fnmatch",
+          "functools",
+          "governed_ai_coding_runtime_contracts",
+          "hashlib",
+          "html",
+          "http",
+          "importlib",
+          "json",
+          "lib",
+          "os",
+          "pathlib",
+          "re",
+          "shutil",
+          "sqlite3",
+          "stat",
+          "subprocess",
+          "sys",
+          "sysconfig",
+          "tempfile",
+          "textwrap",
+          "threading",
+          "time",
+          "tomllib",
+          "types",
+          "typing",
+          "unittest",
+          "urllib",
+          "uuid",
+          "webbrowser",
+          "winreg"
+        ],
+        "scan_roots": [
+          "apps",
+          "packages",
+          "scripts",
+          "tests"
+        ],
+        "status": "pass",
+        "target_repo_baseline": {
+          "checked": true,
+          "expected_paths": [
+            "docs/dependency-baseline.md",
+            ".governed-ai/dependency-baseline.json"
+          ],
+          "matched_paths": [
+            ".governed-ai/dependency-baseline.json"
+          ],
+          "present": true,
+          "required": true,
+          "target_repo_root": "D:/CODE/k12-question-graph"
+        },
+        "undeclared_imports": {}
+      },
+      "write_execute": null,
+      "inspect_evidence": null,
+      "inspect_handoff": null,
+      "write_status": null,
+      "live_loop": {
+        "is_live_attach": false,
+        "evidence_linkage_complete": false,
+        "flow_kind": "unknown",
+        "fallback_explicit": true,
+        "session_identity_continuity": true,
+        "continuation_continuity": true,
+        "resume_identity_continuity": true,
+        "closure_state": "incomplete",
+        "runtime_refs": [],
+        "fallback_reason": null
+      },
+      "next_actions": [],
+      "request_gate": {
+        "command_id": "cmd-20260504233912",
+        "command_type": "run_quick_gate",
+        "payload": {},
+        "policy_decision_ref": "artifacts/task-20260504233912/policy/session-bridge-allow.json",
+        "reason": "contract_reader_error: provenance subject_digest does not match light_pack_path",
+        "status": "degraded",
+        "unsupported_capability_behavior": "manual_handoff"
+      },
+      "status": null,
+      "source_string_contract_guard": {
+        "detected_classes": [],
+        "detected_files": [],
+        "executed_batches": [],
+        "failed_classes": [],
+        "reason": "no_source_string_contract_tests_detected",
+        "status": "skip",
+        "target_repo_root": "D:\\CODE\\k12-question-graph",
+        "test_project": null
+      },
+      "write_preflight": null,
+      "write_approval": null,
+      "summary": {
+        "command_id": "cmd-20260504233912",
+        "continuation_id": "task-20260504233912:run-20260504233912",
+        "resume_id": "resume-task-20260504233912",
+        "mode": "quick",
+        "attachment_runtime_state_root": "D:\\CODE\\governed-ai-coding-runtime\\.runtime\\attachments\\k12-question-graph",
+        "attachment_health": "unknown",
+        "closure_state": "incomplete",
+        "task_id": "task-20260504233912",
+        "overall_status": "fail",
+        "attachment_root": "D:\\CODE\\k12-question-graph",
+        "repo_binding_id": "binding-k12-question-graph",
+        "session_id": "session-task-20260504233912",
+        "entrypoint_id": "runtime-flow-preset",
+        "run_id": "run-20260504233912",
+        "flow_kind": "unknown"
+      },
+      "write_governance": null
+    }
+  },
+  "flow_mode": "daily",
+  "overall_status": "fail",
+  "onboard_attach": null,
+  "next_actions": [],
+  "milestone_commit": {
+    "status": "skipped",
+    "reason": "runtime_flow_failed",
+    "exit_code": 1,
+    "gate_mode": "fast",
+    "gate_mode_source": "auto",
+    "gate_mode_reason": "daily_low_to_medium_risk",
+    "command_timeout_seconds": 900,
+    "gate_skipped": false,
+    "gate_skip_reason": "",
+    "auto_commit_status": "",
+    "auto_commit_reason": "",
+    "auto_commit_disabled_by_caller": false,
+    "commit_hash": "",
+    "commit_message": "",
+    "trigger": "",
+    "milestone_tag": "auto-apply-20260504"
+  },
+  "clean_milestone_gate_skip_enabled": true,
+  "clean_milestone_gate_skip_source": "auto",
+  "prune_retired_managed_files": {
+    "status": "blocked",
+    "reason": "target_flow_failed_before_managed_asset_apply",
+    "exit_code": 2,
+    "target_root": "D:\\CODE\\k12-question-graph",
+    "dry_run": true,
+    "apply": false,
+    "backup_root": "",
+    "manifest_path": "",
+    "operation_type": "",
+    "deletion_policy": "",
+    "delete_candidates": 0,
+    "deleted": 0,
+    "blocked": 1,
+    "missing": 0,
+    "shared_patch_candidates": 0,
+    "shared_patched": 0,
+    "profile_patch_candidates": 0,
+    "profile_patched": 0,
+    "delete_candidate_items": [],
+    "deleted_files": [],
+    "blocked_files": [
+      {
+        "path": "",
+        "reason": "target_flow_failed_before_managed_asset_apply",
+        "flow_exit_code": 1
+      }
+    ],
+    "missing_files": [],
+    "shared_patch_candidate_items": [],
+    "patched_shared_files": [],
+    "profile_patch_candidate_items": [],
+    "patched_profile_files": []
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "overall_status": "fail",
+  "runtime_check": {
+    "payload": null,
+    "exit_code": 1
+  },
+  "governance_baseline_sync": {
+    "status": "pass",
+    "reason": "ok",
+    "exit_code": 0,
+    "duration_ms": 177,
+    "catalog_changed": [],
+    "catalog_blocked": [],
+    "changed": [],
+    "speed_changed": [],
+    "managed_changed": [],
+    "managed_blocked": [],
+    "generated_changed": [],
+    "generated_blocked": [],
+    "sync_revision": "2026-05-04.2",
+    "quick_test_slice_source": "argument",
+    "outer_ai_action": "none",
+    "quick_test_prompt_path": null,
+    "outer_ai_instruction": "",
+    "bootstrap": {
+      "status": "skipped",
+      "reason": "repo_profile_exists",
+      "exit_code": 0,
+      "payload": null,
+      "output": ""
+    }
+  },
+  "flow_mode": "daily",
+  "next_actions": [],
+  "onboard_attach": null,
+  "milestone_commit": {
+    "status": "skipped",
+    "reason": "runtime_flow_failed",
+    "exit_code": 1,
+    "gate_mode": "fast",
+    "gate_mode_source": "auto",
+    "gate_mode_reason": "daily_low_to_medium_risk",
+    "command_timeout_seconds": 900,
+    "gate_skipped": false,
+    "gate_skip_reason": "",
+    "auto_commit_status": "",
+    "auto_commit_reason": "",
+    "auto_commit_disabled_by_caller": false,
+    "commit_hash": "",
+    "commit_message": "",
+    "trigger": "",
+    "milestone_tag": "auto-apply-20260504"
+  },
+  "clean_milestone_gate_skip_enabled": true,
+  "clean_milestone_gate_skip_source": "auto",
+  "prune_retired_managed_files": {
+    "status": "blocked",
+    "reason": "target_flow_failed_before_managed_asset_apply",
+    "exit_code": 2,
+    "target_root": "D:\\CODE\\k12-question-graph",
+    "dry_run": true,
+    "apply": false,
+    "backup_root": "",
+    "manifest_path": "",
+    "operation_type": "",
+    "deletion_policy": "",
+    "delete_candidates": 0,
+    "deleted": 0,
+    "blocked": 1,
+    "missing": 0,
+    "shared_patch_candidates": 0,
+    "shared_patched": 0,
+    "profile_patch_candidates": 0,
+    "profile_patched": 0,
+    "delete_candidate_items": [],
+    "deleted_files": [],
+    "blocked_files": [
+      {
+        "path": "",
+        "reason": "target_flow_failed_before_managed_asset_apply",
+        "flow_exit_code": 1
+      }
+    ],
+    "missing_files": [],
+    "shared_patch_candidate_items": [],
+    "patched_shared_files": [],
+    "profile_patch_candidate_items": [],
+    "patched_profile_files": []
+  }
+}

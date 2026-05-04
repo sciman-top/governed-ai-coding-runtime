@@ -308,6 +308,250 @@ function Write-BatchProgressLine {
   Write-Host $line
 }
 
+function Resolve-TargetRepoBindingId {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$TargetName,
+    [Parameter(Mandatory = $true)]
+    [hashtable]$TargetConfig
+  )
+
+  if (-not [string]::IsNullOrWhiteSpace($RepoBindingId)) {
+    return $RepoBindingId
+  }
+
+  $repoId = ""
+  if ($TargetConfig.ContainsKey("RepoId")) {
+    $repoId = [string]$TargetConfig.RepoId
+  }
+  if ([string]::IsNullOrWhiteSpace($repoId)) {
+    $repoId = $TargetName
+  }
+  return ("binding-{0}" -f $repoId)
+}
+
+function New-AttachTargetRepoArguments {
+  param(
+    [Parameter(Mandatory = $true)]
+    [hashtable]$TargetConfig,
+    [Parameter(Mandatory = $true)]
+    [string]$RepoRoot,
+    [string]$AdapterPreferenceValue = "",
+    [bool]$OverwriteAttachment = $false
+  )
+
+  $attachScriptPath = Join-Path $RepoRoot "scripts\attach-target-repo.py"
+  if (-not (Test-Path -LiteralPath $attachScriptPath)) {
+    throw "Missing attach-target-repo.py at $attachScriptPath"
+  }
+
+  $primaryLanguage = if ([string]::IsNullOrWhiteSpace($TargetConfig.PrimaryLanguage)) { "unknown" } else { $TargetConfig.PrimaryLanguage }
+  $attachArgs = @(
+    $attachScriptPath,
+    "--target-repo", $TargetConfig.AttachmentRoot,
+    "--runtime-state-root", $TargetConfig.AttachmentRuntimeStateRoot,
+    "--primary-language", $primaryLanguage
+  )
+  if (-not [string]::IsNullOrWhiteSpace($AdapterPreferenceValue)) {
+    $attachArgs += @("--adapter-preference", $AdapterPreferenceValue)
+  }
+  if (-not [string]::IsNullOrWhiteSpace($TargetConfig.RepoId)) {
+    $attachArgs += @("--repo-id", $TargetConfig.RepoId)
+  }
+  if (-not [string]::IsNullOrWhiteSpace($TargetConfig.DisplayName)) {
+    $attachArgs += @("--display-name", $TargetConfig.DisplayName)
+  }
+  if (-not [string]::IsNullOrWhiteSpace($TargetConfig.BuildCommand)) {
+    $attachArgs += @("--build-command", $TargetConfig.BuildCommand)
+  }
+  if (-not [string]::IsNullOrWhiteSpace($TargetConfig.TestCommand)) {
+    $attachArgs += @("--test-command", $TargetConfig.TestCommand)
+  }
+  if (-not [string]::IsNullOrWhiteSpace($TargetConfig.ContractCommand)) {
+    $attachArgs += @("--contract-command", $TargetConfig.ContractCommand)
+  }
+  $hasContractGate = (-not [string]::IsNullOrWhiteSpace($TargetConfig.ContractCommand)) -or
+    (-not [string]::IsNullOrWhiteSpace($TargetConfig.ContractCommandsJson))
+  if ([string]::IsNullOrWhiteSpace($TargetConfig.BuildCommand) -or
+      [string]::IsNullOrWhiteSpace($TargetConfig.TestCommand) -or
+      (-not $hasContractGate)) {
+    $attachArgs += "--infer-gate-defaults"
+  }
+  if ($OverwriteAttachment) {
+    $attachArgs += "--overwrite"
+  }
+
+  return ,$attachArgs
+}
+
+function Invoke-AttachmentPostureInspect {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$TargetName,
+    [Parameter(Mandatory = $true)]
+    [hashtable]$TargetConfig,
+    [Parameter(Mandatory = $true)]
+    [string]$RepoRoot,
+    [Parameter(Mandatory = $true)]
+    [string]$PythonCommand,
+    [int]$CommandTimeoutSeconds = 0
+  )
+
+  $contractsSrc = Join-Path $RepoRoot "packages\contracts\src"
+  $inspectCode = @'
+import json
+import sys
+from dataclasses import asdict
+
+sys.path.insert(0, sys.argv[1])
+from governed_ai_coding_runtime_contracts.repo_attachment import inspect_attachment_posture
+
+posture = inspect_attachment_posture(target_repo_root=sys.argv[2], runtime_state_root=sys.argv[3])
+print(json.dumps(asdict(posture), sort_keys=True))
+'@
+
+  $inspectResult = Invoke-CommandCapture `
+    -Executable $PythonCommand `
+    -Arguments @("-c", $inspectCode, $contractsSrc, $TargetConfig.AttachmentRoot, $TargetConfig.AttachmentRuntimeStateRoot) `
+    -TimeoutSeconds $CommandTimeoutSeconds `
+    -WorkingDirectory $RepoRoot
+  $inspectPayload = Try-ParseJson -Raw $inspectResult.output
+  return [pscustomobject]@{
+    target    = $TargetName
+    status    = if (($inspectResult.exit_code -eq 0) -and $inspectPayload) { "pass" } else { "fail" }
+    reason    = if ($inspectResult.timed_out) { "posture_inspection_timed_out" } elseif ($inspectResult.exit_code -eq 0) { "posture_inspected" } else { "posture_inspection_failed" }
+    exit_code = $inspectResult.exit_code
+    payload   = $inspectPayload
+    output    = $inspectResult.output
+  }
+}
+
+function Invoke-AttachmentRepairIfNeeded {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$TargetName,
+    [Parameter(Mandatory = $true)]
+    [hashtable]$TargetConfig,
+    [Parameter(Mandatory = $true)]
+    [string]$RepoRoot,
+    [Parameter(Mandatory = $true)]
+    [string]$PythonCommand,
+    [string]$AdapterPreferenceValue = "",
+    [int]$CommandTimeoutSeconds = 0,
+    [bool]$EmitProgress = $false
+  )
+
+  $inspectResult = Invoke-AttachmentPostureInspect `
+    -TargetName $TargetName `
+    -TargetConfig $TargetConfig `
+    -RepoRoot $RepoRoot `
+    -PythonCommand $PythonCommand `
+    -CommandTimeoutSeconds $CommandTimeoutSeconds
+  if ($inspectResult.status -ne "pass") {
+    return [pscustomobject]@{
+      target      = $TargetName
+      status      = "fail"
+      reason      = $inspectResult.reason
+      exit_code   = $inspectResult.exit_code
+      before      = $inspectResult.payload
+      payload     = $null
+      output      = $inspectResult.output
+      refreshed   = $false
+    }
+  }
+
+  $bindingState = [string]$inspectResult.payload.binding_state
+  if ($bindingState -eq "healthy") {
+    return [pscustomobject]@{
+      target      = $TargetName
+      status      = "skipped"
+      reason      = "attachment_healthy"
+      exit_code   = 0
+      before      = $inspectResult.payload
+      payload     = $null
+      output      = ""
+      refreshed   = $false
+    }
+  }
+  if ($bindingState -notin @("missing_light_pack", "invalid_light_pack", "stale_binding")) {
+    return [pscustomobject]@{
+      target      = $TargetName
+      status      = "fail"
+      reason      = ("unsupported_attachment_state:{0}" -f $bindingState)
+      exit_code   = 1
+      before      = $inspectResult.payload
+      payload     = $null
+      output      = ""
+      refreshed   = $false
+    }
+  }
+
+  Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "attachment_repair" -Status "start" -Detail ("state={0}" -f $bindingState)
+  $attachArgs = New-AttachTargetRepoArguments `
+    -TargetConfig $TargetConfig `
+    -RepoRoot $RepoRoot `
+    -AdapterPreferenceValue $AdapterPreferenceValue `
+    -OverwriteAttachment $true
+  $refreshResult = Invoke-CommandCapture `
+    -Executable $PythonCommand `
+    -Arguments $attachArgs `
+    -TimeoutSeconds $CommandTimeoutSeconds `
+    -WorkingDirectory $RepoRoot
+  $refreshPayload = Try-ParseJson -Raw $refreshResult.output
+  if (($refreshResult.exit_code -ne 0) -and (($refreshResult.output -like "*repo-profile.json content differs*") -or ($bindingState -eq "missing_light_pack"))) {
+    $deferReason = if ($refreshResult.output -like "*repo-profile.json content differs*") {
+      "attachment_refresh_deferred:repo_profile_drift"
+    }
+    else {
+      "attachment_refresh_deferred:missing_light_pack"
+    }
+    Write-BatchProgressLine `
+      -Enabled $EmitProgress `
+      -TargetName $TargetName `
+      -Stage "attachment_repair" `
+      -Status "skipped" `
+      -Detail ("reason={0}" -f $deferReason)
+
+    return [pscustomobject]@{
+      target      = $TargetName
+      status      = "skipped"
+      reason      = $deferReason
+      exit_code   = 0
+      before      = $inspectResult.payload
+      payload     = $refreshPayload
+      output      = $refreshResult.output
+      refreshed   = $false
+    }
+  }
+  $refreshStatus = if ($refreshResult.exit_code -eq 0) { "pass" } else { "fail" }
+  $refreshReason = if ($refreshResult.exit_code -eq 0) {
+    ("refreshed_{0}" -f $bindingState)
+  }
+  elseif ($refreshResult.timed_out) {
+    "attachment_refresh_timed_out"
+  }
+  else {
+    ("attachment_refresh_failed:{0}" -f $bindingState)
+  }
+  Write-BatchProgressLine `
+    -Enabled $EmitProgress `
+    -TargetName $TargetName `
+    -Stage "attachment_repair" `
+    -Status $refreshStatus `
+    -Detail ("reason={0} exit_code={1}" -f $refreshReason, $refreshResult.exit_code)
+
+  return [pscustomobject]@{
+    target      = $TargetName
+    status      = $refreshStatus
+    reason      = $refreshReason
+    exit_code   = $refreshResult.exit_code
+    before      = $inspectResult.payload
+    payload     = $refreshPayload
+    output      = $refreshResult.output
+    refreshed   = ($refreshResult.exit_code -eq 0)
+  }
+}
+
 function Resolve-MilestoneGateStrategy {
   param(
     [Parameter(Mandatory = $true)]
@@ -1094,40 +1338,10 @@ function Invoke-GovernanceBaselineSync {
   }
   $repoProfilePath = Join-Path $TargetConfig.AttachmentRoot ".governed-ai\repo-profile.json"
   if (-not (Test-Path -LiteralPath $repoProfilePath)) {
-    $attachScriptPath = Join-Path $RepoRoot "scripts\attach-target-repo.py"
-    if (-not (Test-Path -LiteralPath $attachScriptPath)) {
-      throw "Missing attach-target-repo.py at $attachScriptPath"
-    }
-
-    $primaryLanguage = if ([string]::IsNullOrWhiteSpace($TargetConfig.PrimaryLanguage)) { "unknown" } else { $TargetConfig.PrimaryLanguage }
-    $attachArgs = @(
-      $attachScriptPath,
-      "--target-repo", $TargetConfig.AttachmentRoot,
-      "--runtime-state-root", $TargetConfig.AttachmentRuntimeStateRoot,
-      "--primary-language", $primaryLanguage
-    )
-    if (-not [string]::IsNullOrWhiteSpace($TargetConfig.RepoId)) {
-      $attachArgs += @("--repo-id", $TargetConfig.RepoId)
-    }
-    if (-not [string]::IsNullOrWhiteSpace($TargetConfig.DisplayName)) {
-      $attachArgs += @("--display-name", $TargetConfig.DisplayName)
-    }
-    if (-not [string]::IsNullOrWhiteSpace($TargetConfig.BuildCommand)) {
-      $attachArgs += @("--build-command", $TargetConfig.BuildCommand)
-    }
-    if (-not [string]::IsNullOrWhiteSpace($TargetConfig.TestCommand)) {
-      $attachArgs += @("--test-command", $TargetConfig.TestCommand)
-    }
-    if (-not [string]::IsNullOrWhiteSpace($TargetConfig.ContractCommand)) {
-      $attachArgs += @("--contract-command", $TargetConfig.ContractCommand)
-    }
-    $hasContractGate = (-not [string]::IsNullOrWhiteSpace($TargetConfig.ContractCommand)) -or
-      (-not [string]::IsNullOrWhiteSpace($TargetConfig.ContractCommandsJson))
-    if ([string]::IsNullOrWhiteSpace($TargetConfig.BuildCommand) -or
-        [string]::IsNullOrWhiteSpace($TargetConfig.TestCommand) -or
-        (-not $hasContractGate)) {
-      $attachArgs += "--infer-gate-defaults"
-    }
+    $attachArgs = New-AttachTargetRepoArguments `
+      -TargetConfig $TargetConfig `
+      -RepoRoot $RepoRoot `
+      -AdapterPreferenceValue $AdapterPreference
 
     $attachResult = Invoke-CommandCapture `
       -Executable $PythonCommand `
@@ -1286,8 +1500,9 @@ function Invoke-TargetPresetFlow {
     "-AdapterId", $AdapterId
   )
 
-  if (-not [string]::IsNullOrWhiteSpace($RepoBindingId)) {
-    $flowArgs += @("-RepoBindingId", $RepoBindingId)
+  $effectiveRepoBindingId = Resolve-TargetRepoBindingId -TargetName $TargetName -TargetConfig $TargetConfig
+  if (-not [string]::IsNullOrWhiteSpace($effectiveRepoBindingId)) {
+    $flowArgs += @("-RepoBindingId", $effectiveRepoBindingId)
   }
   if (-not [string]::IsNullOrWhiteSpace($WriteTargetPath)) {
     $flowArgs += @("-WriteTargetPath", $WriteTargetPath, "-WriteTier", $WriteTier, "-WriteToolName", $WriteToolName, "-WriteContent", $WriteContent)
@@ -1779,22 +1994,45 @@ function Invoke-TargetAllFeatures {
     [bool]$EmitProgress = $false
   )
 
-  Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "governance_sync" -Status "start" -Detail "source=all_features_preflight"
-  $syncStartedAt = Get-Date
-  $syncResult = Invoke-GovernanceBaselineSync `
+  $attachmentRepairResult = Invoke-AttachmentRepairIfNeeded `
     -TargetName $TargetName `
     -TargetConfig $TargetConfig `
     -RepoRoot $RepoRoot `
-    -BaselinePath $GovernanceBaselinePathResolved `
     -PythonCommand $PythonCommand `
-    -CommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds
-  $syncDurationMs = [int][Math]::Round(((Get-Date) - $syncStartedAt).TotalMilliseconds)
-  Write-BatchProgressLine `
-    -Enabled $EmitProgress `
-    -TargetName $TargetName `
-    -Stage "governance_sync" `
-    -Status ([string]$syncResult.status) `
-    -Detail ("source=all_features_preflight duration_ms={0} exit_code={1}" -f $syncDurationMs, $syncResult.exit_code)
+    -AdapterPreferenceValue $AdapterPreference `
+    -CommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds `
+    -EmitProgress $EmitProgress
+
+  $syncDurationMs = 0
+  if ($attachmentRepairResult.status -eq "fail") {
+    $syncResult = [pscustomobject]@{
+      target    = $TargetName
+      status    = "skipped"
+      reason    = "attachment_repair_failed"
+      exit_code = $attachmentRepairResult.exit_code
+      payload   = $null
+      output    = $attachmentRepairResult.output
+    }
+    Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "governance_sync" -Status "skipped" -Detail "reason=attachment_repair_failed"
+  }
+  else {
+    Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "governance_sync" -Status "start" -Detail "source=all_features_preflight"
+    $syncStartedAt = Get-Date
+    $syncResult = Invoke-GovernanceBaselineSync `
+      -TargetName $TargetName `
+      -TargetConfig $TargetConfig `
+      -RepoRoot $RepoRoot `
+      -BaselinePath $GovernanceBaselinePathResolved `
+      -PythonCommand $PythonCommand `
+      -CommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds
+    $syncDurationMs = [int][Math]::Round(((Get-Date) - $syncStartedAt).TotalMilliseconds)
+    Write-BatchProgressLine `
+      -Enabled $EmitProgress `
+      -TargetName $TargetName `
+      -Stage "governance_sync" `
+      -Status ([string]$syncResult.status) `
+      -Detail ("source=all_features_preflight duration_ms={0} exit_code={1}" -f $syncDurationMs, $syncResult.exit_code)
+  }
 
   if ($syncResult.status -eq "pass") {
     $flowResultEnvelope = Invoke-TargetPresetFlow `
@@ -1823,6 +2061,7 @@ function Invoke-TargetAllFeatures {
       flow_payload           = $null
       governance_sync_result = $syncResult
       governance_sync_duration_ms = $syncDurationMs
+      attachment_repair_result = $attachmentRepairResult
       exit_code              = 1
     }
     Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "runtime_flow" -Status "skipped" -Detail "reason=baseline_sync_failed"
@@ -1934,6 +2173,7 @@ function Invoke-TargetAllFeatures {
     flow_payload            = $flowResultEnvelope.flow_payload
     governance_sync_result  = $syncResult
     governance_sync_duration_ms = $syncDurationMs
+    attachment_repair_result = $attachmentRepairResult
     milestone_commit_result = $milestoneResult
     exit_code               = $exitCode
   }
@@ -2186,6 +2426,12 @@ if ($parallelBatchEligible) {
     if ($flowPayload -and ($flowPayload.PSObject.Properties.Name -contains "exit_code")) {
       $ExitCode = [int]$flowPayload.exit_code
     }
+    $attachmentRepairResult = if ($flowPayload -and ($flowPayload.PSObject.Properties.Name -contains "attachment_repair")) {
+      $flowPayload.attachment_repair
+    }
+    else {
+      [pscustomobject]@{ status = "skipped"; reason = "not_applicable"; exit_code = 0; refreshed = $false }
+    }
 
     return [pscustomobject]@{
       target = $TargetName
@@ -2207,6 +2453,7 @@ if ($parallelBatchEligible) {
         output = ""
       }
       governance_sync_duration_ms = 0
+      attachment_repair_result = $attachmentRepairResult
       milestone_commit_result = [pscustomobject]@{
         status = "skipped"
         reason = "not_requested"
@@ -2605,6 +2852,12 @@ if ($Json) {
     $single = $targetRuns[0]
     $singlePruneRetiredForJson = Convert-ManagedAssetActionForJson -ActionResult $single.prune_retired_managed_files_result
     $singleUninstallForJson = Convert-ManagedAssetActionForJson -ActionResult $single.uninstall_governance_result
+    $singleAttachmentRepairForJson = if ($single.PSObject.Properties.Name -contains "attachment_repair_result") {
+      $single.attachment_repair_result
+    }
+    else {
+      [pscustomobject]@{ status = "skipped"; reason = "not_applicable"; exit_code = 0; refreshed = $false }
+    }
     $syncStatus = [string]$single.governance_sync_result.status
     $syncReason = [string]$single.governance_sync_result.reason
     if (($syncStatus -eq "skipped") -and ($syncReason -in @("flow_mode_not_onboard", "explicit_skip", "runtime_flow_failed"))) {
@@ -2626,6 +2879,7 @@ if ($Json) {
             if ($uninstallGovernanceActive) {
               $wrappedFlowOnly["uninstall_governance"] = $singleUninstallForJson
             }
+            $wrappedFlowOnly["attachment_repair"] = $singleAttachmentRepairForJson
             Write-Host ($wrappedFlowOnly | ConvertTo-Json -Depth 20)
           }
           else {
@@ -2635,6 +2889,7 @@ if ($Json) {
               flow_exit_code         = $single.flow_result.exit_code
               flow_output            = $single.flow_result.output
               prune_target_repo_runs = $pruneForJson
+              attachment_repair      = $singleAttachmentRepairForJson
             }
             if ($pruneRetiredManagedFilesActive) {
               $flowOnlyFallback["prune_retired_managed_files"] = $singlePruneRetiredForJson
@@ -2653,6 +2908,7 @@ if ($Json) {
           flow_exit_code         = $single.flow_result.exit_code
           flow_output            = ""
           prune_target_repo_runs = $pruneForJson
+          attachment_repair      = $singleAttachmentRepairForJson
         }
         if ($pruneRetiredManagedFilesActive) {
           $flowOnlyEmpty["prune_retired_managed_files"] = $singlePruneRetiredForJson
@@ -2669,6 +2925,7 @@ if ($Json) {
           flow_exit_code = $single.flow_result.exit_code
           flow_timed_out = if ($single.flow_result.PSObject.Properties.Name -contains "timed_out") { [bool]$single.flow_result.timed_out } else { $false }
           flow_output    = $single.flow_result.output
+          attachment_repair = $singleAttachmentRepairForJson
         }
         Write-Host ($flowOnlyFallback | ConvertTo-Json -Depth 20)
       }
@@ -2736,6 +2993,7 @@ if ($Json) {
         if ($uninstallGovernanceActive) {
           $wrapped["uninstall_governance"] = $singleUninstallForJson
         }
+        $wrapped["attachment_repair"] = $singleAttachmentRepairForJson
         Write-Host ($wrapped | ConvertTo-Json -Depth 20)
       }
       else {
@@ -2744,6 +3002,7 @@ if ($Json) {
           exit_code               = $single.exit_code
           flow_exit_code          = $single.flow_result.exit_code
           flow_output             = $single.flow_result.output
+          attachment_repair       = $singleAttachmentRepairForJson
           governance_baseline_sync = [ordered]@{
             status       = $single.governance_sync_result.status
             reason       = $single.governance_sync_result.reason
@@ -2798,6 +3057,12 @@ if ($Json) {
         $targetDurationMs = if ($_.PSObject.Properties.Name -contains "target_duration_ms") { [int]$_.target_duration_ms } else { 0 }
         $pruneRetiredForJson = Convert-ManagedAssetActionForJson -ActionResult $_.prune_retired_managed_files_result
         $uninstallForJson = Convert-ManagedAssetActionForJson -ActionResult $_.uninstall_governance_result
+        $attachmentRepairForJson = if ($_.PSObject.Properties.Name -contains "attachment_repair_result") {
+          $_.attachment_repair_result
+        }
+        else {
+          [pscustomobject]@{ status = "skipped"; reason = "not_applicable"; exit_code = 0; refreshed = $false }
+        }
         $flowDurationMs = if ($_.PSObject.Properties.Name -contains "flow_duration_ms") {
           [int]$_.flow_duration_ms
         }
@@ -2823,6 +3088,10 @@ if ($Json) {
           flow_exit_code           = $_.flow_result.exit_code
           flow_timed_out           = $flowTimedOut
           flow_duration_ms         = $flowDurationMs
+          attachment_repair_status = $attachmentRepairForJson.status
+          attachment_repair_reason = $attachmentRepairForJson.reason
+          attachment_repair_exit_code = $attachmentRepairForJson.exit_code
+          attachment_repair_refreshed = if ($attachmentRepairForJson.PSObject.Properties.Name -contains "refreshed") { [bool]$attachmentRepairForJson.refreshed } else { $false }
           governance_sync_status   = $_.governance_sync_result.status
           governance_sync_reason   = $_.governance_sync_result.reason
           governance_sync_exit_code = $_.governance_sync_result.exit_code

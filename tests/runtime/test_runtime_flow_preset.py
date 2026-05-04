@@ -1,4 +1,5 @@
 import json
+import hashlib
 import subprocess
 import tempfile
 import time
@@ -55,6 +56,7 @@ if ($Json) {
     flow_mode = $FlowMode
     attachment_root = $AttachmentRoot
     task_id = $TaskId
+    repo_binding_id = $RepoBindingId
   } | ConvertTo-Json -Depth 8
 }
 else {
@@ -615,6 +617,7 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             payload = json.loads(completed.stdout)
             self.assertEqual(payload["overall_status"], "pass")
             self.assertEqual(payload["flow_mode"], "daily")
+            self.assertEqual(payload["repo_binding_id"], "binding-repo-a")
 
     def test_runtime_flow_preset_apply_governance_baseline_only_skips_runtime_flow(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -1334,6 +1337,139 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                 ["required_entrypoint_policy", "auto_commit_policy"],
             )
             self.assertGreaterEqual(payload["governance_baseline_sync"]["duration_ms"], 0)
+
+    def test_runtime_flow_preset_apply_all_features_repairs_invalid_light_pack_before_daily_flow(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_a = workspace / "repo-a"
+            repo_a.mkdir()
+            runtime_state_root = workspace / "state" / "repo-a"
+            attach_completed = subprocess.run(
+                [
+                    "python",
+                    "scripts/attach-target-repo.py",
+                    "--target-repo",
+                    str(repo_a),
+                    "--runtime-state-root",
+                    str(runtime_state_root),
+                    "--repo-id",
+                    "repo-a",
+                    "--display-name",
+                    "repo-a",
+                    "--primary-language",
+                    "python",
+                    "--build-command",
+                    "python --version",
+                    "--test-command",
+                    "python --version",
+                    "--contract-command",
+                    "python --version",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=ROOT,
+            )
+            self.assertEqual(attach_completed.returncode, 0, attach_completed.stderr)
+
+            profile_path = repo_a / ".governed-ai" / "repo-profile.json"
+            profile = json.loads(profile_path.read_text(encoding="utf-8"))
+            profile["interaction_profile"] = {"communication_language": "zh-CN"}
+            profile_path.write_text(json.dumps(profile, indent=2, sort_keys=True), encoding="utf-8")
+            provenance_path = repo_a / ".governed-ai" / "light-pack.provenance.json"
+            provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+            provenance["subject_digest"] = "sha256:stale"
+            provenance["output_digest"] = "sha256:stale"
+            provenance_path.write_text(json.dumps(provenance, indent=2, sort_keys=True), encoding="utf-8")
+
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": str(repo_a),
+                            "attachment_runtime_state_root": str(runtime_state_root),
+                            "repo_id": "repo-a",
+                            "display_name": "repo-a",
+                            "primary_language": "python",
+                            "build_command": "python --version",
+                            "test_command": "python --version",
+                            "contract_command": "python --version",
+                        }
+                    },
+                },
+            )
+            baseline_path = workspace / "target-repo-governance-baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-05-04.4",
+                    "required_profile_overrides": {
+                        "required_entrypoint_policy": {"current_mode": "targeted_enforced"},
+                        "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                    },
+                },
+            )
+
+            fake_runtime_flow_path = workspace / "fake-runtime-flow-requires-synced-profile.ps1"
+            _write_fake_runtime_flow_requires_synced_profile_script(fake_runtime_flow_path)
+            fake_full_check_path = workspace / "fake-full-check.ps1"
+            _write_fake_full_check_script(fake_full_check_path)
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "runtime-flow-preset.ps1"),
+                    "-Target",
+                    "repo-a",
+                    "-ApplyAllFeatures",
+                    "-FlowMode",
+                    "daily",
+                    "-MilestoneTag",
+                    "milestone",
+                    "-Json",
+                    "-CatalogPath",
+                    str(catalog_path),
+                    "-GovernanceBaselinePath",
+                    str(baseline_path),
+                    "-RuntimeFlowPath",
+                    str(fake_runtime_flow_path),
+                    "-GovernanceFullCheckPath",
+                    str(fake_full_check_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr + completed.stdout)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["overall_status"], "pass")
+            self.assertEqual(payload["attachment_repair"]["status"], "pass")
+            self.assertEqual(payload["attachment_repair"]["reason"], "refreshed_invalid_light_pack")
+            self.assertTrue(payload["attachment_repair"]["refreshed"])
+            profile = json.loads(profile_path.read_text(encoding="utf-8"))
+            self.assertEqual(profile["interaction_profile"]["communication_language"], "zh-CN")
+            self.assertEqual(profile["required_entrypoint_policy"]["current_mode"], "targeted_enforced")
+            refreshed_provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
+            light_pack_path = repo_a / ".governed-ai" / "light-pack.json"
+            expected_digest = "sha256:" + hashlib.sha256(light_pack_path.read_bytes()).hexdigest()
+            self.assertEqual(refreshed_provenance["subject_digest"], expected_digest)
+            self.assertEqual(refreshed_provenance["output_digest"], expected_digest)
 
     def test_runtime_flow_preset_all_targets_apply_all_features_supports_fast_milestone_gate_mode(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
