@@ -741,6 +741,7 @@ function Invoke-ContractChecks {
   Invoke-PolicyToolCredentialAuditChecks
   Invoke-GovernanceHubCertificationChecks
   Invoke-TargetRepoPowerShellPolicyChecks
+  Invoke-ShellRiskContractChecks
   Invoke-AgentRuleSyncChecks
   Invoke-PreChangeReviewChecks
   Invoke-FunctionalEffectivenessChecks
@@ -810,6 +811,20 @@ function Invoke-TargetRepoPowerShellPolicyChecks {
   }
 
   Write-CheckOk "target-repo-powershell-policy"
+}
+
+function Invoke-ShellRiskContractChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-shell-risk-contract.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Shell risk contract checks failed"
+    }
+    throw "Shell risk contract checks failed`n$detail"
+  }
+
+  Write-CheckOk "shell-risk-contract"
 }
 
 function Invoke-TargetRepoReuseEffectFeedbackChecks {
