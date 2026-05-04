@@ -36,7 +36,7 @@ def main() -> int:
         candidate_paths=list(args.candidate_path or []),
     )
     print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
-    return 0
+    return 2 if payload.get("status") == "blocked" else 0
 
 
 if __name__ == "__main__":

@@ -22,7 +22,20 @@ TEXT_SUFFIXES = {
     ".yaml",
     ".yml",
 }
-SKIP_PARTS = {".git", ".runtime", ".worktrees", "bin", "node_modules", "obj", "packages"}
+SKIP_PARTS = {
+    ".git",
+    ".runtime",
+    ".txn",
+    ".worktrees",
+    "archive",
+    "bin",
+    "imports",
+    "node_modules",
+    "obj",
+    "packages",
+    "vendor",
+}
+MANAGED_FILE_PROVENANCE_PARTS = (".governed-ai", "managed-files")
 
 
 def load_json_object(path: Path) -> dict[str, Any]:
@@ -137,6 +150,8 @@ def inspect_managed_assets(
     root = target_repo.resolve(strict=False)
     explicit = candidate_paths or []
     candidates = collect_candidate_paths(root, explicit, baseline)
+    reference_scan_errors: list[dict[str, str]] = []
+    reference_index = build_reference_index(root, scan_errors=reference_scan_errors)
     active_entries = {
         normalize_relative_text(str(item["path"])): item
         for item in baseline.get("required_managed_files", [])
@@ -163,16 +178,20 @@ def inspect_managed_assets(
             active_entry=active_entries.get(relative),
             generated_entry=generated_entries.get(relative),
             retired_entry=retired_entries.get(relative),
+            reference_index=reference_index,
         )
         counts[asset["classification"]] = counts.get(asset["classification"], 0) + 1
         assets.append(asset)
 
+    status = "blocked" if reference_scan_errors else "pass"
     return {
         "target_repo": str(root),
-        "status": "pass",
+        "status": status,
+        "reason": "reference_scan_unreadable" if reference_scan_errors else "ok",
         "modified": False,
         "summary": counts,
         "assets": assets,
+        "reference_scan_errors": reference_scan_errors,
     }
 
 
@@ -184,6 +203,7 @@ def classify_asset(
     active_entry: dict[str, Any] | None,
     generated_entry: dict[str, Any] | None,
     retired_entry: dict[str, Any] | None,
+    reference_index: list[dict[str, str]] | None = None,
 ) -> dict[str, Any]:
     target_path = repo_relative_path(target_repo, relative_path)
     actual_text = read_text_if_exists(target_path)
@@ -195,7 +215,11 @@ def classify_asset(
         "classification": "target_owned",
         "reason": "no_runtime_managed_evidence",
         "evidence_refs": [],
-        "referenced_by": find_references(target_repo=target_repo, relative_path=relative_path),
+        "referenced_by": find_references(
+            target_repo=target_repo,
+            relative_path=relative_path,
+            reference_index=reference_index,
+        ),
     }
     if active_entry is not None:
         source = active_entry.get("source")
@@ -295,21 +319,62 @@ def retired_expected_hash(entry: dict[str, Any], *, repo_root: Path) -> str:
     return ""
 
 
-def find_references(*, target_repo: Path, relative_path: str) -> list[str]:
-    needle = normalize_relative_text(relative_path)
-    refs: list[str] = []
-    for path in target_repo.rglob("*"):
+def should_scan_reference_file(relative_path: Path) -> bool:
+    parts = relative_path.parts
+    if len(parts) >= len(MANAGED_FILE_PROVENANCE_PARTS) and tuple(parts[:2]) == MANAGED_FILE_PROVENANCE_PARTS:
+        return False
+    if any(part in SKIP_PARTS for part in parts):
+        return False
+    if relative_path.suffix.lower() not in TEXT_SUFFIXES:
+        return False
+    return True
+
+
+def build_reference_index(
+    target_repo: Path,
+    *,
+    scan_errors: list[dict[str, str]] | None = None,
+) -> list[dict[str, str]]:
+    root = target_repo.resolve(strict=False)
+    entries: list[dict[str, str]] = []
+    for path in root.rglob("*"):
         if not path.is_file():
             continue
-        rel = path.relative_to(target_repo)
-        if any(part in SKIP_PARTS for part in rel.parts):
+        rel = path.relative_to(root)
+        if not should_scan_reference_file(rel):
             continue
-        rel_text = rel.as_posix()
+        try:
+            text = path.read_text(encoding="utf-8", errors="ignore")
+        except OSError as exc:
+            if scan_errors is None:
+                raise
+            scan_errors.append(
+                {
+                    "path": rel.as_posix(),
+                    "reason": "reference_scan_unreadable",
+                    "error": str(exc),
+                }
+            )
+            continue
+        entries.append({"path": rel.as_posix(), "text": text})
+    return entries
+
+
+def find_references(
+    *,
+    target_repo: Path,
+    relative_path: str,
+    reference_index: list[dict[str, str]] | None = None,
+) -> list[str]:
+    needle = normalize_relative_text(relative_path)
+    needle_windows = needle.replace("/", "\\")
+    refs: list[str] = []
+    index = reference_index if reference_index is not None else build_reference_index(target_repo)
+    for entry in index:
+        rel_text = entry["path"]
         if rel_text == needle:
             continue
-        if path.suffix.lower() not in TEXT_SUFFIXES:
-            continue
-        text = path.read_text(encoding="utf-8", errors="ignore")
-        if needle in text or needle.replace("/", "\\") in text:
+        text = entry["text"]
+        if needle in text or needle_windows in text:
             refs.append(rel_text)
     return sorted(refs)

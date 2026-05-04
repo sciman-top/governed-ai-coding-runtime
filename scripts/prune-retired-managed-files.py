@@ -95,6 +95,18 @@ def prune_retired_managed_files(
     blocked: list[dict] = []
     deleted: list[dict] = []
     missing: list[dict] = []
+    if inventory.get("status") != "pass":
+        for error in inventory.get("reference_scan_errors", []):
+            if not isinstance(error, dict):
+                continue
+            blocked.append(
+                {
+                    "path": str(error.get("path", "")),
+                    "reason": str(error.get("reason", "reference_scan_unreadable")),
+                    "classification": "reference_scan_error",
+                    "error": str(error.get("error", "")),
+                }
+            )
 
     retired_paths = {
         normalize_relative_text(str(item.get("path", "")))

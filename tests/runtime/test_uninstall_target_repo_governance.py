@@ -1,10 +1,12 @@
 import hashlib
+import importlib.util
 import json
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -27,6 +29,17 @@ def _write_json(path: Path, payload: dict) -> None:
 
 def _sha256(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _load_uninstall_module():
+    path = ROOT / "scripts" / "uninstall-target-repo-governance.py"
+    spec = importlib.util.spec_from_file_location("uninstall_target_repo_governance_script", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"could not load script: {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["uninstall_target_repo_governance_script"] = module
+    spec.loader.exec_module(module)
+    return module
 
 
 class UninstallTargetRepoGovernanceTests(unittest.TestCase):
@@ -516,6 +529,281 @@ class UninstallTargetRepoGovernanceTests(unittest.TestCase):
             self.assertEqual(payload["status"], "blocked")
             self.assertEqual(payload["summary"]["profile_patch_candidates"], 0)
             self.assertEqual(payload["blocked_files"][0]["reason"], "repo_profile_invalid_json")
+
+    def test_uninstall_governance_removes_runtime_sidecars_without_self_reference_block(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target = workspace / "target"
+            verify_source = workspace / "templates" / "verify-powershell-policy.py"
+            hook_source = workspace / "templates" / "governed-pre-tool-use.py"
+            settings_source = workspace / "templates" / "settings.json"
+            verify_text = "print('verify')\n"
+            hook_text = "print('hook')\n"
+            settings_overlay = {
+                "hooks": {
+                    "PreToolUse": [
+                        {
+                            "matcher": "Write",
+                            "hooks": [
+                                {
+                                    "type": "command",
+                                    "command": ".claude/hooks/governed-pre-tool-use.py",
+                                }
+                            ],
+                        }
+                    ]
+                },
+                "permissions": {"deny": ["Bash(powershell:*)"]},
+            }
+            _write_text(verify_source, verify_text)
+            _write_text(hook_source, hook_text)
+            _write_json(settings_source, settings_overlay)
+            _write_text(target / ".governed-ai" / "verify-powershell-policy.py", verify_text)
+            _write_text(target / ".claude" / "hooks" / "governed-pre-tool-use.py", hook_text)
+            _write_json(
+                target / ".claude" / "settings.json",
+                {
+                    **settings_overlay,
+                    "local": {"keep": True},
+                },
+            )
+            _write_json(
+                target
+                / ".governed-ai"
+                / "managed-files"
+                / ".governed-ai"
+                / "verify-powershell-policy.py.provenance.json",
+                {"path": ".governed-ai/verify-powershell-policy.py"},
+            )
+            _write_json(
+                target
+                / ".governed-ai"
+                / "managed-files"
+                / ".claude"
+                / "hooks"
+                / "governed-pre-tool-use.py.provenance.json",
+                {"path": ".claude/hooks/governed-pre-tool-use.py"},
+            )
+            _write_json(
+                target
+                / ".governed-ai"
+                / "managed-files"
+                / ".claude"
+                / "settings.json.provenance.json",
+                {"path": ".claude/settings.json"},
+            )
+            baseline_path = workspace / "baseline.json"
+            backup_root = workspace / "backups"
+            _write_json(
+                baseline_path,
+                {
+                    "required_managed_files": [
+                        {
+                            "path": ".governed-ai/verify-powershell-policy.py",
+                            "source": str(verify_source),
+                            "management_mode": "block_on_drift",
+                        },
+                        {
+                            "path": ".claude/settings.json",
+                            "source": str(settings_source),
+                            "management_mode": "json_merge",
+                            "shared_ownership_evidence": ["hooks and permissions overlay"],
+                        },
+                        {
+                            "path": ".claude/hooks/governed-pre-tool-use.py",
+                            "source": str(hook_source),
+                            "management_mode": "block_on_drift",
+                        },
+                    ],
+                    "generated_managed_files": [],
+                    "retired_managed_files": [],
+                    "repo_profile_field_ownership": {},
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/uninstall-target-repo-governance.py",
+                    "--target-repo",
+                    str(target),
+                    "--baseline-path",
+                    str(baseline_path),
+                    "--backup-root",
+                    str(backup_root),
+                    "--apply",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr + completed.stdout)
+            payload = json.loads(completed.stdout)
+            deleted_paths = {item["path"] for item in payload["deleted_files"]}
+            self.assertIn(".governed-ai/verify-powershell-policy.py", deleted_paths)
+            self.assertIn(".claude/hooks/governed-pre-tool-use.py", deleted_paths)
+            self.assertIn(
+                ".governed-ai/managed-files/.governed-ai/verify-powershell-policy.py.provenance.json",
+                deleted_paths,
+            )
+            self.assertIn(
+                ".governed-ai/managed-files/.claude/hooks/governed-pre-tool-use.py.provenance.json",
+                deleted_paths,
+            )
+            self.assertEqual(payload["summary"]["blocked"], 0)
+            self.assertEqual(payload["summary"]["shared_patched"], 1)
+            settings = json.loads((target / ".claude" / "settings.json").read_text(encoding="utf-8"))
+            self.assertEqual(settings, {"local": {"keep": True}})
+            manifest_path = backup_root / "manifest.json"
+            self.assertTrue(manifest_path.exists())
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            self.assertEqual(manifest["summary"]["deleted"], payload["summary"]["deleted"])
+            self.assertEqual(manifest["summary"]["shared_patched"], 1)
+
+    def test_uninstall_governance_blocks_when_delete_target_changes_after_backup(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target = workspace / "target"
+            source = workspace / "templates" / "managed.py"
+            target_path = target / ".governed-ai" / "managed.py"
+            managed_text = "print('managed')\n"
+            _write_text(source, managed_text)
+            _write_text(target_path, managed_text)
+            baseline = {
+                "required_managed_files": [
+                    {"path": ".governed-ai/managed.py", "source": str(source), "management_mode": "block_on_drift"},
+                ],
+                "generated_managed_files": [],
+                "retired_managed_files": [],
+                "repo_profile_field_ownership": {},
+            }
+            backup_root = workspace / "backups"
+            module = _load_uninstall_module()
+            original_copy2 = module.shutil.copy2
+
+            def copy_then_mutate(src, dst):
+                result = original_copy2(src, dst)
+                target_path.write_text("changed after backup\n", encoding="utf-8")
+                return result
+
+            with mock.patch.object(module.shutil, "copy2", side_effect=copy_then_mutate):
+                payload, exit_code = module.uninstall_target_repo_governance(
+                    target_repo=target,
+                    baseline=baseline,
+                    backup_root=backup_root,
+                    dry_run=False,
+                    apply=True,
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(payload["status"], "blocked")
+            self.assertEqual(payload["summary"]["deleted"], 0)
+            self.assertEqual(payload["blocked_files"][0]["reason"], "target_changed_before_delete")
+            self.assertEqual(target_path.read_text(encoding="utf-8"), "changed after backup\n")
+            self.assertTrue((backup_root / "manifest.json").exists())
+
+    def test_uninstall_governance_blocks_when_shared_patch_target_changes_after_backup(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target = workspace / "target"
+            settings_source = workspace / "templates" / "settings.json"
+            target_path = target / ".claude" / "settings.json"
+            _write_json(settings_source, {"permissions": {"deny": ["Bash(powershell:*)"]}})
+            _write_json(
+                target_path,
+                {
+                    "permissions": {"deny": ["Bash(powershell:*)", "Read(**/.env)"]},
+                    "local": {"keep": True},
+                },
+            )
+            baseline = {
+                "required_managed_files": [
+                    {
+                        "path": ".claude/settings.json",
+                        "source": str(settings_source),
+                        "management_mode": "json_merge",
+                        "shared_ownership_evidence": ["permissions.deny entries"],
+                    },
+                ],
+                "generated_managed_files": [],
+                "retired_managed_files": [],
+                "repo_profile_field_ownership": {},
+            }
+            backup_root = workspace / "backups"
+            module = _load_uninstall_module()
+            original_copy2 = module.shutil.copy2
+
+            def copy_then_mutate(src, dst):
+                result = original_copy2(src, dst)
+                _write_json(target_path, {"permissions": {"deny": ["target changed"]}})
+                return result
+
+            with mock.patch.object(module.shutil, "copy2", side_effect=copy_then_mutate):
+                payload, exit_code = module.uninstall_target_repo_governance(
+                    target_repo=target,
+                    baseline=baseline,
+                    backup_root=backup_root,
+                    dry_run=False,
+                    apply=True,
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(payload["status"], "blocked")
+            self.assertEqual(payload["summary"]["shared_patched"], 0)
+            self.assertEqual(payload["blocked_files"][0]["reason"], "target_changed_before_patch")
+            settings = json.loads(target_path.read_text(encoding="utf-8"))
+            self.assertEqual(settings, {"permissions": {"deny": ["target changed"]}})
+            self.assertTrue((backup_root / "manifest.json").exists())
+
+    def test_uninstall_governance_blocks_reference_scan_errors_without_mutation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target = workspace / "target"
+            source = workspace / "templates" / "managed.py"
+            managed_path = target / ".governed-ai" / "managed.py"
+            managed_text = "print('managed')\n"
+            _write_text(source, managed_text)
+            _write_text(managed_path, managed_text)
+            baseline = {
+                "required_managed_files": [
+                    {"path": ".governed-ai/managed.py", "source": str(source), "management_mode": "block_on_drift"},
+                ],
+                "generated_managed_files": [],
+                "retired_managed_files": [],
+                "repo_profile_field_ownership": {},
+            }
+            module = _load_uninstall_module()
+
+            def build_index_with_error(root, *, scan_errors=None):
+                if scan_errors is not None:
+                    scan_errors.append(
+                        {
+                            "path": "scripts/locked.py",
+                            "reason": "reference_scan_unreadable",
+                            "error": "file is locked",
+                        }
+                    )
+                return []
+
+            with mock.patch.object(module, "build_reference_index", side_effect=build_index_with_error):
+                payload, exit_code = module.uninstall_target_repo_governance(
+                    target_repo=target,
+                    baseline=baseline,
+                    backup_root=workspace / "backups",
+                    dry_run=False,
+                    apply=True,
+                )
+
+            self.assertEqual(exit_code, 2)
+            self.assertEqual(payload["status"], "blocked")
+            self.assertEqual(payload["summary"]["deleted"], 0)
+            self.assertEqual(payload["blocked_files"][0]["reason"], "reference_scan_unreadable")
+            self.assertEqual(payload["blocked_files"][0]["classification"], "reference_scan_error")
+            self.assertTrue(managed_path.exists())
 
 
 if __name__ == "__main__":
