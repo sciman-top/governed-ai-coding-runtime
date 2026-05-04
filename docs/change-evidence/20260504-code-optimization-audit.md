@@ -37,6 +37,8 @@
 - Added explicit shell-risk allowlist entries with expected counts and reasons for the currently governed exceptions.
 - Wired `shell-risk-contract` into `scripts/verify-repo.ps1 -Check Contract`.
 - Added regression coverage proving new unapproved shell/destructive-process patterns fail and bounded or allowlisted cases remain explicit.
+- Refreshed the repo-slimming surface dry-run report with `python scripts/audit-repo-slimming-surface.py` from a clean worktree after the shell-risk contract commit.
+- Kept repo-slimming as inventory-only in this optimization batch: no archive move and no delete operation was executed.
 
 ## pre_change_review
 - `pre_change_review`: required because this slice modifies `scripts/verify-repo.ps1`, a self-repo hard-gate entrypoint.
@@ -59,7 +61,9 @@
 - `python -m unittest tests.runtime.test_autonomous_next_work_selection -v`: pass, 8 tests in about 19.5 seconds.
 - `python -m unittest tests.runtime.test_run_governed_task_cli tests.runtime.test_attached_repo_e2e tests.runtime.test_autonomous_next_work_selection -v`: pass, 22 tests in about 53.4 seconds.
 - `python -m unittest tests.runtime.test_shell_risk_contract -v`: pass, 6 tests.
+- `python -m unittest tests.runtime.test_repo_slimming_surface -v`: pass, 2 tests.
 - `python scripts/verify-shell-risk-contract.py --json`: pass, checked 150 files, finding_count=0, stale_allowlist_count=0.
+- `python scripts/audit-repo-slimming-surface.py`: pass; refreshed `docs/change-evidence/repo-slimming-surface-audit.json`.
 - Pre-split vs post-split HTML exact comparison: pass for `empty-zh-static`, `empty-en-static`, and `full-zh-interactive`.
 - `python -m py_compile packages\contracts\src\governed_ai_coding_runtime_contracts\subprocess_guard.py packages\contracts\src\governed_ai_coding_runtime_contracts\session_bridge.py packages\contracts\src\governed_ai_coding_runtime_contracts\multi_repo_trial.py scripts\run-governed-task.py tests\runtime\test_subprocess_guard.py`: pass.
 - `python -m py_compile packages\contracts\src\governed_ai_coding_runtime_contracts\operator_ui.py packages\contracts\src\governed_ai_coding_runtime_contracts\operator_ui_text.py packages\contracts\src\governed_ai_coding_runtime_contracts\operator_ui_style.py packages\contracts\src\governed_ai_coding_runtime_contracts\operator_ui_script.py scripts\serve-operator-ui.py tests\runtime\test_operator_ui.py tests\runtime\test_operator_entrypoint.py`: pass.
@@ -75,7 +79,16 @@
 ## Rollback
 - Before commit: `git restore packages/contracts/src/governed_ai_coding_runtime_contracts/subprocess_guard.py packages/contracts/src/governed_ai_coding_runtime_contracts/session_bridge.py packages/contracts/src/governed_ai_coding_runtime_contracts/multi_repo_trial.py packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui.py scripts/run-governed-task.py scripts/serve-operator-ui.py scripts/operator-ui-service.ps1 scripts/select-next-work.py scripts/verify-repo.ps1 tests/runtime/test_subprocess_guard.py tests/runtime/test_operator_ui.py tests/runtime/test_operator_entrypoint.py tests/runtime/test_run_governed_task_cli.py tests/runtime/test_attached_repo_e2e.py tests/runtime/test_autonomous_next_work_selection.py docs/change-evidence/20260504-code-optimization-audit.md docs/change-evidence/runtime-test-speed-latest.json`; then remove the new split modules `operator_ui_script.py`, `operator_ui_style.py`, `operator_ui_text.py`, `scripts/verify-shell-risk-contract.py`, and `tests/runtime/test_shell_risk_contract.py`.
 - After commit: `git revert <commit-sha>`.
+- Repo-slimming dry-run rollback: `git restore docs/change-evidence/repo-slimming-surface-audit.json docs/change-evidence/20260504-code-optimization-audit.md`.
 
-## Next Task List
-1. Keep repo-slimming cleanup separate.
-   - Acceptance: archive/delete only starts with catalog, dry-run, backup, and rollback evidence; no broad deletion in optimization slices.
+## Repo-Slimming Dry-Run Closeout
+- `docs/change-evidence/repo-slimming-surface-audit.json` now records `out_of_scope_dirty_worktree.entry_count=0`, so the inventory was generated from a clean post-shell-risk-commit baseline.
+- Latest inventory: `visible_surface.file_count=1358`, `visible_surface.megabytes=21.3`, `text_surface.file_count=1317`, `text_surface.line_count=220927`.
+- Main active weight remains `docs/change-evidence`: `file_count=752`, `megabytes=14.73`, `text_line_count=97059`.
+- Safety fence remains enforced in evidence: `delete_mode=forbidden_by_default`, `archive_move_mode=forbidden_by_default`.
+- Future physical cleanup remains a separate apply task and must start with candidate catalog, dry-run proof, backup, rollback evidence, and focused verification.
+
+## Task List Closeout
+- Total tasks: `6`.
+- Completed tasks: `6`.
+- Remaining tasks in this optimization batch: `0`.

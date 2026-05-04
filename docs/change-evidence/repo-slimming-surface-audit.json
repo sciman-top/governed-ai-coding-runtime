@@ -7,28 +7,28 @@
       "text_line_count": 358
     },
     "docs": {
-      "byte_count": 1431776,
+      "byte_count": 1457426,
       "file_count": 194,
-      "megabytes": 1.37,
-      "text_line_count": 29679
+      "megabytes": 1.39,
+      "text_line_count": 30092
     },
     "docs_change_evidence": {
-      "byte_count": 9602281,
-      "file_count": 588,
-      "megabytes": 9.16,
-      "text_line_count": 69310
+      "byte_count": 15443268,
+      "file_count": 752,
+      "megabytes": 14.73,
+      "text_line_count": 97059
     },
     "packages": {
-      "byte_count": 691838,
-      "file_count": 51,
-      "megabytes": 0.66,
-      "text_line_count": 17309
+      "byte_count": 701123,
+      "file_count": 54,
+      "megabytes": 0.67,
+      "text_line_count": 17504
     },
     "rules": {
-      "byte_count": 167847,
-      "file_count": 19,
-      "megabytes": 0.16,
-      "text_line_count": 2136
+      "byte_count": 129089,
+      "file_count": 22,
+      "megabytes": 0.12,
+      "text_line_count": 1589
     },
     "schemas": {
       "byte_count": 362184,
@@ -37,16 +37,16 @@
       "text_line_count": 13224
     },
     "scripts": {
-      "byte_count": 1156865,
-      "file_count": 93,
-      "megabytes": 1.1,
-      "text_line_count": 29453
+      "byte_count": 1280825,
+      "file_count": 98,
+      "megabytes": 1.22,
+      "text_line_count": 32223
     },
     "tests": {
-      "byte_count": 1076326,
-      "file_count": 104,
-      "megabytes": 1.03,
-      "text_line_count": 24015
+      "byte_count": 1188252,
+      "file_count": 107,
+      "megabytes": 1.13,
+      "text_line_count": 26368
     }
   },
   "comparison_keys": {
@@ -58,40 +58,46 @@
   },
   "extension_summary": [
     {
-      "byte_count": 6750541,
+      "byte_count": 10483615,
       "extension": ".png",
-      "file_count": 26,
-      "megabytes": 6.44
-    },
-    {
-      "byte_count": 4060552,
-      "extension": ".md",
-      "file_count": 660,
-      "megabytes": 3.87
-    },
-    {
-      "byte_count": 2553203,
-      "extension": ".py",
-      "file_count": 225,
-      "megabytes": 2.43
-    },
-    {
-      "byte_count": 2424299,
-      "extension": ".json",
-      "file_count": 212,
-      "megabytes": 2.31
-    },
-    {
-      "byte_count": 452879,
-      "extension": ".ps1",
       "file_count": 36,
-      "megabytes": 0.43
+      "megabytes": 10.0
     },
     {
-      "byte_count": 31594,
+      "byte_count": 4829293,
+      "extension": ".md",
+      "file_count": 769,
+      "megabytes": 4.61
+    },
+    {
+      "byte_count": 3728560,
+      "extension": ".json",
+      "file_count": 252,
+      "megabytes": 3.56
+    },
+    {
+      "byte_count": 2775022,
+      "extension": ".py",
+      "file_count": 235,
+      "megabytes": 2.65
+    },
+    {
+      "byte_count": 476231,
+      "extension": ".ps1",
+      "file_count": 37,
+      "megabytes": 0.45
+    },
+    {
+      "byte_count": 34220,
       "extension": ".yaml",
       "file_count": 5,
       "megabytes": 0.03
+    },
+    {
+      "byte_count": 7086,
+      "extension": ".txt",
+      "file_count": 15,
+      "megabytes": 0.01
     },
     {
       "byte_count": 2641,
@@ -112,32 +118,26 @@
       "megabytes": 0.0
     },
     {
-      "byte_count": 197,
-      "extension": ".txt",
-      "file_count": 4,
-      "megabytes": 0.0
-    },
-    {
       "byte_count": 107,
       "extension": ".log",
       "file_count": 1,
       "megabytes": 0.0
     }
   ],
-  "generated_at": "2026-05-02T16:46:23.338577+00:00",
+  "generated_at": "2026-05-04T15:19:14.930285+00:00",
   "hotspots": {
     "docs_change_evidence_summary": {
-      "byte_count": 9602281,
-      "file_count": 588,
-      "megabytes": 9.16,
-      "text_line_count": 69310
+      "byte_count": 15443268,
+      "file_count": 752,
+      "megabytes": 14.73,
+      "text_line_count": 97059
     },
     "likely_entrypoint_hotspots": [
       {
         "area": "packages",
-        "bytes": 154218,
-        "line_count": 3382,
-        "megabytes": 0.15,
+        "bytes": 33922,
+        "line_count": 765,
+        "megabytes": 0.03,
         "path": "packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui.py"
       },
       {
@@ -149,22 +149,22 @@
       },
       {
         "area": "scripts",
-        "bytes": 17560,
-        "line_count": 468,
+        "bytes": 18120,
+        "line_count": 471,
         "megabytes": 0.02,
         "path": "scripts/operator.ps1"
       },
       {
         "area": "scripts",
-        "bytes": 113067,
-        "line_count": 2681,
-        "megabytes": 0.11,
+        "bytes": 125751,
+        "line_count": 2941,
+        "megabytes": 0.12,
         "path": "scripts/runtime-flow-preset.ps1"
       },
       {
         "area": "scripts",
-        "bytes": 39105,
-        "line_count": 1108,
+        "bytes": 39618,
+        "line_count": 1123,
         "megabytes": 0.04,
         "path": "scripts/verify-repo.ps1"
       }
@@ -257,10 +257,66 @@
     },
     {
       "area": "docs/change-evidence",
+      "bytes": 363436,
+      "extension": ".png",
+      "megabytes": 0.35,
+      "path": "docs/change-evidence/operator-ui-8770-decluttered-desktop.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 373286,
+      "extension": ".png",
+      "megabytes": 0.36,
+      "path": "docs/change-evidence/operator-ui-8770-integrated-entrypoints.png"
+    },
+    {
+      "area": "docs/change-evidence",
       "bytes": 345708,
       "extension": ".png",
       "megabytes": 0.33,
       "path": "docs/change-evidence/operator-ui-live-8770-after-stale-fix.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 447013,
+      "extension": ".png",
+      "megabytes": 0.43,
+      "path": "docs/change-evidence/operator-ui-polish-claude.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 544804,
+      "extension": ".png",
+      "megabytes": 0.52,
+      "path": "docs/change-evidence/operator-ui-polish-codex.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 514899,
+      "extension": ".png",
+      "megabytes": 0.49,
+      "path": "docs/change-evidence/operator-ui-polish-desktop.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 473019,
+      "extension": ".png",
+      "megabytes": 0.45,
+      "path": "docs/change-evidence/operator-ui-polish-feedback.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 420480,
+      "extension": ".png",
+      "megabytes": 0.4,
+      "path": "docs/change-evidence/operator-ui-polish-mobile.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 371820,
+      "extension": ".png",
+      "megabytes": 0.35,
+      "path": "docs/change-evidence/operator-ui-recovered-8770.png"
     },
     {
       "area": "docs/change-evidence",
@@ -315,10 +371,38 @@
   "largest_files": [
     {
       "area": "docs/change-evidence",
+      "bytes": 544804,
+      "extension": ".png",
+      "megabytes": 0.52,
+      "path": "docs/change-evidence/operator-ui-polish-codex.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 514899,
+      "extension": ".png",
+      "megabytes": 0.49,
+      "path": "docs/change-evidence/operator-ui-polish-desktop.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 473019,
+      "extension": ".png",
+      "megabytes": 0.45,
+      "path": "docs/change-evidence/operator-ui-polish-feedback.png"
+    },
+    {
+      "area": "docs/change-evidence",
       "bytes": 456672,
       "extension": ".png",
       "megabytes": 0.44,
       "path": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-summary-cards.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 447013,
+      "extension": ".png",
+      "megabytes": 0.43,
+      "path": "docs/change-evidence/operator-ui-polish-claude.png"
     },
     {
       "area": "docs/change-evidence",
@@ -329,10 +413,38 @@
     },
     {
       "area": "docs/change-evidence",
+      "bytes": 420480,
+      "extension": ".png",
+      "megabytes": 0.4,
+      "path": "docs/change-evidence/operator-ui-polish-mobile.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 373286,
+      "extension": ".png",
+      "megabytes": 0.36,
+      "path": "docs/change-evidence/operator-ui-8770-integrated-entrypoints.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 371820,
+      "extension": ".png",
+      "megabytes": 0.35,
+      "path": "docs/change-evidence/operator-ui-recovered-8770.png"
+    },
+    {
+      "area": "docs/change-evidence",
       "bytes": 366614,
       "extension": ".png",
       "megabytes": 0.35,
       "path": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-before-entrypoint-integration.png"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 363436,
+      "extension": ".png",
+      "megabytes": 0.35,
+      "path": "docs/change-evidence/operator-ui-8770-decluttered-desktop.png"
     },
     {
       "area": "docs/change-evidence",
@@ -431,106 +543,50 @@
       "extension": ".png",
       "megabytes": 0.22,
       "path": "operator-ui-current-mobile.png"
-    },
-    {
-      "area": "docs/change-evidence",
-      "bytes": 223594,
-      "extension": ".png",
-      "megabytes": 0.21,
-      "path": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-codex.png"
-    },
-    {
-      "area": "docs/change-evidence",
-      "bytes": 222966,
-      "extension": ".png",
-      "megabytes": 0.21,
-      "path": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-claude.png"
-    },
-    {
-      "area": "docs/change-evidence",
-      "bytes": 208609,
-      "extension": ".png",
-      "megabytes": 0.2,
-      "path": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-mobile.png"
-    },
-    {
-      "area": "packages",
-      "bytes": 154218,
-      "extension": ".py",
-      "megabytes": 0.15,
-      "path": "packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui.py"
-    },
-    {
-      "area": "docs/change-evidence",
-      "bytes": 149612,
-      "extension": ".png",
-      "megabytes": 0.14,
-      "path": "docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-before.png"
-    },
-    {
-      "area": "docs/change-evidence",
-      "bytes": 137037,
-      "extension": ".png",
-      "megabytes": 0.13,
-      "path": "docs/change-evidence/operator-ui-v2-workbench.png"
-    },
-    {
-      "area": "docs/change-evidence",
-      "bytes": 120203,
-      "extension": ".png",
-      "megabytes": 0.11,
-      "path": "docs/change-evidence/claude-operator-ui-tabs.png"
-    },
-    {
-      "area": "docs/change-evidence",
-      "bytes": 119798,
-      "extension": ".png",
-      "megabytes": 0.11,
-      "path": "docs/change-evidence/codex-operator-ui.png"
     }
   ],
   "largest_text_files": [
     {
-      "area": "packages",
-      "bytes": 154218,
-      "line_count": 3382,
-      "megabytes": 0.15,
-      "path": "packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui.py"
-    },
-    {
       "area": "scripts",
-      "bytes": 113067,
-      "line_count": 2681,
-      "megabytes": 0.11,
+      "bytes": 125751,
+      "line_count": 2941,
+      "megabytes": 0.12,
       "path": "scripts/runtime-flow-preset.ps1"
     },
     {
+      "area": "tests",
+      "bytes": 124665,
+      "line_count": 2801,
+      "megabytes": 0.12,
+      "path": "tests/runtime/test_runtime_flow_preset.py"
+    },
+    {
       "area": "packages",
-      "bytes": 106403,
-      "line_count": 2465,
+      "bytes": 105924,
+      "line_count": 2452,
       "megabytes": 0.1,
       "path": "packages/contracts/src/governed_ai_coding_runtime_contracts/session_bridge.py"
     },
     {
       "area": "tests",
-      "bytes": 97781,
-      "line_count": 2229,
-      "megabytes": 0.09,
-      "path": "tests/runtime/test_runtime_flow_preset.py"
-    },
-    {
-      "area": "tests",
-      "bytes": 91638,
-      "line_count": 1957,
-      "megabytes": 0.09,
+      "bytes": 104671,
+      "line_count": 2173,
+      "megabytes": 0.1,
       "path": "tests/runtime/test_target_repo_governance_consistency.py"
     },
     {
       "area": "docs",
-      "bytes": 108671,
-      "line_count": 1810,
-      "megabytes": 0.1,
+      "bytes": 120497,
+      "line_count": 2025,
+      "megabytes": 0.11,
       "path": "docs/backlog/issue-ready-backlog.md"
+    },
+    {
+      "area": "packages",
+      "bytes": 77257,
+      "line_count": 2013,
+      "megabytes": 0.07,
+      "path": "packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui_script.py"
     },
     {
       "area": "tests",
@@ -540,11 +596,39 @@
       "path": "tests/runtime/test_session_bridge.py"
     },
     {
+      "area": "scripts",
+      "bytes": 60339,
+      "line_count": 1547,
+      "megabytes": 0.06,
+      "path": "scripts/lib/codex_local.py"
+    },
+    {
+      "area": "docs/change-evidence",
+      "bytes": 88693,
+      "line_count": 1258,
+      "megabytes": 0.08,
+      "path": "docs/change-evidence/repo-slimming-surface-audit.json"
+    },
+    {
       "area": "docs/change-evidence",
       "bytes": 78327,
       "line_count": 1145,
       "megabytes": 0.07,
       "path": "docs/change-evidence/archive/change-evidence-manifests/20260502T164309Z.json"
+    },
+    {
+      "area": "scripts",
+      "bytes": 39618,
+      "line_count": 1123,
+      "megabytes": 0.04,
+      "path": "scripts/verify-repo.ps1"
+    },
+    {
+      "area": "scripts",
+      "bytes": 34607,
+      "line_count": 1120,
+      "megabytes": 0.03,
+      "path": "scripts/governance/gate-runner-common.ps1"
     },
     {
       "area": "packages",
@@ -562,22 +646,8 @@
     },
     {
       "area": "scripts",
-      "bytes": 39105,
-      "line_count": 1108,
-      "megabytes": 0.04,
-      "path": "scripts/verify-repo.ps1"
-    },
-    {
-      "area": "scripts",
-      "bytes": 34206,
-      "line_count": 1106,
-      "megabytes": 0.03,
-      "path": "scripts/governance/gate-runner-common.ps1"
-    },
-    {
-      "area": "scripts",
-      "bytes": 34281,
-      "line_count": 1095,
+      "bytes": 34814,
+      "line_count": 1099,
       "megabytes": 0.03,
       "path": "scripts/github/create-roadmap-issues.ps1"
     },
@@ -597,8 +667,8 @@
     },
     {
       "area": "scripts",
-      "bytes": 43656,
-      "line_count": 1061,
+      "bytes": 43218,
+      "line_count": 1051,
       "megabytes": 0.04,
       "path": "scripts/run-governed-task.py"
     },
@@ -610,18 +680,18 @@
       "path": "docs/plans/optimized-hybrid-final-state-long-term-implementation-plan.md"
     },
     {
-      "area": "docs/change-evidence",
-      "bytes": 26949,
-      "line_count": 1016,
-      "megabytes": 0.03,
-      "path": "docs/change-evidence/repo-slimming-surface-audit.json"
+      "area": "scripts",
+      "bytes": 43706,
+      "line_count": 1013,
+      "megabytes": 0.04,
+      "path": "scripts/serve-operator-ui.py"
     },
     {
-      "area": "scripts",
-      "bytes": 37225,
-      "line_count": 998,
+      "area": "docs/change-evidence",
+      "bytes": 46503,
+      "line_count": 991,
       "megabytes": 0.04,
-      "path": "scripts/lib/codex_local.py"
+      "path": "docs/change-evidence/governance-hub-certification-report.json"
     },
     {
       "area": "packages",
@@ -631,327 +701,31 @@
       "path": "packages/contracts/src/governed_ai_coding_runtime_contracts/codex_adapter.py"
     },
     {
-      "area": "scripts",
-      "bytes": 40186,
-      "line_count": 967,
-      "megabytes": 0.04,
-      "path": "scripts/serve-operator-ui.py"
-    },
-    {
-      "area": "scripts",
-      "bytes": 37173,
-      "line_count": 850,
-      "megabytes": 0.04,
-      "path": "scripts/verify-target-repo-rollout-contract.py"
-    },
-    {
-      "area": "docs",
-      "bytes": 33136,
-      "line_count": 846,
+      "area": "docs/change-evidence",
+      "bytes": 35618,
+      "line_count": 949,
       "megabytes": 0.03,
-      "path": "docs/plans/phase-0-runnable-baseline-implementation-plan.md"
+      "path": "docs/change-evidence/runtime-state-prune-apply-20260503T203802Z.json"
     },
     {
       "area": "tests",
-      "bytes": 30793,
-      "line_count": 794,
+      "bytes": 36558,
+      "line_count": 910,
       "megabytes": 0.03,
       "path": "tests/runtime/test_operator_entrypoint.py"
     },
     {
-      "area": "docs",
-      "bytes": 22333,
-      "line_count": 787,
-      "megabytes": 0.02,
-      "path": "docs/product/positioning-roadmap-competitive-layers.zh-CN.md"
+      "area": "scripts",
+      "bytes": 37175,
+      "line_count": 851,
+      "megabytes": 0.04,
+      "path": "scripts/verify-target-repo-rollout-contract.py"
     }
   ],
   "out_of_scope_dirty_worktree": {
     "adoption_policy": "Existing dirty worktree entries remain out of scope unless explicitly adopted by the current slimming task.",
-    "entries": [
-      " M AGENTS.md",
-      " M CLAUDE.md",
-      " M GEMINI.md",
-      " M docs/change-evidence/README.md",
-      "A  docs/change-evidence/archive/change-evidence-manifests/20260502T164309Z.json",
-      "R  docs/change-evidence/operator-ui-after-claude-polish.png -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-claude-polish.png",
-      "R  docs/change-evidence/operator-ui-after-claude.png -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-claude.png",
-      "R  docs/change-evidence/operator-ui-after-codex-polish.png -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-codex-polish.png",
-      "R  docs/change-evidence/operator-ui-after-codex.png -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-codex.png",
-      "R  docs/change-evidence/operator-ui-after-entrypoint-integration.png -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-entrypoint-integration.png",
-      "R  docs/change-evidence/operator-ui-after-feedback-polish.png -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-feedback-polish.png",
-      "R  docs/change-evidence/operator-ui-after-mobile-polish.png -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-mobile-polish.png",
-      "R  docs/change-evidence/operator-ui-after-mobile.png -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-mobile.png",
-      "R  docs/change-evidence/operator-ui-after-runtime-polish.png -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-runtime-polish.png",
-      "R  docs/change-evidence/operator-ui-after-runtime-v3.png -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-runtime-v3.png",
-      "R  docs/change-evidence/operator-ui-after-summary-cards.png -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-after-summary-cards.png",
-      "R  docs/change-evidence/operator-ui-before-entrypoint-integration.png -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-before-entrypoint-integration.png",
-      "R  docs/change-evidence/operator-ui-before.png -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/operator-ui-before.png",
-      "R  docs/change-evidence/rule-sync-backups/20260427-190348/C/Users/sciman/.claude/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/C/Users/sciman/.claude/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-190348/C/Users/sciman/.gemini/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/C/Users/sciman/.gemini/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/ClassroomToolkit/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/ClassroomToolkit/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/ClassroomToolkit/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/ClassroomToolkit/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/ClassroomToolkit/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/ClassroomToolkit/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/github-toolkit/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/github-toolkit/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/github-toolkit/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/github-toolkit/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/github-toolkit/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/github-toolkit/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/governed-ai-coding-runtime/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/governed-ai-coding-runtime/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/governed-ai-coding-runtime/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/governed-ai-coding-runtime/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/governed-ai-coding-runtime/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/governed-ai-coding-runtime/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/skills-manager/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/skills-manager/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/skills-manager/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/skills-manager/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/skills-manager/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/skills-manager/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/vps-ssh-launcher/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/vps-ssh-launcher/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/vps-ssh-launcher/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/vps-ssh-launcher/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/vps-ssh-launcher/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-190348/D/CODE/vps-ssh-launcher/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-191107/D/CODE/skills-manager/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-191107/D/CODE/skills-manager/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-191107/D/CODE/skills-manager/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-191107/D/CODE/skills-manager/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-191107/D/CODE/skills-manager/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-191107/D/CODE/skills-manager/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-194113/C/Users/sciman/.claude/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-194113/C/Users/sciman/.claude/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-194113/C/Users/sciman/.gemini/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-194113/C/Users/sciman/.gemini/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-225108/D/CODE/vps-ssh-launcher/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-225108/D/CODE/vps-ssh-launcher/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260427-225108/D/CODE/vps-ssh-launcher/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260427-225108/D/CODE/vps-ssh-launcher/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001402/C/Users/sciman/.claude/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/C/Users/sciman/.claude/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001402/C/Users/sciman/.gemini/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/C/Users/sciman/.gemini/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/ClassroomToolkit/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/ClassroomToolkit/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/ClassroomToolkit/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/ClassroomToolkit/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/ClassroomToolkit/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/ClassroomToolkit/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/github-toolkit/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/github-toolkit/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/github-toolkit/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/github-toolkit/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/github-toolkit/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/github-toolkit/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/governed-ai-coding-runtime/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/governed-ai-coding-runtime/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/governed-ai-coding-runtime/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/governed-ai-coding-runtime/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/governed-ai-coding-runtime/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/governed-ai-coding-runtime/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/skills-manager/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/skills-manager/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/skills-manager/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/skills-manager/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/skills-manager/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/skills-manager/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/vps-ssh-launcher/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/vps-ssh-launcher/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/vps-ssh-launcher/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/vps-ssh-launcher/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/vps-ssh-launcher/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001402/D/CODE/vps-ssh-launcher/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001951/C/Users/sciman/.claude/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001951/C/Users/sciman/.claude/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001951/C/Users/sciman/.gemini/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001951/C/Users/sciman/.gemini/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/github-toolkit/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/github-toolkit/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/github-toolkit/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/github-toolkit/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/github-toolkit/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/github-toolkit/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/governed-ai-coding-runtime/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/governed-ai-coding-runtime/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/skills-manager/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/skills-manager/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/skills-manager/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/skills-manager/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/skills-manager/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-001951/D/CODE/skills-manager/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-003004/C/Users/sciman/.claude/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/C/Users/sciman/.claude/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-003004/C/Users/sciman/.gemini/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/C/Users/sciman/.gemini/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/ClassroomToolkit/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/ClassroomToolkit/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/ClassroomToolkit/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/ClassroomToolkit/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/ClassroomToolkit/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/ClassroomToolkit/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/github-toolkit/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/github-toolkit/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/github-toolkit/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/github-toolkit/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/github-toolkit/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/github-toolkit/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/governed-ai-coding-runtime/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/governed-ai-coding-runtime/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/governed-ai-coding-runtime/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/governed-ai-coding-runtime/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/governed-ai-coding-runtime/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/governed-ai-coding-runtime/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/skills-manager/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/skills-manager/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/skills-manager/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/skills-manager/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/skills-manager/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/skills-manager/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/vps-ssh-launcher/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/vps-ssh-launcher/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/vps-ssh-launcher/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/vps-ssh-launcher/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/vps-ssh-launcher/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-003004/D/CODE/vps-ssh-launcher/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-004254/C/Users/sciman/.claude/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/C/Users/sciman/.claude/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-004254/C/Users/sciman/.gemini/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/C/Users/sciman/.gemini/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/ClassroomToolkit/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/ClassroomToolkit/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/ClassroomToolkit/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/ClassroomToolkit/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/ClassroomToolkit/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/ClassroomToolkit/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/github-toolkit/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/github-toolkit/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/github-toolkit/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/github-toolkit/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/github-toolkit/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/github-toolkit/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/governed-ai-coding-runtime/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/governed-ai-coding-runtime/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/governed-ai-coding-runtime/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/governed-ai-coding-runtime/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/governed-ai-coding-runtime/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/governed-ai-coding-runtime/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/skills-manager/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/skills-manager/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/skills-manager/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/skills-manager/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/skills-manager/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/skills-manager/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/vps-ssh-launcher/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/vps-ssh-launcher/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/vps-ssh-launcher/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/vps-ssh-launcher/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/vps-ssh-launcher/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260428-004254/D/CODE/vps-ssh-launcher/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260501-000050/D/CODE/governed-ai-coding-runtime/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260501-000050/D/CODE/governed-ai-coding-runtime/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260501-000050/D/CODE/governed-ai-coding-runtime/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260501-000050/D/CODE/governed-ai-coding-runtime/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260501-192342/D/CODE/governed-ai-coding-runtime/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260501-192342/D/CODE/governed-ai-coding-runtime/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260501-192342/D/CODE/governed-ai-coding-runtime/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260501-192342/D/CODE/governed-ai-coding-runtime/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260501-212006/D/CODE/governed-ai-coding-runtime/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260501-212006/D/CODE/governed-ai-coding-runtime/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260501-212006/D/CODE/governed-ai-coding-runtime/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260501-212006/D/CODE/governed-ai-coding-runtime/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260501-212006/D/CODE/governed-ai-coding-runtime/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260501-212006/D/CODE/governed-ai-coding-runtime/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260502-162159/C/Users/sciman/.claude/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-162159/C/Users/sciman/.claude/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260502-162159/C/Users/sciman/.gemini/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-162159/C/Users/sciman/.gemini/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260502-162427/D/CODE/skills-manager/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-162427/D/CODE/skills-manager/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260502-162427/D/CODE/skills-manager/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-162427/D/CODE/skills-manager/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260502-162427/D/CODE/skills-manager/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-162427/D/CODE/skills-manager/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/rules/projects/governed-ai-coding-runtime/claude/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/rules/projects/governed-ai-coding-runtime/claude/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/rules/projects/governed-ai-coding-runtime/codex/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/rules/projects/governed-ai-coding-runtime/codex/AGENTS.md",
-      "R  docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/rules/projects/governed-ai-coding-runtime/gemini/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-171618/D/CODE/governed-ai-coding-runtime/rules/projects/governed-ai-coding-runtime/gemini/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260502-191519/C/Users/sciman/.claude/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-191519/C/Users/sciman/.claude/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260502-191519/C/Users/sciman/.gemini/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-191519/C/Users/sciman/.gemini/GEMINI.md",
-      "R  docs/change-evidence/rule-sync-backups/20260502-204106/C/Users/sciman/.claude/CLAUDE.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-204106/C/Users/sciman/.claude/CLAUDE.md",
-      "R  docs/change-evidence/rule-sync-backups/20260502-204106/C/Users/sciman/.gemini/GEMINI.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/rule-sync-backups/20260502-204106/C/Users/sciman/.gemini/GEMINI.md",
-      "R  docs/change-evidence/snapshots/20260417-contract-family-completion/docs--README.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-contract-family-completion/docs--README.md",
-      "R  docs/change-evidence/snapshots/20260417-contract-family-completion/schemas--README.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-contract-family-completion/schemas--README.md",
-      "R  docs/change-evidence/snapshots/20260417-contract-family-completion/schemas--catalog--schema-catalog.yaml -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-contract-family-completion/schemas--catalog--schema-catalog.yaml",
-      "R  docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--README.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--README.md",
-      "R  docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--backlog--issue-ready-backlog.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--backlog--issue-ready-backlog.md",
-      "R  docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--backlog--issue-seeds.yaml -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--backlog--issue-seeds.yaml",
-      "R  docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--backlog--mvp-backlog-seeds.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--backlog--mvp-backlog-seeds.md",
-      "R  docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--roadmap--governed-ai-coding-runtime-90-day-plan.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-governance-kernel-realignment/docs--roadmap--governed-ai-coding-runtime-90-day-plan.md",
-      "R  docs/change-evidence/snapshots/20260417-governance-kernel-realignment/scripts--github--create-roadmap-issues.ps1 -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-governance-kernel-realignment/scripts--github--create-roadmap-issues.ps1",
-      "R  docs/change-evidence/snapshots/20260417-project-audit-optimization/docs-README.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-project-audit-optimization/docs-README.md",
-      "R  docs/change-evidence/snapshots/20260417-project-audit-optimization/docs-backlog-issue-ready-backlog.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-project-audit-optimization/docs-backlog-issue-ready-backlog.md",
-      "R  docs/change-evidence/snapshots/20260417-project-audit-optimization/docs-backlog-mvp-backlog-seeds.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-project-audit-optimization/docs-backlog-mvp-backlog-seeds.md",
-      "R  docs/change-evidence/snapshots/20260417-project-audit-optimization/docs-roadmap-governed-agent-platform-90-day-plan.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-project-audit-optimization/docs-roadmap-governed-agent-platform-90-day-plan.md",
-      "R  docs/change-evidence/snapshots/20260417-project-audit-optimization/scripts-github-create-roadmap-issues.ps1 -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-project-audit-optimization/scripts-github-create-roadmap-issues.ps1",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/AGENTS.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/AGENTS.md",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/README.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/README.md",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--FinalStateBestPractices.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--FinalStateBestPractices.md",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--README.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--README.md",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--adrs--0002-no-multi-repo-distribution-in-mvp.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--adrs--0002-no-multi-repo-distribution-in-mvp.md",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--architecture--governance-boundary-matrix.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--architecture--governance-boundary-matrix.md",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--architecture--governed-agent-platform-target-architecture.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--architecture--governed-agent-platform-target-architecture.md",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--backlog--issue-ready-backlog.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--backlog--issue-ready-backlog.md",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--prd--governed-agent-platform-ai-coding-prd.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--prd--governed-agent-platform-ai-coding-prd.md",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--research--benchmark-and-borrowing-notes.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--research--benchmark-and-borrowing-notes.md",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--research--repo-governance-hub-borrowing-review.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--research--repo-governance-hub-borrowing-review.md",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--roadmap--governed-agent-platform-90-day-plan.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/docs--roadmap--governed-agent-platform-90-day-plan.md",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--README.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--README.md",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--control-registry.schema.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--control-registry.schema.json",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--eval-trace-policy.schema.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--eval-trace-policy.schema.json",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--evidence-bundle.schema.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--evidence-bundle.schema.json",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--repo-profile.schema.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--repo-profile.schema.json",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--risk-tier-approval-policy.schema.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--risk-tier-approval-policy.schema.json",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--task-lifecycle.schema.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--task-lifecycle.schema.json",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--tool-contract.schema.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--tool-contract.schema.json",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--verification-gates.schema.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/schemas--jsonschema--verification-gates.schema.json",
-      "R  docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/scripts--github--create-roadmap-issues.ps1 -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-rename-to-governed-ai-coding-runtime/scripts--github--create-roadmap-issues.ps1",
-      "R  docs/change-evidence/snapshots/20260417-repo-governance-hub-mechanism-adoption-matrix/docs--README.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-repo-governance-hub-mechanism-adoption-matrix/docs--README.md",
-      "R  docs/change-evidence/snapshots/20260417-repo-governance-hub-mechanism-adoption-matrix/docs--research--repo-governance-hub-borrowing-review.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-repo-governance-hub-mechanism-adoption-matrix/docs--research--repo-governance-hub-borrowing-review.md",
-      "R  docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/README.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/README.md",
-      "R  docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/docs--README.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/docs--README.md",
-      "R  docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/docs--backlog--issue-ready-backlog.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/docs--backlog--issue-ready-backlog.md",
-      "R  docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/docs--backlog--mvp-backlog-seeds.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/docs--backlog--mvp-backlog-seeds.md",
-      "R  docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/docs--roadmap--governed-ai-coding-runtime-90-day-plan.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/docs--roadmap--governed-ai-coding-runtime-90-day-plan.md",
-      "R  docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/schemas--README.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-schema-examples-and-sample-profiles/schemas--README.md",
-      "R  docs/change-evidence/snapshots/20260417-trial-first-roadmap-refresh/docs--backlog--issue-ready-backlog.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-trial-first-roadmap-refresh/docs--backlog--issue-ready-backlog.md",
-      "R  docs/change-evidence/snapshots/20260417-trial-first-roadmap-refresh/docs--backlog--issue-seeds.yaml -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-trial-first-roadmap-refresh/docs--backlog--issue-seeds.yaml",
-      "R  docs/change-evidence/snapshots/20260417-trial-first-roadmap-refresh/docs--backlog--mvp-backlog-seeds.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-trial-first-roadmap-refresh/docs--backlog--mvp-backlog-seeds.md",
-      "R  docs/change-evidence/snapshots/20260417-trial-first-roadmap-refresh/docs--roadmap--governed-ai-coding-runtime-90-day-plan.md -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-trial-first-roadmap-refresh/docs--roadmap--governed-ai-coding-runtime-90-day-plan.md",
-      "R  docs/change-evidence/snapshots/20260417-trial-first-roadmap-refresh/scripts--github--create-roadmap-issues.ps1 -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/snapshots/20260417-trial-first-roadmap-refresh/scripts--github--create-roadmap-issues.ps1",
-      "RD docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260420225453.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260420225453.json",
-      "RD docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260422191548.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260422191548.json",
-      "RD docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501004238.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501004238.json",
-      "RD docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501182923.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501182923.json",
-      "RD docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501200520.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501200520.json",
-      "RD docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501221521.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501221521.json",
-      "RD docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260502135550.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260502135550.json",
-      "RD docs/change-evidence/target-repo-runs/classroomtoolkit-daily-allowedscope-20260420230050.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/classroomtoolkit-daily-allowedscope-20260420230050.json",
-      "RD docs/change-evidence/target-repo-runs/classroomtoolkit-onboard-20260420225453.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/classroomtoolkit-onboard-20260420225453.json",
-      "RD docs/change-evidence/target-repo-runs/classroomtoolkit-onboard-20260422191507.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/classroomtoolkit-onboard-20260422191507.json",
-      "RD docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json",
-      "RD docs/change-evidence/target-repo-runs/github-toolkit-daily-20260422191633.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/github-toolkit-daily-20260422191633.json",
-      "RD docs/change-evidence/target-repo-runs/github-toolkit-daily-20260501004238.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/github-toolkit-daily-20260501004238.json",
-      "RD docs/change-evidence/target-repo-runs/github-toolkit-daily-20260501182923.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/github-toolkit-daily-20260501182923.json",
-      "RD docs/change-evidence/target-repo-runs/github-toolkit-daily-20260501200520.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/github-toolkit-daily-20260501200520.json",
-      "RD docs/change-evidence/target-repo-runs/github-toolkit-daily-20260501221521.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/github-toolkit-daily-20260501221521.json",
-      "RD docs/change-evidence/target-repo-runs/github-toolkit-daily-20260502135550.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/github-toolkit-daily-20260502135550.json",
-      "RD docs/change-evidence/target-repo-runs/github-toolkit-daily-allow-20260420230743.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/github-toolkit-daily-allow-20260420230743.json",
-      "RD docs/change-evidence/target-repo-runs/github-toolkit-daily-deny-20260420230743.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/github-toolkit-daily-deny-20260420230743.json",
-      "RD docs/change-evidence/target-repo-runs/github-toolkit-onboard-20260420230743.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/github-toolkit-onboard-20260420230743.json",
-      "RD docs/change-evidence/target-repo-runs/github-toolkit-onboard-20260422191627.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/github-toolkit-onboard-20260422191627.json",
-      "RD docs/change-evidence/target-repo-runs/self-runtime-daily-20260420225616.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/self-runtime-daily-20260420225616.json",
-      "RD docs/change-evidence/target-repo-runs/self-runtime-daily-20260422191858.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/self-runtime-daily-20260422191858.json",
-      "RD docs/change-evidence/target-repo-runs/self-runtime-daily-20260501004238.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/self-runtime-daily-20260501004238.json",
-      "RD docs/change-evidence/target-repo-runs/self-runtime-daily-20260501182923.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/self-runtime-daily-20260501182923.json",
-      "RD docs/change-evidence/target-repo-runs/self-runtime-daily-20260501200520.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/self-runtime-daily-20260501200520.json",
-      "RD docs/change-evidence/target-repo-runs/self-runtime-daily-20260501221521.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/self-runtime-daily-20260501221521.json",
-      "RD docs/change-evidence/target-repo-runs/self-runtime-daily-20260502135550.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/self-runtime-daily-20260502135550.json",
-      "RD docs/change-evidence/target-repo-runs/self-runtime-daily-allowedscope-20260420230134.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/self-runtime-daily-allowedscope-20260420230134.json",
-      "RD docs/change-evidence/target-repo-runs/self-runtime-onboard-20260420225616.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/self-runtime-onboard-20260420225616.json",
-      "RD docs/change-evidence/target-repo-runs/self-runtime-onboard-20260422191639.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/self-runtime-onboard-20260422191639.json",
-      "RD docs/change-evidence/target-repo-runs/skills-manager-daily-20260420225937.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/skills-manager-daily-20260420225937.json",
-      "RD docs/change-evidence/target-repo-runs/skills-manager-daily-20260422192117.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/skills-manager-daily-20260422192117.json",
-      "RD docs/change-evidence/target-repo-runs/skills-manager-daily-20260501004238.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/skills-manager-daily-20260501004238.json",
-      "RD docs/change-evidence/target-repo-runs/skills-manager-daily-20260501182923.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/skills-manager-daily-20260501182923.json",
-      "RD docs/change-evidence/target-repo-runs/skills-manager-daily-20260501200520.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/skills-manager-daily-20260501200520.json",
-      "RD docs/change-evidence/target-repo-runs/skills-manager-daily-20260501221521.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/skills-manager-daily-20260501221521.json",
-      "RD docs/change-evidence/target-repo-runs/skills-manager-daily-20260502135550.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/skills-manager-daily-20260502135550.json",
-      "RD docs/change-evidence/target-repo-runs/skills-manager-daily-allowedscope-20260420230317.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/skills-manager-daily-allowedscope-20260420230317.json",
-      "RD docs/change-evidence/target-repo-runs/skills-manager-onboard-20260420225937.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/skills-manager-onboard-20260420225937.json",
-      "RD docs/change-evidence/target-repo-runs/skills-manager-onboard-20260422192111.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/skills-manager-onboard-20260422192111.json",
-      "RD docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260422192129.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260422192129.json",
-      "RD docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260501004238.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260501004238.json",
-      "RD docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260501182923.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260501182923.json",
-      "RD docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260501200520.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260501200520.json",
-      "RD docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260501221521.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260501221521.json",
-      "RD docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-allow-20260420230759.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-allow-20260420230759.json",
-      "RD docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-deny-20260420230759.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-deny-20260420230759.json",
-      "RD docs/change-evidence/target-repo-runs/vps-ssh-launcher-onboard-20260420230759.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/vps-ssh-launcher-onboard-20260420230759.json",
-      "RD docs/change-evidence/target-repo-runs/vps-ssh-launcher-onboard-20260422192122.json -> docs/change-evidence/archive/change-evidence/20260502T164309Z/docs/change-evidence/target-repo-runs/vps-ssh-launcher-onboard-20260422192122.json",
-      " M docs/change-evidence/evidence-index.json",
-      " M docs/change-evidence/repo-map-context-artifact.json",
-      " M rules/projects/governed-ai-coding-runtime/claude/CLAUDE.md",
-      " M rules/projects/governed-ai-coding-runtime/codex/AGENTS.md",
-      " M rules/projects/governed-ai-coding-runtime/gemini/GEMINI.md",
-      "MM scripts/archive-change-evidence.py",
-      "MM tests/runtime/test_archive_change_evidence.py",
-      "?? docs/change-evidence/20260503-change-evidence-archive-apply.md",
-      "?? docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260420225453.json",
-      "?? docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260422191548.json",
-      "?? docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501004238.json",
-      "?? docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501182923.json",
-      "?? docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501200520.json",
-      "?? docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260501221521.json",
-      "?? docs/change-evidence/target-repo-runs/classroomtoolkit-daily-20260502135550.json",
-      "?? docs/change-evidence/target-repo-runs/classroomtoolkit-daily-allowedscope-20260420230050.json",
-      "?? docs/change-evidence/target-repo-runs/classroomtoolkit-onboard-20260420225453.json",
-      "?? docs/change-evidence/target-repo-runs/classroomtoolkit-onboard-20260422191507.json",
-      "?? docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json",
-      "?? docs/change-evidence/target-repo-runs/github-toolkit-daily-20260422191633.json",
-      "?? docs/change-evidence/target-repo-runs/github-toolkit-daily-20260501004238.json",
-      "?? docs/change-evidence/target-repo-runs/github-toolkit-daily-20260501182923.json",
-      "?? docs/change-evidence/target-repo-runs/github-toolkit-daily-20260501200520.json",
-      "?? docs/change-evidence/target-repo-runs/github-toolkit-daily-20260501221521.json",
-      "?? docs/change-evidence/target-repo-runs/github-toolkit-daily-20260502135550.json",
-      "?? docs/change-evidence/target-repo-runs/github-toolkit-daily-allow-20260420230743.json",
-      "?? docs/change-evidence/target-repo-runs/github-toolkit-daily-deny-20260420230743.json",
-      "?? docs/change-evidence/target-repo-runs/github-toolkit-onboard-20260420230743.json",
-      "?? docs/change-evidence/target-repo-runs/github-toolkit-onboard-20260422191627.json",
-      "?? docs/change-evidence/target-repo-runs/self-runtime-daily-20260420225616.json",
-      "?? docs/change-evidence/target-repo-runs/self-runtime-daily-20260422191858.json",
-      "?? docs/change-evidence/target-repo-runs/self-runtime-daily-20260501004238.json",
-      "?? docs/change-evidence/target-repo-runs/self-runtime-daily-20260501182923.json",
-      "?? docs/change-evidence/target-repo-runs/self-runtime-daily-20260501200520.json",
-      "?? docs/change-evidence/target-repo-runs/self-runtime-daily-20260501221521.json",
-      "?? docs/change-evidence/target-repo-runs/self-runtime-daily-20260502135550.json",
-      "?? docs/change-evidence/target-repo-runs/self-runtime-daily-allowedscope-20260420230134.json",
-      "?? docs/change-evidence/target-repo-runs/self-runtime-onboard-20260420225616.json",
-      "?? docs/change-evidence/target-repo-runs/self-runtime-onboard-20260422191639.json",
-      "?? docs/change-evidence/target-repo-runs/skills-manager-daily-20260420225937.json",
-      "?? docs/change-evidence/target-repo-runs/skills-manager-daily-20260422192117.json",
-      "?? docs/change-evidence/target-repo-runs/skills-manager-daily-20260501004238.json",
-      "?? docs/change-evidence/target-repo-runs/skills-manager-daily-20260501182923.json",
-      "?? docs/change-evidence/target-repo-runs/skills-manager-daily-20260501200520.json",
-      "?? docs/change-evidence/target-repo-runs/skills-manager-daily-20260501221521.json",
-      "?? docs/change-evidence/target-repo-runs/skills-manager-daily-20260502135550.json",
-      "?? docs/change-evidence/target-repo-runs/skills-manager-daily-allowedscope-20260420230317.json",
-      "?? docs/change-evidence/target-repo-runs/skills-manager-onboard-20260420225937.json",
-      "?? docs/change-evidence/target-repo-runs/skills-manager-onboard-20260422192111.json",
-      "?? docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260422192129.json",
-      "?? docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260501004238.json",
-      "?? docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260501182923.json",
-      "?? docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260501200520.json",
-      "?? docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-20260501221521.json",
-      "?? docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-allow-20260420230759.json",
-      "?? docs/change-evidence/target-repo-runs/vps-ssh-launcher-daily-deny-20260420230759.json",
-      "?? docs/change-evidence/target-repo-runs/vps-ssh-launcher-onboard-20260420230759.json",
-      "?? docs/change-evidence/target-repo-runs/vps-ssh-launcher-onboard-20260422192122.json"
-    ],
-    "entry_count": 281
+    "entries": [],
+    "entry_count": 0
   },
   "repo_id": "governed-ai-coding-runtime",
   "repo_root": "D:\\CODE\\governed-ai-coding-runtime",
@@ -975,36 +749,36 @@
       ".yaml",
       ".yml"
     ],
-    "file_count": 1146,
-    "line_count": 188098
+    "file_count": 1317,
+    "line_count": 220927
   },
   "top_level_directories": [
     {
-      "byte_count": 11034057,
-      "file_count": 782,
-      "megabytes": 10.52,
-      "text_line_count": 98989,
+      "byte_count": 16900694,
+      "file_count": 946,
+      "megabytes": 16.12,
+      "text_line_count": 127151,
       "top_level": "docs"
     },
     {
-      "byte_count": 1156865,
-      "file_count": 93,
-      "megabytes": 1.1,
-      "text_line_count": 29453,
+      "byte_count": 1280825,
+      "file_count": 98,
+      "megabytes": 1.22,
+      "text_line_count": 32223,
       "top_level": "scripts"
     },
     {
-      "byte_count": 1076326,
-      "file_count": 104,
-      "megabytes": 1.03,
-      "text_line_count": 24015,
+      "byte_count": 1188252,
+      "file_count": 107,
+      "megabytes": 1.13,
+      "text_line_count": 26368,
       "top_level": "tests"
     },
     {
-      "byte_count": 691838,
-      "file_count": 51,
-      "megabytes": 0.66,
-      "text_line_count": 17309,
+      "byte_count": 701123,
+      "file_count": 54,
+      "megabytes": 0.67,
+      "text_line_count": 17504,
       "top_level": "packages"
     },
     {
@@ -1057,10 +831,10 @@
       "top_level": "operator-ui-current-mobile.png"
     },
     {
-      "byte_count": 167847,
-      "file_count": 19,
-      "megabytes": 0.16,
-      "text_line_count": 2136,
+      "byte_count": 129089,
+      "file_count": 22,
+      "megabytes": 0.12,
+      "text_line_count": 1589,
       "top_level": "rules"
     },
     {
@@ -1078,18 +852,18 @@
       "top_level": "README.zh-CN.md"
     },
     {
+      "byte_count": 25260,
+      "file_count": 8,
+      "megabytes": 0.02,
+      "text_line_count": 576,
+      "top_level": ".governed-ai"
+    },
+    {
       "byte_count": 24158,
       "file_count": 1,
       "megabytes": 0.02,
       "text_line_count": 454,
       "top_level": "README.en.md"
-    },
-    {
-      "byte_count": 22225,
-      "file_count": 5,
-      "megabytes": 0.02,
-      "text_line_count": 528,
-      "top_level": ".governed-ai"
     },
     {
       "byte_count": 12932,
@@ -1099,24 +873,10 @@
       "top_level": "apps"
     },
     {
-      "byte_count": 10433,
+      "byte_count": 10624,
       "file_count": 1,
       "megabytes": 0.01,
-      "text_line_count": 105,
-      "top_level": "GEMINI.md"
-    },
-    {
-      "byte_count": 10363,
-      "file_count": 1,
-      "megabytes": 0.01,
-      "text_line_count": 105,
-      "top_level": "CLAUDE.md"
-    },
-    {
-      "byte_count": 10171,
-      "file_count": 1,
-      "megabytes": 0.01,
-      "text_line_count": 106,
+      "text_line_count": 108,
       "top_level": "AGENTS.md"
     },
     {
@@ -1132,6 +892,20 @@
       "megabytes": 0.0,
       "text_line_count": 133,
       "top_level": ".claude"
+    },
+    {
+      "byte_count": 2597,
+      "file_count": 1,
+      "megabytes": 0.0,
+      "text_line_count": 28,
+      "top_level": "GEMINI.md"
+    },
+    {
+      "byte_count": 2423,
+      "file_count": 1,
+      "megabytes": 0.0,
+      "text_line_count": 28,
+      "top_level": "CLAUDE.md"
     },
     {
       "byte_count": 2083,
@@ -1185,10 +959,10 @@
   ],
   "transient_surface_breakdown": {
     ".git": {
-      "byte_count": 24370705,
+      "byte_count": 32536842,
       "directory_count": 1,
-      "file_count": 4155,
-      "megabytes": 23.24
+      "file_count": 5368,
+      "megabytes": 31.03
     },
     ".playwright-mcp": {
       "byte_count": 344428,
@@ -1203,16 +977,16 @@
       "megabytes": 0.0
     },
     ".runtime": {
-      "byte_count": 21935790,
-      "directory_count": 183,
-      "file_count": 5353,
-      "megabytes": 20.92
+      "byte_count": 29274111,
+      "directory_count": 436,
+      "file_count": 6541,
+      "megabytes": 27.92
     },
     ".tmp": {
-      "byte_count": 54790,
+      "byte_count": 525323,
       "directory_count": 1,
-      "file_count": 1,
-      "megabytes": 0.05
+      "file_count": 14,
+      "megabytes": 0.5
     },
     ".worktrees": {
       "byte_count": 0,
@@ -1221,16 +995,16 @@
       "megabytes": 0.0
     },
     "__pycache__": {
-      "byte_count": 3268006,
-      "directory_count": 13,
-      "file_count": 241,
-      "megabytes": 3.12
+      "byte_count": 3668660,
+      "directory_count": 14,
+      "file_count": 252,
+      "megabytes": 3.5
     },
     "dist": {
-      "byte_count": 14302958,
+      "byte_count": 20543067,
       "directory_count": 1,
-      "file_count": 1208,
-      "megabytes": 13.64
+      "file_count": 1517,
+      "megabytes": 19.59
     },
     "node_modules": {
       "byte_count": 0,
@@ -1240,7 +1014,7 @@
     }
   },
   "visible_surface": {
-    "byte_count": 16278799,
+    "byte_count": 22339561,
     "excluded_directory_names": [
       ".git",
       ".playwright-mcp",
@@ -1252,7 +1026,7 @@
       "dist",
       "node_modules"
     ],
-    "file_count": 1177,
-    "megabytes": 15.52
+    "file_count": 1358,
+    "megabytes": 21.3
   }
 }
