@@ -19,8 +19,6 @@ DEFAULT_TIMEOUT_EXEMPT_ALLOWLIST = (
 )
 _TIMEOUT_EXPIRED_EXIT_CODE = 124
 _SAFE_CODEX_ENV_POLICY_KEYS = (
-    "COMSPEC",
-    "ComSpec",
     "WINDIR",
     "windir",
     "SYSTEMROOT",
@@ -195,16 +193,9 @@ def _subprocess_environment() -> dict[str, str]:
     _merge_persisted_windows_environment(env)
 
     windows_root = _resolved_windows_root(env)
-    _ensure_canonical_env_key(env, "SystemRoot", windows_root)
-    _ensure_canonical_env_key(env, "WINDIR", windows_root)
-    comspec = _env_get(env, "ComSpec")
-    if comspec is not None:
-        comspec = _expand_windows_env_value(comspec, env)
-        _ensure_canonical_env_key(env, "ComSpec", comspec)
-    else:
-        cmd_path = str(Path(windows_root) / "System32" / "cmd.exe")
-        if Path(cmd_path).exists():
-            env["ComSpec"] = cmd_path
+    _force_canonical_env_key(env, "SystemRoot", windows_root)
+    _force_canonical_env_key(env, "WINDIR", windows_root)
+    _force_canonical_env_key(env, "ComSpec", _resolved_windows_comspec(env, windows_root))
     if _env_get(env, "SystemDrive") is None:
         env["SystemDrive"] = Path(windows_root).drive or "C:"
     user_profile = _env_get(env, "USERPROFILE")
@@ -330,9 +321,35 @@ def _expand_windows_env_value(value: str, env: dict[str, str]) -> str:
 def _resolved_windows_root(env: dict[str, str]) -> str:
     for key in ("SystemRoot", "WINDIR"):
         candidate = _env_get(env, key)
+        if candidate and "%" not in candidate and _windows_cmd_path(candidate).exists():
+            return candidate
+    default_root = r"C:\Windows"
+    if _windows_cmd_path(default_root).exists():
+        return default_root
+    for key in ("SystemRoot", "WINDIR"):
+        candidate = _env_get(env, key)
         if candidate and "%" not in candidate:
             return candidate
-    return r"C:\Windows"
+    return default_root
+
+
+def _resolved_windows_comspec(env: dict[str, str], windows_root: str) -> str | None:
+    candidates = [
+        _windows_cmd_path(windows_root),
+        _windows_cmd_path(r"C:\Windows"),
+    ]
+    existing = _env_get(env, "ComSpec")
+    if existing is not None:
+        candidates.append(Path(_expand_windows_env_value(existing, env)))
+    for candidate in candidates:
+        if candidate.name.lower() == "cmd.exe" and candidate.exists():
+            return str(candidate)
+    first = candidates[0]
+    return str(first) if first.name.lower() == "cmd.exe" else None
+
+
+def _windows_cmd_path(windows_root: str) -> Path:
+    return Path(windows_root) / "System32" / "cmd.exe"
 
 
 def _env_get(env: dict[str, str], key: str) -> str | None:
@@ -352,10 +369,12 @@ def _set_env_if_missing(env: dict[str, str], key: str, value: str | None) -> Non
     env[key] = value
 
 
-def _ensure_canonical_env_key(env: dict[str, str], key: str, value: str | None) -> None:
-    existing = env.get(key)
-    if not value or (existing and "%" not in existing):
+def _force_canonical_env_key(env: dict[str, str], key: str, value: str | None) -> None:
+    if not value:
         return
+    for existing_key in list(env):
+        if existing_key.lower() == key.lower() and existing_key != key:
+            del env[existing_key]
     env[key] = value
 
 

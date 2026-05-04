@@ -78,6 +78,70 @@ class SubprocessGuardTests(unittest.TestCase):
         self.assertEqual(normalized.get("NO_PROXY"), "localhost,127.0.0.1,::1")
         self.assertNotIn("ANTHROPIC_AUTH_TOKEN", normalized)
 
+    @unittest.skipUnless(os.name == "nt", "Windows shell normalization")
+    def test_codex_shell_policy_cannot_override_comspec(self) -> None:
+        import governed_ai_coding_runtime_contracts.subprocess_guard as guard
+
+        original_env = os.environ.copy()
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            codex_home = Path(tmp_dir) / "codex-home"
+            codex_home.mkdir()
+            fake_shell = Path(tmp_dir) / "fake-cmd.exe"
+            fake_shell.write_text("", encoding="utf-8")
+            (codex_home / "config.toml").write_text(
+                "\n".join(
+                    [
+                        "[shell_environment_policy.set]",
+                        f'ComSpec = "{fake_shell.as_posix()}"',
+                        'HTTP_PROXY = "http://127.0.0.1:10808"',
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            try:
+                os.environ.clear()
+                os.environ["CODEX_HOME"] = str(codex_home)
+                os.environ["USERPROFILE"] = original_env.get("USERPROFILE", r"C:\Users\sciman")
+                normalized = guard._subprocess_environment()
+            finally:
+                os.environ.clear()
+                os.environ.update(original_env)
+
+        comspec = Path(normalized["ComSpec"])
+        self.assertEqual(comspec.name.lower(), "cmd.exe")
+        self.assertEqual(comspec.parent.name.lower(), "system32")
+        self.assertNotEqual(str(comspec).lower(), str(fake_shell).lower())
+        self.assertEqual(normalized.get("HTTP_PROXY"), "http://127.0.0.1:10808")
+
+    @unittest.skipUnless(os.name == "nt", "Windows shell normalization")
+    def test_existing_environment_cannot_override_comspec_or_systemroot(self) -> None:
+        import governed_ai_coding_runtime_contracts.subprocess_guard as guard
+
+        original_env = os.environ.copy()
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            fake_root = Path(tmp_dir) / "Windows"
+            fake_root.mkdir()
+            fake_shell = fake_root / "cmd.exe"
+            fake_shell.write_text("", encoding="utf-8")
+            try:
+                os.environ.clear()
+                os.environ["SystemRoot"] = str(fake_root)
+                os.environ["WINDIR"] = str(fake_root)
+                os.environ["ComSpec"] = str(fake_shell)
+                os.environ["USERPROFILE"] = original_env.get("USERPROFILE", r"C:\Users\sciman")
+                normalized = guard._subprocess_environment()
+            finally:
+                os.environ.clear()
+                os.environ.update(original_env)
+
+        self.assertNotEqual(normalized["SystemRoot"].lower(), str(fake_root).lower())
+        self.assertNotEqual(normalized["WINDIR"].lower(), str(fake_root).lower())
+        comspec = Path(normalized["ComSpec"])
+        self.assertEqual(comspec.name.lower(), "cmd.exe")
+        self.assertEqual(comspec.parent.name.lower(), "system32")
+        self.assertNotEqual(str(comspec).lower(), str(fake_shell).lower())
+
 
 if __name__ == "__main__":
     unittest.main()
