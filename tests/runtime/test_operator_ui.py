@@ -12,6 +12,14 @@ if str(CONTRACTS_SRC) not in sys.path:
 
 
 class OperatorUiTests(unittest.TestCase):
+    def test_operator_ui_translation_keys_stay_in_sync(self) -> None:
+        operator_ui_text = importlib.import_module("governed_ai_coding_runtime_contracts.operator_ui_text")
+
+        zh_keys = set(operator_ui_text.TRANSLATIONS["zh-CN"])
+        en_keys = set(operator_ui_text.TRANSLATIONS["en"])
+
+        self.assertEqual(zh_keys, en_keys)
+
     def test_operator_ui_renders_empty_state_html(self) -> None:
         runtime_status = importlib.import_module("governed_ai_coding_runtime_contracts.runtime_status")
         operator_ui = importlib.import_module("governed_ai_coding_runtime_contracts.operator_ui")

@@ -418,6 +418,18 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("source_last_write_utc", process_status)
         self.assertIn("restart_request", process_status)
         self.assertIn("scripts/serve-operator-ui.py", process_status["source_files"])
+        self.assertIn(
+            "packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui_script.py",
+            process_status["source_files"],
+        )
+        self.assertIn(
+            "packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui_style.py",
+            process_status["source_files"],
+        )
+        self.assertIn(
+            "packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui_text.py",
+            process_status["source_files"],
+        )
 
     def test_operator_ui_server_refuses_stale_content_and_disables_cache(self) -> None:
         script = (ROOT / "scripts" / "serve-operator-ui.py").read_text(encoding="utf-8")
@@ -861,6 +873,9 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("function Test-ServiceProcessStale", script)
         self.assertIn("Get-ServiceSourceLastWriteUtc", script)
         self.assertIn("operator_ui.py", script)
+        self.assertIn("operator_ui_script.py", script)
+        self.assertIn("operator_ui_style.py", script)
+        self.assertIn("operator_ui_text.py", script)
         self.assertIn("serve-operator-ui.py", script)
         self.assertIn("Stop-ServiceProcess", script)
         self.assertIn("source_last_write_utc", script)

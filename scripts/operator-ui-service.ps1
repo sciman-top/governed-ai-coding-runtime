@@ -27,6 +27,9 @@ $SourceFiles = @(
   (Join-Path $RepoRoot "scripts/serve-operator-ui.py"),
   (Join-Path $RepoRoot "scripts/operator-ui-service.ps1"),
   (Join-Path $RepoRoot "packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui.py"),
+  (Join-Path $RepoRoot "packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui_script.py"),
+  (Join-Path $RepoRoot "packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui_style.py"),
+  (Join-Path $RepoRoot "packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui_text.py"),
   (Join-Path $RepoRoot "packages/contracts/src/governed_ai_coding_runtime_contracts/runtime_status.py"),
   (Join-Path $RepoRoot "scripts/lib/codex_local.py"),
   (Join-Path $RepoRoot "scripts/lib/claude_local.py")
