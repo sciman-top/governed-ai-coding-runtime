@@ -283,7 +283,7 @@
             "check_id": "codex_context_window_policy_sane",
             "evidence_ref": "~/.codex/config.toml model_context_window + model_auto_compact_token_limit",
             "reason": "Codex context window and auto-compact thresholds should remain coherent before changing model defaults.",
-            "remediation": "Run `python scripts/codex-account.py context-probe --run-codex` and align the configured context policy with the local Codex catalog before changing defaults.",
+            "remediation": "Run `python scripts/codex-account.py context-probe --run-codex --all-catalogs --probe-exec` and align the configured context policy with the local Codex debug models catalogs before changing defaults.",
             "status": "pass"
           },
           {
@@ -349,6 +349,7 @@
             "reason": "Run with run_codex=true to inspect the local Codex model catalog.",
             "status": "not_run"
           },
+          "catalog_probes": [],
           "checks": [
             {
               "check_id": "context_window_configured",
@@ -375,6 +376,25 @@
           "config_path": "C:\\Users\\sciman\\.codex\\config.toml",
           "configured_auto_compact_token_limit": 220000,
           "configured_context_window": 272000,
+          "context_settings_decision": {
+            "action": "keep_current",
+            "basis_status": "config_only",
+            "catalog_entries": [],
+            "compact_ratio": 0.8088,
+            "compact_source": "configured_guard_band",
+            "context_source": "configured_fallback",
+            "decision_rule": "Prefer matching bundled/refreshed `codex debug models` context_window values; keep configured auto-compact when it is below the context window and inside the guard band; otherwise derive an 81% rounded threshold.",
+            "model": "gpt-5.5",
+            "model_auto_compact_token_limit": 220000,
+            "model_context_window": 272000,
+            "status": "pass"
+          },
+          "exec_probe": {
+            "command": null,
+            "consumes_quota": true,
+            "reason": "Run with probe_exec=true to validate the configured context settings through a minimal Codex exec request.",
+            "status": "not_run"
+          },
           "external_reference": {
             "codex_context_window_tokens": 400000,
             "enforcement": "informational_only_refresh_before_changing_defaults",

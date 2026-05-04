@@ -30,6 +30,8 @@ def main(argv: list[str] | None = None) -> int:
     context_parser.add_argument("--codex-home", default=None)
     context_parser.add_argument("--run-codex", action="store_true", help="Run `codex debug models --bundled`.")
     context_parser.add_argument("--live", action="store_true", help="Refresh the Codex model catalog instead of using --bundled.")
+    context_parser.add_argument("--all-catalogs", action="store_true", help="Run both bundled and refreshed `codex debug models` probes.")
+    context_parser.add_argument("--probe-exec", action="store_true", help="Run a minimal `codex exec --json` probe with the configured context settings. This may consume quota.")
     context_parser.add_argument("--codex-binary", default=None)
     install_parser = subparsers.add_parser("install", help="Install the codex-account PowerShell shim into the user profile.")
     install_parser.add_argument("--codex-home", default=None)
@@ -53,6 +55,8 @@ def main(argv: list[str] | None = None) -> int:
             Path(args.codex_home) if args.codex_home else None,
             run_codex=args.run_codex,
             bundled=not args.live,
+            probe_all_catalogs=args.all_catalogs,
+            probe_exec=args.probe_exec,
             codex_binary=args.codex_binary,
         )
     elif args.command == "install":

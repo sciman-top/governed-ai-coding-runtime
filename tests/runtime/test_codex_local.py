@@ -263,6 +263,9 @@ class CodexLocalTests(unittest.TestCase):
             self.assertEqual(272000, probe["configured_context_window"])
             self.assertEqual(220000, probe["configured_auto_compact_token_limit"])
             self.assertEqual("not_run", probe["catalog_probe"]["status"])
+            self.assertEqual([], probe["catalog_probes"])
+            self.assertEqual("keep_current", probe["context_settings_decision"]["action"])
+            self.assertEqual("config_only", probe["context_settings_decision"]["basis_status"])
             self.assertEqual("informational_only_refresh_before_changing_defaults", probe["external_reference"]["enforcement"])
 
     def test_context_window_probe_can_read_bundled_catalog_summary(self) -> None:
@@ -302,7 +305,113 @@ class CodexLocalTests(unittest.TestCase):
             self.assertEqual("pass", probe["status"])
             self.assertEqual("pass", probe["catalog_probe"]["status"])
             self.assertEqual(272000, probe["catalog_probe"]["model"]["context_window"])
+            self.assertEqual("single_catalog", probe["context_settings_decision"]["basis_status"])
+            self.assertEqual("codex_debug_models_bundled", probe["context_settings_decision"]["context_source"])
             self.assertTrue(all(check["status"] == "pass" for check in probe["checks"]))
+
+    def test_context_window_probe_compares_bundled_and_refreshed_catalogs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            (home / "config.toml").write_text(
+                "\n".join(
+                    [
+                        'model = "gpt-5.5"',
+                        "model_context_window = 272000",
+                        "model_auto_compact_token_limit = 220000",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            catalog = json.dumps(
+                {
+                    "models": [
+                        {
+                            "slug": "gpt-5.5",
+                            "display_name": "GPT-5.5",
+                            "context_window": 272000,
+                            "max_context_window": 272000,
+                        }
+                    ]
+                }
+            )
+            completed = mock.Mock(returncode=0, stdout=catalog, stderr="")
+
+            with (
+                mock.patch("lib.codex_local.shutil.which", return_value="codex.cmd"),
+                mock.patch("lib.codex_local.subprocess.run", return_value=completed) as run_mock,
+            ):
+                probe = codex_local.context_window_probe(home, run_codex=True, probe_all_catalogs=True)
+
+            self.assertEqual("pass", probe["status"])
+            self.assertEqual(["bundled", "refreshed"], [item["catalog_mode"] for item in probe["catalog_probes"]])
+            self.assertEqual(2, run_mock.call_count)
+            self.assertEqual("catalog_consensus", probe["context_settings_decision"]["basis_status"])
+            self.assertTrue(
+                any(
+                    check["check_id"] == "bundled_and_refreshed_catalogs_agree" and check["status"] == "pass"
+                    for check in probe["checks"]
+                )
+            )
+
+    def test_context_window_probe_surfaces_catalog_disagreement(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            (home / "config.toml").write_text(
+                "\n".join(
+                    [
+                        'model = "gpt-5.5"',
+                        "model_context_window = 272000",
+                        "model_auto_compact_token_limit = 220000",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            bundled_catalog = json.dumps({"models": [{"slug": "gpt-5.5", "context_window": 272000, "max_context_window": 272000}]})
+            refreshed_catalog = json.dumps({"models": [{"slug": "gpt-5.5", "context_window": 300000, "max_context_window": 300000}]})
+            completed = [
+                mock.Mock(returncode=0, stdout=bundled_catalog, stderr=""),
+                mock.Mock(returncode=0, stdout=refreshed_catalog, stderr=""),
+            ]
+
+            with (
+                mock.patch("lib.codex_local.shutil.which", return_value="codex.cmd"),
+                mock.patch("lib.codex_local.subprocess.run", side_effect=completed),
+            ):
+                probe = codex_local.context_window_probe(home, run_codex=True, probe_all_catalogs=True)
+
+            self.assertEqual("attention", probe["status"])
+            self.assertEqual("manual_review", probe["context_settings_decision"]["action"])
+            self.assertEqual("catalog_disagreement", probe["context_settings_decision"]["basis_status"])
+            self.assertEqual("probe_before_changing_defaults", probe["recommendation"])
+
+    def test_context_window_probe_can_run_exec_probe_with_config_overrides(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            (home / "config.toml").write_text(
+                "\n".join(
+                    [
+                        'model = "gpt-5.5"',
+                        "model_context_window = 272000",
+                        "model_auto_compact_token_limit = 220000",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            completed = mock.Mock(returncode=0, stdout='{"type":"agent_message","message":"ok"}\n', stderr="")
+
+            with (
+                mock.patch("lib.codex_local.shutil.which", return_value="codex.cmd"),
+                mock.patch("lib.codex_local.subprocess.run", return_value=completed) as run_mock,
+            ):
+                probe = codex_local.context_window_probe(home, probe_exec=True)
+
+            command = run_mock.call_args.args[0]
+            self.assertEqual("pass", probe["status"])
+            self.assertEqual("pass", probe["exec_probe"]["status"])
+            self.assertIn("exec", command)
+            self.assertIn("model_context_window=272000", command)
+            self.assertIn("model_auto_compact_token_limit=220000", command)
+            self.assertTrue(probe["exec_probe"]["consumes_quota"])
 
     def test_status_includes_efficiency_first_core_principle_and_current_choice(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

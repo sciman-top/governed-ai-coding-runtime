@@ -48,6 +48,8 @@ USAGE_DASHBOARD_URL = "https://chatgpt.com/codex/settings/usage"
 USAGE_STALE_AFTER_SECONDS = 300
 CONTEXT_COMPACT_RATIO_MIN = 0.75
 CONTEXT_COMPACT_RATIO_MAX = 0.90
+DEFAULT_CONTEXT_COMPACT_RATIO = 0.81
+CONTEXT_COMPACT_GRANULARITY = 1000
 GPT_55_CODEX_CONTEXT_REFERENCE = {
     "model": "gpt-5.5",
     "codex_context_window_tokens": 400000,
@@ -405,6 +407,8 @@ def context_window_probe(
     *,
     run_codex: bool = False,
     bundled: bool = True,
+    probe_all_catalogs: bool = False,
+    probe_exec: bool = False,
     codex_binary: str | None = None,
     timeout_seconds: int = 30,
 ) -> dict[str, Any]:
@@ -458,49 +462,114 @@ def context_window_probe(
         "reason": "Run with run_codex=true to inspect the local Codex model catalog.",
         "command": None,
     }
+    catalog_probes: list[dict[str, Any]] = []
+    context_settings_decision = _context_settings_decision(
+        model=model,
+        configured_context=configured_context,
+        configured_compact=configured_compact,
+        catalog_probes=catalog_probes,
+    )
+    exec_probe = {
+        "status": "not_run",
+        "reason": "Run with probe_exec=true to validate the configured context settings through a minimal Codex exec request.",
+        "command": None,
+        "consumes_quota": True,
+    }
     recommendation = "keep_current" if all(check["status"] == "pass" for check in checks) else "fix_config"
     if run_codex:
-        catalog_probe = _probe_codex_model_catalog(
+        catalog_modes = ["bundled", "refreshed"] if probe_all_catalogs else ["bundled" if bundled else "refreshed"]
+        for catalog_mode in catalog_modes:
+            probe = _probe_codex_model_catalog(
+                model=model,
+                bundled=catalog_mode == "bundled",
+                codex_binary=codex_binary,
+                timeout_seconds=timeout_seconds,
+            )
+            catalog_probes.append(probe)
+            checks.append(
+                {
+                    "check_id": f"local_{catalog_mode}_catalog_probe_available",
+                    "status": "pass" if probe.get("status") == "pass" else "platform_na",
+                    "reason": "The local Codex debug models catalog must be readable before using catalog-derived context recommendations.",
+                }
+            )
+            model_info = probe.get("model")
+            if isinstance(model_info, dict):
+                catalog_context = _coerce_int(model_info.get("context_window"))
+                catalog_max_context = _coerce_int(model_info.get("max_context_window"))
+                if catalog_max_context is not None and configured_context is not None:
+                    checks.append(
+                        {
+                            "check_id": f"configured_context_within_{catalog_mode}_catalog_max",
+                            "status": "pass" if configured_context <= catalog_max_context else "fail",
+                            "reason": "Configured context must not exceed the model catalog maximum.",
+                            "expected_max": catalog_max_context,
+                            "actual": configured_context,
+                        }
+                    )
+                if catalog_context is not None and configured_context is not None:
+                    checks.append(
+                        {
+                            "check_id": f"configured_context_matches_{catalog_mode}_catalog",
+                            "status": "pass" if configured_context == catalog_context else "fail",
+                            "reason": "Configured context should match the local Codex debug models catalog before changing defaults.",
+                            "expected": catalog_context,
+                            "actual": configured_context,
+                        }
+                    )
+        if len(catalog_probes) > 1:
+            checks.append(_catalogs_agree_check(catalog_probes))
+        catalog_probe = catalog_probes[0] if catalog_probes else catalog_probe
+        context_settings_decision = _context_settings_decision(
             model=model,
-            bundled=bundled,
+            configured_context=configured_context,
+            configured_compact=configured_compact,
+            catalog_probes=catalog_probes,
+        )
+        if context_settings_decision.get("model_context_window") is not None and configured_context is not None:
+            checks.append(
+                {
+                    "check_id": "configured_context_matches_context_settings_decision",
+                    "status": "pass" if configured_context == context_settings_decision.get("model_context_window") else "fail",
+                    "reason": "Configured context should match the value selected from bundled/refreshed debug models evidence.",
+                    "expected": context_settings_decision.get("model_context_window"),
+                    "actual": configured_context,
+                }
+            )
+        if context_settings_decision.get("model_auto_compact_token_limit") is not None and configured_compact is not None:
+            checks.append(
+                {
+                    "check_id": "configured_auto_compact_matches_context_settings_decision",
+                    "status": "pass"
+                    if configured_compact == context_settings_decision.get("model_auto_compact_token_limit")
+                    else "fail",
+                    "reason": "Configured auto compact threshold should match the value selected from the context settings decision.",
+                    "expected": context_settings_decision.get("model_auto_compact_token_limit"),
+                    "actual": configured_compact,
+                }
+            )
+
+    if probe_exec:
+        exec_probe = _probe_codex_context_settings_exec(
+            model=model,
+            configured_context=configured_context,
+            configured_compact=configured_compact,
             codex_binary=codex_binary,
-            timeout_seconds=timeout_seconds,
+            timeout_seconds=max(timeout_seconds, 90),
         )
         checks.append(
             {
-                "check_id": "local_catalog_probe_available",
-                "status": "pass" if catalog_probe.get("status") == "pass" else "platform_na",
-                "reason": "The local Codex model catalog must be readable before using catalog-derived context recommendations.",
+                "check_id": "codex_exec_accepts_context_settings",
+                "status": "pass" if exec_probe.get("status") == "pass" else "platform_na",
+                "reason": "A minimal Codex exec probe should accept the configured context window and auto-compact values.",
             }
         )
-        model_info = catalog_probe.get("model")
-        if isinstance(model_info, dict):
-            catalog_context = _coerce_int(model_info.get("context_window"))
-            catalog_max_context = _coerce_int(model_info.get("max_context_window"))
-            if catalog_context is not None and configured_context is not None:
-                checks.append(
-                    {
-                        "check_id": "configured_context_matches_local_catalog",
-                        "status": "pass" if configured_context == catalog_context else "fail",
-                        "reason": "Configured context should match the currently bundled local Codex model catalog before changing defaults.",
-                        "expected": catalog_context,
-                        "actual": configured_context,
-                    }
-                )
-            if catalog_max_context is not None and configured_context is not None:
-                checks.append(
-                    {
-                        "check_id": "configured_context_within_catalog_max",
-                        "status": "pass" if configured_context <= catalog_max_context else "fail",
-                        "reason": "Configured context must not exceed the model catalog maximum.",
-                        "expected_max": catalog_max_context,
-                        "actual": configured_context,
-                    }
-                )
 
     failed = [check for check in checks if check["status"] != "pass"]
     if failed:
-        recommendation = "probe_before_changing_defaults" if run_codex else "run_catalog_probe"
+        recommendation = "probe_before_changing_defaults" if run_codex or probe_exec else "run_catalog_probe"
+    elif context_settings_decision.get("action") == "update_config":
+        recommendation = "align_config_to_context_settings_decision"
     return {
         "status": "pass" if not failed else "attention",
         "config_path": str(config_path),
@@ -514,6 +583,9 @@ def context_window_probe(
         },
         "external_reference": GPT_55_CODEX_CONTEXT_REFERENCE if model == "gpt-5.5" else None,
         "catalog_probe": catalog_probe,
+        "catalog_probes": catalog_probes,
+        "exec_probe": exec_probe,
+        "context_settings_decision": context_settings_decision,
         "checks": checks,
         "recommendation": recommendation,
     }
@@ -1104,6 +1176,11 @@ def _first_non_empty_line(text: str) -> str:
     return ""
 
 
+def _last_non_empty_lines(text: str, *, limit: int) -> list[str]:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    return lines[-limit:]
+
+
 def _with_usage_freshness(payload: dict[str, Any]) -> dict[str, Any]:
     enriched = dict(payload)
     captured_at = _first_string(enriched.get("captured_at"))
@@ -1172,6 +1249,101 @@ def _coerce_int(value: Any) -> int | None:
         return None
 
 
+def _context_settings_decision(
+    *,
+    model: str,
+    configured_context: int | None,
+    configured_compact: int | None,
+    catalog_probes: list[dict[str, Any]],
+) -> dict[str, Any]:
+    catalog_entries = []
+    for probe in catalog_probes:
+        model_info = probe.get("model")
+        if probe.get("status") != "pass" or not isinstance(model_info, dict):
+            continue
+        catalog_entries.append(
+            {
+                "source": f"codex_debug_models_{probe.get('catalog_mode')}",
+                "catalog_mode": probe.get("catalog_mode"),
+                "context_window": _coerce_int(model_info.get("context_window")),
+                "max_context_window": _coerce_int(model_info.get("max_context_window")),
+                "effective_context_window_percent": _coerce_int(model_info.get("effective_context_window_percent")),
+            }
+        )
+
+    catalog_contexts = [
+        entry["context_window"]
+        for entry in catalog_entries
+        if isinstance(entry.get("context_window"), int) and entry["context_window"] > 0
+    ]
+    distinct_contexts = sorted(set(catalog_contexts))
+    if distinct_contexts and len(distinct_contexts) == 1:
+        selected_context = distinct_contexts[0]
+        context_source = "catalog_agreement" if len(catalog_entries) > 1 else catalog_entries[0]["source"]
+        basis_status = "catalog_consensus" if len(catalog_entries) > 1 else "single_catalog"
+    else:
+        selected_context = configured_context or _coerce_int(DEFAULT_CONFIG.get("model_context_window"))
+        context_source = "configured_fallback" if configured_context else "default_fallback"
+        basis_status = "catalog_disagreement" if distinct_contexts else "config_only"
+
+    selected_compact = None
+    compact_source = "unavailable"
+    compact_ratio = None
+    if selected_context:
+        if configured_compact and configured_compact < selected_context:
+            compact_ratio = round(configured_compact / selected_context, 4)
+            if CONTEXT_COMPACT_RATIO_MIN <= compact_ratio <= CONTEXT_COMPACT_RATIO_MAX:
+                selected_compact = configured_compact
+                compact_source = "configured_guard_band"
+        if selected_compact is None:
+            selected_compact = _recommended_compact_limit(selected_context)
+            compact_ratio = round(selected_compact / selected_context, 4) if selected_compact else None
+            compact_source = "derived_ratio"
+
+    action = "keep_current"
+    if selected_context != configured_context or selected_compact != configured_compact:
+        action = "update_config"
+    if basis_status == "catalog_disagreement":
+        action = "manual_review"
+
+    return {
+        "model": model,
+        "status": "attention" if basis_status == "catalog_disagreement" else "pass",
+        "action": action,
+        "basis_status": basis_status,
+        "model_context_window": selected_context,
+        "model_auto_compact_token_limit": selected_compact,
+        "compact_ratio": compact_ratio,
+        "context_source": context_source,
+        "compact_source": compact_source,
+        "catalog_entries": catalog_entries,
+        "decision_rule": "Prefer matching bundled/refreshed `codex debug models` context_window values; keep configured auto-compact when it is below the context window and inside the guard band; otherwise derive an 81% rounded threshold.",
+    }
+
+
+def _recommended_compact_limit(context_window: int) -> int:
+    raw = int(context_window * DEFAULT_CONTEXT_COMPACT_RATIO)
+    if CONTEXT_COMPACT_GRANULARITY <= 1:
+        return raw
+    rounded = (raw // CONTEXT_COMPACT_GRANULARITY) * CONTEXT_COMPACT_GRANULARITY
+    return max(CONTEXT_COMPACT_GRANULARITY, rounded)
+
+
+def _catalogs_agree_check(catalog_probes: list[dict[str, Any]]) -> dict[str, Any]:
+    contexts_by_mode: dict[str, int | None] = {}
+    for probe in catalog_probes:
+        mode = _first_string(probe.get("catalog_mode")) or "unknown"
+        model_info = probe.get("model")
+        contexts_by_mode[mode] = _coerce_int(model_info.get("context_window")) if isinstance(model_info, dict) else None
+    values = [value for value in contexts_by_mode.values() if value is not None]
+    return {
+        "check_id": "bundled_and_refreshed_catalogs_agree",
+        "status": "pass" if values and len(values) == len(contexts_by_mode) and len(set(values)) == 1 else "fail",
+        "reason": "Bundled and refreshed `codex debug models` catalogs should agree before using them to change context settings.",
+        "contexts_by_mode": contexts_by_mode,
+    }
+
+
 def _probe_codex_model_catalog(
     *,
     model: str,
@@ -1223,6 +1395,79 @@ def _probe_codex_model_catalog(
         "model": model_entry,
         "parse_status": parse_status,
         "stderr_summary": (completed.stderr or "").strip()[:500],
+    }
+
+
+def _probe_codex_context_settings_exec(
+    *,
+    model: str,
+    configured_context: int | None,
+    configured_compact: int | None,
+    codex_binary: str | None,
+    timeout_seconds: int,
+) -> dict[str, Any]:
+    if configured_context is None or configured_compact is None:
+        return {
+            "status": "platform_na",
+            "reason": "configured context window and auto-compact token limit are required before running an exec probe",
+            "command": None,
+            "consumes_quota": True,
+        }
+    codex_cmd = codex_binary or shutil.which("codex.cmd") or shutil.which("codex")
+    if not codex_cmd:
+        return {
+            "status": "platform_na",
+            "reason": "codex command not found",
+            "command": None,
+            "consumes_quota": True,
+        }
+    command = [
+        codex_cmd,
+        "exec",
+        "--json",
+        "--model",
+        model,
+        "-c",
+        f"model_context_window={configured_context}",
+        "-c",
+        f"model_auto_compact_token_limit={configured_compact}",
+        "Reply only ok.",
+    ]
+    try:
+        completed = subprocess.run(
+            command,
+            input="",
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout_seconds,
+        )
+    except subprocess.TimeoutExpired as exc:
+        return {
+            "status": "platform_na",
+            "reason": f"codex exec context probe timed out after {timeout_seconds}s",
+            "command": command,
+            "error": str(exc),
+            "consumes_quota": True,
+        }
+    except OSError as exc:
+        return {
+            "status": "platform_na",
+            "reason": str(exc),
+            "command": command,
+            "consumes_quota": True,
+        }
+
+    stdout_summary = _last_non_empty_lines(completed.stdout or "", limit=4)
+    stderr_summary = _last_non_empty_lines(completed.stderr or "", limit=4)
+    return {
+        "status": "pass" if completed.returncode == 0 else "platform_na",
+        "command": command,
+        "exit_code": completed.returncode,
+        "stdout_summary": stdout_summary,
+        "stderr_summary": stderr_summary,
+        "consumes_quota": True,
     }
 
 
