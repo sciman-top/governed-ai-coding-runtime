@@ -5,6 +5,7 @@ param(
   [int]$GateTimeoutSeconds = 0,
   [int]$MaxGateCount = 50,
   [switch]$ContinueOnError,
+  [switch]$DisableAutoCommit,
   [switch]$Json
 )
 
@@ -23,6 +24,7 @@ $result = Invoke-RepoProfileGateRun `
   -GateTimeoutSeconds $GateTimeoutSeconds `
   -MaxGateCount $MaxGateCount `
   -ContinueOnError:$ContinueOnError.IsPresent `
+  -DisableAutoCommit:$DisableAutoCommit.IsPresent `
   -JsonOutput:$Json.IsPresent
 
 exit ([int]$result.exit_code)

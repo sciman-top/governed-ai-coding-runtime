@@ -124,6 +124,54 @@ class GovernanceGateRunnerTests(unittest.TestCase):
             self.assertEqual(payload["summary"]["detailed"][2]["blocking"], False)
             self.assertNotIn("full-extra-should-skip", completed.stdout)
 
+    def test_full_check_can_disable_auto_commit_for_managed_batch_runs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            profile_path = workspace / ".governed-ai" / "repo-profile.json"
+            _write_json(
+                profile_path,
+                {
+                    "repo_id": "no-auto-commit",
+                    "full_gate_commands": [
+                        {"id": "build", "required": True, "command": "Write-Host 'build-ok'"}
+                    ],
+                    "auto_commit_policy": {
+                        "enabled": True,
+                        "on": ["milestone"],
+                        "require_all_required_gates_pass": True,
+                        "commit_message_template": "自动提交：{repo_id} 里程碑 {milestone} 门禁通过 {timestamp}",
+                    },
+                },
+            )
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "governance" / "full-check.ps1"),
+                    "-RepoProfilePath",
+                    str(profile_path),
+                    "-WorkingDirectory",
+                    str(workspace),
+                    "-MilestoneTag",
+                    "milestone",
+                    "-DisableAutoCommit",
+                    "-Json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = _extract_json_payload(completed.stdout)
+            self.assertEqual(payload["summary"]["auto_commit"]["status"], "skipped")
+            self.assertEqual(payload["summary"]["auto_commit"]["reason"], "disabled_by_caller")
+
     def test_gate_runner_expands_satisfied_gate_aliases(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)

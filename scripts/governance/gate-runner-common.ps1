@@ -693,8 +693,20 @@ function Invoke-AutoCommit {
     [int]$GateExitCode,
     [Parameter(Mandatory)]
     [object]$Profile,
-    [string]$MilestoneTag = ""
+    [string]$MilestoneTag = "",
+    [switch]$DisabledByCaller
   )
+
+  if ($DisabledByCaller.IsPresent) {
+    return [pscustomobject]@{
+      status          = "skipped"
+      reason          = "disabled_by_caller"
+      commit_hash     = $null
+      commit_message  = $null
+      trigger         = $null
+      milestone_tag   = $MilestoneTag
+    }
+  }
 
   if ($null -eq $Policy) {
     return [pscustomobject]@{
@@ -990,6 +1002,7 @@ function Invoke-RepoProfileGateRun {
     [int]$GateTimeoutSeconds = 0,
     [int]$MaxGateCount = 50,
     [switch]$ContinueOnError,
+    [switch]$DisableAutoCommit,
     [switch]$JsonOutput
   )
 
@@ -1029,7 +1042,8 @@ function Invoke-RepoProfileGateRun {
     -WorkingDirectory $resolvedWorkingDirectory `
     -GateExitCode $exitCode `
     -Profile $profile `
-    -MilestoneTag $MilestoneTag
+    -MilestoneTag $MilestoneTag `
+    -DisabledByCaller:$DisableAutoCommit.IsPresent
   if ($autoCommitResult.status -eq "error") {
     $exitCode = 1
   }

@@ -107,10 +107,32 @@ def _write_fake_full_check_script(path: Path) -> None:
   [string]$MilestoneTag = "",
   [int]$GateTimeoutSeconds = 0,
   [switch]$ContinueOnError,
+  [switch]$DisableAutoCommit,
   [switch]$Json
 )
 
 if ($Json) {
+  Write-Host "fake-full-check gate log before json"
+  $autoCommit = if ($DisableAutoCommit) {
+    [ordered]@{
+      status = "skipped"
+      reason = "disabled_by_caller"
+      commit_hash = ""
+      commit_message = ""
+      trigger = $null
+      milestone_tag = $MilestoneTag
+    }
+  }
+  else {
+    [ordered]@{
+      status = "committed"
+      reason = "ok"
+      commit_hash = "fake-commit-hash"
+      commit_message = ("自动提交：fake-repo 里程碑 {0} 门禁通过 2026-04-23 00:00:00 +08:00" -f $MilestoneTag)
+      trigger = "milestone"
+      milestone_tag = $MilestoneTag
+    }
+  }
   @(
     [ordered]@{
       exit_code = 0
@@ -119,14 +141,7 @@ if ($Json) {
         repo_profile_path = $RepoProfilePath
         working_directory = $WorkingDirectory
         gate_timeout_seconds = $GateTimeoutSeconds
-        auto_commit = [ordered]@{
-          status = "committed"
-          reason = "ok"
-          commit_hash = "fake-commit-hash"
-          commit_message = ("自动提交：fake-repo 里程碑 {0} 门禁通过 2026-04-23 00:00:00 +08:00" -f $MilestoneTag)
-          trigger = "milestone"
-          milestone_tag = $MilestoneTag
-        }
+        auto_commit = $autoCommit
       }
     }
   ) | ConvertTo-Json -Depth 20
@@ -146,10 +161,32 @@ def _write_fake_fast_check_script(path: Path) -> None:
   [string]$MilestoneTag = "",
   [int]$GateTimeoutSeconds = 0,
   [switch]$ContinueOnError,
+  [switch]$DisableAutoCommit,
   [switch]$Json
 )
 
 if ($Json) {
+  Write-Host "fake-fast-check gate log before json"
+  $autoCommit = if ($DisableAutoCommit) {
+    [ordered]@{
+      status = "skipped"
+      reason = "disabled_by_caller"
+      commit_hash = ""
+      commit_message = ""
+      trigger = $null
+      milestone_tag = $MilestoneTag
+    }
+  }
+  else {
+    [ordered]@{
+      status = "committed"
+      reason = "ok"
+      commit_hash = "fake-fast-commit-hash"
+      commit_message = ("自动提交：fake-repo 快速里程碑 {0} 门禁通过 2026-04-24 00:00:00 +08:00" -f $MilestoneTag)
+      trigger = "milestone"
+      milestone_tag = $MilestoneTag
+    }
+  }
   @(
     [ordered]@{
       exit_code = 0
@@ -158,14 +195,7 @@ if ($Json) {
         repo_profile_path = $RepoProfilePath
         working_directory = $WorkingDirectory
         gate_timeout_seconds = $GateTimeoutSeconds
-        auto_commit = [ordered]@{
-          status = "committed"
-          reason = "ok"
-          commit_hash = "fake-fast-commit-hash"
-          commit_message = ("自动提交：fake-repo 快速里程碑 {0} 门禁通过 2026-04-24 00:00:00 +08:00" -f $MilestoneTag)
-          trigger = "milestone"
-          milestone_tag = $MilestoneTag
-        }
+        auto_commit = $autoCommit
       }
     }
   ) | ConvertTo-Json -Depth 20
@@ -186,11 +216,33 @@ def _write_fake_fast_check_marker_script(path: Path, marker_path: Path, exit_cod
   [string]$MilestoneTag = "",
   [int]$GateTimeoutSeconds = 0,
   [switch]$ContinueOnError,
+  [switch]$DisableAutoCommit,
   [switch]$Json
 )
 
 Set-Content -LiteralPath '{marker}' -Value 'ran' -Encoding UTF8
 if ($Json) {{
+  Write-Host "fake-fast-check marker log before json"
+  $autoCommit = if ($DisableAutoCommit) {{
+    [ordered]@{{
+      status = "skipped"
+      reason = "disabled_by_caller"
+      commit_hash = ""
+      commit_message = ""
+      trigger = $null
+      milestone_tag = $MilestoneTag
+    }}
+  }}
+  else {{
+    [ordered]@{{
+      status = "committed"
+      reason = "ok"
+      commit_hash = "fake-fast-commit-hash"
+      commit_message = ("自动提交：fake-repo 快速里程碑 {{0}} 门禁通过 2026-04-24 00:00:00 +08:00" -f $MilestoneTag)
+      trigger = "milestone"
+      milestone_tag = $MilestoneTag
+    }}
+  }}
   [ordered]@{{
     exit_code = {exit_code}
     summary = [ordered]@{{
@@ -198,14 +250,7 @@ if ($Json) {{
       repo_profile_path = $RepoProfilePath
       working_directory = $WorkingDirectory
       gate_timeout_seconds = $GateTimeoutSeconds
-      auto_commit = [ordered]@{{
-        status = "committed"
-        reason = "ok"
-        commit_hash = "fake-fast-commit-hash"
-        commit_message = ("自动提交：fake-repo 快速里程碑 {{0}} 门禁通过 2026-04-24 00:00:00 +08:00" -f $MilestoneTag)
-        trigger = "milestone"
-        milestone_tag = $MilestoneTag
-      }}
+      auto_commit = $autoCommit
     }}
   }} | ConvertTo-Json -Depth 20
 }}
@@ -1099,6 +1144,99 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                 profile = json.loads((repo / ".governed-ai" / "repo-profile.json").read_text(encoding="utf-8"))
                 self.assertEqual(profile["required_entrypoint_policy"]["current_mode"], "targeted_enforced")
                 self.assertEqual(profile["auto_commit_policy"]["enabled"], True)
+
+    def test_runtime_flow_preset_apply_all_features_can_disable_milestone_auto_commit(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_a = workspace / "repo-a"
+            _write_json(
+                repo_a / ".governed-ai" / "repo-profile.json",
+                {
+                    "repo_id": "repo-a",
+                    "required_entrypoint_policy": {"current_mode": "advisory"},
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": str(repo_a),
+                            "attachment_runtime_state_root": str(workspace / "state" / "repo-a"),
+                            "repo_id": "repo-a",
+                            "display_name": "repo-a",
+                            "primary_language": "python",
+                            "build_command": "python --version",
+                            "test_command": "python --version",
+                            "contract_command": "python --version",
+                        }
+                    },
+                },
+            )
+            baseline_path = workspace / "target-repo-governance-baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-05-04.3",
+                    "required_profile_overrides": {
+                        "required_entrypoint_policy": {"current_mode": "targeted_enforced"},
+                        "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                    },
+                },
+            )
+
+            fake_runtime_flow_path = workspace / "fake-runtime-flow.ps1"
+            _write_fake_runtime_flow_script(fake_runtime_flow_path)
+            fake_full_check_path = workspace / "fake-full-check.ps1"
+            _write_fake_full_check_script(fake_full_check_path)
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "runtime-flow-preset.ps1"),
+                    "-AllTargets",
+                    "-ApplyAllFeatures",
+                    "-DisableMilestoneAutoCommit",
+                    "-Json",
+                    "-CatalogPath",
+                    str(catalog_path),
+                    "-GovernanceBaselinePath",
+                    str(baseline_path),
+                    "-RuntimeFlowPath",
+                    str(fake_runtime_flow_path),
+                    "-GovernanceFullCheckPath",
+                    str(fake_full_check_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertTrue(payload["apply_all_features"])
+            self.assertTrue(payload["disable_milestone_auto_commit"])
+            self.assertEqual(payload["failure_count"], 0)
+            result = payload["results"][0]
+            self.assertEqual(result["milestone_commit_status"], "pass")
+            self.assertEqual(result["auto_commit_status"], "skipped")
+            self.assertEqual(result["auto_commit_reason"], "disabled_by_caller")
+            self.assertTrue(result["auto_commit_disabled_by_caller"])
+            self.assertEqual(result["auto_commit_commit_hash"], "")
 
     def test_runtime_flow_preset_apply_all_features_syncs_baseline_before_daily_flow(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

@@ -17,6 +17,8 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260504 ApplyAllFeatures No-Auto-Commit Safety](./20260504-applyallfeatures-no-autocommit-safety.md)
+  - evidence companion for safely running all-target `ApplyAllFeatures` with milestone gates enabled but auto-commit suppressed when target repos contain existing local worktree changes
 - [20260504 Agent Rule v9.52 Wrapper Convergence](./20260504-agent-rule-v952-wrapper-convergence.md)
   - evidence companion for converging Codex/Claude/Gemini global and project rules on shared `AGENTS.md` bodies, thin import wrappers, official loading semantics, and synchronized target profiles
 - [20260504 Host Readiness Fixes](./20260504-host-readiness-fixes.md)

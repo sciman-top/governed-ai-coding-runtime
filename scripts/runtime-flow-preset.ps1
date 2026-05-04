@@ -42,6 +42,7 @@ param(
   [switch]$ApplyGovernanceBaselineOnly,
   [switch]$ApplyFeatureBaselineAndMilestoneCommit,
   [string]$MilestoneTag = "milestone",
+  [switch]$DisableMilestoneAutoCommit,
   [switch]$AutoMilestoneGateMode,
   [string]$TaskType = "",
   [switch]$ReleaseCandidate,
@@ -89,6 +90,7 @@ Governance apply options:
   -ApplyGovernanceBaselineOnly  Apply target governance baseline without runtime flow.
   -ApplyCodingSpeedProfile      Refresh derived coding speed profile fields.
   -ApplyAllFeatures             Apply the full target governance feature bundle.
+  -DisableMilestoneAutoCommit   Run milestone gates but suppress post-gate auto-commit.
 '@
 }
 
@@ -435,12 +437,39 @@ function Try-ParseJson {
     return $null
   }
 
+  $trimmed = $Raw.Trim()
   try {
-    return ($Raw | ConvertFrom-Json -Depth 80)
+    return ($trimmed | ConvertFrom-Json -Depth 80)
   }
   catch {
-    return $null
   }
+
+  $pairs = @(
+    [pscustomobject]@{ open = "{"; close = "}" },
+    [pscustomobject]@{ open = "["; close = "]" }
+  )
+  foreach ($pair in $pairs) {
+    $end = $trimmed.LastIndexOf([string]$pair.close)
+    if ($end -lt 0) {
+      continue
+    }
+
+    $start = $trimmed.LastIndexOf([string]$pair.open, $end)
+    while ($start -ge 0) {
+      $candidate = $trimmed.Substring($start, ($end - $start + 1))
+      try {
+        return ($candidate | ConvertFrom-Json -Depth 80)
+      }
+      catch {
+        if ($start -eq 0) {
+          break
+        }
+        $start = $trimmed.LastIndexOf([string]$pair.open, $start - 1)
+      }
+    }
+  }
+
+  return $null
 }
 
 function ConvertTo-JsonArrayValue {
@@ -1474,7 +1503,8 @@ function Invoke-TargetMilestoneAutoCommit {
     [string]$MilestoneTagValue,
     [Parameter(Mandatory = $true)]
     [int]$MilestoneGateTimeoutSeconds,
-    [int]$MilestoneCommandTimeoutSeconds = 0
+    [int]$MilestoneCommandTimeoutSeconds = 0,
+    [bool]$DisableAutoCommit = $false
   )
 
   $repoProfilePath = Join-Path $TargetConfig.AttachmentRoot ".governed-ai\repo-profile.json"
@@ -1515,6 +1545,9 @@ function Invoke-TargetMilestoneAutoCommit {
     "-GateTimeoutSeconds", [string]$MilestoneGateTimeoutSeconds,
     "-Json"
   )
+  if ($DisableAutoCommit) {
+    $args += "-DisableAutoCommit"
+  }
   $result = Invoke-CommandCapture `
     -Executable "pwsh" `
     -Arguments $args `
@@ -1537,21 +1570,28 @@ function Invoke-TargetMilestoneAutoCommit {
   $commitHash = ""
   $commitMessage = ""
   $trigger = ""
-  if ($payload -and $payload.summary -and $payload.summary.auto_commit) {
-    if ($payload.summary.auto_commit.PSObject.Properties.Name -contains "status" -and $null -ne $payload.summary.auto_commit.status) {
-      $autoCommitStatus = [string]$payload.summary.auto_commit.status
+  $payloadSummary = $null
+  foreach ($payloadItem in @($payload)) {
+    if ($payloadItem -and ($payloadItem.PSObject.Properties.Name -contains "summary")) {
+      $payloadSummary = $payloadItem.summary
+      break
     }
-    if ($payload.summary.auto_commit.PSObject.Properties.Name -contains "reason" -and $null -ne $payload.summary.auto_commit.reason) {
-      $autoCommitReason = [string]$payload.summary.auto_commit.reason
+  }
+  if ($payloadSummary -and ($payloadSummary.PSObject.Properties.Name -contains "auto_commit") -and $payloadSummary.auto_commit) {
+    if ($payloadSummary.auto_commit.PSObject.Properties.Name -contains "status" -and $null -ne $payloadSummary.auto_commit.status) {
+      $autoCommitStatus = [string]$payloadSummary.auto_commit.status
     }
-    if ($payload.summary.auto_commit.PSObject.Properties.Name -contains "commit_hash" -and $null -ne $payload.summary.auto_commit.commit_hash) {
-      $commitHash = [string]$payload.summary.auto_commit.commit_hash
+    if ($payloadSummary.auto_commit.PSObject.Properties.Name -contains "reason" -and $null -ne $payloadSummary.auto_commit.reason) {
+      $autoCommitReason = [string]$payloadSummary.auto_commit.reason
     }
-    if ($payload.summary.auto_commit.PSObject.Properties.Name -contains "commit_message" -and $null -ne $payload.summary.auto_commit.commit_message) {
-      $commitMessage = [string]$payload.summary.auto_commit.commit_message
+    if ($payloadSummary.auto_commit.PSObject.Properties.Name -contains "commit_hash" -and $null -ne $payloadSummary.auto_commit.commit_hash) {
+      $commitHash = [string]$payloadSummary.auto_commit.commit_hash
     }
-    if ($payload.summary.auto_commit.PSObject.Properties.Name -contains "trigger" -and $null -ne $payload.summary.auto_commit.trigger) {
-      $trigger = [string]$payload.summary.auto_commit.trigger
+    if ($payloadSummary.auto_commit.PSObject.Properties.Name -contains "commit_message" -and $null -ne $payloadSummary.auto_commit.commit_message) {
+      $commitMessage = [string]$payloadSummary.auto_commit.commit_message
+    }
+    if ($payloadSummary.auto_commit.PSObject.Properties.Name -contains "trigger" -and $null -ne $payloadSummary.auto_commit.trigger) {
+      $trigger = [string]$payloadSummary.auto_commit.trigger
     }
   }
 
@@ -1569,6 +1609,7 @@ function Invoke-TargetMilestoneAutoCommit {
     trigger            = $trigger
     milestone_tag      = $MilestoneTagValue
     gate_mode          = $GateMode
+    auto_commit_disabled_by_caller = [bool]$DisableAutoCommit
     command_timeout_seconds = $effectiveMilestoneCommandTimeoutSeconds
   }
 }
@@ -1596,6 +1637,7 @@ function Invoke-TargetFeatureBaselineAndMilestoneCommit {
     [string]$MilestoneGateModeValue,
     [int]$MilestoneCommandTimeoutSeconds = 0,
     [int]$GovernanceSyncCommandTimeoutSeconds = 0,
+    [bool]$DisableMilestoneAutoCommit = $false,
     [bool]$CleanMilestoneGateSkipEnabled = $false,
     [bool]$EmitProgress = $false
   )
@@ -1667,7 +1709,8 @@ function Invoke-TargetFeatureBaselineAndMilestoneCommit {
       -GateMode $MilestoneGateModeValue `
       -MilestoneTagValue $MilestoneTagValue `
       -MilestoneGateTimeoutSeconds $MilestoneGateTimeoutSeconds `
-      -MilestoneCommandTimeoutSeconds $MilestoneCommandTimeoutSeconds
+      -MilestoneCommandTimeoutSeconds $MilestoneCommandTimeoutSeconds `
+      -DisableAutoCommit $DisableMilestoneAutoCommit
     $milestoneDurationMs = [int][Math]::Round(((Get-Date) - $milestoneStartedAt).TotalMilliseconds)
     Write-BatchProgressLine `
       -Enabled $EmitProgress `
@@ -1731,6 +1774,7 @@ function Invoke-TargetAllFeatures {
     [int]$MilestoneCommandTimeoutSeconds = 0,
     [int]$RuntimeFlowCommandTimeoutSeconds = 0,
     [int]$GovernanceSyncCommandTimeoutSeconds = 0,
+    [bool]$DisableMilestoneAutoCommit = $false,
     [bool]$CleanMilestoneGateSkipEnabled = $false,
     [bool]$EmitProgress = $false
   )
@@ -1835,7 +1879,8 @@ function Invoke-TargetAllFeatures {
         -GateMode $MilestoneGateModeValue `
         -MilestoneTagValue $MilestoneTagValue `
         -MilestoneGateTimeoutSeconds $MilestoneGateTimeoutSeconds `
-        -MilestoneCommandTimeoutSeconds $MilestoneCommandTimeoutSeconds
+        -MilestoneCommandTimeoutSeconds $MilestoneCommandTimeoutSeconds `
+        -DisableAutoCommit $DisableMilestoneAutoCommit
       $milestoneDurationMs = [int][Math]::Round(((Get-Date) - $milestoneStartedAt).TotalMilliseconds)
       Write-BatchProgressLine `
         -Enabled $EmitProgress `
@@ -2339,6 +2384,7 @@ foreach ($targetName in $selectedTargets) {
       -MilestoneCommandTimeoutSeconds $MilestoneCommandTimeoutSeconds `
       -RuntimeFlowCommandTimeoutSeconds $RuntimeFlowTimeoutSeconds `
       -GovernanceSyncCommandTimeoutSeconds $GovernanceSyncTimeoutSeconds `
+      -DisableMilestoneAutoCommit $DisableMilestoneAutoCommit.IsPresent `
       -CleanMilestoneGateSkipEnabled $cleanMilestoneGateSkipEnabled `
       -EmitProgress $progressEnabled
   }
@@ -2355,6 +2401,7 @@ foreach ($targetName in $selectedTargets) {
       -MilestoneGateModeValue $effectiveMilestoneGateMode `
       -MilestoneCommandTimeoutSeconds $MilestoneCommandTimeoutSeconds `
       -GovernanceSyncCommandTimeoutSeconds $GovernanceSyncTimeoutSeconds `
+      -DisableMilestoneAutoCommit $DisableMilestoneAutoCommit.IsPresent `
       -CleanMilestoneGateSkipEnabled $cleanMilestoneGateSkipEnabled `
       -EmitProgress $progressEnabled
   }
@@ -2665,6 +2712,7 @@ if ($Json) {
           gate_skip_reason   = if ($single.milestone_commit_result.PSObject.Properties.Name -contains "gate_skip_reason") { $single.milestone_commit_result.gate_skip_reason } else { "" }
           auto_commit_status = $single.milestone_commit_result.auto_commit_status
           auto_commit_reason = $single.milestone_commit_result.auto_commit_reason
+          auto_commit_disabled_by_caller = if ($single.milestone_commit_result.PSObject.Properties.Name -contains "auto_commit_disabled_by_caller") { [bool]$single.milestone_commit_result.auto_commit_disabled_by_caller } else { $false }
           commit_hash        = $single.milestone_commit_result.commit_hash
           commit_message     = $single.milestone_commit_result.commit_message
           trigger            = $single.milestone_commit_result.trigger
@@ -2802,6 +2850,7 @@ if ($Json) {
           milestone_gate_skip_reason = if ($_.milestone_commit_result.PSObject.Properties.Name -contains "gate_skip_reason") { $_.milestone_commit_result.gate_skip_reason } else { "" }
           auto_commit_status       = $_.milestone_commit_result.auto_commit_status
           auto_commit_reason       = $_.milestone_commit_result.auto_commit_reason
+          auto_commit_disabled_by_caller = if ($_.milestone_commit_result.PSObject.Properties.Name -contains "auto_commit_disabled_by_caller") { [bool]$_.milestone_commit_result.auto_commit_disabled_by_caller } else { $false }
           auto_commit_commit_hash  = $_.milestone_commit_result.commit_hash
           auto_commit_trigger      = $_.milestone_commit_result.trigger
           prune_retired_managed_files = if ($pruneRetiredManagedFilesActive) { $pruneRetiredForJson } else { $null }
@@ -2847,6 +2896,7 @@ if ($Json) {
       milestone_gate_mode_source      = if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) { $milestoneGateModeSource } else { "" }
       milestone_gate_mode_reason      = if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) { $milestoneGateModeReason } else { "" }
       milestone_tag                   = if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) { $MilestoneTag } else { "" }
+      disable_milestone_auto_commit   = if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) { [bool]$DisableMilestoneAutoCommit } else { $false }
       milestone_gate_timeout_seconds  = if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) { $MilestoneGateTimeoutSeconds } else { 0 }
       milestone_command_timeout_seconds = if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) { $MilestoneCommandTimeoutSeconds } else { 0 }
       auto_milestone_gate_mode        = [bool]$AutoMilestoneGateMode
