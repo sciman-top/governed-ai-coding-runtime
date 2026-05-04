@@ -36,6 +36,28 @@ class AgentRuleSyncTests(unittest.TestCase):
             self.assertEqual(entry["version"], global_version)
             self.assertTrue((ROOT / entry["source"]).exists(), entry["source"])
 
+    def test_project_claude_and_gemini_rules_are_import_wrappers(self) -> None:
+        manifest = json.loads((ROOT / "rules" / "manifest.json").read_text(encoding="utf-8"))
+        project_entries = [entry for entry in manifest["entries"] if entry["scope"] == "project"]
+        wrapper_entries = [entry for entry in project_entries if entry["tool"] in {"claude", "gemini"}]
+        self.assertEqual(len(wrapper_entries), 12)
+
+        for entry in wrapper_entries:
+            text = (ROOT / entry["source"]).read_text(encoding="utf-8")
+            lines = [line.strip() for line in text.splitlines()]
+            self.assertIn("@AGENTS.md", lines, entry["source"])
+            self.assertIn(f"GlobalUser/{entry['target_path']} v{manifest['default_version']}", text)
+            self.assertLessEqual(len(text.splitlines()), 40, entry["source"])
+            self.assertNotIn("## A. 项目基线", text, entry["source"])
+            self.assertNotIn("## C. 项目差异", text, entry["source"])
+            self.assertNotIn("### C.", text, entry["source"])
+
+        for entry in [item for item in project_entries if item["tool"] == "codex"]:
+            text = (ROOT / entry["source"]).read_text(encoding="utf-8")
+            self.assertIn("本文件是三工具共同项目规则主体", text, entry["source"])
+            self.assertIn("wrapper 保持 `1 / B / D`", text, entry["source"])
+            self.assertIn("不复制共同正文", text, entry["source"])
+
     def test_global_sync_skips_when_hashes_match(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             user_profile = Path(tmp_dir) / "user"

@@ -93,6 +93,7 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
         self.assertIn("permissions.deny", coordination["tool_specific_loading_policy"]["claude"])
         self.assertIn("auto memory is not the rule source", coordination["tool_specific_loading_policy"]["claude"])
         self.assertIn("/memory show", coordination["tool_specific_loading_policy"]["gemini"])
+        self.assertIn("/memory reload", coordination["tool_specific_loading_policy"]["gemini"])
         self.assertIn("/memory refresh", coordination["tool_specific_loading_policy"]["gemini"])
         self.assertIn("@AGENTS.md", coordination["tool_specific_loading_policy"]["gemini"])
         self.assertIn("current schema/help", coordination["tool_specific_loading_policy"]["gemini"])
