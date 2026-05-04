@@ -14,6 +14,12 @@ if str(CONTRACTS_SRC) not in sys.path:
 FAST_FALLBACK_ADAPTER_ID = "unit-test-adapter"
 
 
+def _runtime_check_env() -> dict[str, str]:
+    env = os.environ.copy()
+    env["GOVERNED_RUNTIME_CODEX_BIN"] = "__missing_codex_binary_for_fast_e2e_test__"
+    return env
+
+
 class AttachedRepoE2ETests(unittest.TestCase):
     def test_runtime_check_executes_attached_write_e2e_with_handoff_and_replay_refs(self) -> None:
         from governed_ai_coding_runtime_contracts.repo_attachment import attach_target_repo
@@ -75,6 +81,7 @@ class AttachedRepoE2ETests(unittest.TestCase):
                 capture_output=True,
                 text=True,
                 cwd=ROOT,
+                env=_runtime_check_env(),
             )
 
             self.assertEqual(completed.returncode, 0, completed.stderr)
@@ -168,6 +175,7 @@ class AttachedRepoE2ETests(unittest.TestCase):
                 capture_output=True,
                 text=True,
                 cwd=ROOT,
+                env=_runtime_check_env(),
             )
 
             self.assertEqual(completed.returncode, 0, completed.stderr)
@@ -205,8 +213,6 @@ class AttachedRepoE2ETests(unittest.TestCase):
             )
 
             target_path = "docs/e2e-fallback-probe.txt"
-            env = os.environ.copy()
-            env["GOVERNED_RUNTIME_CODEX_BIN"] = "__missing_codex_binary_for_fallback_test__"
             completed = subprocess.run(
                 [
                     "pwsh",
@@ -243,7 +249,7 @@ class AttachedRepoE2ETests(unittest.TestCase):
                 capture_output=True,
                 text=True,
                 cwd=ROOT,
-                env=env,
+                env=_runtime_check_env(),
             )
 
             self.assertEqual(completed.returncode, 0, completed.stderr)
@@ -324,6 +330,7 @@ class AttachedRepoE2ETests(unittest.TestCase):
                 encoding="utf-8",
                 errors="replace",
                 cwd=ROOT,
+                env=_runtime_check_env(),
             )
 
             self.assertNotEqual(completed.returncode, 0, completed.stderr)
@@ -392,6 +399,7 @@ class AttachedRepoE2ETests(unittest.TestCase):
                 encoding="utf-8",
                 errors="replace",
                 cwd=ROOT,
+                env=_runtime_check_env(),
             )
 
             self.assertNotEqual(completed.returncode, 0, completed.stderr)

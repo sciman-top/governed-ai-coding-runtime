@@ -27,6 +27,24 @@ def _load_run_governed_task_module():
 RUN_GOVERNED_TASK = _load_run_governed_task_module()
 
 
+def _write_fast_repo_profile(path: Path) -> Path:
+    gate_command = f'"{sys.executable}" -c "print(\'gate-ok\')"'
+    payload = {
+        "repo_id": "fast-test-repo",
+        "primary_language": "python",
+        "rollout_posture": {"current_mode": "observe", "target_mode": "advisory"},
+        "build_commands": [{"id": "build", "command": gate_command, "required": True}],
+        "test_commands": [{"id": "test", "command": gate_command, "required": True}],
+        "quick_gate_commands": [{"id": "quick", "command": gate_command, "required": True}],
+        "contract_commands": [{"id": "contract", "command": gate_command, "required": True}],
+        "invariant_commands": [],
+        "tool_allowlist": ["shell", "python"],
+        "path_policies": {"read_allow": ["**"], "write_allow": ["**"], "blocked": []},
+    }
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    return path
+
+
 class RunGovernedTaskCliTests(unittest.TestCase):
     def test_verify_attachment_help(self) -> None:
         completed = subprocess.run(
@@ -40,23 +58,32 @@ class RunGovernedTaskCliTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         self.assertIn("Execute declared verification gates", completed.stdout)
 
-    def test_run_default_profile_executes_repo_local_quick_gate(self) -> None:
+    def test_run_task_executes_profile_local_quick_gate(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             RUN_GOVERNED_TASK._configure_runtime_roots(
                 runtime_root=str(Path(tmp_dir) / "runtime"),
                 compat_runtime_root=False,
             )
-            payload = RUN_GOVERNED_TASK.run_task(
-                task_id="task-cli-default-profile",
-                goal="CLI default profile smoke",
-                scope="runtime cli",
-                repo="governed-ai-coding-runtime",
-                profile_path=str(ROOT / "schemas" / "examples" / "repo-profile" / "governed-ai-coding-runtime.example.json"),
-                mode="quick",
-            )
+            profile_path = _write_fast_repo_profile(Path(tmp_dir) / "repo-profile.json")
+            with (
+                mock.patch.object(RUN_GOVERNED_TASK, "summarize_codex_capability_readiness", return_value=object()),
+                mock.patch.object(
+                    RUN_GOVERNED_TASK,
+                    "codex_capability_readiness_to_dict",
+                    return_value={"status": "ready", "adapter_tier": "test"},
+                ),
+            ):
+                payload = RUN_GOVERNED_TASK.run_task(
+                    task_id="task-cli-quick-profile",
+                    goal="CLI quick profile smoke",
+                    scope="runtime cli",
+                    repo="fast-test-repo",
+                    profile_path=str(profile_path),
+                    mode="quick",
+                )
 
             self.assertEqual(payload["total_tasks"], 1)
-            self.assertEqual(payload["tasks"][0]["task_id"], "task-cli-default-profile")
+            self.assertEqual(payload["tasks"][0]["task_id"], "task-cli-quick-profile")
             self.assertEqual(payload["tasks"][0]["state"], "delivered")
 
     def test_verify_attachment_executes_declared_target_repo_gates(self) -> None:

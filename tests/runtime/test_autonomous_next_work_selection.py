@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -68,6 +69,28 @@ class AutonomousNextWorkSelectionTests(unittest.TestCase):
 
             self.assertEqual(result["next_action"], "promote_ltp")
             self.assertEqual(result["selected_package"], "LTP-01")
+
+    def test_selector_skips_auto_detection_when_all_runtime_inputs_are_explicit(self) -> None:
+        module = _load_selector_script()
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            next_policy = self._write_next_policy(repo_root)
+            ltp_policy = self._write_ltp_policy(repo_root, decision="auto_select")
+
+            with mock.patch.object(module, "_auto_detect_runtime_inputs", side_effect=AssertionError("auto detect should not run")):
+                result = module.assert_next_work_selection(
+                    repo_root=repo_root,
+                    policy_path=next_policy,
+                    ltp_policy_path=ltp_policy,
+                    as_of=dt.date(2026, 4, 27),
+                    gate_state="pass",
+                    source_state="fresh",
+                    evidence_state="fresh",
+                )
+
+            self.assertEqual(result["next_action"], "promote_ltp")
+            self.assertEqual(result["auto_detected_inputs"]["details"]["detection_skipped"], "explicit_runtime_inputs")
 
     def test_selector_repairs_gate_before_promoting_ltp(self) -> None:
         module = _load_selector_script()

@@ -108,7 +108,11 @@ def inspect_next_work_selection(
         raise ValueError("reviewed_on must be on or before review_expires_at")
 
     defaults = policy["default_inputs"]
-    auto_inputs = _auto_detect_runtime_inputs(repo_root=resolved_root, as_of=today)
+    auto_inputs = (
+        _auto_detect_runtime_inputs(repo_root=resolved_root, as_of=today)
+        if gate_state is None or source_state is None or evidence_state is None
+        else _explicit_runtime_inputs(gate_state=gate_state, source_state=source_state, evidence_state=evidence_state)
+    )
     selected_gate_state = gate_state or auto_inputs["gate_state"] or defaults["gate_state"]
     selected_source_state = source_state or auto_inputs["source_state"] or defaults["source_state"]
     selected_evidence_state = evidence_state or auto_inputs["evidence_state"] or defaults["evidence_state"]
@@ -476,6 +480,16 @@ def _auto_detect_runtime_inputs(*, repo_root: Path, as_of: dt.date) -> dict:
         result["details"]["evidence_detection"] = {"status": "error", "error": str(exc)}
 
     return result
+
+
+def _explicit_runtime_inputs(*, gate_state: str, source_state: str, evidence_state: str) -> dict:
+    return {
+        "gate_state": gate_state,
+        "source_state": source_state,
+        "evidence_state": evidence_state,
+        "evidence_blocker": None,
+        "details": {"detection_skipped": "explicit_runtime_inputs"},
+    }
 
 
 def _has_bounded_host_capability_defer(*, repo_root: Path) -> bool:
