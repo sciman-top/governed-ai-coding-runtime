@@ -242,6 +242,68 @@ class CodexLocalTests(unittest.TestCase):
             self.assertTrue(all(check["ok"] for check in health["checks"]))
             self.assertEqual([], health["secret_like_markers"])
 
+    def test_context_window_probe_keeps_current_compact_policy_static(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            (home / "config.toml").write_text(
+                "\n".join(
+                    [
+                        'model = "gpt-5.5"',
+                        "model_context_window = 272000",
+                        "model_auto_compact_token_limit = 220000",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            probe = codex_local.context_window_probe(home)
+
+            self.assertEqual("pass", probe["status"])
+            self.assertEqual("keep_current", probe["recommendation"])
+            self.assertEqual(272000, probe["configured_context_window"])
+            self.assertEqual(220000, probe["configured_auto_compact_token_limit"])
+            self.assertEqual("not_run", probe["catalog_probe"]["status"])
+            self.assertEqual("informational_only_refresh_before_changing_defaults", probe["external_reference"]["enforcement"])
+
+    def test_context_window_probe_can_read_bundled_catalog_summary(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            (home / "config.toml").write_text(
+                "\n".join(
+                    [
+                        'model = "gpt-5.5"',
+                        "model_context_window = 272000",
+                        "model_auto_compact_token_limit = 220000",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            catalog = json.dumps(
+                {
+                    "models": [
+                        {
+                            "slug": "gpt-5.5",
+                            "display_name": "GPT-5.5",
+                            "context_window": 272000,
+                            "max_context_window": 1000000,
+                            "effective_context_window_percent": 95,
+                        }
+                    ]
+                }
+            )
+            completed = mock.Mock(returncode=0, stdout=catalog, stderr="")
+
+            with (
+                mock.patch("lib.codex_local.shutil.which", return_value="codex.cmd"),
+                mock.patch("lib.codex_local.subprocess.run", return_value=completed),
+            ):
+                probe = codex_local.context_window_probe(home, run_codex=True)
+
+            self.assertEqual("pass", probe["status"])
+            self.assertEqual("pass", probe["catalog_probe"]["status"])
+            self.assertEqual(272000, probe["catalog_probe"]["model"]["context_window"])
+            self.assertTrue(all(check["status"] == "pass" for check in probe["checks"]))
+
     def test_status_includes_efficiency_first_core_principle_and_current_choice(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)

@@ -7,6 +7,8 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
+from lib.codex_local import context_window_probe
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = ROOT / "docs" / "architecture" / "policy-tool-credential-audit-boundary.json"
@@ -161,6 +163,8 @@ def build_policy_tool_credential_audit(
             }
         )
 
+    local_agent_config_audit = _inspect_local_agent_config(home_path=home_path)
+
     status = "pass"
     if (
         unknown_tools
@@ -170,6 +174,7 @@ def build_policy_tool_credential_audit(
         or missing_registry_refs
         or overbroad_credential_refs
         or unsupported_override_refs
+        or local_agent_config_audit["status"] not in {"pass", "platform_na"}
     ):
         status = "fail"
 
@@ -185,7 +190,7 @@ def build_policy_tool_credential_audit(
         "repo_profile_allowlist": normalized_allowlist,
         "audited_tools": audited_tools,
         "override_audit": override_audit,
-        "local_agent_config_audit": _inspect_local_agent_config(home_path=home_path),
+        "local_agent_config_audit": local_agent_config_audit,
         "unknown_tools": unknown_tools,
         "denied_allowlisted_tools": denied_allowlisted_tools,
         "missing_policy_basis_refs": sorted(set(missing_policy_basis_refs)),
@@ -204,6 +209,7 @@ def build_policy_tool_credential_audit(
             "missing_policy_basis_count": len(set(missing_policy_basis_refs)),
             "overbroad_credential_count": len(set(overbroad_credential_refs)),
             "unsupported_override_count": len(set(unsupported_override_refs)),
+            "local_agent_config_status": local_agent_config_audit["status"],
         },
         "rollback_ref": config.get("rollback_ref"),
     }
@@ -230,6 +236,12 @@ def _inspect_local_agent_config(*, home_path: Path) -> dict[str, Any]:
     codex_config = _load_optional_toml(codex_dir / "config.toml")
     claude_settings = _load_optional_json(claude_dir / "settings.json")
     gemini_settings = _load_optional_json(gemini_dir / "settings.json")
+    gemini_antigravity_settings = _load_optional_json(gemini_dir / "antigravity" / "settings.json")
+    codex_context_probe = (
+        context_window_probe(codex_dir, run_codex=False)
+        if codex_dir.exists()
+        else {"status": "platform_na", "reason": "Codex user config directory is not present.", "checks": []}
+    )
 
     checks = [
         _check(
@@ -248,6 +260,13 @@ def _inspect_local_agent_config(*, home_path: Path) -> dict[str, Any]:
             reason="approval_policy=never is an accepted operator preference only when deterministic rules are present.",
             evidence_ref="~/.codex/config.toml + ~/.codex/rules/*.rules",
             remediation="Keep ~/.codex/rules/*.rules present and non-empty when using approval_policy=never.",
+        ),
+        _check(
+            check_id="codex_context_window_policy_sane",
+            status=codex_context_probe.get("status") in {"pass", "platform_na"},
+            reason="Codex context window and auto-compact thresholds should remain coherent before changing model defaults.",
+            evidence_ref="~/.codex/config.toml model_context_window + model_auto_compact_token_limit",
+            remediation="Run `python scripts/codex-account.py context-probe --run-codex` and align the configured context policy with the local Codex catalog before changing defaults.",
         ),
         _check(
             check_id="claude_sensitive_settings_read_denied",
@@ -277,6 +296,17 @@ def _inspect_local_agent_config(*, home_path: Path) -> dict[str, Any]:
             evidence_ref="~/.gemini/settings.json context.fileFiltering + ~/.gemini/.geminiignore",
             remediation="Create ~/.gemini/.geminiignore and reference it from context.fileFiltering.customIgnoreFilePaths.",
         ),
+        _check(
+            check_id="gemini_antigravity_security_guarded_when_present",
+            status=_gemini_antigravity_security_guarded(
+                main_settings=gemini_settings,
+                antigravity_settings=gemini_antigravity_settings,
+                ignore_path=gemini_dir / ".geminiignore",
+            ),
+            reason="Gemini Antigravity settings, when present, should carry the same secure mode, secret redaction, file filtering, and GitHub MCP exclusion posture as the main Gemini CLI settings.",
+            evidence_ref="~/.gemini/antigravity/settings.json + ~/.gemini/settings.json",
+            remediation="Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/Optimize-GeminiLocal.ps1 -Apply` to mirror the bounded security posture.",
+        ),
     ]
 
     mcp_checks = _inspect_mcp_token_indirection(
@@ -284,6 +314,7 @@ def _inspect_local_agent_config(*, home_path: Path) -> dict[str, Any]:
         claude_mcp=_load_optional_json(claude_dir / ".mcp.json"),
         gemini_settings=gemini_settings,
         gemini_mcp=_load_optional_json(gemini_dir / ".mcp.json"),
+        gemini_antigravity_settings=gemini_antigravity_settings,
     )
     checks.extend(mcp_checks)
 
@@ -307,6 +338,7 @@ def _inspect_local_agent_config(*, home_path: Path) -> dict[str, Any]:
         ],
         "checks": checks,
         "failed_checks": failed,
+        "codex_context_window_probe": codex_context_probe,
     }
 
 
@@ -413,12 +445,32 @@ def _gemini_ignores_sensitive_files(settings: dict[str, Any], ignore_path: Path)
     )
 
 
+def _gemini_antigravity_security_guarded(
+    *,
+    main_settings: dict[str, Any],
+    antigravity_settings: dict[str, Any],
+    ignore_path: Path,
+) -> bool:
+    if not antigravity_settings:
+        return True
+    if _nested_get(antigravity_settings, ["admin", "secureModeEnabled"]) is not True:
+        return False
+    if not _gemini_redacts_secret_env(antigravity_settings):
+        return False
+    if not _gemini_ignores_sensitive_files(antigravity_settings, ignore_path):
+        return False
+    main_mcp_excluded = set(_string_list(_nested_get(main_settings, ["mcp", "excluded"])))
+    antigravity_mcp_excluded = set(_string_list(_nested_get(antigravity_settings, ["mcp", "excluded"])))
+    return "github" not in main_mcp_excluded or "github" in antigravity_mcp_excluded
+
+
 def _inspect_mcp_token_indirection(
     *,
     codex_config: dict[str, Any],
     claude_mcp: dict[str, Any],
     gemini_settings: dict[str, Any],
     gemini_mcp: dict[str, Any],
+    gemini_antigravity_settings: dict[str, Any],
 ) -> list[dict[str, str]]:
     return [
         _check(
@@ -438,9 +490,10 @@ def _inspect_mcp_token_indirection(
         _check(
             check_id="gemini_mcp_tokens_use_env_refs",
             status=_json_mcp_tokens_are_indirect({"mcpServers": gemini_settings.get("mcpServers", {})})
-            and _json_mcp_tokens_are_indirect(gemini_mcp),
+            and _json_mcp_tokens_are_indirect(gemini_mcp)
+            and _json_mcp_tokens_are_indirect({"mcpServers": gemini_antigravity_settings.get("mcpServers", {})}),
             reason="Gemini MCP config should not contain expanded bearer tokens.",
-            evidence_ref="~/.gemini/settings.json + ~/.gemini/.mcp.json",
+            evidence_ref="~/.gemini/settings.json + ~/.gemini/.mcp.json + ~/.gemini/antigravity/settings.json",
             remediation="Keep MCP Authorization headers as environment-variable references.",
         ),
     ]

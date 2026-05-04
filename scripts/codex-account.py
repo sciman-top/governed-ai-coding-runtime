@@ -12,6 +12,7 @@ if str(SCRIPTS_SRC) not in sys.path:
 
 from lib.codex_local import (
     codex_status,
+    context_window_probe,
     delete_auth_profile,
     install_account_switcher,
     list_auth_profiles,
@@ -25,6 +26,11 @@ def main(argv: list[str] | None = None) -> int:
     subparsers = parser.add_subparsers(dest="command", required=True)
     subparsers.add_parser("list", help="List local auth profiles.")
     subparsers.add_parser("status", help="Show active Codex auth and config status.")
+    context_parser = subparsers.add_parser("context-probe", help="Inspect Codex context window and auto-compact policy.")
+    context_parser.add_argument("--codex-home", default=None)
+    context_parser.add_argument("--run-codex", action="store_true", help="Run `codex debug models --bundled`.")
+    context_parser.add_argument("--live", action="store_true", help="Refresh the Codex model catalog instead of using --bundled.")
+    context_parser.add_argument("--codex-binary", default=None)
     install_parser = subparsers.add_parser("install", help="Install the codex-account PowerShell shim into the user profile.")
     install_parser.add_argument("--codex-home", default=None)
     switch_parser = subparsers.add_parser("switch", help="Switch active auth.json to another auth profile.")
@@ -42,6 +48,13 @@ def main(argv: list[str] | None = None) -> int:
         payload = [profile.to_dict() for profile in list_auth_profiles()]
     elif args.command == "status":
         payload = codex_status()
+    elif args.command == "context-probe":
+        payload = context_window_probe(
+            Path(args.codex_home) if args.codex_home else None,
+            run_codex=args.run_codex,
+            bundled=not args.live,
+            codex_binary=args.codex_binary,
+        )
     elif args.command == "install":
         payload = install_account_switcher(Path(args.codex_home) if args.codex_home else None)
     elif args.command == "switch":

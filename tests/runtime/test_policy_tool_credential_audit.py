@@ -47,14 +47,18 @@ class PolicyToolCredentialAuditTests(unittest.TestCase):
             codex = home / ".codex"
             claude = home / ".claude"
             gemini = home / ".gemini"
+            antigravity = gemini / "antigravity"
             (codex / "rules").mkdir(parents=True)
             claude.mkdir()
-            gemini.mkdir()
+            antigravity.mkdir(parents=True)
 
             (codex / "config.toml").write_text(
                 '\n'.join(
                     [
                         'approval_policy = "never"',
+                        'model = "gpt-5.5"',
+                        "model_context_window = 272000",
+                        "model_auto_compact_token_limit = 220000",
                         '[analytics]',
                         'enabled = false',
                         '[mcp_servers.github]',
@@ -131,6 +135,46 @@ class PolicyToolCredentialAuditTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
+            (antigravity / "settings.json").write_text(
+                json.dumps(
+                    {
+                        "admin": {"secureModeEnabled": True},
+                        "security": {
+                            "environmentVariableRedaction": {
+                                "enabled": True,
+                                "blocked": [
+                                    "ANTHROPIC_AUTH_TOKEN",
+                                    "GITHUB_PERSONAL_ACCESS_TOKEN",
+                                    "OPENAI_API_KEY",
+                                    "GEMINI_API_KEY",
+                                ],
+                            }
+                        },
+                        "advanced": {
+                            "excludedEnvVars": [
+                                "ANTHROPIC_AUTH_TOKEN",
+                                "GITHUB_PERSONAL_ACCESS_TOKEN",
+                                "OPENAI_API_KEY",
+                                "GEMINI_API_KEY",
+                            ]
+                        },
+                        "context": {
+                            "fileFiltering": {
+                                "respectGeminiIgnore": True,
+                                "customIgnoreFilePaths": [(gemini / ".geminiignore").as_posix()],
+                            }
+                        },
+                        "mcp": {"excluded": ["github"]},
+                        "mcpServers": {
+                            "github": {
+                                "headers": {"Authorization": "Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN}"}
+                            }
+                        },
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
             (gemini / ".mcp.json").write_text(
                 json.dumps({"mcpServers": {"github": {"headers": {"Authorization": "Bearer ${GITHUB_TOKEN}"}}}}),
                 encoding="utf-8",
@@ -156,7 +200,95 @@ class PolicyToolCredentialAuditTests(unittest.TestCase):
         local_audit = payload["local_agent_config_audit"]
         self.assertEqual(local_audit["status"], "pass")
         self.assertFalse(local_audit["failed_checks"])
+        self.assertIn("codex_context_window_policy_sane", [check["check_id"] for check in local_audit["checks"]])
+        self.assertIn("gemini_antigravity_security_guarded_when_present", [check["check_id"] for check in local_audit["checks"]])
         self.assertNotIn("secret-for-login-convenience", completed.stdout)
+
+    def test_builder_flags_antigravity_settings_without_main_security(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            codex = home / ".codex"
+            claude = home / ".claude"
+            gemini = home / ".gemini"
+            antigravity = gemini / "antigravity"
+            (codex / "rules").mkdir(parents=True)
+            claude.mkdir()
+            antigravity.mkdir(parents=True)
+            (codex / "config.toml").write_text(
+                '\n'.join(
+                    [
+                        'approval_policy = "never"',
+                        "model_context_window = 272000",
+                        "model_auto_compact_token_limit = 220000",
+                        "[analytics]",
+                        "enabled = false",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (codex / "rules" / "default.rules").write_text("allow prefix_rule([\"git\", \"status\"])\n", encoding="utf-8")
+            (claude / "settings.json").write_text(
+                json.dumps(
+                    {
+                        "permissions": {
+                            "deny": [
+                                f"Read({(claude / 'settings.json').as_posix()})",
+                                f"Read({(codex / 'auth*.json').as_posix()})",
+                                f"Read({(gemini / 'oauth_creds.json').as_posix()})",
+                                f"Read({(gemini / 'google_accounts.json').as_posix()})",
+                            ]
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (gemini / ".geminiignore").write_text("oauth_creds.json\ngoogle_accounts.json\n*credentials*\n", encoding="utf-8")
+            guarded_gemini_settings = {
+                "admin": {"secureModeEnabled": True},
+                "security": {
+                    "environmentVariableRedaction": {
+                        "enabled": True,
+                        "blocked": ["ANTHROPIC_AUTH_TOKEN", "GITHUB_PERSONAL_ACCESS_TOKEN", "OPENAI_API_KEY", "GEMINI_API_KEY"],
+                    }
+                },
+                "advanced": {
+                    "excludedEnvVars": ["ANTHROPIC_AUTH_TOKEN", "GITHUB_PERSONAL_ACCESS_TOKEN", "OPENAI_API_KEY", "GEMINI_API_KEY"]
+                },
+                "context": {
+                    "fileFiltering": {
+                        "respectGeminiIgnore": True,
+                        "customIgnoreFilePaths": [(gemini / ".geminiignore").as_posix()],
+                    }
+                },
+                "mcp": {"excluded": ["github"]},
+            }
+            (gemini / "settings.json").write_text(json.dumps(guarded_gemini_settings), encoding="utf-8")
+            (antigravity / "settings.json").write_text(
+                json.dumps({"security": {"environmentVariableRedaction": {"enabled": True, "blocked": ["OPENAI_API_KEY"]}}}),
+                encoding="utf-8",
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/build-policy-tool-credential-audit.py",
+                    "--home",
+                    str(home),
+                    "--output",
+                    str(home / "report.json"),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+        self.assertNotEqual(completed.returncode, 0, completed.stdout)
+        payload = json.loads(completed.stdout)
+        local_audit = payload["local_agent_config_audit"]
+        self.assertEqual("fail", local_audit["status"])
+        self.assertIn("gemini_antigravity_security_guarded_when_present", local_audit["failed_checks"])
 
     def test_builder_fails_when_denied_tool_is_allowlisted(self) -> None:
         profile = json.loads((ROOT / ".governed-ai/repo-profile.json").read_text(encoding="utf-8"))

@@ -5,6 +5,7 @@ import binascii
 import hashlib
 import json
 import os
+import re
 import shutil
 import sqlite3
 import subprocess
@@ -45,6 +46,14 @@ DEFAULT_CONFIG_PROFILE = {
 }
 USAGE_DASHBOARD_URL = "https://chatgpt.com/codex/settings/usage"
 USAGE_STALE_AFTER_SECONDS = 300
+CONTEXT_COMPACT_RATIO_MIN = 0.75
+CONTEXT_COMPACT_RATIO_MAX = 0.90
+GPT_55_CODEX_CONTEXT_REFERENCE = {
+    "model": "gpt-5.5",
+    "codex_context_window_tokens": 400000,
+    "source_ref": "https://openai.com/index/introducing-gpt-5-5/",
+    "enforcement": "informational_only_refresh_before_changing_defaults",
+}
 
 
 @dataclass(frozen=True)
@@ -253,6 +262,7 @@ def codex_status(
         "auth": active_auth_status(home),
         "accounts": accounts,
         "config": config_health(home),
+        "context_window_probe": context_window_probe(home, run_codex=False),
         "recommended_defaults": DEFAULT_CONFIG_PROFILE,
         "usage": usage,
         "usage_refresh": usage_refresh,
@@ -387,6 +397,125 @@ def config_health(home: Path | None = None) -> dict[str, Any]:
         "path": str(config_path),
         "checks": checks,
         "secret_like_markers": secret_hits,
+    }
+
+
+def context_window_probe(
+    home: Path | None = None,
+    *,
+    run_codex: bool = False,
+    bundled: bool = True,
+    codex_binary: str | None = None,
+    timeout_seconds: int = 30,
+) -> dict[str, Any]:
+    home = codex_home(str(home) if home else None)
+    config_path = home / "config.toml"
+    if not config_path.exists():
+        return {
+            "status": "platform_na",
+            "reason": f"missing Codex config: {config_path}",
+            "config_path": str(config_path),
+            "checks": [],
+        }
+
+    text = config_path.read_text(encoding="utf-8", errors="replace")
+    model = _first_string(_find_top_level_value(text, "model")) or str(DEFAULT_CONFIG["model"])
+    configured_context = _coerce_int(_find_top_level_value(text, "model_context_window"))
+    configured_compact = _coerce_int(_find_top_level_value(text, "model_auto_compact_token_limit"))
+    compact_ratio = (
+        round(configured_compact / configured_context, 4)
+        if configured_context and configured_compact
+        else None
+    )
+
+    checks = [
+        {
+            "check_id": "context_window_configured",
+            "status": "pass" if configured_context and configured_context > 0 else "fail",
+            "reason": "model_context_window must be present and positive.",
+        },
+        {
+            "check_id": "auto_compact_configured",
+            "status": "pass" if configured_compact and configured_compact > 0 else "fail",
+            "reason": "model_auto_compact_token_limit must be present and positive.",
+        },
+        {
+            "check_id": "auto_compact_below_context_window",
+            "status": "pass" if configured_context and configured_compact and configured_compact < configured_context else "fail",
+            "reason": "Auto compact must trigger before the configured context window is exhausted.",
+        },
+        {
+            "check_id": "auto_compact_ratio_in_guard_band",
+            "status": "pass"
+            if compact_ratio is not None and CONTEXT_COMPACT_RATIO_MIN <= compact_ratio <= CONTEXT_COMPACT_RATIO_MAX
+            else "fail",
+            "reason": f"Auto compact ratio should stay between {CONTEXT_COMPACT_RATIO_MIN:.0%} and {CONTEXT_COMPACT_RATIO_MAX:.0%}.",
+        },
+    ]
+
+    catalog_probe = {
+        "status": "not_run",
+        "reason": "Run with run_codex=true to inspect the local Codex model catalog.",
+        "command": None,
+    }
+    recommendation = "keep_current" if all(check["status"] == "pass" for check in checks) else "fix_config"
+    if run_codex:
+        catalog_probe = _probe_codex_model_catalog(
+            model=model,
+            bundled=bundled,
+            codex_binary=codex_binary,
+            timeout_seconds=timeout_seconds,
+        )
+        checks.append(
+            {
+                "check_id": "local_catalog_probe_available",
+                "status": "pass" if catalog_probe.get("status") == "pass" else "platform_na",
+                "reason": "The local Codex model catalog must be readable before using catalog-derived context recommendations.",
+            }
+        )
+        model_info = catalog_probe.get("model")
+        if isinstance(model_info, dict):
+            catalog_context = _coerce_int(model_info.get("context_window"))
+            catalog_max_context = _coerce_int(model_info.get("max_context_window"))
+            if catalog_context is not None and configured_context is not None:
+                checks.append(
+                    {
+                        "check_id": "configured_context_matches_local_catalog",
+                        "status": "pass" if configured_context == catalog_context else "fail",
+                        "reason": "Configured context should match the currently bundled local Codex model catalog before changing defaults.",
+                        "expected": catalog_context,
+                        "actual": configured_context,
+                    }
+                )
+            if catalog_max_context is not None and configured_context is not None:
+                checks.append(
+                    {
+                        "check_id": "configured_context_within_catalog_max",
+                        "status": "pass" if configured_context <= catalog_max_context else "fail",
+                        "reason": "Configured context must not exceed the model catalog maximum.",
+                        "expected_max": catalog_max_context,
+                        "actual": configured_context,
+                    }
+                )
+
+    failed = [check for check in checks if check["status"] != "pass"]
+    if failed:
+        recommendation = "probe_before_changing_defaults" if run_codex else "run_catalog_probe"
+    return {
+        "status": "pass" if not failed else "attention",
+        "config_path": str(config_path),
+        "model": model,
+        "configured_context_window": configured_context,
+        "configured_auto_compact_token_limit": configured_compact,
+        "compact_ratio": compact_ratio,
+        "recommended_defaults": {
+            "model_context_window": DEFAULT_CONFIG["model_context_window"],
+            "model_auto_compact_token_limit": DEFAULT_CONFIG["model_auto_compact_token_limit"],
+        },
+        "external_reference": GPT_55_CODEX_CONTEXT_REFERENCE if model == "gpt-5.5" else None,
+        "catalog_probe": catalog_probe,
+        "checks": checks,
+        "recommendation": recommendation,
     }
 
 
@@ -1030,6 +1159,126 @@ def _find_top_level_value(text: str, key: str) -> Any:
             except ValueError:
                 return value
     return None
+
+
+def _coerce_int(value: Any) -> int | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+
+
+def _probe_codex_model_catalog(
+    *,
+    model: str,
+    bundled: bool,
+    codex_binary: str | None,
+    timeout_seconds: int,
+) -> dict[str, Any]:
+    codex_cmd = codex_binary or shutil.which("codex.cmd") or shutil.which("codex")
+    if not codex_cmd:
+        return {
+            "status": "platform_na",
+            "reason": "codex command not found",
+            "command": None,
+        }
+    command = [codex_cmd, "debug", "models"]
+    if bundled:
+        command.append("--bundled")
+    try:
+        completed = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout_seconds,
+        )
+    except subprocess.TimeoutExpired as exc:
+        return {
+            "status": "platform_na",
+            "reason": f"codex debug models timed out after {timeout_seconds}s",
+            "command": command,
+            "error": str(exc),
+        }
+    except OSError as exc:
+        return {
+            "status": "platform_na",
+            "reason": str(exc),
+            "command": command,
+        }
+
+    output = _strip_ansi(completed.stdout or "")
+    model_entry, parse_status = _extract_model_catalog_entry(output, model)
+    status = "pass" if completed.returncode == 0 and model_entry else "platform_na"
+    return {
+        "status": status,
+        "command": command,
+        "exit_code": completed.returncode,
+        "catalog_mode": "bundled" if bundled else "refreshed",
+        "model": model_entry,
+        "parse_status": parse_status,
+        "stderr_summary": (completed.stderr or "").strip()[:500],
+    }
+
+
+def _extract_model_catalog_entry(text: str, model: str) -> tuple[dict[str, Any] | None, dict[str, Any]]:
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError as exc:
+        payload = None
+        json_error = f"{exc.msg} at {exc.lineno}:{exc.colno}"
+    else:
+        json_error = None
+
+    if isinstance(payload, dict) and isinstance(payload.get("models"), list):
+        for item in payload["models"]:
+            if isinstance(item, dict) and item.get("slug") == model:
+                return _model_catalog_summary(item), {"method": "json", "json_error": None}
+
+    fallback = _extract_model_catalog_entry_by_regex(text, model)
+    return fallback, {"method": "regex" if fallback else "none", "json_error": json_error}
+
+
+def _extract_model_catalog_entry_by_regex(text: str, model: str) -> dict[str, Any] | None:
+    match = re.search(r'"slug"\s*:\s*"' + re.escape(model) + r'"', text)
+    if not match:
+        return None
+    tail = text[match.start() :]
+    entry = {"slug": model}
+    for field in ("display_name", "context_window", "max_context_window", "effective_context_window_percent"):
+        if field in {"display_name"}:
+            field_match = re.search(rf'"{field}"\s*:\s*"([^"]*)"', tail)
+            if field_match:
+                entry[field] = field_match.group(1)
+        else:
+            field_match = re.search(rf'"{field}"\s*:\s*([0-9]+)', tail)
+            if field_match:
+                entry[field] = int(field_match.group(1))
+    return entry
+
+
+def _model_catalog_summary(item: dict[str, Any]) -> dict[str, Any]:
+    keys = (
+        "slug",
+        "display_name",
+        "default_reasoning_level",
+        "context_window",
+        "max_context_window",
+        "effective_context_window_percent",
+        "supports_search_tool",
+        "support_verbosity",
+        "default_verbosity",
+    )
+    return {key: item.get(key) for key in keys if key in item}
+
+
+def _strip_ansi(value: str) -> str:
+    return re.sub(r"\x1b\[[0-9;]*[A-Za-z]", "", value)
 
 
 def _run_codex_login_status() -> dict[str, Any]:

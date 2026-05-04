@@ -280,6 +280,13 @@
             "status": "pass"
           },
           {
+            "check_id": "codex_context_window_policy_sane",
+            "evidence_ref": "~/.codex/config.toml model_context_window + model_auto_compact_token_limit",
+            "reason": "Codex context window and auto-compact thresholds should remain coherent before changing model defaults.",
+            "remediation": "Run `python scripts/codex-account.py context-probe --run-codex` and align the configured context policy with the local Codex catalog before changing defaults.",
+            "status": "pass"
+          },
+          {
             "check_id": "claude_sensitive_settings_read_denied",
             "evidence_ref": "~/.claude/settings.json permissions.deny",
             "reason": "Plaintext Claude login convenience is accepted, but agent reads of credential-bearing user config must be denied.",
@@ -308,6 +315,13 @@
             "status": "pass"
           },
           {
+            "check_id": "gemini_antigravity_security_guarded_when_present",
+            "evidence_ref": "~/.gemini/antigravity/settings.json + ~/.gemini/settings.json",
+            "reason": "Gemini Antigravity settings, when present, should carry the same secure mode, secret redaction, file filtering, and GitHub MCP exclusion posture as the main Gemini CLI settings.",
+            "remediation": "Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/Optimize-GeminiLocal.ps1 -Apply` to mirror the bounded security posture.",
+            "status": "pass"
+          },
+          {
             "check_id": "codex_mcp_tokens_use_env_refs",
             "evidence_ref": "~/.codex/config.toml mcp_servers.*.bearer_token_env_var",
             "reason": "Codex MCP credentials should be referenced through env vars, not expanded into config.toml.",
@@ -323,12 +337,58 @@
           },
           {
             "check_id": "gemini_mcp_tokens_use_env_refs",
-            "evidence_ref": "~/.gemini/settings.json + ~/.gemini/.mcp.json",
+            "evidence_ref": "~/.gemini/settings.json + ~/.gemini/.mcp.json + ~/.gemini/antigravity/settings.json",
             "reason": "Gemini MCP config should not contain expanded bearer tokens.",
             "remediation": "Keep MCP Authorization headers as environment-variable references.",
             "status": "pass"
           }
         ],
+        "codex_context_window_probe": {
+          "catalog_probe": {
+            "command": null,
+            "reason": "Run with run_codex=true to inspect the local Codex model catalog.",
+            "status": "not_run"
+          },
+          "checks": [
+            {
+              "check_id": "context_window_configured",
+              "reason": "model_context_window must be present and positive.",
+              "status": "pass"
+            },
+            {
+              "check_id": "auto_compact_configured",
+              "reason": "model_auto_compact_token_limit must be present and positive.",
+              "status": "pass"
+            },
+            {
+              "check_id": "auto_compact_below_context_window",
+              "reason": "Auto compact must trigger before the configured context window is exhausted.",
+              "status": "pass"
+            },
+            {
+              "check_id": "auto_compact_ratio_in_guard_band",
+              "reason": "Auto compact ratio should stay between 75% and 90%.",
+              "status": "pass"
+            }
+          ],
+          "compact_ratio": 0.8088,
+          "config_path": "C:\\Users\\sciman\\.codex\\config.toml",
+          "configured_auto_compact_token_limit": 220000,
+          "configured_context_window": 272000,
+          "external_reference": {
+            "codex_context_window_tokens": 400000,
+            "enforcement": "informational_only_refresh_before_changing_defaults",
+            "model": "gpt-5.5",
+            "source_ref": "https://openai.com/index/introducing-gpt-5-5/"
+          },
+          "model": "gpt-5.5",
+          "recommendation": "keep_current",
+          "recommended_defaults": {
+            "model_auto_compact_token_limit": 220000,
+            "model_context_window": 272000
+          },
+          "status": "pass"
+        },
         "failed_checks": [],
         "home_ref": "~",
         "personal_preference_exceptions": [
@@ -390,6 +450,7 @@
         "audited_tool_count": 4,
         "denied_allowlisted_tool_count": 0,
         "known_tool_count": 4,
+        "local_agent_config_status": "pass",
         "missing_policy_basis_count": 0,
         "overbroad_credential_count": 0,
         "override_surface_count": 2,
