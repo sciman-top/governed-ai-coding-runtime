@@ -223,7 +223,7 @@ class CodexLocalTests(unittest.TestCase):
                 "\n".join(
                     [
                         'cli_auth_credentials_store = "file"',
-                        'model = "gpt-5.5"',
+                        'model = "gpt-5.3-codex"',
                         'model_reasoning_effort = "medium"',
                         'model_verbosity = "medium"',
                         "model_context_window = 272000",
@@ -248,7 +248,7 @@ class CodexLocalTests(unittest.TestCase):
             (home / "config.toml").write_text(
                 "\n".join(
                     [
-                        'model = "gpt-5.5"',
+                        'model = "gpt-5.3-codex"',
                         "model_context_window = 272000",
                         "model_auto_compact_token_limit = 220000",
                     ]
@@ -274,7 +274,7 @@ class CodexLocalTests(unittest.TestCase):
             (home / "config.toml").write_text(
                 "\n".join(
                     [
-                        'model = "gpt-5.5"',
+                        'model = "gpt-5.3-codex"',
                         "model_context_window = 272000",
                         "model_auto_compact_token_limit = 220000",
                     ]
@@ -285,8 +285,8 @@ class CodexLocalTests(unittest.TestCase):
                 {
                     "models": [
                         {
-                            "slug": "gpt-5.5",
-                            "display_name": "GPT-5.5",
+                            "slug": "gpt-5.3-codex",
+                            "display_name": "GPT-5.3-Codex",
                             "context_window": 272000,
                             "max_context_window": 1000000,
                             "effective_context_window_percent": 95,
@@ -315,7 +315,7 @@ class CodexLocalTests(unittest.TestCase):
             (home / "config.toml").write_text(
                 "\n".join(
                     [
-                        'model = "gpt-5.5"',
+                        'model = "gpt-5.3-codex"',
                         "model_context_window = 272000",
                         "model_auto_compact_token_limit = 220000",
                     ]
@@ -326,8 +326,8 @@ class CodexLocalTests(unittest.TestCase):
                 {
                     "models": [
                         {
-                            "slug": "gpt-5.5",
-                            "display_name": "GPT-5.5",
+                            "slug": "gpt-5.3-codex",
+                            "display_name": "GPT-5.3-Codex",
                             "context_window": 272000,
                             "max_context_window": 272000,
                         }
@@ -359,15 +359,15 @@ class CodexLocalTests(unittest.TestCase):
             (home / "config.toml").write_text(
                 "\n".join(
                     [
-                        'model = "gpt-5.5"',
+                        'model = "gpt-5.3-codex"',
                         "model_context_window = 272000",
                         "model_auto_compact_token_limit = 220000",
                     ]
                 ),
                 encoding="utf-8",
             )
-            bundled_catalog = json.dumps({"models": [{"slug": "gpt-5.5", "context_window": 272000, "max_context_window": 272000}]})
-            refreshed_catalog = json.dumps({"models": [{"slug": "gpt-5.5", "context_window": 300000, "max_context_window": 300000}]})
+            bundled_catalog = json.dumps({"models": [{"slug": "gpt-5.3-codex", "context_window": 272000, "max_context_window": 272000}]})
+            refreshed_catalog = json.dumps({"models": [{"slug": "gpt-5.3-codex", "context_window": 300000, "max_context_window": 300000}]})
             completed = [
                 mock.Mock(returncode=0, stdout=bundled_catalog, stderr=""),
                 mock.Mock(returncode=0, stdout=refreshed_catalog, stderr=""),
@@ -390,7 +390,7 @@ class CodexLocalTests(unittest.TestCase):
             (home / "config.toml").write_text(
                 "\n".join(
                     [
-                        'model = "gpt-5.5"',
+                        'model = "gpt-5.3-codex"',
                         "model_context_window = 272000",
                         "model_auto_compact_token_limit = 220000",
                     ]
@@ -417,7 +417,7 @@ class CodexLocalTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)
             _write_auth(home / "auth.json", account_id="account-a")
-            (home / "config.toml").write_text('model = "gpt-5.5"', encoding="utf-8")
+            (home / "config.toml").write_text('model = "gpt-5.3-codex"', encoding="utf-8")
 
             status = codex_local.codex_status(home)
 
@@ -427,7 +427,7 @@ class CodexLocalTests(unittest.TestCase):
                 ["少打扰", "自动连续执行", "节省 token / 成本", "保留必要解释", "高效率"],
                 status["recommended_defaults"]["strategy_principles"],
             )
-            self.assertEqual("gpt-5.5 + medium + never", status["recommended_defaults"]["current_combo"])
+            self.assertEqual("gpt-5.3-codex + medium + never", status["recommended_defaults"]["current_combo"])
             self.assertEqual("current_temporary_choice", status["recommended_defaults"]["current_combo_status"])
             self.assertEqual("220000 on a 272000 window", status["recommended_defaults"]["compact_policy"])
             self.assertIn("preserve the efficiency-first principle", status["recommended_defaults"]["change_rule"])
@@ -514,6 +514,28 @@ class CodexLocalTests(unittest.TestCase):
 
             self.assertEqual("plus", status["usage"]["plan_type"])
             self.assertEqual("plus", status["active_account"]["plan_type"])
+
+    def test_status_marks_official_app_persisted_account_separately_from_cli_active(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            app_root = home / "official-app" / "Local Storage" / "leveldb"
+            app_root.mkdir(parents=True, exist_ok=True)
+            _write_auth(home / "auth.json", account_id="account-top", email="sciman.top@gmail.com", plan_type="prolite")
+            _write_auth(home / "auth3-2.json", account_id="account-phys", email="sciman.phys@gmail.com", plan_type="team")
+            (app_root / "000001.ldb").write_bytes(b"official app state account-phys")
+
+            with mock.patch("lib.codex_local._official_codex_app_storage_root", return_value=home / "official-app"):
+                status = codex_local.codex_status(home)
+
+            self.assertEqual("auth", status["active_account"]["name"])
+            self.assertEqual("sciman.top@gmail.com", status["active_account"]["email"])
+            self.assertEqual("ok", status["official_app_account"]["status"])
+            self.assertEqual("auth3-2", status["official_app_account"]["name"])
+            self.assertEqual("sciman.phys@gmail.com", status["official_app_account"]["email"])
+            app_persisted = next(account for account in status["accounts"] if account["name"] == "auth3-2")
+            cli_active = next(account for account in status["accounts"] if account["active"])
+            self.assertTrue(app_persisted["official_app_current"])
+            self.assertFalse(cli_active["official_app_current"])
 
     def test_online_refresh_prefers_latest_session_snapshot_and_reports_refresh_status(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

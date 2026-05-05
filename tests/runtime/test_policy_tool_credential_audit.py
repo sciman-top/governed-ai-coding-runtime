@@ -56,7 +56,7 @@ class PolicyToolCredentialAuditTests(unittest.TestCase):
                 '\n'.join(
                     [
                         'approval_policy = "never"',
-                        'model = "gpt-5.5"',
+                        'model = "gpt-5.3-codex"',
                         "model_context_window = 272000",
                         "model_auto_compact_token_limit = 220000",
                         '[analytics]',

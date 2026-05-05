@@ -18,7 +18,7 @@ from typing import Any
 
 DEFAULT_CONFIG = {
     "cli_auth_credentials_store": "file",
-    "model": "gpt-5.5",
+    "model": "gpt-5.3-codex",
     "model_reasoning_effort": "medium",
     "model_verbosity": "medium",
     "model_context_window": 272000,
@@ -37,7 +37,7 @@ DEFAULT_CONFIG_PROFILE = {
         "保留必要解释",
         "高效率",
     ],
-    "current_combo": "gpt-5.5 + medium + never",
+    "current_combo": "gpt-5.3-codex + medium + never",
     "current_combo_status": "current_temporary_choice",
     "compact_policy": "220000 on a 272000 window",
     "compact_ratio": "81%",
@@ -50,10 +50,10 @@ CONTEXT_COMPACT_RATIO_MIN = 0.75
 CONTEXT_COMPACT_RATIO_MAX = 0.90
 DEFAULT_CONTEXT_COMPACT_RATIO = 0.81
 CONTEXT_COMPACT_GRANULARITY = 1000
-GPT_55_CODEX_CONTEXT_REFERENCE = {
-    "model": "gpt-5.5",
+GPT_53_CODEX_CONTEXT_REFERENCE = {
+    "model": "gpt-5.3-codex",
     "codex_context_window_tokens": 400000,
-    "source_ref": "https://openai.com/index/introducing-gpt-5-5/",
+    "source_ref": "https://openai.com/index/introducing-gpt-5-3-codex",
     "enforcement": "informational_only_refresh_before_changing_defaults",
 }
 
@@ -74,6 +74,7 @@ class CodexAuthProfile:
     subscription_last_checked: str
     id_token_expires_at: str
     access_token_expires_at: str
+    account_id: str
     account_hash: str
     sha256: str
     full_name: str
@@ -94,6 +95,7 @@ class CodexAuthProfile:
             "subscription_last_checked": self.subscription_last_checked,
             "id_token_expires_at": self.id_token_expires_at,
             "access_token_expires_at": self.access_token_expires_at,
+            "account_id": self.account_id,
             "account_hash": self.account_hash,
             "sha256": self.sha256,
             "full_name": self.full_name,
@@ -255,7 +257,7 @@ def codex_status(
     snapshot_status = active_auth_snapshot_status(home, profiles=profiles)
     if active_account:
         active_account["snapshot_status"] = snapshot_status
-    if active_account and usage.get("source") != "unknown":
+    if active_account and _should_update_usage_cache_from_usage(usage=usage, usage_refresh=usage_refresh):
         usage_cache = _update_usage_cache(usage_cache, active_account, usage)
         _save_usage_cache(home, usage_cache)
     accounts = _attach_cached_usage(accounts, usage_cache)
@@ -263,6 +265,11 @@ def codex_status(
     resolved_plan_type = _resolve_active_plan_type(active_account, usage)
     if active_account and resolved_plan_type:
         active_account["plan_type"] = resolved_plan_type
+    official_app_account = _discover_official_codex_app_account(accounts)
+    if isinstance(official_app_account, dict):
+        official_account_id = _first_string(official_app_account.get("account_id"))
+        for account in accounts:
+            account["official_app_current"] = bool(official_account_id and account.get("account_id") == official_account_id)
     payload: dict[str, Any] = {
         "codex_home": str(home),
         "auth": active_auth_status(home),
@@ -273,6 +280,7 @@ def codex_status(
         "usage": usage,
         "usage_refresh": usage_refresh,
         "snapshot_status": snapshot_status,
+        "official_app_account": official_app_account,
     }
     payload["active_account"] = next((account for account in accounts if account.get("active")), None)
     payload["login_status"] = _run_codex_login_status()
@@ -585,7 +593,7 @@ def context_window_probe(
             "model_context_window": DEFAULT_CONFIG["model_context_window"],
             "model_auto_compact_token_limit": DEFAULT_CONFIG["model_auto_compact_token_limit"],
         },
-        "external_reference": GPT_55_CODEX_CONTEXT_REFERENCE if model == "gpt-5.5" else None,
+        "external_reference": GPT_53_CODEX_CONTEXT_REFERENCE if model == "gpt-5.3-codex" else None,
         "catalog_probe": catalog_probe,
         "catalog_probes": catalog_probes,
         "exec_probe": exec_probe,
@@ -648,6 +656,7 @@ def _auth_profile_from_path(path: Path, active_hash: str) -> CodexAuthProfile:
         subscription_last_checked=claims["subscription_last_checked"],
         id_token_expires_at=claims["id_token_expires_at"],
         access_token_expires_at=claims["access_token_expires_at"],
+        account_id=account_id,
         account_hash=account_hash,
         sha256=file_hash,
         full_name=str(path),
@@ -752,9 +761,6 @@ def _attach_cached_usage(accounts: list[dict[str, Any]], cache: dict[str, Any]) 
 def _resolve_active_plan_type(active_account: dict[str, Any] | None, usage: dict[str, Any]) -> str:
     if not isinstance(active_account, dict):
         return ""
-    usage_plan = _first_string(usage.get("plan_type")) if isinstance(usage, dict) else ""
-    if usage_plan and _first_string(usage.get("source")) != "unknown":
-        return usage_plan
     snapshot = active_account.get("usage_snapshot")
     if isinstance(snapshot, dict):
         cached_plan = _first_string(snapshot.get("plan_type"))
@@ -768,7 +774,123 @@ def _resolve_active_plan_type(active_account: dict[str, Any] | None, usage: dict
                     pass
             else:
                 return cached_plan
+    usage_plan = _first_string(usage.get("plan_type")) if isinstance(usage, dict) else ""
+    if usage_plan and _first_string(usage.get("source")) != "unknown":
+        return usage_plan
     return _first_string(active_account.get("plan_type"))
+
+
+def _discover_official_codex_app_account(
+    accounts: list[dict[str, Any]],
+    *,
+    app_storage_root: Path | None = None,
+) -> dict[str, Any]:
+    root = app_storage_root or _official_codex_app_storage_root()
+    if root is None:
+        return {"status": "platform_na", "reason": "official_codex_app_storage_missing"}
+
+    candidate_files: list[Path] = []
+    for relative in (
+        Path("Local Storage") / "leveldb",
+        Path("Session Storage"),
+        Path("Partitions"),
+        Path("Preferences"),
+        Path("Local State"),
+    ):
+        candidate = root / relative
+        if candidate.is_file():
+            candidate_files.append(candidate)
+        elif candidate.is_dir():
+            candidate_files.extend(path for path in candidate.rglob("*") if path.is_file())
+
+    known_accounts = [
+        account
+        for account in accounts
+        if _first_string(account.get("account_id"))
+    ]
+    if not known_accounts:
+        return {
+            "status": "unavailable",
+            "reason": "no_known_codex_account_ids",
+            "storage_root": str(root),
+        }
+
+    newest_hit: dict[str, Any] | None = None
+    for path in candidate_files:
+        try:
+            payload = path.read_bytes()
+        except OSError:
+            continue
+        matched = [
+            account
+            for account in known_accounts
+            if _first_string(account.get("account_id")).encode("utf-8") in payload
+        ]
+        if not matched:
+            continue
+        stat = path.stat()
+        hit = {
+            "path": str(path),
+            "last_modified": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
+            "matched_accounts": [
+                {
+                    "name": _first_string(account.get("name")),
+                    "file": _first_string(account.get("file")),
+                    "email": _first_string(account.get("email")),
+                    "account_id": _first_string(account.get("account_id")),
+                }
+                for account in matched
+            ],
+        }
+        if newest_hit is None or hit["last_modified"] > newest_hit["last_modified"]:
+            newest_hit = hit
+
+    if newest_hit is None:
+        return {
+            "status": "unavailable",
+            "reason": "official_codex_app_account_not_found",
+            "storage_root": str(root),
+        }
+
+    matched_accounts = newest_hit["matched_accounts"]
+    if len(matched_accounts) != 1:
+        return {
+            "status": "ambiguous",
+            "reason": "multiple_accounts_matched_latest_storage_record",
+            "storage_root": str(root),
+            "storage_probe": newest_hit,
+        }
+
+    selected = matched_accounts[0]
+    return {
+        "status": "ok",
+        "storage_root": str(root),
+        "account_id": selected["account_id"],
+        "name": selected["name"],
+        "file": selected["file"],
+        "email": selected["email"],
+        "source": "official_codex_app_storage_scan",
+        "storage_probe": newest_hit,
+    }
+
+
+def _official_codex_app_storage_root() -> Path | None:
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if not local_app_data:
+        return None
+    root = Path(local_app_data) / "Packages" / "OpenAI.Codex_2p2nqsd0c76g0" / "LocalCache" / "Roaming" / "Codex"
+    return root if root.exists() else None
+
+
+def _should_update_usage_cache_from_usage(*, usage: dict[str, Any], usage_refresh: dict[str, Any]) -> bool:
+    if not isinstance(usage, dict) or not isinstance(usage_refresh, dict):
+        return False
+    source = _first_string(usage.get("source"))
+    # `codex_logs_2_sqlite` can contain another account's latest event.
+    # Only promote account cache when online refresh actually succeeded.
+    if source not in {"codex_exec_stdout", "codex_sessions_jsonl"}:
+        return False
+    return bool(usage_refresh.get("attempted")) and _first_string(usage_refresh.get("status")) == "ok"
 
 
 def _read_auth_json(path: Path) -> dict[str, Any]:

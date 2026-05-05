@@ -1,0 +1,380 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - heading "Governed Runtime 控制台" [level=1] [ref=e4]
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - text: "Runtime 根目录:"
+        - code [ref=e7]: D:/CODE/governed-ai-coding-runtime/.runtime
+      - generic [ref=e8]:
+        - text: "持久化:"
+        - code [ref=e9]: filesystem
+  - generic [ref=e10]:
+    - complementary [ref=e11]:
+      - generic [ref=e12]:
+        - heading "统一操作台" [level=2] [ref=e13]
+        - generic [ref=e14]:
+          - paragraph [ref=e15]: AI 推荐下一步
+          - paragraph [ref=e16]: 优先用这些入口完成日常闭环；页面按钮会通过同一个根目录入口执行。
+          - generic [ref=e17]:
+            - article [ref=e18]:
+              - generic [ref=e19]:
+                - generic [ref=e20]: 日常快速反馈
+                - button "执行" [ref=e21] [cursor=pointer]
+              - code [ref=e22]: .\run.ps1 fast
+              - paragraph [ref=e23]: 编码中先跑 build + quick feedback tests；不替代交付前 readiness。
+              - paragraph
+            - article [ref=e24]:
+              - generic [ref=e25]:
+                - generic [ref=e26]: 交付 readiness
+                - button "执行" [ref=e27] [cursor=pointer]
+              - code [ref=e28]: .\run.ps1 readiness -OpenUi
+              - paragraph [ref=e29]: 按 build -> test -> contract/invariant -> hotspot 收口并打开中文控制台。
+              - paragraph
+        - generic [ref=e30]:
+          - paragraph [ref=e31]: 页面
+          - button "刷新状态" [ref=e32] [cursor=pointer]
+        - generic [ref=e33]:
+          - paragraph [ref=e34]: 本仓验证
+          - generic [ref=e35]:
+            - button "快速反馈" [ref=e36] [cursor=pointer]
+            - paragraph
+            - button "本仓 readiness" [ref=e37] [cursor=pointer]
+            - paragraph
+            - button "功能反馈汇总" [ref=e38] [cursor=pointer]
+            - paragraph
+        - group [ref=e39]:
+          - generic "目标仓治理" [ref=e40] [cursor=pointer]
+        - group [ref=e41]:
+          - generic "规则与演进" [ref=e42] [cursor=pointer]
+      - generic [ref=e43]:
+        - heading "执行参数" [level=2] [ref=e44]
+        - generic [ref=e45]:
+          - generic [ref=e46]:
+            - text: 语言
+            - combobox "语言" [ref=e47]:
+              - option "中文" [selected]
+              - option "English"
+          - generic [ref=e48]:
+            - text: 目标仓
+            - combobox "目标仓" [ref=e49]:
+              - option "全部目标仓" [selected]
+              - option "classroomtoolkit"
+              - option "github-toolkit"
+              - option "k12-question-graph"
+              - option "self-runtime"
+              - option "skills-manager"
+              - option "vps-ssh-launcher"
+          - group "目标仓选择" [ref=e50]:
+            - generic [ref=e51]:
+              - generic [ref=e52]: 目标仓选择
+              - generic [ref=e53]: 默认全部；取消全部后可勾选多个目标仓。批量卸载只处理勾选目标。
+            - generic [ref=e54]:
+              - checkbox "全部目标仓" [checked] [ref=e55]
+              - text: 全部目标仓
+            - generic [ref=e56]:
+              - generic [ref=e57]:
+                - checkbox "classroomtoolkit" [disabled] [ref=e58]
+                - generic [ref=e59]: classroomtoolkit
+              - generic [ref=e60]:
+                - checkbox "github-toolkit" [disabled] [ref=e61]
+                - generic [ref=e62]: github-toolkit
+              - generic [ref=e63]:
+                - checkbox "k12-question-graph" [disabled] [ref=e64]
+                - generic [ref=e65]: k12-question-graph
+              - generic [ref=e66]:
+                - checkbox "self-runtime" [disabled] [ref=e67]
+                - generic [ref=e68]: self-runtime
+              - generic [ref=e69]:
+                - checkbox "skills-manager" [disabled] [ref=e70]
+                - generic [ref=e71]: skills-manager
+              - generic [ref=e72]:
+                - checkbox "vps-ssh-launcher" [disabled] [ref=e73]
+                - generic [ref=e74]: vps-ssh-launcher
+          - generic [ref=e75]:
+            - text: 验证模式
+            - combobox "验证模式" [ref=e76]:
+              - option "quick" [selected]
+              - option "full"
+              - option "l1"
+              - option "l2"
+              - option "l3"
+          - generic [ref=e77]:
+            - checkbox "只预演" [ref=e78]
+            - text: 只预演
+          - group [ref=e79]:
+            - generic "高级参数" [ref=e80] [cursor=pointer]
+    - generic [ref=e81]:
+      - tablist "Operator view" [ref=e82]:
+        - tab "Runtime" [ref=e83] [cursor=pointer]
+        - tab "Codex" [active] [selected] [ref=e84] [cursor=pointer]
+        - tab "Claude" [ref=e85] [cursor=pointer]
+        - tab "反馈" [ref=e86] [cursor=pointer]
+      - generic [ref=e87]:
+        - heading "控制台总览" [level=2] [ref=e88]
+        - paragraph [ref=e89]: 所有日常入口集中在左侧操作台；这里只保留当前状态、账号配置和反馈证据的决策摘要。
+        - generic [ref=e90]:
+          - article [ref=e91]:
+            - generic [ref=e92]:
+              - generic [ref=e93]: Runtime
+              - generic [ref=e94]: 打开面板
+            - generic [ref=e95]:
+              - paragraph [ref=e96]: 任务 1 · 审批 1 · 验证 2
+              - paragraph [ref=e97]: 接入仓库 0 · 风险阻断 0
+              - paragraph [ref=e98]: 在此查看执行输出、历史和下一步建议。
+            - button "打开面板" [ref=e253] [cursor=pointer]
+          - article [ref=e100]:
+            - generic [ref=e101]:
+              - generic [ref=e102]: Codex
+              - generic [ref=e103]: 当前面板
+            - generic [ref=e104]:
+              - paragraph [ref=e249]: sciman.top@gmail.com
+              - paragraph [ref=e250]: 已符合推荐值
+              - paragraph [ref=e251]: 已与 auth1 同步
+              - paragraph [ref=e252]: 在线刷新后的最新会话 · 额度快照较新 · 刚刚
+            - button "当前面板" [disabled] [ref=e254]
+          - article [ref=e109]:
+            - generic [ref=e110]:
+              - generic [ref=e111]: Claude
+              - generic [ref=e112]: 打开面板
+            - generic [ref=e113]:
+              - paragraph [ref=e255]: 智谱 GLM
+              - paragraph [ref=e256]: 凭据已就绪
+              - paragraph [ref=e257]: 建议调整：默认模型、permissions.allow[Bash(*)]、model_context_alias
+            - button "打开面板" [ref=e117] [cursor=pointer]
+          - article [ref=e118]:
+            - generic [ref=e119]:
+              - generic [ref=e120]: 反馈
+              - generic [ref=e121]: 打开面板
+            - generic [ref=e122]:
+              - paragraph [ref=e123]: 正在加载摘要…
+              - paragraph [ref=e124]: 闭环状态、证据新鲜度和处理建议。
+              - paragraph [ref=e125]: 去反馈面板查看证据、建议和详细报告。
+            - button "打开面板" [ref=e126] [cursor=pointer]
+      - generic [ref=e259]:
+        - heading "Codex 账号与配置" [level=2] [ref=e260]
+        - generic [ref=e261]:
+          - button "刷新 Codex 状态" [ref=e262] [cursor=pointer]
+          - button "强制在线刷新" [ref=e263] [cursor=pointer]
+          - button "打开官方 Usage" [ref=e264] [cursor=pointer]
+        - generic [ref=e266]:
+          - generic [ref=e267]: "Codex 状态: 已刷新 · 15:53:43"
+          - generic [ref=e268]:
+            - generic "file=auth1.json · hash=1c3cf6c342ea · 2026-05-02T05:05:00.471662Z" [ref=e269]:
+              - generic [ref=e270]:
+                - strong [ref=e271]: sciman.top@gmail.com
+                - generic [ref=e272]:
+                  - generic [ref=e273]:
+                    - generic [ref=e274]: 配置
+                    - generic [ref=e275]: auth1
+                  - generic [ref=e276]:
+                    - generic [ref=e277]: 登录
+                    - generic [ref=e278]: ChatGPT 登录
+                  - generic [ref=e279]:
+                    - generic [ref=e280]: 套餐
+                    - generic [ref=e282]:
+                      - generic [ref=e283]: 05/29 11:19 剩余24日
+                      - generic [ref=e284]: 核验 05/02 13:04
+                  - generic [ref=e285]:
+                    - generic [ref=e286]: 令牌
+                    - generic [ref=e288]:
+                      - generic [ref=e289]: ID token 05/02 14:04 剩余0日
+                      - generic [ref=e290]: Access token 05/12 13:04 剩余7日
+                  - generic [ref=e291]:
+                    - generic [ref=e292]: 类型
+                    - generic [ref=e293]: 团队版
+                  - generic [ref=e294]:
+                    - generic [ref=e295]: 额度
+                    - generic [ref=e297]:
+                      - generic [ref=e299]:
+                        - generic [ref=e300]: 5 小时
+                        - generic [ref=e301]: 余量 67% · 重置 17:37
+                      - generic [ref=e305]:
+                        - generic [ref=e306]: 1 周
+                        - generic [ref=e307]: 余量 32% · 重置 5月6日
+                  - generic [ref=e310]:
+                    - generic [ref=e311]: 配置
+                    - generic [ref=e312]: 已符合推荐值
+                  - generic [ref=e313]:
+                    - generic [ref=e314]: 快照
+                    - generic [ref=e315]: 已与 auth1 同步
+                  - generic [ref=e316]:
+                    - generic [ref=e317]: 来源
+                    - generic [ref=e319]:
+                      - generic [ref=e320]: 团队版 账号 · 在线刷新后的最新会话
+                      - generic [ref=e321]: 额度快照较新 · 刚刚
+              - button "当前" [disabled] [ref=e323]
+            - generic "file=auth2.json · hash=1de78701235e · 2026-04-29T13:01:17.411568Z" [ref=e324]:
+              - generic [ref=e325]:
+                - strong [ref=e326]: ai.sciman.top@gmail.com
+                - generic [ref=e327]:
+                  - generic [ref=e328]:
+                    - generic [ref=e329]: 配置
+                    - generic [ref=e330]: auth2
+                  - generic [ref=e331]:
+                    - generic [ref=e332]: 登录
+                    - generic [ref=e333]: ChatGPT 登录
+                  - generic [ref=e334]:
+                    - generic [ref=e335]: 套餐
+                    - generic [ref=e337]:
+                      - generic [ref=e338]: 05/10 10:33 剩余5日
+                      - generic [ref=e339]: 核验 04/29 21:00
+                  - generic [ref=e340]:
+                    - generic [ref=e341]: 令牌
+                    - generic [ref=e343]:
+                      - generic [ref=e344]: ID token 04/29 22:01 剩余0日
+                      - generic [ref=e345]: Access token 05/09 21:01 剩余5日
+                  - generic [ref=e346]:
+                    - generic [ref=e347]: 类型
+                    - generic [ref=e348]: Plus
+                  - generic [ref=e349]:
+                    - generic [ref=e350]: 额度
+                    - generic [ref=e352]:
+                      - generic [ref=e354]:
+                        - generic [ref=e355]: 5 小时
+                        - generic [ref=e356]: 余量 98% · 重置 19:52
+                      - generic [ref=e360]:
+                        - generic [ref=e361]: 1 周
+                        - generic [ref=e362]: 余量 95% · 重置 5月6日
+              - generic [ref=e365]:
+                - button "切换" [ref=e366] [cursor=pointer]
+                - button "删除" [ref=e367] [cursor=pointer]
+            - generic "file=auth3.json · hash=29b2444c9156 · 2026-04-29T13:22:11.017018600Z" [ref=e368]:
+              - generic [ref=e369]:
+                - strong [ref=e370]: sciman.phys@gmail.com
+                - generic [ref=e371]:
+                  - generic [ref=e372]:
+                    - generic [ref=e373]: 配置
+                    - generic [ref=e374]: auth3
+                  - generic [ref=e375]:
+                    - generic [ref=e376]: 登录
+                    - generic [ref=e377]: ChatGPT 登录
+                  - generic [ref=e378]:
+                    - generic [ref=e379]: 套餐
+                    - generic [ref=e381]:
+                      - generic [ref=e382]: 05/19 12:10 剩余14日
+                      - generic [ref=e383]: 核验 04/29 21:22
+                  - generic [ref=e384]:
+                    - generic [ref=e385]: 令牌
+                    - generic [ref=e387]:
+                      - generic [ref=e388]: ID token 04/29 22:22 剩余0日
+                      - generic [ref=e389]: Access token 05/09 21:22 剩余5日
+                  - generic [ref=e390]:
+                    - generic [ref=e391]: 类型
+                    - generic [ref=e392]: Plus
+                  - generic [ref=e393]:
+                    - generic [ref=e394]: 额度
+                    - generic [ref=e396]:
+                      - generic [ref=e398]:
+                        - generic [ref=e399]: 5 小时
+                        - generic [ref=e400]: 余量 93% · 重置 5月2日
+                      - generic [ref=e404]:
+                        - generic [ref=e405]: 1 周
+                        - generic [ref=e406]: 余量 96% · 重置 5月6日
+              - generic [ref=e409]:
+                - button "切换" [ref=e410] [cursor=pointer]
+                - button "删除" [ref=e411] [cursor=pointer]
+            - generic "file=auth3-2.json · hash=7abfe1176fa4 · 2026-04-29T13:42:16.484513600Z" [ref=e412]:
+              - generic [ref=e413]:
+                - strong [ref=e414]: sciman.phys@gmail.com
+                - generic [ref=e415]:
+                  - generic [ref=e416]:
+                    - generic [ref=e417]: 配置
+                    - generic [ref=e418]: auth3-2
+                  - generic [ref=e419]:
+                    - generic [ref=e420]: 登录
+                    - generic [ref=e421]: ChatGPT 登录
+                  - generic [ref=e422]:
+                    - generic [ref=e423]: 套餐
+                    - generic [ref=e425]:
+                      - generic [ref=e426]: 05/03 10:58 剩余0日
+                      - generic [ref=e427]: 核验 04/29 21:42
+                  - generic [ref=e428]:
+                    - generic [ref=e429]: 令牌
+                    - generic [ref=e431]:
+                      - generic [ref=e432]: ID token 04/29 22:42 剩余0日
+                      - generic [ref=e433]: Access token 05/09 21:42 剩余5日
+                  - generic [ref=e434]:
+                    - generic [ref=e435]: 类型
+                    - generic [ref=e436]: 团队版
+                  - generic [ref=e437]:
+                    - generic [ref=e438]: 额度
+                    - generic [ref=e440]:
+                      - generic [ref=e442]:
+                        - generic [ref=e443]: 5 小时
+                        - generic [ref=e444]: 余量 61% · 重置 17:37
+                      - generic [ref=e448]:
+                        - generic [ref=e449]: 1 周
+                        - generic [ref=e450]: 余量 31% · 重置 5月6日
+              - generic [ref=e453]:
+                - button "切换" [ref=e454] [cursor=pointer]
+                - button "删除" [ref=e455] [cursor=pointer]
+            - generic "file=auth4.json · hash=a4557019d99b · 2026-04-29T13:09:38.856711200Z" [ref=e456]:
+              - generic [ref=e457]:
+                - strong [ref=e458]: agi.sciman@gmail.com
+                - generic [ref=e459]:
+                  - generic [ref=e460]:
+                    - generic [ref=e461]: 配置
+                    - generic [ref=e462]: auth4
+                  - generic [ref=e463]:
+                    - generic [ref=e464]: 登录
+                    - generic [ref=e465]: ChatGPT 登录
+                  - generic [ref=e466]:
+                    - generic [ref=e467]: 套餐
+                    - generic [ref=e469]:
+                      - generic [ref=e470]: 05/13 15:36 剩余8日
+                      - generic [ref=e471]: 核验 04/29 21:09
+                  - generic [ref=e472]:
+                    - generic [ref=e473]: 令牌
+                    - generic [ref=e475]:
+                      - generic [ref=e476]: ID token 04/29 22:09 剩余0日
+                      - generic [ref=e477]: Access token 05/09 21:09 剩余5日
+                  - generic [ref=e478]:
+                    - generic [ref=e479]: 类型
+                    - generic [ref=e480]: Plus
+                  - generic [ref=e481]:
+                    - generic [ref=e482]: 额度
+                    - generic [ref=e484]:
+                      - generic [ref=e486]:
+                        - generic [ref=e487]: 5 小时
+                        - generic [ref=e488]: 余量 100% · 重置 5月2日
+                      - generic [ref=e492]:
+                        - generic [ref=e493]: 1 周
+                        - generic [ref=e494]: 余量 100% · 重置 5月6日
+              - generic [ref=e497]:
+                - button "切换" [ref=e498] [cursor=pointer]
+                - button "删除" [ref=e499] [cursor=pointer]
+            - generic "file=auth5.json · hash=1302877bd2b9 · 2026-04-30T12:59:30.076598500Z" [ref=e500]:
+              - generic [ref=e501]:
+                - strong [ref=e502]: agi.phys@gmail.com
+                - generic [ref=e503]:
+                  - generic [ref=e504]:
+                    - generic [ref=e505]: 配置
+                    - generic [ref=e506]: auth5
+                  - generic [ref=e507]:
+                    - generic [ref=e508]: 登录
+                    - generic [ref=e509]: ChatGPT 登录
+                  - generic [ref=e510]:
+                    - generic [ref=e511]: 套餐
+                    - generic [ref=e513]:
+                      - generic [ref=e514]: 05/06 05:30 剩余1日
+                      - generic [ref=e515]: 核验 04/30 20:59
+                  - generic [ref=e516]:
+                    - generic [ref=e517]: 令牌
+                    - generic [ref=e519]:
+                      - generic [ref=e520]: ID token 04/30 21:59 剩余0日
+                      - generic [ref=e521]: Access token 05/10 20:59 剩余6日
+                  - generic [ref=e522]:
+                    - generic [ref=e523]: 类型
+                    - generic [ref=e524]: Plus
+                  - generic [ref=e525]:
+                    - generic [ref=e526]: 额度
+                    - generic [ref=e528]:
+                      - generic [ref=e530]:
+                        - generic [ref=e531]: 5 小时
+                        - generic [ref=e532]: 余量 3% · 重置 17:33
+                      - generic [ref=e536]:
+                        - generic [ref=e537]: 1 周
+                        - generic [ref=e538]: 余量 28% · 重置 5月6日
+              - generic [ref=e541]:
+                - button "切换" [ref=e542] [cursor=pointer]
+                - button "删除" [ref=e543] [cursor=pointer]

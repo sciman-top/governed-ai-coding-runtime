@@ -231,11 +231,17 @@ def render_interactive_script(
   function updateCodexSurfaceSummary(payload) {{
     const accounts = Array.isArray(payload && payload.accounts) ? payload.accounts : [];
     const active = accounts.find((item) => item && item.active) || accounts[0] || null;
-    const usage = payload && payload.usage ? payload.usage : {{}};
+    const officialAppAccount = payload && payload.official_app_account && typeof payload.official_app_account === 'object'
+      ? payload.official_app_account
+      : null;
+    const usage = resolveAccountUsageSnapshot(active, payload);
     const config = payload && payload.config ? payload.config : {{}};
     const snapshot = active && active.snapshot_status ? active.snapshot_status : (payload && payload.snapshot_status ? payload.snapshot_status : null);
     setSurfaceSummary('codex', [
       active ? codexAccountLabel(active) : (currentUiLanguage() === 'zh-CN' ? '未识别当前账号' : 'No active account'),
+      officialAppAccount && officialAppAccount.status === 'ok' && officialAppAccount.email
+        ? ((currentUiLanguage() === 'zh-CN' ? '官方 App 持久化: ' : 'Official App persisted: ') + codexAccountLabel(officialAppAccount))
+        : '',
       formatConfigHealth(config),
       formatCodexSnapshotStatus(snapshot),
       usage && usage.source
@@ -940,6 +946,16 @@ def render_interactive_script(
     return [prefix, age || captured].filter(Boolean).join(currentUiLanguage() === 'zh-CN' ? ' · ' : ' - ');
   }}
 
+  function resolveAccountUsageSnapshot(account, payload) {{
+    if (account && typeof account === 'object' && account.usage_snapshot && typeof account.usage_snapshot === 'object') {{
+      return account.usage_snapshot;
+    }}
+    if (payload && typeof payload === 'object' && payload.usage && typeof payload.usage === 'object') {{
+      return payload.usage;
+    }}
+    return {{}};
+  }}
+
   function formatTokenExpirySummary(account) {{
     const idExpiry = formatCompactTimestampWithDays(account && account.id_token_expires_at);
     const accessExpiry = formatCompactTimestampWithDays(account && account.access_token_expires_at);
@@ -1407,15 +1423,21 @@ def render_interactive_script(
       actions.className = 'codex-account-actions';
       const switchButton = document.createElement('button');
       switchButton.type = 'button';
-      switchButton.className = account.active ? 'codex-account-switch is-current' : 'codex-account-switch';
-      switchButton.textContent = account.active ? {text['codex_active']!r} : {text['codex_switch']!r};
-      if (account.active) {{
+      const isCliActive = !!account.active;
+      const isOfficialAppCurrent = !!account.official_app_current;
+      switchButton.className = (isCliActive || isOfficialAppCurrent) ? 'codex-account-switch is-current' : 'codex-account-switch';
+      switchButton.textContent = isCliActive && isOfficialAppCurrent
+        ? {text['codex_cli_and_app']!r}
+        : (isCliActive
+          ? {text['codex_cli_active']!r}
+          : (isOfficialAppCurrent ? {text['codex_app_persisted']!r} : {text['codex_switch']!r}));
+      if (isCliActive) {{
         switchButton.disabled = true;
       }} else {{
         switchButton.dataset.codexSwitchName = account.name || '';
       }}
       actions.appendChild(switchButton);
-      if (!account.active) {{
+      if (!isCliActive) {{
         const deleteButton = document.createElement('button');
         deleteButton.type = 'button';
         deleteButton.className = 'codex-account-switch danger';
@@ -1425,7 +1447,8 @@ def render_interactive_script(
         actions.appendChild(deleteButton);
       }}
       row.appendChild(actions);
-      if (account.active) {{
+      if (isCliActive) {{
+        const accountUsage = resolveAccountUsageSnapshot(account, payload);
         const snapshot = account.snapshot_status || payload.snapshot_status || null;
         infoList.append(
           createInfoLine(
@@ -1440,14 +1463,17 @@ def render_interactive_script(
             currentUiLanguage() === 'zh-CN' ? '来源' : 'source',
             createMultilineInfoValue([
               [
-                formatPlanLabel((payload.usage || {{}}).plan_type)
+                isOfficialAppCurrent
+                  ? (currentUiLanguage() === 'zh-CN' ? '官方 App 持久化账号' : 'Official App persisted account')
+                  : (currentUiLanguage() === 'zh-CN' ? 'CLI auth.json 当前账号' : 'CLI auth.json active account'),
+                formatPlanLabel(accountUsage.plan_type)
                   ? (currentUiLanguage() === 'zh-CN'
-                      ? `${{formatPlanLabel((payload.usage || {{}}).plan_type)}} 账号`
-                      : `${{formatPlanLabel((payload.usage || {{}}).plan_type)}} account`)
+                      ? `${{formatPlanLabel(accountUsage.plan_type)}} 账号`
+                      : `${{formatPlanLabel(accountUsage.plan_type)}} account`)
                   : '',
-                formatUsageSourceLabel((payload.usage || {{}}).source || 'unknown'),
+                formatUsageSourceLabel(accountUsage.source || 'unknown'),
               ].filter(Boolean).join(' · '),
-              formatUsageFreshnessLabel(payload.usage || {{}}),
+              formatUsageFreshnessLabel(accountUsage),
             ].filter(Boolean).join('\\n'))
           )
         );
@@ -2010,4 +2036,3 @@ def render_interactive_script(
   }}, 60000);
 }})();
 </script>"""
-
