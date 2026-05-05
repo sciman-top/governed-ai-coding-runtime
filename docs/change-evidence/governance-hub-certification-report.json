@@ -384,7 +384,7 @@
             "compact_source": "configured_guard_band",
             "context_source": "configured_fallback",
             "decision_rule": "Prefer matching bundled/refreshed `codex debug models` context_window values; keep configured auto-compact when it is below the context window and inside the guard band; otherwise derive an 81% rounded threshold.",
-            "model": "gpt-5.5",
+            "model": "gpt-5.4-mini",
             "model_auto_compact_token_limit": 220000,
             "model_context_window": 272000,
             "status": "pass"
@@ -395,13 +395,8 @@
             "reason": "Run with probe_exec=true to validate the configured context settings through a minimal Codex exec request.",
             "status": "not_run"
           },
-          "external_reference": {
-            "codex_context_window_tokens": 400000,
-            "enforcement": "informational_only_refresh_before_changing_defaults",
-            "model": "gpt-5.5",
-            "source_ref": "https://openai.com/index/introducing-gpt-5-5/"
-          },
-          "model": "gpt-5.5",
+          "external_reference": null,
+          "model": "gpt-5.4-mini",
           "recommendation": "keep_current",
           "recommended_defaults": {
             "model_auto_compact_token_limit": 220000,
