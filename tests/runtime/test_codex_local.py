@@ -490,6 +490,31 @@ class CodexLocalTests(unittest.TestCase):
             self.assertEqual("team", account["usage_snapshot"]["plan_type"])
             self.assertEqual([58, 78], [item["remaining_percent"] for item in account["usage_snapshot"]["windows"]])
 
+    def test_status_prefers_usage_plan_type_for_active_account_display(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_auth(home / "auth.json", account_id="account-a", email="active@example.com", plan_type="prolite")
+            connection = sqlite3.connect(home / "logs_2.sqlite")
+            try:
+                connection.execute("CREATE TABLE logs (id INTEGER PRIMARY KEY, ts REAL, feedback_log_body TEXT)")
+                connection.execute(
+                    "INSERT INTO logs (id, ts, feedback_log_body) VALUES (1, 0, ?)",
+                    (
+                        'websocket event: {"type":"codex.rate_limits","plan_type":"plus",'
+                        '"rate_limits":{"allowed":true,"limit_reached":false,'
+                        '"primary":{"used_percent":42,"window_minutes":300,"reset_at":1777565161},'
+                        '"secondary":{"used_percent":22,"window_minutes":10080,"reset_at":1778073532}}}',
+                    ),
+                )
+                connection.commit()
+            finally:
+                connection.close()
+
+            status = codex_local.codex_status(home)
+
+            self.assertEqual("plus", status["usage"]["plan_type"])
+            self.assertEqual("plus", status["active_account"]["plan_type"])
+
     def test_online_refresh_prefers_latest_session_snapshot_and_reports_refresh_status(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)

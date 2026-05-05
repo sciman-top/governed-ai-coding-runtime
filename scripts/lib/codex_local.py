@@ -259,6 +259,10 @@ def codex_status(
         usage_cache = _update_usage_cache(usage_cache, active_account, usage)
         _save_usage_cache(home, usage_cache)
     accounts = _attach_cached_usage(accounts, usage_cache)
+    active_account = next((account for account in accounts if account.get("active")), None)
+    resolved_plan_type = _resolve_active_plan_type(active_account, usage)
+    if active_account and resolved_plan_type:
+        active_account["plan_type"] = resolved_plan_type
     payload: dict[str, Any] = {
         "codex_home": str(home),
         "auth": active_auth_status(home),
@@ -743,6 +747,28 @@ def _attach_cached_usage(accounts: list[dict[str, Any]], cache: dict[str, Any]) 
         item["usage_snapshot"] = cached if isinstance(cached, dict) else None
         enriched.append(item)
     return enriched
+
+
+def _resolve_active_plan_type(active_account: dict[str, Any] | None, usage: dict[str, Any]) -> str:
+    if not isinstance(active_account, dict):
+        return ""
+    usage_plan = _first_string(usage.get("plan_type")) if isinstance(usage, dict) else ""
+    if usage_plan and _first_string(usage.get("source")) != "unknown":
+        return usage_plan
+    snapshot = active_account.get("usage_snapshot")
+    if isinstance(snapshot, dict):
+        cached_plan = _first_string(snapshot.get("plan_type"))
+        if cached_plan:
+            freshness = snapshot.get("freshness")
+            if isinstance(freshness, dict):
+                try:
+                    if not bool(freshness.get("is_stale")):
+                        return cached_plan
+                except (TypeError, ValueError):
+                    pass
+            else:
+                return cached_plan
+    return _first_string(active_account.get("plan_type"))
 
 
 def _read_auth_json(path: Path) -> dict[str, Any]:
