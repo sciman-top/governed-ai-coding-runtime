@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("Start", "Stop", "Restart", "Status", "EnableAutoStart", "DisableAutoStart", "AutoStartStatus")]
+  [ValidateSet("Start", "Stop", "Restart", "Status", "EnableAutoStart", "DisableAutoStart", "AutoStartStatus", "RunForeground")]
   [string]$Action = "Start",
 
   [ValidateSet("zh-CN", "en")]
@@ -21,6 +21,7 @@ $RuntimeDir = Join-Path $RepoRoot ".runtime\operator-ui"
 $PidPath = Join-Path $RuntimeDir "operator-ui.pid"
 $LogPath = Join-Path $RuntimeDir "operator-ui.log"
 $ErrorLogPath = Join-Path $RuntimeDir "operator-ui.err.log"
+$HiddenLauncherPath = Join-Path $RuntimeDir "run-operator-ui.vbs"
 $Url = "http://$HostAddress`:$Port/?lang=$UiLanguage"
 $AutoStartTaskName = "GovernedRuntimeOperatorUi-$Port"
 $SourceFiles = @(
@@ -46,11 +47,37 @@ function Resolve-PythonCommand {
   return $python.Source
 }
 
-function Format-CmdArgument {
-  param([Parameter(Mandatory = $true)][string]$Value)
+function Resolve-PythonWindowlessCommand {
+  $pythonw = Get-Command pythonw -ErrorAction SilentlyContinue
+  if ($pythonw) {
+    return $pythonw.Source
+  }
+  return Resolve-PythonCommand
+}
 
-  $escaped = $Value.Replace('"', '\"')
-  return '"' + $escaped + '"'
+function Get-AutoStartExecute {
+  return Resolve-PythonWindowlessCommand
+}
+
+function Get-AutoStartTaskArgument {
+  $scriptPath = Join-Path $RepoRoot "scripts/serve-operator-ui.py"
+  return ('"{0}" --serve --lang {1} --host {2} --port {3}' -f $scriptPath, $UiLanguage, $HostAddress, $Port)
+}
+
+function Get-AutoStartCommandLine {
+  return '"{0}" {1}' -f (Get-AutoStartExecute), (Get-AutoStartTaskArgument)
+}
+
+function Test-AutoStartCurrent {
+  $task = Get-ScheduledTask -TaskName $AutoStartTaskName -ErrorAction SilentlyContinue
+  if (-not $task) {
+    return $false
+  }
+  $action = @($task.Actions) | Select-Object -First 1
+  if (-not $action) {
+    return $false
+  }
+  return ([string]$action.Execute) -eq (Get-AutoStartExecute) -and ([string]$action.Arguments) -eq (Get-AutoStartTaskArgument)
 }
 
 function Get-RecordedProcess {
@@ -158,6 +185,7 @@ function Get-AutoStartStatus {
       enabled = $false
       task_name = $AutoStartTaskName
       state = "missing"
+      current = $false
     }
   }
 
@@ -165,32 +193,59 @@ function Get-AutoStartStatus {
     enabled = [bool]$task.Settings.Enabled
     task_name = $AutoStartTaskName
     state = [string]$task.State
+    current = Test-AutoStartCurrent
+  }
+}
+
+function New-OperatorUiTaskSettings {
+  try {
+    return New-ScheduledTaskSettingsSet `
+      -AllowStartIfOnBatteries `
+      -StartWhenAvailable `
+      -ExecutionTimeLimit ([timespan]::Zero) `
+      -RestartCount 999 `
+      -RestartInterval (New-TimeSpan -Minutes 1)
+  }
+  catch {
+    return New-ScheduledTaskSettingsSet `
+      -AllowStartIfOnBatteries `
+      -StartWhenAvailable `
+      -ExecutionTimeLimit ([timespan]::Zero)
   }
 }
 
 function Enable-AutoStart {
-  $pwsh = Get-Command pwsh -ErrorAction SilentlyContinue
-  if (-not $pwsh) {
-    throw "pwsh is not available; cannot enable autostart task."
-  }
-
-  $scriptPath = Join-Path $RepoRoot "scripts/operator-ui-service.ps1"
-  $taskCommand = '"{0}" -NoProfile -ExecutionPolicy Bypass -File "{1}" -Action Start -UiLanguage {2} -HostAddress {3} -Port {4}' -f $pwsh.Source, $scriptPath, $UiLanguage, $HostAddress, $Port
-  $taskAction = New-ScheduledTaskAction -Execute $pwsh.Source -Argument ("-NoProfile -ExecutionPolicy Bypass -File `"{0}`" -Action Start -UiLanguage {1} -HostAddress {2} -Port {3}" -f $scriptPath, $UiLanguage, $HostAddress, $Port)
-  $logonTrigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
-  $startupTrigger = New-ScheduledTaskTrigger -AtStartup
-  $taskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -StartWhenAvailable
+  $taskExecute = Get-AutoStartExecute
+  $taskArguments = Get-AutoStartTaskArgument
+  $taskCommand = Get-AutoStartCommandLine
   $registerMode = "logon_and_startup"
+  Unregister-ScheduledTask -TaskName $AutoStartTaskName -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
   try {
+    $taskAction = New-ScheduledTaskAction -Execute $taskExecute -Argument $taskArguments
+    $logonTrigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
+    $startupTrigger = New-ScheduledTaskTrigger -AtStartup
+    $taskSettings = New-OperatorUiTaskSettings
     $taskPrincipal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType S4U -RunLevel Limited
     $task = New-ScheduledTask -Action $taskAction -Trigger @($logonTrigger, $startupTrigger) -Principal $taskPrincipal -Settings $taskSettings
     Register-ScheduledTask -TaskName $AutoStartTaskName -InputObject $task -Force | Out-Null
   }
   catch {
-    $registerMode = "logon_only_fallback"
-    $taskPrincipal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Limited
-    $task = New-ScheduledTask -Action $taskAction -Trigger $logonTrigger -Principal $taskPrincipal -Settings $taskSettings
-    Register-ScheduledTask -TaskName $AutoStartTaskName -InputObject $task -Force | Out-Null
+    try {
+      $registerMode = "schtasks_logon_fallback"
+      & schtasks.exe /Create /TN $AutoStartTaskName /TR $taskCommand /SC ONLOGON /F | Out-Null
+      if ($LASTEXITCODE -ne 0) {
+        throw "schtasks.exe /Create exited with $LASTEXITCODE"
+      }
+    }
+    catch {
+      $registerMode = "logon_only_fallback"
+      $taskAction = New-ScheduledTaskAction -Execute $taskExecute -Argument $taskArguments
+      $logonTrigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
+      $taskSettings = New-OperatorUiTaskSettings
+      $taskPrincipal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Limited
+      $task = New-ScheduledTask -Action $taskAction -Trigger $logonTrigger -Principal $taskPrincipal -Settings $taskSettings
+      Register-ScheduledTask -TaskName $AutoStartTaskName -InputObject $task -Force | Out-Null
+    }
   }
 
   [pscustomobject]@{
@@ -200,6 +255,35 @@ function Enable-AutoStart {
     command = $taskCommand
     autostart = Get-AutoStartStatus
   } | ConvertTo-Json -Depth 4
+}
+
+function Start-OperatorUiTask {
+  try {
+    Start-ScheduledTask -TaskName $AutoStartTaskName -ErrorAction Stop
+    return
+  }
+  catch {
+    & schtasks.exe /Run /TN $AutoStartTaskName | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+      throw "Unable to start operator UI scheduled task with Start-ScheduledTask or schtasks.exe. schtasks_exit=$LASTEXITCODE"
+    }
+  }
+}
+
+function Start-ForegroundService {
+  New-Item -ItemType Directory -Force -Path $RuntimeDir | Out-Null
+  $python = Resolve-PythonCommand
+  $arguments = @(
+    "scripts/serve-operator-ui.py",
+    "--serve",
+    "--lang",
+    $UiLanguage,
+    "--host",
+    $HostAddress,
+    "--port",
+    [string]$Port
+  )
+  & $python @arguments 1>> $LogPath 2>> $ErrorLogPath
 }
 
 function Disable-AutoStart {
@@ -221,6 +305,8 @@ function Show-AutoStartStatus {
 }
 
 function Stop-ServiceProcess {
+  Stop-ScheduledTask -TaskName $AutoStartTaskName -ErrorAction SilentlyContinue | Out-Null
+  & schtasks.exe /End /TN $AutoStartTaskName *> $null
   $processes = @()
   $recorded = Get-RecordedProcess
   if ($recorded) {
@@ -266,33 +352,11 @@ function Start-ServiceProcess {
     throw "Port $Port is already owned by process $($owner.Id). Use -Action Stop or choose another -Port."
   }
 
-  $python = Resolve-PythonCommand
-  $cmd = $env:ComSpec
-  if ([string]::IsNullOrWhiteSpace($cmd)) {
-    $cmd = "cmd.exe"
+  $autoStart = Get-AutoStartStatus
+  if ((-not $autoStart.enabled) -or (-not $autoStart.current)) {
+    Enable-AutoStart | Out-Null
   }
-  $launchParts = @(
-    "start",
-    '""',
-    "/min",
-    (Format-CmdArgument $python),
-    (Format-CmdArgument "scripts/serve-operator-ui.py"),
-    "--serve",
-    "--lang",
-    (Format-CmdArgument $UiLanguage),
-    "--host",
-    (Format-CmdArgument $HostAddress),
-    "--port",
-    (Format-CmdArgument ([string]$Port)),
-    ("1>>" + (Format-CmdArgument $LogPath)),
-    ("2>>" + (Format-CmdArgument $ErrorLogPath))
-  )
-  $launchCommand = [string]::Join(" ", $launchParts)
-  Start-Process `
-    -FilePath $cmd `
-    -ArgumentList @("/d", "/c", $launchCommand) `
-    -WorkingDirectory $RepoRoot `
-    -WindowStyle Hidden | Out-Null
+  Start-OperatorUiTask
 
   $deadline = (Get-Date).AddSeconds(8)
   while ((Get-Date) -lt $deadline) {
@@ -304,7 +368,7 @@ function Start-ServiceProcess {
       Start-Sleep -Seconds 1
       if (-not (Test-UiReady)) {
         Show-Status | Out-Host
-        throw "Operator UI became reachable but did not remain alive. The current host likely reaps background child processes after the launcher exits. Run `python scripts/serve-operator-ui.py --serve` in a dedicated shell or use a host-level scheduler/autostart entrypoint."
+        throw "Operator UI became reachable but did not remain alive. The current host likely reaps the background process after launch. Run `python scripts/serve-operator-ui.py --serve` in a dedicated shell or use a host-level scheduler/autostart entrypoint."
       }
       if ($OpenUi) {
         Start-Process $Url | Out-Null
@@ -335,6 +399,7 @@ try {
     "EnableAutoStart" { Enable-AutoStart }
     "DisableAutoStart" { Disable-AutoStart }
     "AutoStartStatus" { Show-AutoStartStatus }
+    "RunForeground" { Start-ForegroundService }
   }
 }
 finally {

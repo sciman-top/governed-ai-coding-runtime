@@ -26,6 +26,15 @@ def _load_serve_operator_ui_module():
 
 @unittest.skipUnless(shutil.which("pwsh"), "pwsh is not available")
 class OperatorEntrypointTests(unittest.TestCase):
+    def test_operator_ui_backend_subprocesses_are_windowless_on_windows(self) -> None:
+        module = _load_serve_operator_ui_module()
+
+        with (
+            mock.patch.object(module.sys, "platform", "win32"),
+            mock.patch.object(module.subprocess, "CREATE_NO_WINDOW", 0x08000000, create=True),
+        ):
+            self.assertEqual({"creationflags": 0x08000000}, module._windows_no_window_kwargs())
+
     def test_root_run_entrypoint_help_succeeds(self) -> None:
         completed = subprocess.run(
             [
@@ -873,7 +882,13 @@ class OperatorEntrypointTests(unittest.TestCase):
         script = (ROOT / "scripts" / "operator-ui-service.ps1").read_text(encoding="utf-8")
 
         self.assertIn("function Test-ServiceProcessStale", script)
+        self.assertIn("function Resolve-PythonWindowlessCommand", script)
+        self.assertIn("Get-Command pythonw", script)
+        self.assertIn("scripts/serve-operator-ui.py", script)
         self.assertIn("Get-ServiceSourceLastWriteUtc", script)
+        self.assertIn("function New-OperatorUiTaskSettings", script)
+        self.assertIn("-ExecutionTimeLimit ([timespan]::Zero)", script)
+        self.assertIn("-RestartInterval (New-TimeSpan -Minutes 1)", script)
         self.assertIn("operator_ui.py", script)
         self.assertIn("operator_ui_script.py", script)
         self.assertIn("operator_ui_style.py", script)

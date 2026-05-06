@@ -9,6 +9,10 @@
   - logical account display is deduplicated by `account_id` / `account_hash`
   - account plan display uses explicit local account facts first, then account-scoped usage snapshots, then auth token claims
   - plan display keeps `plan_source` and `plan_conflicts` so conflicting local evidence remains visible
+  - quota display never treats unbound global log events or stale per-account cache as current account quota
+  - quota/usage progress bars are allowed to lag and remain visible as historical snapshots; only account identity and plan facts are treated as must-be-current operator facts
+  - normal operator UI refresh reads local status only; explicit `Force online refresh` is the only quota-refreshing UI action
+  - `refresh_if_stale=1` is kept as an API capability and is evaluated against the current active account usage snapshot, not against the newest global log event
 - verification_scope: `py_compile + manual fixed-workspace runtime probes + live CLI status`
 
 ## Changes
@@ -31,6 +35,24 @@
    - the status payload includes `plan_source`, `auth_plan_type`, and `plan_conflicts`
    - the operator UI shows the plan source and conflict evidence on the account card
    - `prolite` / `go` is labeled as `Go` in the UI copy
+7. Corrected quota source trust:
+   - `codex_logs_2_sqlite` snapshots are marked `account_binding = global_unbound_log_event`
+   - online refresh results are marked `account_binding = online_refresh_current_auth`
+   - cached account usage entries saved after online refresh are marked `account_binding = active_account_after_online_refresh`
+   - cached `freshness` is recomputed on every read, so stale cache cannot remain visually fresh
+   - stale or unbound usage snapshots no longer participate in plan resolution
+   - UI account quota cards show stale snapshots as historical-only instead of current quota
+8. Corrected stale-refresh trigger:
+   - `refresh_if_stale` now checks active account `usage_snapshot` missing/stale/unbound state
+   - a fresh global log event no longer suppresses refresh for a stale current account
+9. Relaxed quota freshness semantics after operator feedback:
+   - normal Codex panel refresh now calls `/api/codex/status` and no longer calls `/api/codex/status?refresh_if_stale=1`
+   - stale usage meters keep rendering their bars, with a historical-only warning
+   - button copy now states that quota can lag and that live quota requires `Force online refresh`
+10. Repaired the operator UI persistent service launcher:
+   - added `RunForeground` as the scheduled-task target action
+   - `Start` now detects stale autostart task actions and recreates the task instead of trusting an old `-Action Start` recursion
+   - `AutoStartStatus` / `Status` now expose whether the scheduled task action is current
 5. Exposed the original save-active flow through:
    - `python scripts/codex-account.py save-active <name>`
    - `POST /api/codex/save-active`
@@ -71,6 +93,12 @@ Observed result:
 - live API returns one logical row for the active `ai.sciman.top@gmail.com` account instead of duplicated `auth` + `auth2`
 - live API returns `auth1.plan_type = plus`, `auth1.plan_source = local_operator_asserted`, and a conflict for `auth_token = prolite`
 - live API returns `auth5.plan_type = prolite`, `auth5.plan_source = local_operator_asserted`, and conflicts for `usage_snapshot = plus` and `auth_token = plus`
+- live API with `refresh_if_stale=1` refreshed the active account quota and returned:
+  - `usage_refresh.status = ok`
+  - active account `usage_snapshot.source = codex_sessions_jsonl`
+  - active account `usage_snapshot.account_binding = active_account_after_online_refresh`
+  - active account `usage_snapshot.freshness.is_stale = false`
+  - inactive `auth1` / `auth5` usage snapshots remain stale instead of being displayed as current quota
 - live API returns `official_app_account.status = ambiguous` together with an explicit `limitation` field instead of silently implying safe auto-import
 
 ```text
@@ -161,6 +189,39 @@ Observed result:
 - Runtime gate completed `105 test files`; `failures=0`; `OK runtime-unittest`; `OK runtime-service-parity`; `OK runtime-service-wrapper-drift-guard`
 - Contract gate passed through `OK functional-effectiveness`
 - Doctor passed with existing `WARN codex-capability-degraded` / native attach capability hint only
+
+Second full-gate rerun after quota trust-boundary hardening:
+
+- `python -m unittest tests.runtime.test_codex_local tests.runtime.test_operator_ui tests.runtime.test_operator_entrypoint` -> `Ran 64 tests`, `OK`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\build-runtime.ps1` -> `OK python-bytecode`, `OK python-import`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify-repo.ps1 -Check Runtime` -> `105 test files`, `failures=0`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify-repo.ps1 -Check Contract` -> pass through `OK functional-effectiveness`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\doctor-runtime.ps1` -> pass with existing `WARN codex-capability-degraded`
+
+Third focused rerun after relaxing quota freshness and repairing the service task:
+
+- `python -m unittest tests.runtime.test_codex_local tests.runtime.test_operator_ui tests.runtime.test_operator_entrypoint` -> `Ran 64 tests`, `OK`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator-ui-service.ps1 -Action Stop -Port 8770`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator-ui-service.ps1 -Action Start -Port 8770`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator-ui-service.ps1 -Action Status -Port 8770`
+- `Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:8770/?lang=zh-CN' -TimeoutSec 5`
+
+Observed result:
+
+- Before repair, elevated scheduled task creation succeeded but the existing task action still pointed to `-Action Start`; the task entered `Running` while the page stayed unreachable.
+- After repair, the scheduled task action is `-Action RunForeground ... -Port 8770`, `Status` returns `ready = true`, `current = true`, and the page returns HTTP `200`.
+- The normal Codex UI refresh string is now `fetch('/api/codex/status', { cache: 'no-store' })`; only `POST /api/codex/refresh` forces live quota refresh.
+- Live local-status API after the repair returns:
+  - `sciman.top@gmail.com`: `active = true`, `plan_type = plus`, `plan_source = local_operator_asserted`
+  - `agi.phys@gmail.com`: `plan_type = prolite`, `plan_source = local_operator_asserted`
+  - usage snapshots may report `freshness.is_stale = true`; those snapshots remain visible as delayed quota evidence instead of forcing online refresh.
+
+Third full-gate rerun after service repair and relaxed quota refresh:
+
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\build-runtime.ps1` -> `OK python-bytecode`, `OK python-import`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify-repo.ps1 -Check Runtime` -> `105 test files`, `failures=0`, `OK runtime-unittest`, `OK runtime-service-parity`, `OK runtime-service-wrapper-drift-guard`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify-repo.ps1 -Check Contract` -> pass through `OK functional-effectiveness`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\doctor-runtime.ps1` -> pass with existing `WARN codex-capability-degraded`
 
 ## Compatibility
 

@@ -44,6 +44,13 @@ DEFAULT_CONFIG_PROFILE = {
     "manual_upgrade": "Switch to a stronger model or reasoning level manually when a task genuinely needs deeper reasoning.",
     "change_rule": "Future model or parameter updates should preserve the efficiency-first principle and necessary explanation rather than the current combo itself; existing safety and gate constraints continue to apply.",
 }
+
+
+def _windows_no_window_kwargs() -> dict[str, Any]:
+    if os.name != "nt":
+        return {}
+    creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    return {"creationflags": creationflags} if creationflags else {}
 USAGE_DASHBOARD_URL = "https://chatgpt.com/codex/settings/usage"
 USAGE_STALE_AFTER_SECONDS = 300
 CONTEXT_COMPACT_RATIO_MIN = 0.75
@@ -255,20 +262,24 @@ def codex_status(
         "consumes_quota": False,
     }
     usage = _codex_usage_status(home)
-    if refresh_online or (refresh_if_stale and _usage_is_stale(usage)):
-        usage, usage_refresh = _refresh_codex_usage_online(home, fallback_usage=usage)
     usage_cache = _load_usage_cache(home)
     active_account = next((account for account in accounts if account.get("active")), None)
     snapshot_status = active_auth_snapshot_status(home, profiles=profiles)
     if active_account:
         active_account["snapshot_status"] = snapshot_status
-    if active_account and _should_update_usage_cache_from_usage(usage=usage, usage_refresh=usage_refresh):
-        usage_cache = _update_usage_cache(usage_cache, active_account, usage)
-        _save_usage_cache(home, usage_cache)
     accounts = _attach_cached_usage(accounts, usage_cache)
     active_account = next((account for account in accounts if account.get("active")), None)
+
+    if refresh_online or (refresh_if_stale and _account_usage_needs_refresh(active_account)):
+        usage, usage_refresh = _refresh_codex_usage_online(home, fallback_usage=usage)
+        if active_account and _should_update_usage_cache_from_usage(usage=usage, usage_refresh=usage_refresh):
+            usage_cache = _update_usage_cache(usage_cache, active_account, usage)
+            _save_usage_cache(home, usage_cache)
+            accounts = _attach_cached_usage(accounts, usage_cache)
+            active_account = next((account for account in accounts if account.get("active")), None)
+
     if isinstance(active_account, dict) and not isinstance(active_account.get("usage_snapshot"), dict):
-        if isinstance(usage, dict) and _first_string(usage.get("source")) not in {"", "unknown"}:
+        if isinstance(usage, dict) and _usage_is_safe_for_account_display(usage):
             active_account["usage_snapshot"] = dict(usage)
     account_facts = _load_account_facts(home)
     accounts = _resolve_account_plan_types(accounts, account_facts)
@@ -896,6 +907,7 @@ def _update_usage_cache(cache: dict[str, Any], account: dict[str, Any], usage: d
         "account_label": _first_string(account.get("account_label")),
         "plan_type": _first_string(usage.get("plan_type"), account.get("plan_type")),
         "source": _first_string(usage.get("source")),
+        "account_binding": "active_account_after_online_refresh",
         "captured_at": _first_string(usage.get("captured_at")) or datetime.now().astimezone().isoformat(),
         "windows": usage.get("windows") if isinstance(usage.get("windows"), list) else [],
         "freshness": usage.get("freshness") if isinstance(usage.get("freshness"), dict) else None,
@@ -910,7 +922,10 @@ def _attach_cached_usage(accounts: list[dict[str, Any]], cache: dict[str, Any]) 
         item = dict(account)
         account_hash = _first_string(item.get("account_hash"))
         cached = cache.get(account_hash) if account_hash else None
-        item["usage_snapshot"] = cached if isinstance(cached, dict) else None
+        if isinstance(cached, dict) and _first_string(cached.get("account_hash")) in {"", account_hash}:
+            item["usage_snapshot"] = _with_usage_freshness(cached)
+        else:
+            item["usage_snapshot"] = None
         enriched.append(item)
     return enriched
 
@@ -923,27 +938,12 @@ def _load_account_facts(home: Path) -> dict[str, Any]:
     path = _account_facts_path(home)
     if not path.exists():
         return {"status": "missing", "accounts": []}
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {"status": "error", "accounts": [], "path": str(path)}
-    raw_accounts = payload.get("accounts") if isinstance(payload, dict) else None
-    accounts: list[dict[str, Any]] = []
-    if isinstance(raw_accounts, dict):
-        for key, value in raw_accounts.items():
-            if not isinstance(value, dict):
-                continue
-            item = dict(value)
-            key_text = _first_string(key)
-            if key_text and "email" not in item and "name" not in item and "account_id" not in item:
-                if "@" in key_text:
-                    item["email"] = key_text
-                else:
-                    item["name"] = key_text
-            accounts.append(item)
-    elif isinstance(raw_accounts, list):
-        accounts = [dict(item) for item in raw_accounts if isinstance(item, dict)]
-    return {"status": "ok", "path": str(path), "accounts": accounts}
+    return {
+        "status": "disabled_ignored",
+        "accounts": [],
+        "path": str(path),
+        "reason": "local account facts are disabled because operator-asserted plan overrides are not objective enough for account display",
+    }
 
 
 def _resolve_account_plan_types(accounts: list[dict[str, Any]], account_facts: dict[str, Any]) -> list[dict[str, Any]]:
@@ -964,7 +964,7 @@ def _resolve_account_plan_types(accounts: list[dict[str, Any]], account_facts: d
         candidates: list[tuple[str, str]] = []
         if fact_plan:
             candidates.append(("account_facts", fact_plan))
-        if usage_plan:
+        if usage_plan and _usage_is_safe_for_plan_resolution(usage_snapshot):
             candidates.append(("usage_snapshot", usage_plan))
         if auth_plan:
             candidates.append(("auth_token", auth_plan))
@@ -978,6 +978,8 @@ def _resolve_account_plan_types(accounts: list[dict[str, Any]], account_facts: d
                 for candidate_source, candidate_plan in candidates
                 if candidate_plan != plan_type
             ]
+            if usage_plan and not _usage_is_safe_for_plan_resolution(usage_snapshot) and usage_plan != plan_type:
+                conflicts.append({"source": "stale_or_unbound_usage_snapshot", "plan_type": usage_plan})
             if conflicts:
                 item["plan_conflicts"] = conflicts
         else:
@@ -1044,6 +1046,31 @@ def _resolve_active_plan_type(active_account: dict[str, Any] | None, usage: dict
     if usage_plan and _first_string(usage.get("source")) != "unknown":
         return usage_plan
     return _first_string(active_account.get("plan_type"))
+
+
+def _usage_is_safe_for_account_display(usage: dict[str, Any]) -> bool:
+    if not isinstance(usage, dict):
+        return False
+    if _first_string(usage.get("source")) in {"", "unknown", "codex_logs_2_sqlite"}:
+        return False
+    return _first_string(usage.get("account_binding")) in {"active_account_after_online_refresh", "online_refresh_current_auth"}
+
+
+def _usage_is_safe_for_plan_resolution(usage: Any) -> bool:
+    if not isinstance(usage, dict):
+        return False
+    if _usage_is_stale(usage):
+        return False
+    return _first_string(usage.get("account_binding")) in {"active_account_after_online_refresh", "online_refresh_current_auth"}
+
+
+def _account_usage_needs_refresh(active_account: dict[str, Any] | None) -> bool:
+    if not isinstance(active_account, dict):
+        return False
+    snapshot = active_account.get("usage_snapshot")
+    if not isinstance(snapshot, dict):
+        return True
+    return not _usage_is_safe_for_plan_resolution(snapshot)
 
 
 def _discover_official_codex_app_account(
@@ -1293,6 +1320,7 @@ def _codex_usage_status(home: Path) -> dict[str, Any]:
         limit_reached=event.get("limit_reached", rate_limits.get("limit_reached")),
         note="Best-effort local reading from recent Codex rate limit events.",
         captured_at=_claim_time_iso(event.get("captured_at")) or _timestamp_iso(event.get("captured_at")),
+        account_binding="global_unbound_log_event",
     )
 
 
@@ -1318,6 +1346,7 @@ def _refresh_codex_usage_online(home: Path, *, fallback_usage: dict[str, Any]) -
             errors="replace",
             timeout=90,
             cwd=str(Path.cwd()),
+            **_windows_no_window_kwargs(),
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         refresh["error"] = str(exc)
@@ -1373,6 +1402,7 @@ def _usage_status_from_exec_output(text: str) -> dict[str, Any] | None:
             limit_reached=bool(rate_limits.get("rate_limit_reached_type")) if rate_limits.get("rate_limit_reached_type") else False,
             note="Fresh online reading from a minimal Codex exec request.",
             captured_at=datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+            account_binding="online_refresh_current_auth",
         )
         if usage.get("source") != "unknown":
             return usage
@@ -1422,6 +1452,7 @@ def _latest_session_usage(home: Path, *, min_mtime: float | None = None) -> dict
                 limit_reached=bool(rate_limits.get("rate_limit_reached_type")) if rate_limits.get("rate_limit_reached_type") else False,
                 note="Fresh online reading from the latest Codex session snapshot.",
                 captured_at=_first_string(entry.get("timestamp")),
+                account_binding="online_refresh_current_auth",
             )
             if usage.get("source") == "unknown":
                 continue
@@ -1439,6 +1470,7 @@ def _usage_status_from_rate_limits(
     limit_reached: Any = None,
     note: str,
     captured_at: str = "",
+    account_binding: str = "",
 ) -> dict[str, Any]:
     windows = []
     for key in ("primary", "secondary"):
@@ -1473,6 +1505,7 @@ def _usage_status_from_rate_limits(
         "windows": windows,
         "note": note,
         "captured_at": _first_string(captured_at),
+        "account_binding": _first_string(account_binding),
     }
     return _with_usage_freshness(payload)
 
@@ -1784,6 +1817,7 @@ def _probe_codex_model_catalog(
             encoding="utf-8",
             errors="replace",
             timeout=timeout_seconds,
+            **_windows_no_window_kwargs(),
         )
     except subprocess.TimeoutExpired as exc:
         return {
@@ -1857,6 +1891,7 @@ def _probe_codex_context_settings_exec(
             encoding="utf-8",
             errors="replace",
             timeout=timeout_seconds,
+            **_windows_no_window_kwargs(),
         )
     except subprocess.TimeoutExpired as exc:
         return {
@@ -1953,6 +1988,7 @@ def _run_codex_login_status() -> dict[str, Any]:
             encoding="utf-8",
             errors="replace",
             timeout=15,
+            **_windows_no_window_kwargs(),
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         return {"exit_code": 127, "summary": str(exc)}

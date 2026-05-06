@@ -735,12 +735,14 @@ def render_interactive_script(
       local_operator_asserted: '本机账号事实',
       usage_snapshot: '账号额度快照',
       auth_token: 'auth token',
+      stale_or_unbound_usage_snapshot: '过期或未绑定额度快照',
       unavailable: '不可用',
     }} : {{
       account_facts: 'local account facts',
       local_operator_asserted: 'local account facts',
       usage_snapshot: 'account usage snapshot',
       auth_token: 'auth token',
+      stale_or_unbound_usage_snapshot: 'stale or unbound usage snapshot',
       unavailable: 'unavailable',
     }};
     return labels[value] || source || '';
@@ -902,6 +904,14 @@ def render_interactive_script(
     }}
     const list = document.createElement('div');
     list.className = 'usage-meter-list';
+    if (isUsageSnapshotStale(snapshot)) {{
+      const stale = document.createElement('small');
+      stale.textContent = [
+        {text['codex_usage_freshness_stale']!r},
+        currentUiLanguage() === 'zh-CN' ? '仅作历史参考，不作为当前额度' : 'historical only, not current quota',
+      ].join(' · ');
+      list.appendChild(stale);
+    }}
     windows.forEach((item) => {{
       const percent = clampUsagePercent(item.remaining_percent);
       const row = document.createElement('div');
@@ -945,12 +955,14 @@ def render_interactive_script(
           codex_logs_2_sqlite: '本机日志快照',
           codex_sessions_jsonl: '在线刷新后的最新会话',
           codex_exec_stdout: '在线响应结果',
+          stale_or_unbound_usage_snapshot: '过期或未绑定额度快照',
           unknown: '来源未知',
         }}
       : {{
           codex_logs_2_sqlite: 'local log snapshot',
           codex_sessions_jsonl: 'latest refreshed session',
           codex_exec_stdout: 'online response',
+          stale_or_unbound_usage_snapshot: 'stale or unbound usage snapshot',
           unknown: 'unknown source',
     }};
     return labels[value] || value;
@@ -988,9 +1000,6 @@ def render_interactive_script(
   function resolveAccountUsageSnapshot(account, payload) {{
     if (account && typeof account === 'object' && account.usage_snapshot && typeof account.usage_snapshot === 'object') {{
       return account.usage_snapshot;
-    }}
-    if (payload && typeof payload === 'object' && payload.usage && typeof payload.usage === 'object') {{
-      return payload.usage;
     }}
     return {{}};
   }}
@@ -1569,7 +1578,7 @@ def render_interactive_script(
     lastCodexRefreshEpoch = Date.now();
     setPanelCacheState('codex', codexLoaded ? 'refreshing' : 'cold');
     try {{
-      const response = await fetch('/api/codex/status?refresh_if_stale=1', {{ cache: 'no-store' }});
+      const response = await fetch('/api/codex/status', {{ cache: 'no-store' }});
       const payload = await response.json();
       if (!response.ok) {{
         codexAccounts.innerHTML = `<p class="meta">${{payload.error || response.statusText}}</p>`;

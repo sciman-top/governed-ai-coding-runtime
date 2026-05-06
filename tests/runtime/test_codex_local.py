@@ -12,7 +12,7 @@ SCRIPTS_SRC = ROOT / "scripts"
 if str(SCRIPTS_SRC) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_SRC))
 
-from lib import codex_local
+from lib import claude_local, codex_local
 
 
 def _write_auth(
@@ -77,6 +77,16 @@ def _jwt(payload: dict[str, object]) -> str:
 
 
 class CodexLocalTests(unittest.TestCase):
+    def test_local_status_subprocesses_are_windowless_on_windows(self) -> None:
+        with (
+            mock.patch.object(codex_local.os, "name", "nt"),
+            mock.patch.object(codex_local.subprocess, "CREATE_NO_WINDOW", 0x08000000, create=True),
+            mock.patch.object(claude_local.os, "name", "nt"),
+            mock.patch.object(claude_local.subprocess, "CREATE_NO_WINDOW", 0x08000000, create=True),
+        ):
+            self.assertEqual({"creationflags": 0x08000000}, codex_local._windows_no_window_kwargs())
+            self.assertEqual({"creationflags": 0x08000000}, claude_local._windows_no_window_kwargs())
+
     def test_auth_profiles_are_sanitized_and_switchable(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)
@@ -511,7 +521,7 @@ class CodexLocalTests(unittest.TestCase):
             self.assertEqual("2026-04-30T10:28:57Z", usage["captured_at"])
             self.assertFalse(usage["freshness"]["is_stale"])
 
-    def test_status_attaches_cached_usage_snapshot_to_active_account(self) -> None:
+    def test_status_does_not_attach_unbound_sqlite_usage_to_active_account(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)
             _write_auth(home / "auth.json", account_id="account-a", email="active@example.com", plan_type="team")
@@ -534,11 +544,50 @@ class CodexLocalTests(unittest.TestCase):
             status = codex_local.codex_status(home)
             account = status["active_account"]
 
-            self.assertIsInstance(account.get("usage_snapshot"), dict)
-            self.assertEqual("team", account["usage_snapshot"]["plan_type"])
-            self.assertEqual([58, 78], [item["remaining_percent"] for item in account["usage_snapshot"]["windows"]])
+            self.assertIsNone(account.get("usage_snapshot"))
+            self.assertEqual("codex_logs_2_sqlite", status["usage"]["source"])
+            self.assertEqual("global_unbound_log_event", status["usage"]["account_binding"])
 
-    def test_status_prefers_account_usage_plan_type_over_auth_claim_for_display(self) -> None:
+    def test_status_recomputes_cached_usage_freshness_before_display(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            account_hash = codex_local._short_string_hash("account-a")
+            _write_auth(home / "auth.json", account_id="account-a", email="active@example.com", plan_type="team")
+            (home / "account-usage-cache.json").write_text(
+                json.dumps(
+                    {
+                        account_hash: {
+                            "account_hash": account_hash,
+                            "account_label": "active@example.com",
+                            "plan_type": "team",
+                            "source": "codex_sessions_jsonl",
+                            "account_binding": "active_account_after_online_refresh",
+                            "captured_at": "2026-05-02T04:55:00Z",
+                            "freshness": {
+                                "captured_at": "2026-05-02T04:55:00Z",
+                                "age_seconds": 0,
+                                "stale_after_seconds": 300,
+                                "is_stale": False,
+                            },
+                            "windows": [
+                                {"window": "5h", "window_minutes": 300, "remaining_percent": 58, "remaining": "58%", "reset_at": 1777565161},
+                                {"window": "7d", "window_minutes": 10080, "remaining_percent": 78, "remaining": "78%", "reset_at": 1778073532},
+                            ],
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with mock.patch("lib.codex_local.time.time", return_value=1_778_000_000.0):
+                status = codex_local.codex_status(home)
+
+            account = status["active_account"]
+            self.assertIsInstance(account.get("usage_snapshot"), dict)
+            self.assertTrue(account["usage_snapshot"]["freshness"]["is_stale"])
+            self.assertGreater(account["usage_snapshot"]["freshness"]["age_seconds"], 300)
+
+    def test_status_does_not_use_unbound_sqlite_usage_plan_for_account_display(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)
             _write_auth(home / "auth.json", account_id="account-a", email="active@example.com", plan_type="prolite")
@@ -561,11 +610,12 @@ class CodexLocalTests(unittest.TestCase):
             status = codex_local.codex_status(home)
 
             self.assertEqual("plus", status["usage"]["plan_type"])
-            self.assertEqual("plus", status["active_account"]["plan_type"])
-            self.assertEqual("usage_snapshot", status["active_account"]["plan_source"])
-            self.assertEqual([{"source": "auth_token", "plan_type": "prolite"}], status["active_account"]["plan_conflicts"])
+            self.assertEqual("global_unbound_log_event", status["usage"]["account_binding"])
+            self.assertEqual("prolite", status["active_account"]["plan_type"])
+            self.assertEqual("auth_token", status["active_account"]["plan_source"])
+            self.assertIsNone(status["active_account"].get("usage_snapshot"))
 
-    def test_status_prefers_local_account_facts_over_auth_and_usage_plan_type(self) -> None:
+    def test_status_ignores_local_account_facts_for_plan_resolution(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)
             _write_auth(home / "auth.json", account_id="account-a", email="active@example.com", plan_type="plus")
@@ -598,16 +648,10 @@ class CodexLocalTests(unittest.TestCase):
 
             status = codex_local.codex_status(home)
 
-            self.assertEqual("prolite", status["active_account"]["plan_type"])
-            self.assertEqual("local_operator_asserted", status["active_account"]["plan_source"])
-            self.assertEqual("ok", status["account_facts"]["status"])
-            self.assertEqual(
-                [
-                    {"source": "usage_snapshot", "plan_type": "plus"},
-                    {"source": "auth_token", "plan_type": "plus"},
-                ],
-                status["active_account"]["plan_conflicts"],
-            )
+            self.assertEqual("plus", status["active_account"]["plan_type"])
+            self.assertEqual("auth_token", status["active_account"]["plan_source"])
+            self.assertEqual("disabled_ignored", status["account_facts"]["status"])
+            self.assertNotIn("plan_conflicts", status["active_account"])
 
     def test_status_marks_official_app_persisted_account_separately_from_cli_active(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -740,6 +784,26 @@ class CodexLocalTests(unittest.TestCase):
     def test_status_refreshes_online_when_local_usage_snapshot_is_stale(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)
+            account_hash = codex_local._short_string_hash("account-a")
+            _write_auth(home / "auth.json", account_id="account-a", email="active@example.com", plan_type="prolite")
+            (home / "account-usage-cache.json").write_text(
+                json.dumps(
+                    {
+                        account_hash: {
+                            "account_hash": account_hash,
+                            "account_label": "active@example.com",
+                            "plan_type": "prolite",
+                            "source": "codex_sessions_jsonl",
+                            "account_binding": "active_account_after_online_refresh",
+                            "captured_at": "2026-05-02T04:55:00Z",
+                            "windows": [
+                                {"window": "5h", "window_minutes": 300, "remaining_percent": 40, "remaining": "40%", "reset_at": 1777562537}
+                            ],
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
             connection = sqlite3.connect(home / "logs_2.sqlite")
             try:
                 connection.execute("CREATE TABLE logs (id INTEGER PRIMARY KEY, ts REAL, feedback_log_body TEXT)")
@@ -761,7 +825,10 @@ class CodexLocalTests(unittest.TestCase):
                     {
                         "source": "codex_exec_stdout",
                         "plan_type": "prolite",
-                        "windows": [],
+                        "windows": [
+                            {"window": "5h", "window_minutes": 300, "remaining_percent": 99, "remaining": "99%", "reset_at": 1777562537}
+                        ],
+                        "account_binding": "online_refresh_current_auth",
                         "captured_at": "2026-05-02T04:55:00Z",
                         "freshness": {
                             "captured_at": "2026-05-02T04:55:00Z",
@@ -778,6 +845,8 @@ class CodexLocalTests(unittest.TestCase):
             refresh_mock.assert_called_once()
             self.assertEqual("ok", status["usage_refresh"]["status"])
             self.assertEqual("codex_exec_stdout", status["usage"]["source"])
+            self.assertEqual("active_account_after_online_refresh", status["active_account"]["usage_snapshot"]["account_binding"])
+            self.assertEqual([99], [item["remaining_percent"] for item in status["active_account"]["usage_snapshot"]["windows"]])
 
 
 if __name__ == "__main__":

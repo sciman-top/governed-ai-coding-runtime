@@ -15,6 +15,13 @@ from typing import Any
 PROVIDER_PROFILES_FILE = "provider-profiles.json"
 CLAUDE_USAGE_NOTE = "Third-party provider usage and quota data is not exposed through a stable Claude Code local API."
 
+
+def _windows_no_window_kwargs() -> dict[str, Any]:
+    if os.name != "nt":
+        return {}
+    creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    return {"creationflags": creationflags} if creationflags else {}
+
 COMMON_RECOMMENDED_ENV = {
     "CLAUDE_CODE_EFFORT_LEVEL": "high",
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
@@ -697,6 +704,7 @@ def _run_command(command: list[str], *, timeout_seconds: int) -> dict[str, Any]:
             encoding="utf-8",
             errors="replace",
             timeout=timeout_seconds,
+            **_windows_no_window_kwargs(),
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         return {"exit_code": 127, "summary": str(exc), "command": command}

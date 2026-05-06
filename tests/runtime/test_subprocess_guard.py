@@ -3,6 +3,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACTS_SRC = ROOT / "packages" / "contracts" / "src"
@@ -11,6 +12,15 @@ if str(CONTRACTS_SRC) not in sys.path:
 
 
 class SubprocessGuardTests(unittest.TestCase):
+    def test_run_subprocess_uses_no_window_creationflag_on_windows(self) -> None:
+        import governed_ai_coding_runtime_contracts.subprocess_guard as guard
+
+        with (
+            mock.patch.object(guard.os, "name", "nt"),
+            mock.patch.object(guard.subprocess, "CREATE_NO_WINDOW", 0x08000000, create=True),
+        ):
+            self.assertEqual({"creationflags": 0x08000000}, guard._windows_no_window_kwargs())
+
     @unittest.skipUnless(os.name == "nt", "Windows shell lookup behavior")
     def test_shell_execution_uses_normalized_windows_environment(self) -> None:
         from governed_ai_coding_runtime_contracts.subprocess_guard import run_subprocess

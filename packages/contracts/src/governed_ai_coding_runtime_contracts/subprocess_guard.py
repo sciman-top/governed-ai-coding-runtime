@@ -100,6 +100,7 @@ def run_subprocess(
     }
     if shell and os.name == "nt" and env.get("ComSpec"):
         kwargs["executable"] = env["ComSpec"]
+    kwargs.update(_windows_no_window_kwargs())
     try:
         completed = subprocess.run(
             command,
@@ -124,6 +125,13 @@ def run_subprocess(
         stderr=completed.stderr or "",
         timed_out=False,
     )
+
+
+def _windows_no_window_kwargs() -> dict[str, int]:
+    if os.name != "nt":
+        return {}
+    creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    return {"creationflags": creationflags} if creationflags else {}
 
 
 def run_governed_gate_command(

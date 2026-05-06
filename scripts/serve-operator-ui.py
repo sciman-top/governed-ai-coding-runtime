@@ -104,6 +104,13 @@ _STATUS_CACHE_LOCK = Lock()
 _STATUS_CACHE: dict[str, dict] = {}
 
 
+def _windows_no_window_kwargs() -> dict:
+    if sys.platform != "win32":
+        return {}
+    creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    return {"creationflags": creationflags} if creationflags else {}
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Render the local governed runtime operator UI.")
     parser.add_argument(
@@ -730,42 +737,39 @@ def maybe_request_operator_ui_restart(*, language: str, host: str, port: int) ->
         "port": port,
         "language": language,
     }
-    pwsh = shutil.which("pwsh")
-    if not pwsh:
-        payload["error"] = "pwsh not found"
+    schtasks = shutil.which("schtasks")
+    if not schtasks:
+        payload["error"] = "schtasks not found"
         save_operator_ui_restart_state(payload)
         return payload
 
+    task_name = f"GovernedRuntimeOperatorUi-{port}"
     command = [
-        pwsh,
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        str(ROOT / "scripts" / "operator-ui-service.ps1"),
-        "-Action",
-        "Restart",
-        "-UiLanguage",
-        language,
-        "-HostAddress",
-        host,
-        "-Port",
-        str(port),
+        schtasks,
+        "/Run",
+        "/TN",
+        task_name,
     ]
     try:
-        subprocess.Popen(
+        result = subprocess.run(
             command,
-            cwd=str(ROOT),
+            check=False,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            timeout=8,
+            **_windows_no_window_kwargs(),
         )
-    except OSError as exc:
+        if int(result.returncode) != 0:
+            payload["error"] = f"schtasks exited with code {result.returncode}"
+            save_operator_ui_restart_state(payload)
+            return payload
+    except (OSError, subprocess.TimeoutExpired) as exc:
         payload["error"] = str(exc)
         save_operator_ui_restart_state(payload)
         return payload
 
     payload["requested"] = True
+    payload["task_name"] = task_name
     payload["command"] = command
     save_operator_ui_restart_state(payload)
     return payload
@@ -934,6 +938,7 @@ def _run_operator_command(command: list[str], *, timeout_seconds: int) -> dict:
             encoding="utf-8",
             errors="replace",
             timeout=timeout_seconds,
+            **_windows_no_window_kwargs(),
         )
         output = "\n".join(segment for segment in [completed.stdout.rstrip(), completed.stderr.rstrip()] if segment)
         exit_code = completed.returncode
