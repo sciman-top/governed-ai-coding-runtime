@@ -56,6 +56,7 @@ GPT_53_CODEX_CONTEXT_REFERENCE = {
     "source_ref": "https://openai.com/index/introducing-gpt-5-3-codex",
     "enforcement": "informational_only_refresh_before_changing_defaults",
 }
+ACCOUNT_FACTS_FILENAME = "account-facts.json"
 
 
 @dataclass(frozen=True)
@@ -239,8 +240,12 @@ def codex_status(
     *,
     refresh_online: bool = False,
     refresh_if_stale: bool = False,
+    ensure_saved_snapshot: bool = False,
 ) -> dict[str, Any]:
     home = codex_home(str(home) if home else None)
+    auto_snapshot: dict[str, Any] | None = None
+    if ensure_saved_snapshot:
+        auto_snapshot = ensure_active_auth_snapshot(home)
     profiles = list_auth_profiles(home)
     accounts = _display_auth_profiles(profiles)
     usage_refresh = {
@@ -262,6 +267,12 @@ def codex_status(
         _save_usage_cache(home, usage_cache)
     accounts = _attach_cached_usage(accounts, usage_cache)
     active_account = next((account for account in accounts if account.get("active")), None)
+    if isinstance(active_account, dict) and not isinstance(active_account.get("usage_snapshot"), dict):
+        if isinstance(usage, dict) and _first_string(usage.get("source")) not in {"", "unknown"}:
+            active_account["usage_snapshot"] = dict(usage)
+    account_facts = _load_account_facts(home)
+    accounts = _resolve_account_plan_types(accounts, account_facts)
+    active_account = next((account for account in accounts if account.get("active")), None)
     resolved_plan_type = _resolve_active_plan_type(active_account, usage)
     if active_account and resolved_plan_type:
         active_account["plan_type"] = resolved_plan_type
@@ -279,8 +290,13 @@ def codex_status(
         "recommended_defaults": DEFAULT_CONFIG_PROFILE,
         "usage": usage,
         "usage_refresh": usage_refresh,
+        "account_facts": {
+            "path": str(_account_facts_path(home)),
+            "status": account_facts.get("status", "missing") if isinstance(account_facts, dict) else "missing",
+        },
         "snapshot_status": snapshot_status,
         "official_app_account": official_app_account,
+        "auto_snapshot": auto_snapshot,
     }
     payload["active_account"] = next((account for account in accounts if account.get("active")), None)
     payload["login_status"] = _run_codex_login_status()
@@ -383,6 +399,99 @@ def sync_active_auth_snapshot(
         "target_profile": refreshed_target.to_dict() if refreshed_target else target.to_dict(),
         "active_profile": refreshed_active.to_dict() if refreshed_active else active_profile.to_dict(),
     }
+
+
+def save_active_auth_snapshot(
+    target_name: str,
+    home: Path | None = None,
+    *,
+    dry_run: bool = False,
+) -> dict[str, Any]:
+    normalized = _normalize_snapshot_name(target_name)
+    if not normalized:
+        return {"status": "error", "error": "missing or invalid auth snapshot name"}
+    if normalized == "auth":
+        return {"status": "error", "error": "reserved auth snapshot name: auth"}
+
+    home = codex_home(str(home) if home else None)
+    profiles = list_auth_profiles(home)
+    active_profile = next((profile for profile in profiles if profile.file == "auth.json"), None)
+    if active_profile is None:
+        return {"status": "error", "error": f"missing active auth: {home / 'auth.json'}"}
+
+    target_path = (home / "auth-profiles" / f"{normalized}.json").resolve()
+    try:
+        target_path.relative_to(home.resolve())
+    except ValueError:
+        return {"status": "error", "error": f"auth snapshot escapes Codex home: {target_path}"}
+
+    existing = next(
+        (
+            profile
+            for profile in profiles
+            if profile.name == normalized or profile.file == f"{normalized}.json" or profile.full_name == str(target_path)
+        ),
+        None,
+    )
+    if existing is not None:
+        if existing.sha256 == active_profile.sha256:
+            return {
+                "status": "ok",
+                "changed": False,
+                "target_profile": existing.to_dict(),
+                "active_profile": active_profile.to_dict(),
+            }
+        return {
+            "status": "error",
+            "error": f"auth snapshot already exists: {normalized}",
+            "existing_profile": existing.to_dict(),
+        }
+
+    if dry_run:
+        return {
+            "status": "ok",
+            "changed": False,
+            "dry_run": True,
+            "target_name": normalized,
+            "target_path": str(target_path),
+            "active_profile": active_profile.to_dict(),
+        }
+
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(home / "auth.json", target_path)
+    refreshed_profiles = list_auth_profiles(home)
+    refreshed_target = next((profile for profile in refreshed_profiles if profile.full_name == str(target_path)), None)
+    refreshed_active = next((profile for profile in refreshed_profiles if profile.file == "auth.json"), None)
+    return {
+        "status": "ok",
+        "changed": True,
+        "created_profile": refreshed_target.to_dict() if refreshed_target else None,
+        "active_profile": refreshed_active.to_dict() if refreshed_active else active_profile.to_dict(),
+    }
+
+
+def ensure_active_auth_snapshot(home: Path | None = None) -> dict[str, Any]:
+    home = codex_home(str(home) if home else None)
+    profiles = list_auth_profiles(home)
+    active_profile = next((profile for profile in profiles if profile.file == "auth.json"), None)
+    if active_profile is None:
+        return {"status": "error", "error": f"missing active auth: {home / 'auth.json'}"}
+
+    named_profiles = [profile for profile in profiles if profile.file != "auth.json" and profile.name != "auth"]
+    matched = _find_named_snapshot_match(active_profile, named_profiles)
+    if matched is not None:
+        return {
+            "status": "ok",
+            "changed": False,
+            "target_profile": matched.to_dict(),
+            "active_profile": active_profile.to_dict(),
+        }
+
+    suggested_name = _suggest_snapshot_name(active_profile, profiles)
+    result = save_active_auth_snapshot(suggested_name, home)
+    if result.get("status") == "ok":
+        result["auto_name"] = suggested_name
+    return result
 
 
 def config_health(home: Path | None = None) -> dict[str, Any]:
@@ -636,7 +745,7 @@ def backup_saved_auth_snapshot(path: Path, home: Path | None = None) -> Path:
 def _auth_profile_from_path(path: Path, active_hash: str) -> CodexAuthProfile:
     payload = _read_auth_json(path)
     tokens = payload.get("tokens") if isinstance(payload.get("tokens"), dict) else {}
-    account_id = str(tokens.get("account_id") or "")
+    account_id = _first_string(tokens.get("account_id"), payload.get("account_id"))
     file_hash = _short_file_hash(path)
     claims = _auth_claims(payload, tokens)
     account_hash = _short_string_hash(account_id) if account_id else ""
@@ -666,12 +775,12 @@ def _auth_profile_from_path(path: Path, active_hash: str) -> CodexAuthProfile:
 def _display_auth_profiles(profiles: list[CodexAuthProfile]) -> list[dict[str, Any]]:
     grouped: dict[str, list[CodexAuthProfile]] = {}
     for profile in profiles:
-        group_key = profile.sha256 or profile.full_name
+        group_key = _display_group_key(profile)
         grouped.setdefault(group_key, []).append(profile)
 
     rendered: list[dict[str, Any]] = []
     for duplicates in grouped.values():
-        preferred = min(duplicates, key=_display_profile_rank)
+        preferred = _select_display_profile(duplicates)
         rendered_profile = preferred.to_dict()
         rendered_profile["active"] = any(profile.active for profile in duplicates)
         rendered.append(rendered_profile)
@@ -686,6 +795,54 @@ def _display_profile_rank(profile: CodexAuthProfile) -> tuple[int, int, str]:
         0 if profile.active else 1,
         profile.name,
     )
+
+
+def _display_group_key(profile: CodexAuthProfile) -> str:
+    if profile.account_id:
+        return f"account:{profile.account_id}"
+    if profile.account_hash:
+        return f"hash:{profile.account_hash}"
+    return f"file:{profile.sha256 or profile.full_name}"
+
+
+def _select_display_profile(duplicates: list[CodexAuthProfile]) -> CodexAuthProfile:
+    active_profile = next((profile for profile in duplicates if profile.active), None)
+    if active_profile is not None:
+        exact_named_mirror = [
+            profile
+            for profile in duplicates
+            if profile.name != "auth" and profile.sha256 == active_profile.sha256
+        ]
+        if exact_named_mirror:
+            return min(exact_named_mirror, key=_display_profile_rank)
+        return active_profile
+    return max(duplicates, key=lambda profile: (profile.last_refresh or "", 0 if profile.name != "auth" else 1, profile.name))
+
+
+def _normalize_snapshot_name(value: str) -> str:
+    normalized = str(value or "").strip()
+    if normalized.lower().endswith(".json"):
+        normalized = normalized[:-5]
+    if not normalized:
+        return ""
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}", normalized):
+        return ""
+    return normalized
+
+
+def _suggest_snapshot_name(active_profile: CodexAuthProfile, profiles: list[CodexAuthProfile]) -> str:
+    base = f"auto-{(active_profile.account_hash or active_profile.sha256 or 'auth')[:10]}".strip("-")
+    if not base:
+        base = "auto-auth"
+    existing_names = {profile.name for profile in profiles}
+    if base not in existing_names:
+        return base
+    suffix = 2
+    while True:
+        candidate = f"{base}-{suffix}"
+        if candidate not in existing_names:
+            return candidate
+        suffix += 1
 
 
 def _find_named_snapshot_match(active_profile: CodexAuthProfile, named_profiles: list[CodexAuthProfile]) -> CodexAuthProfile | None:
@@ -758,9 +915,118 @@ def _attach_cached_usage(accounts: list[dict[str, Any]], cache: dict[str, Any]) 
     return enriched
 
 
+def _account_facts_path(home: Path) -> Path:
+    return home / ACCOUNT_FACTS_FILENAME
+
+
+def _load_account_facts(home: Path) -> dict[str, Any]:
+    path = _account_facts_path(home)
+    if not path.exists():
+        return {"status": "missing", "accounts": []}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {"status": "error", "accounts": [], "path": str(path)}
+    raw_accounts = payload.get("accounts") if isinstance(payload, dict) else None
+    accounts: list[dict[str, Any]] = []
+    if isinstance(raw_accounts, dict):
+        for key, value in raw_accounts.items():
+            if not isinstance(value, dict):
+                continue
+            item = dict(value)
+            key_text = _first_string(key)
+            if key_text and "email" not in item and "name" not in item and "account_id" not in item:
+                if "@" in key_text:
+                    item["email"] = key_text
+                else:
+                    item["name"] = key_text
+            accounts.append(item)
+    elif isinstance(raw_accounts, list):
+        accounts = [dict(item) for item in raw_accounts if isinstance(item, dict)]
+    return {"status": "ok", "path": str(path), "accounts": accounts}
+
+
+def _resolve_account_plan_types(accounts: list[dict[str, Any]], account_facts: dict[str, Any]) -> list[dict[str, Any]]:
+    facts = account_facts.get("accounts") if isinstance(account_facts, dict) else []
+    if not isinstance(facts, list):
+        facts = []
+    resolved: list[dict[str, Any]] = []
+    for account in accounts:
+        item = dict(account)
+        auth_plan = _canonical_plan_type(item.get("plan_type"))
+        if auth_plan:
+            item["auth_plan_type"] = auth_plan
+        usage_snapshot = item.get("usage_snapshot")
+        usage_plan = _canonical_plan_type(usage_snapshot.get("plan_type")) if isinstance(usage_snapshot, dict) else ""
+        fact = _match_account_fact(item, facts)
+        fact_plan = _canonical_plan_type(fact.get("plan_type")) if fact else ""
+
+        candidates: list[tuple[str, str]] = []
+        if fact_plan:
+            candidates.append(("account_facts", fact_plan))
+        if usage_plan:
+            candidates.append(("usage_snapshot", usage_plan))
+        if auth_plan:
+            candidates.append(("auth_token", auth_plan))
+
+        if candidates:
+            source, plan_type = candidates[0]
+            item["plan_type"] = plan_type
+            item["plan_source"] = _first_string(fact.get("source")) if source == "account_facts" and fact else source
+            conflicts = [
+                {"source": candidate_source, "plan_type": candidate_plan}
+                for candidate_source, candidate_plan in candidates
+                if candidate_plan != plan_type
+            ]
+            if conflicts:
+                item["plan_conflicts"] = conflicts
+        else:
+            item["plan_source"] = "unavailable"
+        resolved.append(item)
+    return resolved
+
+
+def _match_account_fact(account: dict[str, Any], facts: list[dict[str, Any]]) -> dict[str, Any] | None:
+    account_id = _first_string(account.get("account_id"))
+    account_hash = _first_string(account.get("account_hash"))
+    email = _first_string(account.get("email")).lower()
+    name = _first_string(account.get("name"))
+    file_name = _first_string(account.get("file"))
+    for fact in facts:
+        if account_id and _first_string(fact.get("account_id")) == account_id:
+            return fact
+        if account_hash and _first_string(fact.get("account_hash")) == account_hash:
+            return fact
+        if email and _first_string(fact.get("email")).lower() == email:
+            return fact
+        if name and _first_string(fact.get("name")) == name:
+            return fact
+        if file_name and _first_string(fact.get("file")) == file_name:
+            return fact
+    return None
+
+
+def _canonical_plan_type(value: Any) -> str:
+    raw = _first_string(value).lower()
+    aliases = {
+        "chatgpt plus": "plus",
+        "plus": "plus",
+        "chatgpt go": "prolite",
+        "go": "prolite",
+        "prolite": "prolite",
+        "team": "team",
+        "pro": "pro",
+        "free": "free",
+    }
+    return aliases.get(raw, raw)
+
+
 def _resolve_active_plan_type(active_account: dict[str, Any] | None, usage: dict[str, Any]) -> str:
     if not isinstance(active_account, dict):
         return ""
+    configured_plan = _first_string(active_account.get("plan_type"))
+    if configured_plan:
+        return configured_plan
     snapshot = active_account.get("usage_snapshot")
     if isinstance(snapshot, dict):
         cached_plan = _first_string(snapshot.get("plan_type"))
@@ -857,6 +1123,7 @@ def _discover_official_codex_app_account(
         return {
             "status": "ambiguous",
             "reason": "multiple_accounts_matched_latest_storage_record",
+            "limitation": "official_app_storage_currently_exposes_multiple_known_account_ids_without_a_safe_full_auth_payload_import",
             "storage_root": str(root),
             "storage_probe": newest_hit,
         }

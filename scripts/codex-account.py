@@ -16,6 +16,7 @@ from lib.codex_local import (
     delete_auth_profile,
     install_account_switcher,
     list_auth_profiles,
+    save_active_auth_snapshot,
     switch_auth_profile,
     sync_active_auth_snapshot,
 )
@@ -41,6 +42,9 @@ def main(argv: list[str] | None = None) -> int:
     sync_parser = subparsers.add_parser("sync-active", help="Save the current auth.json back into its named auth snapshot.")
     sync_parser.add_argument("--name", default=None, help="Optional named auth profile to overwrite.")
     sync_parser.add_argument("--dry-run", action="store_true")
+    save_parser = subparsers.add_parser("save-active", help="Save the current auth.json into a new named auth snapshot.")
+    save_parser.add_argument("name")
+    save_parser.add_argument("--dry-run", action="store_true")
     delete_parser = subparsers.add_parser("delete", help="Back up and delete a non-active local auth profile.")
     delete_parser.add_argument("name")
     delete_parser.add_argument("--dry-run", action="store_true")
@@ -49,7 +53,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "list":
         payload = [profile.to_dict() for profile in list_auth_profiles()]
     elif args.command == "status":
-        payload = codex_status()
+        payload = codex_status(ensure_saved_snapshot=True)
     elif args.command == "context-probe":
         payload = context_window_probe(
             Path(args.codex_home) if args.codex_home else None,
@@ -65,6 +69,8 @@ def main(argv: list[str] | None = None) -> int:
         payload = switch_auth_profile(args.name, dry_run=args.dry_run)
     elif args.command == "sync-active":
         payload = sync_active_auth_snapshot(target_name=args.name, dry_run=args.dry_run)
+    elif args.command == "save-active":
+        payload = save_active_auth_snapshot(args.name, dry_run=args.dry_run)
     elif args.command == "delete":
         payload = delete_auth_profile(args.name, dry_run=args.dry_run)
     else:

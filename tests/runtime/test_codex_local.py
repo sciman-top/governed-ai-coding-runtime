@@ -158,6 +158,7 @@ class CodexLocalTests(unittest.TestCase):
             self.assertEqual("drifted", status["snapshot_status"]["status"])
             self.assertEqual("auth2", status["snapshot_status"]["profile_name"])
             self.assertEqual("drifted", status["active_account"]["snapshot_status"]["status"])
+            self.assertEqual(["auth"], [account["name"] for account in status["accounts"]])
 
     def test_sync_active_snapshot_overwrites_named_profile_and_keeps_backup(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -187,6 +188,53 @@ class CodexLocalTests(unittest.TestCase):
                 (home / "auth2.json").read_text(encoding="utf-8"),
             )
             self.assertEqual("synced", codex_local.codex_status(home)["snapshot_status"]["status"])
+
+    def test_save_active_snapshot_creates_new_named_profile_for_untracked_login(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_auth(
+                home / "auth.json",
+                account_id="account-a",
+                email="same@example.com",
+                plan_type="team",
+                last_refresh="2026-05-02T03:00:00Z",
+            )
+
+            result = codex_local.save_active_auth_snapshot("team-main", home)
+
+            self.assertEqual("ok", result["status"])
+            self.assertTrue(result["changed"])
+            self.assertTrue((home / "auth-profiles" / "team-main.json").exists())
+            self.assertEqual(
+                (home / "auth.json").read_text(encoding="utf-8"),
+                (home / "auth-profiles" / "team-main.json").read_text(encoding="utf-8"),
+            )
+            status = codex_local.codex_status(home)
+            self.assertEqual("synced", status["snapshot_status"]["status"])
+            self.assertEqual("team-main", status["active_account"]["name"])
+
+    def test_status_can_auto_save_missing_named_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_auth(home / "auth.json", account_id="account-a", email="same@example.com", plan_type="team")
+
+            status = codex_local.codex_status(home, ensure_saved_snapshot=True)
+
+            self.assertEqual("synced", status["snapshot_status"]["status"])
+            self.assertTrue((home / "auth-profiles").exists())
+            self.assertEqual("ok", status["auto_snapshot"]["status"])
+            self.assertTrue(status["auto_snapshot"]["changed"])
+            self.assertNotEqual("auth", status["active_account"]["name"])
+
+    def test_save_active_snapshot_rejects_invalid_name(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_auth(home / "auth.json", account_id="account-a")
+
+            result = codex_local.save_active_auth_snapshot("../bad", home)
+
+            self.assertEqual("error", result["status"])
+            self.assertFalse((home / ".." / "bad.json").exists())
 
     def test_delete_auth_profile_backs_up_and_removes_inactive_snapshot(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -490,7 +538,7 @@ class CodexLocalTests(unittest.TestCase):
             self.assertEqual("team", account["usage_snapshot"]["plan_type"])
             self.assertEqual([58, 78], [item["remaining_percent"] for item in account["usage_snapshot"]["windows"]])
 
-    def test_status_prefers_usage_plan_type_for_active_account_display(self) -> None:
+    def test_status_prefers_account_usage_plan_type_over_auth_claim_for_display(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)
             _write_auth(home / "auth.json", account_id="account-a", email="active@example.com", plan_type="prolite")
@@ -514,6 +562,52 @@ class CodexLocalTests(unittest.TestCase):
 
             self.assertEqual("plus", status["usage"]["plan_type"])
             self.assertEqual("plus", status["active_account"]["plan_type"])
+            self.assertEqual("usage_snapshot", status["active_account"]["plan_source"])
+            self.assertEqual([{"source": "auth_token", "plan_type": "prolite"}], status["active_account"]["plan_conflicts"])
+
+    def test_status_prefers_local_account_facts_over_auth_and_usage_plan_type(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_auth(home / "auth.json", account_id="account-a", email="active@example.com", plan_type="plus")
+            (home / "account-usage-cache.json").write_text(
+                json.dumps(
+                    {
+                        codex_local._short_string_hash("account-a"): {
+                            "account_hash": codex_local._short_string_hash("account-a"),
+                            "account_label": "active@example.com",
+                            "plan_type": "plus",
+                            "source": "codex_sessions_jsonl",
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (home / "account-facts.json").write_text(
+                json.dumps(
+                    {
+                        "accounts": {
+                            "active@example.com": {
+                                "plan_type": "go",
+                                "source": "local_operator_asserted",
+                            }
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            status = codex_local.codex_status(home)
+
+            self.assertEqual("prolite", status["active_account"]["plan_type"])
+            self.assertEqual("local_operator_asserted", status["active_account"]["plan_source"])
+            self.assertEqual("ok", status["account_facts"]["status"])
+            self.assertEqual(
+                [
+                    {"source": "usage_snapshot", "plan_type": "plus"},
+                    {"source": "auth_token", "plan_type": "plus"},
+                ],
+                status["active_account"]["plan_conflicts"],
+            )
 
     def test_status_marks_official_app_persisted_account_separately_from_cli_active(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -536,6 +630,37 @@ class CodexLocalTests(unittest.TestCase):
             cli_active = next(account for account in status["accounts"] if account["active"])
             self.assertTrue(app_persisted["official_app_current"])
             self.assertFalse(cli_active["official_app_current"])
+
+    def test_status_reports_official_app_ambiguity_limitation_when_latest_storage_contains_multiple_accounts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            app_root = home / "official-app" / "Local Storage" / "leveldb"
+            app_root.mkdir(parents=True, exist_ok=True)
+            _write_auth(home / "auth.json", account_id="account-top", email="sciman.top@gmail.com", plan_type="prolite")
+            _write_auth(home / "auth3-2.json", account_id="account-phys", email="sciman.phys@gmail.com", plan_type="team")
+            (app_root / "000001.ldb").write_bytes(b"official app state account-top account-phys")
+
+            with mock.patch("lib.codex_local._official_codex_app_storage_root", return_value=home / "official-app"):
+                status = codex_local.codex_status(home)
+
+            self.assertEqual("ambiguous", status["official_app_account"]["status"])
+            self.assertIn("limitation", status["official_app_account"])
+
+    def test_list_auth_profiles_accepts_top_level_account_id_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            payload = {
+                "auth_mode": "chatgpt",
+                "account_id": "top-level-account",
+                "email": "top@example.com",
+                "name": "Top Level",
+                "plan_type": "plus",
+            }
+            (home / "auth.json").write_text(json.dumps(payload), encoding="utf-8")
+
+            profile = codex_local.list_auth_profiles(home)[0]
+
+            self.assertEqual("top-level-account", profile.account_id)
 
     def test_online_refresh_prefers_latest_session_snapshot_and_reports_refresh_status(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

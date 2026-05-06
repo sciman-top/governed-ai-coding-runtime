@@ -395,6 +395,7 @@ class OperatorEntrypointTests(unittest.TestCase):
             self.assertIn(module.load_codex_status()["status"], {"ok", "error"})
             self.assertEqual("error", module.run_codex_switch({"name": ""})["status"])
             self.assertEqual("error", module.run_codex_sync_active({"name": "missing-profile"})["status"])
+            self.assertEqual("error", module.run_codex_save_active({"name": ""})["status"])
             self.assertEqual("error", module.run_codex_delete({"name": ""})["status"])
             self.assertIn(module.load_claude_status()["status"], {"ok", "error"})
             self.assertEqual("error", module.run_claude_switch({"name": ""})["status"])
@@ -543,6 +544,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertEqual("claude", first_claude["cache_kind"])
         self.assertEqual(1, codex_mock.call_count)
         self.assertEqual(1, claude_mock.call_count)
+        codex_mock.assert_called_with(refresh_online=False, ensure_saved_snapshot=True)
         self.assertEqual(first_codex["cached_at"], second_codex["cached_at"])
         self.assertEqual(first_claude["cached_at"], second_claude["cached_at"])
 
@@ -554,7 +556,7 @@ class OperatorEntrypointTests(unittest.TestCase):
             payload = module.load_codex_status(refresh_if_stale=True)
 
         self.assertEqual("ok", payload["status"])
-        codex_mock.assert_called_once_with(refresh_online=False, refresh_if_stale=True)
+        codex_mock.assert_called_once_with(refresh_online=False, refresh_if_stale=True, ensure_saved_snapshot=True)
 
     def test_operator_ui_restart_request_is_throttled(self) -> None:
         module = _load_serve_operator_ui_module()

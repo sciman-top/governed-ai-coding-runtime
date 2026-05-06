@@ -46,6 +46,13 @@ function Resolve-PythonCommand {
   return $python.Source
 }
 
+function Format-CmdArgument {
+  param([Parameter(Mandatory = $true)][string]$Value)
+
+  $escaped = $Value.Replace('"', '\"')
+  return '"' + $escaped + '"'
+}
+
 function Get-RecordedProcess {
   if (-not (Test-Path -LiteralPath $PidPath)) {
     return $null
@@ -260,30 +267,45 @@ function Start-ServiceProcess {
   }
 
   $python = Resolve-PythonCommand
-  $arguments = @(
-    "scripts/serve-operator-ui.py",
+  $cmd = $env:ComSpec
+  if ([string]::IsNullOrWhiteSpace($cmd)) {
+    $cmd = "cmd.exe"
+  }
+  $launchParts = @(
+    "start",
+    '""',
+    "/min",
+    (Format-CmdArgument $python),
+    (Format-CmdArgument "scripts/serve-operator-ui.py"),
     "--serve",
     "--lang",
-    $UiLanguage,
+    (Format-CmdArgument $UiLanguage),
     "--host",
-    $HostAddress,
+    (Format-CmdArgument $HostAddress),
     "--port",
-    [string]$Port
+    (Format-CmdArgument ([string]$Port)),
+    ("1>>" + (Format-CmdArgument $LogPath)),
+    ("2>>" + (Format-CmdArgument $ErrorLogPath))
   )
-  $process = Start-Process `
-    -FilePath $python `
-    -ArgumentList $arguments `
+  $launchCommand = [string]::Join(" ", $launchParts)
+  Start-Process `
+    -FilePath $cmd `
+    -ArgumentList @("/d", "/c", $launchCommand) `
     -WorkingDirectory $RepoRoot `
-    -RedirectStandardOutput $LogPath `
-    -RedirectStandardError $ErrorLogPath `
-    -WindowStyle Hidden `
-    -PassThru
-
-  Set-Content -LiteralPath $PidPath -Value ([string]$process.Id) -Encoding UTF8
+    -WindowStyle Hidden | Out-Null
 
   $deadline = (Get-Date).AddSeconds(8)
   while ((Get-Date) -lt $deadline) {
     if (Test-UiReady) {
+      $startedOwner = Get-PortOwner
+      if ($startedOwner) {
+        Set-Content -LiteralPath $PidPath -Value ([string]$startedOwner.Id) -Encoding UTF8
+      }
+      Start-Sleep -Seconds 1
+      if (-not (Test-UiReady)) {
+        Show-Status | Out-Host
+        throw "Operator UI became reachable but did not remain alive. The current host likely reaps background child processes after the launcher exits. Run `python scripts/serve-operator-ui.py --serve` in a dedicated shell or use a host-level scheduler/autostart entrypoint."
+      }
       if ($OpenUi) {
         Start-Process $Url | Out-Null
       }

@@ -1,0 +1,275 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - heading "Governed Runtime 控制台" [level=1] [ref=e4]
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - text: "Runtime 根目录:"
+        - code [ref=e7]: D:/CODE/governed-ai-coding-runtime/.runtime
+      - generic [ref=e8]:
+        - text: "持久化:"
+        - code [ref=e9]: filesystem
+  - generic [ref=e10]:
+    - complementary [ref=e11]:
+      - generic [ref=e12]:
+        - heading "统一操作台" [level=2] [ref=e13]
+        - generic [ref=e14]:
+          - paragraph [ref=e15]: AI 推荐下一步
+          - paragraph [ref=e16]: 优先用这些入口完成日常闭环；页面按钮会通过同一个根目录入口执行。
+          - generic [ref=e17]:
+            - article [ref=e18]:
+              - generic [ref=e19]:
+                - generic [ref=e20]: 日常快速反馈
+                - button "执行" [ref=e21] [cursor=pointer]
+              - code [ref=e22]: .\run.ps1 fast
+              - paragraph [ref=e23]: 编码中先跑 build + quick feedback tests；不替代交付前 readiness。
+              - paragraph
+            - article [ref=e24]:
+              - generic [ref=e25]:
+                - generic [ref=e26]: 交付 readiness
+                - button "执行" [ref=e27] [cursor=pointer]
+              - code [ref=e28]: .\run.ps1 readiness -OpenUi
+              - paragraph [ref=e29]: 按 build -> test -> contract/invariant -> hotspot 收口并打开中文控制台。
+              - paragraph
+        - generic [ref=e30]:
+          - paragraph [ref=e31]: 页面
+          - button "刷新状态" [ref=e32] [cursor=pointer]
+        - generic [ref=e33]:
+          - paragraph [ref=e34]: 本仓验证
+          - generic [ref=e35]:
+            - button "快速反馈" [ref=e36] [cursor=pointer]
+            - paragraph
+            - button "本仓 readiness" [ref=e37] [cursor=pointer]
+            - paragraph
+            - button "功能反馈汇总" [ref=e38] [cursor=pointer]
+            - paragraph
+        - group [ref=e39]:
+          - generic "目标仓治理" [ref=e40] [cursor=pointer]
+        - group [ref=e41]:
+          - generic "规则与演进" [ref=e42] [cursor=pointer]
+      - generic [ref=e43]:
+        - heading "执行参数" [level=2] [ref=e44]
+        - generic [ref=e45]:
+          - generic [ref=e46]:
+            - text: 语言
+            - combobox "语言" [ref=e47]:
+              - option "中文" [selected]
+              - option "English"
+          - generic [ref=e48]:
+            - text: 目标仓
+            - combobox "目标仓" [ref=e49]:
+              - option "全部目标仓" [selected]
+              - option "classroomtoolkit"
+              - option "github-toolkit"
+              - option "k12-question-graph"
+              - option "self-runtime"
+              - option "skills-manager"
+              - option "vps-ssh-launcher"
+          - group "目标仓选择" [ref=e50]:
+            - generic [ref=e51]:
+              - generic [ref=e52]: 目标仓选择
+              - generic [ref=e53]: 默认全部；取消全部后可勾选多个目标仓。批量卸载只处理勾选目标。
+            - generic [ref=e54]:
+              - checkbox "全部目标仓" [checked] [ref=e55]
+              - text: 全部目标仓
+            - generic [ref=e56]:
+              - generic [ref=e57]:
+                - checkbox "classroomtoolkit" [disabled] [ref=e58]
+                - generic [ref=e59]: classroomtoolkit
+              - generic [ref=e60]:
+                - checkbox "github-toolkit" [disabled] [ref=e61]
+                - generic [ref=e62]: github-toolkit
+              - generic [ref=e63]:
+                - checkbox "k12-question-graph" [disabled] [ref=e64]
+                - generic [ref=e65]: k12-question-graph
+              - generic [ref=e66]:
+                - checkbox "self-runtime" [disabled] [ref=e67]
+                - generic [ref=e68]: self-runtime
+              - generic [ref=e69]:
+                - checkbox "skills-manager" [disabled] [ref=e70]
+                - generic [ref=e71]: skills-manager
+              - generic [ref=e72]:
+                - checkbox "vps-ssh-launcher" [disabled] [ref=e73]
+                - generic [ref=e74]: vps-ssh-launcher
+          - generic [ref=e75]:
+            - text: 验证模式
+            - combobox "验证模式" [ref=e76]:
+              - option "quick" [selected]
+              - option "full"
+              - option "l1"
+              - option "l2"
+              - option "l3"
+          - generic [ref=e77]:
+            - checkbox "只预演" [ref=e78]
+            - text: 只预演
+          - group [ref=e79]:
+            - generic "高级参数" [ref=e80] [cursor=pointer]
+    - generic [ref=e81]:
+      - tablist "Operator view" [ref=e82]:
+        - tab "Runtime" [selected] [ref=e83] [cursor=pointer]
+        - tab "Codex" [ref=e84] [cursor=pointer]
+        - tab "Claude" [ref=e85] [cursor=pointer]
+        - tab "反馈" [ref=e86] [cursor=pointer]
+      - generic [ref=e87]:
+        - heading "控制台总览" [level=2] [ref=e88]
+        - paragraph [ref=e89]: 所有日常入口集中在左侧操作台；这里只保留当前状态、账号配置和反馈证据的决策摘要。
+        - generic [ref=e90]:
+          - article [ref=e91]:
+            - generic [ref=e92]:
+              - generic [ref=e93]: Runtime
+              - generic [ref=e94]: 当前面板
+            - generic [ref=e95]:
+              - paragraph [ref=e96]: 任务 1 · 审批 1 · 验证 2
+              - paragraph [ref=e97]: 接入仓库 0 · 风险阻断 0
+              - paragraph [ref=e98]: 在此查看执行输出、历史和下一步建议。
+            - button "当前面板" [disabled] [ref=e99]
+          - article [ref=e100]:
+            - generic [ref=e101]:
+              - generic [ref=e102]: Codex
+              - generic [ref=e103]: 打开面板
+            - generic [ref=e104]:
+              - paragraph [ref=e105]: 正在加载摘要…
+              - paragraph [ref=e106]: 当前账号、配置健康和额度快照。
+              - paragraph [ref=e107]: 去 Codex 面板查看账号详情和在线刷新。
+            - button "打开面板" [ref=e108] [cursor=pointer]
+          - article [ref=e109]:
+            - generic [ref=e110]:
+              - generic [ref=e111]: Claude
+              - generic [ref=e112]: 打开面板
+            - generic [ref=e113]:
+              - paragraph [ref=e114]: 正在加载摘要…
+              - paragraph [ref=e115]: 当前 Provider、凭据状态和本机配置入口。
+              - paragraph [ref=e116]: 去 Claude 面板查看 Provider 和推荐配置。
+            - button "打开面板" [ref=e117] [cursor=pointer]
+          - article [ref=e118]:
+            - generic [ref=e119]:
+              - generic [ref=e120]: 反馈
+              - generic [ref=e121]: 打开面板
+            - generic [ref=e122]:
+              - paragraph [ref=e123]: 正在加载摘要…
+              - paragraph [ref=e124]: 闭环状态、证据新鲜度和处理建议。
+              - paragraph [ref=e125]: 去反馈面板查看证据、建议和详细报告。
+            - button "打开面板" [ref=e126] [cursor=pointer]
+      - generic [ref=e127]:
+        - region "Runtime 摘要" [ref=e128]:
+          - generic [ref=e129]:
+            - generic [ref=e130]: 任务
+            - strong [ref=e131]: "1"
+            - generic [ref=e132]: 最近任务
+          - generic [ref=e133]:
+            - generic [ref=e134]: 审批
+            - strong [ref=e135]: "1"
+            - generic [ref=e136]: 待确认
+          - generic [ref=e137]:
+            - generic [ref=e138]: 验证结果
+            - strong [ref=e139]: "2"
+            - generic [ref=e140]: 验证记录
+          - generic [ref=e141]:
+            - generic [ref=e142]: 已接入仓库
+            - strong [ref=e143]: "0"
+            - generic [ref=e144]: 0 风险自动阻断
+        - generic [ref=e145]:
+          - generic [ref=e146]:
+            - generic [ref=e147]:
+              - generic [ref=e148]:
+                - heading "执行输出" [level=2] [ref=e149]
+                - generic [ref=e150]: 就绪
+              - generic [ref=e152]:
+                - heading "执行历史" [level=2] [ref=e153]
+                - paragraph [ref=e155]: 暂无执行历史。
+                - button "清空历史" [ref=e156] [cursor=pointer]
+            - generic [ref=e157]:
+              - heading "下一步选择" [level=2] [ref=e158]
+              - paragraph [ref=e159]: 把当前建议、阻断和推荐动作放在执行输出下面，便于直接决定下一步。
+              - generic [ref=e160]:
+                - generic [ref=e161]:
+                  - strong [ref=e162]: 动作
+                  - text: 加载中
+                - generic [ref=e163]:
+                  - strong [ref=e164]: 建议
+                  - text: "AI 推荐: 正在刷新"
+                - generic [ref=e165]:
+                  - strong [ref=e166]: 判定
+                  - text: "状态: loading"
+              - paragraph
+              - button "刷新 next-work" [ref=e168] [cursor=pointer]
+              - group [ref=e169]:
+                - generic "查看 selector JSON" [ref=e170]
+          - generic [ref=e172]:
+            - generic [ref=e173]:
+              - heading "维护与升级" [level=2] [ref=e174]
+              - generic [ref=e175]:
+                - generic [ref=e176]:
+                  - generic [ref=e177]: 阶段
+                  - code [ref=e178]: 已完成
+                - generic [ref=e179]:
+                  - generic [ref=e180]: 兼容性
+                  - code [ref=e181]: docs/product/runtime-compatibility-and-upgrade-policy.md
+                - generic [ref=e182]:
+                  - generic [ref=e183]: 升级
+                  - code [ref=e184]: docs/product/runtime-compatibility-and-upgrade-policy.md
+                - generic [ref=e185]:
+                  - generic [ref=e186]: 分流
+                  - code [ref=e187]: docs/product/maintenance-deprecation-and-retirement-policy.md
+                - generic [ref=e188]:
+                  - generic [ref=e189]: 弃用
+                  - code [ref=e190]: docs/product/maintenance-deprecation-and-retirement-policy.md
+                - generic [ref=e191]:
+                  - generic [ref=e192]: 退役
+                  - code [ref=e193]: docs/product/maintenance-deprecation-and-retirement-policy.md
+            - generic [ref=e194]:
+              - heading "已接入仓库" [level=2] [ref=e195]
+              - generic [ref=e196]: 暂无已接入目标仓记录。
+        - generic [ref=e197]:
+          - heading "任务" [level=2] [ref=e198]
+          - table [ref=e200]:
+            - rowgroup [ref=e201]:
+              - row "任务 状态 目标 结果与记录" [ref=e202]:
+                - columnheader "任务" [ref=e203]
+                - columnheader "状态" [ref=e204]
+                - columnheader "目标" [ref=e205]
+                - columnheader "结果与记录" [ref=e206]
+            - rowgroup [ref=e207]:
+              - 'row "task-attached-e2e 执行: run-attached-e2e 工作区: 缺失 已完成 交互: 未记录 回滚: git checkout -- src/governed_probe.txt Attached repo governed e2e loop 审批 approval-a53115fc83ae444497e4615f84921107 执行输出 artifacts/task-attached-e2e/write-execution/execution-write/src-governed_probe.txt.json artifacts/task-attached-e2e/run-attached-e2e/handoff/attached-e2e.json 运行证据 artifacts/task-attached-e2e/policy/write-escalate.json artifacts/task-attached-e2e/write-execution/execution-write/src-governed_probe.txt.json 验证结果 artifacts/task-attached-e2e/run-attached-e2e/verification-output/test.txt artifacts/task-attached-e2e/run-attached-e2e/verification-output/contract.txt" [ref=e208]':
+                - 'cell "task-attached-e2e 执行: run-attached-e2e 工作区: 缺失" [ref=e209]':
+                  - generic [ref=e210]: task-attached-e2e
+                  - generic [ref=e211]:
+                    - text: "执行:"
+                    - code [ref=e212]: run-attached-e2e
+                  - generic [ref=e213]:
+                    - text: "工作区:"
+                    - code [ref=e214]: 缺失
+                - 'cell "已完成 交互: 未记录 回滚: git checkout -- src/governed_probe.txt" [ref=e215]':
+                  - generic [ref=e216]: 已完成
+                  - generic [ref=e217]: "交互: 未记录"
+                  - generic [ref=e218]:
+                    - text: "回滚:"
+                    - code [ref=e219]: git checkout -- src/governed_probe.txt
+                - cell "Attached repo governed e2e loop" [ref=e220]
+                - cell "审批 approval-a53115fc83ae444497e4615f84921107 执行输出 artifacts/task-attached-e2e/write-execution/execution-write/src-governed_probe.txt.json artifacts/task-attached-e2e/run-attached-e2e/handoff/attached-e2e.json 运行证据 artifacts/task-attached-e2e/policy/write-escalate.json artifacts/task-attached-e2e/write-execution/execution-write/src-governed_probe.txt.json 验证结果 artifacts/task-attached-e2e/run-attached-e2e/verification-output/test.txt artifacts/task-attached-e2e/run-attached-e2e/verification-output/contract.txt" [ref=e221]:
+                  - generic [ref=e222]:
+                    - generic [ref=e223]:
+                      - generic [ref=e224]: 审批
+                      - list [ref=e225]:
+                        - listitem [ref=e226]:
+                          - code [ref=e227]: approval-a53115fc83ae444497e4615f84921107
+                    - generic [ref=e228]:
+                      - generic [ref=e229]: 执行输出
+                      - list [ref=e230]:
+                        - listitem [ref=e231]:
+                          - button "artifacts/task-attached-e2e/write-execution/execution-write/src-governed_probe.txt.json" [ref=e232] [cursor=pointer]
+                        - listitem [ref=e233]:
+                          - button "artifacts/task-attached-e2e/run-attached-e2e/handoff/attached-e2e.json" [ref=e234] [cursor=pointer]
+                    - generic [ref=e235]:
+                      - generic [ref=e236]: 运行证据
+                      - list [ref=e237]:
+                        - listitem [ref=e238]:
+                          - button "artifacts/task-attached-e2e/policy/write-escalate.json" [ref=e239] [cursor=pointer]
+                        - listitem [ref=e240]:
+                          - button "artifacts/task-attached-e2e/write-execution/execution-write/src-governed_probe.txt.json" [ref=e241] [cursor=pointer]
+                    - generic [ref=e242]:
+                      - generic [ref=e243]: 验证结果
+                      - list [ref=e244]:
+                        - listitem [ref=e245]:
+                          - button "artifacts/task-attached-e2e/run-attached-e2e/verification-output/test.txt" [ref=e246] [cursor=pointer]
+                        - listitem [ref=e247]:
+                          - button "artifacts/task-attached-e2e/run-attached-e2e/verification-output/contract.txt" [ref=e248] [cursor=pointer]

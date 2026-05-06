@@ -241,7 +241,12 @@ def render_interactive_script(
       active ? codexAccountLabel(active) : (currentUiLanguage() === 'zh-CN' ? '未识别当前账号' : 'No active account'),
       officialAppAccount && officialAppAccount.status === 'ok' && officialAppAccount.email
         ? ((currentUiLanguage() === 'zh-CN' ? '官方 App 持久化: ' : 'Official App persisted: ') + codexAccountLabel(officialAppAccount))
-        : '',
+        : (officialAppAccount && officialAppAccount.status === 'ambiguous'
+          ? [
+              {text['codex_app_ambiguous']!r},
+              officialAppAccount.limitation || officialAppAccount.reason || '',
+            ].filter(Boolean).join(' · ')
+          : ''),
       formatConfigHealth(config),
       formatCodexSnapshotStatus(snapshot),
       usage && usage.source
@@ -709,13 +714,47 @@ def render_interactive_script(
       const labels = {{
         team: '团队版',
         plus: 'Plus',
-        prolite: 'Pro',
+        prolite: 'Go',
+        go: 'Go',
         pro: 'Pro',
         free: '免费版',
       }};
       return labels[value] || planType;
     }}
+    if (value === 'prolite' || value === 'go') {{
+      return 'Go';
+    }}
     return planType;
+  }}
+
+  function formatPlanSourceLabel(source) {{
+    const value = String(source || '').trim().toLowerCase();
+    const zh = currentUiLanguage() === 'zh-CN';
+    const labels = zh ? {{
+      account_facts: '本机账号事实',
+      local_operator_asserted: '本机账号事实',
+      usage_snapshot: '账号额度快照',
+      auth_token: 'auth token',
+      unavailable: '不可用',
+    }} : {{
+      account_facts: 'local account facts',
+      local_operator_asserted: 'local account facts',
+      usage_snapshot: 'account usage snapshot',
+      auth_token: 'auth token',
+      unavailable: 'unavailable',
+    }};
+    return labels[value] || source || '';
+  }}
+
+  function formatPlanConflicts(account) {{
+    const conflicts = Array.isArray(account.plan_conflicts) ? account.plan_conflicts : [];
+    if (!conflicts.length) {{
+      return '';
+    }}
+    const prefix = currentUiLanguage() === 'zh-CN' ? '冲突证据' : 'conflicting evidence';
+    return conflicts.map((item) => `${{formatPlanSourceLabel(item.source)}}=${{formatPlanLabel(item.plan_type)}}`).join(' · ')
+      ? `${{prefix}}: ${{conflicts.map((item) => `${{formatPlanSourceLabel(item.source)}}=${{formatPlanLabel(item.plan_type)}}`).join(' · ')}}`
+      : '';
   }}
 
   function formatAuthModeLabel(authMode) {{
@@ -1368,6 +1407,9 @@ def render_interactive_script(
   function renderCodexStatus(payload) {{
     lastCodexPayload = payload;
     const accounts = Array.isArray(payload.accounts) ? payload.accounts : [];
+    const officialAppAccount = payload && payload.official_app_account && typeof payload.official_app_account === 'object'
+      ? payload.official_app_account
+      : null;
     codexAccounts.innerHTML = '';
     accounts.forEach((account) => {{
       const label = codexAccountLabel(account);
@@ -1402,7 +1444,11 @@ def render_interactive_script(
         infoList.appendChild(
           createInfoLine(
             currentUiLanguage() === 'zh-CN' ? '类型' : 'type',
-            planLabel
+            createMultilineInfoValue([
+              planLabel,
+              account.plan_source ? ((currentUiLanguage() === 'zh-CN' ? '来源: ' : 'source: ') + formatPlanSourceLabel(account.plan_source)) : '',
+              formatPlanConflicts(account),
+            ].filter(Boolean).join('\\n'))
           )
         );
       }}
@@ -1466,10 +1512,10 @@ def render_interactive_script(
                 isOfficialAppCurrent
                   ? (currentUiLanguage() === 'zh-CN' ? '官方 App 持久化账号' : 'Official App persisted account')
                   : (currentUiLanguage() === 'zh-CN' ? 'CLI auth.json 当前账号' : 'CLI auth.json active account'),
-                formatPlanLabel(accountUsage.plan_type)
+                formatPlanLabel(account.plan_type || accountUsage.plan_type)
                   ? (currentUiLanguage() === 'zh-CN'
-                      ? `${{formatPlanLabel(accountUsage.plan_type)}} 账号`
-                      : `${{formatPlanLabel(accountUsage.plan_type)}} account`)
+                      ? `${{formatPlanLabel(account.plan_type || accountUsage.plan_type)}} 账号`
+                      : `${{formatPlanLabel(account.plan_type || accountUsage.plan_type)}} account`)
                   : '',
                 formatUsageSourceLabel(accountUsage.source || 'unknown'),
               ].filter(Boolean).join(' · '),
@@ -1477,6 +1523,17 @@ def render_interactive_script(
             ].filter(Boolean).join('\\n'))
           )
         );
+        if (officialAppAccount && officialAppAccount.status === 'ambiguous') {{
+          infoList.appendChild(
+            createInfoLine(
+              currentUiLanguage() === 'zh-CN' ? '官方 App' : 'official app',
+              createMultilineInfoValue([
+                {text['codex_app_ambiguous']!r},
+                officialAppAccount.limitation || officialAppAccount.reason || '',
+              ].filter(Boolean).join('\\n'))
+            )
+          );
+        }}
         if (snapshot && snapshot.status === 'drifted' && snapshot.profile_name) {{
           const syncButton = document.createElement('button');
           syncButton.type = 'button';
@@ -1485,6 +1542,15 @@ def render_interactive_script(
           syncButton.dataset.codexSyncName = snapshot.profile_name;
           syncButton.dataset.confirm = {text['codex_sync_confirm']!r};
           actions.appendChild(syncButton);
+        }} else if (snapshot && snapshot.status === 'missing_named_snapshot') {{
+          const saveButton = document.createElement('button');
+          saveButton.type = 'button';
+          saveButton.className = 'codex-account-switch';
+          saveButton.textContent = {text['codex_save_active']!r};
+          saveButton.dataset.codexSaveActive = '1';
+          saveButton.dataset.prompt = {text['codex_save_active_prompt']!r};
+          saveButton.dataset.confirm = {text['codex_save_active_confirm']!r};
+          actions.appendChild(saveButton);
         }}
       }}
       codexAccounts.appendChild(row);
@@ -1607,6 +1673,36 @@ def render_interactive_script(
     setBusy(true);
     try {{
       const response = await fetch('/api/codex/sync-active', {{
+        method: 'POST',
+        headers: {{ 'content-type': 'application/json' }},
+        body: JSON.stringify({{ name }})
+      }});
+      const payload = await response.json();
+      setOutput(JSON.stringify(payload, null, 2));
+      await refreshCodexStatus();
+    }} catch (error) {{
+      setOutput(String(error));
+    }} finally {{
+      setBusy(false);
+    }}
+  }}
+
+  async function saveCodexActiveSnapshot(promptMessage, confirmMessage) {{
+    const requested = window.prompt(promptMessage || '', '');
+    if (requested === null) {{
+      return;
+    }}
+    const name = String(requested || '').trim();
+    if (!name) {{
+      setOutput(currentUiLanguage() === 'zh-CN' ? '缺少新的快照名。' : 'Missing snapshot name.');
+      return;
+    }}
+    if (confirmMessage && !window.confirm(confirmMessage)) {{
+      return;
+    }}
+    setBusy(true);
+    try {{
+      const response = await fetch('/api/codex/save-active', {{
         method: 'POST',
         headers: {{ 'content-type': 'application/json' }},
         body: JSON.stringify({{ name }})
@@ -1925,6 +2021,14 @@ def render_interactive_script(
       syncCodexActiveSnapshot(
         syncButton.getAttribute('data-codex-sync-name') || '',
         syncButton.getAttribute('data-confirm') || ''
+      );
+      return;
+    }}
+    const saveButton = event.target.closest('button[data-codex-save-active]');
+    if (saveButton) {{
+      saveCodexActiveSnapshot(
+        saveButton.getAttribute('data-prompt') || '',
+        saveButton.getAttribute('data-confirm') || ''
       );
       return;
     }}
