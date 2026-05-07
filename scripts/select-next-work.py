@@ -179,7 +179,7 @@ def _select_action(
         and evidence_state == "stale"
         and evidence_blocker == "host_capability_degraded_bounded_defer"
     ):
-        return "wait_for_host_capability_recovery", _why(policy, "wait_for_host_capability_recovery"), None
+        return "defer_ltp_and_refresh_evidence", _why(policy, "defer_ltp_and_refresh_evidence"), None
     if source_state in {"stale", "unknown"} or evidence_state in {"stale", "unknown"}:
         return "refresh_evidence_first", _why(policy, "refresh_evidence_first"), None
     if ltp["decision"] == "auto_select":

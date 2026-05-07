@@ -64,15 +64,12 @@ def render_interactive_script(
   const feedbackSurfaceActionText = {text['surface_feedback_action']!r};
   const managedRemovalActions = new Set(['cleanup_targets', 'uninstall_governance']);
   const defaultManagedRemovalActions = new Set(['apply_all_features']);
-  const codexAutoRefreshAgeSeconds = 90;
-  const codexRefreshCooldownMs = 15000;
   let codexLoaded = false;
   let claudeLoaded = false;
   let feedbackLoaded = false;
   let nextWorkLoaded = false;
   let lastClaudePayload = null;
   let lastCodexPayload = null;
-  let lastCodexRefreshEpoch = 0;
   let lastNextWorkPayload = null;
 
   function readHistory() {{
@@ -161,13 +158,7 @@ def render_interactive_script(
     if (!payload || typeof payload !== 'object') {{
       return false;
     }}
-    const active = payload.active_account && typeof payload.active_account === 'object'
-      ? payload.active_account
-      : ((Array.isArray(payload.accounts) ? payload.accounts.find((item) => item && item.active) : null) || null);
-    const snapshot = active && active.usage_snapshot && typeof active.usage_snapshot === 'object'
-      ? active.usage_snapshot
-      : null;
-    return !!snapshot && !isUsageSnapshotStale(snapshot);
+    return Array.isArray(payload.accounts) || !!payload.active_account || !!payload.auth || !!payload.config;
   }}
 
   function hydratePanelCache(kind, key) {{
@@ -211,8 +202,18 @@ def render_interactive_script(
     if (!target) {{
       return;
     }}
+    const seen = new Set();
     const items = Array.isArray(lines)
-      ? lines.map((item) => String(item || '').trim()).filter(Boolean)
+      ? lines
+          .map((item) => String(item || '').trim())
+          .filter(Boolean)
+          .filter((item) => {{
+            if (seen.has(item)) {{
+              return false;
+            }}
+            seen.add(item);
+            return true;
+          }})
       : [];
     target.innerHTML = items.map((item) => `<p>${{escapeHtml(item)}}</p>`).join('');
   }}
@@ -306,15 +307,12 @@ def render_interactive_script(
     }});
     if (selected === 'codex' && !codexLoaded) {{
       hydratePanelCache('codex', codexCacheKey);
-      refreshCodexStatus();
     }}
     if (selected === 'claude' && !claudeLoaded) {{
       hydratePanelCache('claude', claudeCacheKey);
-      refreshClaudeStatus();
     }}
     if (selected === 'feedback' && !feedbackLoaded) {{
       hydratePanelCache('feedback', feedbackCacheKey);
-      refreshFeedbackSummary();
     }}
   }}
 
@@ -1442,25 +1440,8 @@ def render_interactive_script(
         createInfoLine(
           currentUiLanguage() === 'zh-CN' ? '套餐' : 'plan',
           createMultilineInfoValue(formatSubscriptionExpirySummary(account))
-        ),
-        createInfoLine(
-          currentUiLanguage() === 'zh-CN' ? '令牌' : 'token',
-          createMultilineInfoValue(formatTokenExpirySummary(account))
         )
       );
-      const planLabel = formatPlanLabel(account.plan_type);
-      if (planLabel) {{
-        infoList.appendChild(
-          createInfoLine(
-            currentUiLanguage() === 'zh-CN' ? '类型' : 'type',
-            createMultilineInfoValue([
-              planLabel,
-              account.plan_source ? ((currentUiLanguage() === 'zh-CN' ? '来源: ' : 'source: ') + formatPlanSourceLabel(account.plan_source)) : '',
-              formatPlanConflicts(account),
-            ].filter(Boolean).join('\\n'))
-          )
-        );
-      }}
       infoList.appendChild(
         createInfoLine(
           currentUiLanguage() === 'zh-CN' ? '额度' : 'usage',
@@ -1503,7 +1484,6 @@ def render_interactive_script(
       }}
       row.appendChild(actions);
       if (isCliActive) {{
-        const accountUsage = resolveAccountUsageSnapshot(account, payload);
         const snapshot = account.snapshot_status || payload.snapshot_status || null;
         infoList.append(
           createInfoLine(
@@ -1513,33 +1493,13 @@ def render_interactive_script(
           createInfoLine(
             {text['codex_snapshot']!r},
             formatCodexSnapshotStatus(snapshot)
-          ),
-          createInfoLine(
-            currentUiLanguage() === 'zh-CN' ? '来源' : 'source',
-            createMultilineInfoValue([
-              [
-                isOfficialAppCurrent
-                  ? (currentUiLanguage() === 'zh-CN' ? '官方 App 持久化账号' : 'Official App persisted account')
-                  : (currentUiLanguage() === 'zh-CN' ? 'CLI auth.json 当前账号' : 'CLI auth.json active account'),
-                formatPlanLabel(account.plan_type || accountUsage.plan_type)
-                  ? (currentUiLanguage() === 'zh-CN'
-                      ? `${{formatPlanLabel(account.plan_type || accountUsage.plan_type)}} 账号`
-                      : `${{formatPlanLabel(account.plan_type || accountUsage.plan_type)}} account`)
-                  : '',
-                formatUsageSourceLabel(accountUsage.source || 'unknown'),
-              ].filter(Boolean).join(' · '),
-              formatUsageFreshnessLabel(accountUsage),
-            ].filter(Boolean).join('\\n'))
           )
         );
         if (officialAppAccount && officialAppAccount.status === 'ambiguous') {{
           infoList.appendChild(
             createInfoLine(
               currentUiLanguage() === 'zh-CN' ? '官方 App' : 'official app',
-              createMultilineInfoValue([
-                {text['codex_app_ambiguous']!r},
-                officialAppAccount.limitation || officialAppAccount.reason || '',
-              ].filter(Boolean).join('\\n'))
+              {text['codex_app_ambiguous']!r}
             )
           );
         }}
@@ -1575,7 +1535,6 @@ def render_interactive_script(
     if (!codexAccounts) {{
       return;
     }}
-    lastCodexRefreshEpoch = Date.now();
     setPanelCacheState('codex', codexLoaded ? 'refreshing' : 'cold');
     try {{
       const response = await fetch('/api/codex/status', {{ cache: 'no-store' }});
@@ -1600,7 +1559,6 @@ def render_interactive_script(
       return;
     }}
     setBusy(true);
-    lastCodexRefreshEpoch = Date.now();
     setPanelCacheState('codex', codexLoaded ? 'refreshing' : 'cold');
     try {{
       const response = await fetch('/api/codex/refresh', {{
@@ -1625,33 +1583,6 @@ def render_interactive_script(
     }} finally {{
       setBusy(false);
     }}
-  }}
-
-  function shouldRefreshCodexOnResume() {{
-    if (document.hidden || document.body.dataset.busy === '1') {{
-      return false;
-    }}
-    if (!lastCodexPayload) {{
-      return true;
-    }}
-    const age = Date.now() - lastCodexRefreshEpoch;
-    if (age < codexRefreshCooldownMs) {{
-      return false;
-    }}
-    const active = lastCodexPayload.active_account && typeof lastCodexPayload.active_account === 'object'
-      ? lastCodexPayload.active_account
-      : null;
-    const snapshot = active && active.usage_snapshot && typeof active.usage_snapshot === 'object'
-      ? active.usage_snapshot
-      : null;
-    return isUsageSnapshotStale(snapshot);
-  }}
-
-  function maybeRefreshCodexStatusOnResume() {{
-    if (!shouldRefreshCodexOnResume()) {{
-      return;
-    }}
-    refreshCodexStatus();
   }}
 
   async function switchCodexAccount(name) {{
@@ -1758,7 +1689,6 @@ def render_interactive_script(
     const permissions = settings.permissions || {{}};
     const config = payload.config || {{}};
     const mcp = payload.mcp || {{}};
-    const usage = payload.usage || {{}};
     providers.forEach((provider) => {{
       const row = document.createElement('div');
       row.className = 'codex-account';
@@ -1834,19 +1764,6 @@ def render_interactive_script(
               : `model ${{settings.model || 'unknown'}} · mode ${{permissions.defaultMode || 'unknown'}} · cleanup ${{settings.cleanupPeriodDays || 'unknown'}}d`
           ),
           createInfoLine(
-            {text['claude_context_strategy']!r},
-            summarizeClaudeContext(provider)
-          ),
-          createInfoLine(
-            {text['claude_timeout']!r},
-            summarizeClaudeTimeout(provider)
-          ),
-          createInfoLine(
-            {text['claude_subagent']!r},
-            String((provider.env || {{}}).CLAUDE_CODE_SUBAGENT_MODEL || '')
-              || (currentUiLanguage() === 'zh-CN' ? '未记录' : 'not recorded')
-          ),
-          createInfoLine(
             currentUiLanguage() === 'zh-CN' ? '配置健康' : 'config',
             formatConfigHealth(config)
           ),
@@ -1859,10 +1776,6 @@ def render_interactive_script(
                   : `exit_code=${{mcp.exit_code ?? 'unknown'}}`
               )
             )
-          ),
-          createInfoLine(
-            {text['claude_usage_note']!r},
-            usage.note || {text['claude_unknown_usage']!r}
           )
         );
       }}
@@ -2128,24 +2041,7 @@ def render_interactive_script(
   hydratePanelCache('feedback', feedbackCacheKey);
   hydratePanelCache('next-work', nextWorkCacheKey);
   activateView('runtime');
-  window.setTimeout(() => {{
-    refreshCodexStatus();
-    refreshClaudeStatus();
-    refreshFeedbackSummary();
-  }}, 120);
-  window.setTimeout(() => {{
-    refreshNextWorkSummary();
-  }}, 80);
-  document.addEventListener('visibilitychange', () => {{
-    if (!document.hidden) {{
-      maybeRefreshCodexStatusOnResume();
-    }}
-  }});
-  window.addEventListener('focus', () => {{
-    maybeRefreshCodexStatusOnResume();
-  }});
-  window.setInterval(() => {{
-    maybeRefreshCodexStatusOnResume();
-  }}, 60000);
+  // Page load and tab switches stay side-effect-light: process-backed host
+  // probes run only after the operator clicks a refresh/action button.
 }})();
 </script>"""

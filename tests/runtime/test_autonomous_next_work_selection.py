@@ -27,7 +27,7 @@ class AutonomousNextWorkSelectionTests(unittest.TestCase):
         sys.modules.pop("select_next_work_script", None)
         sys.modules.pop("evaluate_ltp_promotion_script", None)
 
-    def test_repo_selector_waits_for_host_recovery_when_target_runs_are_degraded_under_bounded_defer(self) -> None:
+    def test_repo_selector_continues_low_risk_flow_when_target_runs_are_degraded_under_bounded_defer(self) -> None:
         module = _load_selector_script()
 
         payload = module.assert_next_work_selection(
@@ -40,7 +40,7 @@ class AutonomousNextWorkSelectionTests(unittest.TestCase):
         self.assertEqual(payload["status"], "pass")
         self.assertEqual(payload["policy_id"], "default-autonomous-next-work-selection")
         self.assertEqual(payload["ltp_decision"], "defer_all")
-        self.assertEqual(payload["next_action"], "wait_for_host_capability_recovery")
+        self.assertEqual(payload["next_action"], "defer_ltp_and_refresh_evidence")
         self.assertIsNone(payload["selected_package"])
         self.assertEqual(payload["gate_state"], "pass")
         self.assertEqual(payload["source_state"], "fresh")

@@ -541,9 +541,9 @@ def render_next_work_panel(*, language: str) -> str:
     is_zh = not language.lower().startswith("en")
     title = "下一步选择" if is_zh else "Next Work Selector"
     caption = "把当前建议、阻断和推荐动作放在执行输出下面，便于直接决定下一步。" if is_zh else "Keep the current recommendation, blockers, and suggested action directly under the output panel."
-    summary = "加载中" if is_zh else "Loading"
-    recommendation = "AI 推荐: 正在刷新" if is_zh else "AI recommended: refreshing"
-    state_line = "状态: loading" if is_zh else "Status: loading"
+    summary = "未自动刷新" if is_zh else "Not auto-refreshed"
+    recommendation = "AI 推荐: 点击刷新后显示" if is_zh else "AI recommended: refresh to inspect"
+    state_line = "状态: 等待手动刷新" if is_zh else "Status: waiting for manual refresh"
     reason = ""
     escape_json = escape(json.dumps({"status": "loading"}, ensure_ascii=False, indent=2, sort_keys=True))
     return "\n".join(

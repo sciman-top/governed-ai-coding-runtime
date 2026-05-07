@@ -531,7 +531,8 @@ class OperatorEntrypointTests(unittest.TestCase):
             html = module.render_next_work_panel(language="zh-CN")
 
         self.assertIn("下一步选择", html)
-        self.assertIn("加载中", html)
+        self.assertIn("未自动刷新", html)
+        self.assertIn("等待手动刷新", html)
         self.assertIn("data-next-work-refresh='1'", html)
 
     def test_operator_ui_status_helpers_cache_short_ttl_results(self) -> None:
