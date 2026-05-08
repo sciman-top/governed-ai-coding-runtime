@@ -23,8 +23,8 @@
     {
       "priority": 2,
       "condition": "source_state == fresh && evidence_state == stale && evidence_blocker == host_capability_degraded_bounded_defer",
-      "next_action": "defer_ltp_and_refresh_evidence",
-      "why": "Fresh target-run evidence proves a bounded host capability defer; keep autonomous flow by deferring heavy LTP promotion and continuing low-risk evidence and gate upkeep until native_attach recovery is proven."
+      "next_action": "wait_for_host_capability_recovery",
+      "why": "Fresh target-run evidence already proves a bounded host capability defer; do not repeat implementation or evidence-refresh loops until native_attach recovery is proven."
     },
     {
       "priority": 3,
@@ -47,8 +47,8 @@
     {
       "priority": 6,
       "condition": "ltp_decision == defer_all",
-      "next_action": "wait_for_host_capability_recovery",
-      "why": "No heavy LTP package is currently trigger-selected and no safer autonomous continuation signal is available; wait for host-capability recovery evidence."
+      "next_action": "defer_ltp_and_refresh_evidence",
+      "why": "No heavy LTP package is currently trigger-selected and no safer autonomous continuation signal is available; defer heavy implementation and keep evidence/gate upkeep bounded."
     }
   ],
   "default_inputs": {

@@ -72,7 +72,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--repo-root", default=str(ROOT))
     parser.add_argument("--write-markdown", default=None, help="Optional markdown output path.")
     parser.add_argument("--assert-minimum", action="store_true", help="Fail if the minimum feedback surface is incomplete.")
-    parser.add_argument("--max-target-runs", type=int, default=5, help="Maximum number of target run summaries to include.")
+    parser.add_argument("--max-target-runs", type=int, default=0, help="Maximum number of target run summaries to include. Use 0 to include all latest target summaries.")
     return parser.parse_args(argv)
 
 
@@ -100,7 +100,7 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def build_host_feedback_summary(*, repo_root: Path, max_target_runs: int = 5) -> dict[str, Any]:
+def build_host_feedback_summary(*, repo_root: Path, max_target_runs: int = 0) -> dict[str, Any]:
     resolved_root = repo_root.resolve(strict=False)
     generated_at = datetime.now(timezone.utc)
     docs_dimension = _build_docs_dimension(resolved_root)
@@ -403,10 +403,12 @@ def _build_claude_workload_dimension(repo_root: Path) -> FeedbackDimension:
 
 def _build_target_runs_dimension(repo_root: Path, *, max_target_runs: int, generated_at: datetime) -> FeedbackDimension:
     evidence_root = repo_root / "docs" / "change-evidence" / "target-repo-runs"
+    latest_run_limit = None if max_target_runs <= 0 else max_target_runs
     details: dict[str, Any] = {
         "path": evidence_root.as_posix(),
         "exists": evidence_root.exists(),
         "total_run_files": 0,
+        "max_target_runs": max_target_runs,
         "latest_runs": [],
         "degraded_latest_runs": [],
         "skipped_files": [],
@@ -434,7 +436,8 @@ def _build_target_runs_dimension(repo_root: Path, *, max_target_runs: int, gener
         except ValueError as exc:
             details["skipped_files"].append({"file_name": selected.name, "reason": str(exc)})
     latest_runs.sort(key=lambda item: item.get("run_stamp") or item["file_name"], reverse=True)
-    details["latest_runs"] = latest_runs[:max_target_runs]
+    report_latest_runs = latest_runs if latest_run_limit is None else latest_runs[:latest_run_limit]
+    details["latest_runs"] = report_latest_runs
     details["degraded_latest_runs"] = [
         {
             "repo_id": item["repo_id"],
@@ -445,7 +448,7 @@ def _build_target_runs_dimension(repo_root: Path, *, max_target_runs: int, gener
             "recovery_evidence_rule": "fresh target run with codex_capability_status=ready and adapter_tier=native_attach",
             "claim_guard": "do not claim native_attach recovery until a fresh target repo run proves it",
         }
-        for item in latest_runs[:max_target_runs]
+        for item in report_latest_runs
         if item.get("codex_capability_status") not in {"ready", None}
     ]
     stale_runs = [
@@ -455,7 +458,7 @@ def _build_target_runs_dimension(repo_root: Path, *, max_target_runs: int, gener
     ]
     details["stale_latest_runs"] = [
         {"repo_id": item["repo_id"], "file_name": item["file_name"], "age_hours": item["age_hours"]}
-        for item in stale_runs[:max_target_runs]
+        for item in (stale_runs if latest_run_limit is None else stale_runs[:latest_run_limit])
     ]
     if latest_runs:
         details["freshness_status"] = "stale" if stale_runs else "fresh"
@@ -632,7 +635,7 @@ def _build_recommendations(dimensions: list[FeedbackDimension]) -> list[str]:
 
     target_runs = dimension_map["target_runs"]
     if not target_runs.details["latest_runs"]:
-        recommendations.append("先跑一轮 `runtime-flow-preset.ps1 -AllTargets -FlowMode daily -Json`，否则没有真实目标仓反馈可分析。")
+        recommendations.append("先跑一轮 `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -AllTargets -FlowMode daily -Mode quick -SkipGovernanceBaselineSync -Json -ExportTargetRepoRuns`，否则没有真实目标仓反馈可分析。")
     elif target_runs.details.get("freshness_status") == "stale":
         recommendations.append("最新 target-run evidence 已过期；先跑 `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action DailyAll -Mode quick` 刷新真实 workload 反馈。")
     elif target_runs.details.get("degraded_latest_runs"):

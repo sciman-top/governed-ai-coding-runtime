@@ -456,7 +456,7 @@ def load_feedback_summary() -> dict:
 
 def _build_feedback_summary() -> dict:
     try:
-        payload = build_host_feedback_summary(repo_root=ROOT, max_target_runs=5)
+        payload = build_host_feedback_summary(repo_root=ROOT, max_target_runs=0)
     except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
         return {"status": "error", "error": str(exc)}
     payload["overall_status"] = payload.get("status") or "pass"

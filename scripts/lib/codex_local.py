@@ -16,17 +16,20 @@ from pathlib import Path
 from typing import Any
 
 
-DEFAULT_CONFIG = {
+REQUIRED_CONFIG = {
     "cli_auth_credentials_store": "file",
-    "model": "gpt-5.3-codex",
-    "model_reasoning_effort": "medium",
-    "model_verbosity": "medium",
     "model_context_window": 272000,
     "model_auto_compact_token_limit": 220000,
     "sandbox_mode": "workspace-write",
     "approval_policy": "never",
     "web_search": "cached",
 }
+REFERENCE_CONFIG = {
+    "model": "gpt-5.5",
+    "model_reasoning_effort": "medium",
+    "model_verbosity": "medium",
+}
+DEFAULT_CONFIG = {**REQUIRED_CONFIG, **REFERENCE_CONFIG}
 DEFAULT_CONFIG_PROFILE = {
     "strategy": "efficiency_first",
     "strategy_label": "综合效率优先",
@@ -37,7 +40,7 @@ DEFAULT_CONFIG_PROFILE = {
         "保留必要解释",
         "高效率",
     ],
-    "current_combo": "gpt-5.3-codex + medium + never",
+    "current_combo": "gpt-5.5 + medium + never",
     "current_combo_status": "current_temporary_choice",
     "compact_policy": "220000 on a 272000 window",
     "compact_ratio": "81%",
@@ -512,7 +515,7 @@ def config_health(home: Path | None = None) -> dict[str, Any]:
         return {"status": "missing", "path": str(config_path), "checks": []}
     text = config_path.read_text(encoding="utf-8", errors="replace")
     checks = []
-    for key, expected in DEFAULT_CONFIG.items():
+    for key, expected in REQUIRED_CONFIG.items():
         actual = _find_top_level_value(text, key)
         checks.append(
             {
@@ -520,6 +523,18 @@ def config_health(home: Path | None = None) -> dict[str, Any]:
                 "expected": expected,
                 "actual": actual,
                 "ok": str(actual) == str(expected),
+            }
+        )
+    advisory_checks = []
+    for key, expected in REFERENCE_CONFIG.items():
+        actual = _find_top_level_value(text, key)
+        advisory_checks.append(
+            {
+                "key": key,
+                "reference": expected,
+                "actual": actual,
+                "matches_reference": str(actual) == str(expected),
+                "blocking": False,
             }
         )
     secret_hits = []
@@ -530,6 +545,7 @@ def config_health(home: Path | None = None) -> dict[str, Any]:
         "status": "ok" if all(check["ok"] for check in checks) and not secret_hits else "attention",
         "path": str(config_path),
         "checks": checks,
+        "advisory_checks": advisory_checks,
         "secret_like_markers": secret_hits,
     }
 

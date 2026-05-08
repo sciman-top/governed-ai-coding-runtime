@@ -398,7 +398,7 @@ def _build_evidence_snapshot(*, repo_root: Path, as_of: dt.date) -> dict[str, di
         repo_root / "scripts" / "host-feedback-summary.py",
         "host_feedback_summary_evolution",
     )
-    host_feedback = host_feedback_module.build_host_feedback_summary(repo_root=repo_root, max_target_runs=5)
+    host_feedback = host_feedback_module.build_host_feedback_summary(repo_root=repo_root, max_target_runs=0)
     target_runs_details = next(
         (
             item.get("details", {})

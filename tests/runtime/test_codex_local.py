@@ -298,6 +298,7 @@ class CodexLocalTests(unittest.TestCase):
 
             self.assertEqual("ok", health["status"])
             self.assertTrue(all(check["ok"] for check in health["checks"]))
+            self.assertTrue(any(not check["matches_reference"] for check in health["advisory_checks"]))
             self.assertEqual([], health["secret_like_markers"])
 
     def test_context_window_probe_keeps_current_compact_policy_static(self) -> None:
@@ -485,7 +486,7 @@ class CodexLocalTests(unittest.TestCase):
                 ["少打扰", "自动连续执行", "节省 token / 成本", "保留必要解释", "高效率"],
                 status["recommended_defaults"]["strategy_principles"],
             )
-            self.assertEqual("gpt-5.3-codex + medium + never", status["recommended_defaults"]["current_combo"])
+            self.assertEqual("gpt-5.5 + medium + never", status["recommended_defaults"]["current_combo"])
             self.assertEqual("current_temporary_choice", status["recommended_defaults"]["current_combo_status"])
             self.assertEqual("220000 on a 272000 window", status["recommended_defaults"]["compact_policy"])
             self.assertIn("preserve the efficiency-first principle", status["recommended_defaults"]["change_rule"])

@@ -3,6 +3,7 @@ import json
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest import mock
 
@@ -73,6 +74,7 @@ class HostFeedbackSummaryTests(unittest.TestCase):
                 failures = module.validate_minimum_feedback_surface(payload)
 
         self.assertTrue(any("target repo run evidence" in item for item in failures))
+        self.assertIn("-ExportTargetRepoRuns", "\n".join(payload["recommendations"]))
 
     def test_host_dimension_surfaces_config_attention(self) -> None:
         module = _load_host_feedback_summary_script()
@@ -122,6 +124,39 @@ class HostFeedbackSummaryTests(unittest.TestCase):
         self.assertEqual("demo-daily-20260430110000.json", demo_run["file_name"])
         self.assertEqual("daily", demo_run["run_kind"])
 
+    def test_latest_target_runs_are_not_truncated_by_default(self) -> None:
+        module = _load_host_feedback_summary_script()
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            self._write_minimal_repo(repo_root, include_target_run=False)
+            runs_root = repo_root / "docs" / "change-evidence" / "target-repo-runs"
+            runs_root.mkdir(parents=True, exist_ok=True)
+            fresh_timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+            for repo_id in (
+                "classroomtoolkit",
+                "github-toolkit",
+                "k12-question-graph",
+                "self-runtime",
+                "skills-manager",
+                "vps-ssh-launcher",
+            ):
+                (runs_root / f"{repo_id}-daily-{fresh_timestamp}.json").write_text(
+                    json.dumps(self._target_run_payload("daily")),
+                    encoding="utf-8",
+                )
+
+            with (
+                mock.patch.object(module, "codex_status", return_value={"login_status": {"exit_code": 0}, "config": {"status": "ok"}}),
+                mock.patch.object(module, "claude_status", return_value={"active_provider": {"name": "glm"}, "config": {"status": "ok"}, "command": {"exit_code": 0}, "mcp": {"exit_code": 0}}),
+                mock.patch.object(module, "probe_claude_code_surface", return_value=self._claude_probe(module)),
+            ):
+                payload = module.build_host_feedback_summary(repo_root=repo_root)
+
+        target_runs = next(item for item in payload["dimensions"] if item["dimension_id"] == "target_runs")
+        self.assertEqual(6, len(target_runs["details"]["latest_runs"]))
+        self.assertEqual(6, len(payload["summary"]["latest_target_repos"]))
+
     def test_claude_workload_dimension_surfaces_degraded_probe(self) -> None:
         module = _load_host_feedback_summary_script()
 
@@ -155,7 +190,8 @@ class HostFeedbackSummaryTests(unittest.TestCase):
             degraded_payload["runtime_check"]["payload"]["status"]["codex_capability"]["adapter_tier"] = "process_bridge"
             degraded_payload["runtime_check"]["payload"]["status"]["codex_capability"]["flow_kind"] = "process_bridge"
             degraded_payload["runtime_check"]["payload"]["status"]["codex_capability"]["status"] = "degraded"
-            (runs_root / "demo-daily-20260430120000.json").write_text(
+            fresh_timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+            (runs_root / f"demo-daily-{fresh_timestamp}.json").write_text(
                 json.dumps(degraded_payload),
                 encoding="utf-8",
             )

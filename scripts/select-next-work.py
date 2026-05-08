@@ -179,7 +179,7 @@ def _select_action(
         and evidence_state == "stale"
         and evidence_blocker == "host_capability_degraded_bounded_defer"
     ):
-        return "defer_ltp_and_refresh_evidence", _why(policy, "defer_ltp_and_refresh_evidence"), None
+        return "wait_for_host_capability_recovery", _why(policy, "wait_for_host_capability_recovery"), None
     if source_state in {"stale", "unknown"} or evidence_state in {"stale", "unknown"}:
         return "refresh_evidence_first", _why(policy, "refresh_evidence_first"), None
     if ltp["decision"] == "auto_select":
@@ -406,7 +406,7 @@ def _auto_detect_runtime_inputs(*, repo_root: Path, as_of: dt.date) -> dict:
             ROOT / "scripts" / "host-feedback-summary.py",
             "host_feedback_summary_selector",
         )
-        host_feedback = host_feedback_module.build_host_feedback_summary(repo_root=repo_root, max_target_runs=5)
+        host_feedback = host_feedback_module.build_host_feedback_summary(repo_root=repo_root, max_target_runs=0)
         target_runs = next(
             (
                 item.get("details", {})
