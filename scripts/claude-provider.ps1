@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [ValidateSet('list', 'status', 'install', 'switch', 'delete', 'optimize')]
+    [ValidateSet('list', 'status', 'continuity', 'install', 'switch', 'delete', 'optimize')]
     [string] $Command = 'status',
 
     [Parameter(Position = 1)]

@@ -289,6 +289,7 @@ class CodexLocalTests(unittest.TestCase):
                         'sandbox_mode = "workspace-write"',
                         'approval_policy = "never"',
                         'web_search = "cached"',
+                        "check_for_update_on_startup = false",
                     ]
                 ),
                 encoding="utf-8",
@@ -300,6 +301,53 @@ class CodexLocalTests(unittest.TestCase):
             self.assertTrue(all(check["ok"] for check in health["checks"]))
             self.assertTrue(any(not check["matches_reference"] for check in health["advisory_checks"]))
             self.assertEqual([], health["secret_like_markers"])
+
+    def test_startup_health_detects_and_remediates_startup_slow_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            (home / "plugins" / "cache" / "openai-bundled" / "chrome" / "0.1.7").mkdir(parents=True)
+            (home / "log").mkdir()
+            (home / "log" / "codex-tui.log").write_text(
+                "\n".join(
+                    [
+                        "WARN startup remote plugin sync failed",
+                        "WARN Request failed with status 403 Forbidden",
+                        'WARN failed to load plugin: missing or invalid plugin.json plugin="chrome@openai-bundled"',
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (home / "config.toml").write_text(
+                "\n".join(
+                    [
+                        "check_for_update_on_startup = true",
+                        '[plugins."chrome@openai-bundled"]',
+                        "enabled = true",
+                        "[mcp_servers.context7]",
+                        'transport = "stdio"',
+                        "[mcp_servers.filesystem]",
+                        'transport = "stdio"',
+                        "[mcp_servers.playwright]",
+                        'transport = "stdio"',
+                        "[mcp_servers.fetch]",
+                        'transport = "stdio"',
+                        "[mcp_servers.postgres]",
+                        'transport = "stdio"',
+                        'command = "pwsh"',
+                        'args = ["-Command", "npx -y @modelcontextprotocol/server-postgres $conn"]',
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            health = codex_local.codex_startup_health(home)
+
+            self.assertEqual("attention", health["status"])
+            self.assertIn("startup_update_check_disabled", health["summary"])
+            self.assertIn("invalid_chrome_plugin_disabled", health["summary"])
+            self.assertIn("stdio_mcp_startup_surface", health["summary"])
+            self.assertIn("postgres_mcp_connection_string_not_in_process_args", health["summary"])
+            self.assertIn("recent_startup_log_failures", health["summary"])
 
     def test_context_window_probe_keeps_current_compact_policy_static(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

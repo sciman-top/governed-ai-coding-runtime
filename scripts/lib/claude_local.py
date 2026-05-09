@@ -14,6 +14,10 @@ from typing import Any
 
 PROVIDER_PROFILES_FILE = "provider-profiles.json"
 CLAUDE_USAGE_NOTE = "Third-party provider usage and quota data is not exposed through a stable Claude Code local API."
+CLAUDE_SESSION_CONTINUITY_NOTE = (
+    "Claude Code resume continuity is anchored in the Claude home transcript directories. "
+    "Provider switching should update settings/env only and keep the same Claude home unless isolation is intentional."
+)
 
 
 def _windows_no_window_kwargs() -> dict[str, Any]:
@@ -226,6 +230,7 @@ def claude_status(home: Path | None = None) -> dict[str, Any]:
         "settings": settings_summary(home),
         "providers": [profile.to_dict() for profile in load_provider_profiles(home)],
         "active_provider": active_provider(home),
+        "session_continuity": session_continuity_status(home),
         "config": config_health(home),
         "mcp": _run_command(["claude", "mcp", "list"], timeout_seconds=30),
         "usage": {
@@ -233,6 +238,58 @@ def claude_status(home: Path | None = None) -> dict[str, Any]:
             "windows": [],
             "note": CLAUDE_USAGE_NOTE,
         },
+    }
+
+
+def session_continuity_status(home: Path | None = None) -> dict[str, Any]:
+    home = claude_home(str(home) if home else None)
+    projects_dir = home / "projects"
+    sessions_dir = home / "sessions"
+    history_path = home / "history.jsonl"
+    file_history_dir = home / "file-history"
+    claude_config_dir = os.environ.get("CLAUDE_CONFIG_DIR") or ""
+
+    project_transcript_count = _count_files(projects_dir, "*.jsonl")
+    session_record_count = _count_files(sessions_dir, "*.jsonl")
+    checks = [
+        _check_value("claude_home.exists", True, home.exists()),
+        _check_value("projects.exists", True, projects_dir.exists()),
+        _check_value("history_jsonl.exists", True, history_path.exists()),
+        {
+            "key": "provider_switch_preserves_home",
+            "expected": "same Claude home across provider switches",
+            "actual": "switch_provider writes settings.json and provider-profiles.json only",
+            "ok": True,
+        },
+    ]
+    has_resume_artifact = bool(project_transcript_count or session_record_count or history_path.exists())
+    checks.append(
+        {
+            "key": "resume_artifacts.present",
+            "expected": "projects/*.jsonl, sessions/*.jsonl, or history.jsonl",
+            "actual": {
+                "project_transcript_count": project_transcript_count,
+                "session_record_count": session_record_count,
+                "history_jsonl": history_path.exists(),
+            },
+            "ok": has_resume_artifact,
+        }
+    )
+
+    return {
+        "status": "ok" if all(check["ok"] for check in checks) else "attention",
+        "note": CLAUDE_SESSION_CONTINUITY_NOTE,
+        "claude_home": str(home),
+        "claude_config_dir_env": claude_config_dir or None,
+        "provider_switch_policy": "preserve_claude_home",
+        "resume_commands": ["claude --continue", "claude --resume", "/resume"],
+        "paths": {
+            "projects": {"path": str(projects_dir), "exists": projects_dir.exists(), "jsonl_count": project_transcript_count},
+            "sessions": {"path": str(sessions_dir), "exists": sessions_dir.exists(), "jsonl_count": session_record_count},
+            "history": {"path": str(history_path), "exists": history_path.exists(), "bytes": history_path.stat().st_size if history_path.exists() else 0},
+            "file_history": {"path": str(file_history_dir), "exists": file_history_dir.exists()},
+        },
+        "checks": checks,
     }
 
 
@@ -341,6 +398,7 @@ def switch_provider(name: str, home: Path | None = None, *, dry_run: bool = Fals
             "dry_run": True,
             "provider": target.to_dict(),
             "credential_source": credential_source,
+            "session_continuity": session_continuity_status(home),
         }
 
     backup_path = backup_settings(home)
@@ -352,6 +410,7 @@ def switch_provider(name: str, home: Path | None = None, *, dry_run: bool = Fals
         "backup_path": str(backup_path),
         "provider": target.to_dict(),
         "credential_source": credential_source,
+        "session_continuity": session_continuity_status(home),
     }
 
 
@@ -710,6 +769,20 @@ def _run_command(command: list[str], *, timeout_seconds: int) -> dict[str, Any]:
         return {"exit_code": 127, "summary": str(exc), "command": command}
     output = "\n".join(part for part in [completed.stdout.strip(), completed.stderr.strip()] if part)
     return {"exit_code": completed.returncode, "summary": output, "command": command}
+
+
+def _count_files(root: Path, pattern: str) -> int:
+    if not root.exists():
+        return 0
+    count = 0
+    try:
+        for _ in root.rglob(pattern):
+            count += 1
+            if count >= 10000:
+                return count
+    except OSError:
+        return count
+    return count
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:

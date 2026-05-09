@@ -26,6 +26,7 @@ $Recommended = [ordered]@{
     personality = '"pragmatic"'
     sandbox_mode = '"workspace-write"'
     web_search = '"cached"'
+    check_for_update_on_startup = 'false'
 }
 
 function ConvertTo-TomlString {
@@ -176,6 +177,38 @@ function Remove-TomlTable {
     return $result.ToArray()
 }
 
+function Set-TomlRawTable {
+    param(
+        [string[]] $Lines,
+        [string] $Header,
+        [string[]] $Body
+    )
+
+    $result = New-Object System.Collections.Generic.List[string]
+    $result.AddRange([string[]](Remove-TomlTable -Lines $Lines -Header $Header))
+    if ($result.Count -gt 0 -and $result[$result.Count - 1].Trim()) {
+        $result.Add('')
+    }
+    $result.Add($Header)
+    foreach ($line in $Body) {
+        $result.Add($line)
+    }
+    return $result.ToArray()
+}
+
+function Set-PluginEnabled {
+    param(
+        [string[]] $Lines,
+        [string] $PluginId,
+        [bool] $Enabled
+    )
+
+    $value = if ($Enabled) { 'true' } else { 'false' }
+    return Set-TomlTableValues -Lines $Lines -Header ('[plugins."{0}"]' -f $PluginId) -Values @{
+        enabled = $value
+    }
+}
+
 function Set-HistorySection {
     param([string[]] $Lines)
 
@@ -313,6 +346,13 @@ function Update-ConfigToml {
     $lines = Set-TopLevelTomlValue -Lines $lines -Key 'sqlite_home' -Value (ConvertTo-TomlString $HomePath)
     $lines = Set-TopLevelTomlValue -Lines $lines -Key 'log_dir' -Value (ConvertTo-TomlString (Join-Path $HomePath 'log'))
     $lines = Set-HistorySection -Lines $lines
+    $lines = Set-PluginEnabled -Lines $lines -PluginId 'chrome@openai-bundled' -Enabled:$false
+    $postgresWrapperPath = Join-Path (Join-Path $HomePath 'scripts') 'mcp-postgres-env-wrapper.mjs'
+    $lines = Set-TomlRawTable -Lines $lines -Header '[mcp_servers.postgres]' -Body @(
+        'transport = "stdio"',
+        'command = "node"',
+        ('args = [{0}]' -f (ConvertTo-TomlString $postgresWrapperPath))
+    )
     $lines = Set-TomlTableValues -Lines $lines -Header '[profiles.shared-chatgpt]' -Values @{
         forced_login_method = '"chatgpt"'
         model_provider = '"openai"'
@@ -347,6 +387,58 @@ function Update-ConfigToml {
     }
     $lines = Add-DuplicateSkillDisableOverrides -Lines $lines
     return $lines
+}
+
+function Install-PostgresMcpEnvWrapper {
+    param([string] $HomePath)
+
+    $scriptsDir = Join-Path $HomePath 'scripts'
+    New-Item -ItemType Directory -Force -Path $scriptsDir | Out-Null
+    $wrapperPath = Join-Path $scriptsDir 'mcp-postgres-env-wrapper.mjs'
+    $content = @'
+#!/usr/bin/env node
+import { existsSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+
+const conn = process.env.POSTGRES_CONNECTION_STRING;
+if (!conn || !conn.trim()) {
+  console.error("POSTGRES_CONNECTION_STRING is required for postgres MCP.");
+  process.exit(64);
+}
+
+const npmCache = process.env.npm_config_cache || join(process.env.LOCALAPPDATA || "", "npm-cache");
+const npxRoot = join(npmCache, "_npx");
+let entry = "";
+if (existsSync(npxRoot)) {
+  for (const item of readdirSync(npxRoot, { withFileTypes: true })) {
+    if (!item.isDirectory()) continue;
+    const candidate = join(
+      npxRoot,
+      item.name,
+      "node_modules",
+      "@modelcontextprotocol",
+      "server-postgres",
+      "dist",
+      "index.js",
+    );
+    if (existsSync(candidate)) {
+      entry = candidate;
+      break;
+    }
+  }
+}
+
+if (!entry) {
+  console.error("Cached @modelcontextprotocol/server-postgres package was not found. Run `npx -y @modelcontextprotocol/server-postgres --help` once to populate the npm cache.");
+  process.exit(69);
+}
+
+process.argv = [process.argv[0], entry, conn];
+await import(pathToFileURL(entry).href);
+'@
+    Set-Content -LiteralPath $wrapperPath -Value $content -Encoding utf8
+    return $wrapperPath
 }
 
 function Invoke-CodexInteropCheck {
@@ -498,6 +590,7 @@ if (Test-Path -LiteralPath $configPath -PathType Leaf) {
 $updated = Update-ConfigToml -Path $configPath -HomePath $CodexHome
 Set-Content -LiteralPath $configPath -Value $updated -Encoding utf8
 $plan.config_written = $true
+$plan.postgres_mcp_env_wrapper = Install-PostgresMcpEnvWrapper -HomePath $CodexHome
 
 if ($InstallAccountSwitcher) {
     $scriptsDir = Join-Path $CodexHome 'scripts'

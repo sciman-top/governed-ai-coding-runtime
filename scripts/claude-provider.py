@@ -16,6 +16,7 @@ from lib.claude_local import (
     install_provider_switcher,
     load_provider_profiles,
     optimize_claude_local,
+    session_continuity_status,
     switch_provider,
     write_default_provider_profiles,
 )
@@ -28,6 +29,7 @@ def main(argv: list[str] | None = None) -> int:
     subparsers = parser.add_subparsers(dest="command", required=True)
     subparsers.add_parser("list", help="List provider profiles.")
     subparsers.add_parser("status", help="Show active Claude Code provider and config status.")
+    subparsers.add_parser("continuity", help="Show Claude Code session continuity anchors for provider switching.")
     install_parser = subparsers.add_parser("install", help="Install provider profile metadata and the claude-provider shim.")
     install_parser.add_argument("--claude-home", default=None)
     switch_parser = subparsers.add_parser("switch", help="Switch active Claude Code provider profile.")
@@ -48,6 +50,8 @@ def main(argv: list[str] | None = None) -> int:
     elif args.command == "status":
         write_default_provider_profiles()
         payload = claude_status()
+    elif args.command == "continuity":
+        payload = session_continuity_status()
     elif args.command == "install":
         home = Path(args.claude_home) if args.claude_home else None
         payload = {

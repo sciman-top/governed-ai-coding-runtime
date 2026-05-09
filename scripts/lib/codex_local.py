@@ -23,6 +23,7 @@ REQUIRED_CONFIG = {
     "sandbox_mode": "workspace-write",
     "approval_policy": "never",
     "web_search": "cached",
+    "check_for_update_on_startup": False,
 }
 REFERENCE_CONFIG = {
     "model": "gpt-5.5",
@@ -300,6 +301,7 @@ def codex_status(
         "auth": active_auth_status(home),
         "accounts": accounts,
         "config": config_health(home),
+        "startup_health": codex_startup_health(home),
         "context_window_probe": context_window_probe(home, run_codex=False),
         "recommended_defaults": DEFAULT_CONFIG_PROFILE,
         "usage": usage,
@@ -548,6 +550,147 @@ def config_health(home: Path | None = None) -> dict[str, Any]:
         "advisory_checks": advisory_checks,
         "secret_like_markers": secret_hits,
     }
+
+
+def codex_startup_health(home: Path | None = None) -> dict[str, Any]:
+    home = codex_home(str(home) if home else None)
+    config_path = home / "config.toml"
+    text = config_path.read_text(encoding="utf-8", errors="replace") if config_path.exists() else ""
+    checks = [
+        _startup_check_remote_plugin_sync(text),
+        _startup_check_invalid_chrome_plugin(home, text),
+        _startup_check_stdio_mcp_count(text),
+        _startup_check_postgres_mcp_secret_exposure(text),
+        _startup_check_logs_db_size(home),
+        _startup_check_recent_log_failures(home),
+    ]
+    attention = [check for check in checks if check["status"] == "attention"]
+    return {
+        "status": "attention" if attention else "ok",
+        "path": str(config_path),
+        "checks": checks,
+        "summary": [check["id"] for check in attention],
+    }
+
+
+def _startup_check_remote_plugin_sync(text: str) -> dict[str, Any]:
+    actual = _find_top_level_value(text, "check_for_update_on_startup")
+    return {
+        "id": "startup_update_check_disabled",
+        "status": "pass" if actual is False else "attention",
+        "actual": actual,
+        "reason": "Startup update checks should stay disabled on this host because failed remote plugin/app sync adds startup latency.",
+        "remediation": 'Set top-level check_for_update_on_startup = false.',
+    }
+
+
+def _startup_check_invalid_chrome_plugin(home: Path, text: str) -> dict[str, Any]:
+    enabled = _plugin_enabled(text, "chrome@openai-bundled")
+    plugin_dir = home / "plugins" / "cache" / "openai-bundled" / "chrome"
+    has_plugin_json = any(path.name == "plugin.json" for path in plugin_dir.glob("*/plugin.json")) if plugin_dir.exists() else False
+    invalid_enabled = enabled is True and not has_plugin_json
+    return {
+        "id": "invalid_chrome_plugin_disabled",
+        "status": "attention" if invalid_enabled else "pass",
+        "enabled": enabled,
+        "has_plugin_json": has_plugin_json,
+        "path": str(plugin_dir),
+        "reason": "The bundled chrome plugin should not be enabled when its cached plugin.json is missing.",
+        "remediation": 'Set [plugins."chrome@openai-bundled"].enabled = false or refresh the bundled plugin cache.',
+    }
+
+
+def _startup_check_stdio_mcp_count(text: str) -> dict[str, Any]:
+    stdio_count = len(re.findall(r'(?ms)^\[mcp_servers\.[^\]]+\].*?^\s*transport\s*=\s*"stdio"', text))
+    return {
+        "id": "stdio_mcp_startup_surface",
+        "status": "attention" if stdio_count > 4 else "pass",
+        "stdio_server_count": stdio_count,
+        "threshold": 4,
+        "reason": "Each stdio MCP server can spawn cold-start subprocesses during Codex session startup.",
+        "remediation": "Keep frequently used stdio MCP servers enabled and move rarely used ones to on-demand profiles.",
+    }
+
+
+def _startup_check_postgres_mcp_secret_exposure(text: str) -> dict[str, Any]:
+    block = _toml_table_block(text, "mcp_servers.postgres")
+    unsafe = "server-postgres $conn" in block or "POSTGRES_CONNECTION_STRING" in block and "pwsh" in block
+    return {
+        "id": "postgres_mcp_connection_string_not_in_process_args",
+        "status": "attention" if unsafe else "pass",
+        "configured": bool(block),
+        "reason": "The postgres MCP connection string should not be expanded into long-lived process command lines.",
+        "remediation": "Use the local mcp-postgres-env-wrapper.mjs wrapper so only POSTGRES_CONNECTION_STRING environment state carries the secret.",
+    }
+
+
+def _startup_check_logs_db_size(home: Path) -> dict[str, Any]:
+    db = home / "logs_2.sqlite"
+    size = db.stat().st_size if db.exists() else 0
+    threshold = 1024 * 1024 * 1024
+    return {
+        "id": "logs_sqlite_size_under_1gb",
+        "status": "attention" if size > threshold else "pass",
+        "path": str(db),
+        "bytes": size,
+        "threshold_bytes": threshold,
+        "reason": "Large local Codex logs increase backup, scan, and startup-adjacent I/O risk even when SQLite integrity is healthy.",
+        "remediation": "Archive or compact old logs after stopping Codex App/CLI processes.",
+    }
+
+
+def _startup_check_recent_log_failures(home: Path) -> dict[str, Any]:
+    log = home / "log" / "codex-tui.log"
+    if not log.exists():
+        return {
+            "id": "recent_startup_log_failures",
+            "status": "pass",
+            "path": str(log),
+            "matches": {},
+        }
+    try:
+        with log.open("rb") as handle:
+            handle.seek(0, os.SEEK_END)
+            size = handle.tell()
+            handle.seek(max(0, size - 1_000_000))
+            tail = handle.read().decode("utf-8", errors="replace")
+    except OSError:
+        tail = ""
+    patterns = {
+        "remote_plugin_sync_failed": "startup remote plugin sync failed",
+        "cloudflare_403": "403 Forbidden",
+        "invalid_chrome_plugin": "missing or invalid plugin.json plugin=\"chrome@openai-bundled\"",
+        "apps_list_fallback": "failed to load full apps list",
+    }
+    matches = {key: tail.count(pattern) for key, pattern in patterns.items()}
+    failed = any(count > 0 for count in matches.values())
+    return {
+        "id": "recent_startup_log_failures",
+        "status": "attention" if failed else "pass",
+        "path": str(log),
+        "matches": matches,
+        "reason": "Recent startup logs should not contain repeated plugin sync, Cloudflare 403, invalid plugin, or apps-list fallback failures.",
+        "remediation": "Disable invalid local plugins and keep remote plugin/app sync out of the startup critical path.",
+    }
+
+
+def _plugin_enabled(text: str, plugin_id: str) -> bool | None:
+    block = _toml_table_block(text, f'plugins."{plugin_id}"')
+    if not block:
+        return None
+    value = re.search(r'(?m)^\s*enabled\s*=\s*(true|false)\s*$', block)
+    if not value:
+        return None
+    return value.group(1) == "true"
+
+
+def _toml_table_block(text: str, table: str) -> str:
+    match = re.search(rf'(?m)^\[{re.escape(table)}\]\s*$', text)
+    if not match:
+        return ""
+    next_header = re.search(r"(?m)^\[", text[match.end() :])
+    end = match.end() + next_header.start() if next_header else len(text)
+    return text[match.start() : end]
 
 
 def context_window_probe(
@@ -1695,6 +1838,8 @@ def _find_top_level_value(text: str, key: str) -> Any:
             value = line[len(prefix) :].strip()
             if value.startswith('"') and value.endswith('"'):
                 return value[1:-1]
+            if value in {"true", "false"}:
+                return value == "true"
             try:
                 return int(value)
             except ValueError:

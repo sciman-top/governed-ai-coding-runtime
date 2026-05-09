@@ -1411,6 +1411,19 @@ def render_interactive_script(
     return prefix + issues.join('、');
   }}
 
+  function formatClaudeSessionContinuity(continuity) {{
+    if (!continuity) {{
+      return currentUiLanguage() === 'zh-CN' ? '未记录' : 'not recorded';
+    }}
+    const paths = continuity.paths || {{}};
+    const projects = paths.projects || {{}};
+    const history = paths.history || {{}};
+    const commands = Array.isArray(continuity.resume_commands) ? continuity.resume_commands.join(' / ') : '';
+    const state = continuity.status || 'unknown';
+    const configDir = continuity.claude_config_dir_env || (currentUiLanguage() === 'zh-CN' ? '默认 Claude home' : 'default Claude home');
+    return `${{state}} · transcripts ${{projects.jsonl_count ?? 0}} · history ${{history.exists ? 'yes' : 'no'}} · ${{configDir}} · ${{commands}}`;
+  }}
+
   function renderCodexStatus(payload) {{
     lastCodexPayload = payload;
     const accounts = Array.isArray(payload.accounts) ? payload.accounts : [];
@@ -1766,6 +1779,10 @@ def render_interactive_script(
           createInfoLine(
             currentUiLanguage() === 'zh-CN' ? '配置健康' : 'config',
             formatConfigHealth(config)
+          ),
+          createInfoLine(
+            {text['claude_session_continuity']!r},
+            formatClaudeSessionContinuity(payload.session_continuity || null)
           ),
           createInfoLine(
             {text['claude_extensions']!r},

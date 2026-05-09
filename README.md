@@ -87,7 +87,7 @@ AI 推荐的交付前 readiness：
 - 操作者聚合入口：`scripts/operator.ps1`。它把 readiness、自检、规则漂移/同步、目标仓批量流和 operator UI 生成收成同一个入口；默认 `-Action Help`，适合日常少记长命令。
 - 宿主反馈汇总入口：`scripts/operator.ps1 -Action FeedbackReport`。它统一汇总 `Codex/Claude` 本机状态、规则同步面、parity 文档面和最新 target-run evidence。
 - Codex 本机优化入口：`scripts/Optimize-CodexLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入本项目当前推荐的 Codex 共享历史配置，还会实读 `Cockpit Tools` 的 Codex 当前账号/API provider，并把 Codex App/CLI 统一到内置 `model_provider = "openai"` 历史 bucket；API relay 通过 `openai_base_url` 切换，避免 custom provider bucket 隐藏历史。`CC Switch` 在本机只作为 Claude/第三方 API 切换边界，不再作为 Codex provider 真源。长期优先级是“综合效率优先，安全边界约束”：少打扰、自动连续执行、节省 token / 成本、保留必要解释、高效率；当前暂行实现是 `cli_auth_credentials_store = "file"`、`model = "gpt-5.5"`、`model_reasoning_effort = "medium"`、`approval_policy = "never"`、`model_context_window = 272000`、`model_auto_compact_token_limit = 220000`、`history.persistence = "save-all"`、`sqlite_home = "~/.codex"`、`log_dir = "~/.codex/log"`。账号/API/中转站不再靠切换多套 `CODEX_HOME` 隔离，而是用同一个 `~/.codex` 下的 `shared-chatgpt`、`shared-openai-api`、`shared-cockpit-api`、`shared-cockpit-auth` profiles 和 `codex-cockpit*` 启动器共享 coding 会话历史；只有需要隐私或信任隔离时才另建独立 `CODEX_HOME`。脚本同时会安装 `codex-account`、`codex-shared*`、`codex-cockpit*`、`codex-relay*` 入口，并把当前仓加入 trusted project。
-- Claude Code 本机优化入口：`scripts/Optimize-ClaudeLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入第三方 Anthropic-compatible provider 推荐配置、安装 `claude-provider` 切换入口；密钥只保留在用户本机 settings/env，不写入仓库 profile。
+- Claude Code 本机优化入口：`scripts/Optimize-ClaudeLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入第三方 Anthropic-compatible provider 推荐配置、安装 `claude-provider` 切换入口；密钥只保留在用户本机 settings/env，不写入仓库 profile。`claude-provider continuity` 会只读检查 `~/.claude/projects`、`~/.claude/sessions`、`history.jsonl` 和 `CLAUDE_CONFIG_DIR`，确认 GLM、DeepSeek 等 provider 切换仍锚定同一个 Claude home，从而保留 `claude --continue`、`claude --resume`、`/resume` 的本地 session 连续性；只有明确需要隔离时才应使用独立 Claude config/context 目录。
 - 核心原则变更候选入口：`scripts/operator.ps1 -Action CorePrincipleMaterialize`。默认只 dry-run 报告候选；得到明确允许后加 `-ConfirmCorePrincipleProposalWrite` 才写 reviewable proposal/manifest；如只需审计留痕，加 `-WriteCorePrincipleDryRunReport` 只写 dry-run report。以上路径仍不直接改 active core-principles policy、spec、verifier 或目标仓。
 - 目标仓日常运行/批量下发总入口：`scripts/runtime-flow-preset.ps1`。它读取 `docs/targets/target-repos-catalog.json`，可以对单个 target 或所有 active targets 执行 attach、daily gate、治理基线同步、特性基线同步和里程碑提交。
 - AI 规则文件同步入口：`scripts/sync-agent-rules.ps1`。它读取 `rules/manifest.json`，把全局与项目级 `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` 同步到用户目录和目标仓；默认同 hash 跳过，内容漂移按脚本策略阻断或要求 `-Force`。
@@ -132,7 +132,13 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Opera
 ```
 
 UI 使用方式：`-OpenUi` 会启动 `127.0.0.1` 本地常驻交互控制台并打开浏览器；后续可直接访问 `http://127.0.0.1:8770/?lang=zh-CN`。状态/停止/重启使用 `scripts/operator-ui-service.ps1 -Action Status|Stop|Restart`；登录自动启动可用 `-Action EnableAutoStart|DisableAutoStart|AutoStartStatus` 管理。页面可执行 allowlist 内的本仓 readiness、目标仓列表、规则漂移检查、规则同步、治理基线下发、daily、全部功能应用（默认删除已证明安全的退役托管文件）、一键清理退役治理文件和一键卸载治理；可选择全部目标仓、单个目标仓或勾选多个目标仓进行批量卸载，可调整语言、验证模式、并发、fail-fast、只预演、真实删除开关与里程碑标签；执行结果会写入输出区和本地浏览器执行历史；可点击 evidence/artifact/verification refs 查看文件内容。若不加 `-OpenUi`，脚本只生成只读快照 `.runtime/artifacts/operator-ui/index.html` 并在 JSON 输出里给出 `file_url`。
-Codex 面板会显示本机 ChatGPT auth profiles、当前登录状态、推荐配置健康、官方 usage dashboard 入口和账号切换按钮；同时会把“综合效率优先，安全边界约束”作为长期核心原则单独展示，明确目标是少打扰、自动连续执行、节省 token / 成本、保留必要解释、高效率，且既有安全、最小权限、门禁、证据和回滚约束仍照常生效，再把 `gpt-5.5 + medium + never` 标为当前暂行实现，并把 `model_auto_compact_token_limit = 220000` 标为配套压缩阈值。以后如有新模型/新参数/新技术栈进入默认方案，也应优先保持这个原则，而不是固化当前组合。5h/7d 额度在缺少稳定官方本地 API 时标为 `unknown`，不伪造估算值。Claude 面板会集中展示第三方 provider 状态，并提供 provider 切换、推荐配置预演/应用，以及 `settings.json`、`provider-profiles.json`、切换脚本的本机预览入口。
+Codex 面板会显示本机 ChatGPT auth profiles、当前登录状态、推荐配置健康、官方 usage dashboard 入口和账号切换按钮；同时会把“综合效率优先，安全边界约束”作为长期核心原则单独展示，明确目标是少打扰、自动连续执行、节省 token / 成本、保留必要解释、高效率，且既有安全、最小权限、门禁、证据和回滚约束仍照常生效，再把 `gpt-5.5 + medium + never` 标为当前暂行实现，并把 `model_auto_compact_token_limit = 220000` 标为配套压缩阈值。以后如有新模型/新参数/新技术栈进入默认方案，也应优先保持这个原则，而不是固化当前组合。5h/7d 额度在缺少稳定官方本地 API 时标为 `unknown`，不伪造估算值。Claude 面板会集中展示第三方 provider 状态、provider 切换、推荐配置预演/应用、session continuity 诊断，以及 `settings.json`、`provider-profiles.json`、切换脚本的本机预览入口。
+
+Claude provider 切换连续性只读检查：
+
+```powershell
+claude-provider continuity
+```
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/Optimize-CodexLocal.ps1
@@ -183,7 +189,7 @@ codex-interop-repair
 
 `http://127.0.0.1:8770/?lang=zh-CN` 的 Codex 面板也提供“检查共享历史互操作”和“应用共享历史优化”。前者只读检查 `Cockpit Tools` 当前 Codex 账号是否可投影到 Codex App/CLI，并核对 `state_5.sqlite` 中的 `threads.model_provider` 可见性分桶；后者会备份并写入 Codex 配置，把历史 metadata 迁移到稳定内置 `openai` bucket。
 
-与本机 `Cockpit Tools` / `CC Switch` 的衔接边界：`Cockpit Tools` 负责 Codex App/CLI 的 ChatGPT auth 和 Codex API provider 切换；`cc-switch` 负责 Claude CLI、GLM、DeepSeek 等第三方 API 切换。Codex 侧统一读取 Cockpit 当前 Codex account 文件，API key 只注入当前启动进程，并把 RightCode、35.213.82.91 等所有 Cockpit API provider 都归到同一个内置 `model_provider = "openai"` 历史 bucket；中转站地址写入 `openai_base_url`。Codex App 对 auth/provider 状态是进程启动时读取；切换 Cockpit 账号后如已打开 App，使用 `codex-cockpit-app-restart` 自动关开，或手动关闭后再用 `codex-cockpit-app` 打开。历史 metadata 迁移会先备份 `state_5.sqlite`。
+与本机 `Cockpit Tools` / `CC Switch` 的衔接边界：`Cockpit Tools` 负责 Codex App/CLI 的 ChatGPT auth 和 Codex API provider 切换；`cc-switch` 负责 Claude CLI、GLM、DeepSeek 等第三方 API 切换。Codex 侧统一读取 Cockpit 当前 Codex account 文件，API key 只注入当前启动进程，并把 RightCode、35.213.82.91 等所有 Cockpit API provider 都归到同一个内置 `model_provider = "openai"` 历史 bucket；中转站地址写入 `openai_base_url`。Codex App 对 auth/provider 状态是进程启动时读取；切换 Cockpit 账号后如已打开 App，使用 `codex-cockpit-app-restart` 自动关开，或手动关闭后再用 `codex-cockpit-app` 打开。历史 metadata 迁移会先备份 `state_5.sqlite`。Claude 侧连续性由 Claude Code 自身的 session transcript 机制承担，provider 切换只应改 `settings.json` / provider profile / 当前进程 env，不应把每个 provider 切到不同 `CLAUDE_CONFIG_DIR`；若 `cc-switch` 或其他工具启用了独立 context group，需要显式把它视为隔离会话而非共享历史。
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets

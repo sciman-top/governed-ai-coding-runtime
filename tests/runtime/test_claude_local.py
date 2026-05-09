@@ -97,6 +97,40 @@ class ClaudeLocalTests(unittest.TestCase):
             self.assertEqual("error", result["status"])
             self.assertIn("ANTHROPIC_API_KEY", result["error"])
 
+    def test_session_continuity_status_reports_resume_anchors(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_settings(home / "settings.json")
+            project_dir = home / "projects" / "D--CODE--repo"
+            project_dir.mkdir(parents=True)
+            (project_dir / "session-1.jsonl").write_text("{}\n", encoding="utf-8")
+            (home / "history.jsonl").write_text("{}\n", encoding="utf-8")
+
+            result = claude_local.session_continuity_status(home)
+
+            self.assertEqual("ok", result["status"])
+            self.assertEqual("preserve_claude_home", result["provider_switch_policy"])
+            self.assertEqual(1, result["paths"]["projects"]["jsonl_count"])
+            self.assertIn("claude --resume", result["resume_commands"])
+
+    def test_switch_provider_reports_that_session_home_is_preserved(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_settings(home / "settings.json")
+            settings = json.loads((home / "settings.json").read_text(encoding="utf-8"))
+            settings["env"]["ANTHROPIC_API_KEY"] = "deepseek-secret"
+            (home / "settings.json").write_text(json.dumps(settings), encoding="utf-8")
+            (home / "projects" / "D--CODE--repo").mkdir(parents=True)
+            (home / "projects" / "D--CODE--repo" / "session-1.jsonl").write_text("{}\n", encoding="utf-8")
+            (home / "history.jsonl").write_text("{}\n", encoding="utf-8")
+            claude_local.write_default_provider_profiles(home)
+
+            result = claude_local.switch_provider("deepseek-v4", home, dry_run=True)
+
+            self.assertEqual("ok", result["status"])
+            self.assertEqual(str(home.resolve()), result["session_continuity"]["claude_home"])
+            self.assertEqual("preserve_claude_home", result["session_continuity"]["provider_switch_policy"])
+
     def test_delete_provider_profile_backs_up_and_removes_inactive_profile(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)

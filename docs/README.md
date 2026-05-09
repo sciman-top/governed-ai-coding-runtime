@@ -136,6 +136,7 @@
   - default mode is dry-run; use `-Apply` to write recommended user-level Claude Code settings for third-party Anthropic-compatible providers and install `claude-provider`
   - provider profiles include BigModel GLM and DeepSeek without storing API keys in the repository
   - provider switching fails closed when the required credential env is missing
+  - session continuity is checked with `claude-provider continuity`; the expected shared-history posture is one Claude home with `projects/`, `sessions/`, and `history.jsonl` preserved while provider profiles change
 - Target-repo daily/batch entrypoint: `scripts/runtime-flow-preset.ps1`
   - source of truth: `docs/targets/target-repos-catalog.json`
   - typical uses: `-ListTargets`, `-Target <id> -FlowMode daily`, `-AllTargets -ApplyGovernanceBaselineOnly`, `-AllTargets -ApplyAllFeatures`
