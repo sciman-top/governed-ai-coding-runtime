@@ -78,6 +78,8 @@ class CodexSharedLauncherTests(unittest.TestCase):
         self.assertIn("model_provider={0}", script)
         self.assertIn("$Surface -eq 'exec'", script)
         self.assertIn("Codex app accepts a workspace path", script)
+        self.assertIn("UseCcSwitchCurrentProvider", script)
+        self.assertIn("OPENAI_API_KEY sourced from current CC Switch provider", script)
 
     def test_optimizer_installs_interop_shortcuts_when_switcher_install_is_enabled(self) -> None:
         script = (ROOT / "scripts" / "Optimize-CodexLocal.ps1").read_text(encoding="utf-8")
@@ -85,9 +87,13 @@ class CodexSharedLauncherTests(unittest.TestCase):
         self.assertIn("codex-interop-check.cmd", script)
         self.assertIn("codex-interop-repair.cmd", script)
         self.assertIn("codex-interop-check.py", script)
+        self.assertIn("codex-relay.cmd", script)
+        self.assertIn("codex-relay-exec.cmd", script)
+        self.assertIn("codex-relay-app.cmd", script)
         self.assertIn("--cc-switch-db", script)
         self.assertIn("--cockpit-home", script)
-        self.assertIn("--apply %*", script)
+        self.assertIn("--migrate-provider-bucket", script)
+        self.assertIn("--apply --migrate-provider-bucket %*", script)
 
     def test_interop_checker_repairs_cc_switch_shared_history_blockers(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -129,7 +135,9 @@ class CodexSharedLauncherTests(unittest.TestCase):
                 dry_check_ids["cc_switch_current_provider_bucket_provider-test"]["dominant_provider"],
             )
 
-            applied = _run_interop_checker(codex_home, cc_switch_db, cockpit_home, apply=True)
+            applied = _run_interop_checker(
+                codex_home, cc_switch_db, cockpit_home, apply=True, migrate_provider_bucket=True
+            )
             self.assertEqual(applied.returncode, 0, applied.stderr)
             payload = json.loads(applied.stdout)
             self.assertEqual("pass", payload["status"])
@@ -155,8 +163,25 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertIn('persistence = "save-all"', common)
             self.assertNotIn("disable_response_storage", provider_settings)
             provider_config = json.loads(provider_settings)["config"]
-            self.assertIn('model_provider = "openai"', provider_config)
-            self.assertIn('openai_base_url = "https://right.codes/codex/v1"', provider_config)
+            self.assertIn('model_provider = "ccswitch"', provider_config)
+            self.assertIn("[model_providers.ccswitch]", provider_config)
+            self.assertIn('base_url = "https://right.codes/codex/v1"', provider_config)
+            self.assertNotIn("openai_base_url", provider_config)
+
+            connection = sqlite3.connect(codex_home / "state_5.sqlite")
+            try:
+                buckets = dict(
+                    connection.execute(
+                        "select model_provider, count(*) from threads group by model_provider"
+                    ).fetchall()
+                )
+            finally:
+                connection.close()
+            self.assertEqual({"ccswitch": 3}, buckets)
+            live_config = (codex_home / "config.toml").read_text(encoding="utf-8")
+            self.assertIn("[profiles.shared-current-provider]", live_config)
+            self.assertIn("[profiles.shared-relay]", live_config)
+            self.assertIn("[model_providers.ccswitch]", live_config)
 
 def _run_interop_checker(
     codex_home: Path,
@@ -164,6 +189,7 @@ def _run_interop_checker(
     cockpit_home: Path,
     *,
     apply: bool = False,
+    migrate_provider_bucket: bool = False,
 ) -> subprocess.CompletedProcess[str]:
     command = [
         sys.executable,
@@ -177,6 +203,8 @@ def _run_interop_checker(
     ]
     if apply:
         command.append("--apply")
+    if migrate_provider_bucket:
+        command.append("--migrate-provider-bucket")
     return subprocess.run(
         command,
         cwd=ROOT,

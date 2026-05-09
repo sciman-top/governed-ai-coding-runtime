@@ -20,12 +20,14 @@
 
 - The checker now reads `state_5.sqlite.threads.model_provider` and reports the local thread provider distribution.
 - The checker compares the live Codex `model_provider` and the current CC Switch Codex provider snippet against the dominant local history bucket.
-- Repair remains conservative: for CC Switch relay providers with `requires_openai_auth = true` and a `base_url`, it rewrites the provider snippet to `model_provider = "openai"` plus `openai_base_url = <relay URL>`.
-- Repair does not rewrite `state_5.sqlite`, `sessions`, `archived_sessions`, or message/history content.
+- Repair normalizes CC Switch relay providers to the stable custom `model_provider = "ccswitch"` bucket, preserving the relay `base_url` under `[model_providers.ccswitch]`.
+- Repair can migrate `state_5.sqlite.threads.model_provider` to `ccswitch` after backing up the state DB; it does not rewrite `sessions`, `archived_sessions`, or message content.
 - Unit coverage creates a temporary Codex state DB with `openai` history and verifies that a RightCode-style CC Switch provider is detected, repaired, and kept in the `openai` visibility bucket.
 - Real local pre-repair check found `state_5.sqlite` distribution `{ "openai": 1578 }` and current CC Switch `RightCode` bucket `rightcode`, so `cc_switch_current_provider_bucket_a2398ca2-ed8f-4219-9d66-24db0cfd8e8e` failed with `repair_strategy = "openai_base_url"`.
-- Real local repair backed up CC Switch sqlite state to `C:\Users\sciman\.cc-switch\backups\db_backup_20260509_133451_codex_interop.db`.
-- Real local post-repair check returned `status = "pass"` and current CC Switch `RightCode` bucket `openai`.
+- Real local repair backed up CC Switch sqlite state to `C:\Users\sciman\.cc-switch\backups\db_backup_20260509_140352_codex_interop.db`.
+- Real local repair backed up Codex config to `C:\Users\sciman\.codex\backups\config.toml.20260509_140501_provider_bucket.bak` and state DB to `C:\Users\sciman\.codex\backups\state_5.sqlite.20260509_140501_provider_bucket.bak`.
+- Real local post-repair check returned `status = "pass"`, current CC Switch `RightCode` bucket `ccswitch`, and `state_5.sqlite` distribution `{ "ccswitch": 1579 }`.
+- `codex-relay-exec --help` confirmed the CLI relay launcher loads `shared-current-provider` and sources `OPENAI_API_KEY` from the current CC Switch provider.
 - Installed shortcut script `C:\Users\sciman\.codex\scripts\codex-interop-check.py` was refreshed from this repo, and `codex-interop-check` returned `status = "pass"`.
 - Build gate passed with `OK python-bytecode` and `OK python-import`.
 - Runtime gate passed: 106 runtime/service test files, failures `0`.
@@ -34,5 +36,6 @@
 
 ## Rollback
 
-- Restore `C:\Users\sciman\.cc-switch\backups\db_backup_20260509_133451_codex_interop.db` to `C:\Users\sciman\.cc-switch\cc-switch.db` if the local provider-bucket repair must be undone.
+- Restore `C:\Users\sciman\.cc-switch\backups\db_backup_20260509_140352_codex_interop.db` to `C:\Users\sciman\.cc-switch\cc-switch.db` if the local provider-bucket repair must be undone.
+- Restore `C:\Users\sciman\.codex\backups\config.toml.20260509_140501_provider_bucket.bak` and `C:\Users\sciman\.codex\backups\state_5.sqlite.20260509_140501_provider_bucket.bak` if the live config/state bucket migration must be undone.
 - Revert this commit from git history to remove provider-bucket detection and docs.

@@ -15,6 +15,10 @@ param(
 
     [string] $CodexHome = (Join-Path $HOME '.codex'),
 
+    [switch] $UseCcSwitchCurrentProvider,
+
+    [string] $CcSwitchDbPath = (Join-Path $HOME '.cc-switch\cc-switch.db'),
+
     [string] $Workdir,
 
     [Parameter(ValueFromRemainingArguments = $true)]
@@ -54,6 +58,37 @@ if (-not [string]::IsNullOrWhiteSpace($ApiKeyEnv)) {
     $env:OPENAI_API_KEY = $apiKey
 }
 
+if ($UseCcSwitchCurrentProvider) {
+    if (-not (Test-Path -LiteralPath $CcSwitchDbPath -PathType Leaf)) {
+        throw "CC Switch database not found: $CcSwitchDbPath"
+    }
+    $python = Get-Command python -ErrorAction SilentlyContinue
+    if (-not $python) {
+        throw 'python command not found; cannot read CC Switch provider state.'
+    }
+    $providerJson = & $python.Source -c @'
+import json, sqlite3, sys
+db = sys.argv[1]
+con = sqlite3.connect(db)
+con.row_factory = sqlite3.Row
+row = con.execute("select name, settings_config from providers where app_type='codex' and is_current=1 limit 1").fetchone()
+con.close()
+if not row:
+    print("{}")
+    raise SystemExit(0)
+payload = json.loads(row["settings_config"] or "{}")
+auth = payload.get("auth") if isinstance(payload, dict) else {}
+print(json.dumps({"name": row["name"], "openai_api_key": auth.get("OPENAI_API_KEY") if isinstance(auth, dict) else None}))
+'@ $CcSwitchDbPath
+    $provider = $providerJson | ConvertFrom-Json
+    if (-not [string]::IsNullOrWhiteSpace([string]$provider.openai_api_key)) {
+        $env:OPENAI_API_KEY = [string]$provider.openai_api_key
+    }
+    if ([string]::IsNullOrWhiteSpace($Profile)) {
+        $Profile = 'shared-current-provider'
+    }
+}
+
 $codexArgs = @()
 if (-not [string]::IsNullOrWhiteSpace($Profile)) {
     $codexArgs += @('--profile', $Profile)
@@ -84,6 +119,9 @@ Write-Host ("CODEX_HOME={0}" -f $env:CODEX_HOME)
 Write-Host ("profile={0}" -f $Profile)
 if (-not [string]::IsNullOrWhiteSpace($ApiKeyEnv)) {
     Write-Host ("OPENAI_API_KEY sourced from {0}" -f $ApiKeyEnv)
+}
+if ($UseCcSwitchCurrentProvider) {
+    Write-Host ("OPENAI_API_KEY sourced from current CC Switch provider")
 }
 if (-not [string]::IsNullOrWhiteSpace($BaseUrl)) {
     Write-Host ("openai_base_url={0}" -f $BaseUrl)

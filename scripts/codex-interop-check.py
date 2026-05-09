@@ -14,6 +14,7 @@ SHARED_HISTORY_KEYS = {
     "history_persistence": 'persistence = "save-all"',
     "history_max_bytes": "max_bytes = 104857600",
 }
+SHARED_RELAY_PROVIDER_ID = "ccswitch"
 
 
 def main() -> int:
@@ -22,6 +23,7 @@ def main() -> int:
     parser.add_argument("--cc-switch-db", required=True)
     parser.add_argument("--cockpit-home", required=True)
     parser.add_argument("--apply", action="store_true")
+    parser.add_argument("--migrate-provider-bucket", action="store_true")
     args = parser.parse_args()
 
     codex_home = Path(args.codex_home).expanduser().resolve()
@@ -32,11 +34,16 @@ def main() -> int:
     actions: list[dict[str, Any]] = []
     if args.apply:
         actions.extend(repair_cc_switch(codex_home=codex_home, db_path=cc_switch_db, checks=before))
+        if args.migrate_provider_bucket:
+            actions.extend(
+                migrate_codex_provider_bucket(codex_home=codex_home, target_provider=SHARED_RELAY_PROVIDER_ID)
+            )
     after = inspect_interop(codex_home=codex_home, cc_switch_db=cc_switch_db, cockpit_home=cockpit_home)
 
     payload = {
         "status": after["status"],
         "apply": bool(args.apply),
+        "migrate_provider_bucket": bool(args.migrate_provider_bucket),
         "codex_home": str(codex_home),
         "cc_switch_db": str(cc_switch_db),
         "cockpit_home": str(cockpit_home),
@@ -252,12 +259,18 @@ def _inspect_cc_switch_current_provider_bucket(
     for provider in providers:
         provider_config = _settings_config_provider_text(provider["settings_config"])
         provider_bucket = _toml_top_level_string(provider_config, "model_provider") or "openai"
+        relay_source_provider = _custom_provider_id_for_openai_base_url(provider_config)
         provider_info = _model_provider_info(provider_config, provider_bucket)
-        can_use_openai_bucket = bool(provider_info.get("requires_openai_auth") and provider_info.get("base_url"))
+        if relay_source_provider and provider_bucket == "openai":
+            provider_info = _model_provider_info(provider_config, relay_source_provider)
+        can_normalize = bool(provider_info.get("base_url")) or provider_bucket == "openai"
         status = "pass"
         reason = "Current CC Switch Codex provider keeps the same visible history bucket."
-        if dominant_provider and provider_bucket != dominant_provider:
-            status = "fail" if can_use_openai_bucket and dominant_provider == "openai" else "warn"
+        if relay_source_provider and provider_bucket == "openai":
+            status = "fail"
+            reason = "Current CC Switch Codex provider maps a relay endpoint onto the reserved openai provider, which can send relay credentials to the official OpenAI endpoint."
+        elif dominant_provider and provider_bucket != dominant_provider:
+            status = "fail" if can_normalize else "warn"
             reason = (
                 "Current CC Switch Codex provider would switch Codex App/CLI history visibility to a different model_provider bucket."
             )
@@ -272,7 +285,9 @@ def _inspect_cc_switch_current_provider_bucket(
                 "provider_name": provider["name"] or provider["id"],
                 "provider_bucket": provider_bucket,
                 "dominant_provider": dominant_provider,
-                "repair_strategy": "openai_base_url" if status == "fail" and can_use_openai_bucket else "manual_review",
+                "expected_shared_provider": SHARED_RELAY_PROVIDER_ID,
+                "repair_strategy": "stable_ccswitch_provider" if status == "fail" and can_normalize else "manual_review",
+                "relay_source_provider": relay_source_provider,
                 "base_url": provider_info.get("base_url"),
                 "requires_openai_auth": provider_info.get("requires_openai_auth"),
             }
@@ -341,29 +356,28 @@ def inspect_cockpit(*, codex_home: Path, cockpit_home: Path) -> list[dict[str, A
 def repair_cc_switch(*, codex_home: Path, db_path: Path, checks: dict[str, Any]) -> list[dict[str, Any]]:
     if not db_path.exists():
         return []
-    needs_repair = any(
+    needs_cc_switch_repair = any(
         str(check.get("tool")) == "cc_switch" and check.get("status") == "fail"
         for check in checks.get("checks", [])
     )
-    if not needs_repair:
-        return []
-
-    backup_path = _backup_cc_switch_db(db_path)
     connection = sqlite3.connect(str(db_path), timeout=15)
     connection.row_factory = sqlite3.Row
-    actions: list[dict[str, Any]] = [
-        {
-            "id": "cc_switch_db_backup",
-            "tool": "cc_switch",
-            "status": "ok",
-            "backup_path": str(backup_path),
-        }
-    ]
+    actions: list[dict[str, Any]] = []
+    if needs_cc_switch_repair:
+        backup_path = _backup_cc_switch_db(db_path)
+        actions.append(
+            {
+                "id": "cc_switch_db_backup",
+                "tool": "cc_switch",
+                "status": "ok",
+                "backup_path": str(backup_path),
+            }
+        )
     try:
         row = connection.execute("select value from settings where key = 'common_config_codex'").fetchone()
         common_config = str(row["value"] or "") if row else ""
         repaired_common = ensure_common_config_shared(common_config, codex_home)
-        if repaired_common != common_config:
+        if needs_cc_switch_repair and repaired_common != common_config:
             if row:
                 connection.execute(
                     "update settings set value = ? where key = 'common_config_codex'",
@@ -383,13 +397,14 @@ def repair_cc_switch(*, codex_home: Path, db_path: Path, checks: dict[str, Any])
                 }
             )
 
+        current_provider_config = ""
         providers = connection.execute(
-            "select id, settings_config from providers where app_type = 'codex'"
+            "select id, settings_config, is_current from providers where app_type = 'codex'"
         ).fetchall()
         for provider in providers:
             raw_settings = str(provider["settings_config"] or "")
             repaired_settings = repair_provider_settings_config(raw_settings)
-            if repaired_settings != raw_settings:
+            if needs_cc_switch_repair and repaired_settings != raw_settings:
                 connection.execute(
                     "update providers set settings_config = ? where id = ?",
                     (repaired_settings, provider["id"]),
@@ -402,9 +417,13 @@ def repair_cc_switch(*, codex_home: Path, db_path: Path, checks: dict[str, Any])
                         "provider_id": provider["id"],
                     }
                 )
+            if bool(provider["is_current"]):
+                current_provider_config = _settings_config_provider_text(repaired_settings)
         connection.commit()
     finally:
         connection.close()
+    if current_provider_config:
+        actions.extend(repair_codex_live_config(codex_home=codex_home, provider_config=current_provider_config))
     return actions
 
 
@@ -415,6 +434,61 @@ def _backup_cc_switch_db(db_path: Path) -> Path:
     backup_path = backup_dir / f"db_backup_{timestamp}_codex_interop.db"
     shutil.copy2(db_path, backup_path)
     return backup_path
+
+
+def repair_codex_live_config(*, codex_home: Path, provider_config: str) -> list[dict[str, Any]]:
+    provider_bucket = _toml_top_level_string(provider_config, "model_provider")
+    if provider_bucket != SHARED_RELAY_PROVIDER_ID:
+        return []
+    provider_table = _extract_model_provider_table(provider_config, SHARED_RELAY_PROVIDER_ID)
+    if not provider_table:
+        return []
+    config_path = codex_home / "config.toml"
+    current = _read_text(config_path)
+    lines = current.splitlines()
+    lines = _remove_top_level_key(lines, "openai_base_url")
+    lines = _set_top_level(lines, "model_provider", _toml_string(SHARED_RELAY_PROVIDER_ID))
+    provider_model = _toml_top_level_string(provider_config, "model")
+    if provider_model:
+        lines = _set_top_level(lines, "model", _toml_string(provider_model))
+    lines = _remove_toml_table(lines, f"[model_providers.{SHARED_RELAY_PROVIDER_ID}]")
+    lines = _replace_toml_table(
+        lines,
+        "[profiles.shared-current-provider]",
+        [
+            "[profiles.shared-current-provider]",
+            'forced_login_method = "chatgpt"',
+            f"model_provider = {_toml_string(SHARED_RELAY_PROVIDER_ID)}",
+        ],
+    )
+    lines = _replace_toml_table(
+        lines,
+        "[profiles.shared-relay]",
+        [
+            "[profiles.shared-relay]",
+            'forced_login_method = "chatgpt"',
+            f"model_provider = {_toml_string(SHARED_RELAY_PROVIDER_ID)}",
+        ],
+    )
+    if lines and lines[-1].strip():
+        lines.append("")
+    lines.extend(provider_table)
+    updated = "\n".join(lines).rstrip() + "\n"
+    if updated == current:
+        return []
+    backup_path = _backup_file(config_path, suffix="provider_bucket") if config_path.exists() else None
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(updated, encoding="utf-8")
+    return [
+        {
+            "id": "codex_live_config_provider_bucket",
+            "tool": "codex",
+            "status": "changed",
+            "path": str(config_path),
+            "backup_path": str(backup_path) if backup_path else None,
+            "target_provider": SHARED_RELAY_PROVIDER_ID,
+        }
+    ]
 
 
 def ensure_common_config_shared(config: str, codex_home: Path) -> str:
@@ -438,25 +512,170 @@ def repair_provider_settings_config(raw_settings: str) -> str:
     repaired_lines = [
         line for line in config.splitlines() if not line.strip().startswith("disable_response_storage")
     ]
-    repaired = _normalize_openai_auth_provider_bucket("\n".join(repaired_lines).rstrip() + "\n")
+    repaired = _normalize_stable_relay_provider_bucket("\n".join(repaired_lines).rstrip() + "\n")
     if repaired == config:
         return raw_settings
     payload["config"] = repaired
     return json.dumps(payload, ensure_ascii=False)
 
 
-def _normalize_openai_auth_provider_bucket(config: str) -> str:
+def _normalize_stable_relay_provider_bucket(config: str) -> str:
     provider_id = _toml_top_level_string(config, "model_provider")
-    if not provider_id or provider_id == "openai" or not _is_custom_provider_id(provider_id):
+    if provider_id == SHARED_RELAY_PROVIDER_ID:
         return config
-    provider_info = _model_provider_info(config, provider_id)
-    base_url = provider_info.get("base_url")
-    if not (provider_info.get("requires_openai_auth") and isinstance(base_url, str) and base_url.strip()):
+    source_provider_id = provider_id if provider_id and _is_custom_provider_id(provider_id) else _custom_provider_id_for_openai_base_url(config)
+    if not source_provider_id:
         return config
-    lines = config.splitlines()
-    lines = _set_top_level(lines, "model_provider", _toml_string("openai"))
-    lines = _set_top_level(lines, "openai_base_url", _toml_string(base_url.strip()))
+    provider_info = _model_provider_info(config, source_provider_id)
+    if not provider_info:
+        return config
+    lines = _remove_top_level_key(config.splitlines(), "openai_base_url")
+    lines = _rename_model_provider_table(lines, source_provider_id, SHARED_RELAY_PROVIDER_ID)
+    lines = _replace_model_provider_refs(lines, source_provider_id, SHARED_RELAY_PROVIDER_ID)
+    lines = _set_top_level(lines, "model_provider", _toml_string(SHARED_RELAY_PROVIDER_ID))
     return "\n".join(lines).rstrip() + "\n"
+
+
+def migrate_codex_provider_bucket(*, codex_home: Path, target_provider: str) -> list[dict[str, Any]]:
+    state_path = codex_home / "state_5.sqlite"
+    if not state_path.exists():
+        return []
+    backup_path = _backup_file(state_path, suffix="provider_bucket")
+    connection = sqlite3.connect(str(state_path), timeout=15)
+    actions: list[dict[str, Any]] = [
+        {
+            "id": "codex_state_db_backup",
+            "tool": "codex",
+            "status": "ok",
+            "backup_path": str(backup_path),
+        }
+    ]
+    try:
+        updated = connection.execute(
+            """
+            update threads
+            set model_provider = ?
+            where coalesce(model_provider, '') <> ?
+            """,
+            (target_provider, target_provider),
+        ).rowcount
+        connection.commit()
+        actions.append(
+            {
+                "id": "codex_threads_provider_bucket_migrated",
+                "tool": "codex",
+                "status": "changed" if updated else "ok",
+                "target_provider": target_provider,
+                "updated_rows": int(updated or 0),
+            }
+        )
+    finally:
+        connection.close()
+    return actions
+
+
+def _backup_file(path: Path, *, suffix: str) -> Path:
+    backup_dir = path.parent / "backups"
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    backup_path = backup_dir / f"{path.name}.{timestamp}_{suffix}.bak"
+    shutil.copy2(path, backup_path)
+    return backup_path
+
+
+def _custom_provider_id_for_openai_base_url(config: str) -> str | None:
+    base_url = _toml_top_level_string(config, "openai_base_url")
+    if not base_url:
+        return None
+    try:
+        payload = tomllib.loads(config or "")
+    except tomllib.TOMLDecodeError:
+        return None
+    model_providers = payload.get("model_providers")
+    if not isinstance(model_providers, dict):
+        return None
+    for provider_id, provider_info in model_providers.items():
+        if not _is_custom_provider_id(str(provider_id)) or not isinstance(provider_info, dict):
+            continue
+        if provider_info.get("base_url") == base_url:
+            return str(provider_id)
+    custom_ids = [
+        str(provider_id)
+        for provider_id, provider_info in model_providers.items()
+        if _is_custom_provider_id(str(provider_id)) and isinstance(provider_info, dict)
+    ]
+    return custom_ids[0] if len(custom_ids) == 1 else None
+
+
+def _remove_top_level_key(lines: list[str], key: str) -> list[str]:
+    result: list[str] = []
+    in_top_level = True
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("["):
+            in_top_level = False
+        if in_top_level and stripped.startswith(f"{key} ="):
+            continue
+        result.append(line)
+    return result
+
+
+def _rename_model_provider_table(lines: list[str], old_provider: str, new_provider: str) -> list[str]:
+    old_header = f"[model_providers.{old_provider}]"
+    new_header = f"[model_providers.{new_provider}]"
+    return [new_header if line.strip() == old_header else line for line in lines]
+
+
+def _replace_model_provider_refs(lines: list[str], old_provider: str, new_provider: str) -> list[str]:
+    old_value = _toml_string(old_provider)
+    new_value = _toml_string(new_provider)
+    result: list[str] = []
+    for line in lines:
+        if line.strip() == f"model_provider = {old_value}":
+            result.append(f"model_provider = {new_value}")
+        else:
+            result.append(line)
+    return result
+
+
+def _extract_model_provider_table(config: str, provider_id: str) -> list[str]:
+    header = f"[model_providers.{provider_id}]"
+    result: list[str] = []
+    in_target = False
+    for line in config.splitlines():
+        stripped = line.strip()
+        if stripped == header:
+            in_target = True
+            result.append(header)
+            continue
+        if in_target and stripped.startswith("["):
+            break
+        if in_target:
+            result.append(line)
+    return result
+
+
+def _remove_toml_table(lines: list[str], header: str) -> list[str]:
+    result: list[str] = []
+    in_target = False
+    for line in lines:
+        stripped = line.strip()
+        if stripped == header:
+            in_target = True
+            continue
+        if in_target and stripped.startswith("["):
+            in_target = False
+        if not in_target:
+            result.append(line)
+    return result
+
+
+def _replace_toml_table(lines: list[str], header: str, replacement: list[str]) -> list[str]:
+    result = _remove_toml_table(lines, header)
+    if result and result[-1].strip():
+        result.append("")
+    result.extend(replacement)
+    return result
 
 
 def _settings_config_provider_text(raw_settings: Any) -> str:

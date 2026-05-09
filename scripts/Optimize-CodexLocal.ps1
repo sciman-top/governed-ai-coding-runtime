@@ -3,6 +3,7 @@ param(
     [switch] $Apply,
     [switch] $InstallAccountSwitcher = $true,
     [switch] $RepairThirdPartyInterop = $true,
+    [bool] $MigrateProviderBucket = $true,
     [switch] $SkipInteropCheck,
     [string] $CodexHome = $(if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $HOME '.codex' }),
     [string[]] $TrustedRepoRoot = @((Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path),
@@ -284,7 +285,8 @@ function Invoke-CodexInteropCheck {
         [string] $HomePath,
         [string] $CcSwitchDb,
         [string] $CockpitStateHome,
-        [switch] $ApplyRepair
+        [switch] $ApplyRepair,
+        [bool] $MigrateHistoryProviderBucket = $false
     )
 
     if ($SkipInteropCheck) {
@@ -318,6 +320,9 @@ function Invoke-CodexInteropCheck {
     )
     if ($ApplyRepair) {
         $args += '--apply'
+        if ($MigrateHistoryProviderBucket) {
+            $args += '--migrate-provider-bucket'
+        }
     }
 
     $output = & $python.Source @args 2>&1
@@ -358,6 +363,7 @@ $plan = [ordered]@{
     apply = [bool]$Apply
     install_account_switcher = [bool]$InstallAccountSwitcher
     repair_third_party_interop = [bool]$RepairThirdPartyInterop
+    migrate_provider_bucket = [bool]$MigrateProviderBucket
     skip_interop_check = [bool]$SkipInteropCheck
     trusted_repo_roots = $TrustedRepoRoot
     core_principle = '综合效率优先'
@@ -378,12 +384,12 @@ $plan = [ordered]@{
         sqlite_home = $CodexHome
         history_persistence = 'save-all'
         shared_profiles = @('shared-chatgpt', 'shared-openai-api', 'shared-current-provider')
-        launchers = @('codex-shared', 'codex-shared-exec', 'codex-shared-app', 'codex-interop-check', 'codex-interop-repair')
+        launchers = @('codex-shared', 'codex-shared-exec', 'codex-shared-app', 'codex-relay', 'codex-relay-exec', 'codex-relay-app', 'codex-interop-check', 'codex-interop-repair')
     }
     compatibility = [ordered]@{
-        strategy = 'Use one shared CodexHome for coding history/state; switch auth/provider inside that home.'
+        strategy = 'Use one shared CodexHome plus one stable model_provider bucket for coding history/state; switch auth/provider endpoint inside that bucket.'
         cockpit_tools = 'Compatible with default Cockpit Tools Codex home and Cockpit managed auth projection; Cockpit instances can still share state when their copied config keeps sqlite_home/log_dir pointing at this CodexHome.'
-        cc_switch = 'Compatible with CC Switch default Codex config directory and stable model_provider behavior; provider switches should keep history/save-all plus sqlite_home/log_dir, and can use shared-current-provider for the currently active custom provider.'
+        cc_switch = 'Compatible with CC Switch default Codex config directory and stable model_provider behavior; provider switches should keep history/save-all plus sqlite_home/log_dir, and normalize relay providers to the shared ccswitch provider bucket.'
         boundary = 'Use an isolated CODEX_HOME only for identities, relays, or privacy boundaries that must not share local coding sessions.'
     }
     local_tooling = [ordered]@{
@@ -440,10 +446,16 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Star
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface exec %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-shared-app.cmd') -Value '@echo off
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface app %*' -Encoding ascii
+    Set-Content -LiteralPath (Join-Path $binDir 'codex-relay.cmd') -Value '@echo off
+pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Profile shared-current-provider -UseCcSwitchCurrentProvider %*' -Encoding ascii
+    Set-Content -LiteralPath (Join-Path $binDir 'codex-relay-exec.cmd') -Value '@echo off
+pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface exec -Profile shared-current-provider -UseCcSwitchCurrentProvider %*' -Encoding ascii
+    Set-Content -LiteralPath (Join-Path $binDir 'codex-relay-app.cmd') -Value '@echo off
+pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface app -Profile shared-current-provider -UseCcSwitchCurrentProvider %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-interop-check.cmd') -Value '@echo off
 python "%USERPROFILE%\.codex\scripts\codex-interop-check.py" --codex-home "%USERPROFILE%\.codex" --cc-switch-db "%USERPROFILE%\.cc-switch\cc-switch.db" --cockpit-home "%USERPROFILE%\.antigravity_cockpit" %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-interop-repair.cmd') -Value '@echo off
-python "%USERPROFILE%\.codex\scripts\codex-interop-check.py" --codex-home "%USERPROFILE%\.codex" --cc-switch-db "%USERPROFILE%\.cc-switch\cc-switch.db" --cockpit-home "%USERPROFILE%\.antigravity_cockpit" --apply %*' -Encoding ascii
+python "%USERPROFILE%\.codex\scripts\codex-interop-check.py" --codex-home "%USERPROFILE%\.codex" --cc-switch-db "%USERPROFILE%\.cc-switch\cc-switch.db" --cockpit-home "%USERPROFILE%\.antigravity_cockpit" --apply --migrate-provider-bucket %*' -Encoding ascii
     $plan.account_switcher_installed = $true
     $plan.shared_launcher_installed = $true
     $plan.interop_shortcuts_installed = $true
@@ -453,7 +465,8 @@ $plan.interop = Invoke-CodexInteropCheck `
     -HomePath $CodexHome `
     -CcSwitchDb $ccSwitchDbPath `
     -CockpitStateHome $cockpitHomePath `
-    -ApplyRepair:([bool]$RepairThirdPartyInterop)
+    -ApplyRepair:([bool]$RepairThirdPartyInterop) `
+    -MigrateHistoryProviderBucket:([bool]$MigrateProviderBucket)
 
 if ($plan.interop.status -eq 'fail') {
     $plan.status = 'blocked'
