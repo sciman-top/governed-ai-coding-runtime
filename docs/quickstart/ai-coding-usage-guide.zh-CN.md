@@ -85,9 +85,12 @@ codex-shared -Profile shared-chatgpt
 codex-shared-exec -Profile shared-openai-api "检查当前仓库状态"
 codex-shared -Profile shared-current-provider
 codex-shared-app -Profile shared-chatgpt D:\CODE\governed-ai-coding-runtime
+codex-cockpit-exec "检查当前仓库状态"
+codex-cockpit-app D:\CODE\governed-ai-coding-runtime
+codex-cockpit-app-restart D:\CODE\governed-ai-coding-runtime
 ```
 
-`Cockpit Tools` 和 `CC Switch` 可以继续负责账号、API provider、代理和 quota。关键约束是让它们管理同一个 `~/.codex`，并保留 `history.persistence = "save-all"`、`sqlite_home`、`log_dir` 和稳定 `model_provider`；`Optimize-CodexLocal.ps1 -Apply` 会实读并修复 CC Switch 的 shared-history 关键字段，也会检查 Cockpit Codex instances 是否强制独立状态根。只有需要隐私/信任隔离时，才把某个账号或中转站放到独立 `CODEX_HOME`。
+`Cockpit Tools` 负责 Codex App/CLI 的 ChatGPT auth 和 Codex API provider 切换；`cc-switch` 负责 Claude CLI、GLM、DeepSeek 等第三方 API 切换。关键约束是让 Codex 始终使用同一个 `~/.codex`，并把 Cockpit 当前 Codex account 投影到稳定 `model_provider = "cockpit"` 历史 bucket；`Optimize-CodexLocal.ps1 -Apply` 会实读 Cockpit 当前账号，写入 Codex 配置并迁移 `state_5.sqlite` 的 provider metadata。Codex App 切换后需要重启进程才能刷新 auth/provider 状态，可用 `codex-cockpit-app-restart` 自动关开。
 
 ### 宿主反馈汇总
 如果你想系统性判断“功能在 Codex 和 Claude 里是否真的生效、异常属于宿主还是 runtime、下一步该优化哪里”，直接生成统一反馈报告，而不是只读单次日志：

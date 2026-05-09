@@ -264,6 +264,14 @@ function Update-ConfigToml {
         forced_login_method = '"api"'
         model_provider = '"openai"'
     }
+    $lines = Set-TomlTableValues -Lines $lines -Header '[profiles.shared-cockpit-api]' -Values @{
+        forced_login_method = '"api"'
+        model_provider = '"cockpit"'
+    }
+    $lines = Set-TomlTableValues -Lines $lines -Header '[profiles.shared-cockpit-auth]' -Values @{
+        forced_login_method = '"chatgpt"'
+        model_provider = '"cockpit"'
+    }
     if (Test-CustomModelProviderId -Value $activeModelProvider) {
         $lines = Set-TomlTableValues -Lines $lines -Header '[profiles.shared-current-provider]' -Values @{
             forced_login_method = '"chatgpt"'
@@ -308,7 +316,7 @@ function Invoke-CodexInteropCheck {
     if (-not $python) {
         return [ordered]@{
             status = 'platform_na'
-            reason = 'python command not found; cannot inspect CC Switch sqlite state.'
+            reason = 'python command not found; cannot inspect Codex/Cockpit interop state.'
         }
     }
 
@@ -383,13 +391,13 @@ $plan = [ordered]@{
         model_auto_compact_token_limit = 220000
         sqlite_home = $CodexHome
         history_persistence = 'save-all'
-        shared_profiles = @('shared-chatgpt', 'shared-openai-api', 'shared-current-provider')
-        launchers = @('codex-shared', 'codex-shared-exec', 'codex-shared-app', 'codex-relay', 'codex-relay-exec', 'codex-relay-app', 'codex-interop-check', 'codex-interop-repair')
+        shared_profiles = @('shared-chatgpt', 'shared-openai-api', 'shared-current-provider', 'shared-cockpit-api', 'shared-cockpit-auth')
+        launchers = @('codex-shared', 'codex-shared-exec', 'codex-shared-app', 'codex-cockpit', 'codex-cockpit-exec', 'codex-cockpit-app', 'codex-cockpit-app-restart', 'codex-relay', 'codex-relay-exec', 'codex-relay-app', 'codex-interop-check', 'codex-interop-repair')
     }
     compatibility = [ordered]@{
-        strategy = 'Use one shared CodexHome plus one stable model_provider bucket for coding history/state; switch auth/provider endpoint inside that bucket.'
-        cockpit_tools = 'Compatible with default Cockpit Tools Codex home and Cockpit managed auth projection; Cockpit instances can still share state when their copied config keeps sqlite_home/log_dir pointing at this CodexHome.'
-        cc_switch = 'Compatible with CC Switch default Codex config directory and stable model_provider behavior; provider switches should keep history/save-all plus sqlite_home/log_dir, and normalize relay providers to the shared ccswitch provider bucket.'
+        strategy = 'Use one shared CodexHome plus one stable Cockpit model_provider bucket for Codex coding history/state; switch auth/provider endpoint inside that bucket.'
+        cockpit_tools = 'Cockpit Tools owns Codex auth/API switching on this host; Codex launchers read the current Cockpit Codex account and normalize all API providers to the shared cockpit provider bucket.'
+        cc_switch = 'CC Switch is treated as the Claude/third-party API switcher boundary and is not used as the Codex provider source.'
         boundary = 'Use an isolated CODEX_HOME only for identities, relays, or privacy boundaries that must not share local coding sessions.'
     }
     local_tooling = [ordered]@{
@@ -446,12 +454,20 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Star
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface exec %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-shared-app.cmd') -Value '@echo off
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface app %*' -Encoding ascii
+    Set-Content -LiteralPath (Join-Path $binDir 'codex-cockpit.cmd') -Value '@echo off
+pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -UseCockpitCurrentAccount %*' -Encoding ascii
+    Set-Content -LiteralPath (Join-Path $binDir 'codex-cockpit-exec.cmd') -Value '@echo off
+pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface exec -UseCockpitCurrentAccount %*' -Encoding ascii
+    Set-Content -LiteralPath (Join-Path $binDir 'codex-cockpit-app.cmd') -Value '@echo off
+pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface app -UseCockpitCurrentAccount %*' -Encoding ascii
+    Set-Content -LiteralPath (Join-Path $binDir 'codex-cockpit-app-restart.cmd') -Value '@echo off
+pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface app -UseCockpitCurrentAccount -RestartExistingCodexApp %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-relay.cmd') -Value '@echo off
-pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Profile shared-current-provider -UseCcSwitchCurrentProvider %*' -Encoding ascii
+pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -UseCockpitCurrentAccount %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-relay-exec.cmd') -Value '@echo off
-pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface exec -Profile shared-current-provider -UseCcSwitchCurrentProvider %*' -Encoding ascii
+pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface exec -UseCockpitCurrentAccount %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-relay-app.cmd') -Value '@echo off
-pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface app -Profile shared-current-provider -UseCcSwitchCurrentProvider %*' -Encoding ascii
+pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface app -UseCockpitCurrentAccount %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-interop-check.cmd') -Value '@echo off
 python "%USERPROFILE%\.codex\scripts\codex-interop-check.py" --codex-home "%USERPROFILE%\.codex" --cc-switch-db "%USERPROFILE%\.cc-switch\cc-switch.db" --cockpit-home "%USERPROFILE%\.antigravity_cockpit" %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-interop-repair.cmd') -Value '@echo off

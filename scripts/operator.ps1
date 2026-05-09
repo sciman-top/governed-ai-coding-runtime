@@ -250,7 +250,7 @@ AI 推荐:
   FastFeedback           执行本仓日常编码快速反馈：build + quick feedback tests；不替代交付前 Readiness。
   Readiness              执行 build -> test -> contract/invariant -> hotspot，然后生成 operator UI。
   CodexLocalOptimize     一键应用本机 Codex 共享历史优化，安装 codex-account / codex-shared* 启动器。
-  CodexInteropCheck      检查 CC Switch / Cockpit Tools 是否仍共享同一个 Codex 历史根；不写入。
+  CodexInteropCheck      检查 Cockpit Tools Codex 切换是否仍共享同一个 Codex 历史根；不写入。
   RulesDryRun            只检查全局/项目级规则漂移，不写入。
   RulesApply             应用规则 manifest 同步，然后复查漂移。
   GovernanceBaselineAll  对所有 active targets 下发治理基线，然后验证目标仓治理一致性。

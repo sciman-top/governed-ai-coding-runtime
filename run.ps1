@@ -27,7 +27,7 @@ AI 推荐:
   .\run.ps1 fast                 执行 build + quick feedback tests；不替代交付前 readiness。
   .\run.ps1 readiness -OpenUi    执行 build -> test -> contract/invariant -> hotspot，并打开 UI。
   .\run.ps1 ui                   打开本地 operator UI。
-  .\run.ps1 codex-interop        检查 Codex / CC Switch / Cockpit Tools 共享历史互操作状态。
+  .\run.ps1 codex-interop        检查 Codex / Cockpit Tools 共享历史互操作状态。
   .\run.ps1 targets              列出 active target repos。
   .\run.ps1 rules-check          只检查 Codex/Claude/Gemini 规则漂移，不写入。
   .\run.ps1 rules-apply          同步规则文件，然后复查漂移。
