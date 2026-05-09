@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
+  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexLocalOptimize", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
   [string]$Action = "Help",
 
   [ValidateSet("quick", "full", "l1", "l2", "l3")]
@@ -249,6 +249,7 @@ AI 推荐:
   Targets                列出 target catalog 中的 active target repos。
   FastFeedback           执行本仓日常编码快速反馈：build + quick feedback tests；不替代交付前 Readiness。
   Readiness              执行 build -> test -> contract/invariant -> hotspot，然后生成 operator UI。
+  CodexLocalOptimize     一键应用本机 Codex 共享历史优化，安装 codex-account / codex-shared* 启动器。
   RulesDryRun            只检查全局/项目级规则漂移，不写入。
   RulesApply             应用规则 manifest 同步，然后复查漂移。
   GovernanceBaselineAll  对所有 active targets 下发治理基线，然后验证目标仓治理一致性。
@@ -318,6 +319,10 @@ function Invoke-FastFeedback {
     -Name "quick-feedback" `
     -ScriptPath "scripts/verify-repo.ps1" `
     -ScriptArguments @("-Check", "RuntimeQuick")
+}
+
+function Invoke-CodexLocalOptimize {
+  Invoke-PwshScript -Name "codex-local-optimize" -ScriptPath "scripts/Optimize-CodexLocal.ps1" -ScriptArguments @("-Apply")
 }
 
 function Invoke-Targets {
@@ -451,6 +456,7 @@ try {
     "Targets" { Invoke-Targets }
     "FastFeedback" { Invoke-FastFeedback }
     "Readiness" { Invoke-Readiness }
+    "CodexLocalOptimize" { Invoke-CodexLocalOptimize }
     "RulesDryRun" { Invoke-RulesDryRun }
     "RulesApply" { Invoke-RulesApply }
     "GovernanceBaselineAll" { Invoke-GovernanceBaselineAll }

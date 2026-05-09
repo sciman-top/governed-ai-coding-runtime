@@ -43,12 +43,12 @@
     "scripts/Optimize-ClaudeLocal.ps1",
     "scripts/Optimize-CodexLocal.ps1",
     "scripts/Optimize-GeminiLocal.ps1",
+    "scripts/Start-CodexShared.ps1",
     "scripts/apply-target-repo-governance.py",
     "scripts/archive-change-evidence.py",
     "scripts/attach-target-repo.py",
     "scripts/audit-repo-slimming-surface.py",
     "scripts/audit-target-repo-gate-speed.py",
-    "scripts/bootstrap-runtime.ps1",
     "scripts/lib/__init__.py",
     "scripts/verify-agent-rules.ps1"
   ],

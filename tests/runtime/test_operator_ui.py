@@ -225,6 +225,8 @@ class OperatorUiTests(unittest.TestCase):
         self.assertIn("data-action='experience_review'", html)
         self.assertIn("data-action='evolution_materialize'", html)
         self.assertIn("data-action='core_principle_materialize'", html)
+        self.assertIn("data-action='codex_local_optimize'", html)
+        self.assertIn("应用共享历史优化", html)
         self.assertIn("id='ui-output'", html)
         self.assertIn("fetch('/api/run'", html)
         self.assertIn("id='ui-target'", html)

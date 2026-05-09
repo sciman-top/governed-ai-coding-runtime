@@ -56,6 +56,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("AI 推荐", completed.stdout)
         self.assertIn(".\\run.ps1 fast", completed.stdout)
         self.assertIn(".\\run.ps1 readiness -OpenUi", completed.stdout)
+        self.assertNotIn("codex-optimize", completed.stdout)
         self.assertIn("rules-check", completed.stdout)
         self.assertIn("operator-help", completed.stdout)
         self.assertIn("cleanup-targets", completed.stdout)
@@ -144,6 +145,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("AI 推荐", completed.stdout)
         self.assertIn("FastFeedback", completed.stdout)
         self.assertIn("Readiness", completed.stdout)
+        self.assertIn("CodexLocalOptimize", completed.stdout)
         self.assertIn("FeedbackReport", completed.stdout)
         self.assertIn("CleanupTargets", completed.stdout)
         self.assertIn("UninstallGovernance", completed.stdout)
@@ -237,6 +239,31 @@ class OperatorEntrypointTests(unittest.TestCase):
 
         self.assertIn("-PruneRetiredManagedFiles", completed.stdout)
         self.assertIn("-DisableManagedAssetRemoval", completed.stdout)
+
+    def test_operator_codex_local_optimize_is_available_as_dry_run(self) -> None:
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "operator.ps1"),
+                "-Action",
+                "CodexLocalOptimize",
+                "-DryRun",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+        )
+
+        self.assertIn("DRY-RUN codex-local-optimize", completed.stdout)
+        self.assertIn("scripts/Optimize-CodexLocal.ps1", completed.stdout)
+        self.assertIn("-Apply", completed.stdout)
         self.assertNotIn("-ApplyManagedAssetRemoval", completed.stdout)
 
     def test_operator_apply_all_features_is_available_while_waiting_for_host_recovery(self) -> None:
@@ -390,6 +417,7 @@ class OperatorEntrypointTests(unittest.TestCase):
             self.assertIn("feedback_report", module.ALLOWED_ACTIONS)
             self.assertIn("cleanup_targets", module.ALLOWED_ACTIONS)
             self.assertIn("uninstall_governance", module.ALLOWED_ACTIONS)
+            self.assertIn("codex_local_optimize", module.ALLOWED_ACTIONS)
             self.assertIn("evolution_review", module.ALLOWED_ACTIONS)
             self.assertIn("evolution_materialize", module.ALLOWED_ACTIONS)
             self.assertIn("core_principle_materialize", module.ALLOWED_ACTIONS)

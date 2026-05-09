@@ -86,7 +86,7 @@ AI 推荐的交付前 readiness：
 - 根目录短入口：`run.ps1`。它把常用动作压成场景化短命令，例如 `.\run.ps1 fast`、`.\run.ps1 readiness -OpenUi`、`.\run.ps1 daily -Mode quick`、`.\run.ps1 rules-check`、`.\run.ps1 feedback`；底层仍转交 `scripts/operator.ps1`。
 - 操作者聚合入口：`scripts/operator.ps1`。它把 readiness、自检、规则漂移/同步、目标仓批量流和 operator UI 生成收成同一个入口；默认 `-Action Help`，适合日常少记长命令。
 - 宿主反馈汇总入口：`scripts/operator.ps1 -Action FeedbackReport`。它统一汇总 `Codex/Claude` 本机状态、规则同步面、parity 文档面和最新 target-run evidence。
-- Codex 本机优化入口：`scripts/Optimize-CodexLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入本项目当前推荐的 Codex 共享历史配置。长期优先级是“综合效率优先，安全边界约束”：少打扰、自动连续执行、节省 token / 成本、保留必要解释、高效率；当前暂行实现是 `cli_auth_credentials_store = "file"`、`model = "gpt-5.5"`、`model_reasoning_effort = "medium"`、`approval_policy = "never"`、`model_context_window = 272000`、`model_auto_compact_token_limit = 220000`、`history.persistence = "save-all"`、`sqlite_home = "~/.codex"`、`log_dir = "~/.codex/log"`。账号/API/中转站不再靠切换多套 `CODEX_HOME` 隔离，而是用同一个 `~/.codex` 下的 `shared-chatgpt`、`shared-openai-api`、`shared-current-provider` profiles 和 `codex-shared*` 启动器共享 coding 会话历史；只有需要隐私或信任隔离时才另建独立 `CODEX_HOME`。脚本同时会安装 `codex-account`、`codex-shared`、`codex-shared-exec`、`codex-shared-app` 入口，并把当前仓加入 trusted project。
+- Codex 本机优化入口：`scripts/Optimize-CodexLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入本项目当前推荐的 Codex 共享历史配置，还会实读 `CC Switch` / `Cockpit Tools` 本机状态并修复会破坏共享历史的 CC Switch 配置片段。长期优先级是“综合效率优先，安全边界约束”：少打扰、自动连续执行、节省 token / 成本、保留必要解释、高效率；当前暂行实现是 `cli_auth_credentials_store = "file"`、`model = "gpt-5.5"`、`model_reasoning_effort = "medium"`、`approval_policy = "never"`、`model_context_window = 272000`、`model_auto_compact_token_limit = 220000`、`history.persistence = "save-all"`、`sqlite_home = "~/.codex"`、`log_dir = "~/.codex/log"`。账号/API/中转站不再靠切换多套 `CODEX_HOME` 隔离，而是用同一个 `~/.codex` 下的 `shared-chatgpt`、`shared-openai-api`、`shared-current-provider` profiles 和 `codex-shared*` 启动器共享 coding 会话历史；只有需要隐私或信任隔离时才另建独立 `CODEX_HOME`。脚本同时会安装 `codex-account`、`codex-shared`、`codex-shared-exec`、`codex-shared-app` 入口，并把当前仓加入 trusted project。
 - Claude Code 本机优化入口：`scripts/Optimize-ClaudeLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入第三方 Anthropic-compatible provider 推荐配置、安装 `claude-provider` 切换入口；密钥只保留在用户本机 settings/env，不写入仓库 profile。
 - 核心原则变更候选入口：`scripts/operator.ps1 -Action CorePrincipleMaterialize`。默认只 dry-run 报告候选；得到明确允许后加 `-ConfirmCorePrincipleProposalWrite` 才写 reviewable proposal/manifest；如只需审计留痕，加 `-WriteCorePrincipleDryRunReport` 只写 dry-run report。以上路径仍不直接改 active core-principles policy、spec、verifier 或目标仓。
 - 目标仓日常运行/批量下发总入口：`scripts/runtime-flow-preset.ps1`。它读取 `docs/targets/target-repos-catalog.json`，可以对单个 target 或所有 active targets 执行 attach、daily gate、治理基线同步、特性基线同步和里程碑提交。
@@ -156,7 +156,13 @@ codex-shared -Profile shared-openai-api -ApiKeyEnv OPENAI_API_KEY -BaseUrl https
 codex-shared-app -Profile shared-chatgpt D:\CODE\governed-ai-coding-runtime
 ```
 
-与本机 `Cockpit Tools` / `CC Switch` 的衔接边界：二者可以继续管理 Codex 账号、API provider、代理和 quota；本项目的优化器只固定共同历史根。`CC Switch` 使用默认 `~/.codex` 或它自己的 Codex config override 指向该目录时可无缝共用；其 provider 切换会写 `auth.json` / `config.toml`，因此需要保留 `history.save-all`、`sqlite_home`、`log_dir` 和稳定 `model_provider`。`Cockpit Tools` 使用默认 Codex home 时可直接共用；若创建多实例，实例 config 应保留 `sqlite_home` / `log_dir` 指向共同 `~/.codex`，否则实例会话仍会被隔离。
+也可以走本仓统一操作入口：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action CodexLocalOptimize
+```
+
+与本机 `Cockpit Tools` / `CC Switch` 的衔接边界：二者可以继续管理 Codex 账号、API provider、代理和 quota；本项目的优化器只固定共同历史根。`CC Switch` 使用默认 `~/.codex` 或它自己的 Codex config override 指向该目录时可无缝共用；其 provider 切换会写 `auth.json` / `config.toml`，因此 `Optimize-CodexLocal.ps1` 会检查并修复 `common_config_codex` 中的 `history.persistence`、`sqlite_home`、`log_dir`，同时移除 provider 片段里的 `disable_response_storage`。`Cockpit Tools` 使用默认 Codex home 时可直接共用；检测器会确认其 Codex 账号/provider inventory 存在，并阻断强制独立 `CODEX_HOME` / `sqlite_home` 的实例配置。
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets

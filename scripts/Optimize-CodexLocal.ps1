@@ -2,8 +2,12 @@
 param(
     [switch] $Apply,
     [switch] $InstallAccountSwitcher = $true,
+    [switch] $RepairThirdPartyInterop = $true,
+    [switch] $SkipInteropCheck,
     [string] $CodexHome = $(if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $HOME '.codex' }),
-    [string[]] $TrustedRepoRoot = @((Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path)
+    [string[]] $TrustedRepoRoot = @((Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path),
+    [string] $CcSwitchDbPath = $(Join-Path $HOME '.cc-switch\cc-switch.db'),
+    [string] $CockpitHome = $(Join-Path $HOME '.antigravity_cockpit')
 )
 
 Set-StrictMode -Version Latest
@@ -242,7 +246,10 @@ function Update-ConfigToml {
         $lines = @()
     }
     $activeModelProvider = Get-TopLevelTomlStringValue -Lines $lines -Key 'model_provider'
-    $lines = @($lines | Where-Object { $_ -notmatch '^ANTHROPIC_AUTH_TOKEN\s*=' })
+    $lines = @($lines | Where-Object {
+        $_ -notmatch '^ANTHROPIC_AUTH_TOKEN\s*=' -and
+        $_ -notmatch '^\s*disable_response_storage\s*='
+    })
     foreach ($entry in $Recommended.GetEnumerator()) {
         $lines = Set-TopLevelTomlValue -Lines $lines -Key $entry.Key -Value $entry.Value
     }
@@ -272,6 +279,67 @@ function Update-ConfigToml {
     return $lines
 }
 
+function Invoke-CodexInteropCheck {
+    param(
+        [string] $HomePath,
+        [string] $CcSwitchDb,
+        [string] $CockpitStateHome,
+        [switch] $ApplyRepair
+    )
+
+    if ($SkipInteropCheck) {
+        return [ordered]@{
+            status = 'skipped'
+            reason = 'SkipInteropCheck was set.'
+        }
+    }
+
+    $checker = Join-Path $PSScriptRoot 'codex-interop-check.py'
+    if (-not (Test-Path -LiteralPath $checker -PathType Leaf)) {
+        return [ordered]@{
+            status = 'platform_na'
+            reason = "Missing interop checker: $checker"
+        }
+    }
+
+    $python = Get-Command python -ErrorAction SilentlyContinue
+    if (-not $python) {
+        return [ordered]@{
+            status = 'platform_na'
+            reason = 'python command not found; cannot inspect CC Switch sqlite state.'
+        }
+    }
+
+    $args = @(
+        $checker,
+        '--codex-home', $HomePath,
+        '--cc-switch-db', $CcSwitchDb,
+        '--cockpit-home', $CockpitStateHome
+    )
+    if ($ApplyRepair) {
+        $args += '--apply'
+    }
+
+    $output = & $python.Source @args 2>&1
+    $exitCode = $LASTEXITCODE
+    $text = ($output | ForEach-Object { [string] $_ }) -join "`n"
+    try {
+        $payload = $text | ConvertFrom-Json
+    }
+    catch {
+        return [ordered]@{
+            status = 'fail'
+            reason = 'Interop checker did not return valid JSON.'
+            exit_code = $exitCode
+            output = $text
+        }
+    }
+    if ($exitCode -ne 0 -and $payload.status -ne 'fail') {
+        $payload | Add-Member -NotePropertyName exit_code -NotePropertyValue $exitCode -Force
+    }
+    return $payload
+}
+
 $resolvedHome = Resolve-Path -LiteralPath $CodexHome -ErrorAction SilentlyContinue
 if ($resolvedHome) {
     $CodexHome = $resolvedHome.Path
@@ -280,7 +348,8 @@ else {
     $CodexHome = [System.IO.Path]::GetFullPath($CodexHome)
 }
 $configPath = Join-Path $CodexHome 'config.toml'
-$ccSwitchDbPath = Join-Path $HOME '.cc-switch\cc-switch.db'
+$ccSwitchDbPath = [System.IO.Path]::GetFullPath($CcSwitchDbPath)
+$cockpitHomePath = [System.IO.Path]::GetFullPath($CockpitHome)
 $ccSwitchExePath = Join-Path $env:LOCALAPPDATA 'Programs\CC Switch\cc-switch.exe'
 $cockpitToolsExePath = Join-Path $env:LOCALAPPDATA 'Cockpit Tools\cockpit-tools.exe'
 $plan = [ordered]@{
@@ -288,6 +357,8 @@ $plan = [ordered]@{
     config_path = $configPath
     apply = [bool]$Apply
     install_account_switcher = [bool]$InstallAccountSwitcher
+    repair_third_party_interop = [bool]$RepairThirdPartyInterop
+    skip_interop_check = [bool]$SkipInteropCheck
     trusted_repo_roots = $TrustedRepoRoot
     core_principle = '综合效率优先'
     principle_targets = @(
@@ -325,12 +396,15 @@ $plan = [ordered]@{
         cockpit_tools = [ordered]@{
             installed = (Test-Path -LiteralPath $cockpitToolsExePath -PathType Leaf)
             exe_path = $cockpitToolsExePath
+            state_home = $cockpitHomePath
+            state_home_present = (Test-Path -LiteralPath $cockpitHomePath -PathType Container)
             managed_projection_present = (Test-Path -LiteralPath (Join-Path $CodexHome '.cockpit_codex_auth.json') -PathType Leaf)
         }
     }
 }
 
 if (-not $Apply) {
+    $plan.interop = Invoke-CodexInteropCheck -HomePath $CodexHome -CcSwitchDb $ccSwitchDbPath -CockpitStateHome $cockpitHomePath
     $plan.status = 'dry_run'
     $plan.next = 'Re-run with -Apply to write the current implementation under the efficiency-first principle and install the account switcher.'
     $plan | ConvertTo-Json -Depth 5
@@ -369,5 +443,18 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Star
     $plan.shared_launcher_installed = $true
 }
 
+$plan.interop = Invoke-CodexInteropCheck `
+    -HomePath $CodexHome `
+    -CcSwitchDb $ccSwitchDbPath `
+    -CockpitStateHome $cockpitHomePath `
+    -ApplyRepair:([bool]$RepairThirdPartyInterop)
+
+if ($plan.interop.status -eq 'fail') {
+    $plan.status = 'blocked'
+    $plan.blocked_reason = 'Third-party Codex interop still has shared-history blockers after apply.'
+    $plan | ConvertTo-Json -Depth 8
+    exit 2
+}
+
 $plan.status = 'ok'
-$plan | ConvertTo-Json -Depth 5
+$plan | ConvertTo-Json -Depth 8

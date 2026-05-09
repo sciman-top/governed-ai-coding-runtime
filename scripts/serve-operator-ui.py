@@ -74,6 +74,7 @@ ALLOWED_ACTIONS = {
         "allow_multi_target": True,
         "managed_asset_removal": True,
     },
+    "codex_local_optimize": {"operator_action": "CodexLocalOptimize", "timeout_seconds": 300},
     "feedback_report": {"operator_action": "FeedbackReport", "run_alias": "feedback", "timeout_seconds": 600},
     "evolution_review": {"operator_action": "EvolutionReview", "run_alias": "evolution-review", "timeout_seconds": 900},
     "experience_review": {"operator_action": "ExperienceReview", "run_alias": "experience-review", "timeout_seconds": 900},
