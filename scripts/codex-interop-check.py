@@ -356,13 +356,13 @@ def inspect_cockpit(*, codex_home: Path, cockpit_home: Path) -> list[dict[str, A
             "id": "cockpit_codex_app_restart_semantics",
             "tool": "cockpit_tools",
             "status": "warn" if managed_restart_enabled else "pass",
-            "reason": "Cockpit Tools owns Codex account/provider state; governed interop must not install a restart wrapper that can rewrite Cockpit account metadata.",
+            "reason": "Cockpit Tools owns Codex account/provider state; governed interop must not install an automatic restart wrapper because it can switch a running Codex App away from the account the user is actively using.",
             "path": str(cockpit_home / "config.json"),
             "codex_restart_specified_app_on_switch": restart_on_switch,
             "codex_specified_app_path": specified_app_path,
             "expected_restart_wrapper": expected_restart_wrapper,
             "managed_restart_enabled": managed_restart_enabled,
-            "alternative": "Launch Codex manually after Cockpit switching unless a user explicitly re-enables a wrapper.",
+            "alternative": "Use codex-cockpit-app-restart manually after confirming the current Cockpit account is the intended one.",
         }
     )
 

@@ -166,6 +166,16 @@ class CodexSharedLauncherTests(unittest.TestCase):
                 json.dumps([{"id": "provider_test", "name": "RightCode"}]),
                 encoding="utf-8",
             )
+            (cockpit_home / "config.json").write_text(
+                json.dumps(
+                    {
+                        "codex_launch_on_switch": True,
+                        "codex_restart_specified_app_on_switch": False,
+                        "codex_specified_app_path": "",
+                    }
+                ),
+                encoding="utf-8",
+            )
             (cockpit_home / "codex_instances.json").write_text(
                 json.dumps({"instances": [], "defaultSettings": {"extraArgs": "", "lastPid": 99999999}}),
                 encoding="utf-8",
@@ -254,7 +264,10 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertEqual("custom", live_auth["api_provider_mode"])
             self.assertEqual("provider_test", live_auth["api_provider_id"])
             self.assertEqual("RightCode", live_auth["api_provider_name"])
-            self.assertFalse((cockpit_home / "config.json").exists())
+            cockpit_config = json.loads((cockpit_home / "config.json").read_text(encoding="utf-8"))
+            self.assertTrue(cockpit_config["codex_launch_on_switch"])
+            self.assertFalse(cockpit_config["codex_restart_specified_app_on_switch"])
+            self.assertEqual("", cockpit_config["codex_specified_app_path"])
             cockpit_instances = json.loads((cockpit_home / "codex_instances.json").read_text(encoding="utf-8"))
             self.assertIsNone(cockpit_instances["defaultSettings"]["lastPid"])
 
