@@ -102,6 +102,7 @@ class CodexSharedLauncherTests(unittest.TestCase):
         self.assertIn("function Wait-CockpitCodexStateStable", script)
         self.assertIn("Wait-CockpitCodexStateStable -CockpitStateHome $CockpitHome", script)
         self.assertIn("--migrate-provider-bucket", script)
+        self.assertIn("--quick-launch", script)
         self.assertIn("function Stop-CodexAppProcesses", script)
         self.assertIn("Get-Process -Name 'Codex', 'codex'", script)
         self.assertIn("Stop-Process -Id $liveProcess.Id", script)
@@ -205,6 +206,35 @@ class CodexSharedLauncherTests(unittest.TestCase):
             restart_wrapper.parent.mkdir(parents=True)
             restart_wrapper.write_text("@echo off\n", encoding="ascii")
             _create_cc_switch_db(cc_switch_db)
+            session_dir = codex_home / "sessions" / "2026" / "05" / "10"
+            session_dir.mkdir(parents=True)
+            session_path = session_dir / "rollout-test.jsonl"
+            session_path.write_text(
+                "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "type": "session_meta",
+                                "payload": {
+                                    "id": "thread-rightcode-1",
+                                    "model_provider": "rightcode",
+                                    "source": "vscode",
+                                },
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "type": "response_item",
+                                "payload": {
+                                    "text": 'user text mentions "model_provider":"cmp_1778165666417_1"',
+                                },
+                            }
+                        ),
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
             (cockpit_home / "codex_accounts.json").write_text(
                 json.dumps({"accounts": [{"id": "codex_test"}], "current_account_id": "codex_test"}),
                 encoding="utf-8",
@@ -272,6 +302,8 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertIn("cockpit_codex_stale_last_pid_cleared", action_ids)
             self.assertIn("codex_live_config_cockpit_provider", action_ids)
             self.assertIn("codex_threads_provider_bucket_migrated", action_ids)
+            self.assertIn("codex_session_provider_bucket_migrated", action_ids)
+            self.assertIn("codex_provider_bucket_triggers_ensured", action_ids)
             self.assertNotIn("cockpit_codex_restart_wrapper_configured", action_ids)
             self.assertIn("codex_history_indexes_ensured", action_ids)
 
@@ -304,11 +336,37 @@ class CodexSharedLauncherTests(unittest.TestCase):
                         "select name from sqlite_master where type = 'index'"
                     ).fetchall()
                 }
+                triggers = {
+                    row[0]
+                    for row in connection.execute(
+                        "select name from sqlite_master where type = 'trigger'"
+                    ).fetchall()
+                }
+                connection.execute(
+                    "insert into threads(id, model_provider, archived, updated_at, updated_at_ms) values(?, ?, ?, ?, ?)",
+                    ("thread-repoison-attempt", "rightcode", 0, "2026-05-09T05:00:00Z", 6),
+                )
+                guarded_provider = connection.execute(
+                    "select model_provider from threads where id = ?",
+                    ("thread-repoison-attempt",),
+                ).fetchone()[0]
             finally:
                 connection.close()
             self.assertEqual({"openai": 3}, buckets)
             self.assertIn("idx_threads_archived_provider_updated_at_ms", indexes)
             self.assertIn("idx_threads_archived_provider_updated_at", indexes)
+            self.assertIn("trg_threads_shared_provider_after_insert", triggers)
+            self.assertIn("trg_threads_shared_provider_after_update", triggers)
+            self.assertEqual("openai", guarded_provider)
+            session_lines = [json.loads(line) for line in session_path.read_text(encoding="utf-8").splitlines()]
+            self.assertEqual("openai", session_lines[0]["payload"]["model_provider"])
+            self.assertIn('"model_provider":"cmp_1778165666417_1"', session_lines[1]["payload"]["text"])
+            session_action = next(
+                action for action in payload["actions"] if action["id"] == "codex_session_provider_bucket_migrated"
+            )
+            self.assertEqual(1, session_action["files_changed"])
+            self.assertEqual(1, session_action["provider_updates"])
+            self.assertTrue(Path(session_action["backup_manifest"]).exists())
             live_config = (codex_home / "config.toml").read_text(encoding="utf-8")
             self.assertIn("[profiles.shared-current-provider]", live_config)
             self.assertIn("[profiles.shared-cockpit-api]", live_config)
@@ -331,6 +389,87 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertEqual("", cockpit_config["codex_specified_app_path"])
             cockpit_instances = json.loads((cockpit_home / "codex_instances.json").read_text(encoding="utf-8"))
             self.assertIsNone(cockpit_instances["defaultSettings"]["lastPid"])
+
+    def test_interop_checker_quick_launch_skips_session_scan_but_keeps_sqlite_guard(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            codex_home = root / "codex-home"
+            codex_home.mkdir()
+            _create_codex_state_db(codex_home / "state_5.sqlite")
+            session_dir = codex_home / "sessions" / "2026" / "05" / "10"
+            session_dir.mkdir(parents=True)
+            (session_dir / "rollout-test.jsonl").write_text(
+                json.dumps(
+                    {
+                        "type": "session_meta",
+                        "payload": {"id": "thread-rightcode-1", "model_provider": "rightcode"},
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            cc_switch_db = root / ".cc-switch" / "cc-switch.db"
+            cc_switch_db.parent.mkdir()
+            _create_cc_switch_db(cc_switch_db)
+            cockpit_home = root / ".antigravity_cockpit"
+            cockpit_home.mkdir()
+            (cockpit_home / "codex_accounts").mkdir()
+            (cockpit_home / "codex_accounts.json").write_text(
+                json.dumps({"accounts": [{"id": "codex_chatgpt"}], "current_account_id": "codex_chatgpt"}),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_accounts" / "codex_chatgpt.json").write_text(
+                json.dumps({"id": "codex_chatgpt", "auth_mode": "chatgpt", "tokens": {"access_token": "token"}}),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_model_providers.json").write_text(
+                json.dumps([{"id": "openai", "name": "OpenAI"}]),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_instances.json").write_text(
+                json.dumps({"instances": [], "defaultSettings": {"extraArgs": "", "lastPid": None}}),
+                encoding="utf-8",
+            )
+            (codex_home / "config.toml").write_text(
+                'model_provider = "openai"\nforced_login_method = "chatgpt"\n',
+                encoding="utf-8",
+            )
+
+            applied = _run_interop_checker(
+                codex_home,
+                cc_switch_db,
+                cockpit_home,
+                apply=True,
+                migrate_provider_bucket=True,
+                quick_launch=True,
+            )
+
+            self.assertEqual(applied.returncode, 0, applied.stderr)
+            payload = json.loads(applied.stdout)
+            checks = {check["id"]: check for check in payload["after"]["checks"]}
+            self.assertTrue(checks["codex_session_provider_distribution"]["session_scan_skipped"])
+            actions = {action["id"]: action for action in payload["actions"]}
+            self.assertTrue(actions["codex_session_provider_bucket_migrated"]["session_scan_skipped"])
+            connection = sqlite3.connect(codex_home / "state_5.sqlite")
+            try:
+                triggers = {
+                    row[0]
+                    for row in connection.execute(
+                        "select name from sqlite_master where type = 'trigger'"
+                    ).fetchall()
+                }
+                connection.execute(
+                    "insert into threads(id, model_provider, archived, updated_at, updated_at_ms) values(?, ?, ?, ?, ?)",
+                    ("thread-repoison-attempt", "rightcode", 0, "2026-05-09T05:00:00Z", 6),
+                )
+                guarded_provider = connection.execute(
+                    "select model_provider from threads where id = ?",
+                    ("thread-repoison-attempt",),
+                ).fetchone()[0]
+            finally:
+                connection.close()
+            self.assertIn("trg_threads_shared_provider_after_insert", triggers)
+            self.assertEqual("openai", guarded_provider)
 
     def test_interop_checker_restores_cockpit_api_provider_metadata_from_codex_state(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -542,6 +681,7 @@ def _run_interop_checker(
     *,
     apply: bool = False,
     migrate_provider_bucket: bool = False,
+    quick_launch: bool = False,
 ) -> subprocess.CompletedProcess[str]:
     command = [
         sys.executable,
@@ -557,6 +697,8 @@ def _run_interop_checker(
         command.append("--apply")
     if migrate_provider_bucket:
         command.append("--migrate-provider-bucket")
+    if quick_launch:
+        command.append("--quick-launch")
     return subprocess.run(
         command,
         cwd=ROOT,

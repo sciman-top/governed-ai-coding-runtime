@@ -1,0 +1,34 @@
+# Codex Cockpit Resume History Bucket Repair Evidence
+
+- rule_id: `R1/R6/R8`
+- risk_level: `low`
+- current_landing: live `C:\Users\sciman\.codex\state_5.sqlite` and `C:\Users\sciman\.codex\sessions\**\*.jsonl`
+- target_home: `D:\CODE\governed-ai-coding-runtime`
+- issue: after switching to a relay/API account, `codex-cockpit-resume` could not see the same historical sessions that were visible under ChatGPT auth.
+- root_cause: local Codex history was split by `threads.model_provider`, and old `session_meta.payload.model_provider` values in session JSONL files could repopulate `state_5.sqlite` during resume. The shared history strategy expects the built-in `openai` provider bucket.
+- commands:
+  - `python scripts\codex-interop-check.py --apply --migrate-provider-bucket --codex-home $HOME\.codex --cockpit-home $HOME\.antigravity_cockpit --cc-switch-db $HOME\.cc-switch\cc-switch.db`
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Optimize-CodexLocal.ps1 -Apply -TrustedRepoRoot D:\CODE\governed-ai-coding-runtime`
+  - `codex-cockpit-resume --last "只输出 RESUME_PROBE_OK"`
+  - `codex exec resume --last --all --json "只输出 EXEC_RESUME_OK"`
+  - `Measure-Command { codex-cockpit --help }`
+  - `Measure-Command { codex-cockpit-resume --help }`
+  - `python scripts\codex-interop-check.py --apply --migrate-provider-bucket --quick-launch --codex-home $HOME\.codex --cockpit-home $HOME\.antigravity_cockpit --cc-switch-db $HOME\.cc-switch\cc-switch.db`
+  - `python scripts\codex-interop-check.py --codex-home $HOME\.codex --cockpit-home $HOME\.antigravity_cockpit --cc-switch-db $HOME\.cc-switch\cc-switch.db`
+- key_output:
+  - initial SQLite-only repair was insufficient: after `codex exec resume`, old session metadata wrote `cmp_1778165666417_1` back into `state_5.sqlite`.
+  - before structured session repair: SQLite `openai=1517`, `cmp_1778165666417_1=93`; session JSONL metadata `cmp_1778165666417_1=1645`, `cmp_1778246510288_1=3`, `openai=66`.
+  - structured session repair: `files_changed=1607`, `lines_changed=1644`, `provider_updates=1644`, `backup_manifest=C:\Users\sciman\.codex\backups\session_provider_bucket_20260510_010128\changed-lines.jsonl`.
+  - remaining session metadata: 2 files / 4 entries are locked by live Codex processes, so the checker reports `attention` instead of blocking startup and retries on the next launch.
+  - SQLite write guard: `codex_provider_bucket_triggers_ensured` created `trg_threads_shared_provider_after_insert` and `trg_threads_shared_provider_after_update`.
+  - after direct `codex exec resume --last --all --json`: command returned `EXEC_RESUME_OK`; final SQLite distribution stayed `openai=1610`.
+  - `codex-cockpit-resume --last`: `profile=shared-cockpit-api`, `forced_login_method=api`, `model_provider=openai`, `provider_base_url=http://35.213.82.91:8003/v1`; non-TTY agent shell still returns `Error: stdin is not a terminal`, which is expected for interactive `codex resume`.
+  - performance root cause: launcher preflight used the full session JSONL repair path on every launch; with `1610` session files, `codex-cockpit --help` and `codex-cockpit-resume --help` took about `44s`, while full `codex-interop-check.py --apply --migrate-provider-bucket` took about `42s`.
+  - performance repair: `Start-CodexShared.ps1` now calls the checker with `--quick-launch`, skipping full session JSONL scan/migration during normal launch while keeping config, SQLite bucket and trigger guards active.
+  - quick launch timing: `codex-interop-check.py --apply --migrate-provider-bucket --quick-launch` took about `0.22s`; live `codex-cockpit --help` took about `1.78s`; live `codex-cockpit-resume --help` took about `1.98s`.
+  - config guard: no `[model_providers.openai]`; top-level `model_provider = "openai"` plus `openai_base_url = "http://35.213.82.91:8003/v1"`
+- compatibility: using `openai` as the shared provider bucket must not define `[model_providers.openai]`; relay routing stays on top-level `openai_base_url`.
+- rollback:
+  - state backups include `C:\Users\sciman\.codex\backups\state_5.sqlite.20260510_010148_provider_bucket.bak` and `C:\Users\sciman\.codex\backups\state_5.sqlite.20260510_011006_provider_bucket.bak`.
+  - session rollback manifest: `C:\Users\sciman\.codex\backups\session_provider_bucket_20260510_010128\changed-lines.jsonl`.
+  - trigger rollback shape: stop Codex processes, open `state_5.sqlite`, drop `trg_threads_shared_provider_after_insert` and `trg_threads_shared_provider_after_update`, restore the state DB backup if needed, then rerun `python scripts\codex-interop-check.py ...`.

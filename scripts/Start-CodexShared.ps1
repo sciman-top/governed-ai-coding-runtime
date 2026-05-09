@@ -236,7 +236,8 @@ function Invoke-CodexInteropRepair {
         '--cc-switch-db', $CcSwitchDb,
         '--cockpit-home', $CockpitStateHome,
         '--apply',
-        '--migrate-provider-bucket'
+        '--migrate-provider-bucket',
+        '--quick-launch'
     )
     $output = & $python.Source @repairArgs 2>&1
     $exitCode = $LASTEXITCODE

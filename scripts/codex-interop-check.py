@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import ctypes
 import json
 import os
 import re
@@ -44,6 +45,24 @@ CODEX_HISTORY_INDEXES = {
         ),
     },
 }
+CODEX_PROVIDER_BUCKET_TRIGGERS = {
+    "trg_threads_shared_provider_after_insert": (
+        "create trigger if not exists trg_threads_shared_provider_after_insert "
+        "after insert on threads "
+        "when coalesce(new.model_provider, '') <> 'openai' "
+        "begin "
+        "update threads set model_provider = 'openai' where id = new.id; "
+        "end"
+    ),
+    "trg_threads_shared_provider_after_update": (
+        "create trigger if not exists trg_threads_shared_provider_after_update "
+        "after update of model_provider on threads "
+        "when coalesce(new.model_provider, '') <> 'openai' "
+        "begin "
+        "update threads set model_provider = 'openai' where id = new.id; "
+        "end"
+    ),
+}
 CODEX_TUI_LOG_ROTATE_BYTES = 100 * 1024 * 1024
 
 
@@ -54,26 +73,42 @@ def main() -> int:
     parser.add_argument("--cockpit-home", required=True)
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--migrate-provider-bucket", action="store_true")
+    parser.add_argument("--quick-launch", action="store_true")
     args = parser.parse_args()
 
     codex_home = Path(args.codex_home).expanduser().resolve()
     cc_switch_db = Path(args.cc_switch_db).expanduser()
     cockpit_home = Path(args.cockpit_home).expanduser()
 
-    before = inspect_interop(codex_home=codex_home, cc_switch_db=cc_switch_db, cockpit_home=cockpit_home)
+    before = inspect_interop(
+        codex_home=codex_home,
+        cc_switch_db=cc_switch_db,
+        cockpit_home=cockpit_home,
+        include_session_scan=not args.quick_launch,
+    )
     actions: list[dict[str, Any]] = []
     if args.apply:
         actions.extend(repair_cockpit(codex_home=codex_home, cockpit_home=cockpit_home, checks=before))
         if args.migrate_provider_bucket:
             actions.extend(
-                migrate_codex_provider_bucket(codex_home=codex_home, target_provider=SHARED_CODEX_PROVIDER_ID)
+                migrate_codex_provider_bucket(
+                    codex_home=codex_home,
+                    target_provider=SHARED_CODEX_PROVIDER_ID,
+                    migrate_sessions=not args.quick_launch,
+                )
             )
-    after = inspect_interop(codex_home=codex_home, cc_switch_db=cc_switch_db, cockpit_home=cockpit_home)
+    after = inspect_interop(
+        codex_home=codex_home,
+        cc_switch_db=cc_switch_db,
+        cockpit_home=cockpit_home,
+        include_session_scan=not args.quick_launch,
+    )
 
     payload = {
         "status": after["status"],
         "apply": bool(args.apply),
         "migrate_provider_bucket": bool(args.migrate_provider_bucket),
+        "quick_launch": bool(args.quick_launch),
         "codex_home": str(codex_home),
         "cc_switch_db": str(cc_switch_db),
         "cockpit_home": str(cockpit_home),
@@ -85,9 +120,19 @@ def main() -> int:
     return 2 if after["status"] == "fail" else 0
 
 
-def inspect_interop(*, codex_home: Path, cc_switch_db: Path, cockpit_home: Path) -> dict[str, Any]:
+def inspect_interop(
+    *,
+    codex_home: Path,
+    cc_switch_db: Path,
+    cockpit_home: Path,
+    include_session_scan: bool = True,
+) -> dict[str, Any]:
     checks: list[dict[str, Any]] = []
-    provider_state = inspect_codex_provider_buckets(codex_home=codex_home, cockpit_home=cockpit_home)
+    provider_state = inspect_codex_provider_buckets(
+        codex_home=codex_home,
+        cockpit_home=cockpit_home,
+        include_session_scan=include_session_scan,
+    )
     checks.extend(provider_state["checks"])
     checks.extend(inspect_cc_switch(codex_home=codex_home, db_path=cc_switch_db))
     checks.extend(inspect_cockpit(codex_home=codex_home, cockpit_home=cockpit_home))
@@ -158,7 +203,12 @@ def inspect_cc_switch(*, codex_home: Path, db_path: Path) -> list[dict[str, Any]
     ]
 
 
-def inspect_codex_provider_buckets(*, codex_home: Path, cockpit_home: Path) -> dict[str, Any]:
+def inspect_codex_provider_buckets(
+    *,
+    codex_home: Path,
+    cockpit_home: Path,
+    include_session_scan: bool = True,
+) -> dict[str, Any]:
     checks: list[dict[str, Any]] = []
     state_path = codex_home / "state_5.sqlite"
     config_path = codex_home / "config.toml"
@@ -188,6 +238,20 @@ def inspect_codex_provider_buckets(*, codex_home: Path, cockpit_home: Path) -> d
             "unexpected_providers": unexpected_providers,
         }
     )
+    if include_session_scan:
+        checks.append(_inspect_codex_session_provider_bucket(codex_home))
+    else:
+        checks.append(
+            {
+                "id": "codex_session_provider_distribution",
+                "tool": "codex",
+                "status": "pass",
+                "reason": "Quick launch skipped full session JSONL scan; SQLite trigger guard protects active history from stale session metadata repopulation.",
+                "path": str(codex_home / "sessions"),
+                "session_scan_skipped": True,
+                "expected_shared_provider": SHARED_CODEX_PROVIDER_ID,
+            }
+        )
 
     config_text = _read_text(config_path)
     active_provider = _toml_top_level_string(config_text, "model_provider") or "openai"
@@ -415,6 +479,7 @@ def repair_cockpit(*, codex_home: Path, cockpit_home: Path, checks: dict[str, An
     actions.extend(repair_codex_live_config_for_cockpit(codex_home=codex_home, account=current))
     actions.extend(repair_codex_auth_for_cockpit(codex_home=codex_home, account=current))
     actions.extend(ensure_codex_history_indexes(codex_home=codex_home))
+    actions.extend(ensure_codex_provider_bucket_triggers(codex_home=codex_home))
     actions.extend(rotate_large_codex_tui_log(codex_home=codex_home))
     return actions
 
@@ -636,12 +701,31 @@ def _cockpit_profile_lines(name: str, *, forced_login: str, base_url: str) -> li
     return lines
 
 
-def migrate_codex_provider_bucket(*, codex_home: Path, target_provider: str) -> list[dict[str, Any]]:
+def migrate_codex_provider_bucket(
+    *,
+    codex_home: Path,
+    target_provider: str,
+    migrate_sessions: bool = True,
+) -> list[dict[str, Any]]:
     state_path = codex_home / "state_5.sqlite"
-    if not state_path.exists():
-        return []
-    connection = sqlite3.connect(str(state_path), timeout=15)
     actions: list[dict[str, Any]] = []
+    if migrate_sessions:
+        actions.extend(_migrate_codex_session_provider_bucket(codex_home=codex_home, target_provider=target_provider))
+    else:
+        actions.append(
+            {
+                "id": "codex_session_provider_bucket_migrated",
+                "tool": "codex",
+                "status": "ok",
+                "path": str(codex_home / "sessions"),
+                "target_provider": target_provider,
+                "session_scan_skipped": True,
+                "reason": "Quick launch skips full session JSONL migration; SQLite trigger guard handles active history writes.",
+            }
+        )
+    if not state_path.exists():
+        return actions
+    connection = sqlite3.connect(str(state_path), timeout=15)
     try:
         thread_columns = _sqlite_table_columns(connection, "threads")
         required_columns = {"model_provider"}
@@ -710,6 +794,133 @@ def migrate_codex_provider_bucket(*, codex_home: Path, target_provider: str) -> 
     return actions
 
 
+def _migrate_codex_session_provider_bucket(*, codex_home: Path, target_provider: str) -> list[dict[str, Any]]:
+    sessions_dir = codex_home / "sessions"
+    if not sessions_dir.exists():
+        return []
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    backup_dir = codex_home / "backups" / f"session_provider_bucket_{timestamp}"
+    manifest_path = backup_dir / "changed-lines.jsonl"
+    files_scanned = 0
+    files_changed = 0
+    lines_changed = 0
+    provider_updates = 0
+    errors: list[dict[str, str]] = []
+    backup_dir_created = False
+    for path in sorted(sessions_dir.rglob("*.jsonl")):
+        files_scanned += 1
+        try:
+            changed = _rewrite_session_jsonl_provider_bucket(
+                path,
+                sessions_dir=sessions_dir,
+                manifest_path=manifest_path,
+                target_provider=target_provider,
+                ensure_backup_dir=lambda: _ensure_backup_dir(backup_dir),
+            )
+        except OSError as exc:
+            errors.append({"path": str(path), "reason": str(exc)})
+            continue
+        if not changed:
+            continue
+        backup_dir_created = True
+        files_changed += 1
+        lines_changed += int(changed["lines_changed"])
+        provider_updates += int(changed["provider_updates"])
+    all_errors_locked = bool(errors) and all(
+        _file_locked_for_exclusive_access(Path(error["path"])) for error in errors
+    )
+    status = "warn" if all_errors_locked else ("fail" if errors else ("changed" if files_changed else "ok"))
+    action: dict[str, Any] = {
+        "id": "codex_session_provider_bucket_migrated",
+        "tool": "codex",
+        "status": status,
+        "path": str(sessions_dir),
+        "target_provider": target_provider,
+        "files_scanned": files_scanned,
+        "files_changed": files_changed,
+        "lines_changed": lines_changed,
+        "provider_updates": provider_updates,
+    }
+    if backup_dir_created:
+        action["backup_manifest"] = str(manifest_path)
+    if errors:
+        action["errors"] = errors[:10]
+        action["error_count"] = len(errors)
+    return [action]
+
+
+def _rewrite_session_jsonl_provider_bucket(
+    path: Path,
+    *,
+    sessions_dir: Path,
+    manifest_path: Path,
+    target_provider: str,
+    ensure_backup_dir: Any,
+) -> dict[str, int] | None:
+    temp_path = path.with_name(f".{path.name}.provider-bucket.tmp")
+    lines_changed = 0
+    provider_updates = 0
+    changed_records: list[dict[str, Any]] = []
+    try:
+        with path.open("r", encoding="utf-8", errors="replace") as source, temp_path.open(
+            "w", encoding="utf-8", newline=""
+        ) as target:
+            for line_number, line in enumerate(source, start=1):
+                if "model_provider" not in line:
+                    target.write(line)
+                    continue
+                try:
+                    payload = json.loads(line)
+                except json.JSONDecodeError:
+                    target.write(line)
+                    continue
+                updated = _replace_json_model_provider(payload, target_provider)
+                if updated <= 0:
+                    target.write(line)
+                    continue
+                lines_changed += 1
+                provider_updates += updated
+                changed_records.append(
+                    {
+                        "path": str(path.relative_to(sessions_dir)),
+                        "line": line_number,
+                        "old": line.rstrip("\n"),
+                    }
+                )
+                target.write(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n")
+        if lines_changed <= 0:
+            temp_path.unlink(missing_ok=True)
+            return None
+        ensure_backup_dir()
+        with manifest_path.open("a", encoding="utf-8", newline="\n") as manifest:
+            for record in changed_records:
+                manifest.write(json.dumps(record, ensure_ascii=False, separators=(",", ":")) + "\n")
+        temp_path.replace(path)
+    except Exception:
+        temp_path.unlink(missing_ok=True)
+        raise
+    return {"lines_changed": lines_changed, "provider_updates": provider_updates}
+
+
+def _ensure_backup_dir(path: Path) -> None:
+    path.mkdir(parents=True, exist_ok=True)
+
+
+def _replace_json_model_provider(value: Any, target_provider: str) -> int:
+    updates = 0
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if key == "model_provider" and isinstance(child, str) and child != target_provider:
+                value[key] = target_provider
+                updates += 1
+                continue
+            updates += _replace_json_model_provider(child, target_provider)
+    elif isinstance(value, list):
+        for child in value:
+            updates += _replace_json_model_provider(child, target_provider)
+    return updates
+
+
 def ensure_codex_history_indexes(*, codex_home: Path) -> list[dict[str, Any]]:
     state_path = codex_home / "state_5.sqlite"
     if not state_path.exists():
@@ -758,6 +969,57 @@ def ensure_codex_history_indexes(*, codex_home: Path) -> list[dict[str, Any]]:
             "created_indexes": missing,
             "skipped_indexes": skipped,
             "target_indexes": list(CODEX_HISTORY_INDEXES),
+        }
+    ]
+
+
+def ensure_codex_provider_bucket_triggers(*, codex_home: Path) -> list[dict[str, Any]]:
+    state_path = codex_home / "state_5.sqlite"
+    if not state_path.exists():
+        return []
+    connection = sqlite3.connect(str(state_path), timeout=15)
+    try:
+        tables = {
+            str(row[0])
+            for row in connection.execute(
+                "select name from sqlite_master where type = 'table'"
+            ).fetchall()
+        }
+        if "threads" not in tables:
+            return []
+        thread_columns = _sqlite_table_columns(connection, "threads")
+        missing_columns = sorted({"id", "model_provider"} - thread_columns)
+        if missing_columns:
+            return [
+                {
+                    "id": "codex_provider_bucket_triggers_ensured",
+                    "tool": "codex",
+                    "status": "fail",
+                    "path": str(state_path),
+                    "reason": "Codex state database threads table is missing required columns.",
+                    "missing_columns": missing_columns,
+                }
+            ]
+        existing_triggers = {
+            str(row[0])
+            for row in connection.execute(
+                "select name from sqlite_master where type = 'trigger'"
+            ).fetchall()
+        }
+        missing = [name for name in CODEX_PROVIDER_BUCKET_TRIGGERS if name not in existing_triggers]
+        for name in missing:
+            connection.execute(CODEX_PROVIDER_BUCKET_TRIGGERS[name])
+        connection.commit()
+    finally:
+        connection.close()
+    return [
+        {
+            "id": "codex_provider_bucket_triggers_ensured",
+            "tool": "codex",
+            "status": "changed" if missing else "ok",
+            "path": str(state_path),
+            "created_triggers": missing,
+            "target_provider": SHARED_CODEX_PROVIDER_ID,
         }
     ]
 
@@ -919,6 +1181,134 @@ def _read_codex_thread_provider_distribution(state_path: Path) -> tuple[dict[str
         except UnboundLocalError:
             pass
     return {str(provider or "<empty>"): int(count) for provider, count in rows}, None
+
+
+def _inspect_codex_session_provider_bucket(codex_home: Path) -> dict[str, Any]:
+    session_distribution, session_error, session_stats = _read_codex_session_provider_distribution(codex_home)
+    unexpected_session_providers = {
+        provider: count
+        for provider, count in session_distribution.items()
+        if provider != SHARED_CODEX_PROVIDER_ID and int(count) > 0
+    }
+    session_unexpected_status = "pass"
+    if session_error:
+        session_unexpected_status = "fail"
+    elif unexpected_session_providers:
+        if (
+            int(session_stats.get("stale_provider_files", 0)) > 0
+            and session_stats.get("stale_provider_files") == session_stats.get("locked_stale_provider_files")
+        ):
+            session_unexpected_status = "warn"
+        else:
+            session_unexpected_status = "fail"
+    return {
+        "id": "codex_session_provider_distribution",
+        "tool": "codex",
+        "status": session_unexpected_status,
+        "reason": session_error
+        or (
+            "Codex session JSONL metadata still contains non-shared provider buckets, but the remaining stale files are locked by a live Codex process; repair will retry on the next launch."
+            if session_unexpected_status == "warn"
+            else "Codex session JSONL metadata still contains non-shared provider buckets and can repopulate state_5.sqlite during resume."
+            if unexpected_session_providers
+            else "Codex session JSONL metadata uses the shared provider bucket."
+        ),
+        "path": str(codex_home / "sessions"),
+        "distribution": session_distribution,
+        "expected_shared_provider": SHARED_CODEX_PROVIDER_ID,
+        "unexpected_providers": unexpected_session_providers,
+        **session_stats,
+    }
+
+
+def _read_codex_session_provider_distribution(codex_home: Path) -> tuple[dict[str, int], str | None, dict[str, int]]:
+    sessions_dir = codex_home / "sessions"
+    stats = {
+        "files_scanned": 0,
+        "files_with_model_provider": 0,
+        "json_lines_scanned": 0,
+        "stale_provider_files": 0,
+        "locked_stale_provider_files": 0,
+    }
+    if not sessions_dir.exists():
+        return {}, None, stats
+    distribution: dict[str, int] = {}
+    errors: list[str] = []
+    for path in sorted(sessions_dir.rglob("*.jsonl")):
+        stats["files_scanned"] += 1
+        file_has_provider = False
+        file_has_stale_provider = False
+        try:
+            with path.open("r", encoding="utf-8", errors="replace") as handle:
+                for line in handle:
+                    if "model_provider" not in line:
+                        continue
+                    file_has_provider = True
+                    try:
+                        payload = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    stats["json_lines_scanned"] += 1
+                    for provider in _json_model_provider_values(payload):
+                        bucket = provider if provider else "<empty>"
+                        distribution[bucket] = distribution.get(bucket, 0) + 1
+                        if bucket != SHARED_CODEX_PROVIDER_ID:
+                            file_has_stale_provider = True
+        except OSError as exc:
+            errors.append(f"{path}: {exc}")
+        if file_has_provider:
+            stats["files_with_model_provider"] += 1
+        if file_has_stale_provider:
+            stats["stale_provider_files"] += 1
+            if _file_locked_for_exclusive_access(path):
+                stats["locked_stale_provider_files"] += 1
+    error = None
+    if errors:
+        error = "Cannot inspect some Codex session JSONL files: " + "; ".join(errors[:3])
+    return dict(sorted(distribution.items(), key=lambda item: (-item[1], item[0]))), error, stats
+
+
+def _json_model_provider_values(value: Any) -> list[str]:
+    providers: list[str] = []
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if key == "model_provider" and isinstance(child, str):
+                providers.append(child)
+                continue
+            providers.extend(_json_model_provider_values(child))
+    elif isinstance(value, list):
+        for child in value:
+            providers.extend(_json_model_provider_values(child))
+    return providers
+
+
+def _file_locked_for_exclusive_access(path: Path) -> bool:
+    if os.name != "nt":
+        return False
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    create_file = kernel32.CreateFileW
+    create_file.argtypes = [
+        ctypes.c_wchar_p,
+        ctypes.c_uint32,
+        ctypes.c_uint32,
+        ctypes.c_void_p,
+        ctypes.c_uint32,
+        ctypes.c_uint32,
+        ctypes.c_void_p,
+    ]
+    create_file.restype = ctypes.c_void_p
+    close_handle = kernel32.CloseHandle
+    close_handle.argtypes = [ctypes.c_void_p]
+    close_handle.restype = ctypes.c_int
+    generic_read = 0x80000000
+    generic_write = 0x40000000
+    open_existing = 3
+    invalid_handle_value = ctypes.c_void_p(-1).value
+    handle = create_file(str(path), generic_read | generic_write, 0, None, open_existing, 0, None)
+    if handle == invalid_handle_value:
+        return True
+    close_handle(handle)
+    return False
 
 
 def _sqlite_table_columns(connection: sqlite3.Connection, table_name: str) -> set[str]:
