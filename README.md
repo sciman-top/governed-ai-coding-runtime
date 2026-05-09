@@ -162,6 +162,21 @@ codex-shared-app -Profile shared-chatgpt D:\CODE\governed-ai-coding-runtime
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action CodexLocalOptimize
 ```
 
+更新 `CC Switch`、执行 WebDAV sync/import、恢复 `cc-switch.db` 备份或新增 Codex provider 后，可先执行只读互操作检查：
+
+```powershell
+.\run.ps1 codex-interop
+codex-interop-check
+```
+
+如检查失败，再执行显式修复：
+
+```powershell
+codex-interop-repair
+```
+
+`http://127.0.0.1:8770/?lang=zh-CN` 的 Codex 面板也提供“检查共享历史互操作”和“应用共享历史优化”。前者只读检查 `CC Switch` / `Cockpit Tools` 是否仍共享同一个 Codex 历史根；后者会备份并写入 Codex 配置，同时实读/修复第三方切换器状态。
+
 与本机 `Cockpit Tools` / `CC Switch` 的衔接边界：二者可以继续管理 Codex 账号、API provider、代理和 quota；本项目的优化器只固定共同历史根。`CC Switch` 使用默认 `~/.codex` 或它自己的 Codex config override 指向该目录时可无缝共用；其 provider 切换会写 `auth.json` / `config.toml`，因此 `Optimize-CodexLocal.ps1` 会检查并修复 `common_config_codex` 中的 `history.persistence`、`sqlite_home`、`log_dir`，同时移除 provider 片段里的 `disable_response_storage`。`Cockpit Tools` 使用默认 Codex home 时可直接共用；检测器会确认其 Codex 账号/provider inventory 存在，并阻断强制独立 `CODEX_HOME` / `sqlite_home` 的实例配置。
 
 ```powershell

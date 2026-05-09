@@ -79,6 +79,16 @@ class CodexSharedLauncherTests(unittest.TestCase):
         self.assertIn("$Surface -eq 'exec'", script)
         self.assertIn("Codex app accepts a workspace path", script)
 
+    def test_optimizer_installs_interop_shortcuts_when_switcher_install_is_enabled(self) -> None:
+        script = (ROOT / "scripts" / "Optimize-CodexLocal.ps1").read_text(encoding="utf-8")
+
+        self.assertIn("codex-interop-check.cmd", script)
+        self.assertIn("codex-interop-repair.cmd", script)
+        self.assertIn("codex-interop-check.py", script)
+        self.assertIn("--cc-switch-db", script)
+        self.assertIn("--cockpit-home", script)
+        self.assertIn("--apply %*", script)
+
     def test_interop_checker_repairs_cc_switch_shared_history_blockers(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)

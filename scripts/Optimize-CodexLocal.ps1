@@ -378,7 +378,7 @@ $plan = [ordered]@{
         sqlite_home = $CodexHome
         history_persistence = 'save-all'
         shared_profiles = @('shared-chatgpt', 'shared-openai-api', 'shared-current-provider')
-        launchers = @('codex-shared', 'codex-shared-exec', 'codex-shared-app')
+        launchers = @('codex-shared', 'codex-shared-exec', 'codex-shared-app', 'codex-interop-check', 'codex-interop-repair')
     }
     compatibility = [ordered]@{
         strategy = 'Use one shared CodexHome for coding history/state; switch auth/provider inside that home.'
@@ -431,6 +431,7 @@ if ($InstallAccountSwitcher) {
     New-Item -ItemType Directory -Force -Path $binDir | Out-Null
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'codex-account.ps1') -Destination (Join-Path $scriptsDir 'Switch-CodexAccount.ps1') -Force
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Start-CodexShared.ps1') -Destination (Join-Path $scriptsDir 'Start-CodexShared.ps1') -Force
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'codex-interop-check.py') -Destination (Join-Path $scriptsDir 'codex-interop-check.py') -Force
     Set-Content -LiteralPath (Join-Path $binDir 'codex-account.cmd') -Value '@echo off
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Switch-CodexAccount.ps1" %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-shared.cmd') -Value '@echo off
@@ -439,8 +440,13 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Star
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface exec %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-shared-app.cmd') -Value '@echo off
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface app %*' -Encoding ascii
+    Set-Content -LiteralPath (Join-Path $binDir 'codex-interop-check.cmd') -Value '@echo off
+python "%USERPROFILE%\.codex\scripts\codex-interop-check.py" --codex-home "%USERPROFILE%\.codex" --cc-switch-db "%USERPROFILE%\.cc-switch\cc-switch.db" --cockpit-home "%USERPROFILE%\.antigravity_cockpit" %*' -Encoding ascii
+    Set-Content -LiteralPath (Join-Path $binDir 'codex-interop-repair.cmd') -Value '@echo off
+python "%USERPROFILE%\.codex\scripts\codex-interop-check.py" --codex-home "%USERPROFILE%\.codex" --cc-switch-db "%USERPROFILE%\.cc-switch\cc-switch.db" --cockpit-home "%USERPROFILE%\.antigravity_cockpit" --apply %*' -Encoding ascii
     $plan.account_switcher_installed = $true
     $plan.shared_launcher_installed = $true
+    $plan.interop_shortcuts_installed = $true
 }
 
 $plan.interop = Invoke-CodexInteropCheck `

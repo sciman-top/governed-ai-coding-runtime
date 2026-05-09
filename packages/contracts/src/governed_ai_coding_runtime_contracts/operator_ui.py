@@ -642,6 +642,7 @@ def _render_codex_panel(text: dict[str, str], *, interactive: bool) -> str:
             f"<button type='button' data-codex-refresh='1' title='{escape(text['codex_refresh_if_stale'])}'>{escape(text['codex_refresh'])}</button>",
             f"<button type='button' data-codex-refresh-online='1' title='{escape(text['codex_refresh_online_hint'])}'>{escape(text['codex_refresh_online'])}</button>",
             f"<button type='button' data-codex-usage='1'>{escape(text['codex_open_usage'])}</button>",
+            f"<button type='button' data-action='codex_interop_check'>{escape(text['codex_interop_check'])}</button>",
             f"<button type='button' class='primary' data-action='codex_local_optimize' data-confirm='{escape(text['codex_local_optimize_confirm'])}'>{escape(text['codex_local_optimize'])}</button>",
             "</div>",
             "<div class='codex-grid'>",

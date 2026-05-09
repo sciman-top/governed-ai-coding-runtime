@@ -57,6 +57,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn(".\\run.ps1 fast", completed.stdout)
         self.assertIn(".\\run.ps1 readiness -OpenUi", completed.stdout)
         self.assertNotIn("codex-optimize", completed.stdout)
+        self.assertIn("codex-interop", completed.stdout)
         self.assertIn("rules-check", completed.stdout)
         self.assertIn("operator-help", completed.stdout)
         self.assertIn("cleanup-targets", completed.stdout)
@@ -146,6 +147,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("FastFeedback", completed.stdout)
         self.assertIn("Readiness", completed.stdout)
         self.assertIn("CodexLocalOptimize", completed.stdout)
+        self.assertIn("CodexInteropCheck", completed.stdout)
         self.assertIn("FeedbackReport", completed.stdout)
         self.assertIn("CleanupTargets", completed.stdout)
         self.assertIn("UninstallGovernance", completed.stdout)
@@ -265,6 +267,33 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("scripts/Optimize-CodexLocal.ps1", completed.stdout)
         self.assertIn("-Apply", completed.stdout)
         self.assertNotIn("-ApplyManagedAssetRemoval", completed.stdout)
+
+    def test_operator_codex_interop_check_is_available_as_dry_run(self) -> None:
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "operator.ps1"),
+                "-Action",
+                "CodexInteropCheck",
+                "-DryRun",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+        )
+
+        self.assertIn("DRY-RUN codex-interop-check", completed.stdout)
+        self.assertIn("scripts/codex-interop-check.py", completed.stdout)
+        self.assertIn("--cc-switch-db", completed.stdout)
+        self.assertIn("--cockpit-home", completed.stdout)
+        self.assertNotIn("--apply", completed.stdout)
 
     def test_operator_apply_all_features_is_available_while_waiting_for_host_recovery(self) -> None:
         env = dict(os.environ)
