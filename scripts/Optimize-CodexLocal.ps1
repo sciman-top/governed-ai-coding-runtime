@@ -238,6 +238,60 @@ function Set-TrustedProject {
     return $result.ToArray()
 }
 
+function Add-DuplicateSkillDisableOverrides {
+    param(
+        [string[]] $Lines,
+        [string] $CanonicalSkillRoot = (Join-Path (Split-Path -Parent $PSScriptRoot) '..\skills-manager\agent'),
+        [string] $DuplicateSkillRoot = (Join-Path $HOME '.agents\skills')
+    )
+
+    $canonicalRootResolved = $null
+    if (Test-Path -LiteralPath $CanonicalSkillRoot -PathType Container) {
+        $canonicalRootResolved = (Resolve-Path -LiteralPath $CanonicalSkillRoot).Path
+    }
+    elseif (Test-Path -LiteralPath 'D:\CODE\skills-manager\agent' -PathType Container) {
+        $canonicalRootResolved = (Resolve-Path -LiteralPath 'D:\CODE\skills-manager\agent').Path
+    }
+    if (-not $canonicalRootResolved -or -not (Test-Path -LiteralPath $DuplicateSkillRoot -PathType Container)) {
+        return $Lines
+    }
+
+    $canonicalNames = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+    foreach ($dir in Get-ChildItem -LiteralPath $canonicalRootResolved -Directory) {
+        if (Test-Path -LiteralPath (Join-Path $dir.FullName 'SKILL.md') -PathType Leaf) {
+            [void]$canonicalNames.Add($dir.Name)
+        }
+    }
+    if ($canonicalNames.Count -eq 0) {
+        return $Lines
+    }
+
+    $existingConfigText = [string]::Join("`n", $Lines)
+    $result = New-Object System.Collections.Generic.List[string]
+    $result.AddRange([string[]]$Lines)
+    foreach ($dir in Get-ChildItem -LiteralPath $DuplicateSkillRoot -Directory | Sort-Object Name) {
+        if (-not $canonicalNames.Contains($dir.Name)) {
+            continue
+        }
+        if (-not (Test-Path -LiteralPath (Join-Path $dir.FullName 'SKILL.md') -PathType Leaf)) {
+            continue
+        }
+        $skillPath = $dir.FullName
+        $escapedPath = [regex]::Escape($skillPath)
+        if ($existingConfigText -match $escapedPath) {
+            continue
+        }
+        if ($result.Count -gt 0 -and $result[$result.Count - 1].Trim()) {
+            $result.Add('')
+        }
+        $result.Add('[[skills.config]]')
+        $result.Add(('path = {0}' -f (ConvertTo-TomlString $skillPath)))
+        $result.Add('enabled = false')
+        $existingConfigText += "`n$skillPath"
+    }
+    return $result.ToArray()
+}
+
 function Update-ConfigToml {
     param([string] $Path, [string] $HomePath)
 
@@ -291,6 +345,7 @@ function Update-ConfigToml {
         $resolved = (Resolve-Path -LiteralPath $repo).Path
         $lines = Set-TrustedProject -Lines $lines -Path $resolved
     }
+    $lines = Add-DuplicateSkillDisableOverrides -Lines $lines
     return $lines
 }
 

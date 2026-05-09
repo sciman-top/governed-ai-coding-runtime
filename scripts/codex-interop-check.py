@@ -164,17 +164,28 @@ def inspect_codex_provider_buckets(*, codex_home: Path, cockpit_home: Path) -> d
     config_path = codex_home / "config.toml"
     distribution, distribution_error = _read_codex_thread_provider_distribution(state_path)
     dominant_provider = _dominant_provider(distribution)
+    unexpected_providers = {
+        provider: count
+        for provider, count in distribution.items()
+        if provider != SHARED_CODEX_PROVIDER_ID and int(count) > 0
+    }
 
     checks.append(
         {
             "id": "codex_thread_provider_distribution",
             "tool": "codex",
-            "status": "fail" if distribution_error else "pass",
+            "status": "fail" if distribution_error or unexpected_providers else "pass",
             "reason": distribution_error
-            or "Codex local history visibility is bucketed by threads.model_provider; this distribution must be considered when switching relays.",
+            or (
+                "Active Codex threads still use non-shared provider buckets; run repair with migrate-provider-bucket."
+                if unexpected_providers
+                else "Codex local history visibility is bucketed by threads.model_provider; all active threads use the shared provider bucket."
+            ),
             "path": str(state_path),
             "distribution": distribution,
             "dominant_provider": dominant_provider,
+            "expected_shared_provider": SHARED_CODEX_PROVIDER_ID,
+            "unexpected_providers": unexpected_providers,
         }
     )
 

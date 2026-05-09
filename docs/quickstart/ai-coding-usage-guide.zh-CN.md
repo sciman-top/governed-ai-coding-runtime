@@ -90,7 +90,7 @@ codex-cockpit-app D:\CODE\governed-ai-coding-runtime
 codex-cockpit-app-restart D:\CODE\governed-ai-coding-runtime
 ```
 
-`Cockpit Tools` 负责 Codex App/CLI 的 ChatGPT auth 和 Codex API provider 切换；`cc-switch` 负责 Claude CLI、GLM、DeepSeek 等第三方 API 切换。关键约束是让 Codex 始终使用同一个 `~/.codex`，并把 Cockpit 当前 Codex account 投影到稳定 `model_provider = "cockpit"` 历史 bucket；`Optimize-CodexLocal.ps1 -Apply` 会实读 Cockpit 当前账号，写入 Codex 配置并迁移 `state_5.sqlite` 的 provider metadata。Codex App 切换后需要重启进程才能刷新 auth/provider 状态，可用 `codex-cockpit-app-restart` 自动关开。
+`Cockpit Tools` 负责 Codex App/CLI 的 ChatGPT auth 和 Codex API provider 切换；`cc-switch` 负责 Claude CLI、GLM、DeepSeek 等第三方 API 切换。关键约束是让 Codex 始终使用同一个 `~/.codex`，并把 Cockpit 当前 Codex account 投影到稳定内置 `model_provider = "openai"` 历史 bucket；API relay 通过 `openai_base_url` 切换。`Optimize-CodexLocal.ps1 -Apply` 会实读 Cockpit 当前账号，写入 Codex 配置并迁移 `state_5.sqlite` 的 provider metadata。Codex App 切换后需要重启进程才能刷新 auth/provider 状态，可用 `codex-cockpit-app-restart` 自动关开。
 
 ### 宿主反馈汇总
 如果你想系统性判断“功能在 Codex 和 Claude 里是否真的生效、异常属于宿主还是 runtime、下一步该优化哪里”，直接生成统一反馈报告，而不是只读单次日志：

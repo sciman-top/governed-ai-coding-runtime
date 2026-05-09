@@ -133,6 +133,63 @@ class CodexSharedLauncherTests(unittest.TestCase):
         self.assertIn("--migrate-provider-bucket", script)
         self.assertIn("--apply --migrate-provider-bucket %*", script)
 
+    def test_interop_checker_fails_when_any_active_thread_uses_non_shared_provider(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            codex_home = root / "codex-home"
+            codex_home.mkdir()
+            _create_codex_state_db(codex_home / "state_5.sqlite")
+            connection = sqlite3.connect(codex_home / "state_5.sqlite")
+            try:
+                connection.execute(
+                    "insert into threads(id, model_provider, archived, updated_at, updated_at_ms) values(?, ?, ?, ?, ?)",
+                    ("thread-openai-majority", "openai", 0, "2026-05-09T03:00:00Z", 4),
+                )
+                connection.execute(
+                    "insert into threads(id, model_provider, archived, updated_at, updated_at_ms) values(?, ?, ?, ?, ?)",
+                    ("thread-openai-majority-2", "openai", 0, "2026-05-09T04:00:00Z", 5),
+                )
+                connection.commit()
+            finally:
+                connection.close()
+            cc_switch_db = root / ".cc-switch" / "cc-switch.db"
+            cc_switch_db.parent.mkdir()
+            _create_cc_switch_db(cc_switch_db)
+            cockpit_home = root / ".antigravity_cockpit"
+            cockpit_home.mkdir()
+            (cockpit_home / "codex_accounts").mkdir()
+            (cockpit_home / "codex_accounts.json").write_text(
+                json.dumps({"accounts": [{"id": "codex_chatgpt"}], "current_account_id": "codex_chatgpt"}),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_accounts" / "codex_chatgpt.json").write_text(
+                json.dumps({"id": "codex_chatgpt", "auth_mode": "chatgpt", "tokens": {"access_token": "token"}}),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_model_providers.json").write_text(
+                json.dumps([{"id": "openai", "name": "OpenAI"}]),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_instances.json").write_text(
+                json.dumps({"instances": [], "defaultSettings": {"extraArgs": "", "lastPid": None}}),
+                encoding="utf-8",
+            )
+            (codex_home / "config.toml").write_text(
+                'model_provider = "openai"\nforced_login_method = "chatgpt"\n',
+                encoding="utf-8",
+            )
+
+            checked = _run_interop_checker(codex_home, cc_switch_db, cockpit_home)
+
+            self.assertEqual(checked.returncode, 2, checked.stdout + checked.stderr)
+            payload = json.loads(checked.stdout)
+            checks = {check["id"]: check for check in payload["after"]["checks"]}
+            provider_check = checks["codex_thread_provider_distribution"]
+            self.assertEqual("fail", provider_check["status"])
+            self.assertEqual("openai", provider_check["dominant_provider"])
+            self.assertEqual({"rightcode": 2}, provider_check["unexpected_providers"])
+            self.assertIn("non-shared provider buckets", provider_check["reason"])
+
     def test_interop_checker_repairs_cc_switch_shared_history_blockers(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)

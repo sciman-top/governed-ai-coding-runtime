@@ -637,7 +637,7 @@
           "claude_host_status": "ok",
           "claude_workload_status": "ready",
           "codex_host_status": "ok",
-          "recommendation_count": 2,
+          "recommendation_count": 3,
           "stale_latest_runs": [],
           "status": "attention",
           "target_run_freshness": "fresh"
