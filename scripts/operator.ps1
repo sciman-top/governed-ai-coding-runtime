@@ -89,7 +89,8 @@ function Invoke-OperatorStep {
     $exitCode = 0
   }
   if ($exitCode -ne 0) {
-    throw "Operator step failed: $Name (exit_code=$exitCode)"
+    Write-Error "Operator step failed: $Name (exit_code=$exitCode)" -ErrorAction Continue
+    exit $exitCode
   }
 }
 

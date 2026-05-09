@@ -69,6 +69,10 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertIn("[profiles.shared-cockpit-api]", config)
             self.assertIn("[profiles.shared-cockpit-auth]", config)
             self.assertIn("[profiles.shared-current-provider]", config)
+            self.assertIn('model_provider = "openai"', config)
+            shared_chatgpt = config.split("[profiles.shared-chatgpt]", 1)[1].split("[profiles.", 1)[0]
+            self.assertIn('forced_login_method = "chatgpt"', shared_chatgpt)
+            self.assertIn('model_provider = "openai"', shared_chatgpt)
             self.assertIn('model_provider = "rightcode"', config)
             self.assertNotIn("disable_response_storage", config)
             self.assertNotIn("cmp_1778246510288_1", config)
@@ -182,7 +186,7 @@ class CodexSharedLauncherTests(unittest.TestCase):
             )
 
             dry_run = _run_interop_checker(codex_home, cc_switch_db, cockpit_home)
-            self.assertEqual(dry_run.returncode, 0, dry_run.stderr)
+            self.assertEqual(dry_run.returncode, 2, dry_run.stderr)
             dry_payload = json.loads(dry_run.stdout)
             self.assertEqual("fail", dry_payload["status"])
             dry_check_ids = {
@@ -379,6 +383,100 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertEqual("fail", checks["cockpit_current_account_projectable"]["status"])
             self.assertEqual("", checks["cockpit_current_account_projectable"]["base_url"])
             self.assertNotIn("https://api.openai.com/v1", (codex_home / "config.toml").read_text(encoding="utf-8"))
+            self.assertFalse((codex_home / "auth.json").exists())
+
+    def test_interop_checker_does_not_mutate_existing_auth_for_unprojectable_api_account(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            codex_home = root / "codex-home"
+            codex_home.mkdir()
+            (codex_home / "config.toml").write_text("", encoding="utf-8")
+            original_auth = {"auth_mode": "chatgpt", "tokens": {"access_token": "old-token"}}
+            (codex_home / "auth.json").write_text(json.dumps(original_auth), encoding="utf-8")
+            cc_switch_db = root / ".cc-switch" / "cc-switch.db"
+            cc_switch_db.parent.mkdir()
+            _create_cc_switch_db(cc_switch_db)
+            cockpit_home = root / ".antigravity_cockpit"
+            cockpit_home.mkdir()
+            (cockpit_home / "codex_accounts").mkdir()
+            (cockpit_home / "codex_accounts.json").write_text(
+                json.dumps({"accounts": [{"id": "codex_api"}], "current_account_id": "codex_api"}),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_accounts" / "codex_api.json").write_text(
+                json.dumps(
+                    {
+                        "id": "codex_api",
+                        "email": "api-key-test",
+                        "auth_mode": "apikey",
+                        "openai_api_key": "secret",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_model_providers.json").write_text("[]", encoding="utf-8")
+            (cockpit_home / "codex_instances.json").write_text(
+                json.dumps({"instances": [], "defaultSettings": {"extraArgs": "", "lastPid": None}}),
+                encoding="utf-8",
+            )
+
+            applied = _run_interop_checker(codex_home, cc_switch_db, cockpit_home, apply=True)
+
+            self.assertEqual(applied.returncode, 2, applied.stdout + applied.stderr)
+            payload = json.loads(applied.stdout)
+            action_ids = {action["id"] for action in payload["actions"]}
+            self.assertNotIn("codex_auth_cockpit_projected", action_ids)
+            self.assertEqual(original_auth, json.loads((codex_home / "auth.json").read_text(encoding="utf-8")))
+
+    def test_interop_checker_flags_unreadable_codex_state_schema(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            codex_home = root / "codex-home"
+            codex_home.mkdir()
+            (codex_home / "config.toml").write_text("", encoding="utf-8")
+            connection = sqlite3.connect(codex_home / "state_5.sqlite")
+            try:
+                connection.execute("create table unrelated(id text)")
+                connection.commit()
+            finally:
+                connection.close()
+            cc_switch_db = root / ".cc-switch" / "cc-switch.db"
+            cc_switch_db.parent.mkdir()
+            _create_cc_switch_db(cc_switch_db)
+            cockpit_home = root / ".antigravity_cockpit"
+            cockpit_home.mkdir()
+            (cockpit_home / "codex_accounts").mkdir()
+            (cockpit_home / "codex_accounts.json").write_text(
+                json.dumps({"accounts": [{"id": "codex_chatgpt"}], "current_account_id": "codex_chatgpt"}),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_accounts" / "codex_chatgpt.json").write_text(
+                json.dumps(
+                    {
+                        "id": "codex_chatgpt",
+                        "email": "chatgpt-test",
+                        "auth_mode": "chatgpt",
+                        "tokens": {"access_token": "token"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_model_providers.json").write_text(
+                json.dumps([{"id": "openai", "name": "OpenAI"}]),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_instances.json").write_text(
+                json.dumps({"instances": [], "defaultSettings": {"extraArgs": "", "lastPid": None}}),
+                encoding="utf-8",
+            )
+
+            checked = _run_interop_checker(codex_home, cc_switch_db, cockpit_home)
+
+            self.assertEqual(checked.returncode, 2, checked.stdout + checked.stderr)
+            payload = json.loads(checked.stdout)
+            checks = {check["id"]: check for check in payload["after"]["checks"]}
+            self.assertEqual("fail", checks["codex_thread_provider_distribution"]["status"])
+            self.assertIn("threads", checks["codex_thread_provider_distribution"]["reason"])
 
 def _run_interop_checker(
     codex_home: Path,

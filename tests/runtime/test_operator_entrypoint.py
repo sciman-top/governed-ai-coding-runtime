@@ -3,6 +3,7 @@ import importlib.util
 import os
 import shutil
 import subprocess
+import tempfile
 import threading
 import unittest
 import urllib.error
@@ -294,6 +295,41 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("--cc-switch-db", completed.stdout)
         self.assertIn("--cockpit-home", completed.stdout)
         self.assertNotIn("--apply", completed.stdout)
+
+    def test_operator_preserves_codex_interop_check_failure_exit_code(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            fake_bin = Path(tmp_dir)
+            fake_python = fake_bin / "python.cmd"
+            fake_python.write_text(
+                "@echo off\r\n"
+                "echo {\"\"status\"\":\"\"fail\"\",\"\"after\"\":{\"\"status\"\":\"\"fail\"\"}}\r\n"
+                "exit /b 2\r\n",
+                encoding="ascii",
+            )
+            env = dict(os.environ)
+            env["PATH"] = str(fake_bin) + os.pathsep + env["PATH"]
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "operator.ps1"),
+                    "-Action",
+                    "CodexInteropCheck",
+                ],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=ROOT,
+                env=env,
+            )
+
+            self.assertEqual(2, completed.returncode, completed.stdout + completed.stderr)
+            self.assertIn("Operator step failed: codex-interop-check (exit_code=2)", completed.stderr)
 
     def test_operator_apply_all_features_is_available_while_waiting_for_host_recovery(self) -> None:
         env = dict(os.environ)

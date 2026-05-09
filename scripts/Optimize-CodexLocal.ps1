@@ -18,6 +18,7 @@ $Recommended = [ordered]@{
     cli_auth_credentials_store = '"file"'
     approval_policy = '"never"'
     model = '"gpt-5.5"'
+    model_provider = '"openai"'
     model_reasoning_effort = '"medium"'
     model_verbosity = '"medium"'
     model_context_window = '272000'
@@ -260,6 +261,7 @@ function Update-ConfigToml {
     $lines = Set-HistorySection -Lines $lines
     $lines = Set-TomlTableValues -Lines $lines -Header '[profiles.shared-chatgpt]' -Values @{
         forced_login_method = '"chatgpt"'
+        model_provider = '"openai"'
     }
     $lines = Set-TomlTableValues -Lines $lines -Header '[profiles.shared-openai-api]' -Values @{
         forced_login_method = '"api"'
