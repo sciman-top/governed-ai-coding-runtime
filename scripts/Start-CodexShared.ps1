@@ -21,6 +21,8 @@ param(
 
     [string] $CockpitAccountId,
 
+    [switch] $SkipCockpitApiValidation,
+
     [switch] $UseCcSwitchCurrentProvider,
 
     [string] $CcSwitchDbPath = (Join-Path $HOME '.cc-switch\cc-switch.db'),
@@ -63,6 +65,38 @@ function Get-JsonStringProperty {
         return [string]$Object.$Name
     }
     return ''
+}
+
+function Assert-CockpitApiAccountUsable {
+    param(
+        [string] $BaseUrl,
+        [string] $ApiKey
+    )
+    if ([string]::IsNullOrWhiteSpace($BaseUrl) -or [string]::IsNullOrWhiteSpace($ApiKey)) {
+        throw 'Cockpit Tools current Codex API account is missing base URL or API key.'
+    }
+    $modelsUrl = $BaseUrl.TrimEnd('/') + '/models'
+    try {
+        $response = Invoke-WebRequest `
+            -Uri $modelsUrl `
+            -Method Get `
+            -Headers @{ Authorization = ('Bearer ' + $ApiKey) } `
+            -TimeoutSec 10 `
+            -ErrorAction Stop
+        if ($response.StatusCode -lt 200 -or $response.StatusCode -ge 300) {
+            throw ("status {0}" -f $response.StatusCode)
+        }
+    }
+    catch {
+        $status = ''
+        if ($_.Exception.PSObject.Properties.Name -contains 'Response' -and $null -ne $_.Exception.Response) {
+            $statusCode = $_.Exception.Response.StatusCode
+            if ($statusCode) {
+                $status = " (status $([int]$statusCode))"
+            }
+        }
+        throw "Cockpit Tools current Codex API account failed /models validation$status; refusing to launch Codex with a broken API account: $modelsUrl"
+    }
 }
 
 function Write-CodexAuthProjection {
@@ -138,6 +172,33 @@ function Stop-CodexAppProcesses {
     }
 }
 
+function Wait-CockpitCodexStateStable {
+    param([string] $CockpitStateHome)
+
+    $paths = @(
+        (Join-Path $CockpitStateHome 'codex_accounts.json'),
+        (Join-Path $CockpitStateHome 'codex_instances.json'),
+        (Join-Path $CockpitStateHome 'config.json')
+    )
+    $previous = $null
+    foreach ($attempt in 1..10) {
+        $current = @($paths | ForEach-Object {
+            if (Test-Path -LiteralPath $_ -PathType Leaf) {
+                $item = Get-Item -LiteralPath $_
+                '{0}|{1}|{2}' -f $_, $item.Length, $item.LastWriteTimeUtc.Ticks
+            }
+            else {
+                '{0}|missing' -f $_
+            }
+        })
+        if ($previous -and (($current -join "`n") -eq ($previous -join "`n"))) {
+            return
+        }
+        $previous = $current
+        Start-Sleep -Milliseconds 250
+    }
+}
+
 function Invoke-CodexInteropRepair {
     param(
         [string] $HomePath,
@@ -194,6 +255,10 @@ if ($UseCockpitCurrentAccount -and $UseCcSwitchCurrentProvider) {
     throw 'UseCockpitCurrentAccount and UseCcSwitchCurrentProvider are mutually exclusive.'
 }
 
+if ($UseCockpitCurrentAccount) {
+    Wait-CockpitCodexStateStable -CockpitStateHome $CockpitHome
+}
+
 if (-not [string]::IsNullOrWhiteSpace($AuthProfile)) {
     $switcher = Join-Path $resolvedHome 'scripts\Switch-CodexAccount.ps1'
     if (-not (Test-Path -LiteralPath $switcher -PathType Leaf)) {
@@ -239,7 +304,10 @@ if ($UseCockpitCurrentAccount) {
         $ModelProvider = 'openai'
     }
     $accountBaseUrl = Get-JsonStringProperty -Object $cockpitAccount -Name 'api_base_url'
-    if ([string]::IsNullOrWhiteSpace($accountBaseUrl)) {
+    if ([string]::IsNullOrWhiteSpace($accountBaseUrl) -and $authMode -eq 'apikey') {
+        throw "Cockpit Tools current Codex API account has no api_base_url; refusing to fall back to OpenAI Official: $accountPath"
+    }
+    elseif ([string]::IsNullOrWhiteSpace($accountBaseUrl)) {
         $accountBaseUrl = 'https://api.openai.com/v1'
     }
     $accountBaseUrl = $accountBaseUrl.TrimEnd('/')
@@ -250,6 +318,9 @@ if ($UseCockpitCurrentAccount) {
         $apiKey = Get-JsonStringProperty -Object $cockpitAccount -Name 'openai_api_key'
         if ([string]::IsNullOrWhiteSpace($apiKey)) {
             throw "Cockpit Tools current Codex API account has no openai_api_key: $accountPath"
+        }
+        if (-not $SkipCockpitApiValidation) {
+            Assert-CockpitApiAccountUsable -BaseUrl $accountBaseUrl -ApiKey $apiKey
         }
         $env:OPENAI_API_KEY = $apiKey
         $forcedLoginMethod = 'api'
@@ -301,7 +372,7 @@ print(json.dumps({"name": row["name"], "openai_api_key": auth.get("OPENAI_API_KE
     }
 }
 
-if ($Surface -eq 'app' -and ($UseCockpitCurrentAccount -or $RestartExistingCodexApp)) {
+if ($Surface -eq 'app' -and $RestartExistingCodexApp -and -not $UseCockpitCurrentAccount) {
     Stop-CodexAppProcesses
 }
 if ($UseCockpitCurrentAccount) {
@@ -312,6 +383,9 @@ if ($UseCockpitCurrentAccount) {
             -Account $cockpitAccount `
             -Mode ([string]$pendingCockpitAuthProjection.Mode) `
             -ApiKey ([string]$pendingCockpitAuthProjection.ApiKey))
+    }
+    if ($Surface -eq 'app' -and $RestartExistingCodexApp) {
+        Stop-CodexAppProcesses
     }
 }
 

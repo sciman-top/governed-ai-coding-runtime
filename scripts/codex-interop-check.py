@@ -349,18 +349,19 @@ def inspect_cockpit(*, codex_home: Path, cockpit_home: Path) -> list[dict[str, A
         str(cockpit_config.get("codex_specified_app_path") or "") if isinstance(cockpit_config, dict) else ""
     )
     expected_restart_wrapper = str(_expected_cockpit_restart_wrapper(codex_home))
-    restart_ready = restart_on_switch and _same_path(specified_app_path, expected_restart_wrapper)
+    managed_restart_enabled = restart_on_switch and _same_path(specified_app_path, expected_restart_wrapper)
     checks.append(
         {
             "id": "cockpit_codex_app_restart_semantics",
             "tool": "cockpit_tools",
-            "status": "pass" if restart_ready else "warn",
-            "reason": "Codex App reads auth/provider state at process startup; switching Cockpit accounts usually needs an app restart to refresh visible history.",
+            "status": "warn" if managed_restart_enabled else "pass",
+            "reason": "Cockpit Tools owns Codex account/provider state; governed interop must not install a restart wrapper that can rewrite Cockpit account metadata.",
             "path": str(cockpit_home / "config.json"),
             "codex_restart_specified_app_on_switch": restart_on_switch,
             "codex_specified_app_path": specified_app_path,
             "expected_restart_wrapper": expected_restart_wrapper,
-            "alternative": "Use codex-cockpit-app-restart after switching, or let repair configure Cockpit to launch the restart wrapper.",
+            "managed_restart_enabled": managed_restart_enabled,
+            "alternative": "Launch Codex manually after Cockpit switching unless a user explicitly re-enables a wrapper.",
         }
     )
 
@@ -403,7 +404,6 @@ def repair_cockpit(*, codex_home: Path, cockpit_home: Path, checks: dict[str, An
         return actions
     actions.extend(repair_codex_live_config_for_cockpit(codex_home=codex_home, account=current))
     actions.extend(repair_codex_auth_for_cockpit(codex_home=codex_home, account=current))
-    actions.extend(repair_cockpit_restart_on_switch(codex_home=codex_home, cockpit_home=cockpit_home))
     actions.extend(ensure_codex_history_indexes(codex_home=codex_home))
     actions.extend(rotate_large_codex_tui_log(codex_home=codex_home))
     return actions
@@ -1357,6 +1357,8 @@ def _cockpit_account_base_url(account: dict[str, Any]) -> str:
     base_url = account.get("api_base_url")
     if isinstance(base_url, str) and base_url.strip():
         return base_url.strip().rstrip("/")
+    if account.get("auth_mode") == "apikey":
+        return ""
     return OFFICIAL_OPENAI_BASE_URL
 
 

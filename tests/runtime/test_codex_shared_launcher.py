@@ -88,13 +88,24 @@ class CodexSharedLauncherTests(unittest.TestCase):
         self.assertIn("UseCockpitCurrentAccount", script)
         self.assertIn("OPENAI_API_KEY sourced from current Cockpit Tools account", script)
         self.assertIn("[Environment]::SetEnvironmentVariable('OPENAI_API_KEY', $null, 'Process')", script)
+        self.assertIn("refusing to fall back to OpenAI Official", script)
+        self.assertIn("[switch] $SkipCockpitApiValidation", script)
+        self.assertIn("function Assert-CockpitApiAccountUsable", script)
+        self.assertIn("/models validation", script)
+        self.assertIn("refusing to launch Codex with a broken API account", script)
         self.assertIn("model_providers.{0}.base_url={1}", script)
         self.assertIn("function Invoke-CodexInteropRepair", script)
+        self.assertIn("function Wait-CockpitCodexStateStable", script)
+        self.assertIn("Wait-CockpitCodexStateStable -CockpitStateHome $CockpitHome", script)
         self.assertIn("--migrate-provider-bucket", script)
         self.assertIn("function Stop-CodexAppProcesses", script)
         self.assertIn("Get-Process -Name 'Codex', 'codex'", script)
         self.assertIn("Stop-Process -Id $liveProcess.Id", script)
-        self.assertIn("$Surface -eq 'app' -and ($UseCockpitCurrentAccount -or $RestartExistingCodexApp)", script)
+        self.assertIn("$Surface -eq 'app' -and $RestartExistingCodexApp -and -not $UseCockpitCurrentAccount", script)
+        self.assertLess(
+            script.index("Invoke-CodexInteropRepair -HomePath $resolvedHome"),
+            script.rindex("Stop-CodexAppProcesses"),
+        )
 
     def test_optimizer_installs_interop_shortcuts_when_switcher_install_is_enabled(self) -> None:
         script = (ROOT / "scripts" / "Optimize-CodexLocal.ps1").read_text(encoding="utf-8")
@@ -190,7 +201,7 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertIn("cockpit_codex_stale_last_pid_cleared", action_ids)
             self.assertIn("codex_live_config_cockpit_provider", action_ids)
             self.assertIn("codex_threads_provider_bucket_migrated", action_ids)
-            self.assertIn("cockpit_codex_restart_wrapper_configured", action_ids)
+            self.assertNotIn("cockpit_codex_restart_wrapper_configured", action_ids)
             self.assertIn("codex_history_indexes_ensured", action_ids)
 
             connection = sqlite3.connect(cc_switch_db)
@@ -236,11 +247,51 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertIn('forced_login_method = "api"', live_config)
             self.assertIn('model_provider = "openai"', live_config)
             self.assertIn('openai_base_url = "https://right.codes/codex/v1"', live_config)
-            cockpit_config = json.loads((cockpit_home / "config.json").read_text(encoding="utf-8"))
-            self.assertTrue(cockpit_config["codex_restart_specified_app_on_switch"])
-            self.assertEqual(str(restart_wrapper), cockpit_config["codex_specified_app_path"])
+            self.assertFalse((cockpit_home / "config.json").exists())
             cockpit_instances = json.loads((cockpit_home / "codex_instances.json").read_text(encoding="utf-8"))
             self.assertIsNone(cockpit_instances["defaultSettings"]["lastPid"])
+
+    def test_interop_checker_refuses_api_account_without_base_url(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            codex_home = root / "codex-home"
+            codex_home.mkdir()
+            (codex_home / "config.toml").write_text("", encoding="utf-8")
+            cc_switch_db = root / ".cc-switch" / "cc-switch.db"
+            cc_switch_db.parent.mkdir()
+            _create_cc_switch_db(cc_switch_db)
+            cockpit_home = root / ".antigravity_cockpit"
+            cockpit_home.mkdir()
+            (cockpit_home / "codex_accounts").mkdir()
+            (cockpit_home / "codex_accounts.json").write_text(
+                json.dumps({"accounts": [{"id": "codex_api"}], "current_account_id": "codex_api"}),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_accounts" / "codex_api.json").write_text(
+                json.dumps(
+                    {
+                        "id": "codex_api",
+                        "email": "api-key-test",
+                        "auth_mode": "apikey",
+                        "openai_api_key": "secret",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_model_providers.json").write_text("[]", encoding="utf-8")
+            (cockpit_home / "codex_instances.json").write_text(
+                json.dumps({"instances": [], "defaultSettings": {"extraArgs": "", "lastPid": None}}),
+                encoding="utf-8",
+            )
+
+            applied = _run_interop_checker(codex_home, cc_switch_db, cockpit_home, apply=True)
+
+            self.assertEqual(applied.returncode, 2, applied.stdout + applied.stderr)
+            payload = json.loads(applied.stdout)
+            checks = {check["id"]: check for check in payload["after"]["checks"]}
+            self.assertEqual("fail", checks["cockpit_current_account_projectable"]["status"])
+            self.assertEqual("", checks["cockpit_current_account_projectable"]["base_url"])
+            self.assertNotIn("https://api.openai.com/v1", (codex_home / "config.toml").read_text(encoding="utf-8"))
 
 def _run_interop_checker(
     codex_home: Path,
