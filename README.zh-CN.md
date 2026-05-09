@@ -168,9 +168,9 @@ codex-interop-check
 codex-interop-repair
 ```
 
-`http://127.0.0.1:8770/?lang=zh-CN` 的 Codex 面板也提供“检查共享历史互操作”和“应用共享历史优化”。前者只读检查 `CC Switch` / `Cockpit Tools` 是否仍共享同一个 Codex 历史根；后者会备份并写入 Codex 配置，同时实读/修复第三方切换器状态。
+`http://127.0.0.1:8770/?lang=zh-CN` 的 Codex 面板也提供“检查共享历史互操作”和“应用共享历史优化”。前者只读检查 `CC Switch` / `Cockpit Tools` 是否仍共享同一个 Codex 历史根，并核对 `state_5.sqlite` 中的 `threads.model_provider` 可见性分桶；后者会备份并写入 Codex 配置，同时实读/修复第三方切换器状态。
 
-与本机 `Cockpit Tools` / `CC Switch` 的衔接边界：二者可以继续管理 Codex 账号、API provider、代理和 quota；本项目的优化器只固定共同历史根。`CC Switch` 使用默认 `~/.codex` 或它自己的 Codex config override 指向该目录时可无缝共用；其 provider 切换会写 `auth.json` / `config.toml`，因此 `Optimize-CodexLocal.ps1` 会检查并修复 `common_config_codex` 中的 `history.persistence`、`sqlite_home`、`log_dir`，同时移除 provider 片段里的 `disable_response_storage`。`Cockpit Tools` 使用默认 Codex home 时可直接共用；检测器会确认其 Codex 账号/provider inventory 存在，并阻断强制独立 `CODEX_HOME` / `sqlite_home` 的实例配置。
+与本机 `Cockpit Tools` / `CC Switch` 的衔接边界：二者可以继续管理 Codex 账号、API provider、代理和 quota；本项目的优化器固定共同历史根，并阻断会让 Codex App/CLI 历史按不同 `model_provider` 分桶隐藏的切换配置。`CC Switch` 使用默认 `~/.codex` 或它自己的 Codex config override 指向该目录时可共用；其 provider 切换会写 `auth.json` / `config.toml`，因此 `Optimize-CodexLocal.ps1` 会检查并修复 `common_config_codex` 中的 `history.persistence`、`sqlite_home`、`log_dir`，移除 provider 片段里的 `disable_response_storage`，并在 `requires_openai_auth = true` 的 relay provider 上优先保持 `model_provider = "openai"` + `openai_base_url`，避免 RightCode 等中转站把历史切到单独 bucket。`Cockpit Tools` 使用默认 Codex home 时可直接共用；检测器会确认其 Codex 账号/provider inventory 存在，并阻断强制独立 `CODEX_HOME` / `sqlite_home` 的实例配置。历史 metadata 迁移属于高风险显式动作，本项目默认不改 `state_5.sqlite` 既有 thread。
 
 先查看当前可用 target：
 

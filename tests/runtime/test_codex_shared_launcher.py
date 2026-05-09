@@ -94,6 +94,7 @@ class CodexSharedLauncherTests(unittest.TestCase):
             root = Path(tmp_dir)
             codex_home = root / "codex-home"
             codex_home.mkdir()
+            _create_codex_state_db(codex_home / "state_5.sqlite")
             cc_switch_db = root / ".cc-switch" / "cc-switch.db"
             cc_switch_db.parent.mkdir()
             cockpit_home = root / ".antigravity_cockpit"
@@ -116,6 +117,17 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertEqual(dry_run.returncode, 0, dry_run.stderr)
             dry_payload = json.loads(dry_run.stdout)
             self.assertEqual("fail", dry_payload["status"])
+            dry_check_ids = {
+                check["id"]: check for check in dry_payload["after"]["checks"]
+            }
+            self.assertEqual(
+                "fail",
+                dry_check_ids["cc_switch_current_provider_bucket_provider-test"]["status"],
+            )
+            self.assertEqual(
+                "openai",
+                dry_check_ids["cc_switch_current_provider_bucket_provider-test"]["dominant_provider"],
+            )
 
             applied = _run_interop_checker(codex_home, cc_switch_db, cockpit_home, apply=True)
             self.assertEqual(applied.returncode, 0, applied.stderr)
@@ -142,6 +154,9 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertIn(f'log_dir = "{escaped_log}"', common)
             self.assertIn('persistence = "save-all"', common)
             self.assertNotIn("disable_response_storage", provider_settings)
+            provider_config = json.loads(provider_settings)["config"]
+            self.assertIn('model_provider = "openai"', provider_config)
+            self.assertIn('openai_base_url = "https://right.codes/codex/v1"', provider_config)
 
 def _run_interop_checker(
     codex_home: Path,
@@ -219,12 +234,38 @@ def _create_cc_switch_db(path: Path) -> None:
                                 "[model_providers.rightcode]",
                                 'base_url = "https://right.codes/codex/v1"',
                                 'wire_api = "responses"',
+                                "requires_openai_auth = true",
                             ]
                         ),
                     }
                 ),
                 1,
             ),
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+
+def _create_codex_state_db(path: Path) -> None:
+    connection = sqlite3.connect(path)
+    try:
+        connection.execute(
+            """
+            create table threads(
+              id text primary key,
+              model_provider text,
+              archived integer
+            )
+            """
+        )
+        connection.executemany(
+            "insert into threads(id, model_provider, archived) values(?, ?, ?)",
+            [
+                ("thread-openai-1", "openai", 0),
+                ("thread-openai-2", "openai", 0),
+                ("thread-old-archived", "rightcode", 1),
+            ],
         )
         connection.commit()
     finally:

@@ -4,6 +4,7 @@ import argparse
 import json
 import shutil
 import sqlite3
+import tomllib
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -49,6 +50,8 @@ def main() -> int:
 
 def inspect_interop(*, codex_home: Path, cc_switch_db: Path, cockpit_home: Path) -> dict[str, Any]:
     checks: list[dict[str, Any]] = []
+    provider_state = inspect_codex_provider_buckets(codex_home=codex_home, cc_switch_db=cc_switch_db)
+    checks.extend(provider_state["checks"])
     checks.extend(inspect_cc_switch(codex_home=codex_home, db_path=cc_switch_db))
     checks.extend(inspect_cockpit(codex_home=codex_home, cockpit_home=cockpit_home))
     status = aggregate_status(checks)
@@ -171,6 +174,107 @@ def inspect_cc_switch(*, codex_home: Path, db_path: Path) -> list[dict[str, Any]
                 "provider_id": provider_id,
                 "provider_name": provider_name,
                 "is_current": bool(provider["is_current"]),
+            }
+        )
+    return checks
+
+
+def inspect_codex_provider_buckets(*, codex_home: Path, cc_switch_db: Path) -> dict[str, Any]:
+    checks: list[dict[str, Any]] = []
+    state_path = codex_home / "state_5.sqlite"
+    config_path = codex_home / "config.toml"
+    distribution = _read_codex_thread_provider_distribution(state_path)
+    dominant_provider = _dominant_provider(distribution)
+
+    checks.append(
+        {
+            "id": "codex_thread_provider_distribution",
+            "tool": "codex",
+            "status": "pass",
+            "reason": "Codex local history visibility is bucketed by threads.model_provider; this distribution must be considered when switching relays.",
+            "path": str(state_path),
+            "distribution": distribution,
+            "dominant_provider": dominant_provider,
+        }
+    )
+
+    config_text = _read_text(config_path)
+    active_provider = _toml_top_level_string(config_text, "model_provider") or "openai"
+    active_status = "pass"
+    active_reason = "Codex live config uses the same provider bucket as the dominant local history bucket."
+    if dominant_provider and active_provider != dominant_provider:
+        active_status = "fail" if _is_custom_provider_id(active_provider) else "warn"
+        active_reason = "Codex live config points at a different provider bucket than the dominant local history bucket."
+    checks.append(
+        {
+            "id": "codex_live_provider_bucket",
+            "tool": "codex",
+            "status": active_status,
+            "reason": active_reason,
+            "path": str(config_path),
+            "active_provider": active_provider,
+            "dominant_provider": dominant_provider,
+        }
+    )
+
+    checks.extend(_inspect_cc_switch_current_provider_bucket(cc_switch_db, dominant_provider))
+    return {"checks": checks, "distribution": distribution, "dominant_provider": dominant_provider}
+
+
+def _inspect_cc_switch_current_provider_bucket(
+    db_path: Path, dominant_provider: str | None
+) -> list[dict[str, Any]]:
+    if not db_path.exists():
+        return []
+    try:
+        connection = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+        connection.row_factory = sqlite3.Row
+        providers = connection.execute(
+            "select id, name, settings_config, is_current from providers where app_type = 'codex' and is_current = 1"
+        ).fetchall()
+    except sqlite3.Error as exc:
+        return [
+            {
+                "id": "cc_switch_current_provider_bucket",
+                "tool": "cc_switch",
+                "status": "fail",
+                "reason": f"Cannot inspect current CC Switch Codex provider bucket: {exc}",
+                "path": str(db_path),
+            }
+        ]
+    finally:
+        try:
+            connection.close()
+        except UnboundLocalError:
+            pass
+
+    checks: list[dict[str, Any]] = []
+    for provider in providers:
+        provider_config = _settings_config_provider_text(provider["settings_config"])
+        provider_bucket = _toml_top_level_string(provider_config, "model_provider") or "openai"
+        provider_info = _model_provider_info(provider_config, provider_bucket)
+        can_use_openai_bucket = bool(provider_info.get("requires_openai_auth") and provider_info.get("base_url"))
+        status = "pass"
+        reason = "Current CC Switch Codex provider keeps the same visible history bucket."
+        if dominant_provider and provider_bucket != dominant_provider:
+            status = "fail" if can_use_openai_bucket and dominant_provider == "openai" else "warn"
+            reason = (
+                "Current CC Switch Codex provider would switch Codex App/CLI history visibility to a different model_provider bucket."
+            )
+        checks.append(
+            {
+                "id": f"cc_switch_current_provider_bucket_{provider['id']}",
+                "tool": "cc_switch",
+                "status": status,
+                "reason": reason,
+                "path": str(db_path),
+                "provider_id": provider["id"],
+                "provider_name": provider["name"] or provider["id"],
+                "provider_bucket": provider_bucket,
+                "dominant_provider": dominant_provider,
+                "repair_strategy": "openai_base_url" if status == "fail" and can_use_openai_bucket else "manual_review",
+                "base_url": provider_info.get("base_url"),
+                "requires_openai_auth": provider_info.get("requires_openai_auth"),
             }
         )
     return checks
@@ -334,11 +438,25 @@ def repair_provider_settings_config(raw_settings: str) -> str:
     repaired_lines = [
         line for line in config.splitlines() if not line.strip().startswith("disable_response_storage")
     ]
-    repaired = "\n".join(repaired_lines).rstrip() + "\n"
+    repaired = _normalize_openai_auth_provider_bucket("\n".join(repaired_lines).rstrip() + "\n")
     if repaired == config:
         return raw_settings
     payload["config"] = repaired
     return json.dumps(payload, ensure_ascii=False)
+
+
+def _normalize_openai_auth_provider_bucket(config: str) -> str:
+    provider_id = _toml_top_level_string(config, "model_provider")
+    if not provider_id or provider_id == "openai" or not _is_custom_provider_id(provider_id):
+        return config
+    provider_info = _model_provider_info(config, provider_id)
+    base_url = provider_info.get("base_url")
+    if not (provider_info.get("requires_openai_auth") and isinstance(base_url, str) and base_url.strip()):
+        return config
+    lines = config.splitlines()
+    lines = _set_top_level(lines, "model_provider", _toml_string("openai"))
+    lines = _set_top_level(lines, "openai_base_url", _toml_string(base_url.strip()))
+    return "\n".join(lines).rstrip() + "\n"
 
 
 def _settings_config_provider_text(raw_settings: Any) -> str:
@@ -350,6 +468,69 @@ def _settings_config_provider_text(raw_settings: Any) -> str:
         return ""
     config = payload.get("config")
     return config if isinstance(config, str) else ""
+
+
+def _read_codex_thread_provider_distribution(state_path: Path) -> dict[str, int]:
+    if not state_path.exists():
+        return {}
+    try:
+        connection = sqlite3.connect(f"file:{state_path}?mode=ro", uri=True)
+        rows = connection.execute(
+            """
+            select coalesce(model_provider, '') as provider, count(*) as n
+            from threads
+            where coalesce(archived, 0) = 0
+            group by coalesce(model_provider, '')
+            order by n desc, provider asc
+            """
+        ).fetchall()
+    except sqlite3.Error:
+        return {}
+    finally:
+        try:
+            connection.close()
+        except UnboundLocalError:
+            pass
+    return {str(provider or "<empty>"): int(count) for provider, count in rows}
+
+
+def _dominant_provider(distribution: dict[str, int]) -> str | None:
+    if not distribution:
+        return None
+    provider, count = max(distribution.items(), key=lambda item: item[1])
+    return provider if count > 0 and provider != "<empty>" else None
+
+
+def _read_text(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except OSError:
+        return ""
+
+
+def _toml_top_level_string(config: str, key: str) -> str | None:
+    try:
+        value = tomllib.loads(config or "").get(key)
+    except (tomllib.TOMLDecodeError, TypeError):
+        return None
+    return value.strip() if isinstance(value, str) and value.strip() else None
+
+
+def _model_provider_info(config: str, provider_id: str) -> dict[str, Any]:
+    try:
+        payload = tomllib.loads(config or "")
+    except tomllib.TOMLDecodeError:
+        return {}
+    model_providers = payload.get("model_providers")
+    if not isinstance(model_providers, dict):
+        return {}
+    info = model_providers.get(provider_id)
+    return info if isinstance(info, dict) else {}
+
+
+def _is_custom_provider_id(provider_id: str) -> bool:
+    reserved = {"amazon-bedrock", "openai", "ollama", "lmstudio", "oss", "ollama-chat"}
+    return bool(provider_id.strip()) and provider_id.strip().lower() not in reserved
 
 
 def _has_exact_top_level(config: str, key: str, value: str) -> bool:
