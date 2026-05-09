@@ -247,9 +247,83 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertIn('forced_login_method = "api"', live_config)
             self.assertIn('model_provider = "openai"', live_config)
             self.assertIn('openai_base_url = "https://right.codes/codex/v1"', live_config)
+            live_auth = json.loads((codex_home / "auth.json").read_text(encoding="utf-8"))
+            self.assertEqual("apikey", live_auth["auth_mode"])
+            self.assertEqual("https://right.codes/codex/v1", live_auth["base_url"])
+            self.assertEqual("https://right.codes/codex/v1", live_auth["api_base_url"])
+            self.assertEqual("custom", live_auth["api_provider_mode"])
+            self.assertEqual("provider_test", live_auth["api_provider_id"])
+            self.assertEqual("RightCode", live_auth["api_provider_name"])
             self.assertFalse((cockpit_home / "config.json").exists())
             cockpit_instances = json.loads((cockpit_home / "codex_instances.json").read_text(encoding="utf-8"))
             self.assertIsNone(cockpit_instances["defaultSettings"]["lastPid"])
+
+    def test_interop_checker_restores_cockpit_api_provider_metadata_from_codex_state(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            codex_home = root / "codex-home"
+            codex_home.mkdir()
+            (codex_home / "config.toml").write_text(
+                'model_provider = "openai"\nopenai_base_url = "https://right.codes/codex/v1"\n',
+                encoding="utf-8",
+            )
+            (codex_home / "auth.json").write_text(
+                json.dumps({"auth_mode": "apikey", "OPENAI_API_KEY": "secret"}),
+                encoding="utf-8",
+            )
+            cc_switch_db = root / ".cc-switch" / "cc-switch.db"
+            cc_switch_db.parent.mkdir()
+            _create_cc_switch_db(cc_switch_db)
+            cockpit_home = root / ".antigravity_cockpit"
+            cockpit_home.mkdir()
+            (cockpit_home / "codex_accounts").mkdir()
+            (cockpit_home / "codex_accounts.json").write_text(
+                json.dumps({"accounts": [{"id": "codex_api"}], "current_account_id": "codex_api"}),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_accounts" / "codex_api.json").write_text(
+                json.dumps(
+                    {
+                        "id": "codex_api",
+                        "email": "api-key-test",
+                        "auth_mode": "apikey",
+                        "openai_api_key": "secret",
+                        "api_provider_mode": "openai_builtin",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_model_providers.json").write_text(
+                json.dumps(
+                    [
+                        {
+                            "id": "provider_test",
+                            "name": "RightCode",
+                            "baseUrl": "https://right.codes/codex/v1",
+                        }
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_instances.json").write_text(
+                json.dumps({"instances": [], "defaultSettings": {"extraArgs": "", "lastPid": None}}),
+                encoding="utf-8",
+            )
+
+            applied = _run_interop_checker(codex_home, cc_switch_db, cockpit_home, apply=True)
+
+            self.assertEqual(applied.returncode, 0, applied.stdout + applied.stderr)
+            payload = json.loads(applied.stdout)
+            self.assertEqual("pass", payload["status"])
+            action_ids = {action["id"] for action in payload["actions"]}
+            self.assertIn("cockpit_current_api_provider_metadata_restored", action_ids)
+            account = json.loads(
+                (cockpit_home / "codex_accounts" / "codex_api.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual("custom", account["api_provider_mode"])
+            self.assertEqual("https://right.codes/codex/v1", account["api_base_url"])
+            self.assertEqual("provider_test", account["api_provider_id"])
+            self.assertEqual("RightCode", account["api_provider_name"])
 
     def test_interop_checker_refuses_api_account_without_base_url(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

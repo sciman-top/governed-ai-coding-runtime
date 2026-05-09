@@ -109,9 +109,23 @@ function Write-CodexAuthProjection {
 
     $authPath = Join-Path $HomePath 'auth.json'
     if ($Mode -eq 'apikey') {
+        $accountBaseUrl = Get-JsonStringProperty -Object $Account -Name 'api_base_url'
+        $providerId = Get-JsonStringProperty -Object $Account -Name 'api_provider_id'
+        $providerName = Get-JsonStringProperty -Object $Account -Name 'api_provider_name'
         $payload = [ordered]@{
             OPENAI_API_KEY = $ApiKey
             auth_mode = 'apikey'
+        }
+        if (-not [string]::IsNullOrWhiteSpace($accountBaseUrl)) {
+            $payload['base_url'] = $accountBaseUrl
+            $payload['api_base_url'] = $accountBaseUrl
+            $payload['api_provider_mode'] = 'custom'
+            if (-not [string]::IsNullOrWhiteSpace($providerId)) {
+                $payload['api_provider_id'] = $providerId
+            }
+            if (-not [string]::IsNullOrWhiteSpace($providerName)) {
+                $payload['api_provider_name'] = $providerName
+            }
         }
     }
     else {

@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import sqlite3
 import tomllib
@@ -399,6 +400,7 @@ def inspect_cockpit(*, codex_home: Path, cockpit_home: Path) -> list[dict[str, A
 
 def repair_cockpit(*, codex_home: Path, cockpit_home: Path, checks: dict[str, Any]) -> list[dict[str, Any]]:
     actions = repair_cockpit_stale_last_pid(cockpit_home=cockpit_home)
+    actions.extend(repair_cockpit_current_api_provider_metadata(codex_home=codex_home, cockpit_home=cockpit_home))
     current = _cockpit_current_account(cockpit_home)
     if not current:
         return actions
@@ -481,16 +483,85 @@ def repair_cockpit_restart_on_switch(*, codex_home: Path, cockpit_home: Path) ->
     ]
 
 
+def repair_cockpit_current_api_provider_metadata(*, codex_home: Path, cockpit_home: Path) -> list[dict[str, Any]]:
+    account = _cockpit_current_account(cockpit_home)
+    if str(account.get("auth_mode") or "").strip() != "apikey":
+        return []
+    if _cockpit_account_base_url(account):
+        return []
+    account_key = str(account.get("openai_api_key") or "").strip()
+    if not account_key:
+        return []
+
+    auth = _read_json(codex_home / "auth.json")
+    auth_key = str(auth.get("OPENAI_API_KEY") or "").strip() if isinstance(auth, dict) else ""
+    if auth_key and auth_key != account_key:
+        return []
+
+    config = _read_text(codex_home / "config.toml")
+    base_url = (
+        _json_string(auth, "api_base_url")
+        or _json_string(auth, "base_url")
+        or _toml_top_level_string(config, "openai_base_url")
+    )
+    if not base_url:
+        return []
+    base_url = base_url.strip().rstrip("/")
+    provider = _cockpit_provider_for_base_url(cockpit_home, base_url)
+    provider_id = provider.get("id") or _json_string(auth, "api_provider_id") or _provider_id_from_base_url(base_url)
+    provider_name = provider.get("name") or _json_string(auth, "api_provider_name") or _provider_name_from_base_url(base_url)
+
+    account_id = str(account.get("id") or "").strip()
+    if not account_id:
+        return []
+    account_path = cockpit_home / "codex_accounts" / f"{account_id}.json"
+    if not account_path.exists():
+        return []
+
+    updated = dict(account)
+    updated["api_provider_mode"] = "custom"
+    updated["api_base_url"] = base_url
+    updated["api_provider_id"] = provider_id
+    updated["api_provider_name"] = provider_name
+    if updated == account:
+        return []
+
+    backup_path = _backup_file(account_path, suffix="cockpit_api_provider")
+    account_path.write_text(json.dumps(updated, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return [
+        {
+            "id": "cockpit_current_api_provider_metadata_restored",
+            "tool": "cockpit_tools",
+            "status": "changed",
+            "path": str(account_path),
+            "backup_path": str(backup_path),
+            "account_id": account_id,
+            "api_provider_id": provider_id,
+            "api_provider_name": provider_name,
+            "base_url": base_url,
+        }
+    ]
+
+
 def repair_codex_auth_for_cockpit(*, codex_home: Path, account: dict[str, Any]) -> list[dict[str, Any]]:
     auth_mode = str(account.get("auth_mode") or "").strip()
     if auth_mode == "apikey":
         api_key = str(account.get("openai_api_key") or "").strip()
         if not api_key:
             return []
+        base_url = _cockpit_account_base_url(account)
         payload: dict[str, Any] = {
             "OPENAI_API_KEY": api_key,
             "auth_mode": "apikey",
         }
+        if base_url:
+            payload["base_url"] = base_url
+            payload["api_base_url"] = base_url
+            payload["api_provider_mode"] = "custom"
+            if account.get("api_provider_id"):
+                payload["api_provider_id"] = account.get("api_provider_id")
+            if account.get("api_provider_name"):
+                payload["api_provider_name"] = account.get("api_provider_name")
     else:
         tokens = account.get("tokens")
         if not isinstance(tokens, dict) or not tokens.get("access_token"):
@@ -1340,6 +1411,44 @@ def _json_semantically_equal(text: str, expected: dict[str, Any]) -> bool:
     except json.JSONDecodeError:
         return False
     return current == expected
+
+
+def _json_string(value: Any, key: str) -> str:
+    if not isinstance(value, dict):
+        return ""
+    raw = value.get(key)
+    return raw.strip() if isinstance(raw, str) else ""
+
+
+def _cockpit_provider_for_base_url(cockpit_home: Path, base_url: str) -> dict[str, str]:
+    providers = _read_json(cockpit_home / "codex_model_providers.json")
+    if not isinstance(providers, list):
+        return {}
+    normalized = base_url.strip().rstrip("/")
+    for provider in providers:
+        if not isinstance(provider, dict):
+            continue
+        provider_base = str(provider.get("baseUrl") or provider.get("base_url") or "").strip().rstrip("/")
+        if provider_base == normalized:
+            return {
+                "id": str(provider.get("id") or "").strip(),
+                "name": str(provider.get("name") or "").strip(),
+            }
+    return {}
+
+
+def _provider_name_from_base_url(base_url: str) -> str:
+    without_scheme = re.sub(r"^[a-zA-Z][a-zA-Z0-9+.-]*://", "", base_url.strip())
+    host = without_scheme.split("/", 1)[0].strip()
+    return host or "custom"
+
+
+def _provider_id_from_base_url(base_url: str) -> str:
+    name = _provider_name_from_base_url(base_url).lower()
+    normalized = re.sub(r"[^a-z0-9_-]+", "_", name).strip("_-")
+    if not normalized or not normalized[0].isalpha() or normalized == "openai":
+        normalized = f"provider_{normalized or 'custom'}"
+    return normalized
 
 
 def _cockpit_current_account(cockpit_home: Path) -> dict[str, Any]:
