@@ -1,6 +1,6 @@
-[CmdletBinding()]
+[CmdletBinding(PositionalBinding = $false)]
 param(
-    [ValidateSet('cli', 'exec', 'app')]
+    [ValidateSet('cli', 'exec', 'app', 'resume')]
     [string] $Surface = 'cli',
 
     [string] $Profile = 'shared-chatgpt',
@@ -29,12 +29,22 @@ param(
 
     [string] $Workdir,
 
-    [Parameter(ValueFromRemainingArguments = $true)]
+    [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
     [string[]] $Prompt
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+if ($Surface -eq 'app' -and [string]::IsNullOrWhiteSpace($Workdir) -and $Prompt -and $Prompt.Count -gt 0) {
+    $Workdir = $Prompt[0]
+    if ($Prompt.Count -gt 1) {
+        $Prompt = @($Prompt[1..($Prompt.Count - 1)])
+    }
+    else {
+        $Prompt = @()
+    }
+}
 
 function ConvertTo-TomlString {
     param([string] $Value)
@@ -110,11 +120,75 @@ function Write-CodexAuthProjection {
     return $true
 }
 
+function Stop-CodexAppProcesses {
+    $processes = Get-Process -Name 'Codex', 'codex' -ErrorAction SilentlyContinue |
+        Where-Object { $_.Id -ne $PID }
+    if ($processes) {
+        foreach ($process in $processes) {
+            $liveProcess = Get-Process -Id $process.Id -ErrorAction SilentlyContinue
+            if ($liveProcess) {
+                try {
+                    Stop-Process -Id $liveProcess.Id -Force -ErrorAction SilentlyContinue
+                }
+                catch {
+                }
+            }
+        }
+        Start-Sleep -Seconds 1
+    }
+}
+
+function Invoke-CodexInteropRepair {
+    param(
+        [string] $HomePath,
+        [string] $CockpitStateHome,
+        [string] $CcSwitchDb
+    )
+
+    $checker = Join-Path $PSScriptRoot 'codex-interop-check.py'
+    if (-not (Test-Path -LiteralPath $checker -PathType Leaf)) {
+        Write-Warning "Codex interop checker not found; skipping pre-launch repair: $checker"
+        return $false
+    }
+    $python = Get-Command python -ErrorAction SilentlyContinue
+    if (-not $python) {
+        Write-Warning 'python command not found; skipping Codex pre-launch interop repair.'
+        return $false
+    }
+    $repairArgs = @(
+        $checker,
+        '--codex-home', $HomePath,
+        '--cc-switch-db', $CcSwitchDb,
+        '--cockpit-home', $CockpitStateHome,
+        '--apply',
+        '--migrate-provider-bucket'
+    )
+    $output = & $python.Source @repairArgs 2>&1
+    $exitCode = $LASTEXITCODE
+    $text = ($output | ForEach-Object { [string] $_ }) -join "`n"
+    if ($exitCode -ne 0) {
+        throw "Codex pre-launch interop repair failed with exit code ${exitCode}: $text"
+    }
+    try {
+        $payload = $text | ConvertFrom-Json
+        Write-Host ("interop_repair_status={0}" -f $payload.status)
+        $changedActions = @($payload.actions | Where-Object { $_.status -eq 'changed' })
+        if ($changedActions.Count -gt 0) {
+            Write-Host ("interop_repair_actions={0}" -f (($changedActions | ForEach-Object { $_.id }) -join ','))
+        }
+    }
+    catch {
+        Write-Host 'interop_repair_status=unknown'
+    }
+    return $true
+}
+
 $resolvedHome = (Resolve-Path -LiteralPath $CodexHome).Path
 $env:CODEX_HOME = $resolvedHome
 $forcedLoginMethod = $null
 $requiresOpenAiAuth = $true
 $cockpitAccount = $null
+$pendingCockpitAuthProjection = $null
 
 if ($UseCockpitCurrentAccount -and $UseCcSwitchCurrentProvider) {
     throw 'UseCockpitCurrentAccount and UseCcSwitchCurrentProvider are mutually exclusive.'
@@ -162,7 +236,7 @@ if ($UseCockpitCurrentAccount) {
         throw "Cockpit Tools current Codex account has no auth_mode: $accountPath"
     }
     if (-not $PSBoundParameters.ContainsKey('ModelProvider') -or [string]::IsNullOrWhiteSpace($ModelProvider)) {
-        $ModelProvider = 'cockpit'
+        $ModelProvider = 'openai'
     }
     $accountBaseUrl = Get-JsonStringProperty -Object $cockpitAccount -Name 'api_base_url'
     if ([string]::IsNullOrWhiteSpace($accountBaseUrl)) {
@@ -183,15 +257,16 @@ if ($UseCockpitCurrentAccount) {
         if (-not $PSBoundParameters.ContainsKey('Profile')) {
             $Profile = 'shared-cockpit-api'
         }
-        [void](Write-CodexAuthProjection -HomePath $resolvedHome -Account $cockpitAccount -Mode 'apikey' -ApiKey $apiKey)
+        $pendingCockpitAuthProjection = [ordered]@{ Mode = 'apikey'; ApiKey = $apiKey }
     }
     else {
+        [Environment]::SetEnvironmentVariable('OPENAI_API_KEY', $null, 'Process')
         $forcedLoginMethod = 'chatgpt'
         $requiresOpenAiAuth = $true
         if (-not $PSBoundParameters.ContainsKey('Profile')) {
             $Profile = 'shared-cockpit-auth'
         }
-        [void](Write-CodexAuthProjection -HomePath $resolvedHome -Account $cockpitAccount -Mode 'chatgpt' -ApiKey '')
+        $pendingCockpitAuthProjection = [ordered]@{ Mode = 'chatgpt'; ApiKey = '' }
     }
 }
 
@@ -226,11 +301,30 @@ print(json.dumps({"name": row["name"], "openai_api_key": auth.get("OPENAI_API_KE
     }
 }
 
+if ($Surface -eq 'app' -and ($UseCockpitCurrentAccount -or $RestartExistingCodexApp)) {
+    Stop-CodexAppProcesses
+}
+if ($UseCockpitCurrentAccount) {
+    $repairApplied = Invoke-CodexInteropRepair -HomePath $resolvedHome -CockpitStateHome $CockpitHome -CcSwitchDb $CcSwitchDbPath
+    if (-not $repairApplied -and $pendingCockpitAuthProjection) {
+        [void](Write-CodexAuthProjection `
+            -HomePath $resolvedHome `
+            -Account $cockpitAccount `
+            -Mode ([string]$pendingCockpitAuthProjection.Mode) `
+            -ApiKey ([string]$pendingCockpitAuthProjection.ApiKey))
+    }
+}
+
 $codexArgs = @()
 if (-not [string]::IsNullOrWhiteSpace($Profile)) {
     $codexArgs += @('--profile', $Profile)
 }
-if (-not $UseCockpitCurrentAccount -and -not [string]::IsNullOrWhiteSpace($BaseUrl)) {
+$shouldPassOpenAiBaseUrl = -not [string]::IsNullOrWhiteSpace($BaseUrl) -and (
+    -not $UseCockpitCurrentAccount -or
+    $forcedLoginMethod -eq 'api' -or
+    $BaseUrl.TrimEnd('/') -ne 'https://api.openai.com/v1'
+)
+if ($shouldPassOpenAiBaseUrl) {
     $codexArgs += @('-c', ('openai_base_url={0}' -f (ConvertTo-TomlString $BaseUrl)))
 }
 if (-not [string]::IsNullOrWhiteSpace($ModelProvider)) {
@@ -239,7 +333,7 @@ if (-not [string]::IsNullOrWhiteSpace($ModelProvider)) {
 if (-not [string]::IsNullOrWhiteSpace($forcedLoginMethod)) {
     $codexArgs += @('-c', ('forced_login_method={0}' -f (ConvertTo-TomlString $forcedLoginMethod)))
 }
-if ($UseCockpitCurrentAccount -and -not [string]::IsNullOrWhiteSpace($ModelProvider)) {
+if ($UseCockpitCurrentAccount -and -not [string]::IsNullOrWhiteSpace($ModelProvider) -and $ModelProvider -ne 'openai') {
     $providerName = 'Cockpit Tools Current'
     $cockpitProviderName = Get-JsonStringProperty -Object $cockpitAccount -Name 'api_provider_name'
     $cockpitEmail = Get-JsonStringProperty -Object $cockpitAccount -Name 'email'
@@ -260,11 +354,10 @@ if ($Surface -ne 'app' -and -not [string]::IsNullOrWhiteSpace($Workdir)) {
 if ($Surface -eq 'exec') {
     $codexArgs += 'exec'
 }
+elseif ($Surface -eq 'resume') {
+    $codexArgs += 'resume'
+}
 elseif ($Surface -eq 'app') {
-    if ($RestartExistingCodexApp) {
-        Get-Process -Name 'Codex' -ErrorAction SilentlyContinue | Stop-Process -Force
-        Start-Sleep -Seconds 1
-    }
     $codexArgs += 'app'
     if (-not [string]::IsNullOrWhiteSpace($Workdir)) {
         $codexArgs += $Workdir

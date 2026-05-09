@@ -76,13 +76,25 @@ class CodexSharedLauncherTests(unittest.TestCase):
     def test_shared_launcher_supports_cli_exec_and_app_surfaces(self) -> None:
         script = (ROOT / "scripts" / "Start-CodexShared.ps1").read_text(encoding="utf-8")
 
-        self.assertIn("[ValidateSet('cli', 'exec', 'app')]", script)
+        self.assertIn("PositionalBinding = $false", script)
+        self.assertIn("[ValidateSet('cli', 'exec', 'app', 'resume')]", script)
+        self.assertIn("Position = 0, ValueFromRemainingArguments = $true", script)
+        self.assertIn("$Surface -eq 'app'", script)
+        self.assertIn("$Workdir = $Prompt[0]", script)
         self.assertIn("model_provider={0}", script)
         self.assertIn("$Surface -eq 'exec'", script)
+        self.assertIn("$Surface -eq 'resume'", script)
         self.assertIn("Codex app accepts a workspace path", script)
         self.assertIn("UseCockpitCurrentAccount", script)
         self.assertIn("OPENAI_API_KEY sourced from current Cockpit Tools account", script)
+        self.assertIn("[Environment]::SetEnvironmentVariable('OPENAI_API_KEY', $null, 'Process')", script)
         self.assertIn("model_providers.{0}.base_url={1}", script)
+        self.assertIn("function Invoke-CodexInteropRepair", script)
+        self.assertIn("--migrate-provider-bucket", script)
+        self.assertIn("function Stop-CodexAppProcesses", script)
+        self.assertIn("Get-Process -Name 'Codex', 'codex'", script)
+        self.assertIn("Stop-Process -Id $liveProcess.Id", script)
+        self.assertIn("$Surface -eq 'app' -and ($UseCockpitCurrentAccount -or $RestartExistingCodexApp)", script)
 
     def test_optimizer_installs_interop_shortcuts_when_switcher_install_is_enabled(self) -> None:
         script = (ROOT / "scripts" / "Optimize-CodexLocal.ps1").read_text(encoding="utf-8")
@@ -92,11 +104,15 @@ class CodexSharedLauncherTests(unittest.TestCase):
         self.assertIn("codex-interop-check.py", script)
         self.assertIn("codex-cockpit.cmd", script)
         self.assertIn("codex-cockpit-exec.cmd", script)
+        self.assertIn("codex-cockpit-resume.cmd", script)
         self.assertIn("codex-cockpit-app.cmd", script)
         self.assertIn("codex-cockpit-app-restart.cmd", script)
         self.assertIn("codex-relay.cmd", script)
         self.assertIn("codex-relay-exec.cmd", script)
+        self.assertIn("codex-relay-resume.cmd", script)
         self.assertIn("codex-relay-app.cmd", script)
+        self.assertIn("codex-shared-resume.cmd", script)
+        self.assertIn("-Surface resume -UseCockpitCurrentAccount --all --include-non-interactive", script)
         self.assertIn("--cc-switch-db", script)
         self.assertIn("--cockpit-home", script)
         self.assertIn("--migrate-provider-bucket", script)
@@ -113,6 +129,9 @@ class CodexSharedLauncherTests(unittest.TestCase):
             cockpit_home = root / ".antigravity_cockpit"
             cockpit_home.mkdir()
             (cockpit_home / "codex_accounts").mkdir()
+            restart_wrapper = root / ".local" / "bin" / "codex-cockpit-app-restart.cmd"
+            restart_wrapper.parent.mkdir(parents=True)
+            restart_wrapper.write_text("@echo off\n", encoding="ascii")
             _create_cc_switch_db(cc_switch_db)
             (cockpit_home / "codex_accounts.json").write_text(
                 json.dumps({"accounts": [{"id": "codex_test"}], "current_account_id": "codex_test"}),
@@ -137,7 +156,7 @@ class CodexSharedLauncherTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (cockpit_home / "codex_instances.json").write_text(
-                json.dumps({"instances": [], "defaultSettings": {"extraArgs": ""}}),
+                json.dumps({"instances": [], "defaultSettings": {"extraArgs": "", "lastPid": 99999999}}),
                 encoding="utf-8",
             )
 
@@ -153,7 +172,11 @@ class CodexSharedLauncherTests(unittest.TestCase):
                 dry_check_ids["cockpit_current_provider_bucket"]["status"],
             )
             self.assertEqual(
-                "openai",
+                "fail",
+                dry_check_ids["cockpit_live_login_mode_matches_current_account"]["status"],
+            )
+            self.assertEqual(
+                "rightcode",
                 dry_check_ids["cockpit_current_provider_bucket"]["dominant_provider"],
             )
 
@@ -164,8 +187,11 @@ class CodexSharedLauncherTests(unittest.TestCase):
             payload = json.loads(applied.stdout)
             self.assertEqual("pass", payload["status"])
             action_ids = {action["id"] for action in payload["actions"]}
+            self.assertIn("cockpit_codex_stale_last_pid_cleared", action_ids)
             self.assertIn("codex_live_config_cockpit_provider", action_ids)
             self.assertIn("codex_threads_provider_bucket_migrated", action_ids)
+            self.assertIn("cockpit_codex_restart_wrapper_configured", action_ids)
+            self.assertIn("codex_history_indexes_ensured", action_ids)
 
             connection = sqlite3.connect(cc_switch_db)
             try:
@@ -190,16 +216,31 @@ class CodexSharedLauncherTests(unittest.TestCase):
                         "select model_provider, count(*) from threads group by model_provider"
                     ).fetchall()
                 )
+                indexes = {
+                    row[0]
+                    for row in connection.execute(
+                        "select name from sqlite_master where type = 'index'"
+                    ).fetchall()
+                }
             finally:
                 connection.close()
-            self.assertEqual({"cockpit": 3}, buckets)
+            self.assertEqual({"openai": 3}, buckets)
+            self.assertIn("idx_threads_archived_provider_updated_at_ms", indexes)
+            self.assertIn("idx_threads_archived_provider_updated_at", indexes)
             live_config = (codex_home / "config.toml").read_text(encoding="utf-8")
             self.assertIn("[profiles.shared-current-provider]", live_config)
             self.assertIn("[profiles.shared-cockpit-api]", live_config)
             self.assertIn("[profiles.shared-cockpit-auth]", live_config)
             self.assertIn("[profiles.shared-relay]", live_config)
-            self.assertIn("[model_providers.cockpit]", live_config)
-            self.assertIn('base_url = "https://right.codes/codex/v1"', live_config)
+            self.assertNotIn("[model_providers.cockpit]", live_config)
+            self.assertIn('forced_login_method = "api"', live_config)
+            self.assertIn('model_provider = "openai"', live_config)
+            self.assertIn('openai_base_url = "https://right.codes/codex/v1"', live_config)
+            cockpit_config = json.loads((cockpit_home / "config.json").read_text(encoding="utf-8"))
+            self.assertTrue(cockpit_config["codex_restart_specified_app_on_switch"])
+            self.assertEqual(str(restart_wrapper), cockpit_config["codex_specified_app_path"])
+            cockpit_instances = json.loads((cockpit_home / "codex_instances.json").read_text(encoding="utf-8"))
+            self.assertIsNone(cockpit_instances["defaultSettings"]["lastPid"])
 
 def _run_interop_checker(
     codex_home: Path,
@@ -301,16 +342,18 @@ def _create_codex_state_db(path: Path) -> None:
             create table threads(
               id text primary key,
               model_provider text,
-              archived integer
+              archived integer,
+              updated_at text,
+              updated_at_ms integer
             )
             """
         )
         connection.executemany(
-            "insert into threads(id, model_provider, archived) values(?, ?, ?)",
+            "insert into threads(id, model_provider, archived, updated_at, updated_at_ms) values(?, ?, ?, ?, ?)",
             [
-                ("thread-openai-1", "openai", 0),
-                ("thread-openai-2", "openai", 0),
-                ("thread-old-archived", "rightcode", 1),
+                ("thread-rightcode-1", "rightcode", 0, "2026-05-09T01:00:00Z", 1),
+                ("thread-rightcode-2", "rightcode", 0, "2026-05-09T02:00:00Z", 2),
+                ("thread-old-archived", "openai", 1, "2026-05-08T01:00:00Z", 3),
             ],
         )
         connection.commit()

@@ -251,6 +251,7 @@ function Update-ConfigToml {
         $_ -notmatch '^ANTHROPIC_AUTH_TOKEN\s*=' -and
         $_ -notmatch '^\s*disable_response_storage\s*='
     })
+    $lines = Remove-TomlTable -Lines $lines -Header '[model_providers.cockpit]'
     foreach ($entry in $Recommended.GetEnumerator()) {
         $lines = Set-TopLevelTomlValue -Lines $lines -Key $entry.Key -Value $entry.Value
     }
@@ -266,11 +267,11 @@ function Update-ConfigToml {
     }
     $lines = Set-TomlTableValues -Lines $lines -Header '[profiles.shared-cockpit-api]' -Values @{
         forced_login_method = '"api"'
-        model_provider = '"cockpit"'
+        model_provider = '"openai"'
     }
     $lines = Set-TomlTableValues -Lines $lines -Header '[profiles.shared-cockpit-auth]' -Values @{
         forced_login_method = '"chatgpt"'
-        model_provider = '"cockpit"'
+        model_provider = '"openai"'
     }
     if (Test-CustomModelProviderId -Value $activeModelProvider) {
         $lines = Set-TomlTableValues -Lines $lines -Header '[profiles.shared-current-provider]' -Values @{
@@ -279,7 +280,10 @@ function Update-ConfigToml {
         }
     }
     else {
-        $lines = Remove-TomlTable -Lines $lines -Header '[profiles.shared-current-provider]'
+        $lines = Set-TomlTableValues -Lines $lines -Header '[profiles.shared-current-provider]' -Values @{
+            forced_login_method = '"chatgpt"'
+            model_provider = '"openai"'
+        }
     }
     foreach ($repo in $TrustedRepoRoot) {
         $resolved = (Resolve-Path -LiteralPath $repo).Path
@@ -392,11 +396,11 @@ $plan = [ordered]@{
         sqlite_home = $CodexHome
         history_persistence = 'save-all'
         shared_profiles = @('shared-chatgpt', 'shared-openai-api', 'shared-current-provider', 'shared-cockpit-api', 'shared-cockpit-auth')
-        launchers = @('codex-shared', 'codex-shared-exec', 'codex-shared-app', 'codex-cockpit', 'codex-cockpit-exec', 'codex-cockpit-app', 'codex-cockpit-app-restart', 'codex-relay', 'codex-relay-exec', 'codex-relay-app', 'codex-interop-check', 'codex-interop-repair')
+        launchers = @('codex-shared', 'codex-shared-exec', 'codex-shared-resume', 'codex-shared-app', 'codex-cockpit', 'codex-cockpit-exec', 'codex-cockpit-resume', 'codex-cockpit-app', 'codex-cockpit-app-restart', 'codex-relay', 'codex-relay-exec', 'codex-relay-resume', 'codex-relay-app', 'codex-interop-check', 'codex-interop-repair')
     }
     compatibility = [ordered]@{
-        strategy = 'Use one shared CodexHome plus one stable Cockpit model_provider bucket for Codex coding history/state; switch auth/provider endpoint inside that bucket.'
-        cockpit_tools = 'Cockpit Tools owns Codex auth/API switching on this host; Codex launchers read the current Cockpit Codex account and normalize all API providers to the shared cockpit provider bucket.'
+        strategy = 'Use one shared CodexHome plus the built-in openai model_provider bucket for Codex coding history/state; switch auth/provider endpoint inside that bucket.'
+        cockpit_tools = 'Cockpit Tools owns Codex auth/API switching on this host; Codex launchers read the current Cockpit Codex account and normalize all API providers to the shared openai provider bucket.'
         cc_switch = 'CC Switch is treated as the Claude/third-party API switcher boundary and is not used as the Codex provider source.'
         boundary = 'Use an isolated CODEX_HOME only for identities, relays, or privacy boundaries that must not share local coding sessions.'
     }
@@ -452,12 +456,16 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Swit
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-shared-exec.cmd') -Value '@echo off
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface exec %*' -Encoding ascii
+    Set-Content -LiteralPath (Join-Path $binDir 'codex-shared-resume.cmd') -Value '@echo off
+pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface resume --all --include-non-interactive %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-shared-app.cmd') -Value '@echo off
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface app %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-cockpit.cmd') -Value '@echo off
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -UseCockpitCurrentAccount %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-cockpit-exec.cmd') -Value '@echo off
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface exec -UseCockpitCurrentAccount %*' -Encoding ascii
+    Set-Content -LiteralPath (Join-Path $binDir 'codex-cockpit-resume.cmd') -Value '@echo off
+pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface resume -UseCockpitCurrentAccount --all --include-non-interactive %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-cockpit-app.cmd') -Value '@echo off
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface app -UseCockpitCurrentAccount %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-cockpit-app-restart.cmd') -Value '@echo off
@@ -466,6 +474,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Star
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -UseCockpitCurrentAccount %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-relay-exec.cmd') -Value '@echo off
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface exec -UseCockpitCurrentAccount %*' -Encoding ascii
+    Set-Content -LiteralPath (Join-Path $binDir 'codex-relay-resume.cmd') -Value '@echo off
+pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface resume -UseCockpitCurrentAccount --all --include-non-interactive %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-relay-app.cmd') -Value '@echo off
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface app -UseCockpitCurrentAccount %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-interop-check.cmd') -Value '@echo off
