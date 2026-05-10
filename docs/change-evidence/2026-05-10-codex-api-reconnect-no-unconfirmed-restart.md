@@ -100,3 +100,51 @@
 
 - The currently running Codex App may not hot-reload every file-level change. This repair intentionally did not restart the App or CLI after the user correction.
 - 9 live session JSONL files remain locked by running Codex processes. SQLite state and triggers are already migrated to `cockpit_http`; the locked session metadata can be retried after the user explicitly confirms a reload/restart or after those sessions naturally close.
+
+## 2026-05-10 OAuth follow-up
+
+- Trigger: after switching away from the `35.213.82.91` API relay to OAuth, the App again showed repository histories as empty.
+- Fresh root cause:
+  - `state_5.sqlite` still contained the histories, but all active rows had been migrated to `threads.model_provider = "cockpit_http"` for the API relay.
+  - The current Cockpit account was `auth_mode = "oauth"`, which maps to Codex `forced_login_method = "chatgpt"` and provider bucket `openai`.
+  - Live `config.toml` had drifted to `forced_login_method = "api"` with active provider `openai`, while `auth.json` had tokens but no explicit `auth_mode`.
+  - `scripts/codex-interop-check.py` treated Cockpit `oauth` as unsupported instead of normalizing it to Codex `chatgpt`; therefore the checker could identify the mismatch but could not repair it.
+  - Cockpit default settings also kept `followLocalAccount = false` and a fixed `bindAccountId`, so account switching could relaunch stale account state.
+- Code fix:
+  - `scripts/codex-interop-check.py` now normalizes Cockpit `auth_mode = "oauth"` to Codex login/auth mode `chatgpt`.
+  - The auth projection check now reports both `cockpit_auth_mode` and expected Codex `auth_mode`.
+  - Unsupported auth modes fail closed instead of being projected through the ChatGPT path by accident.
+  - `tests/runtime/test_codex_shared_launcher.py` adds a regression test for OAuth after API relay bucket migration.
+- Live repair:
+  - command: `python scripts\codex-interop-check.py --codex-home C:\Users\sciman\.codex --cc-switch-db C:\Users\sciman\.cc-switch\cc-switch.db --cockpit-home C:\Users\sciman\.antigravity_cockpit --apply --migrate-provider-bucket --quick-launch`
+  - result: `pass`
+  - changed: `codex_threads_provider_bucket_migrated updated_rows=1626`, target provider `openai`
+  - changed: `codex_live_config_cockpit_provider` to `model_provider = "openai"` and `forced_login_method = "chatgpt"`
+  - changed: `codex_auth_cockpit_projected` from Cockpit `oauth` to Codex `auth_mode = "chatgpt"`
+  - changed: `cockpit_codex_instances_follow_current_account_repaired`
+  - unchanged: no Codex App, CLI, Claude, or Claude Desktop process was stopped or restarted.
+- Fresh verification:
+  - `python scripts\codex-interop-check.py --codex-home C:\Users\sciman\.codex --cc-switch-db C:\Users\sciman\.cc-switch\cc-switch.db --cockpit-home C:\Users\sciman\.antigravity_cockpit --quick-launch`
+    - result: `pass`
+    - key checks: `codex_thread_provider_distribution=openai:1625`, `codex_live_provider_bucket=pass`, `codex_auth_matches_cockpit_current_account=pass`, `cockpit_live_login_mode_matches_current_account=pass`
+  - `python scripts\codex-history-view-diagnose.py --codex-home C:\Users\sciman\.codex --target-cwd D:\CODE\governed-ai-coding-runtime --target-cwd D:\CODE\k12-question-graph --target-cwd D:\CODE\skills-manager --target-cwd D:\CODE\ClassroomToolkit --target-cwd D:\CODE\github-toolkit --target-cwd D:\CODE\vps-ssh-launcher`
+    - result: `pass`
+    - loaded `337` non-archived App-source rows
+    - all six target repos were visible in the default first page.
+  - `python -m unittest tests.runtime.test_codex_shared_launcher -v`
+    - result: `Ran 11 tests`, `OK`
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\build-runtime.ps1`
+    - result: `OK python-bytecode`, `OK python-import`
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify-repo.ps1 -Check Runtime`
+    - result: `Completed 109 test files in 128.801s; failures=0`, `OK runtime-unittest`, `OK runtime-service-parity`, `OK runtime-service-wrapper-drift-guard`
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify-repo.ps1 -Check Contract`
+    - result: all listed contract checks passed, including `agent-rule-sync`, `pre-change-review`, and `functional-effectiveness`
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\doctor-runtime.ps1`
+    - result: hard checks passed; residual `WARN codex-capability-degraded` is the existing native attach warning, not a failure for this auth/history repair
+- New backups:
+  - `C:\Users\sciman\.codex\backups\config.toml.20260510_190513_cockpit_provider.bak`
+  - `C:\Users\sciman\.codex\backups\state_5.sqlite.20260510_190513_provider_bucket.bak`
+  - `C:\Users\sciman\.antigravity_cockpit\backups\codex_instances.json.20260510_190513_cockpit_follow_current_account.bak`
+- Rollback:
+  - restore the listed `config.toml`, `state_5.sqlite`, and `codex_instances.json` backups if OAuth projection must be undone.
+  - do not restore stale fixed `bindAccountId` unless the intent is account isolation rather than shared history.

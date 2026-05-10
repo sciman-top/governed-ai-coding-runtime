@@ -288,6 +288,7 @@ def _inspect_cockpit_current_provider_bucket(
         return []
     provider_bucket = _provider_bucket_for_cockpit_account(current)
     auth_mode = str(current.get("auth_mode") or "")
+    codex_login_mode = _codex_login_mode_for_cockpit_auth(auth_mode)
     base_url = _cockpit_account_base_url(current)
     has_key = bool(str(current.get("openai_api_key") or "").strip())
     key_status = "pass"
@@ -303,7 +304,7 @@ def _inspect_cockpit_current_provider_bucket(
     if dominant_provider and dominant_provider != provider_bucket:
         bucket_status = "fail"
         bucket_reason = "Existing Codex history is still in a different provider bucket and should be migrated."
-    expected_forced_login = "api" if auth_mode == "apikey" else "chatgpt"
+    expected_forced_login = codex_login_mode or "chatgpt"
     active_forced_login = _toml_top_level_string(config_text, "forced_login_method") or "chatgpt"
     provider_info = _model_provider_info(config_text, active_provider)
     requires_openai_auth = provider_info.get("requires_openai_auth") if isinstance(provider_info, dict) else None
@@ -482,6 +483,7 @@ def _inspect_codex_auth_projection(*, codex_home: Path, account: dict[str, Any])
     auth_path = codex_home / "auth.json"
     auth = _read_json(auth_path)
     auth_mode = str(account.get("auth_mode") or "").strip() if isinstance(account, dict) else ""
+    expected_codex_auth_mode = _codex_auth_mode_for_cockpit_auth(auth_mode)
     if not account:
         return {
             "id": "codex_auth_matches_cockpit_current_account",
@@ -515,7 +517,7 @@ def _inspect_codex_auth_projection(*, codex_home: Path, account: dict[str, Any])
             issues.append("OPENAI_API_KEY does not match current Cockpit API account")
         if expected_base_url and actual_base_url.rstrip("/") != expected_base_url.rstrip("/"):
             issues.append("auth.json API base URL does not match current Cockpit API account")
-    elif auth_mode == "chatgpt":
+    elif expected_codex_auth_mode == "chatgpt":
         if actual_auth_mode != "chatgpt":
             issues.append(f"auth_mode is {actual_auth_mode or '<missing>'}, expected chatgpt")
         tokens = auth.get("tokens") if isinstance(auth, dict) else None
@@ -530,13 +532,14 @@ def _inspect_codex_auth_projection(*, codex_home: Path, account: dict[str, Any])
         "status": "fail" if issues else "pass",
         "reason": "Codex auth.json must match the current Cockpit Codex account before Codex CLI/App startup; config-only API switching can otherwise reuse stale ChatGPT tokens or fail auth.",
         "path": str(auth_path),
-        "expected_auth_mode": auth_mode,
+        "cockpit_auth_mode": auth_mode,
+        "expected_auth_mode": expected_codex_auth_mode or auth_mode,
         "actual_auth_mode": actual_auth_mode,
         "expected_base_url": expected_base_url if auth_mode == "apikey" else None,
         "actual_base_url": actual_base_url if auth_mode == "apikey" else None,
         "key_present": key_present,
         "issues": issues,
-        "repair_strategy": "project_cockpit_auth" if issues and auth_mode in {"apikey", "chatgpt"} else "none",
+        "repair_strategy": "project_cockpit_auth" if issues and expected_codex_auth_mode in {"apikey", "chatgpt"} else "none",
     }
 
 
@@ -597,6 +600,24 @@ def _provider_bucket_for_cockpit_account(account: dict[str, Any] | None) -> str:
     if auth_mode == "apikey" and base_url and base_url != OFFICIAL_OPENAI_BASE_URL:
         return API_RELAY_PROVIDER_ID
     return OPENAI_SHARED_PROVIDER_ID
+
+
+def _codex_login_mode_for_cockpit_auth(auth_mode: str) -> str | None:
+    auth_mode = str(auth_mode or "").strip().lower()
+    if auth_mode == "apikey":
+        return "api"
+    if auth_mode in {"chatgpt", "oauth"}:
+        return "chatgpt"
+    return None
+
+
+def _codex_auth_mode_for_cockpit_auth(auth_mode: str) -> str | None:
+    auth_mode = str(auth_mode or "").strip().lower()
+    if auth_mode == "apikey":
+        return "apikey"
+    if auth_mode in {"chatgpt", "oauth"}:
+        return "chatgpt"
+    return None
 
 
 def repair_cockpit_restart_wrapper_config(*, cockpit_home: Path) -> list[dict[str, Any]]:
@@ -712,7 +733,8 @@ def repair_cockpit_current_api_provider_metadata(*, codex_home: Path, cockpit_ho
 
 def repair_codex_auth_for_cockpit(*, codex_home: Path, account: dict[str, Any]) -> list[dict[str, Any]]:
     auth_mode = str(account.get("auth_mode") or "").strip()
-    if auth_mode == "apikey":
+    codex_auth_mode = _codex_auth_mode_for_cockpit_auth(auth_mode)
+    if codex_auth_mode == "apikey":
         api_key = str(account.get("openai_api_key") or "").strip()
         if not api_key:
             return []
@@ -731,7 +753,7 @@ def repair_codex_auth_for_cockpit(*, codex_home: Path, account: dict[str, Any]) 
                 payload["api_provider_id"] = account.get("api_provider_id")
             if account.get("api_provider_name"):
                 payload["api_provider_name"] = account.get("api_provider_name")
-    else:
+    elif codex_auth_mode == "chatgpt":
         tokens = account.get("tokens")
         if not isinstance(tokens, dict) or not tokens.get("access_token"):
             return []
@@ -747,6 +769,8 @@ def repair_codex_auth_for_cockpit(*, codex_home: Path, account: dict[str, Any]) 
         updated_at = account.get("token_updated_at")
         if isinstance(updated_at, (int, float)) and updated_at > 0:
             payload["last_refresh"] = datetime.fromtimestamp(updated_at, tz=timezone.utc).isoformat()
+    else:
+        return []
     auth_path = codex_home / "auth.json"
     current_text = _read_text(auth_path).strip()
     updated_text = json.dumps(payload, ensure_ascii=False, indent=2)
@@ -763,7 +787,8 @@ def repair_codex_auth_for_cockpit(*, codex_home: Path, account: dict[str, Any]) 
             "path": str(auth_path),
             "backup_path": str(backup_path) if backup_path else None,
             "account_id": account.get("id"),
-            "auth_mode": auth_mode,
+            "cockpit_auth_mode": auth_mode,
+            "auth_mode": codex_auth_mode,
             "api_provider_id": account.get("api_provider_id"),
             "api_provider_name": account.get("api_provider_name"),
         }

@@ -656,6 +656,109 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertNotIn("codex_auth_cockpit_projected", action_ids)
             self.assertEqual(original_auth, json.loads((codex_home / "auth.json").read_text(encoding="utf-8")))
 
+    def test_interop_checker_treats_cockpit_oauth_as_codex_chatgpt_auth(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            codex_home = root / "codex-home"
+            codex_home.mkdir()
+            _create_codex_state_db(codex_home / "state_5.sqlite")
+            connection = sqlite3.connect(codex_home / "state_5.sqlite")
+            try:
+                connection.execute("update threads set model_provider = 'cockpit_http' where archived = 0")
+                connection.commit()
+            finally:
+                connection.close()
+            (codex_home / "config.toml").write_text(
+                'model_provider = "openai"\nforced_login_method = "api"\n',
+                encoding="utf-8",
+            )
+            (codex_home / "auth.json").write_text(
+                json.dumps({"tokens": {"access_token": "old-token"}}),
+                encoding="utf-8",
+            )
+            cc_switch_db = root / ".cc-switch" / "cc-switch.db"
+            cc_switch_db.parent.mkdir()
+            _create_cc_switch_db(cc_switch_db)
+            cockpit_home = root / ".antigravity_cockpit"
+            cockpit_home.mkdir()
+            (cockpit_home / "codex_accounts").mkdir()
+            (cockpit_home / "codex_accounts.json").write_text(
+                json.dumps({"accounts": [{"id": "codex_oauth"}], "current_account_id": "codex_oauth"}),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_accounts" / "codex_oauth.json").write_text(
+                json.dumps(
+                    {
+                        "id": "codex_oauth",
+                        "email": "oauth-test@example.test",
+                        "auth_mode": "oauth",
+                        "tokens": {"access_token": "oauth-token"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_model_providers.json").write_text(
+                json.dumps([{"id": "openai", "name": "OpenAI"}]),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_instances.json").write_text(
+                json.dumps(
+                    {
+                        "instances": [],
+                        "defaultSettings": {
+                            "extraArgs": "",
+                            "lastPid": None,
+                            "followLocalAccount": False,
+                            "bindAccountId": "codex_old_api",
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            dry_run = _run_interop_checker(codex_home, cc_switch_db, cockpit_home, quick_launch=True)
+            self.assertEqual(dry_run.returncode, 2, dry_run.stdout + dry_run.stderr)
+            dry_payload = json.loads(dry_run.stdout)
+            dry_checks = {check["id"]: check for check in dry_payload["after"]["checks"]}
+            self.assertEqual("chatgpt", dry_checks["codex_auth_matches_cockpit_current_account"]["expected_auth_mode"])
+            self.assertEqual("oauth", dry_checks["codex_auth_matches_cockpit_current_account"]["cockpit_auth_mode"])
+
+            applied = _run_interop_checker(
+                codex_home,
+                cc_switch_db,
+                cockpit_home,
+                apply=True,
+                migrate_provider_bucket=True,
+                quick_launch=True,
+            )
+
+            self.assertEqual(applied.returncode, 0, applied.stdout + applied.stderr)
+            payload = json.loads(applied.stdout)
+            self.assertEqual("pass", payload["status"])
+            action_ids = {action["id"] for action in payload["actions"]}
+            self.assertIn("codex_live_config_cockpit_provider", action_ids)
+            self.assertIn("codex_auth_cockpit_projected", action_ids)
+            self.assertIn("codex_threads_provider_bucket_migrated", action_ids)
+            connection = sqlite3.connect(codex_home / "state_5.sqlite")
+            try:
+                buckets = dict(
+                    connection.execute(
+                        "select model_provider, count(*) from threads where archived = 0 group by model_provider"
+                    ).fetchall()
+                )
+            finally:
+                connection.close()
+            self.assertEqual({"openai": 2}, buckets)
+            live_config = (codex_home / "config.toml").read_text(encoding="utf-8")
+            self.assertIn('model_provider = "openai"', live_config)
+            self.assertIn('forced_login_method = "chatgpt"', live_config)
+            live_auth = json.loads((codex_home / "auth.json").read_text(encoding="utf-8"))
+            self.assertEqual("chatgpt", live_auth["auth_mode"])
+            self.assertEqual("oauth-token", live_auth["tokens"]["access_token"])
+            cockpit_instances = json.loads((cockpit_home / "codex_instances.json").read_text(encoding="utf-8"))
+            self.assertTrue(cockpit_instances["defaultSettings"]["followLocalAccount"])
+            self.assertIsNone(cockpit_instances["defaultSettings"]["bindAccountId"])
+
     def test_interop_checker_flags_unreadable_codex_state_schema(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
