@@ -28,6 +28,14 @@
   - quick launch timing: `codex-interop-check.py --apply --migrate-provider-bucket --quick-launch` took about `0.22s`; live `codex-cockpit --help` took about `1.78s`; live `codex-cockpit-resume --help` took about `1.98s`.
   - config guard: no `[model_providers.openai]`; top-level `model_provider = "openai"` plus `openai_base_url = "http://35.213.82.91:8003/v1"`
 - compatibility: using `openai` as the shared provider bucket must not define `[model_providers.openai]`; relay routing stays on top-level `openai_base_url`.
+- closeout_2026_05_10:
+  - repeated reproduction root cause: `Start-CodexShared.ps1` and `codex-interop-check.py` still had a path that selected or recreated `model_provider = "cockpit_http"` for non-official Cockpit API accounts such as `35.213.82.91`; Codex resume history is bucketed by `threads.model_provider`, so that split history away from ChatGPT auth sessions.
+  - durable repair: Cockpit API accounts now keep `model_provider = "openai"` and switch only `openai_base_url`; launcher custom non-`openai` `-ModelProvider` is ignored for Cockpit current-account launches; interop repair removes stale `[model_providers.cockpit_http]` and makes `shared-cockpit-api` use the built-in `openai` bucket.
+  - live final repair: installed checker `--apply --migrate-provider-bucket` returned `status=pass`; after state is `active_provider=openai`, `thread_distribution.openai=1634`, `session_distribution.openai=1788`, `provider_bucket=openai`, `login_status=pass`, `auth_status=pass`.
+  - final source/live scan: `rg 'cockpit_http|model_providers\.{0}|supports_websockets=false|ignoring custom ModelProvider'` over source and installed launcher/checker only finds the warning string, the legacy cleanup constant, and test negative/stale-input assertions.
+  - regression tests: `python -m unittest tests.runtime.test_codex_shared_launcher` -> `Ran 12 tests ... OK`.
+  - full gates: `scripts\build-runtime.ps1` -> `OK python-bytecode`, `OK python-import`; `scripts\verify-repo.ps1 -Check Runtime` -> `Completed 109 test files ... failures=0`; `scripts\verify-repo.ps1 -Check Contract` -> listed contract checks `OK`; `scripts\doctor-runtime.ps1` -> checks `OK` with `WARN codex-capability-degraded` for native attach/status-handshake support, unrelated to provider buckets.
+  - no process restart was performed.
 - rollback:
   - state backups include `C:\Users\sciman\.codex\backups\state_5.sqlite.20260510_010148_provider_bucket.bak` and `C:\Users\sciman\.codex\backups\state_5.sqlite.20260510_011006_provider_bucket.bak`.
   - session rollback manifest: `C:\Users\sciman\.codex\backups\session_provider_bucket_20260510_010128\changed-lines.jsonl`.

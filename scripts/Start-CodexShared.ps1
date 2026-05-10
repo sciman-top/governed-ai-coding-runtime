@@ -217,7 +217,8 @@ function Invoke-CodexInteropRepair {
     param(
         [string] $HomePath,
         [string] $CockpitStateHome,
-        [string] $CcSwitchDb
+        [string] $CcSwitchDb,
+        [string] $AccountId
     )
 
     $checker = Join-Path $PSScriptRoot 'codex-interop-check.py'
@@ -239,6 +240,9 @@ function Invoke-CodexInteropRepair {
         '--migrate-provider-bucket',
         '--quick-launch'
     )
+    if (-not [string]::IsNullOrWhiteSpace($AccountId)) {
+        $repairArgs += @('--cockpit-account-id', $AccountId)
+    }
     $output = & $python.Source @repairArgs 2>&1
     $exitCode = $LASTEXITCODE
     $text = ($output | ForEach-Object { [string] $_ }) -join "`n"
@@ -337,14 +341,10 @@ if ($UseCockpitCurrentAccount) {
         $env:OPENAI_API_KEY = $apiKey
         $forcedLoginMethod = 'api'
         $requiresOpenAiAuth = $false
-        if (-not $PSBoundParameters.ContainsKey('ModelProvider') -or [string]::IsNullOrWhiteSpace($ModelProvider)) {
-            if ($accountBaseUrl -ne 'https://api.openai.com/v1') {
-                $ModelProvider = 'cockpit_http'
-            }
-            else {
-                $ModelProvider = 'openai'
-            }
+        if ($PSBoundParameters.ContainsKey('ModelProvider') -and -not [string]::IsNullOrWhiteSpace($ModelProvider) -and $ModelProvider -ne 'openai') {
+            Write-Warning 'Cockpit launchers share Codex App history through the built-in openai provider bucket; ignoring custom ModelProvider for history continuity.'
         }
+        $ModelProvider = 'openai'
         if (-not $PSBoundParameters.ContainsKey('Profile')) {
             $Profile = 'shared-cockpit-api'
         }
@@ -399,7 +399,7 @@ if ($Surface -eq 'app' -and $RestartExistingCodexApp -and -not $UseCockpitCurren
     Stop-CodexAppProcesses
 }
 if ($UseCockpitCurrentAccount) {
-    $repairApplied = Invoke-CodexInteropRepair -HomePath $resolvedHome -CockpitStateHome $CockpitHome -CcSwitchDb $CcSwitchDbPath
+    $repairApplied = Invoke-CodexInteropRepair -HomePath $resolvedHome -CockpitStateHome $CockpitHome -CcSwitchDb $CcSwitchDbPath -AccountId $accountId
     if (-not $repairApplied -and $pendingCockpitAuthProjection) {
         [void](Write-CodexAuthProjection `
             -HomePath $resolvedHome `
@@ -418,8 +418,12 @@ if (-not [string]::IsNullOrWhiteSpace($Profile)) {
 }
 $shouldPassOpenAiBaseUrl = -not [string]::IsNullOrWhiteSpace($BaseUrl) -and (
     -not $UseCockpitCurrentAccount -or
-    $forcedLoginMethod -eq 'api' -or
-    $BaseUrl.TrimEnd('/') -ne 'https://api.openai.com/v1'
+    (
+        $ModelProvider -eq 'openai' -and (
+            $forcedLoginMethod -eq 'api' -or
+            $BaseUrl.TrimEnd('/') -ne 'https://api.openai.com/v1'
+        )
+    )
 )
 if ($shouldPassOpenAiBaseUrl) {
     $codexArgs += @('-c', ('openai_base_url={0}' -f (ConvertTo-TomlString $BaseUrl)))
@@ -429,24 +433,6 @@ if (-not [string]::IsNullOrWhiteSpace($ModelProvider)) {
 }
 if (-not [string]::IsNullOrWhiteSpace($forcedLoginMethod)) {
     $codexArgs += @('-c', ('forced_login_method={0}' -f (ConvertTo-TomlString $forcedLoginMethod)))
-}
-if ($UseCockpitCurrentAccount -and -not [string]::IsNullOrWhiteSpace($ModelProvider) -and $ModelProvider -ne 'openai') {
-    $providerName = 'Cockpit Tools Current'
-    $cockpitProviderName = Get-JsonStringProperty -Object $cockpitAccount -Name 'api_provider_name'
-    $cockpitEmail = Get-JsonStringProperty -Object $cockpitAccount -Name 'email'
-    if ($cockpitAccount -and -not [string]::IsNullOrWhiteSpace($cockpitProviderName)) {
-        $providerName = $cockpitProviderName
-    }
-    elseif ($cockpitAccount -and -not [string]::IsNullOrWhiteSpace($cockpitEmail)) {
-        $providerName = $cockpitEmail
-    }
-    $codexArgs += @('-c', ('model_providers.{0}.name={1}' -f $ModelProvider, (ConvertTo-TomlString $providerName)))
-    $codexArgs += @('-c', ('model_providers.{0}.base_url={1}' -f $ModelProvider, (ConvertTo-TomlString $BaseUrl)))
-    $codexArgs += @('-c', ('model_providers.{0}.wire_api="responses"' -f $ModelProvider))
-    $codexArgs += @('-c', ('model_providers.{0}.requires_openai_auth={1}' -f $ModelProvider, ($requiresOpenAiAuth.ToString().ToLowerInvariant())))
-    if ($forcedLoginMethod -eq 'api') {
-        $codexArgs += @('-c', ('model_providers.{0}.supports_websockets=false' -f $ModelProvider))
-    }
 }
 if ($Surface -ne 'app' -and -not [string]::IsNullOrWhiteSpace($Workdir)) {
     $codexArgs += @('--cd', $Workdir)
