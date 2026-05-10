@@ -142,7 +142,15 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
         )
         self.assertEqual(
             set(ownership["catalog_input_fields"]),
-            {"repo_id", "display_name", "primary_language", "build_commands", "test_commands", "contract_commands"},
+            {
+                "repo_id",
+                "display_name",
+                "primary_language",
+                "build_commands",
+                "test_commands",
+                "contract_commands",
+                "full_gate_optimization",
+            },
         )
         self.assertTrue(speed_policy["enabled"])
         self.assertTrue(speed_policy["materialize_quick_gate_commands"])
@@ -971,6 +979,147 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             self.assertEqual(updated_profile["quick_gate_commands"][0]["description"], "Focused fast regression slice.")
             self.assertEqual(updated_profile["quick_gate_commands"][1]["id"], "contract")
             self.assertEqual(updated_profile["full_gate_commands"][1]["command"], "python -m unittest discover")
+
+    def test_apply_target_repo_governance_syncs_full_gate_optimization_intent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "repo-a"
+            profile_path = target_repo / ".governed-ai" / "repo-profile.json"
+            _write_json(
+                profile_path,
+                {
+                    "repo_id": "repo-a",
+                    "build_commands": [{"id": "build", "command": "python -m compileall src", "required": True}],
+                    "test_commands": [{"id": "test", "command": "python -m unittest discover", "required": True}],
+                    "contract_commands": [
+                        {"id": "contract", "command": "python -m unittest tests.test_contracts", "required": True}
+                    ],
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-05-10.1",
+                    "target_repo_speed_profile_policy": {
+                        "enabled": True,
+                        "materialize_quick_gate_commands": True,
+                        "materialize_full_gate_commands": True,
+                        "preserve_existing_gate_commands": True,
+                        "default_gate_timeout_seconds": 90,
+                        "quick_gate_timeout_seconds": 30,
+                        "full_gate_timeout_seconds": 60,
+                    },
+                    "required_profile_overrides": {"auto_commit_policy": {"enabled": True}},
+                },
+            )
+            optimization = {
+                "status": "needed",
+                "reason": "Full gate is serial and heavy.",
+                "recommended_target_entrypoint": "tools/run-gate-group.ps1",
+                "required_capabilities": ["gate_groups", "affected_path_routing"],
+                "fallback_full_gate_command": "python -m unittest discover",
+                "control_repo_next_action": "Implement target-local grouped gate runner.",
+            }
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/apply-target-repo-governance.py",
+                    "--target-repo",
+                    str(target_repo),
+                    "--baseline-path",
+                    str(baseline_path),
+                    "--full-gate-optimization-json",
+                    json.dumps(optimization),
+                    "--quick-test-skip-reason",
+                    "No safe smaller slice.",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertIn("full_gate_optimization", payload["changed_catalog_fields"])
+            updated_profile = json.loads(profile_path.read_text(encoding="utf-8"))
+            self.assertEqual(updated_profile["full_gate_optimization"], optimization)
+
+    def test_apply_target_repo_governance_overwrites_reviewed_catalog_field_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "repo-a"
+            profile_path = target_repo / ".governed-ai" / "repo-profile.json"
+            old_optimization = {
+                "status": "needed",
+                "reason": "Full gate still needs a grouped runner.",
+                "recommended_target_entrypoint": "tools/run-gate-group.ps1",
+                "required_capabilities": ["gate_groups"],
+                "fallback_full_gate_command": "python -m unittest discover",
+                "control_repo_next_action": "Create grouped runner.",
+            }
+            _write_json(
+                profile_path,
+                {
+                    "repo_id": "repo-a",
+                    "test_commands": [{"id": "test", "command": "python -m unittest discover", "required": True}],
+                    "contract_commands": [
+                        {"id": "contract", "command": "python -m unittest tests.test_contracts", "required": True}
+                    ],
+                    "full_gate_optimization": old_optimization,
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-05-10.1",
+                    "required_profile_overrides": {"auto_commit_policy": {"enabled": True}},
+                },
+            )
+            new_optimization = {
+                "status": "planned",
+                "reason": "Grouped runner exists; path routing remains pending.",
+                "recommended_target_entrypoint": "tools/run-gate-group.ps1",
+                "required_capabilities": ["gate_groups", "affected_path_routing"],
+                "fallback_full_gate_command": "python -m unittest discover",
+                "control_repo_next_action": "Wire affected-path routing.",
+            }
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/apply-target-repo-governance.py",
+                    "--target-repo",
+                    str(target_repo),
+                    "--baseline-path",
+                    str(baseline_path),
+                    "--full-gate-optimization-json",
+                    json.dumps(new_optimization),
+                    "--allow-catalog-field-overwrite",
+                    "full_gate_optimization",
+                    "--quick-test-skip-reason",
+                    "No safe smaller slice.",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertIn("full_gate_optimization", payload["changed_catalog_fields"])
+            updated_profile = json.loads(profile_path.read_text(encoding="utf-8"))
+            self.assertEqual(updated_profile["full_gate_optimization"], new_optimization)
 
     def test_apply_target_repo_governance_refreshes_derived_quick_group_to_target_slice(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

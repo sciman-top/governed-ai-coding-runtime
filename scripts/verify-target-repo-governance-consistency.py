@@ -31,7 +31,15 @@ DEFAULT_QUICK_TEST_RECOMMENDATION_RELATIVE_PATH = ".governed-ai/quick-test-slice
 DEFAULT_QUICK_TEST_PROMPT_RELATIVE_PATH = ".governed-ai/quick-test-slice.prompt.md"
 DEFAULT_MANAGED_FILE_PROVENANCE_ROOT = ".governed-ai/managed-files"
 DERIVED_RUNTIME_PROFILE_FIELDS = {"quick_gate_commands", "full_gate_commands", "gate_timeout_seconds"}
-CATALOG_PROFILE_FIELDS = {"repo_id", "display_name", "primary_language", "build_commands", "test_commands", "contract_commands"}
+CATALOG_PROFILE_FIELDS = {
+    "repo_id",
+    "display_name",
+    "primary_language",
+    "build_commands",
+    "test_commands",
+    "contract_commands",
+    "full_gate_optimization",
+}
 
 
 def _load_json(path: Path) -> dict[str, Any]:

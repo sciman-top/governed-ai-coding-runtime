@@ -137,6 +137,68 @@ class TargetRepoGateSpeedAuditTests(unittest.TestCase):
             self.assertIn("missing_timeout", codes)
             self.assertIn("missing_required_gate_ids", codes)
 
+    def test_audit_warns_when_full_gate_physical_optimization_is_pending(self) -> None:
+        module = _load_module()
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo = workspace / "repo-a"
+            optimization = {
+                "status": "needed",
+                "reason": "Full gate is serial and heavy.",
+                "recommended_target_entrypoint": "tools/run-gate-group.ps1",
+                "required_capabilities": ["gate_groups", "affected_path_routing"],
+                "fallback_full_gate_command": "python -m unittest",
+                "control_repo_next_action": "Implement target-local grouped gate runner.",
+            }
+            _write_json(
+                repo / ".governed-ai" / "repo-profile.json",
+                {
+                    "gate_timeout_seconds": 300,
+                    "full_gate_optimization": optimization,
+                    "quick_gate_commands": [
+                        {
+                            "id": "test",
+                            "command": "python -m unittest tests.test_fast",
+                            "timeout_seconds": 120,
+                            "satisfies_gate_ids": ["test", "contract"],
+                        }
+                    ],
+                    "full_gate_commands": [
+                        {"id": "build", "command": "python -m compileall .", "timeout_seconds": 300},
+                        {"id": "test", "command": "python -m unittest", "timeout_seconds": 300},
+                        {"id": "contract", "command": "python -m unittest tests.test_contract", "timeout_seconds": 300},
+                    ],
+                },
+            )
+            catalog = workspace / "catalog.json"
+            _write_json(
+                catalog,
+                {
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": str(repo),
+                            "primary_language": "python",
+                            "quick_test_command": "python -m unittest tests.test_fast",
+                            "full_gate_optimization": optimization,
+                        }
+                    }
+                },
+            )
+
+            report = module.audit(
+                repo_root=workspace,
+                catalog_path=catalog,
+                quick_timeout_budget_seconds=180,
+                full_timeout_budget_seconds=600,
+                serial_result_path=None,
+                parallel_result_path=None,
+            )
+
+            self.assertEqual(report["status"], "pass")
+            codes = {finding["code"] for finding in report["findings"]}
+            self.assertIn("full_gate_physical_optimization_pending", codes)
+            self.assertEqual(report["targets"][0]["full_gate_optimization"]["profile_synced"], True)
+
     def test_cli_writes_report(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)

@@ -70,7 +70,8 @@ param(
   [switch]$PruneRetiredManagedFiles,
   [switch]$UninstallGovernance,
   [switch]$DisableManagedAssetRemoval,
-  [switch]$ApplyManagedAssetRemoval
+  [switch]$ApplyManagedAssetRemoval,
+  [string[]]$AllowCatalogFieldOverwrite = @()
 )
 
 function Show-RuntimeFlowPresetHelp {
@@ -91,6 +92,7 @@ Governance apply options:
   -ApplyCodingSpeedProfile      Refresh derived coding speed profile fields.
   -ApplyAllFeatures             Apply the full target governance feature bundle.
   -DisableMilestoneAutoCommit   Run milestone gates but suppress post-gate auto-commit.
+  -AllowCatalogFieldOverwrite   Reviewed catalog field drift that may be overwritten intentionally.
 '@
 }
 
@@ -1321,7 +1323,8 @@ function Invoke-GovernanceBaselineSync {
     [string]$BaselinePath,
     [Parameter(Mandatory = $true)]
     [string]$PythonCommand,
-    [int]$CommandTimeoutSeconds = 0
+    [int]$CommandTimeoutSeconds = 0,
+    [string[]]$AllowCatalogFieldOverwrite = @()
   )
 
   $syncScriptPath = Join-Path $RepoRoot "scripts\apply-target-repo-governance.py"
@@ -1417,6 +1420,14 @@ function Invoke-GovernanceBaselineSync {
   if (-not [string]::IsNullOrWhiteSpace($TargetConfig.QuickTestSkipReason)) {
     $args += @("--quick-test-skip-reason", $TargetConfig.QuickTestSkipReason)
   }
+  if (-not [string]::IsNullOrWhiteSpace($TargetConfig.FullGateOptimizationJson)) {
+    $args += @("--full-gate-optimization-json", $TargetConfig.FullGateOptimizationJson)
+  }
+  foreach ($fieldName in @($AllowCatalogFieldOverwrite)) {
+    if (-not [string]::IsNullOrWhiteSpace($fieldName)) {
+      $args += @("--allow-catalog-field-overwrite", $fieldName)
+    }
+  }
   $result = Invoke-CommandCapture `
     -Executable $PythonCommand `
     -Arguments $args `
@@ -1474,7 +1485,8 @@ function Invoke-TargetPresetFlow {
     [string]$PythonCommand,
     [int]$RuntimeFlowCommandTimeoutSeconds = 0,
     [int]$GovernanceSyncCommandTimeoutSeconds = 0,
-    [bool]$EmitProgress = $false
+    [bool]$EmitProgress = $false,
+    [string[]]$AllowCatalogFieldOverwrite = @()
   )
 
   $flowStartedAt = Get-Date
@@ -1578,7 +1590,8 @@ function Invoke-TargetPresetFlow {
         -RepoRoot $RepoRoot `
         -BaselinePath $GovernanceBaselinePathResolved `
         -PythonCommand $PythonCommand `
-        -CommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds
+        -CommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds `
+        -AllowCatalogFieldOverwrite $AllowCatalogFieldOverwrite
       $syncDurationMs = [int][Math]::Round(((Get-Date) - $syncStartedAt).TotalMilliseconds)
       Write-BatchProgressLine `
         -Enabled $EmitProgress `
@@ -1660,7 +1673,8 @@ function Invoke-TargetGovernanceBaselineOnly {
     [string]$GovernanceBaselinePathResolved,
     [Parameter(Mandatory = $true)]
     [string]$PythonCommand,
-    [int]$GovernanceSyncCommandTimeoutSeconds = 0
+    [int]$GovernanceSyncCommandTimeoutSeconds = 0,
+    [string[]]$AllowCatalogFieldOverwrite = @()
   )
 
   $syncStartedAt = Get-Date
@@ -1670,7 +1684,8 @@ function Invoke-TargetGovernanceBaselineOnly {
     -RepoRoot $RepoRoot `
     -BaselinePath $GovernanceBaselinePathResolved `
     -PythonCommand $PythonCommand `
-    -CommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds
+    -CommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds `
+    -AllowCatalogFieldOverwrite $AllowCatalogFieldOverwrite
   $syncDurationMs = [int][Math]::Round(((Get-Date) - $syncStartedAt).TotalMilliseconds)
   $exitCode = if ($syncResult.status -eq "fail") { 1 } else { 0 }
 
@@ -1854,7 +1869,8 @@ function Invoke-TargetFeatureBaselineAndMilestoneCommit {
     [int]$GovernanceSyncCommandTimeoutSeconds = 0,
     [bool]$DisableMilestoneAutoCommit = $false,
     [bool]$CleanMilestoneGateSkipEnabled = $false,
-    [bool]$EmitProgress = $false
+    [bool]$EmitProgress = $false,
+    [string[]]$AllowCatalogFieldOverwrite = @()
   )
 
   Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "governance_sync" -Status "start" -Detail "source=baseline_only"
@@ -1865,7 +1881,8 @@ function Invoke-TargetFeatureBaselineAndMilestoneCommit {
     -RepoRoot $RepoRoot `
     -BaselinePath $GovernanceBaselinePathResolved `
     -PythonCommand $PythonCommand `
-    -CommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds
+    -CommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds `
+    -AllowCatalogFieldOverwrite $AllowCatalogFieldOverwrite
   $syncDurationMs = [int][Math]::Round(((Get-Date) - $syncStartedAt).TotalMilliseconds)
   Write-BatchProgressLine `
     -Enabled $EmitProgress `
@@ -1991,7 +2008,8 @@ function Invoke-TargetAllFeatures {
     [int]$GovernanceSyncCommandTimeoutSeconds = 0,
     [bool]$DisableMilestoneAutoCommit = $false,
     [bool]$CleanMilestoneGateSkipEnabled = $false,
-    [bool]$EmitProgress = $false
+    [bool]$EmitProgress = $false,
+    [string[]]$AllowCatalogFieldOverwrite = @()
   )
 
   $attachmentRepairResult = Invoke-AttachmentRepairIfNeeded `
@@ -2024,7 +2042,8 @@ function Invoke-TargetAllFeatures {
       -RepoRoot $RepoRoot `
       -BaselinePath $GovernanceBaselinePathResolved `
       -PythonCommand $PythonCommand `
-      -CommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds
+      -CommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds `
+      -AllowCatalogFieldOverwrite $AllowCatalogFieldOverwrite
     $syncDurationMs = [int][Math]::Round(((Get-Date) - $syncStartedAt).TotalMilliseconds)
     Write-BatchProgressLine `
       -Enabled $EmitProgress `
@@ -2046,7 +2065,8 @@ function Invoke-TargetAllFeatures {
       -PythonCommand $PythonCommand `
       -RuntimeFlowCommandTimeoutSeconds $RuntimeFlowCommandTimeoutSeconds `
       -GovernanceSyncCommandTimeoutSeconds $GovernanceSyncCommandTimeoutSeconds `
-      -EmitProgress $EmitProgress
+      -EmitProgress $EmitProgress `
+      -AllowCatalogFieldOverwrite $AllowCatalogFieldOverwrite
   }
   else {
     $flowResultEnvelope = [pscustomobject]@{
@@ -2633,7 +2653,8 @@ foreach ($targetName in $selectedTargets) {
       -GovernanceSyncCommandTimeoutSeconds $GovernanceSyncTimeoutSeconds `
       -DisableMilestoneAutoCommit $DisableMilestoneAutoCommit.IsPresent `
       -CleanMilestoneGateSkipEnabled $cleanMilestoneGateSkipEnabled `
-      -EmitProgress $progressEnabled
+      -EmitProgress $progressEnabled `
+      -AllowCatalogFieldOverwrite $AllowCatalogFieldOverwrite
   }
   elseif ($applyFeatureBaselineAndMilestoneCommit) {
     $targetRun = Invoke-TargetFeatureBaselineAndMilestoneCommit `
@@ -2650,7 +2671,8 @@ foreach ($targetName in $selectedTargets) {
       -GovernanceSyncCommandTimeoutSeconds $GovernanceSyncTimeoutSeconds `
       -DisableMilestoneAutoCommit $DisableMilestoneAutoCommit.IsPresent `
       -CleanMilestoneGateSkipEnabled $cleanMilestoneGateSkipEnabled `
-      -EmitProgress $progressEnabled
+      -EmitProgress $progressEnabled `
+      -AllowCatalogFieldOverwrite $AllowCatalogFieldOverwrite
   }
   elseif ($applyFeatureBaselineOnly) {
     $targetRun = Invoke-TargetGovernanceBaselineOnly `
@@ -2659,7 +2681,8 @@ foreach ($targetName in $selectedTargets) {
       -RepoRoot $repoRoot `
       -GovernanceBaselinePathResolved $governanceBaselinePathResolved `
       -PythonCommand $pythonCommand `
-      -GovernanceSyncCommandTimeoutSeconds $GovernanceSyncTimeoutSeconds
+      -GovernanceSyncCommandTimeoutSeconds $GovernanceSyncTimeoutSeconds `
+      -AllowCatalogFieldOverwrite $AllowCatalogFieldOverwrite
   }
   else {
     $targetRun = Invoke-TargetPresetFlow `
@@ -2673,7 +2696,8 @@ foreach ($targetName in $selectedTargets) {
       -PythonCommand $pythonCommand `
       -RuntimeFlowCommandTimeoutSeconds $RuntimeFlowTimeoutSeconds `
       -GovernanceSyncCommandTimeoutSeconds $GovernanceSyncTimeoutSeconds `
-      -EmitProgress $progressEnabled
+      -EmitProgress $progressEnabled `
+      -AllowCatalogFieldOverwrite $AllowCatalogFieldOverwrite
   }
 
   $flowFailedBeforeManagedRemoval = ($targetRun.exit_code -ne 0)

@@ -265,6 +265,7 @@ $forcedLoginMethod = $null
 $requiresOpenAiAuth = $true
 $cockpitAccount = $null
 $pendingCockpitAuthProjection = $null
+$cockpitHttpProviderId = 'cockpit_http'
 
 if ($UseCockpitCurrentAccount -and $UseCcSwitchCurrentProvider) {
     throw 'UseCockpitCurrentAccount and UseCcSwitchCurrentProvider are mutually exclusive.'
@@ -315,9 +316,6 @@ if ($UseCockpitCurrentAccount) {
     if ([string]::IsNullOrWhiteSpace($authMode)) {
         throw "Cockpit Tools current Codex account has no auth_mode: $accountPath"
     }
-    if (-not $PSBoundParameters.ContainsKey('ModelProvider') -or [string]::IsNullOrWhiteSpace($ModelProvider)) {
-        $ModelProvider = 'openai'
-    }
     $accountBaseUrl = Get-JsonStringProperty -Object $cockpitAccount -Name 'api_base_url'
     if ([string]::IsNullOrWhiteSpace($accountBaseUrl) -and $authMode -eq 'apikey') {
         throw "Cockpit Tools current Codex API account has no api_base_url; refusing to fall back to OpenAI Official: $accountPath"
@@ -340,6 +338,9 @@ if ($UseCockpitCurrentAccount) {
         $env:OPENAI_API_KEY = $apiKey
         $forcedLoginMethod = 'api'
         $requiresOpenAiAuth = $false
+        if (-not $PSBoundParameters.ContainsKey('ModelProvider') -or [string]::IsNullOrWhiteSpace($ModelProvider)) {
+            $ModelProvider = $cockpitHttpProviderId
+        }
         if (-not $PSBoundParameters.ContainsKey('Profile')) {
             $Profile = 'shared-cockpit-api'
         }
@@ -349,6 +350,9 @@ if ($UseCockpitCurrentAccount) {
         [Environment]::SetEnvironmentVariable('OPENAI_API_KEY', $null, 'Process')
         $forcedLoginMethod = 'chatgpt'
         $requiresOpenAiAuth = $true
+        if (-not $PSBoundParameters.ContainsKey('ModelProvider') -or [string]::IsNullOrWhiteSpace($ModelProvider)) {
+            $ModelProvider = 'openai'
+        }
         if (-not $PSBoundParameters.ContainsKey('Profile')) {
             $Profile = 'shared-cockpit-auth'
         }
@@ -436,6 +440,10 @@ if ($UseCockpitCurrentAccount -and -not [string]::IsNullOrWhiteSpace($ModelProvi
     $codexArgs += @('-c', ('model_providers.{0}.base_url={1}' -f $ModelProvider, (ConvertTo-TomlString $BaseUrl)))
     $codexArgs += @('-c', ('model_providers.{0}.wire_api="responses"' -f $ModelProvider))
     $codexArgs += @('-c', ('model_providers.{0}.requires_openai_auth={1}' -f $ModelProvider, ($requiresOpenAiAuth.ToString().ToLowerInvariant())))
+    if ($forcedLoginMethod -eq 'api') {
+        $codexArgs += @('-c', ('model_providers.{0}.env_key="OPENAI_API_KEY"' -f $ModelProvider))
+        $codexArgs += @('-c', ('model_providers.{0}.supports_websockets=false' -f $ModelProvider))
+    }
 }
 if ($Surface -ne 'app' -and -not [string]::IsNullOrWhiteSpace($Workdir)) {
     $codexArgs += @('--cd', $Workdir)

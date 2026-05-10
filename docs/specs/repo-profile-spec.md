@@ -28,6 +28,7 @@ Define the per-repository configuration inherited by governed sessions.
 - gate_timeout_seconds
 - quick_gate_commands
 - full_gate_commands
+- full_gate_optimization
 - additional_gate_commands
 - task_lifecycle
 - extra_eval_suites
@@ -50,6 +51,7 @@ Repo profiles may override:
 - command entrypoints
 - timeouts
 - per-gate `timeout_seconds`
+- target-local full-gate physical optimization intent and fallback command
 - allowed low-risk tools
 - optional eval suites
 - delivery templates

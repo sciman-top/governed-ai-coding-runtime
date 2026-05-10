@@ -14,6 +14,7 @@ from typing import Any
 
 
 SHARED_CODEX_PROVIDER_ID = "openai"
+COCKPIT_HTTP_PROVIDER_ID = "cockpit_http"
 OFFICIAL_OPENAI_BASE_URL = "https://api.openai.com/v1"
 CODEX_HISTORY_INDEXES = {
     "idx_threads_archived_provider_updated_at_ms": {
@@ -255,11 +256,17 @@ def inspect_codex_provider_buckets(
 
     config_text = _read_text(config_path)
     active_provider = _toml_top_level_string(config_text, "model_provider") or "openai"
+    current = _cockpit_current_account(cockpit_home)
+    current_auth_mode = str(current.get("auth_mode") or "") if current else ""
     active_status = "pass"
     active_reason = "Codex live config uses the same provider bucket as the dominant local history bucket."
     if dominant_provider and active_provider != dominant_provider:
-        active_status = "fail" if _is_custom_provider_id(active_provider) else "warn"
-        active_reason = "Codex live config points at a different provider bucket than the dominant local history bucket."
+        if current_auth_mode == "apikey" and active_provider == COCKPIT_HTTP_PROVIDER_ID:
+            active_status = "pass"
+            active_reason = "Codex API relay uses a custom HTTP-only provider to disable unsupported Responses WebSocket transport; SQLite trigger guards keep active history in the shared provider bucket."
+        else:
+            active_status = "fail" if _is_custom_provider_id(active_provider) else "warn"
+            active_reason = "Codex live config points at a different provider bucket than the dominant local history bucket."
     checks.append(
         {
             "id": "codex_live_provider_bucket",
@@ -427,18 +434,21 @@ def inspect_cockpit(*, codex_home: Path, cockpit_home: Path) -> list[dict[str, A
         {
             "id": "cockpit_codex_app_restart_semantics",
             "tool": "cockpit_tools",
-            "status": "warn" if managed_restart_enabled else "pass",
-            "reason": "Cockpit Tools owns Codex account/provider state; governed interop must not install an automatic restart wrapper because it can switch a running Codex App away from the account the user is actively using.",
+            "status": "pass" if managed_restart_enabled else "fail",
+            "reason": (
+                "Cockpit Codex switches must launch through the governed restart wrapper so Codex App receives the current account auth, API base URL, and pre-launch validation instead of reusing stale process state."
+            ),
             "path": str(cockpit_home / "config.json"),
             "codex_restart_specified_app_on_switch": restart_on_switch,
             "codex_specified_app_path": specified_app_path,
             "expected_restart_wrapper": expected_restart_wrapper,
             "managed_restart_enabled": managed_restart_enabled,
-            "alternative": "Use codex-cockpit-app-restart manually after confirming the current Cockpit account is the intended one.",
+            "repair_strategy": "configure_restart_wrapper" if not managed_restart_enabled else "none",
         }
     )
 
     isolation_findings = _cockpit_instance_isolation_findings(instances, codex_home)
+    account_binding_findings = _cockpit_account_binding_findings(instances)
     stale_last_pid = _cockpit_stale_last_pid(instances)
     last_pid = _cockpit_default_last_pid(instances)
     last_pid_status = "pass"
@@ -458,6 +468,16 @@ def inspect_cockpit(*, codex_home: Path, cockpit_home: Path) -> list[dict[str, A
     )
     checks.append(
         {
+            "id": "cockpit_codex_instances_follow_current_account",
+            "tool": "cockpit_tools",
+            "status": "fail" if account_binding_findings else "pass",
+            "reason": "Cockpit Codex default launch settings must follow the current account; a fixed bindAccountId can relaunch an old OAuth account after the user switches to an API account.",
+            "path": str(instances_path),
+            "findings": account_binding_findings,
+        }
+    )
+    checks.append(
+        {
             "id": "cockpit_codex_instances_last_pid_current",
             "tool": "cockpit_tools",
             "status": last_pid_status,
@@ -472,6 +492,8 @@ def inspect_cockpit(*, codex_home: Path, cockpit_home: Path) -> list[dict[str, A
 
 def repair_cockpit(*, codex_home: Path, cockpit_home: Path, checks: dict[str, Any]) -> list[dict[str, Any]]:
     actions = repair_cockpit_stale_last_pid(cockpit_home=cockpit_home)
+    actions.extend(repair_cockpit_restart_wrapper_config(codex_home=codex_home, cockpit_home=cockpit_home))
+    actions.extend(repair_cockpit_default_account_binding(cockpit_home=cockpit_home))
     actions.extend(repair_cockpit_current_api_provider_metadata(codex_home=codex_home, cockpit_home=cockpit_home))
     current = _cockpit_current_account(cockpit_home)
     if not current:
@@ -507,6 +529,71 @@ def repair_cockpit_stale_last_pid(*, cockpit_home: Path) -> list[dict[str, Any]]
             "path": str(instances_path),
             "backup_path": str(backup_path) if backup_path else None,
             "cleared_lastPid": stale_last_pid,
+        }
+    ]
+
+
+def repair_cockpit_restart_wrapper_config(*, codex_home: Path, cockpit_home: Path) -> list[dict[str, Any]]:
+    config_path = cockpit_home / "config.json"
+    config = _read_json(config_path)
+    if not isinstance(config, dict):
+        config = {}
+    expected_wrapper = str(_expected_cockpit_restart_wrapper(codex_home))
+    already_configured = (
+        bool(config.get("codex_launch_on_switch"))
+        and bool(config.get("codex_restart_specified_app_on_switch"))
+        and _same_path(str(config.get("codex_specified_app_path") or ""), expected_wrapper)
+    )
+    if already_configured:
+        return [
+            {
+                "id": "cockpit_codex_restart_wrapper_configured",
+                "tool": "cockpit_tools",
+                "status": "ok",
+                "path": str(config_path),
+                "codex_specified_app_path": expected_wrapper,
+            }
+        ]
+    backup_path = _backup_file(config_path, suffix="cockpit_restart_wrapper") if config_path.exists() else None
+    config["codex_launch_on_switch"] = True
+    config["codex_restart_specified_app_on_switch"] = True
+    config["codex_specified_app_path"] = expected_wrapper
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return [
+        {
+            "id": "cockpit_codex_restart_wrapper_configured",
+            "tool": "cockpit_tools",
+            "status": "changed",
+            "path": str(config_path),
+            "backup_path": str(backup_path) if backup_path else None,
+            "codex_specified_app_path": expected_wrapper,
+        }
+    ]
+
+
+def repair_cockpit_default_account_binding(*, cockpit_home: Path) -> list[dict[str, Any]]:
+    instances_path = cockpit_home / "codex_instances.json"
+    instances = _read_json(instances_path)
+    findings = _cockpit_account_binding_findings(instances)
+    if not findings or not isinstance(instances, dict):
+        return []
+    default_settings = instances.get("defaultSettings")
+    if not isinstance(default_settings, dict):
+        return []
+    backup_path = _backup_file(instances_path, suffix="cockpit_follow_current_account") if instances_path.exists() else None
+    default_settings["followLocalAccount"] = True
+    default_settings["bindAccountId"] = None
+    instances_path.parent.mkdir(parents=True, exist_ok=True)
+    instances_path.write_text(json.dumps(instances, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return [
+        {
+            "id": "cockpit_codex_instances_follow_current_account_repaired",
+            "tool": "cockpit_tools",
+            "status": "changed",
+            "path": str(instances_path),
+            "backup_path": str(backup_path) if backup_path else None,
+            "findings": findings,
         }
     ]
 
@@ -636,17 +723,23 @@ def repair_codex_live_config_for_cockpit(*, codex_home: Path, account: dict[str,
     if not base_url:
         return []
     forced_login = "api" if account.get("auth_mode") == "apikey" else "chatgpt"
+    target_provider = COCKPIT_HTTP_PROVIDER_ID if forced_login == "api" else SHARED_CODEX_PROVIDER_ID
     config_path = codex_home / "config.toml"
     current = _read_text(config_path)
     lines = current.splitlines()
     lines = _remove_top_level_key(lines, "openai_base_url")
-    if forced_login == "api":
+    if forced_login == "api" and target_provider == SHARED_CODEX_PROVIDER_ID:
         lines = _set_top_level(lines, "openai_base_url", _toml_string(base_url))
     lines = _set_top_level(lines, "forced_login_method", _toml_string(forced_login))
-    lines = _set_top_level(lines, "model_provider", _toml_string(SHARED_CODEX_PROVIDER_ID))
+    lines = _set_top_level(lines, "model_provider", _toml_string(target_provider))
     lines = _remove_toml_table(lines, "[model_providers.cockpit]")
     lines = _remove_toml_table(lines, "[model_providers.openai]")
     lines = _remove_toml_table(lines, "[model_providers.ccswitch]")
+    lines = _replace_toml_table(
+        lines,
+        f"[model_providers.{COCKPIT_HTTP_PROVIDER_ID}]",
+        _cockpit_http_provider_lines(base_url),
+    )
     lines = _replace_toml_table(
         lines,
         "[profiles.shared-current-provider]",
@@ -680,7 +773,8 @@ def repair_codex_live_config_for_cockpit(*, codex_home: Path, account: dict[str,
             "status": "changed",
             "path": str(config_path),
             "backup_path": str(backup_path) if backup_path else None,
-            "target_provider": SHARED_CODEX_PROVIDER_ID,
+            "target_provider": target_provider,
+            "history_provider_bucket": SHARED_CODEX_PROVIDER_ID,
             "forced_login_method": forced_login,
             "base_url": base_url,
             "account_id": account.get("id"),
@@ -691,14 +785,27 @@ def repair_codex_live_config_for_cockpit(*, codex_home: Path, account: dict[str,
 
 
 def _cockpit_profile_lines(name: str, *, forced_login: str, base_url: str) -> list[str]:
+    provider = COCKPIT_HTTP_PROVIDER_ID if forced_login == "api" else SHARED_CODEX_PROVIDER_ID
     lines = [
         f"[profiles.{name}]",
         f"forced_login_method = {_toml_string(forced_login)}",
-        f"model_provider = {_toml_string(SHARED_CODEX_PROVIDER_ID)}",
+        f"model_provider = {_toml_string(provider)}",
     ]
-    if forced_login == "api":
+    if forced_login == "api" and provider == SHARED_CODEX_PROVIDER_ID:
         lines.append(f"openai_base_url = {_toml_string(base_url)}")
     return lines
+
+
+def _cockpit_http_provider_lines(base_url: str) -> list[str]:
+    return [
+        f"[model_providers.{COCKPIT_HTTP_PROVIDER_ID}]",
+        'name = "Cockpit HTTP Relay"',
+        f"base_url = {_toml_string(base_url)}",
+        'wire_api = "responses"',
+        'env_key = "OPENAI_API_KEY"',
+        "requires_openai_auth = false",
+        "supports_websockets = false",
+    ]
 
 
 def migrate_codex_provider_bucket(
@@ -1404,6 +1511,28 @@ def _cockpit_instance_isolation_findings(instances: Any, codex_home: Path) -> li
             findings.append({"instance": label, "issue": "different_codex_home", "expected": str(codex_home)})
         if "sqlite_home" in lowered and expected_home not in lowered:
             findings.append({"instance": label, "issue": "different_sqlite_home", "expected": str(codex_home)})
+    return findings
+
+
+def _cockpit_account_binding_findings(instances: Any) -> list[dict[str, Any]]:
+    findings: list[dict[str, Any]] = []
+    if not isinstance(instances, dict):
+        return findings
+    default_settings = instances.get("defaultSettings")
+    if not isinstance(default_settings, dict):
+        return findings
+    follow_current = bool(default_settings.get("followLocalAccount"))
+    bind_account_id = default_settings.get("bindAccountId")
+    if not follow_current:
+        findings.append({"setting": "defaultSettings.followLocalAccount", "issue": "not_following_current_account"})
+    if isinstance(bind_account_id, str) and bind_account_id.strip():
+        findings.append(
+            {
+                "setting": "defaultSettings.bindAccountId",
+                "issue": "fixed_account_binding",
+                "bindAccountId": bind_account_id,
+            }
+        )
     return findings
 
 

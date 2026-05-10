@@ -53,7 +53,15 @@ class TargetRepoRolloutContractTests(unittest.TestCase):
         ownership = contract["repo_profile_ownership_contract"]
         self.assertEqual(
             set(ownership["catalog_input_fields"]),
-            {"repo_id", "display_name", "primary_language", "build_commands", "test_commands", "contract_commands"},
+            {
+                "repo_id",
+                "display_name",
+                "primary_language",
+                "build_commands",
+                "test_commands",
+                "contract_commands",
+                "full_gate_optimization",
+            },
         )
         self.assertIn("retired_managed_files", contract["managed_file_rollout"])
         self.assertIn("retired_managed_files", json.loads(DEFAULT_BASELINE_PATH.read_text(encoding="utf-8")))

@@ -26,6 +26,20 @@ function Get-OptionalIntProperty {
   return 0
 }
 
+function Get-OptionalJsonProperty {
+  param(
+    [Parameter(Mandatory = $true)]
+    [object]$Object,
+    [Parameter(Mandatory = $true)]
+    [string]$Name
+  )
+
+  if ($Object -and ($Object.PSObject.Properties.Name -contains $Name) -and $null -ne $Object.$Name) {
+    return ConvertTo-Json -InputObject $Object.$Name -Compress -Depth 20
+  }
+  return ""
+}
+
 function Load-TargetConfigMap {
   param(
     [Parameter(Mandatory = $true)]
@@ -61,6 +75,7 @@ function Load-TargetConfigMap {
       QuickTestReason = Get-OptionalStringProperty -Object $rawConfig -Name "quick_test_reason"
       QuickTestTimeoutSeconds = Get-OptionalIntProperty -Object $rawConfig -Name "quick_test_timeout_seconds"
       QuickTestSkipReason = Get-OptionalStringProperty -Object $rawConfig -Name "quick_test_skip_reason"
+      FullGateOptimizationJson = Get-OptionalJsonProperty -Object $rawConfig -Name "full_gate_optimization"
     }
   }
 

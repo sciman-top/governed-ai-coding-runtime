@@ -204,6 +204,74 @@ def _effect_summary(serial_path: Path | None, parallel_path: Path | None) -> dic
     }
 
 
+def _audit_full_gate_optimization(
+    *,
+    target: str,
+    target_config: dict[str, Any],
+    profile: dict[str, Any],
+) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+    expected = target_config.get("full_gate_optimization")
+    if expected is None:
+        return None, []
+    if not isinstance(expected, dict):
+        return None, [
+            {
+                "severity": "error",
+                "target": target,
+                "code": "invalid_full_gate_optimization_catalog",
+                "message": "Target catalog full_gate_optimization must be an object when present.",
+            }
+        ]
+
+    findings: list[dict[str, Any]] = []
+    actual = profile.get("full_gate_optimization")
+    if actual != expected:
+        findings.append(
+            {
+                "severity": "error",
+                "target": target,
+                "code": "full_gate_optimization_not_synced",
+                "message": "Target profile full_gate_optimization does not match the target catalog.",
+            }
+        )
+
+    status = str(expected.get("status") or "").strip()
+    if status in {"needed", "planned"}:
+        findings.append(
+            {
+                "severity": "warn",
+                "target": target,
+                "code": "full_gate_physical_optimization_pending",
+                "message": "Target full gate still needs target-local grouping, affected-path routing, or equivalent physical speed work.",
+                "status": status,
+                "next_action": str(expected.get("control_repo_next_action") or "").strip(),
+            }
+        )
+
+    fallback = str(expected.get("fallback_full_gate_command") or "").strip()
+    if not fallback:
+        findings.append(
+            {
+                "severity": "error",
+                "target": target,
+                "code": "full_gate_optimization_missing_fallback",
+                "message": "full_gate_optimization must retain a fallback_full_gate_command.",
+            }
+        )
+
+    capabilities = [str(item).strip() for item in _as_list(expected.get("required_capabilities")) if str(item).strip()]
+    return (
+        {
+            "status": status,
+            "fallback_full_gate_command": fallback,
+            "recommended_target_entrypoint": str(expected.get("recommended_target_entrypoint") or "").strip(),
+            "required_capabilities": capabilities,
+            "profile_synced": actual == expected,
+        },
+        findings,
+    )
+
+
 def audit(
     *,
     repo_root: Path,
@@ -247,6 +315,11 @@ def audit(
             continue
 
         profile = _load_json(profile_path)
+        full_gate_optimization, full_gate_optimization_findings = _audit_full_gate_optimization(
+            target=target_name,
+            target_config=target_config,
+            profile=profile,
+        )
         quick_summary, quick_findings = _audit_group(
             target=target_name,
             profile=profile,
@@ -261,6 +334,7 @@ def audit(
             required_gate_ids={"build", "test", "contract"},
             max_timeout_seconds=full_timeout_budget_seconds,
         )
+        target_findings.extend(full_gate_optimization_findings)
         target_findings.extend(quick_findings)
         target_findings.extend(full_findings)
 
@@ -279,6 +353,7 @@ def audit(
                 "gate_timeout_seconds": profile.get("gate_timeout_seconds"),
                 "quick_gate_summary": quick_summary,
                 "full_gate_summary": full_summary,
+                "full_gate_optimization": full_gate_optimization,
                 "findings": target_findings,
             }
         )

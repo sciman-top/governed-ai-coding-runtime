@@ -599,6 +599,44 @@
       },
       "type": "array"
     },
+    "full_gate_optimization": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "not_needed",
+            "needed",
+            "planned",
+            "implemented"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "recommended_target_entrypoint": {
+          "type": "string"
+        },
+        "required_capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fallback_full_gate_command": {
+          "type": "string"
+        },
+        "control_repo_next_action": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "reason",
+        "fallback_full_gate_command"
+      ]
+    },
     "task_lifecycle": {
       "type": "object",
       "additionalProperties": false,

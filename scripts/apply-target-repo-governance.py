@@ -36,7 +36,15 @@ OUTER_AI_QUICK_TEST_INSTRUCTION = (
     "test command."
 )
 DERIVED_RUNTIME_PROFILE_FIELDS = {"quick_gate_commands", "full_gate_commands", "gate_timeout_seconds"}
-CATALOG_PROFILE_FIELDS = {"repo_id", "display_name", "primary_language", "build_commands", "test_commands", "contract_commands"}
+CATALOG_PROFILE_FIELDS = {
+    "repo_id",
+    "display_name",
+    "primary_language",
+    "build_commands",
+    "test_commands",
+    "contract_commands",
+    "full_gate_optimization",
+}
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -379,6 +387,29 @@ def _catalog_gate_entries(
     return entries
 
 
+def _parse_catalog_json_object(raw_json: str | None, *, field_name: str) -> dict[str, Any] | None:
+    if raw_json is None or not str(raw_json).strip():
+        return None
+    parsed = json.loads(raw_json)
+    if not isinstance(parsed, dict):
+        raise ValueError(f"--{field_name.replace('_', '-')} must be a JSON object")
+    return parsed
+
+
+def _parse_allow_catalog_field_overwrite(raw_values: list[str] | None) -> set[str]:
+    allowed: set[str] = set()
+    for raw_value in raw_values or []:
+        for item in str(raw_value or "").split(","):
+            field_name = item.strip()
+            if field_name:
+                allowed.add(field_name)
+    unknown = allowed - CATALOG_PROFILE_FIELDS
+    if unknown:
+        formatted = ", ".join(sorted(unknown))
+        raise ValueError(f"--allow-catalog-field-overwrite contains unknown catalog profile field(s): {formatted}")
+    return allowed
+
+
 def _apply_catalog_profile_facts(
     profile: dict[str, Any],
     *,
@@ -389,10 +420,13 @@ def _apply_catalog_profile_facts(
     test_command: str | None = None,
     contract_command: str | None = None,
     contract_commands_json: str | None = None,
+    full_gate_optimization_json: str | None = None,
+    allow_catalog_field_overwrite: set[str] | None = None,
 ) -> tuple[dict[str, Any], list[str], list[dict[str, Any]]]:
     updated = copy.deepcopy(profile)
     changed_fields: list[str] = []
     blocked_fields: list[dict[str, Any]] = []
+    allowed_overwrites = allow_catalog_field_overwrite or set()
     for field_name, value in (
         ("repo_id", repo_id),
         ("display_name", display_name),
@@ -406,6 +440,10 @@ def _apply_catalog_profile_facts(
             updated[field_name] = normalized
             changed_fields.append(field_name)
         elif current != normalized:
+            if field_name in allowed_overwrites:
+                updated[field_name] = normalized
+                changed_fields.append(field_name)
+                continue
             blocked_fields.append(
                 {
                     "field": field_name,
@@ -431,6 +469,10 @@ def _apply_catalog_profile_facts(
             updated[group_name] = expected_group
             changed_fields.append(group_name)
         elif not _command_group_satisfies(actual_group, expected_group):
+            if group_name in allowed_overwrites:
+                updated[group_name] = expected_group
+                changed_fields.append(group_name)
+                continue
             blocked_fields.append(_catalog_group_block(group_name, actual_group, expected_group))
 
     expected_contract_commands = _catalog_gate_entries(
@@ -443,7 +485,37 @@ def _apply_catalog_profile_facts(
         updated["contract_commands"] = expected_contract_commands
         changed_fields.append("contract_commands")
     elif expected_contract_commands and not _command_group_satisfies(actual_contract_commands, expected_contract_commands):
-        blocked_fields.append(_catalog_group_block("contract_commands", actual_contract_commands, expected_contract_commands))
+        if "contract_commands" in allowed_overwrites:
+            updated["contract_commands"] = expected_contract_commands
+            changed_fields.append("contract_commands")
+        else:
+            blocked_fields.append(_catalog_group_block("contract_commands", actual_contract_commands, expected_contract_commands))
+
+    expected_full_gate_optimization = _parse_catalog_json_object(
+        full_gate_optimization_json,
+        field_name="full_gate_optimization_json",
+    )
+    if expected_full_gate_optimization is not None:
+        actual_full_gate_optimization = updated.get("full_gate_optimization")
+        if actual_full_gate_optimization is None:
+            updated["full_gate_optimization"] = expected_full_gate_optimization
+            changed_fields.append("full_gate_optimization")
+        elif actual_full_gate_optimization != expected_full_gate_optimization:
+            if "full_gate_optimization" in allowed_overwrites:
+                updated["full_gate_optimization"] = expected_full_gate_optimization
+                changed_fields.append("full_gate_optimization")
+            else:
+                blocked_fields.append(
+                    {
+                        "field": "full_gate_optimization",
+                        "reason": "content_drift",
+                        "target_value": copy.deepcopy(actual_full_gate_optimization),
+                        "source_value": copy.deepcopy(expected_full_gate_optimization),
+                        "blocking_reason": "catalog full-gate optimization field differs; review and integrate target repo gate-speed decisions before applying",
+                        "conflict_policy": "block_on_drift",
+                        "recommended_action": "compare target full_gate_optimization with catalog source, update the catalog or target profile intentionally, then rerun apply",
+                    }
+                )
 
     return updated, changed_fields, blocked_fields
 
@@ -648,6 +720,19 @@ def main() -> int:
     parser.add_argument("--test-command", help="Catalog test gate command to sync into test_commands.")
     parser.add_argument("--contract-command", help="Catalog contract gate command to sync into contract_commands.")
     parser.add_argument("--contract-commands-json", help="Catalog contract gate command array to sync into contract_commands.")
+    parser.add_argument(
+        "--full-gate-optimization-json",
+        help="Catalog full-gate physical optimization plan object to sync into full_gate_optimization.",
+    )
+    parser.add_argument(
+        "--allow-catalog-field-overwrite",
+        action="append",
+        default=[],
+        help=(
+            "Catalog profile field that may overwrite existing target profile drift after review. "
+            "Repeat or pass comma-separated values."
+        ),
+    )
     parser.add_argument("--quick-test-command", help="Target-specific quick test slice command for fast gates.")
     parser.add_argument("--quick-test-reason", help="Short reason for the quick test slice command.")
     parser.add_argument("--quick-test-timeout-seconds", type=int, help="Timeout override for the quick test slice command.")
@@ -685,6 +770,7 @@ def main() -> int:
 
     baseline = _normalize_baseline(baseline_path)
     profile = _load_json(profile_path)
+    allow_catalog_field_overwrite = _parse_allow_catalog_field_overwrite(args.allow_catalog_field_overwrite)
     target_test_slice = normalize_target_test_slice(
         command=args.quick_test_command,
         reason=args.quick_test_reason,
@@ -715,6 +801,8 @@ def main() -> int:
         test_command=args.test_command,
         contract_command=args.contract_command,
         contract_commands_json=args.contract_commands_json,
+        full_gate_optimization_json=args.full_gate_optimization_json,
+        allow_catalog_field_overwrite=allow_catalog_field_overwrite,
     )
     updated_profile, changed_fields = _apply_profile_overrides(profile=updated_profile, overrides=overrides)
     changed_speed_profile_fields: list[str] = []

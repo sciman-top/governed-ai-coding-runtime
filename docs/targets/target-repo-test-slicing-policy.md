@@ -68,9 +68,11 @@ Targets may declare:
 - `quick_test_reason`: short justification for why the slice is representative.
 - `quick_test_timeout_seconds`: optional timeout override for the focused test slice.
 - `quick_test_skip_reason`: durable catalog reason to suppress repeated outer-AI slicing prompts when no safe slice is justified.
+- `full_gate_optimization`: catalog/profile intent for targets whose full gate remains physically heavy even after quick/full command materialization.
 
 The full test command remains `test_command`. One-click apply must use `quick_test_command` only for `quick_gate_commands.test`; it must not replace `test_commands` or `full_gate_commands.test`.
 `quick_test_command` and `quick_test_skip_reason` are mutually exclusive.
+`full_gate_optimization` does not replace the full gate. It records the target-local grouping, affected-path routing, parallel-safe groups, fixture reuse, and fallback command required before runtime can claim the target full gate itself is faster.
 
 ## Safe Slice Criteria
 A `quick_test_command` is allowed when it satisfies all criteria:

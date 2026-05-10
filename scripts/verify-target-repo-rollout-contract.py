@@ -13,7 +13,15 @@ DEFAULT_CONTRACT_PATH = ROOT / "docs" / "targets" / "target-repo-rollout-contrac
 DEFAULT_BASELINE_PATH = ROOT / "docs" / "targets" / "target-repo-governance-baseline.json"
 DEFAULT_RUNTIME_FLOW_PRESET_PATH = ROOT / "scripts" / "runtime-flow-preset.ps1"
 DERIVED_RUNTIME_PROFILE_FIELDS = {"quick_gate_commands", "full_gate_commands", "gate_timeout_seconds"}
-CATALOG_PROFILE_FIELDS = {"repo_id", "display_name", "primary_language", "build_commands", "test_commands", "contract_commands"}
+CATALOG_PROFILE_FIELDS = {
+    "repo_id",
+    "display_name",
+    "primary_language",
+    "build_commands",
+    "test_commands",
+    "contract_commands",
+    "full_gate_optimization",
+}
 
 
 def _load_json(path: Path) -> dict[str, Any]:

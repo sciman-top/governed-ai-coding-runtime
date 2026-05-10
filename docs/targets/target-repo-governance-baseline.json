@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "baseline_id": "active-target-governance-baseline",
-  "sync_revision": "2026-05-04.2",
+  "sync_revision": "2026-05-10.1",
   "required_managed_files": [
     {
       "path": ".governed-ai/verify-powershell-policy.py",
@@ -63,7 +63,8 @@
       "primary_language",
       "build_commands",
       "test_commands",
-      "contract_commands"
+      "contract_commands",
+      "full_gate_optimization"
     ]
   },
   "target_repo_speed_profile_policy": {
@@ -75,7 +76,7 @@
     "default_gate_timeout_seconds": 300,
     "quick_gate_timeout_seconds": 180,
     "full_gate_timeout_seconds": 600,
-    "reason": "Materialize explicit quick/full gate groups from each target repo's existing build/test/contract commands, and allow target catalog quick_test_command slices for daily fast feedback while release/onboard paths still escalate to full gates."
+    "reason": "Materialize explicit quick/full gate groups from each target repo's existing build/test/contract commands, allow target catalog quick_test_command slices for daily fast feedback, and sync full_gate_optimization intent for heavy targets whose physical full gate still needs target-local grouping or affected-path routing while release/onboard paths still escalate to full gates."
   },
   "required_profile_overrides": {
     "required_entrypoint_policy": {
