@@ -25,6 +25,10 @@ This directory holds executable implementation plans that translate strategy and
   - Status: completed bounded optimization lane on `2026-05-03`; physical repository size was not reduced yet, but the default context, retention, and gate-control surfaces are now explicit and executable
   - Scope: `GAP-152` through `GAP-158` for inventory, evidence archive layout, repo-map/context routing, README and plan-index slimming, runtime-flow responsibility split, gate timing split, operator screenshot retention, and closeout metrics
   - Safety boundary: the completed lane still leaves archive movement dry-run-first and manifest-backed; use the lane evidence and helper scripts before any future apply step.
+- [Agent Continuity And Shared Context Plan](./agent-continuity-and-shared-context-plan.md)
+  - Status: active planning baseline created on `2026-05-10`; this queue starts after the completed `GAP-152..158` repo-slimming lane and does not mutate user-local Codex, Claude, Claude Desktop, provider, or auth state by itself
+  - Scope: `GAP-159` through `GAP-164` for cross-host continuity scope fencing, continuity record schema, read-only continuity auditing, portable handoff and memory index, MCP/operator exposure, and closeout evidence across Codex App, Codex CLI, Claude Code, and Claude Desktop boundaries
+  - Safety boundary: share classified metadata, refs, summaries, handoff packages, and evidence; do not merge vendor-owned native history stores or copy credentials.
 - [Long-Term Gap Trigger Audit Plan](./long-term-gap-trigger-audit-plan.md)
   - Status: completed trigger-audit queue for `GAP-090` through `GAP-092`; all `LTP-01..05` packages remain deferred pending future trigger evidence
   - Scope: final-state claim refresh, sustained real-workload evidence window, and gated decision for whether exactly one `LTP-01..05` package should start
@@ -83,6 +87,7 @@ This directory holds executable implementation plans that translate strategy and
    - use [Governance Hub Reuse And Controlled Evolution Plan](./governance-hub-reuse-and-controlled-evolution-plan.md) as the `GAP-130..143` queue for the governance hub, reusable contract, controlled evolution implementation path, real effect feedback, and evidence recovery posture
    - use [Target Repo Managed Asset Retirement And Uninstall Plan](./target-repo-managed-asset-retirement-and-uninstall-plan.md) as the completed `GAP-144..151` managed-asset queue record
    - use [Repo Slimming And Coding Speed Plan](./repo-slimming-and-speed-plan.md) as the completed `GAP-152..158` optimization lane for reducing active work-surface weight, default context cost, evidence/archive noise, hotspot script maintenance cost, and gate timing noise without weakening evidence or hard-gate semantics
+   - use [Agent Continuity And Shared Context Plan](./agent-continuity-and-shared-context-plan.md) as the active `GAP-159..164` queue for classified cross-host continuity records, portable handoff/memory sharing, and operator/MCP exposure without merging private host history stores
    - use [Long-Term Gap Trigger Audit Plan](./long-term-gap-trigger-audit-plan.md) as the completed `GAP-090..092` trigger-audit record before opening any future long-term package implementation
    - use [Continuous Execution Readiness And Rollout Plan](./continuous-execution-readiness-and-rollout-plan.md) as the active loop-oriented execution baseline
    - the local runtime baseline through `Maintenance Baseline / GAP-034` is complete on the current branch baseline

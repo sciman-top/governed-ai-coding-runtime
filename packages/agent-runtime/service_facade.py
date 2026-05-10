@@ -12,6 +12,7 @@ if str(CONTRACTS_SRC) not in sys.path:
     sys.path.insert(0, str(CONTRACTS_SRC))
 
 from governed_ai_coding_runtime_contracts.policy_decision import build_policy_decision
+from governed_ai_coding_runtime_contracts.agent_continuity import LocalAgentContinuityIndex
 from governed_ai_coding_runtime_contracts.session_bridge import (  # noqa: E402
     build_session_bridge_command,
     handle_session_bridge_command,
@@ -170,6 +171,39 @@ class RuntimeServiceFacade:
             command_id=f"api-operator-write-status-{task_id}",
             attachment_runtime_state_root=attachment_runtime_state_root,
         )
+
+    def operator_search_context(
+        self,
+        *,
+        index_root: str | Path | None = None,
+        repo_id: str | None = None,
+        tool_family: str | None = None,
+        account_alias: str | None = None,
+        provider_alias: str | None = None,
+        include_expired: bool = False,
+    ) -> dict:
+        root = Path(index_root) if index_root else self._repo_root / ".runtime" / "agent-continuity"
+        result = LocalAgentContinuityIndex(root).search(
+            repo_id=repo_id,
+            tool_family=tool_family,
+            account_alias=account_alias,
+            provider_alias=provider_alias,
+            include_expired=include_expired,
+        )
+        result["service_boundary"] = "control-plane"
+        result["read_only"] = True
+        return result
+
+    def operator_write_handoff(
+        self,
+        *,
+        record: dict,
+        index_root: str | Path | None = None,
+    ) -> dict:
+        root = Path(index_root) if index_root else self._repo_root / ".runtime" / "agent-continuity"
+        result = LocalAgentContinuityIndex(root).write_record(record).to_dict()
+        result["service_boundary"] = "control-plane"
+        return result
 
     def _execute_session_command(
         self,

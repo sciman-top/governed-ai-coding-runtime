@@ -54,6 +54,9 @@ items:
   - name: knowledge-memory-lifecycle
     path: schemas/jsonschema/knowledge-memory-lifecycle.schema.json
     source_spec: docs/specs/knowledge-memory-lifecycle-spec.md
+  - name: agent-continuity-record
+    path: schemas/jsonschema/agent-continuity-record.schema.json
+    source_spec: docs/specs/agent-continuity-record-spec.md
   - name: promotion-lifecycle
     path: schemas/jsonschema/promotion-lifecycle.schema.json
     source_spec: docs/specs/promotion-lifecycle-spec.md

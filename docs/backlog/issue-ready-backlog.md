@@ -1628,6 +1628,90 @@ The entries below record the executed queue for complete hybrid final-state and 
   - [x] closeout reports repository surface, context budget, timing, evidence movement, and rollback posture
   - [x] the lane remains dry-run-first for future archive movement and does not weaken hard gates
 
+### GAP-159 Cross Host Continuity Scope Fence
+- Type: HITL
+- Blocked by: GAP-158
+- User stories: 13, 18, 20, 21, 23, 31, 37, 44, 45
+- Status: complete by `docs/change-evidence/2026-05-10-agent-continuity-planning.md`
+- What to build:
+  - freeze the sharing boundaries for Codex App, Codex CLI, Claude Code, and Claude Desktop before adding runtime surfaces
+  - classify native host history, portable summaries, transcript refs, provider/account aliases, and secret material
+  - record backup, rollback, and `platform_na` expectations for unsupported native-history sharing
+- Acceptance criteria:
+  - [x] each host surface has `native_shared`, `portable_shared`, `referenced_only`, and `isolated_secret` boundaries
+  - [x] multi-account and multi-provider behavior is defined without copying credentials
+  - [x] live state mutation is blocked until the scope fence and rollback expectations are documented
+
+### GAP-160 Agent Continuity Record Contract
+- Type: AFK
+- Blocked by: GAP-159
+- User stories: 13, 18, 20, 21, 23, 31, 44
+- Status: complete by `docs/change-evidence/2026-05-10-agent-continuity-planning.md`
+- What to build:
+  - add a schema-backed record for portable cross-host continuity metadata
+  - encode account/provider aliases, evidence refs, handoff refs, native refs, sensitivity labels, retention, and rollback
+  - keep raw transcripts and secrets out of the portable record by default
+- Acceptance criteria:
+  - [x] `agent-continuity-record` schema is paired with a spec and catalog entry
+  - [x] the schema distinguishes `native_shared`, `portable_shared`, `referenced_only`, and `isolated_secret`
+  - [x] Contract verification passes after schema/catalog updates
+
+### GAP-161 Read Only Continuity Auditor
+- Type: AFK
+- Blocked by: GAP-160
+- User stories: 13, 18, 20, 21, 23, 31, 37, 44
+- Status: complete by `docs/change-evidence/2026-05-10-agent-continuity-auditor.md`
+- What to build:
+  - implement a no-mutation continuity auditor for Codex and Claude host families
+  - report Codex shared home, history persistence, SQLite state presence, launcher presence, and provider/profile metadata without secrets
+  - report Claude home, `CLAUDE_CONFIG_DIR`, projects transcript count, history file presence, and provider switch policy without secrets
+- Acceptance criteria:
+  - [x] auditor emits an `agent-continuity-record` candidate or structured `platform_na`
+  - [x] secret-like values are redacted or omitted
+  - [x] RuntimeQuick passes with focused auditor coverage
+
+### GAP-162 Portable Handoff And Memory Index
+- Type: AFK
+- Blocked by: GAP-161
+- User stories: 13, 18, 20, 21, 23, 31, 37, 44
+- Status: complete by `docs/change-evidence/2026-05-10-agent-continuity-index.md`
+- What to build:
+  - store portable continuity records and handoff summaries in a runtime-owned index
+  - support retrieval by repo, host, account alias, provider alias, task, sensitivity, and expiry
+  - connect retention and retirement to the governed knowledge-memory lifecycle
+- Acceptance criteria:
+  - [x] index stores classified metadata, refs, summaries, decisions, changed files, next actions, and sensitivity labels
+  - [x] search and retrieval never return blocked secret material
+  - [x] expiry and retirement preserve audit history
+
+### GAP-163 Continuity MCP And Operator Surface
+- Type: HITL
+- Blocked by: GAP-162
+- User stories: 13, 18, 20, 21, 23, 31, 37, 44, 45
+- Status: complete by `docs/change-evidence/2026-05-10-agent-continuity-operator-surface.md`
+- What to build:
+  - expose continuity search and handoff operations through an MCP or equivalent local tool surface
+  - show continuity posture, recent handoffs, redaction status, and isolated-secret warnings in the `8770` operator
+  - fail closed when write payloads include secret-like material
+- Acceptance criteria:
+  - [x] `search_context`, `get_handoff`, and `write_handoff` or equivalent operations are available
+  - [x] operator UI exposes current continuity posture without showing credentials
+  - [x] service/operator tests and browser verification pass
+
+### GAP-164 Cross Host Continuity Closeout
+- Type: HITL
+- Blocked by: GAP-163
+- User stories: 13, 18, 20, 21, 23, 31, 37, 44, 45
+- Status: complete by `docs/change-evidence/2026-05-10-agent-continuity-closeout.md`
+- What to build:
+  - prove at least one safe Codex-to-Claude-to-Codex portable handoff path
+  - document Claude Desktop and other unsupported native-history sharing limits as explicit `platform_na` or `referenced_only`
+  - close with full gate or declared N/A evidence and rollback instructions
+- Acceptance criteria:
+  - [x] a real repo task can be summarized from one host and resumed through another via the portable continuity layer
+  - [x] unsupported native history claims are explicit and do not appear as failures or hidden assumptions
+  - [x] build, Runtime, Contract, and doctor gates pass or carry structured N/A evidence
+
 ## Vision
 
 ### GAP-018 Final Product Lifecycle Alignment

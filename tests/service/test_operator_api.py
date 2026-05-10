@@ -28,6 +28,7 @@ class OperatorApiTests(unittest.TestCase):
         service_facade_module = _load_module("packages/agent-runtime/service_facade.py", "service_facade")
         app_module = _load_module("apps/control-plane/app.py", "control_plane_app")
         session_bridge = importlib.import_module("governed_ai_coding_runtime_contracts.session_bridge")
+        agent_continuity = importlib.import_module("governed_ai_coding_runtime_contracts.agent_continuity")
         task_store = importlib.import_module("governed_ai_coding_runtime_contracts.task_store")
         task_intake = importlib.import_module("governed_ai_coding_runtime_contracts.task_intake")
 
@@ -159,6 +160,27 @@ class OperatorApiTests(unittest.TestCase):
                 repo_root=workspace,
                 attachment_runtime_state_root=workspace / ".runtime",
             )
+            continuity_record = agent_continuity.build_claude_desktop_boundary_record(
+                repo_root=workspace,
+                now="2026-05-10T00:00:00Z",
+            ).to_dict()
+            continuity_index_root = workspace / ".runtime" / "agent-continuity"
+            continuity_write = app.dispatch(
+                route="/operator",
+                payload={
+                    "action": "write_handoff",
+                    "index_root": str(continuity_index_root),
+                    "record": continuity_record,
+                },
+            )
+            continuity_search = app.dispatch(
+                route="/operator",
+                payload={
+                    "action": "search_context",
+                    "index_root": str(continuity_index_root),
+                    "repo_id": workspace.name,
+                },
+            )
 
             self.assertEqual(status_result["status"], "ok")
             self.assertEqual(status_result["status"], direct_status.status)
@@ -190,6 +212,12 @@ class OperatorApiTests(unittest.TestCase):
                 write_status_result["payload"]["approval_ref"],
                 direct_write_status.payload["approval_ref"],
             )
+            self.assertEqual("written", continuity_write["status"])
+            self.assertEqual("control-plane", continuity_write["service_boundary"])
+            self.assertEqual("ok", continuity_search["status"])
+            self.assertEqual(1, continuity_search["record_count"])
+            self.assertTrue(continuity_search["read_only"])
+            self.assertEqual("claude-desktop-boundary", continuity_search["records"][0]["record_id"])
 
 
 if __name__ == "__main__":

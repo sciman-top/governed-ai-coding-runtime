@@ -143,6 +143,16 @@ from governed_ai_coding_runtime_contracts.tool_runner import (
     validate_containment_profile,
     validate_containment_registry,
 )
+from governed_ai_coding_runtime_contracts.agent_continuity import (
+    AgentContinuityRecord,
+    ContinuityIndexWriteResult,
+    LocalAgentContinuityIndex,
+    audit_agent_continuity,
+    build_claude_continuity_record,
+    build_claude_desktop_boundary_record,
+    build_codex_continuity_record,
+    validate_portable_continuity_record,
+)
 
 __all__ = [
     "PolicyDecision",
@@ -175,6 +185,9 @@ __all__ = [
     "LearningEfficiencyMetricsRecord",
     "LearningEfficiencyMetricsSnapshot",
     "ContainmentProfile",
+    "AgentContinuityRecord",
+    "ContinuityIndexWriteResult",
+    "LocalAgentContinuityIndex",
     "InteractionSignal",
     "ResponsePolicy",
     "TeachingBudget",
@@ -244,6 +257,11 @@ __all__ = [
     "build_parity_matrix",
     "build_learning_efficiency_metrics",
     "build_containment_profile",
+    "audit_agent_continuity",
+    "build_codex_continuity_record",
+    "build_claude_continuity_record",
+    "build_claude_desktop_boundary_record",
+    "validate_portable_continuity_record",
     "derive_response_policy",
     "govern_contained_execution_request",
     "export_target_repo_speed_kpi",

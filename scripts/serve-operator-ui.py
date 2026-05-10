@@ -24,6 +24,7 @@ if str(SCRIPTS_SRC) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_SRC))
 
 from governed_ai_coding_runtime_contracts.operator_ui import render_runtime_snapshot_html
+from governed_ai_coding_runtime_contracts.agent_continuity import LocalAgentContinuityIndex
 from governed_ai_coding_runtime_contracts.runtime_status import RuntimeStatusStore, runtime_snapshot_to_dict
 from lib.claude_local import claude_home, claude_status, delete_provider_profile, optimize_claude_local, provider_profiles_path, settings_path, switch_provider
 from lib.codex_local import codex_status, delete_auth_profile, save_active_auth_snapshot, switch_auth_profile, sync_active_auth_snapshot
@@ -240,6 +241,17 @@ def _build_handler(*, default_language: str, host: str, port: int):
                 status = HTTPStatus.OK if result.get("status") != "error" else HTTPStatus.INTERNAL_SERVER_ERROR
                 self._send_json(result, status=status)
                 return
+            if parsed.path == "/api/continuity/search":
+                params = parse_qs(parsed.query)
+                result = LocalAgentContinuityIndex(ROOT / ".runtime" / "agent-continuity").search(
+                    repo_id=_query_string(params, "repo_id"),
+                    tool_family=_query_string(params, "tool_family"),
+                    account_alias=_query_string(params, "account_alias"),
+                    provider_alias=_query_string(params, "provider_alias"),
+                    include_expired=_truthy(params.get("include_expired", [""])[0]),
+                )
+                self._send_json(result)
+                return
             if parsed.path == "/api/file":
                 params = parse_qs(parsed.query)
                 requested = params.get("path", [""])[0]
@@ -290,6 +302,11 @@ def _build_handler(*, default_language: str, host: str, port: int):
                 if parsed.path == "/api/claude/optimize":
                     result = run_claude_optimize(self._read_json_body())
                     status = HTTPStatus.OK if result.get("status") in {"ok", "dry_run"} else HTTPStatus.BAD_REQUEST
+                    self._send_json(result, status=status)
+                    return
+                if parsed.path == "/api/continuity/write-handoff":
+                    result = write_continuity_handoff(self._read_json_body())
+                    status = HTTPStatus.OK if result.get("status") == "written" else HTTPStatus.BAD_REQUEST
                     self._send_json(result, status=status)
                     return
                 self._send_json({"error": "not found"}, status=HTTPStatus.NOT_FOUND)
@@ -1001,6 +1018,16 @@ def read_claude_local_file(kind: str) -> dict:
         return {"path": str(path), "error": str(exc)}
 
 
+def write_continuity_handoff(payload: dict) -> dict:
+    record = payload.get("record")
+    if not isinstance(record, dict):
+        return {"status": "error", "error": "record is required"}
+    try:
+        return LocalAgentContinuityIndex(ROOT / ".runtime" / "agent-continuity").write_record(record).to_dict()
+    except ValueError as exc:
+        return {"status": "error", "error": str(exc)}
+
+
 def load_target_ids() -> list[str]:
     catalog_path = ROOT / "docs" / "targets" / "target-repos-catalog.json"
     try:
@@ -1033,6 +1060,11 @@ def _string(value: object, default: str) -> str:
     if isinstance(value, str):
         return value.strip()
     return default
+
+
+def _query_string(params: dict[str, list[str]], key: str) -> str | None:
+    value = params.get(key, [""])[0]
+    return value.strip() if isinstance(value, str) and value.strip() else None
 
 
 def _truthy(value: object) -> bool:

@@ -46,6 +46,7 @@ class OperatorUiTests(unittest.TestCase):
         self.assertIn("维护与升级", html)
         self.assertIn("Runtime 摘要", html)
         self.assertIn("Claude Provider 与配置", html)
+        self.assertIn("共享上下文连续性", html)
         self.assertIn("功能反馈闭环", html)
 
     def test_operator_ui_renders_non_empty_snapshot(self) -> None:
@@ -138,6 +139,7 @@ class OperatorUiTests(unittest.TestCase):
         self.assertIn("No runtime activity has been recorded", html)
         self.assertIn("Maintenance and Upgrade", html)
         self.assertIn("Claude Provider and Config", html)
+        self.assertIn("Shared Context Continuity", html)
         self.assertIn("Host Feedback Loop", html)
 
     def test_operator_ui_renders_attachment_table(self) -> None:
@@ -259,6 +261,7 @@ class OperatorUiTests(unittest.TestCase):
         self.assertIn("document.body.dataset.busy = isBusy ? '1' : '';", html)
         self.assertIn("data-open-view='codex'", html)
         self.assertIn("data-open-view='claude'", html)
+        self.assertIn("data-open-view='continuity'", html)
         self.assertIn("data-open-view='feedback'", html)
         self.assertIn("data-surface-card='runtime'", html)
         self.assertIn('class="runtime-shell"', html)
@@ -306,6 +309,10 @@ class OperatorUiTests(unittest.TestCase):
         self.assertIn("function createRefButton(path, label, previewTarget = 'runtime')", html)
         self.assertIn("function setFeedbackPreview(text)", html)
         self.assertIn("data-view-tab='claude'", html)
+        self.assertIn("data-view-tab='continuity'", html)
+        self.assertIn("fetch('/api/continuity/search'", html)
+        self.assertIn("data-continuity-refresh='1'", html)
+        self.assertIn("id='continuity-records'", html)
         self.assertIn("fetch('/api/claude/status'", html)
         self.assertIn("fetch('/api/claude/optimize'", html)
         self.assertIn("fetch('/api/claude/file?kind='", html)

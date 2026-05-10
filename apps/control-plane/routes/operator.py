@@ -31,6 +31,23 @@ def handle_operator_route(facade: Any, payload: dict) -> dict:
             execution_id=_string_or_none(payload.get("execution_id")),
             attachment_runtime_state_root=_string_or_none(payload.get("attachment_runtime_state_root")),
         )
+    if action == "search_context":
+        return facade.operator_search_context(
+            index_root=_string_or_none(payload.get("index_root")),
+            repo_id=_string_or_none(payload.get("repo_id")),
+            tool_family=_string_or_none(payload.get("tool_family")),
+            account_alias=_string_or_none(payload.get("account_alias")),
+            provider_alias=_string_or_none(payload.get("provider_alias")),
+            include_expired=bool(payload.get("include_expired")),
+        )
+    if action == "write_handoff":
+        record = payload.get("record")
+        if not isinstance(record, dict):
+            raise ValueError("record is required")
+        return facade.operator_write_handoff(
+            index_root=_string_or_none(payload.get("index_root")),
+            record=record,
+        )
     msg = f"unsupported operator action: {action}"
     raise ValueError(msg)
 

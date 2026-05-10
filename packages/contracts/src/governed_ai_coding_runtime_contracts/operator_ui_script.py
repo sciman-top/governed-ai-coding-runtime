@@ -43,6 +43,9 @@ def render_interactive_script(
   const feedbackGuideLink = document.getElementById('feedback-guide-link');
   const feedbackGuideLinkEn = document.getElementById('feedback-guide-link-en');
   const feedbackPreview = document.getElementById('feedback-preview');
+  const continuityStatus = document.getElementById('continuity-status');
+  const continuityRecords = document.getElementById('continuity-records');
+  const continuityJson = document.getElementById('continuity-json');
   const nextWorkAction = document.getElementById('next-work-action');
   const nextWorkRecommendation = document.getElementById('next-work-recommendation');
   const nextWorkState = document.getElementById('next-work-state');
@@ -61,12 +64,14 @@ def render_interactive_script(
   const runtimeSurfaceActionText = {text['surface_runtime_action']!r};
   const codexSurfaceActionText = {text['surface_codex_action']!r};
   const claudeSurfaceActionText = {text['surface_claude_action']!r};
+  const continuitySurfaceActionText = {text['surface_continuity_action']!r};
   const feedbackSurfaceActionText = {text['surface_feedback_action']!r};
   const managedRemovalActions = new Set(['cleanup_targets', 'uninstall_governance']);
   const defaultManagedRemovalActions = new Set(['apply_all_features']);
   let codexLoaded = false;
   let claudeLoaded = false;
   let feedbackLoaded = false;
+  let continuityLoaded = false;
   let nextWorkLoaded = false;
   let lastClaudePayload = null;
   let lastCodexPayload = null;
@@ -283,6 +288,15 @@ def render_interactive_script(
     ]);
   }}
 
+  function updateContinuitySurfaceSummary(payload) {{
+    const count = payload && Number.isFinite(Number(payload.record_count)) ? Number(payload.record_count) : 0;
+    setSurfaceSummary('continuity', [
+      currentUiLanguage() === 'zh-CN' ? `记录 ${{count}}` : `Records ${{count}}`,
+      currentUiLanguage() === 'zh-CN' ? '默认过滤 secret-blocked 项' : 'Secret-blocked records are filtered by default',
+      continuitySurfaceActionText,
+    ]);
+  }}
+
   function activateView(selected) {{
     document.querySelectorAll('[data-view-tab]').forEach((tab) => {{
       const isSelected = tab.getAttribute('data-view-tab') === selected;
@@ -313,6 +327,9 @@ def render_interactive_script(
     }}
     if (selected === 'feedback' && !feedbackLoaded) {{
       hydratePanelCache('feedback', feedbackCacheKey);
+    }}
+    if (selected === 'continuity' && !continuityLoaded) {{
+      refreshContinuityRecords();
     }}
   }}
 
@@ -1326,6 +1343,48 @@ def render_interactive_script(
     }}
   }}
 
+  function renderContinuitySummary(payload) {{
+    if (!continuityRecords || !continuityJson || !continuityStatus) {{
+      return;
+    }}
+    const records = Array.isArray(payload && payload.records) ? payload.records : [];
+    continuityStatus.textContent = `{text['continuity_status']}: ${{payload && payload.status ? payload.status : 'unknown'}} · ${{records.length}}`;
+    continuityRecords.innerHTML = '';
+    records.forEach((record) => {{
+      const section = document.createElement('section');
+      section.className = 'claude-summary-card';
+      section.appendChild(createInfoLine(record.record_id || 'record', record.task_summary || ''));
+      section.appendChild(createInfoLine({text['repo']!r}, record.repo_id || {text['not_recorded']!r}));
+      section.appendChild(createInfoLine({text['adapter']!r}, `${{record.tool_family || ''}} · ${{record.provider_alias || ''}}`));
+      section.appendChild(createInfoLine({text['continuity_class']!r}, record.continuity_class || {text['not_recorded']!r}));
+      continuityRecords.appendChild(section);
+    }});
+    if (!records.length) {{
+      continuityRecords.innerHTML = `<p class="meta">{text['continuity_empty']}</p>`;
+    }}
+    continuityJson.textContent = JSON.stringify(payload || {{}}, null, 2);
+    updateContinuitySurfaceSummary(payload || {{}});
+  }}
+
+  async function refreshContinuityRecords() {{
+    if (!continuityRecords) {{
+      return;
+    }}
+    continuityStatus.textContent = `{text['continuity_status']}: {text['running']}`;
+    try {{
+      const response = await fetch('/api/continuity/search', {{ cache: 'no-store' }});
+      const payload = await response.json();
+      if (!response.ok) {{
+        continuityStatus.textContent = `{text['continuity_status']}: ${{payload.error || response.statusText}}`;
+        return;
+      }}
+      renderContinuitySummary(payload);
+      continuityLoaded = true;
+    }} catch (error) {{
+      continuityStatus.textContent = `{text['continuity_status']}: ${{String(error)}}`;
+    }}
+  }}
+
   function summarizeClaudeContext(provider) {{
     const env = provider && provider.env ? provider.env : {{}};
     const compactWindow = String(env.CLAUDE_CODE_AUTO_COMPACT_WINDOW || '').trim();
@@ -2005,6 +2064,10 @@ def render_interactive_script(
     switchClaudeProvider(button.getAttribute('data-claude-switch-name') || '');
   }});
   document.querySelector('[data-feedback-refresh]').addEventListener('click', () => refreshFeedbackSummaryWithMode(true));
+  const continuityRefreshButton = document.querySelector('[data-continuity-refresh]');
+  if (continuityRefreshButton) {{
+    continuityRefreshButton.addEventListener('click', () => refreshContinuityRecords());
+  }}
   const nextWorkRefreshButton = document.querySelector('[data-next-work-refresh]');
   if (nextWorkRefreshButton) {{
     nextWorkRefreshButton.addEventListener('click', () => refreshNextWorkSummaryWithMode(true));

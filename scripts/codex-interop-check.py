@@ -858,6 +858,7 @@ def _rewrite_session_jsonl_provider_bucket(
     ensure_backup_dir: Any,
 ) -> dict[str, int] | None:
     temp_path = path.with_name(f".{path.name}.provider-bucket.tmp")
+    original_stat = path.stat()
     lines_changed = 0
     provider_updates = 0
     changed_records: list[dict[str, Any]] = []
@@ -896,6 +897,7 @@ def _rewrite_session_jsonl_provider_bucket(
             for record in changed_records:
                 manifest.write(json.dumps(record, ensure_ascii=False, separators=(",", ":")) + "\n")
         temp_path.replace(path)
+        os.utime(path, ns=(original_stat.st_atime_ns, original_stat.st_mtime_ns))
     except Exception:
         temp_path.unlink(missing_ok=True)
         raise

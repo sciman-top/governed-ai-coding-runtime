@@ -16,6 +16,7 @@ Machine-readable schema drafts and example instances for the platform's core gov
 - `jsonschema/skill-manifest.schema.json`
 - `jsonschema/knowledge-source.schema.json`
 - `jsonschema/knowledge-memory-lifecycle.schema.json`
+- `jsonschema/agent-continuity-record.schema.json`
 - `jsonschema/promotion-lifecycle.schema.json`
 - `jsonschema/policy-tool-credential-audit.schema.json`
 - `jsonschema/governance-hub-certification.schema.json`

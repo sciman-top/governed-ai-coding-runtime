@@ -37,6 +37,7 @@ def render_runtime_snapshot_html(
     feedback = _render_feedback(text, interactive=interactive)
     codex_panel = _render_codex_panel(text, interactive=interactive)
     claude_panel = _render_claude_panel(text, interactive=interactive)
+    continuity_panel = _render_continuity_panel(text, interactive=interactive)
     feedback_panel = _render_host_feedback_panel(text, interactive=interactive)
     script = render_interactive_script(
         text,
@@ -95,6 +96,9 @@ def render_runtime_snapshot_html(
         <div data-view-panel="claude" hidden>
           {claude_panel}
         </div>
+        <div data-view-panel="continuity" hidden>
+          {continuity_panel}
+        </div>
         <div data-view-panel="feedback" hidden>
           {feedback_panel}
         </div>
@@ -141,6 +145,7 @@ def _render_view_tabs(text: dict[str, str]) -> str:
             f"<button type='button' class='view-tab' role='tab' aria-selected='true' data-view-tab='runtime'>{escape(text['runtime_view'])}</button>",
             f"<button type='button' class='view-tab' role='tab' aria-selected='false' data-view-tab='codex'>{escape(text['codex_view'])}</button>",
             f"<button type='button' class='view-tab' role='tab' aria-selected='false' data-view-tab='claude'>{escape(text['claude_view'])}</button>",
+            f"<button type='button' class='view-tab' role='tab' aria-selected='false' data-view-tab='continuity'>{escape(text['continuity_view'])}</button>",
             f"<button type='button' class='view-tab' role='tab' aria-selected='false' data-view-tab='feedback'>{escape(text['feedback_view'])}</button>",
             "</div>",
         ]
@@ -152,6 +157,7 @@ def _render_workspace_overview(text: dict[str, str], *, interactive: bool) -> st
         ("runtime", text["runtime_view"], text["runtime_surface_caption"], True),
         ("codex", text["codex_view"], text["codex_surface_caption"], False),
         ("claude", text["claude_view"], text["claude_surface_caption"], False),
+        ("continuity", text["continuity_view"], text["continuity_surface_caption"], False),
         ("feedback", text["feedback_view"], text["feedback_surface_caption"], False),
     ]
     cards: list[str] = []
@@ -202,6 +208,7 @@ def _surface_action_text(surface_id: str, text: dict[str, str]) -> str:
         "runtime": text["surface_runtime_action"],
         "codex": text["surface_codex_action"],
         "claude": text["surface_claude_action"],
+        "continuity": text["surface_continuity_action"],
         "feedback": text["surface_feedback_action"],
     }
     return mapping.get(surface_id, "")
@@ -691,6 +698,32 @@ def _render_claude_panel(text: dict[str, str], *, interactive: bool) -> str:
             "</section>",
             "</div>",
             "</div>",
+            "</section>",
+        ]
+    )
+
+
+def _render_continuity_panel(text: dict[str, str], *, interactive: bool) -> str:
+    if not interactive:
+        return "\n".join(
+            [
+                "<section class='panel'>",
+                f"<h2>{escape(text['continuity_console'])}</h2>",
+                f"<p class='meta'>{escape(text['interactive_required'])}</p>",
+                "</section>",
+            ]
+        )
+    return "\n".join(
+        [
+            "<section class='panel'>",
+            f"<h2>{escape(text['continuity_console'])}</h2>",
+            f"<p class='meta'>{escape(text['continuity_caption'])}</p>",
+            "<div class='claude-toolbar'>",
+            f"<button type='button' data-continuity-refresh='1'>{escape(text['continuity_refresh'])}</button>",
+            "</div>",
+            f"<div class='status-line' id='continuity-status'>{escape(text['continuity_status'])}: {escape(text['panel_cache_cold'])}</div>",
+            "<div id='continuity-records' class='feedback-summary-grid'></div>",
+            "<pre id='continuity-json' class='output'></pre>",
             "</section>",
         ]
     )

@@ -680,3 +680,33 @@ issues:
     type: AFK
     blocked_by: [GAP-157]
     user_stories: [13, 18, 20, 21, 23, 31, 44, 45]
+  - id: GAP-159
+    title: Cross Host Continuity Scope Fence
+    type: HITL
+    blocked_by: [GAP-158]
+    user_stories: [13, 18, 20, 21, 23, 31, 37, 44, 45]
+  - id: GAP-160
+    title: Agent Continuity Record Contract
+    type: AFK
+    blocked_by: [GAP-159]
+    user_stories: [13, 18, 20, 21, 23, 31, 44]
+  - id: GAP-161
+    title: Read Only Continuity Auditor
+    type: AFK
+    blocked_by: [GAP-160]
+    user_stories: [13, 18, 20, 21, 23, 31, 37, 44]
+  - id: GAP-162
+    title: Portable Handoff And Memory Index
+    type: AFK
+    blocked_by: [GAP-161]
+    user_stories: [13, 18, 20, 21, 23, 31, 37, 44]
+  - id: GAP-163
+    title: Continuity MCP And Operator Surface
+    type: HITL
+    blocked_by: [GAP-162]
+    user_stories: [13, 18, 20, 21, 23, 31, 37, 44, 45]
+  - id: GAP-164
+    title: Cross Host Continuity Closeout
+    type: HITL
+    blocked_by: [GAP-163]
+    user_stories: [13, 18, 20, 21, 23, 31, 37, 44, 45]

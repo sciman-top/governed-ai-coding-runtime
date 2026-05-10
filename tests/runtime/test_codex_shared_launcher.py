@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 import subprocess
 import sys
@@ -235,6 +236,8 @@ class CodexSharedLauncherTests(unittest.TestCase):
                 + "\n",
                 encoding="utf-8",
             )
+            os.utime(session_path, ns=(1_700_000_000_123_456_789, 1_700_000_000_123_456_789))
+            original_session_mtime_ns = session_path.stat().st_mtime_ns
             (cockpit_home / "codex_accounts.json").write_text(
                 json.dumps({"accounts": [{"id": "codex_test"}], "current_account_id": "codex_test"}),
                 encoding="utf-8",
@@ -361,6 +364,7 @@ class CodexSharedLauncherTests(unittest.TestCase):
             session_lines = [json.loads(line) for line in session_path.read_text(encoding="utf-8").splitlines()]
             self.assertEqual("openai", session_lines[0]["payload"]["model_provider"])
             self.assertIn('"model_provider":"cmp_1778165666417_1"', session_lines[1]["payload"]["text"])
+            self.assertEqual(original_session_mtime_ns, session_path.stat().st_mtime_ns)
             session_action = next(
                 action for action in payload["actions"] if action["id"] == "codex_session_provider_bucket_migrated"
             )
