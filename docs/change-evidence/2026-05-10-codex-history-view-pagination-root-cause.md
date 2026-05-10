@@ -40,6 +40,7 @@
 - `python scripts/codex-history-view-diagnose.py --codex-home C:\Users\sciman\.codex --target-cwd D:\CODE\ClassroomToolkit --target-cwd D:\CODE\skills-manager --target-cwd D:\CODE\github-toolkit --target-cwd D:\CODE\vps-ssh-launcher`
 - `python scripts/codex-history-view-diagnose.py --codex-home C:\Users\sciman\.codex --source vscode --source cli --target-cwd D:\CODE\ClassroomToolkit --target-cwd D:\CODE\skills-manager --target-cwd D:\CODE\github-toolkit --target-cwd D:\CODE\vps-ssh-launcher`
 - `python -m unittest tests.runtime.test_codex_history_view_diagnose -v`
+- `python scripts/codex-history-view-diagnose.py --codex-home C:\Users\sciman\.codex --source vscode --source cli --target-cwd D:\CODE\ClassroomToolkit --target-cwd D:\CODE\skills-manager --target-cwd D:\CODE\github-toolkit --target-cwd D:\CODE\vps-ssh-launcher` on 2026-05-10 after the Windows console encoding fix.
 
 ## Evidence
 
@@ -59,6 +60,15 @@
 - Live diagnostic evidence written during this investigation:
   - `C:\Users\sciman\.codex\tmp\codex-history-view-diagnose-live-vscode.json`
   - `C:\Users\sciman\.codex\tmp\codex-history-view-diagnose-live-vscode-cli.json`
+- Fresh 2026-05-10 `vscode+cli` diagnostic after the output encoding hardening:
+  - total loaded non-archived rows: `1307`.
+  - first native page (`limit=50`) contains `0` `ClassroomToolkit` rows, `1` `skills-manager` row, `2` `github-toolkit` rows, and `1` `vps-ssh-launcher` row.
+  - maximum observed first page (`limit=100`) contains `2` `ClassroomToolkit` rows.
+  - `ClassroomToolkit`: `439` total rows, latest rank `69`, diagnosis `hidden_until_native_recent_list_loads_a_larger_page`.
+  - `skills-manager`: `220` total rows, latest rank `19`, diagnosis `visible_in_initial_thread_list_page`.
+  - `github-toolkit`: `23` total rows, latest rank `5`, diagnosis `visible_in_initial_thread_list_page`.
+  - `vps-ssh-launcher`: `29` total rows, latest rank `27`, diagnosis `visible_in_initial_thread_list_page`.
+- `scripts/codex-history-view-diagnose.py` now emits ASCII-safe JSON (`ensure_ascii=True`) so thread titles containing symbols do not fail under a Windows GBK console.
 
 ## Operator guidance
 

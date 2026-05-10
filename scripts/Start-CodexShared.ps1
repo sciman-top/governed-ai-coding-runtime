@@ -265,7 +265,6 @@ $forcedLoginMethod = $null
 $requiresOpenAiAuth = $true
 $cockpitAccount = $null
 $pendingCockpitAuthProjection = $null
-$cockpitHttpProviderId = 'cockpit_http'
 
 if ($UseCockpitCurrentAccount -and $UseCcSwitchCurrentProvider) {
     throw 'UseCockpitCurrentAccount and UseCcSwitchCurrentProvider are mutually exclusive.'
@@ -339,7 +338,12 @@ if ($UseCockpitCurrentAccount) {
         $forcedLoginMethod = 'api'
         $requiresOpenAiAuth = $false
         if (-not $PSBoundParameters.ContainsKey('ModelProvider') -or [string]::IsNullOrWhiteSpace($ModelProvider)) {
-            $ModelProvider = $cockpitHttpProviderId
+            if ($accountBaseUrl -ne 'https://api.openai.com/v1') {
+                $ModelProvider = 'cockpit_http'
+            }
+            else {
+                $ModelProvider = 'openai'
+            }
         }
         if (-not $PSBoundParameters.ContainsKey('Profile')) {
             $Profile = 'shared-cockpit-api'
@@ -441,7 +445,6 @@ if ($UseCockpitCurrentAccount -and -not [string]::IsNullOrWhiteSpace($ModelProvi
     $codexArgs += @('-c', ('model_providers.{0}.wire_api="responses"' -f $ModelProvider))
     $codexArgs += @('-c', ('model_providers.{0}.requires_openai_auth={1}' -f $ModelProvider, ($requiresOpenAiAuth.ToString().ToLowerInvariant())))
     if ($forcedLoginMethod -eq 'api') {
-        $codexArgs += @('-c', ('model_providers.{0}.env_key="OPENAI_API_KEY"' -f $ModelProvider))
         $codexArgs += @('-c', ('model_providers.{0}.supports_websockets=false' -f $ModelProvider))
     }
 }

@@ -99,8 +99,6 @@ class CodexSharedLauncherTests(unittest.TestCase):
         self.assertIn("/models validation", script)
         self.assertIn("refusing to launch Codex with a broken API account", script)
         self.assertIn("model_providers.{0}.base_url={1}", script)
-        self.assertIn("model_providers.{0}.env_key=\"OPENAI_API_KEY\"", script)
-        self.assertIn("model_providers.{0}.supports_websockets=false", script)
         self.assertIn("function Invoke-CodexInteropRepair", script)
         self.assertIn("function Wait-CockpitCodexStateStable", script)
         self.assertIn("Wait-CockpitCodexStateStable -CockpitStateHome $CockpitHome", script)
@@ -303,13 +301,18 @@ class CodexSharedLauncherTests(unittest.TestCase):
                 dry_check_ids["cockpit_live_login_mode_matches_current_account"]["status"],
             )
             self.assertEqual(
+                "fail",
+                dry_check_ids["codex_auth_matches_cockpit_current_account"]["status"],
+            )
+            self.assertIn(
+                "OPENAI_API_KEY is missing from auth.json",
+                dry_check_ids["codex_auth_matches_cockpit_current_account"]["issues"],
+            )
+            self.assertEqual(
                 "rightcode",
                 dry_check_ids["cockpit_current_provider_bucket"]["dominant_provider"],
             )
-            self.assertEqual(
-                "fail",
-                dry_check_ids["cockpit_codex_app_restart_semantics"]["status"],
-            )
+            self.assertEqual("pass", dry_check_ids["cockpit_codex_app_restart_semantics"]["status"])
             self.assertEqual(
                 "fail",
                 dry_check_ids["cockpit_codex_instances_follow_current_account"]["status"],
@@ -323,9 +326,9 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertEqual("pass", payload["status"])
             action_ids = {action["id"] for action in payload["actions"]}
             self.assertIn("cockpit_codex_stale_last_pid_cleared", action_ids)
-            self.assertIn("cockpit_codex_restart_wrapper_configured", action_ids)
             self.assertIn("cockpit_codex_instances_follow_current_account_repaired", action_ids)
             self.assertIn("codex_live_config_cockpit_provider", action_ids)
+            self.assertIn("codex_auth_cockpit_projected", action_ids)
             self.assertIn("codex_threads_provider_bucket_migrated", action_ids)
             self.assertIn("codex_session_provider_bucket_migrated", action_ids)
             self.assertIn("codex_provider_bucket_triggers_ensured", action_ids)
@@ -376,14 +379,14 @@ class CodexSharedLauncherTests(unittest.TestCase):
                 ).fetchone()[0]
             finally:
                 connection.close()
-            self.assertEqual({"openai": 3}, buckets)
+            self.assertEqual({"cockpit_http": 3}, buckets)
             self.assertIn("idx_threads_archived_provider_updated_at_ms", indexes)
             self.assertIn("idx_threads_archived_provider_updated_at", indexes)
             self.assertIn("trg_threads_shared_provider_after_insert", triggers)
             self.assertIn("trg_threads_shared_provider_after_update", triggers)
-            self.assertEqual("openai", guarded_provider)
+            self.assertEqual("cockpit_http", guarded_provider)
             session_lines = [json.loads(line) for line in session_path.read_text(encoding="utf-8").splitlines()]
-            self.assertEqual("openai", session_lines[0]["payload"]["model_provider"])
+            self.assertEqual("cockpit_http", session_lines[0]["payload"]["model_provider"])
             self.assertIn('"model_provider":"cmp_1778165666417_1"', session_lines[1]["payload"]["text"])
             self.assertEqual(original_session_mtime_ns, session_path.stat().st_mtime_ns)
             session_action = next(
@@ -402,8 +405,6 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertIn('model_provider = "cockpit_http"', live_config)
             self.assertIn("[model_providers.cockpit_http]", live_config)
             self.assertIn('base_url = "https://right.codes/codex/v1"', live_config)
-            self.assertIn('env_key = "OPENAI_API_KEY"', live_config)
-            self.assertIn("requires_openai_auth = false", live_config)
             self.assertIn("supports_websockets = false", live_config)
             live_auth = json.loads((codex_home / "auth.json").read_text(encoding="utf-8"))
             self.assertEqual("apikey", live_auth["auth_mode"])
@@ -414,8 +415,8 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertEqual("RightCode", live_auth["api_provider_name"])
             cockpit_config = json.loads((cockpit_home / "config.json").read_text(encoding="utf-8"))
             self.assertTrue(cockpit_config["codex_launch_on_switch"])
-            self.assertTrue(cockpit_config["codex_restart_specified_app_on_switch"])
-            self.assertEqual(str(restart_wrapper), cockpit_config["codex_specified_app_path"])
+            self.assertFalse(cockpit_config["codex_restart_specified_app_on_switch"])
+            self.assertEqual("", cockpit_config["codex_specified_app_path"])
             cockpit_instances = json.loads((cockpit_home / "codex_instances.json").read_text(encoding="utf-8"))
             self.assertIsNone(cockpit_instances["defaultSettings"]["lastPid"])
             self.assertTrue(cockpit_instances["defaultSettings"]["followLocalAccount"])

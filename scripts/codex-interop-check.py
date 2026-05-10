@@ -13,8 +13,9 @@ from pathlib import Path
 from typing import Any
 
 
-SHARED_CODEX_PROVIDER_ID = "openai"
-COCKPIT_HTTP_PROVIDER_ID = "cockpit_http"
+OPENAI_SHARED_PROVIDER_ID = "openai"
+API_RELAY_PROVIDER_ID = "cockpit_http"
+SHARED_CODEX_PROVIDER_ID = OPENAI_SHARED_PROVIDER_ID
 OFFICIAL_OPENAI_BASE_URL = "https://api.openai.com/v1"
 CODEX_HISTORY_INDEXES = {
     "idx_threads_archived_provider_updated_at_ms": {
@@ -46,24 +47,10 @@ CODEX_HISTORY_INDEXES = {
         ),
     },
 }
-CODEX_PROVIDER_BUCKET_TRIGGERS = {
-    "trg_threads_shared_provider_after_insert": (
-        "create trigger if not exists trg_threads_shared_provider_after_insert "
-        "after insert on threads "
-        "when coalesce(new.model_provider, '') <> 'openai' "
-        "begin "
-        "update threads set model_provider = 'openai' where id = new.id; "
-        "end"
-    ),
-    "trg_threads_shared_provider_after_update": (
-        "create trigger if not exists trg_threads_shared_provider_after_update "
-        "after update of model_provider on threads "
-        "when coalesce(new.model_provider, '') <> 'openai' "
-        "begin "
-        "update threads set model_provider = 'openai' where id = new.id; "
-        "end"
-    ),
-}
+CODEX_PROVIDER_BUCKET_TRIGGER_NAMES = (
+    "trg_threads_shared_provider_after_insert",
+    "trg_threads_shared_provider_after_update",
+)
 CODEX_TUI_LOG_ROTATE_BYTES = 100 * 1024 * 1024
 
 
@@ -91,10 +78,11 @@ def main() -> int:
     if args.apply:
         actions.extend(repair_cockpit(codex_home=codex_home, cockpit_home=cockpit_home, checks=before))
         if args.migrate_provider_bucket:
+            target_provider = _expected_cockpit_provider_bucket(cockpit_home)
             actions.extend(
                 migrate_codex_provider_bucket(
                     codex_home=codex_home,
-                    target_provider=SHARED_CODEX_PROVIDER_ID,
+                    target_provider=target_provider,
                     migrate_sessions=not args.quick_launch,
                 )
             )
@@ -213,12 +201,13 @@ def inspect_codex_provider_buckets(
     checks: list[dict[str, Any]] = []
     state_path = codex_home / "state_5.sqlite"
     config_path = codex_home / "config.toml"
+    expected_provider = _expected_cockpit_provider_bucket(cockpit_home)
     distribution, distribution_error = _read_codex_thread_provider_distribution(state_path)
     dominant_provider = _dominant_provider(distribution)
     unexpected_providers = {
         provider: count
         for provider, count in distribution.items()
-        if provider != SHARED_CODEX_PROVIDER_ID and int(count) > 0
+        if provider != expected_provider and int(count) > 0
     }
 
     checks.append(
@@ -235,12 +224,12 @@ def inspect_codex_provider_buckets(
             "path": str(state_path),
             "distribution": distribution,
             "dominant_provider": dominant_provider,
-            "expected_shared_provider": SHARED_CODEX_PROVIDER_ID,
+            "expected_shared_provider": expected_provider,
             "unexpected_providers": unexpected_providers,
         }
     )
     if include_session_scan:
-        checks.append(_inspect_codex_session_provider_bucket(codex_home))
+        checks.append(_inspect_codex_session_provider_bucket(codex_home, expected_provider=expected_provider))
     else:
         checks.append(
             {
@@ -250,23 +239,20 @@ def inspect_codex_provider_buckets(
                 "reason": "Quick launch skipped full session JSONL scan; SQLite trigger guard protects active history from stale session metadata repopulation.",
                 "path": str(codex_home / "sessions"),
                 "session_scan_skipped": True,
-                "expected_shared_provider": SHARED_CODEX_PROVIDER_ID,
+                "expected_shared_provider": expected_provider,
             }
         )
 
     config_text = _read_text(config_path)
     active_provider = _toml_top_level_string(config_text, "model_provider") or "openai"
-    current = _cockpit_current_account(cockpit_home)
-    current_auth_mode = str(current.get("auth_mode") or "") if current else ""
     active_status = "pass"
     active_reason = "Codex live config uses the same provider bucket as the dominant local history bucket."
     if dominant_provider and active_provider != dominant_provider:
-        if current_auth_mode == "apikey" and active_provider == COCKPIT_HTTP_PROVIDER_ID:
-            active_status = "pass"
-            active_reason = "Codex API relay uses a custom HTTP-only provider to disable unsupported Responses WebSocket transport; SQLite trigger guards keep active history in the shared provider bucket."
-        else:
-            active_status = "fail" if _is_custom_provider_id(active_provider) else "warn"
-            active_reason = "Codex live config points at a different provider bucket than the dominant local history bucket."
+        active_status = "fail" if _is_custom_provider_id(active_provider) else "warn"
+        active_reason = "Codex live config points at a different provider bucket than the dominant local history bucket."
+    if active_provider != expected_provider:
+        active_status = "fail" if _is_custom_provider_id(expected_provider) else active_status
+        active_reason = "Codex live config does not match the provider bucket required by the current Cockpit account."
     checks.append(
         {
             "id": "codex_live_provider_bucket",
@@ -276,6 +262,7 @@ def inspect_codex_provider_buckets(
             "path": str(config_path),
             "active_provider": active_provider,
             "dominant_provider": dominant_provider,
+            "expected_provider": expected_provider,
         }
     )
 
@@ -299,7 +286,7 @@ def _inspect_cockpit_current_provider_bucket(
     current = _cockpit_current_account(cockpit_home)
     if not current:
         return []
-    provider_bucket = SHARED_CODEX_PROVIDER_ID
+    provider_bucket = _provider_bucket_for_cockpit_account(current)
     auth_mode = str(current.get("auth_mode") or "")
     base_url = _cockpit_account_base_url(current)
     has_key = bool(str(current.get("openai_api_key") or "").strip())
@@ -351,8 +338,8 @@ def _inspect_cockpit_current_provider_bucket(
             "path": str(cockpit_home),
             "provider_bucket": provider_bucket,
             "dominant_provider": dominant_provider,
-            "expected_shared_provider": SHARED_CODEX_PROVIDER_ID,
-            "repair_strategy": "stable_openai_provider" if bucket_status == "fail" else "none",
+            "expected_shared_provider": provider_bucket,
+            "repair_strategy": "current_account_provider_bucket" if bucket_status == "fail" else "none",
         },
         {
             "id": "cockpit_live_login_mode_matches_current_account",
@@ -424,6 +411,7 @@ def inspect_cockpit(*, codex_home: Path, cockpit_home: Path) -> list[dict[str, A
             "api_provider_id": current.get("api_provider_id") if current else None,
         }
     )
+    checks.append(_inspect_codex_auth_projection(codex_home=codex_home, account=current))
     restart_on_switch = bool(cockpit_config.get("codex_restart_specified_app_on_switch")) if isinstance(cockpit_config, dict) else False
     specified_app_path = (
         str(cockpit_config.get("codex_specified_app_path") or "") if isinstance(cockpit_config, dict) else ""
@@ -434,16 +422,16 @@ def inspect_cockpit(*, codex_home: Path, cockpit_home: Path) -> list[dict[str, A
         {
             "id": "cockpit_codex_app_restart_semantics",
             "tool": "cockpit_tools",
-            "status": "pass" if managed_restart_enabled else "fail",
+            "status": "fail" if managed_restart_enabled else "pass",
             "reason": (
-                "Cockpit Codex switches must launch through the governed restart wrapper so Codex App receives the current account auth, API base URL, and pre-launch validation instead of reusing stale process state."
+                "Cockpit Tools must not automatically restart Codex App on account/provider switch; process restarts require explicit user confirmation in the current task."
             ),
             "path": str(cockpit_home / "config.json"),
             "codex_restart_specified_app_on_switch": restart_on_switch,
             "codex_specified_app_path": specified_app_path,
             "expected_restart_wrapper": expected_restart_wrapper,
             "managed_restart_enabled": managed_restart_enabled,
-            "repair_strategy": "configure_restart_wrapper" if not managed_restart_enabled else "none",
+            "repair_strategy": "disable_restart_wrapper" if managed_restart_enabled else "none",
         }
     )
 
@@ -490,18 +478,81 @@ def inspect_cockpit(*, codex_home: Path, cockpit_home: Path) -> list[dict[str, A
     return checks
 
 
+def _inspect_codex_auth_projection(*, codex_home: Path, account: dict[str, Any]) -> dict[str, Any]:
+    auth_path = codex_home / "auth.json"
+    auth = _read_json(auth_path)
+    auth_mode = str(account.get("auth_mode") or "").strip() if isinstance(account, dict) else ""
+    if not account:
+        return {
+            "id": "codex_auth_matches_cockpit_current_account",
+            "tool": "codex",
+            "status": "fail",
+            "reason": "Codex auth projection cannot be checked because Cockpit has no current Codex account.",
+            "path": str(auth_path),
+            "expected_auth_mode": None,
+            "actual_auth_mode": _json_string(auth, "auth_mode") if isinstance(auth, dict) else "",
+            "key_present": bool(_json_string(auth, "OPENAI_API_KEY")) if isinstance(auth, dict) else False,
+            "issues": ["missing_cockpit_current_account"],
+            "repair_strategy": "select_cockpit_account",
+        }
+    issues: list[str] = []
+    actual_auth_mode = _json_string(auth, "auth_mode") if isinstance(auth, dict) else ""
+    key_present = bool(_json_string(auth, "OPENAI_API_KEY")) if isinstance(auth, dict) else False
+    actual_base_url = (
+        _json_string(auth, "api_base_url")
+        or _json_string(auth, "base_url")
+        if isinstance(auth, dict)
+        else ""
+    )
+    expected_base_url = _cockpit_account_base_url(account)
+    if auth_mode == "apikey":
+        if actual_auth_mode != "apikey":
+            issues.append(f"auth_mode is {actual_auth_mode or '<missing>'}, expected apikey")
+        if not key_present:
+            issues.append("OPENAI_API_KEY is missing from auth.json")
+        account_key = str(account.get("openai_api_key") or "").strip()
+        if key_present and account_key and _json_string(auth, "OPENAI_API_KEY") != account_key:
+            issues.append("OPENAI_API_KEY does not match current Cockpit API account")
+        if expected_base_url and actual_base_url.rstrip("/") != expected_base_url.rstrip("/"):
+            issues.append("auth.json API base URL does not match current Cockpit API account")
+    elif auth_mode == "chatgpt":
+        if actual_auth_mode != "chatgpt":
+            issues.append(f"auth_mode is {actual_auth_mode or '<missing>'}, expected chatgpt")
+        tokens = auth.get("tokens") if isinstance(auth, dict) else None
+        if not isinstance(tokens, dict) or not tokens.get("access_token"):
+            issues.append("ChatGPT tokens are missing from auth.json")
+    else:
+        issues.append(f"unsupported Cockpit auth_mode: {auth_mode or '<missing>'}")
+
+    return {
+        "id": "codex_auth_matches_cockpit_current_account",
+        "tool": "codex",
+        "status": "fail" if issues else "pass",
+        "reason": "Codex auth.json must match the current Cockpit Codex account before Codex CLI/App startup; config-only API switching can otherwise reuse stale ChatGPT tokens or fail auth.",
+        "path": str(auth_path),
+        "expected_auth_mode": auth_mode,
+        "actual_auth_mode": actual_auth_mode,
+        "expected_base_url": expected_base_url if auth_mode == "apikey" else None,
+        "actual_base_url": actual_base_url if auth_mode == "apikey" else None,
+        "key_present": key_present,
+        "issues": issues,
+        "repair_strategy": "project_cockpit_auth" if issues and auth_mode in {"apikey", "chatgpt"} else "none",
+    }
+
+
 def repair_cockpit(*, codex_home: Path, cockpit_home: Path, checks: dict[str, Any]) -> list[dict[str, Any]]:
     actions = repair_cockpit_stale_last_pid(cockpit_home=cockpit_home)
-    actions.extend(repair_cockpit_restart_wrapper_config(codex_home=codex_home, cockpit_home=cockpit_home))
+    actions.extend(repair_cockpit_restart_wrapper_config(cockpit_home=cockpit_home))
     actions.extend(repair_cockpit_default_account_binding(cockpit_home=cockpit_home))
     actions.extend(repair_cockpit_current_api_provider_metadata(codex_home=codex_home, cockpit_home=cockpit_home))
     current = _cockpit_current_account(cockpit_home)
     if not current:
         return actions
+    target_provider = _provider_bucket_for_cockpit_account(current)
     actions.extend(repair_codex_live_config_for_cockpit(codex_home=codex_home, account=current))
     actions.extend(repair_codex_auth_for_cockpit(codex_home=codex_home, account=current))
     actions.extend(ensure_codex_history_indexes(codex_home=codex_home))
-    actions.extend(ensure_codex_provider_bucket_triggers(codex_home=codex_home))
+    actions.extend(ensure_codex_provider_bucket_triggers(codex_home=codex_home, target_provider=target_provider))
     actions.extend(rotate_large_codex_tui_log(codex_home=codex_home))
     return actions
 
@@ -533,41 +584,42 @@ def repair_cockpit_stale_last_pid(*, cockpit_home: Path) -> list[dict[str, Any]]
     ]
 
 
-def repair_cockpit_restart_wrapper_config(*, codex_home: Path, cockpit_home: Path) -> list[dict[str, Any]]:
+def _expected_cockpit_provider_bucket(cockpit_home: Path) -> str:
+    current = _cockpit_current_account(cockpit_home)
+    return _provider_bucket_for_cockpit_account(current)
+
+
+def _provider_bucket_for_cockpit_account(account: dict[str, Any] | None) -> str:
+    if not account:
+        return OPENAI_SHARED_PROVIDER_ID
+    auth_mode = str(account.get("auth_mode") or "").strip()
+    base_url = _normalize_base_url(_cockpit_account_base_url(account))
+    if auth_mode == "apikey" and base_url and base_url != OFFICIAL_OPENAI_BASE_URL:
+        return API_RELAY_PROVIDER_ID
+    return OPENAI_SHARED_PROVIDER_ID
+
+
+def repair_cockpit_restart_wrapper_config(*, cockpit_home: Path) -> list[dict[str, Any]]:
     config_path = cockpit_home / "config.json"
     config = _read_json(config_path)
     if not isinstance(config, dict):
         config = {}
-    expected_wrapper = str(_expected_cockpit_restart_wrapper(codex_home))
-    already_configured = (
-        bool(config.get("codex_launch_on_switch"))
-        and bool(config.get("codex_restart_specified_app_on_switch"))
-        and _same_path(str(config.get("codex_specified_app_path") or ""), expected_wrapper)
-    )
-    if already_configured:
-        return [
-            {
-                "id": "cockpit_codex_restart_wrapper_configured",
-                "tool": "cockpit_tools",
-                "status": "ok",
-                "path": str(config_path),
-                "codex_specified_app_path": expected_wrapper,
-            }
-        ]
+    if not bool(config.get("codex_restart_specified_app_on_switch")) and not str(config.get("codex_specified_app_path") or ""):
+        return []
     backup_path = _backup_file(config_path, suffix="cockpit_restart_wrapper") if config_path.exists() else None
     config["codex_launch_on_switch"] = True
-    config["codex_restart_specified_app_on_switch"] = True
-    config["codex_specified_app_path"] = expected_wrapper
+    config["codex_restart_specified_app_on_switch"] = False
+    config["codex_specified_app_path"] = ""
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return [
         {
-            "id": "cockpit_codex_restart_wrapper_configured",
+            "id": "cockpit_codex_restart_wrapper_disabled",
             "tool": "cockpit_tools",
             "status": "changed",
             "path": str(config_path),
             "backup_path": str(backup_path) if backup_path else None,
-            "codex_specified_app_path": expected_wrapper,
+            "codex_restart_specified_app_on_switch": False,
         }
     ]
 
@@ -723,42 +775,45 @@ def repair_codex_live_config_for_cockpit(*, codex_home: Path, account: dict[str,
     if not base_url:
         return []
     forced_login = "api" if account.get("auth_mode") == "apikey" else "chatgpt"
-    target_provider = COCKPIT_HTTP_PROVIDER_ID if forced_login == "api" else SHARED_CODEX_PROVIDER_ID
+    target_provider = _provider_bucket_for_cockpit_account(account)
     config_path = codex_home / "config.toml"
     current = _read_text(config_path)
     lines = current.splitlines()
     lines = _remove_top_level_key(lines, "openai_base_url")
-    if forced_login == "api" and target_provider == SHARED_CODEX_PROVIDER_ID:
+    if forced_login == "api" and target_provider == OPENAI_SHARED_PROVIDER_ID:
         lines = _set_top_level(lines, "openai_base_url", _toml_string(base_url))
     lines = _set_top_level(lines, "forced_login_method", _toml_string(forced_login))
     lines = _set_top_level(lines, "model_provider", _toml_string(target_provider))
     lines = _remove_toml_table(lines, "[model_providers.cockpit]")
     lines = _remove_toml_table(lines, "[model_providers.openai]")
     lines = _remove_toml_table(lines, "[model_providers.ccswitch]")
-    lines = _replace_toml_table(
-        lines,
-        f"[model_providers.{COCKPIT_HTTP_PROVIDER_ID}]",
-        _cockpit_http_provider_lines(base_url),
-    )
+    if target_provider == API_RELAY_PROVIDER_ID:
+        lines = _replace_toml_table(
+            lines,
+            f"[model_providers.{API_RELAY_PROVIDER_ID}]",
+            _api_relay_provider_lines(account=account, base_url=base_url),
+        )
+    else:
+        lines = _remove_toml_table(lines, f"[model_providers.{API_RELAY_PROVIDER_ID}]")
     lines = _replace_toml_table(
         lines,
         "[profiles.shared-current-provider]",
-        _cockpit_profile_lines("shared-current-provider", forced_login=forced_login, base_url=base_url),
+        _cockpit_profile_lines("shared-current-provider", forced_login=forced_login, base_url=base_url, provider=target_provider),
     )
     lines = _replace_toml_table(
         lines,
         "[profiles.shared-cockpit-api]",
-        _cockpit_profile_lines("shared-cockpit-api", forced_login="api", base_url=base_url),
+        _cockpit_profile_lines("shared-cockpit-api", forced_login="api", base_url=base_url, provider=API_RELAY_PROVIDER_ID if _normalize_base_url(base_url) != OFFICIAL_OPENAI_BASE_URL else OPENAI_SHARED_PROVIDER_ID),
     )
     lines = _replace_toml_table(
         lines,
         "[profiles.shared-cockpit-auth]",
-        _cockpit_profile_lines("shared-cockpit-auth", forced_login="chatgpt", base_url=base_url),
+        _cockpit_profile_lines("shared-cockpit-auth", forced_login="chatgpt", base_url=base_url, provider=OPENAI_SHARED_PROVIDER_ID),
     )
     lines = _replace_toml_table(
         lines,
         "[profiles.shared-relay]",
-        _cockpit_profile_lines("shared-relay", forced_login=forced_login, base_url=base_url),
+        _cockpit_profile_lines("shared-relay", forced_login=forced_login, base_url=base_url, provider=target_provider),
     )
     updated = "\n".join(lines).rstrip() + "\n"
     if updated == current:
@@ -774,7 +829,6 @@ def repair_codex_live_config_for_cockpit(*, codex_home: Path, account: dict[str,
             "path": str(config_path),
             "backup_path": str(backup_path) if backup_path else None,
             "target_provider": target_provider,
-            "history_provider_bucket": SHARED_CODEX_PROVIDER_ID,
             "forced_login_method": forced_login,
             "base_url": base_url,
             "account_id": account.get("id"),
@@ -784,28 +838,27 @@ def repair_codex_live_config_for_cockpit(*, codex_home: Path, account: dict[str,
     ]
 
 
-def _cockpit_profile_lines(name: str, *, forced_login: str, base_url: str) -> list[str]:
-    provider = COCKPIT_HTTP_PROVIDER_ID if forced_login == "api" else SHARED_CODEX_PROVIDER_ID
+def _api_relay_provider_lines(*, account: dict[str, Any], base_url: str) -> list[str]:
+    provider_name = str(account.get("api_provider_name") or account.get("email") or "Cockpit API Relay")
+    return [
+        f"[model_providers.{API_RELAY_PROVIDER_ID}]",
+        f"name = {_toml_string(provider_name)}",
+        f"base_url = {_toml_string(base_url)}",
+        'wire_api = "responses"',
+        "requires_openai_auth = false",
+        "supports_websockets = false",
+    ]
+
+
+def _cockpit_profile_lines(name: str, *, forced_login: str, base_url: str, provider: str) -> list[str]:
     lines = [
         f"[profiles.{name}]",
         f"forced_login_method = {_toml_string(forced_login)}",
         f"model_provider = {_toml_string(provider)}",
     ]
-    if forced_login == "api" and provider == SHARED_CODEX_PROVIDER_ID:
+    if forced_login == "api" and provider == OPENAI_SHARED_PROVIDER_ID:
         lines.append(f"openai_base_url = {_toml_string(base_url)}")
     return lines
-
-
-def _cockpit_http_provider_lines(base_url: str) -> list[str]:
-    return [
-        f"[model_providers.{COCKPIT_HTTP_PROVIDER_ID}]",
-        'name = "Cockpit HTTP Relay"',
-        f"base_url = {_toml_string(base_url)}",
-        'wire_api = "responses"',
-        'env_key = "OPENAI_API_KEY"',
-        "requires_openai_auth = false",
-        "supports_websockets = false",
-    ]
 
 
 def migrate_codex_provider_bucket(
@@ -1082,7 +1135,7 @@ def ensure_codex_history_indexes(*, codex_home: Path) -> list[dict[str, Any]]:
     ]
 
 
-def ensure_codex_provider_bucket_triggers(*, codex_home: Path) -> list[dict[str, Any]]:
+def ensure_codex_provider_bucket_triggers(*, codex_home: Path, target_provider: str = SHARED_CODEX_PROVIDER_ID) -> list[dict[str, Any]]:
     state_path = codex_home / "state_5.sqlite"
     if not state_path.exists():
         return []
@@ -1115,9 +1168,28 @@ def ensure_codex_provider_bucket_triggers(*, codex_home: Path) -> list[dict[str,
                 "select name from sqlite_master where type = 'trigger'"
             ).fetchall()
         }
-        missing = [name for name in CODEX_PROVIDER_BUCKET_TRIGGERS if name not in existing_triggers]
-        for name in missing:
-            connection.execute(CODEX_PROVIDER_BUCKET_TRIGGERS[name])
+        changed: list[str] = []
+        for name in CODEX_PROVIDER_BUCKET_TRIGGER_NAMES:
+            if name in existing_triggers:
+                connection.execute(f"drop trigger if exists {name}")
+            changed.append(name)
+        quoted_provider = target_provider.replace("'", "''")
+        connection.execute(
+            "create trigger trg_threads_shared_provider_after_insert "
+            "after insert on threads "
+            f"when coalesce(new.model_provider, '') <> '{quoted_provider}' "
+            "begin "
+            f"update threads set model_provider = '{quoted_provider}' where id = new.id; "
+            "end"
+        )
+        connection.execute(
+            "create trigger trg_threads_shared_provider_after_update "
+            "after update of model_provider on threads "
+            f"when coalesce(new.model_provider, '') <> '{quoted_provider}' "
+            "begin "
+            f"update threads set model_provider = '{quoted_provider}' where id = new.id; "
+            "end"
+        )
         connection.commit()
     finally:
         connection.close()
@@ -1125,10 +1197,10 @@ def ensure_codex_provider_bucket_triggers(*, codex_home: Path) -> list[dict[str,
         {
             "id": "codex_provider_bucket_triggers_ensured",
             "tool": "codex",
-            "status": "changed" if missing else "ok",
+            "status": "changed",
             "path": str(state_path),
-            "created_triggers": missing,
-            "target_provider": SHARED_CODEX_PROVIDER_ID,
+            "created_triggers": changed,
+            "target_provider": target_provider,
         }
     ]
 
@@ -1292,12 +1364,12 @@ def _read_codex_thread_provider_distribution(state_path: Path) -> tuple[dict[str
     return {str(provider or "<empty>"): int(count) for provider, count in rows}, None
 
 
-def _inspect_codex_session_provider_bucket(codex_home: Path) -> dict[str, Any]:
+def _inspect_codex_session_provider_bucket(codex_home: Path, *, expected_provider: str = SHARED_CODEX_PROVIDER_ID) -> dict[str, Any]:
     session_distribution, session_error, session_stats = _read_codex_session_provider_distribution(codex_home)
     unexpected_session_providers = {
         provider: count
         for provider, count in session_distribution.items()
-        if provider != SHARED_CODEX_PROVIDER_ID and int(count) > 0
+        if provider != expected_provider and int(count) > 0
     }
     session_unexpected_status = "pass"
     if session_error:
@@ -1324,7 +1396,7 @@ def _inspect_codex_session_provider_bucket(codex_home: Path) -> dict[str, Any]:
         ),
         "path": str(codex_home / "sessions"),
         "distribution": session_distribution,
-        "expected_shared_provider": SHARED_CODEX_PROVIDER_ID,
+        "expected_shared_provider": expected_provider,
         "unexpected_providers": unexpected_session_providers,
         **session_stats,
     }
@@ -1613,15 +1685,19 @@ def _json_string(value: Any, key: str) -> str:
     return raw.strip() if isinstance(raw, str) else ""
 
 
+def _normalize_base_url(base_url: str) -> str:
+    return str(base_url or "").strip().rstrip("/")
+
+
 def _cockpit_provider_for_base_url(cockpit_home: Path, base_url: str) -> dict[str, str]:
     providers = _read_json(cockpit_home / "codex_model_providers.json")
     if not isinstance(providers, list):
         return {}
-    normalized = base_url.strip().rstrip("/")
+    normalized = _normalize_base_url(base_url)
     for provider in providers:
         if not isinstance(provider, dict):
             continue
-        provider_base = str(provider.get("baseUrl") or provider.get("base_url") or "").strip().rstrip("/")
+        provider_base = _normalize_base_url(str(provider.get("baseUrl") or provider.get("base_url") or ""))
         if provider_base == normalized:
             return {
                 "id": str(provider.get("id") or "").strip(),

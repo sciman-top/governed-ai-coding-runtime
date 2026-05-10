@@ -57,6 +57,7 @@
 - `AGENTS.md` 是上下文规则；确定性验证、权限或安全拦截应落到 `.codex/rules/*.rules`、本仓门禁、hooks 或 CI。
 - `prefix_rule()` 必须保持精确命令前缀并配 `match/not_match` 样例，避免过宽 allowlist。
 - 规则文件变更后用新命令或重启会话复测，不假定当前 Codex 会话热加载。
+- 本机 Codex/Cockpit/Claude 连通性修复不得在未经用户当前任务明确确认时重启、停止、杀掉或自动拉起 `Codex App`、`codex`、`Claude Code`、`Claude Desktop`、`claude`；先用文件级状态、dry-run、API 探针和历史桶检查收敛，确需重启时必须先说明影响、会话历史可见性风险和回滚入口。
 
 ## C. 项目差异
 ### C.1 模块职责

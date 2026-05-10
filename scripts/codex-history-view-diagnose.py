@@ -69,7 +69,7 @@ def main() -> int:
                 "reason": "Page limits must be positive integers.",
             }
         )
-        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        emit_json(payload)
         return 2
 
     if not state_path.exists():
@@ -82,7 +82,7 @@ def main() -> int:
                 "path": str(state_path),
             }
         )
-        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        emit_json(payload)
         return 2
 
     connection = sqlite3.connect(state_path)
@@ -101,7 +101,7 @@ def main() -> int:
                     "missing_columns": missing,
                 }
             )
-            print(json.dumps(payload, ensure_ascii=False, indent=2))
+            emit_json(payload)
             return 2
 
         rows = load_rows(connection, sources)
@@ -128,8 +128,12 @@ def main() -> int:
     finally:
         connection.close()
 
-    print(json.dumps(payload, ensure_ascii=False, indent=2))
+    emit_json(payload)
     return 0
+
+
+def emit_json(payload: dict[str, Any]) -> None:
+    print(json.dumps(payload, ensure_ascii=True, indent=2))
 
 
 def table_columns(connection: sqlite3.Connection, table: str) -> set[str]:

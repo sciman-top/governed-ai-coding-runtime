@@ -43,6 +43,8 @@ class CodexHistoryViewDiagnoseTests(unittest.TestCase):
             )
 
             self.assertEqual(0, completed.returncode, completed.stderr)
+            self.assertIn(r"\u26a0", completed.stdout)
+            self.assertNotIn("⚠", completed.stdout)
             payload = json.loads(completed.stdout)
             self.assertEqual("pass", payload["status"])
             self.assertEqual(5, payload["checks"][0]["row_count"])
@@ -150,7 +152,7 @@ def _create_state(path: Path) -> None:
                 ("new-2", r"D:\CODE\busy", "vscode", "new 2", None, 105, 0),
                 ("new-3", r"D:\CODE\other", "vscode", "new 3", None, 104, 0),
                 ("archived", r"D:\CODE\old-target", "vscode", "archived", None, 103, 1),
-                ("old-1", r"D:\CODE\old-target", "vscode", "old 1", None, 102, 0),
+                ("old-1", r"D:\CODE\old-target", "vscode", "⚠ old 1", None, 102, 0),
                 ("old-2", r"\\?\D:\CODE\old-target", "vscode", "old 2", None, 101, 0),
                 ("cli-1", r"D:\CODE\cli-only", "cli", "cli only", None, 100, 0),
             ],

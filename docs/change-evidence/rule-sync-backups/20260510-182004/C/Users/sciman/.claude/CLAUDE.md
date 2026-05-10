@@ -107,7 +107,6 @@
 - 本机 `Claude Code` 日常经 `ANTHROPIC_BASE_URL` 使用 Anthropic-compatible provider；当前 provider/profile 事实以 `settings.json`、环境变量和 `claude --help`/`/status` 为准。
 - provider-aware 基线：`GLM` 档质量优先，`DeepSeek` 档偏长上下文；无新证据不要混用两档模型、窗口和压缩参数。
 - 保留已明确接受的便利例外，但规则、settings、hooks 和门禁必须能证明其余安全边界仍有效。
-- 未经用户在当前任务中明确确认，不得重启、停止、杀掉或自动拉起 `Claude Code` / `Claude Desktop` / `claude` 进程；provider/auth/API 修复先做文件级投影、dry-run、连通性探针和证据记录，确需重启时先说明影响、会话连续性风险和回滚路径。
 
 ### B.4 回退
 - 命令缺失、行为不一致或非交互失败时，记录 `platform_na`、原因、替代证据和复测条件。

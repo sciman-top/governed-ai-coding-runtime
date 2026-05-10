@@ -100,6 +100,7 @@
 - `approval_policy = "never"` 属本机自动化便利例外；必须配套非空规则/门禁/备份证据，不能作为跳过安全判断的理由。
 - `danger-full-access`、`--dangerously-bypass-approvals-and-sandbox` 或等价全自动模式只适合外部隔离环境或明确授权场景；仍必须遵守 R4 风险分级和 R8 留痕。
 - 修改 `config.toml`、MCP、auth 或 provider 前先区分登录链路、执行权限、模型能力和仓库代码问题。
+- 未经用户在当前任务中明确确认，不得重启、停止、杀掉或自动拉起 `Codex App` / `codex` 进程；provider/auth/API 修复先做文件级投影、dry-run、连通性探针和证据记录，确需重启时先说明影响、历史可见性风险和回滚路径。
 
 ### B.4 回退
 - 命令缺失、行为不一致或非交互失败时，记录 `platform_na`、原因、替代证据和复测条件。
