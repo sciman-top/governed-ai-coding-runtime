@@ -1,0 +1,18 @@
+{
+  "label": "operator-ui-20260511-012953",
+  "record_path": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\codex-cockpit-snapshots\\20260511-012954-operator-ui-20260511-012953\\record.json",
+  "timestamp": "2026-05-11T01:29:55",
+  "cockpit_current_account_id": "codex_apikey_8b8853f15e823dc53bd156163035bc78",
+  "codex_launch_on_switch": false,
+  "codex_restart_specified_app_on_switch": false,
+  "codex_specified_app_path": "",
+  "cockpit_bind_account_id": null,
+  "cockpit_follow_local_account": true,
+  "codex_forced_login_method": "api",
+  "codex_model_provider": "openai",
+  "codex_openai_base_url": "http://35.213.82.91:8003/v1",
+  "codex_auth_mode": "apikey",
+  "codex_auth_has_api_key": true,
+  "codex_auth_has_tokens": false,
+  "changed_files_within_watch": []
+}

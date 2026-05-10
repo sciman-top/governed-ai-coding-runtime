@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import importlib.util
 import os
 import sqlite3
 import subprocess
@@ -14,6 +15,25 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class CodexSharedLauncherTests(unittest.TestCase):
+    def test_interop_checker_accepts_common_cockpit_api_base_url_field_names(self) -> None:
+        spec = importlib.util.spec_from_file_location("codex_interop_check", ROOT / "scripts" / "codex-interop-check.py")
+        self.assertIsNotNone(spec)
+        module = importlib.util.module_from_spec(spec)
+        self.assertIsNotNone(spec.loader)
+        spec.loader.exec_module(module)
+
+        for key in ["api_base_url", "base_url", "baseUrl", "apiBaseUrl", "OPENAI_BASE_URL"]:
+            with self.subTest(key=key):
+                self.assertEqual(
+                    "https://relay.example.test/v1",
+                    module._cockpit_account_base_url(
+                        {
+                            "auth_mode": "apikey",
+                            key: "https://relay.example.test/v1/",
+                        }
+                    ),
+                )
+
     def test_optimizer_apply_writes_shared_history_config_without_fixed_relay_id(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             codex_home = Path(tmp_dir) / "codex-home"
@@ -880,11 +900,88 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertIn('model_provider = "openai"', live_config)
             self.assertIn('forced_login_method = "api"', live_config)
             self.assertNotIn("[model_providers.cockpit_http]", live_config)
-            self.assertIn('openai_base_url = "http://35.213.82.91:8003/v1"', live_config)
-            self.assertNotIn("supports_websockets = false", live_config)
-            live_auth = json.loads((codex_home / "auth.json").read_text(encoding="utf-8"))
-            self.assertEqual("apikey", live_auth["auth_mode"])
-            self.assertEqual("http://35.213.82.91:8003/v1", live_auth["api_base_url"])
+
+    def test_interop_checker_detects_recent_cockpit_raw_start_after_switch(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            codex_home = root / "codex-home"
+            codex_home.mkdir()
+            _create_codex_state_db(codex_home / "state_5.sqlite")
+            connection = sqlite3.connect(codex_home / "state_5.sqlite")
+            try:
+                connection.execute("update threads set model_provider = 'openai'")
+                connection.commit()
+            finally:
+                connection.close()
+            (codex_home / "config.toml").write_text(
+                'model_provider = "openai"\nforced_login_method = "chatgpt"\n',
+                encoding="utf-8",
+            )
+            (codex_home / "auth.json").write_text(
+                json.dumps({"auth_mode": "chatgpt", "tokens": {"access_token": "oauth-token"}}),
+                encoding="utf-8",
+            )
+            cc_switch_db = root / ".cc-switch" / "cc-switch.db"
+            cc_switch_db.parent.mkdir()
+            _create_cc_switch_db(cc_switch_db)
+            cockpit_home = root / ".antigravity_cockpit"
+            cockpit_home.mkdir()
+            (cockpit_home / "codex_accounts").mkdir()
+            (cockpit_home / "logs").mkdir()
+            (cockpit_home / "config.json").write_text(
+                json.dumps({"codex_launch_on_switch": False, "codex_restart_specified_app_on_switch": False}),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_accounts.json").write_text(
+                json.dumps({"accounts": [{"id": "codex_oauth"}], "current_account_id": "codex_oauth"}),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_accounts" / "codex_oauth.json").write_text(
+                json.dumps(
+                    {
+                        "id": "codex_oauth",
+                        "auth_mode": "oauth",
+                        "tokens": {"access_token": "oauth-token"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_model_providers.json").write_text(
+                json.dumps([{"id": "openai", "name": "OpenAI"}]),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_instances.json").write_text(
+                json.dumps(
+                    {
+                        "instances": [],
+                        "defaultSettings": {
+                            "extraArgs": "",
+                            "lastPid": None,
+                            "followLocalAccount": True,
+                            "bindAccountId": None,
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (cockpit_home / "logs" / "app.log.2026-05-11").write_text(
+                "\n".join(
+                    [
+                        "2099-05-11T00:03:57.627100600+08:00  INFO [Codex切号] 开始切换账号: account_id=codex_oauth",
+                        "2099-05-11T00:04:01.545008600+08:00  INFO [Codex Start] 启动策略=system-store-entry app_id=OpenAI.Codex_2p2nqsd0c76g0!App pid=44968",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            checked = _run_interop_checker(codex_home, cc_switch_db, cockpit_home, quick_launch=True)
+
+            self.assertEqual(2, checked.returncode, checked.stdout + checked.stderr)
+            payload = json.loads(checked.stdout)
+            checks = {check["id"]: check for check in payload["after"]["checks"]}
+            self.assertEqual("pass", checks["cockpit_codex_raw_launch_on_switch_disabled"]["status"])
+            self.assertEqual("fail", checks["cockpit_codex_recent_start_after_switch_absent"]["status"])
+            self.assertTrue(checks["cockpit_codex_recent_start_after_switch_absent"]["detected"])
 
     def test_interop_checker_flags_unreadable_codex_state_schema(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

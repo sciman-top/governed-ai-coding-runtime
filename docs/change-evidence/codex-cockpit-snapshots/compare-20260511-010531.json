@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "record_count": 3,
+  "records": [
+    {
+      "path": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\codex-cockpit-snapshots\\20260511-005733-after-restart-before-switch\\record.json",
+      "label": "after-restart-before-switch",
+      "timestamp": "2026-05-11T00:57:33",
+      "history_threads_by_provider": "openai:1639",
+      "changed_files_within_watch": [],
+      "cockpit.current_account_id": "codex_apikey_8b8853f15e823dc53bd156163035bc78",
+      "cockpit.codex_launch_on_switch": false,
+      "cockpit.codex_restart_specified_app_on_switch": false,
+      "cockpit.codex_specified_app_path": "",
+      "cockpit.default.bindAccountId": null,
+      "cockpit.default.followLocalAccount": true,
+      "cockpit.default.lastPid": 20680,
+      "codex.config.model_provider": "openai",
+      "codex.config.openai_base_url": "http://35.213.82.91:8003/v1",
+      "codex.config.forced_login_method": "api",
+      "codex.auth.auth_mode": "apikey",
+      "codex.auth.has_openai_api_key": true,
+      "codex.auth.has_tokens": false,
+      "codex.auth.base_url": "http://35.213.82.91:8003/v1",
+      "codex.auth.provider": null
+    },
+    {
+      "path": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\codex-cockpit-snapshots\\20260511-005845-after-switch-api-name\\record.json",
+      "label": "after-switch-api-name",
+      "timestamp": "2026-05-11T00:58:46",
+      "history_threads_by_provider": "openai:1639",
+      "changed_files_within_watch": [],
+      "cockpit.current_account_id": "codex_apikey_8b8853f15e823dc53bd156163035bc78",
+      "cockpit.codex_launch_on_switch": false,
+      "cockpit.codex_restart_specified_app_on_switch": false,
+      "cockpit.codex_specified_app_path": "",
+      "cockpit.default.bindAccountId": null,
+      "cockpit.default.followLocalAccount": true,
+      "cockpit.default.lastPid": 20680,
+      "codex.config.model_provider": "openai",
+      "codex.config.openai_base_url": "http://35.213.82.91:8003/v1",
+      "codex.config.forced_login_method": "api",
+      "codex.auth.auth_mode": "apikey",
+      "codex.auth.has_openai_api_key": true,
+      "codex.auth.has_tokens": false,
+      "codex.auth.base_url": "http://35.213.82.91:8003/v1",
+      "codex.auth.provider": null
+    },
+    {
+      "path": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\codex-cockpit-snapshots\\20260511-010011-after-repair-api-name\\record.json",
+      "label": "after-repair-api-name",
+      "timestamp": "2026-05-11T01:00:12",
+      "history_threads_by_provider": "openai:1639",
+      "changed_files_within_watch": [],
+      "cockpit.current_account_id": "codex_apikey_8b8853f15e823dc53bd156163035bc78",
+      "cockpit.codex_launch_on_switch": false,
+      "cockpit.codex_restart_specified_app_on_switch": false,
+      "cockpit.codex_specified_app_path": "",
+      "cockpit.default.bindAccountId": null,
+      "cockpit.default.followLocalAccount": true,
+      "cockpit.default.lastPid": 20680,
+      "codex.config.model_provider": "openai",
+      "codex.config.openai_base_url": "http://35.213.82.91:8003/v1",
+      "codex.config.forced_login_method": "api",
+      "codex.auth.auth_mode": "apikey",
+      "codex.auth.has_openai_api_key": true,
+      "codex.auth.has_tokens": false,
+      "codex.auth.base_url": "http://35.213.82.91:8003/v1",
+      "codex.auth.provider": null
+    }
+  ],
+  "transitions": [
+    {
+      "from": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\codex-cockpit-snapshots\\20260511-005733-after-restart-before-switch\\record.json",
+      "to": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\codex-cockpit-snapshots\\20260511-005845-after-switch-api-name\\record.json",
+      "from_label": "after-restart-before-switch",
+      "to_label": "after-switch-api-name",
+      "field_changes": [],
+      "file_changes": []
+    },
+    {
+      "from": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\codex-cockpit-snapshots\\20260511-005845-after-switch-api-name\\record.json",
+      "to": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\codex-cockpit-snapshots\\20260511-010011-after-repair-api-name\\record.json",
+      "from_label": "after-switch-api-name",
+      "to_label": "after-repair-api-name",
+      "field_changes": [],
+      "file_changes": []
+    }
+  ]
+}

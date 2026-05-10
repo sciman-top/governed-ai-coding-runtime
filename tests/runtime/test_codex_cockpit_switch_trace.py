@@ -89,6 +89,8 @@ class CodexCockpitSwitchTraceTests(unittest.TestCase):
             self.assertEqual(report["codex"]["config"]["forced_login_method"], "api")
             self.assertTrue(report["codex"]["auth"]["has_openai_api_key"])
             self.assertEqual(report["codex"]["state_db"]["threads_by_model_provider"][0]["model_provider"], "openai")
+            self.assertIn("guard_status", report)
+            self.assertIn("healthy", report["guard_status"])
 
             serialized = json.dumps(report, ensure_ascii=False)
             self.assertNotIn("sk-should-not-leak", serialized)
@@ -100,6 +102,7 @@ class CodexCockpitSwitchTraceTests(unittest.TestCase):
             "label": "before-restart",
             "after": {
                 "timestamp": "2026-05-10T23:50:00",
+                "guard_status": {"healthy": True, "process_count": 1, "task_state": "Running"},
                 "files": {
                     "codex_auth": {"sha256": "aaa", "mtime_iso": "2026-05-10T23:50:00"},
                 },
@@ -123,6 +126,7 @@ class CodexCockpitSwitchTraceTests(unittest.TestCase):
             "label": "api-reconnecting",
             "after": {
                 "timestamp": "2026-05-10T23:55:00",
+                "guard_status": {"healthy": False, "process_count": 0, "task_state": "Ready"},
                 "files": {
                     "codex_auth": {"sha256": "bbb", "mtime_iso": "2026-05-10T23:55:00"},
                 },
@@ -153,6 +157,7 @@ class CodexCockpitSwitchTraceTests(unittest.TestCase):
             comparison = trace.compare_reports([before_path, after_path])
 
         fields = {item["field"]: item for item in comparison["transitions"][0]["field_changes"]}
+        self.assertEqual(fields["guard.healthy"]["after"], False)
         self.assertEqual(fields["cockpit.current_account_id"]["after"], "codex_api")
         self.assertEqual(fields["cockpit.codex_launch_on_switch"]["after"], True)
         self.assertEqual(fields["codex.config.forced_login_method"]["after"], "api")

@@ -479,6 +479,20 @@ def inspect_cockpit(
             "repair_strategy": "disable_raw_launch_on_switch" if raw_launch_on_switch else "none",
         }
     )
+    recent_raw_start = _cockpit_recent_codex_start_after_switch(cockpit_home)
+    checks.append(
+        {
+            "id": "cockpit_codex_recent_start_after_switch_absent",
+            "tool": "cockpit_tools",
+            "status": "fail" if recent_raw_start.get("detected") else "pass",
+            "reason": (
+                "Cockpit Tools logs must not show a Codex App raw start immediately after account switch; "
+                "this proves the switch path bypassed shared-history repair even when config flags look disabled."
+            ),
+            "path": str(cockpit_home / "logs"),
+            **recent_raw_start,
+        }
+    )
 
     isolation_findings = _cockpit_instance_isolation_findings(instances, codex_home)
     account_binding_findings = _cockpit_account_binding_findings(instances)
@@ -521,6 +535,77 @@ def inspect_cockpit(
         }
     )
     return checks
+
+
+def _cockpit_recent_codex_start_after_switch(cockpit_home: Path) -> dict[str, Any]:
+    log_dir = cockpit_home / "logs"
+    if not log_dir.exists():
+        return {"detected": False, "reason": "logs directory missing"}
+    switch_event: dict[str, Any] | None = None
+    start_event: dict[str, Any] | None = None
+    for log_path in sorted(log_dir.glob("app.log*"), key=lambda path: path.stat().st_mtime if path.exists() else 0)[-4:]:
+        try:
+            lines = log_path.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            continue
+        for line in lines[-3000:]:
+            timestamp = _parse_log_timestamp(line)
+            timestamp_text = timestamp.isoformat() if timestamp else None
+            if "[Codex切号] 开始切换账号" in line:
+                switch_event = {"timestamp": timestamp_text, "line": line, "path": str(log_path)}
+                start_event = None
+            elif switch_event and "[Codex Start] 启动策略=" in line:
+                start_event = {"timestamp": timestamp_text, "line": line, "path": str(log_path)}
+    if not switch_event or not start_event:
+        return {
+            "detected": False,
+            "last_switch": switch_event,
+            "last_start_after_switch": start_event,
+        }
+    delta_seconds = None
+    switch_timestamp = _parse_log_timestamp(str(switch_event.get("line") or ""))
+    start_timestamp = _parse_log_timestamp(str(start_event.get("line") or ""))
+    if switch_timestamp and start_timestamp:
+        delta_seconds = (start_timestamp - switch_timestamp).total_seconds()
+    state_mtime = _latest_existing_mtime(
+        [
+            cockpit_home / "config.json",
+            cockpit_home / "codex_instances.json",
+            cockpit_home / "codex_accounts.json",
+        ]
+    )
+    start_epoch = start_timestamp.timestamp() if start_timestamp else None
+    superseded_by_state_write = bool(start_epoch and state_mtime and state_mtime > start_epoch + 5)
+    detected = (delta_seconds is None or 0 <= delta_seconds <= 120) and not superseded_by_state_write
+    return {
+        "detected": detected,
+        "seconds_after_switch": delta_seconds,
+        "superseded_by_state_write": superseded_by_state_write,
+        "last_switch": switch_event,
+        "last_start_after_switch": start_event,
+    }
+
+
+def _latest_existing_mtime(paths: list[Path]) -> float | None:
+    mtimes: list[float] = []
+    for path in paths:
+        try:
+            mtimes.append(path.stat().st_mtime)
+        except FileNotFoundError:
+            pass
+    return max(mtimes) if mtimes else None
+
+
+def _parse_log_timestamp(line: str) -> datetime | None:
+    match = re.match(r"^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d+))?([+-]\d{2}:\d{2}|Z)", line)
+    if not match:
+        return None
+    fraction = (match.group(2) or "")[:6].ljust(6, "0")
+    suffix = "+00:00" if match.group(3) == "Z" else match.group(3)
+    try:
+        return datetime.fromisoformat(f"{match.group(1)}.{fraction}{suffix}")
+    except ValueError:
+        return None
 
 
 def _inspect_codex_auth_projection(*, codex_home: Path, account: dict[str, Any]) -> dict[str, Any]:
@@ -1880,9 +1965,10 @@ def _cockpit_account(cockpit_home: Path, *, account_id: str | None = None) -> di
 
 
 def _cockpit_account_base_url(account: dict[str, Any]) -> str:
-    base_url = account.get("api_base_url")
-    if isinstance(base_url, str) and base_url.strip():
-        return base_url.strip().rstrip("/")
+    for key in ("api_base_url", "base_url", "baseUrl", "apiBaseUrl", "OPENAI_BASE_URL"):
+        base_url = account.get(key)
+        if isinstance(base_url, str) and base_url.strip():
+            return base_url.strip().rstrip("/")
     if account.get("auth_mode") == "apikey":
         return ""
     return OFFICIAL_OPENAI_BASE_URL

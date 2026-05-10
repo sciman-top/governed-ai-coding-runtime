@@ -296,6 +296,39 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("--cockpit-home", completed.stdout)
         self.assertNotIn("--apply", completed.stdout)
 
+    def test_operator_codex_interop_repair_and_switch_helpers_are_available_as_dry_run(self) -> None:
+        cases = [
+            ("CodexInteropRepair", "codex-interop-repair", "scripts/codex-interop-check.py", "--apply"),
+            ("CodexSwitchRecord", "codex-switch-record", "scripts/Save-CodexCockpitSwitchRecord.ps1", "-Label"),
+            ("CodexSwitchGuardStatus", "codex-switch-guard-status", "scripts/Start-CodexCockpitSwitchGuard.ps1", "-Status"),
+            ("CodexSwitchGuardStart", "codex-switch-guard-start", "scripts/Start-CodexCockpitSwitchGuard.ps1", "-Start"),
+        ]
+        for action, step_name, script_name, expected_arg in cases:
+            with self.subTest(action=action):
+                completed = subprocess.run(
+                    [
+                        "pwsh",
+                        "-NoProfile",
+                        "-ExecutionPolicy",
+                        "Bypass",
+                        "-File",
+                        str(ROOT / "scripts" / "operator.ps1"),
+                        "-Action",
+                        action,
+                        "-DryRun",
+                    ],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    cwd=ROOT,
+                )
+
+                self.assertIn(f"DRY-RUN {step_name}", completed.stdout)
+                self.assertIn(script_name, completed.stdout)
+                self.assertIn(expected_arg, completed.stdout)
+
     def test_operator_preserves_codex_interop_check_failure_exit_code(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             fake_bin = Path(tmp_dir)
@@ -483,6 +516,11 @@ class OperatorEntrypointTests(unittest.TestCase):
             self.assertIn("cleanup_targets", module.ALLOWED_ACTIONS)
             self.assertIn("uninstall_governance", module.ALLOWED_ACTIONS)
             self.assertIn("codex_local_optimize", module.ALLOWED_ACTIONS)
+            self.assertIn("codex_interop_check", module.ALLOWED_ACTIONS)
+            self.assertIn("codex_interop_repair", module.ALLOWED_ACTIONS)
+            self.assertIn("codex_switch_record", module.ALLOWED_ACTIONS)
+            self.assertIn("codex_guard_status", module.ALLOWED_ACTIONS)
+            self.assertIn("codex_guard_start", module.ALLOWED_ACTIONS)
             self.assertIn("evolution_review", module.ALLOWED_ACTIONS)
             self.assertIn("evolution_materialize", module.ALLOWED_ACTIONS)
             self.assertIn("core_principle_materialize", module.ALLOWED_ACTIONS)

@@ -296,6 +296,54 @@ def process_snapshot() -> list[dict[str, Any]]:
     return []
 
 
+def guard_status_snapshot() -> dict[str, Any]:
+    if os.name != "nt":
+        return {"platform": os.name, "available": False}
+    script = r"""
+$task = Get-ScheduledTask -TaskName codex-cockpit-switch-guard -ErrorAction SilentlyContinue
+$processes = @(
+  Get-CimInstance Win32_Process |
+    Where-Object {
+      $_.CommandLine -and
+      $_.CommandLine.Contains('codex-cockpit-switch-guard.py') -and
+      $_.Name -match '^(python|python3)(\.exe)?$'
+    } |
+    Select-Object ProcessId,Name,CreationDate
+)
+[pscustomobject]@{
+  task_state = if ($task) { [string]$task.State } else { 'not_installed' }
+  healthy = $processes.Count -gt 0
+  process_count = $processes.Count
+  process_ids = @($processes | ForEach-Object { $_.ProcessId })
+} | ConvertTo-Json -Compress
+"""
+    try:
+        completed = subprocess.run(
+            ["powershell", "-NoProfile", "-Command", script],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=10,
+        )
+    except Exception as exc:
+        return {"platform": os.name, "available": False, "error": f"{type(exc).__name__}: {exc}"}
+    if completed.returncode != 0 or not completed.stdout.strip():
+        return {
+            "platform": os.name,
+            "available": False,
+            "exit_code": completed.returncode,
+            "stderr": completed.stderr[-1000:],
+        }
+    try:
+        parsed = json.loads(completed.stdout)
+    except json.JSONDecodeError:
+        return {"platform": os.name, "available": False, "stdout": completed.stdout[-1000:]}
+    if isinstance(parsed, dict):
+        return redact(parsed)
+    return {"platform": os.name, "available": False, "shape": type(parsed).__name__}
+
+
 def snapshot(codex_home: Path, cockpit_home: Path) -> dict[str, Any]:
     tracked_files = {
         "cockpit_config": cockpit_home / "config.json",
@@ -322,6 +370,7 @@ def snapshot(codex_home: Path, cockpit_home: Path) -> dict[str, Any]:
             "state_db": summarize_state_db(codex_home / "state_5.sqlite"),
         },
         "processes": process_snapshot(),
+        "guard_status": guard_status_snapshot(),
         "recent_cockpit_events": recent_cockpit_events(cockpit_home),
     }
 
@@ -377,6 +426,9 @@ def _history_distribution(snapshot_payload: dict[str, Any]) -> str:
 
 
 COMPARE_FIELDS = {
+    "guard.healthy": "guard_status.healthy",
+    "guard.process_count": "guard_status.process_count",
+    "guard.task_state": "guard_status.task_state",
     "cockpit.current_account_id": "cockpit.current_account_id",
     "cockpit.codex_launch_on_switch": "cockpit.launch_flags.codex_launch_on_switch",
     "cockpit.codex_restart_specified_app_on_switch": "cockpit.launch_flags.codex_restart_specified_app_on_switch",

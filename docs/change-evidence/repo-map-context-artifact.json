@@ -3,7 +3,7 @@
   "governance_override_enforced": false,
   "metrics": {
     "clarification_reduction_proxy": 1.0,
-    "estimated_token_cost": 5985,
+    "estimated_token_cost": 5988,
     "excluded_archive_candidate_count": 182,
     "file_selection_accuracy": 1.0,
     "max_tokens": 6000,
@@ -47,8 +47,8 @@
     "scripts/Optimize-GeminiLocal.ps1",
     "scripts/Restore-CodexAppRestartState.ps1",
     "scripts/Save-CodexCockpitSwitchRecord.ps1",
+    "scripts/Start-CodexCockpitSwitchGuard.ps1",
     "scripts/Start-CodexShared.ps1",
-    "scripts/agent-continuity.py",
     "scripts/lib/__init__.py",
     "scripts/verify-agent-rules.ps1"
   ],

@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexLocalOptimize", "CodexInteropCheck", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
+  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexLocalOptimize", "CodexInteropCheck", "CodexInteropRepair", "CodexSwitchRecord", "CodexSwitchGuardStatus", "CodexSwitchGuardStart", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
   [string]$Action = "Help",
 
   [ValidateSet("quick", "full", "l1", "l2", "l3")]
@@ -252,6 +252,10 @@ AI 推荐:
   Readiness              执行 build -> test -> contract/invariant -> hotspot，然后生成 operator UI。
   CodexLocalOptimize     一键应用本机 Codex 共享历史优化，安装 codex-account / codex-shared* 启动器。
   CodexInteropCheck      检查 Cockpit Tools Codex 切换是否仍共享同一个 Codex 历史根；不写入。
+  CodexInteropRepair     修复 Cockpit/Codex 互操作投影、历史 provider bucket 与切换启动项；不重启 Codex App。
+  CodexSwitchRecord      保存当前 Cockpit/Codex 切换快照到 docs/change-evidence/codex-cockpit-snapshots。
+  CodexSwitchGuardStatus 查看本机切换守护任务状态。
+  CodexSwitchGuardStart  启动本机切换守护任务。
   RulesDryRun            只检查全局/项目级规则漂移，不写入。
   RulesApply             应用规则 manifest 同步，然后复查漂移。
   GovernanceBaselineAll  对所有 active targets 下发治理基线，然后验证目标仓治理一致性。
@@ -336,6 +340,33 @@ function Invoke-CodexInteropCheck {
     "--cockpit-home",
     (Join-Path $HOME ".antigravity_cockpit")
   )
+}
+
+function Invoke-CodexInteropRepair {
+  Invoke-PythonScript -Name "codex-interop-repair" -ScriptPath "scripts/codex-interop-check.py" -ScriptArguments @(
+    "--codex-home",
+    (Join-Path $HOME ".codex"),
+    "--cc-switch-db",
+    (Join-Path $HOME ".cc-switch\cc-switch.db"),
+    "--cockpit-home",
+    (Join-Path $HOME ".antigravity_cockpit"),
+    "--apply",
+    "--migrate-provider-bucket",
+    "--quick-launch"
+  )
+}
+
+function Invoke-CodexSwitchRecord {
+  $label = "operator-ui-" + (Get-Date -Format "yyyyMMdd-HHmmss")
+  Invoke-PwshScript -Name "codex-switch-record" -ScriptPath "scripts/Save-CodexCockpitSwitchRecord.ps1" -ScriptArguments @("-Label", $label)
+}
+
+function Invoke-CodexSwitchGuardStatus {
+  Invoke-PwshScript -Name "codex-switch-guard-status" -ScriptPath "scripts/Start-CodexCockpitSwitchGuard.ps1" -ScriptArguments @("-Status")
+}
+
+function Invoke-CodexSwitchGuardStart {
+  Invoke-PwshScript -Name "codex-switch-guard-start" -ScriptPath "scripts/Start-CodexCockpitSwitchGuard.ps1" -ScriptArguments @("-Start")
 }
 
 function Invoke-Targets {
@@ -471,6 +502,10 @@ try {
     "Readiness" { Invoke-Readiness }
     "CodexLocalOptimize" { Invoke-CodexLocalOptimize }
     "CodexInteropCheck" { Invoke-CodexInteropCheck }
+    "CodexInteropRepair" { Invoke-CodexInteropRepair }
+    "CodexSwitchRecord" { Invoke-CodexSwitchRecord }
+    "CodexSwitchGuardStatus" { Invoke-CodexSwitchGuardStatus }
+    "CodexSwitchGuardStart" { Invoke-CodexSwitchGuardStart }
     "RulesDryRun" { Invoke-RulesDryRun }
     "RulesApply" { Invoke-RulesApply }
     "GovernanceBaselineAll" { Invoke-GovernanceBaselineAll }
