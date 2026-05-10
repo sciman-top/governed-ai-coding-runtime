@@ -5,31 +5,37 @@
 - landing: `C:\Users\sciman\.codex`, `C:\Users\sciman\.antigravity_cockpit`, `scripts/codex-interop-check.py`, global/project rule sources
 - destination: keep Codex API switching usable across all saved projects, repair API auth/provider projection without process restarts, and enforce explicit user confirmation before restarting Codex/Claude processes
 
+## Superseded Correction
+
+- This file preserves an intermediate 2026-05-10 repair attempt. The `cockpit_http` custom-provider strategy below is superseded and must not be treated as current guidance.
+- Current durable rule: keep shared history on the built-in `model_provider = "openai"` bucket, switch API relays with top-level `openai_base_url`, and never define `[model_providers.openai]`.
+- Because built-in `openai` cannot be overridden with `supports_websockets = false`, the `35.213.82.91` WebSocket `404` must be fixed in the remote relay/proxy/backend or tolerated as a client fallback warning. Do not split history into a custom provider bucket just to suppress that warning.
+
 ## Root Cause
 
 - The API relay at `http://35.213.82.91:8003/v1` was reachable. Direct HTTP probes with the current Cockpit API key returned `/models = 200` and `/responses = 200`.
 - The `Reconnecting` symptom was not caused by the remote API being offline. Live logs showed failed target-repo turns using `responses_websocket` against `ws://35.213.82.91:8003/v1/responses`, which returned `404 Not Found`; direct HTTP Responses calls succeeded.
-- The prior `openai` shared-bucket strategy was incomplete for this API relay: built-in provider `openai` cannot be overridden with `[model_providers.openai]`, so it cannot be given `supports_websockets = false`. API relay mode therefore requires a non-built-in shared bucket.
+- An intermediate hypothesis treated the built-in `openai` shared-bucket strategy as incomplete because it cannot be given `supports_websockets = false`. That was corrected later: API relay mode still stays on the built-in `openai` bucket, and the relay WebSocket gap is a server-side capability issue rather than a reason to define a custom shared bucket.
 - Target repos showed mixed live state: this repo's current thread was still connected through `auth_mode="Chatgpt"` websocket, while `k12-question-graph`, `github-toolkit`, and `ClassroomToolkit` attempted API relay websocket and failed; `vps-ssh-launcher` also showed stale `auth_mode="Chatgpt"` with a `401` against the API relay.
 - A config-only API switch was incomplete: `config.toml` could point to API mode while `auth.json` or already-spawned sessions still held stale ChatGPT token shape. That can produce reconnect/auth drift on the next Codex startup or project switch.
 - Cockpit fixed account bindings and automatic restart wrappers can relaunch stale account/process state. Process restarts also risk disrupting App session/history visibility, so they require explicit user confirmation in the current task.
 
 ## Changes
 
-- Restored live Codex API relay to non-websocket shared history bucket semantics:
+- Superseded intermediate change, later reverted: temporarily moved live Codex API relay to non-websocket custom bucket semantics:
   - `model_provider = "cockpit_http"`
   - `forced_login_method = "api"`
   - `[model_providers.cockpit_http].base_url = "http://35.213.82.91:8003/v1"`
   - `[model_providers.cockpit_http].requires_openai_auth = false`
   - `[model_providers.cockpit_http].supports_websockets = false`
-- Migrated `state_5.sqlite.threads.model_provider` from `openai` to `cockpit_http` after backing up the database so target project history remains visible under the API relay provider bucket.
+- Superseded intermediate change, later reverted: migrated `state_5.sqlite.threads.model_provider` from `openai` to `cockpit_http` after backing up the database.
 - Projected current Cockpit API account into `C:\Users\sciman\.codex\auth.json` as `auth_mode = "apikey"` with the same base URL.
 - Disabled Cockpit automatic Codex App restart wrapper:
   - `codex_restart_specified_app_on_switch = false`
   - `codex_specified_app_path = ""`
 - Set Cockpit default Codex instance behavior to follow the current account instead of a fixed `bindAccountId`.
 - Added `codex_auth_matches_cockpit_current_account` to `scripts/codex-interop-check.py` so API mode now fails if `auth.json` does not match the current Cockpit account.
-- Updated `scripts/codex-interop-check.py` and `scripts/Start-CodexShared.ps1` so non-official Cockpit API accounts use `cockpit_http` with `supports_websockets=false`; ChatGPT mode remains on built-in `openai`.
+- Superseded intermediate change, later reverted: updated `scripts/codex-interop-check.py` and `scripts/Start-CodexShared.ps1` so non-official Cockpit API accounts used `cockpit_http` with `supports_websockets=false`.
 - Added tests covering stale/missing API auth projection.
 - Added global and project rule text forbidding unconfirmed restart/stop/kill/auto-launch of `Codex App`, `codex`, `Claude Code`, `Claude Desktop`, and `claude` for provider/auth/API repair.
 - Applied managed rule sync with `--force` to global user files and all target project files.
@@ -99,7 +105,7 @@
 ## Residual Risk
 
 - The currently running Codex App may not hot-reload every file-level change. This repair intentionally did not restart the App or CLI after the user correction.
-- 9 live session JSONL files remain locked by running Codex processes. SQLite state and triggers are already migrated to `cockpit_http`; the locked session metadata can be retried after the user explicitly confirms a reload/restart or after those sessions naturally close.
+- Superseded intermediate residual: at this point in the investigation, 9 live session JSONL files were locked and SQLite state had been moved to `cockpit_http`. Later repair restored the shared `openai` bucket; use the current restart-guard evidence file for present state.
 
 ## 2026-05-10 OAuth follow-up
 

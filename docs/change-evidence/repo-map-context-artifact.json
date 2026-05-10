@@ -3,12 +3,12 @@
   "governance_override_enforced": false,
   "metrics": {
     "clarification_reduction_proxy": 1.0,
-    "estimated_token_cost": 5998,
+    "estimated_token_cost": 5985,
     "excluded_archive_candidate_count": 182,
     "file_selection_accuracy": 1.0,
     "max_tokens": 6000,
     "required_file_override_count": 0,
-    "selected_file_count": 32
+    "selected_file_count": 31
   },
   "repo_id": "governed-ai-coding-runtime",
   "required_governance_files": [
@@ -39,19 +39,18 @@
     "schemas/README.md",
     "schemas/control-packs/README.md",
     "schemas/examples/README.md",
+    "scripts/Backup-CodexAppRestartState.ps1",
+    "scripts/Compare-CodexCockpitSwitchRecords.ps1",
     "scripts/Initialize-WindowsProcessEnvironment.ps1",
     "scripts/Optimize-ClaudeLocal.ps1",
     "scripts/Optimize-CodexLocal.ps1",
     "scripts/Optimize-GeminiLocal.ps1",
+    "scripts/Restore-CodexAppRestartState.ps1",
+    "scripts/Save-CodexCockpitSwitchRecord.ps1",
     "scripts/Start-CodexShared.ps1",
     "scripts/agent-continuity.py",
-    "scripts/apply-target-repo-governance.py",
-    "scripts/archive-change-evidence.py",
-    "scripts/attach-target-repo.py",
-    "scripts/audit-repo-slimming-surface.py",
     "scripts/lib/__init__.py",
-    "scripts/verify-agent-rules.ps1",
-    "docs/product/claim-exceptions.json"
+    "scripts/verify-agent-rules.ps1"
   ],
   "strategy_id": "governed-ai-coding-runtime-default",
   "strategy_path": ".governed-ai/repo-map-context-shaping.json"

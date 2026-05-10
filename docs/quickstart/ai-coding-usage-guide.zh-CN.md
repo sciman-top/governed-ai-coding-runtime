@@ -87,10 +87,26 @@ codex-shared -Profile shared-current-provider
 codex-shared-app -Profile shared-chatgpt D:\CODE\governed-ai-coding-runtime
 codex-cockpit-exec "检查当前仓库状态"
 codex-cockpit-app D:\CODE\governed-ai-coding-runtime
+# 仅在明确决定重启并已创建 restart-guard 备份后手动执行：
 codex-cockpit-app-restart D:\CODE\governed-ai-coding-runtime
 ```
 
-`Cockpit Tools` 负责 Codex App/CLI 的 ChatGPT auth 和 Codex API provider 切换；`cc-switch` 负责 Claude CLI、GLM、DeepSeek 等第三方 API 切换。关键约束是让 Codex 始终使用同一个 `~/.codex`，并把 Cockpit 当前 Codex account 投影到稳定内置 `model_provider = "openai"` 历史 bucket；API relay 通过 `openai_base_url` 切换。`Optimize-CodexLocal.ps1 -Apply` 会实读 Cockpit 当前账号，写入 Codex 配置并迁移 `state_5.sqlite` 的 provider metadata。Codex App 切换后需要重启进程才能刷新 auth/provider 状态，可用 `codex-cockpit-app-restart` 自动关开。
+`Cockpit Tools` 负责 Codex App/CLI 的 ChatGPT auth 和 Codex API provider 切换；`cc-switch` 负责 Claude CLI、GLM、DeepSeek 等第三方 API 切换。关键约束是让 Codex 始终使用同一个 `~/.codex`，并把 Cockpit 当前 Codex account 投影到稳定内置 `model_provider = "openai"` 历史 bucket；API relay 只能通过顶层 `openai_base_url` 切换，严禁定义 `[model_providers.openai]` 覆盖内置 provider。`Optimize-CodexLocal.ps1 -Apply` 会实读 Cockpit 当前账号，写入 Codex 配置并迁移 `state_5.sqlite` 的 provider metadata。Cockpit 的 `codex_launch_on_switch` 必须保持关闭，避免切号后绕过本仓共享历史修复链直接 raw-launch Codex App。Codex App 切换后如 UI 未热刷新，先创建 restart-guard 备份；确需刷新 UI 时由操作者手动关闭后再用 `codex-cockpit-app` 打开，`codex-cockpit-app-restart` 只作为明确授权后的手动入口。
+
+复现切号覆盖问题时，先开只读追踪窗口，再手动切换 Cockpit 账号：
+
+```powershell
+python scripts\codex-cockpit-switch-trace.py --watch-seconds 45 --out docs\change-evidence\codex-cockpit-switch-trace-local.json
+```
+
+按“重启前 -> API Reconnecting -> 切回 OAuth/API 后”的人工排障节奏，推荐用固定快照命令：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Save-CodexCockpitSwitchRecord.ps1 -Label before-restart
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Save-CodexCockpitSwitchRecord.ps1 -Label api-reconnecting
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Save-CodexCockpitSwitchRecord.ps1 -Label oauth-restored
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Compare-CodexCockpitSwitchRecords.ps1
+```
 
 ### 宿主反馈汇总
 如果你想系统性判断“功能在 Codex 和 Claude 里是否真的生效、异常属于宿主还是 runtime、下一步该优化哪里”，直接生成统一反馈报告，而不是只读单次日志：

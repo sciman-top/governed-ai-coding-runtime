@@ -14,9 +14,10 @@ from typing import Any
 
 
 OPENAI_SHARED_PROVIDER_ID = "openai"
-API_RELAY_PROVIDER_ID = "cockpit_http"
 SHARED_CODEX_PROVIDER_ID = OPENAI_SHARED_PROVIDER_ID
 OFFICIAL_OPENAI_BASE_URL = "https://api.openai.com/v1"
+CODEX_BUILTIN_PROVIDER_IDS = {"openai", "ollama", "lmstudio"}
+LEGACY_RELAY_PROVIDER_IDS = ("cockpit", "cockpit_http", "ccswitch")
 CODEX_HISTORY_INDEXES = {
     "idx_threads_archived_provider_updated_at_ms": {
         "columns": ("archived", "model_provider", "updated_at_ms", "id"),
@@ -263,6 +264,7 @@ def inspect_codex_provider_buckets(
         )
 
     config_text = _read_text(config_path)
+    checks.append(_inspect_builtin_provider_overrides(config_text=config_text, config_path=config_path))
     active_provider = _toml_top_level_string(config_text, "model_provider") or "openai"
     active_status = "pass"
     active_reason = "Codex live config uses the same provider bucket as the dominant local history bucket."
@@ -462,6 +464,21 @@ def inspect_cockpit(
             "repair_strategy": "disable_restart_wrapper" if managed_restart_enabled else "none",
         }
     )
+    raw_launch_on_switch = bool(cockpit_config.get("codex_launch_on_switch")) if isinstance(cockpit_config, dict) else False
+    checks.append(
+        {
+            "id": "cockpit_codex_raw_launch_on_switch_disabled",
+            "tool": "cockpit_tools",
+            "status": "fail" if raw_launch_on_switch else "pass",
+            "reason": (
+                "Cockpit Tools must not raw-launch Codex App immediately after account/provider switch; "
+                "shared-history launchers need to project auth/config and repair provider buckets before startup."
+            ),
+            "path": str(cockpit_home / "config.json"),
+            "codex_launch_on_switch": raw_launch_on_switch,
+            "repair_strategy": "disable_raw_launch_on_switch" if raw_launch_on_switch else "none",
+        }
+    )
 
     isolation_findings = _cockpit_instance_isolation_findings(instances, codex_home)
     account_binding_findings = _cockpit_account_binding_findings(instances)
@@ -525,7 +542,7 @@ def _inspect_codex_auth_projection(*, codex_home: Path, account: dict[str, Any])
             "repair_strategy": "select_cockpit_account",
         }
     issues: list[str] = []
-    actual_auth_mode = _json_string(auth, "auth_mode") if isinstance(auth, dict) else ""
+    actual_auth_mode = _codex_auth_mode_from_auth_json(auth)
     key_present = bool(_json_string(auth, "OPENAI_API_KEY")) if isinstance(auth, dict) else False
     actual_base_url = (
         _json_string(auth, "api_base_url")
@@ -568,6 +585,20 @@ def _inspect_codex_auth_projection(*, codex_home: Path, account: dict[str, Any])
         "issues": issues,
         "repair_strategy": "project_cockpit_auth" if issues and expected_codex_auth_mode in {"apikey", "chatgpt"} else "none",
     }
+
+
+def _codex_auth_mode_from_auth_json(auth: Any) -> str:
+    if not isinstance(auth, dict):
+        return ""
+    explicit = _json_string(auth, "auth_mode")
+    if explicit:
+        return explicit
+    if _json_string(auth, "OPENAI_API_KEY"):
+        return "apikey"
+    tokens = auth.get("tokens")
+    if isinstance(tokens, dict) and tokens.get("access_token"):
+        return "chatgpt"
+    return ""
 
 
 def repair_cockpit(
@@ -661,21 +692,26 @@ def repair_cockpit_restart_wrapper_config(*, cockpit_home: Path) -> list[dict[st
     config = _read_json(config_path)
     if not isinstance(config, dict):
         config = {}
-    if not bool(config.get("codex_restart_specified_app_on_switch")) and not str(config.get("codex_specified_app_path") or ""):
+    if (
+        not bool(config.get("codex_launch_on_switch"))
+        and not bool(config.get("codex_restart_specified_app_on_switch"))
+        and not str(config.get("codex_specified_app_path") or "")
+    ):
         return []
     backup_path = _backup_file(config_path, suffix="cockpit_restart_wrapper") if config_path.exists() else None
-    config["codex_launch_on_switch"] = True
+    config["codex_launch_on_switch"] = False
     config["codex_restart_specified_app_on_switch"] = False
     config["codex_specified_app_path"] = ""
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return [
         {
-            "id": "cockpit_codex_restart_wrapper_disabled",
+            "id": "cockpit_codex_switch_raw_launch_disabled",
             "tool": "cockpit_tools",
             "status": "changed",
             "path": str(config_path),
             "backup_path": str(backup_path) if backup_path else None,
+            "codex_launch_on_switch": False,
             "codex_restart_specified_app_on_switch": False,
         }
     ]
@@ -850,10 +886,8 @@ def repair_codex_live_config_for_cockpit(*, codex_home: Path, account: dict[str,
         lines = _set_top_level(lines, "openai_base_url", _toml_string(base_url))
     lines = _set_top_level(lines, "forced_login_method", _toml_string(forced_login))
     lines = _set_top_level(lines, "model_provider", _toml_string(target_provider))
-    lines = _remove_toml_table(lines, "[model_providers.cockpit]")
-    lines = _remove_toml_table(lines, "[model_providers.openai]")
-    lines = _remove_toml_table(lines, "[model_providers.ccswitch]")
-    lines = _remove_toml_table(lines, f"[model_providers.{API_RELAY_PROVIDER_ID}]")
+    for provider_id in [*LEGACY_RELAY_PROVIDER_IDS, *sorted(CODEX_BUILTIN_PROVIDER_IDS)]:
+        lines = _remove_model_provider_table(lines, provider_id)
     lines = _replace_toml_table(
         lines,
         "[profiles.shared-current-provider]",
@@ -899,18 +933,6 @@ def repair_codex_live_config_for_cockpit(*, codex_home: Path, account: dict[str,
             "api_provider_id": account.get("api_provider_id"),
             "api_provider_name": account.get("api_provider_name"),
         }
-    ]
-
-
-def _api_relay_provider_lines(*, account: dict[str, Any], base_url: str) -> list[str]:
-    provider_name = str(account.get("api_provider_name") or account.get("email") or "Cockpit API Relay")
-    return [
-        f"[model_providers.{API_RELAY_PROVIDER_ID}]",
-        f"name = {_toml_string(provider_name)}",
-        f"base_url = {_toml_string(base_url)}",
-        'wire_api = "responses"',
-        "requires_openai_auth = false",
-        "supports_websockets = false",
     ]
 
 
@@ -1385,6 +1407,23 @@ def _remove_toml_table(lines: list[str], header: str) -> list[str]:
     return result
 
 
+def _remove_model_provider_table(lines: list[str], provider_id: str) -> list[str]:
+    escaped = re.escape(provider_id)
+    header_pattern = re.compile(rf'^\s*\[model_providers\.(?:"{escaped}"|{escaped})\]\s*$', re.IGNORECASE)
+    result: list[str] = []
+    in_target = False
+    for line in lines:
+        stripped = line.strip()
+        if header_pattern.match(stripped):
+            in_target = True
+            continue
+        if in_target and stripped.startswith("["):
+            in_target = False
+        if not in_target:
+            result.append(line)
+    return result
+
+
 def _replace_toml_table(lines: list[str], header: str, replacement: list[str]) -> list[str]:
     result = _remove_toml_table(lines, header)
     if result and result[-1].strip():
@@ -1598,8 +1637,49 @@ def _model_provider_info(config: str, provider_id: str) -> dict[str, Any]:
 
 
 def _is_custom_provider_id(provider_id: str) -> bool:
-    reserved = {"amazon-bedrock", "openai", "ollama", "lmstudio", "oss", "ollama-chat"}
+    reserved = {"amazon-bedrock", *CODEX_BUILTIN_PROVIDER_IDS, "oss", "ollama-chat"}
     return bool(provider_id.strip()) and provider_id.strip().lower() not in reserved
+
+
+def _inspect_builtin_provider_overrides(*, config_text: str, config_path: Path) -> dict[str, Any]:
+    configured_ids, parse_error = _configured_model_provider_ids(config_text)
+    builtin_overrides = sorted(provider for provider in configured_ids if provider.lower() in CODEX_BUILTIN_PROVIDER_IDS)
+    return {
+        "id": "codex_builtin_provider_overrides_absent",
+        "tool": "codex",
+        "status": "fail" if builtin_overrides or parse_error else "pass",
+        "reason": (
+            f"Codex built-in provider IDs cannot be overridden in config.toml: {', '.join(builtin_overrides)}"
+            if builtin_overrides
+            else (
+                f"Cannot parse config.toml while checking built-in provider overrides: {parse_error}"
+                if parse_error
+                else "Codex config does not override built-in provider IDs; relay routing must use openai_base_url or a non-built-in custom provider."
+            )
+        ),
+        "path": str(config_path),
+        "builtin_provider_ids": sorted(CODEX_BUILTIN_PROVIDER_IDS),
+        "configured_builtin_overrides": builtin_overrides,
+    }
+
+
+def _configured_model_provider_ids(config_text: str) -> tuple[set[str], str | None]:
+    configured: set[str] = set()
+    parse_error: str | None = None
+    try:
+        payload = tomllib.loads(config_text or "")
+        model_providers = payload.get("model_providers")
+        if isinstance(model_providers, dict):
+            configured.update(str(provider_id) for provider_id in model_providers)
+    except tomllib.TOMLDecodeError as exc:
+        parse_error = str(exc)
+
+    table_pattern = re.compile(r'^\s*\[model_providers\.(?:"([^"]+)"|([A-Za-z0-9_-]+))\]\s*$')
+    for line in (config_text or "").splitlines():
+        match = table_pattern.match(line)
+        if match:
+            configured.add(match.group(1) or match.group(2) or "")
+    return {provider for provider in configured if provider}, parse_error
 
 
 def _set_top_level(lines: list[str], key: str, value: str) -> list[str]:

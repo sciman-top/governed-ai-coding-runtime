@@ -317,6 +317,10 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertEqual("pass", dry_check_ids["cockpit_codex_app_restart_semantics"]["status"])
             self.assertEqual(
                 "fail",
+                dry_check_ids["cockpit_codex_raw_launch_on_switch_disabled"]["status"],
+            )
+            self.assertEqual(
+                "fail",
                 dry_check_ids["cockpit_codex_instances_follow_current_account"]["status"],
             )
 
@@ -328,6 +332,7 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertEqual("pass", payload["status"])
             action_ids = {action["id"] for action in payload["actions"]}
             self.assertIn("cockpit_codex_stale_last_pid_cleared", action_ids)
+            self.assertIn("cockpit_codex_switch_raw_launch_disabled", action_ids)
             self.assertIn("cockpit_codex_instances_follow_current_account_repaired", action_ids)
             self.assertIn("codex_live_config_cockpit_provider", action_ids)
             self.assertIn("codex_auth_cockpit_projected", action_ids)
@@ -416,7 +421,7 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertEqual("provider_test", live_auth["api_provider_id"])
             self.assertEqual("RightCode", live_auth["api_provider_name"])
             cockpit_config = json.loads((cockpit_home / "config.json").read_text(encoding="utf-8"))
-            self.assertTrue(cockpit_config["codex_launch_on_switch"])
+            self.assertFalse(cockpit_config["codex_launch_on_switch"])
             self.assertFalse(cockpit_config["codex_restart_specified_app_on_switch"])
             self.assertEqual("", cockpit_config["codex_specified_app_path"])
             cockpit_instances = json.loads((cockpit_home / "codex_instances.json").read_text(encoding="utf-8"))
@@ -671,7 +676,21 @@ class CodexSharedLauncherTests(unittest.TestCase):
             finally:
                 connection.close()
             (codex_home / "config.toml").write_text(
-                'model_provider = "openai"\nforced_login_method = "api"\n',
+                "\n".join(
+                    [
+                        'model_provider = "openai"',
+                        'forced_login_method = "api"',
+                        "",
+                        "[model_providers.openai]",
+                        'base_url = "http://35.213.82.91:8003/v1"',
+                        'wire_api = "responses"',
+                        "supports_websockets = false",
+                        "",
+                        '[model_providers."ollama"]',
+                        'base_url = "http://localhost:11434/v1"',
+                    ]
+                )
+                + "\n",
                 encoding="utf-8",
             )
             (codex_home / "auth.json").write_text(
@@ -722,7 +741,11 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertEqual(dry_run.returncode, 2, dry_run.stdout + dry_run.stderr)
             dry_payload = json.loads(dry_run.stdout)
             dry_checks = {check["id"]: check for check in dry_payload["after"]["checks"]}
+            self.assertEqual("fail", dry_checks["codex_builtin_provider_overrides_absent"]["status"])
+            self.assertEqual(["ollama", "openai"], dry_checks["codex_builtin_provider_overrides_absent"]["configured_builtin_overrides"])
             self.assertEqual("chatgpt", dry_checks["codex_auth_matches_cockpit_current_account"]["expected_auth_mode"])
+            self.assertEqual("chatgpt", dry_checks["codex_auth_matches_cockpit_current_account"]["actual_auth_mode"])
+            self.assertEqual("pass", dry_checks["codex_auth_matches_cockpit_current_account"]["status"])
             self.assertEqual("oauth", dry_checks["codex_auth_matches_cockpit_current_account"]["cockpit_auth_mode"])
 
             applied = _run_interop_checker(
@@ -754,6 +777,10 @@ class CodexSharedLauncherTests(unittest.TestCase):
             live_config = (codex_home / "config.toml").read_text(encoding="utf-8")
             self.assertIn('model_provider = "openai"', live_config)
             self.assertIn('forced_login_method = "chatgpt"', live_config)
+            self.assertNotIn("[model_providers.openai]", live_config)
+            self.assertNotIn('[model_providers."ollama"]', live_config)
+            after_checks = {check["id"]: check for check in payload["after"]["checks"]}
+            self.assertEqual("pass", after_checks["codex_builtin_provider_overrides_absent"]["status"])
             live_auth = json.loads((codex_home / "auth.json").read_text(encoding="utf-8"))
             self.assertEqual("chatgpt", live_auth["auth_mode"])
             self.assertEqual("oauth-token", live_auth["tokens"]["access_token"])
