@@ -271,6 +271,54 @@ function Set-TrustedProject {
     return $result.ToArray()
 }
 
+function Remove-DuplicateSkillConfigBlocks {
+    param([string[]] $Lines)
+
+    $result = New-Object System.Collections.Generic.List[string]
+    $seenPaths = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+
+    for ($i = 0; $i -lt $Lines.Count; ) {
+        if ($Lines[$i] -ne '[[skills.config]]') {
+            $result.Add($Lines[$i])
+            $i += 1
+            continue
+        }
+
+        $block = New-Object System.Collections.Generic.List[string]
+        $j = $i
+        while ($j -lt $Lines.Count) {
+            if ($j -gt $i -and $Lines[$j] -match '^\[') {
+                break
+            }
+            $block.Add($Lines[$j])
+            $j += 1
+        }
+
+        $skillPath = $null
+        foreach ($line in $block) {
+            if ($line -match '^path\s*=\s*"(.+)"') {
+                $skillPath = $Matches[1]
+                break
+            }
+        }
+        $pathKey = if ($skillPath) {
+            ([System.IO.Path]::GetFullPath($skillPath.Trim())).TrimEnd('\')
+        }
+        else {
+            "__skills_config_missing_path_$i"
+        }
+
+        if ($seenPaths.Add($pathKey)) {
+            foreach ($line in $block) {
+                $result.Add($line)
+            }
+        }
+        $i = $j
+    }
+
+    return $result.ToArray()
+}
+
 function Add-DuplicateSkillDisableOverrides {
     param(
         [string[]] $Lines,
@@ -397,6 +445,7 @@ function Update-ConfigToml {
         $resolved = (Resolve-Path -LiteralPath $repo).Path
         $lines = Set-TrustedProject -Lines $lines -Path $resolved
     }
+    $lines = Remove-DuplicateSkillConfigBlocks -Lines $lines
     $lines = Add-DuplicateSkillDisableOverrides -Lines $lines
     return $lines
 }

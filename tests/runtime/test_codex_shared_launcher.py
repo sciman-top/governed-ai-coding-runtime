@@ -47,6 +47,14 @@ class CodexSharedLauncherTests(unittest.TestCase):
                         "[model_providers.rightcode]",
                         'base_url = "https://right.codes/codex/v1"',
                         'wire_api = "responses"',
+                        "",
+                        "[[skills.config]]",
+                        'path = "C:\\Users\\example\\.agents\\skills\\duplicate-skill"',
+                        "enabled = false",
+                        "",
+                        "[[skills.config]]",
+                        'path = "C:\\Users\\example\\.agents\\skills\\duplicate-skill"',
+                        "enabled = false",
                     ]
                 ),
                 encoding="utf-8",
@@ -100,6 +108,7 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertIn('model_provider = "rightcode"', shared_api)
             self.assertNotIn("disable_response_storage", config)
             self.assertNotIn("cmp_1778246510288_1", config)
+            self.assertEqual(1, config.count('path = "C:\\Users\\example\\.agents\\skills\\duplicate-skill"'))
 
     def test_shared_launcher_supports_cli_exec_and_app_surfaces(self) -> None:
         script = (ROOT / "scripts" / "Start-CodexShared.ps1").read_text(encoding="utf-8")
