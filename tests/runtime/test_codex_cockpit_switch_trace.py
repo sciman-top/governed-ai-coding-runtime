@@ -33,6 +33,7 @@ class CodexCockpitSwitchTraceTests(unittest.TestCase):
                 json.dumps(
                     {
                         "codex_launch_on_switch": True,
+                        "codex_app_path": "C:/tmp/codex-noop.exe",
                         "codex_restart_specified_app_on_switch": True,
                         "codex_specified_app_path": "C:/tmp/codex.cmd",
                     }
@@ -86,6 +87,7 @@ class CodexCockpitSwitchTraceTests(unittest.TestCase):
             report = trace.snapshot(codex_home, cockpit_home)
             self.assertEqual(report["cockpit"]["current_account_id"], "codex_apikey_test")
             self.assertTrue(report["cockpit"]["launch_flags"]["codex_launch_on_switch"])
+            self.assertEqual(report["cockpit"]["launch_flags"]["codex_app_path"], "C:/tmp/codex-noop.exe")
             self.assertEqual(report["codex"]["config"]["forced_login_method"], "api")
             self.assertTrue(report["codex"]["auth"]["has_openai_api_key"])
             self.assertEqual(report["codex"]["state_db"]["threads_by_model_provider"][0]["model_provider"], "openai")
@@ -108,7 +110,7 @@ class CodexCockpitSwitchTraceTests(unittest.TestCase):
                 },
                 "cockpit": {
                     "current_account_id": "codex_oauth",
-                    "launch_flags": {"codex_launch_on_switch": False},
+                    "launch_flags": {"codex_launch_on_switch": False, "codex_app_path": ""},
                     "default_instance": {"bindAccountId": None, "followLocalAccount": True},
                 },
                 "codex": {
@@ -132,7 +134,7 @@ class CodexCockpitSwitchTraceTests(unittest.TestCase):
                 },
                 "cockpit": {
                     "current_account_id": "codex_api",
-                    "launch_flags": {"codex_launch_on_switch": True},
+                    "launch_flags": {"codex_launch_on_switch": True, "codex_app_path": "C:/tmp/codex-noop.exe"},
                     "default_instance": {"bindAccountId": "codex_api", "followLocalAccount": False},
                 },
                 "codex": {
@@ -160,6 +162,7 @@ class CodexCockpitSwitchTraceTests(unittest.TestCase):
         self.assertEqual(fields["guard.healthy"]["after"], False)
         self.assertEqual(fields["cockpit.current_account_id"]["after"], "codex_api")
         self.assertEqual(fields["cockpit.codex_launch_on_switch"]["after"], True)
+        self.assertEqual(fields["cockpit.codex_app_path"]["after"], "C:/tmp/codex-noop.exe")
         self.assertEqual(fields["codex.config.forced_login_method"]["after"], "api")
         self.assertEqual(fields["codex.config.openai_base_url"]["after"], "http://35.213.82.91:8003/v1")
         self.assertEqual(comparison["transitions"][0]["file_changes"][0]["file"], "codex_auth")

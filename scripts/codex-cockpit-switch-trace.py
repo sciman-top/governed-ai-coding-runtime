@@ -175,9 +175,11 @@ def summarize_cockpit(cockpit_home: Path) -> dict[str, Any]:
     if isinstance(config, dict):
         for key in [
             "codex_launch_on_switch",
+            "codex_app_path",
             "codex_restart_specified_app_on_switch",
             "codex_specified_app_path",
             "codex_app_launch_mode",
+            "antigravity_dual_switch_no_restart_enabled",
         ]:
             if key in config:
                 launch_flags[key] = config.get(key)
@@ -431,10 +433,13 @@ COMPARE_FIELDS = {
     "guard.task_state": "guard_status.task_state",
     "cockpit.current_account_id": "cockpit.current_account_id",
     "cockpit.codex_launch_on_switch": "cockpit.launch_flags.codex_launch_on_switch",
+    "cockpit.codex_app_path": "cockpit.launch_flags.codex_app_path",
     "cockpit.codex_restart_specified_app_on_switch": "cockpit.launch_flags.codex_restart_specified_app_on_switch",
     "cockpit.codex_specified_app_path": "cockpit.launch_flags.codex_specified_app_path",
+    "cockpit.antigravity_dual_switch_no_restart_enabled": "cockpit.launch_flags.antigravity_dual_switch_no_restart_enabled",
     "cockpit.default.bindAccountId": "cockpit.default_instance.bindAccountId",
     "cockpit.default.followLocalAccount": "cockpit.default_instance.followLocalAccount",
+    "cockpit.default.launchMode": "cockpit.default_instance.launchMode",
     "cockpit.default.lastPid": "cockpit.default_instance.lastPid",
     "codex.config.model_provider": "codex.config.model_provider",
     "codex.config.openai_base_url": "codex.config.openai_base_url",

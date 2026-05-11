@@ -27,7 +27,14 @@ from governed_ai_coding_runtime_contracts.operator_ui import render_runtime_snap
 from governed_ai_coding_runtime_contracts.agent_continuity import LocalAgentContinuityIndex
 from governed_ai_coding_runtime_contracts.runtime_status import RuntimeStatusStore, runtime_snapshot_to_dict
 from lib.claude_local import claude_home, claude_status, delete_provider_profile, optimize_claude_local, provider_profiles_path, settings_path, switch_provider
-from lib.codex_local import codex_status, delete_auth_profile, save_active_auth_snapshot, switch_auth_profile, sync_active_auth_snapshot
+from lib.codex_local import (
+    codex_status,
+    delete_auth_profile,
+    save_active_auth_snapshot,
+    save_api_auth_profile,
+    switch_auth_profile,
+    sync_active_auth_snapshot,
+)
 
 
 def _load_host_feedback_summary_builder():
@@ -280,6 +287,11 @@ def _build_handler(*, default_language: str, host: str, port: int):
                     return
                 if parsed.path == "/api/codex/save-active":
                     result = run_codex_save_active(self._read_json_body())
+                    status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
+                    self._send_json(result, status=status)
+                    return
+                if parsed.path == "/api/codex/save-api":
+                    result = run_codex_save_api(self._read_json_body())
                     status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
                     self._send_json(result, status=status)
                     return
@@ -626,6 +638,33 @@ def run_codex_save_active(payload: dict) -> dict:
     except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
         return {"status": "error", "error": str(exc)}
     if result.get("status") == "ok":
+        invalidate_status_cache("codex")
+    return result
+
+
+def run_codex_save_api(payload: dict) -> dict:
+    if "_json_error" in payload:
+        return {"status": "error", "error": payload["_json_error"]}
+    name = _string(payload.get("name"), "")
+    api_key = _string(payload.get("api_key"), "")
+    base_url = _string(payload.get("base_url"), "")
+    label = _string(payload.get("label"), "")
+    dry_run = bool(payload.get("dry_run", False))
+    switch_now = bool(payload.get("switch_now", False))
+    probe = bool(payload.get("probe", False))
+    try:
+        result = save_api_auth_profile(
+            name,
+            api_key,
+            base_url,
+            label=label,
+            dry_run=dry_run,
+            switch_now=switch_now,
+            probe=probe,
+        )
+    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
+        return {"status": "error", "error": str(exc)}
+    if result.get("status") == "ok" and (result.get("changed") or result.get("switch")):
         invalidate_status_cache("codex")
     return result
 

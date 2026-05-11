@@ -479,6 +479,25 @@ def inspect_cockpit(
             "repair_strategy": "disable_raw_launch_on_switch" if raw_launch_on_switch else "none",
         }
     )
+    dual_switch_no_restart = (
+        bool(cockpit_config.get("antigravity_dual_switch_no_restart_enabled"))
+        if isinstance(cockpit_config, dict)
+        else False
+    )
+    checks.append(
+        {
+            "id": "cockpit_codex_dual_switch_no_restart_enabled",
+            "tool": "cockpit_tools",
+            "status": "pass" if dual_switch_no_restart else "fail",
+            "reason": (
+                "Cockpit Tools must leave the running Codex App/app-server alone while switching Codex accounts; "
+                "otherwise AG Close/taskkill can disconnect the UI and make history appear empty."
+            ),
+            "path": str(cockpit_home / "config.json"),
+            "antigravity_dual_switch_no_restart_enabled": dual_switch_no_restart,
+            "repair_strategy": "enable_dual_switch_no_restart" if not dual_switch_no_restart else "none",
+        }
+    )
     recent_raw_start = _cockpit_recent_codex_start_after_switch(cockpit_home)
     checks.append(
         {
@@ -493,14 +512,47 @@ def inspect_cockpit(
             **recent_raw_start,
         }
     )
+    recent_ag_close = _cockpit_recent_codex_log_event_after_switch(
+        cockpit_home,
+        patterns=("[AG Close] taskkill",),
+    )
+    checks.append(
+        {
+            "id": "cockpit_codex_recent_taskkill_after_switch_absent",
+            "tool": "cockpit_tools",
+            "status": "fail" if recent_ag_close.get("detected") else "pass",
+            "reason": (
+                "Cockpit Tools logs must not show AG Close/taskkill after a Codex account switch; "
+                "that kills the app-server process group and causes Reconnecting or empty history in the UI."
+            ),
+            "path": str(cockpit_home / "logs"),
+            **recent_ag_close,
+        }
+    )
+    recent_cli_failure = _cockpit_recent_codex_log_event_after_switch(
+        cockpit_home,
+        patterns=("当前系统暂不支持生成 Codex CLI 启动命令",),
+    )
+    checks.append(
+        {
+            "id": "cockpit_codex_recent_cli_launch_failure_after_switch_absent",
+            "tool": "cockpit_tools",
+            "status": "fail" if recent_cli_failure.get("detected") else "pass",
+            "reason": (
+                "Cockpit Tools launchMode=cli is not a safe Windows workaround here; "
+                "the switch path enters CodexWakeup CLI and then fails before the App can recover."
+            ),
+            "path": str(cockpit_home / "logs"),
+            **recent_cli_failure,
+        }
+    )
 
     isolation_findings = _cockpit_instance_isolation_findings(instances, codex_home)
     account_binding_findings = _cockpit_account_binding_findings(instances)
+    cli_launch_mode_findings = _cockpit_cli_launch_mode_findings(instances)
     stale_last_pid = _cockpit_stale_last_pid(instances)
     last_pid = _cockpit_default_last_pid(instances)
-    last_pid_status = "pass"
-    if stale_last_pid is not None:
-        last_pid_status = "warn"
+    last_pid_status = "fail" if last_pid is not None else "pass"
     checks.append(
         {
             "id": "cockpit_codex_instances_share_state",
@@ -525,24 +577,55 @@ def inspect_cockpit(
     )
     checks.append(
         {
+            "id": "cockpit_codex_default_cli_launch_mode_absent",
+            "tool": "cockpit_tools",
+            "status": "fail" if cli_launch_mode_findings else "pass",
+            "reason": (
+                "Cockpit Codex default launchMode=cli is unsupported on this Windows host; "
+                "use app launch mode only with no-restart switch semantics enabled."
+            ),
+            "path": str(instances_path),
+            "findings": cli_launch_mode_findings,
+            "repair_strategy": "switch_default_launch_mode_to_app" if cli_launch_mode_findings else "none",
+        }
+    )
+    checks.append(
+        {
             "id": "cockpit_codex_instances_last_pid_current",
             "tool": "cockpit_tools",
             "status": last_pid_status,
-            "reason": "Cockpit Tools persists the last Codex App PID; stale values can produce repeated process-not-found noise during CLI/App startup.",
+            "reason": (
+                "Cockpit Tools persists the last Codex App PID and later uses it for AG Close/taskkill; "
+                "shared-history switching must not leave any Codex App PID under Cockpit ownership."
+            ),
             "path": str(instances_path),
             "lastPid": last_pid,
             "stale_lastPid": stale_last_pid,
+            "repair_strategy": "clear_lastPid" if last_pid is not None else "none",
         }
     )
     return checks
 
 
 def _cockpit_recent_codex_start_after_switch(cockpit_home: Path) -> dict[str, Any]:
+    return _cockpit_recent_codex_log_event_after_switch(
+        cockpit_home,
+        patterns=("[Codex Start] 启动策略=",),
+        event_key="last_start_after_switch",
+    )
+
+
+def _cockpit_recent_codex_log_event_after_switch(
+    cockpit_home: Path,
+    *,
+    patterns: tuple[str, ...],
+    event_key: str = "last_event_after_switch",
+) -> dict[str, Any]:
     log_dir = cockpit_home / "logs"
     if not log_dir.exists():
         return {"detected": False, "reason": "logs directory missing"}
     switch_event: dict[str, Any] | None = None
-    start_event: dict[str, Any] | None = None
+    matched_event: dict[str, Any] | None = None
     for log_path in sorted(log_dir.glob("app.log*"), key=lambda path: path.stat().st_mtime if path.exists() else 0)[-4:]:
         try:
             lines = log_path.read_text(encoding="utf-8", errors="replace").splitlines()
@@ -553,20 +636,20 @@ def _cockpit_recent_codex_start_after_switch(cockpit_home: Path) -> dict[str, An
             timestamp_text = timestamp.isoformat() if timestamp else None
             if "[Codex切号] 开始切换账号" in line:
                 switch_event = {"timestamp": timestamp_text, "line": line, "path": str(log_path)}
-                start_event = None
-            elif switch_event and "[Codex Start] 启动策略=" in line:
-                start_event = {"timestamp": timestamp_text, "line": line, "path": str(log_path)}
-    if not switch_event or not start_event:
+                matched_event = None
+            elif switch_event and any(pattern in line for pattern in patterns):
+                matched_event = {"timestamp": timestamp_text, "line": line, "path": str(log_path)}
+    if not switch_event or not matched_event:
         return {
             "detected": False,
             "last_switch": switch_event,
-            "last_start_after_switch": start_event,
+            event_key: matched_event,
         }
     delta_seconds = None
     switch_timestamp = _parse_log_timestamp(str(switch_event.get("line") or ""))
-    start_timestamp = _parse_log_timestamp(str(start_event.get("line") or ""))
-    if switch_timestamp and start_timestamp:
-        delta_seconds = (start_timestamp - switch_timestamp).total_seconds()
+    matched_timestamp = _parse_log_timestamp(str(matched_event.get("line") or ""))
+    if switch_timestamp and matched_timestamp:
+        delta_seconds = (matched_timestamp - switch_timestamp).total_seconds()
     state_mtime = _latest_existing_mtime(
         [
             cockpit_home / "config.json",
@@ -574,15 +657,15 @@ def _cockpit_recent_codex_start_after_switch(cockpit_home: Path) -> dict[str, An
             cockpit_home / "codex_accounts.json",
         ]
     )
-    start_epoch = start_timestamp.timestamp() if start_timestamp else None
-    superseded_by_state_write = bool(start_epoch and state_mtime and state_mtime > start_epoch + 5)
-    detected = (delta_seconds is None or 0 <= delta_seconds <= 120) and not superseded_by_state_write
+    matched_epoch = matched_timestamp.timestamp() if matched_timestamp else None
+    superseded_by_state_write = bool(matched_epoch and state_mtime and state_mtime > matched_epoch + 5)
+    detected = delta_seconds is None or 0 <= delta_seconds <= 120
     return {
         "detected": detected,
         "seconds_after_switch": delta_seconds,
         "superseded_by_state_write": superseded_by_state_write,
         "last_switch": switch_event,
-        "last_start_after_switch": start_event,
+        event_key: matched_event,
     }
 
 
@@ -693,9 +776,10 @@ def repair_cockpit(
     checks: dict[str, Any],
     cockpit_account_id: str | None = None,
 ) -> list[dict[str, Any]]:
-    actions = repair_cockpit_stale_last_pid(cockpit_home=cockpit_home)
+    actions = repair_cockpit_last_pid(cockpit_home=cockpit_home)
     actions.extend(repair_cockpit_restart_wrapper_config(cockpit_home=cockpit_home))
     actions.extend(repair_cockpit_default_account_binding(cockpit_home=cockpit_home))
+    actions.extend(repair_cockpit_default_launch_mode(cockpit_home=cockpit_home))
     actions.extend(
         repair_cockpit_current_api_provider_metadata(
             codex_home=codex_home,
@@ -715,29 +799,31 @@ def repair_cockpit(
     return actions
 
 
-def repair_cockpit_stale_last_pid(*, cockpit_home: Path) -> list[dict[str, Any]]:
+def repair_cockpit_last_pid(*, cockpit_home: Path) -> list[dict[str, Any]]:
     instances_path = cockpit_home / "codex_instances.json"
     instances = _read_json(instances_path)
-    stale_last_pid = _cockpit_stale_last_pid(instances)
-    if stale_last_pid is None:
-        return []
     if not isinstance(instances, dict):
         return []
     default_settings = instances.get("defaultSettings")
     if not isinstance(default_settings, dict):
         return []
+    last_pid = _cockpit_default_last_pid(instances)
+    if last_pid is None:
+        return []
+    stale_last_pid = _cockpit_stale_last_pid(instances)
     backup_path = _backup_file(instances_path, suffix="cockpit_lastpid") if instances_path.exists() else None
     default_settings["lastPid"] = None
     instances_path.parent.mkdir(parents=True, exist_ok=True)
     instances_path.write_text(json.dumps(instances, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return [
         {
-            "id": "cockpit_codex_stale_last_pid_cleared",
+            "id": "cockpit_codex_last_pid_cleared",
             "tool": "cockpit_tools",
             "status": "changed",
             "path": str(instances_path),
             "backup_path": str(backup_path) if backup_path else None,
-            "cleared_lastPid": stale_last_pid,
+            "cleared_lastPid": last_pid,
+            "stale_lastPid": stale_last_pid,
         }
     ]
 
@@ -781,12 +867,14 @@ def repair_cockpit_restart_wrapper_config(*, cockpit_home: Path) -> list[dict[st
         not bool(config.get("codex_launch_on_switch"))
         and not bool(config.get("codex_restart_specified_app_on_switch"))
         and not str(config.get("codex_specified_app_path") or "")
+        and bool(config.get("antigravity_dual_switch_no_restart_enabled"))
     ):
         return []
     backup_path = _backup_file(config_path, suffix="cockpit_restart_wrapper") if config_path.exists() else None
     config["codex_launch_on_switch"] = False
     config["codex_restart_specified_app_on_switch"] = False
     config["codex_specified_app_path"] = ""
+    config["antigravity_dual_switch_no_restart_enabled"] = True
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return [
@@ -798,6 +886,7 @@ def repair_cockpit_restart_wrapper_config(*, cockpit_home: Path) -> list[dict[st
             "backup_path": str(backup_path) if backup_path else None,
             "codex_launch_on_switch": False,
             "codex_restart_specified_app_on_switch": False,
+            "antigravity_dual_switch_no_restart_enabled": True,
         }
     ]
 
@@ -823,6 +912,34 @@ def repair_cockpit_default_account_binding(*, cockpit_home: Path) -> list[dict[s
             "status": "changed",
             "path": str(instances_path),
             "backup_path": str(backup_path) if backup_path else None,
+            "findings": findings,
+        }
+    ]
+
+
+def repair_cockpit_default_launch_mode(*, cockpit_home: Path) -> list[dict[str, Any]]:
+    instances_path = cockpit_home / "codex_instances.json"
+    instances = _read_json(instances_path)
+    findings = _cockpit_cli_launch_mode_findings(instances)
+    if not findings or not isinstance(instances, dict):
+        return []
+    default_settings = instances.get("defaultSettings")
+    if not isinstance(default_settings, dict):
+        return []
+    backup_path = _backup_file(instances_path, suffix="cockpit_default_launch_mode") if instances_path.exists() else None
+    default_settings["launchMode"] = "app"
+    default_settings["lastPid"] = None
+    instances_path.parent.mkdir(parents=True, exist_ok=True)
+    instances_path.write_text(json.dumps(instances, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return [
+        {
+            "id": "cockpit_codex_default_launch_mode_repaired",
+            "tool": "cockpit_tools",
+            "status": "changed",
+            "path": str(instances_path),
+            "backup_path": str(backup_path) if backup_path else None,
+            "launchMode": "app",
+            "lastPid": None,
             "findings": findings,
         }
     ]
@@ -1832,6 +1949,26 @@ def _cockpit_account_binding_findings(instances: Any) -> list[dict[str, Any]]:
                 "setting": "defaultSettings.bindAccountId",
                 "issue": "fixed_account_binding",
                 "bindAccountId": bind_account_id,
+            }
+        )
+    return findings
+
+
+def _cockpit_cli_launch_mode_findings(instances: Any) -> list[dict[str, Any]]:
+    findings: list[dict[str, Any]] = []
+    if not isinstance(instances, dict):
+        return findings
+    default_settings = instances.get("defaultSettings")
+    if not isinstance(default_settings, dict):
+        return findings
+    launch_mode = str(default_settings.get("launchMode") or "").strip().lower()
+    if launch_mode == "cli":
+        findings.append(
+            {
+                "setting": "defaultSettings.launchMode",
+                "issue": "cli_launch_mode_unsupported_on_windows",
+                "launchMode": default_settings.get("launchMode"),
+                "expected": "app",
             }
         )
     return findings

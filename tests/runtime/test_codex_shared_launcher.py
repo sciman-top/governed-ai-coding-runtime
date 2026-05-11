@@ -288,6 +288,7 @@ class CodexSharedLauncherTests(unittest.TestCase):
                         "codex_launch_on_switch": True,
                         "codex_restart_specified_app_on_switch": False,
                         "codex_specified_app_path": "",
+                        "antigravity_dual_switch_no_restart_enabled": False,
                     }
                 ),
                 encoding="utf-8",
@@ -301,6 +302,7 @@ class CodexSharedLauncherTests(unittest.TestCase):
                             "lastPid": 99999999,
                             "followLocalAccount": False,
                             "bindAccountId": "codex_old_oauth",
+                            "launchMode": "cli",
                         },
                     }
                 ),
@@ -343,6 +345,14 @@ class CodexSharedLauncherTests(unittest.TestCase):
                 "fail",
                 dry_check_ids["cockpit_codex_instances_follow_current_account"]["status"],
             )
+            self.assertEqual(
+                "fail",
+                dry_check_ids["cockpit_codex_dual_switch_no_restart_enabled"]["status"],
+            )
+            self.assertEqual(
+                "fail",
+                dry_check_ids["cockpit_codex_default_cli_launch_mode_absent"]["status"],
+            )
 
             applied = _run_interop_checker(
                 codex_home, cc_switch_db, cockpit_home, apply=True, migrate_provider_bucket=True
@@ -351,9 +361,10 @@ class CodexSharedLauncherTests(unittest.TestCase):
             payload = json.loads(applied.stdout)
             self.assertEqual("pass", payload["status"])
             action_ids = {action["id"] for action in payload["actions"]}
-            self.assertIn("cockpit_codex_stale_last_pid_cleared", action_ids)
+            self.assertIn("cockpit_codex_last_pid_cleared", action_ids)
             self.assertIn("cockpit_codex_switch_raw_launch_disabled", action_ids)
             self.assertIn("cockpit_codex_instances_follow_current_account_repaired", action_ids)
+            self.assertIn("cockpit_codex_default_launch_mode_repaired", action_ids)
             self.assertIn("codex_live_config_cockpit_provider", action_ids)
             self.assertIn("codex_auth_cockpit_projected", action_ids)
             self.assertIn("codex_threads_provider_bucket_migrated", action_ids)
@@ -444,10 +455,12 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertFalse(cockpit_config["codex_launch_on_switch"])
             self.assertFalse(cockpit_config["codex_restart_specified_app_on_switch"])
             self.assertEqual("", cockpit_config["codex_specified_app_path"])
+            self.assertTrue(cockpit_config["antigravity_dual_switch_no_restart_enabled"])
             cockpit_instances = json.loads((cockpit_home / "codex_instances.json").read_text(encoding="utf-8"))
             self.assertIsNone(cockpit_instances["defaultSettings"]["lastPid"])
             self.assertTrue(cockpit_instances["defaultSettings"]["followLocalAccount"])
             self.assertIsNone(cockpit_instances["defaultSettings"]["bindAccountId"])
+            self.assertEqual("app", cockpit_instances["defaultSettings"]["launchMode"])
 
     def test_interop_checker_quick_launch_skips_session_scan_but_keeps_sqlite_guard(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -982,6 +995,74 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertEqual("pass", checks["cockpit_codex_raw_launch_on_switch_disabled"]["status"])
             self.assertEqual("fail", checks["cockpit_codex_recent_start_after_switch_absent"]["status"])
             self.assertTrue(checks["cockpit_codex_recent_start_after_switch_absent"]["detected"])
+
+    def test_interop_checker_does_not_mask_cockpit_raw_start_after_state_write(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            codex_home = root / "codex-home"
+            codex_home.mkdir()
+            _create_codex_state_db(codex_home / "state_5.sqlite")
+            cc_switch_db = root / ".cc-switch" / "cc-switch.db"
+            cc_switch_db.parent.mkdir()
+            _create_cc_switch_db(cc_switch_db)
+            cockpit_home = root / ".antigravity_cockpit"
+            cockpit_home.mkdir()
+            (cockpit_home / "logs").mkdir()
+            (cockpit_home / "codex_accounts").mkdir()
+            (cockpit_home / "codex_accounts.json").write_text(
+                json.dumps({"accounts": [{"id": "codex_oauth"}], "current_account_id": "codex_oauth"}),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_accounts" / "codex_oauth.json").write_text(
+                json.dumps(
+                    {
+                        "id": "codex_oauth",
+                        "auth_mode": "oauth",
+                        "tokens": {"access_token": "oauth-token"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_model_providers.json").write_text(
+                json.dumps([{"id": "openai", "name": "OpenAI"}]),
+                encoding="utf-8",
+            )
+            config_path = cockpit_home / "config.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "codex_launch_on_switch": False,
+                        "codex_restart_specified_app_on_switch": False,
+                        "codex_specified_app_path": "",
+                        "antigravity_dual_switch_no_restart_enabled": True,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_instances.json").write_text(
+                json.dumps({"instances": [], "defaultSettings": {"extraArgs": "", "lastPid": None}}),
+                encoding="utf-8",
+            )
+            (cockpit_home / "logs" / "app.log.2000-01-01").write_text(
+                "\n".join(
+                    [
+                        "2000-01-01T00:00:00.000000000+08:00  INFO [Codex切号] 开始切换账号: account_id=codex_oauth",
+                        "2000-01-01T00:00:04.000000000+08:00  INFO [Codex Start] 启动策略=system-store-entry app_id=OpenAI.Codex_2p2nqsd0c76g0!App pid=44968",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            os.utime(config_path, None)
+
+            checked = _run_interop_checker(codex_home, cc_switch_db, cockpit_home, quick_launch=True)
+
+            self.assertEqual(2, checked.returncode, checked.stdout + checked.stderr)
+            payload = json.loads(checked.stdout)
+            checks = {check["id"]: check for check in payload["after"]["checks"]}
+            start_check = checks["cockpit_codex_recent_start_after_switch_absent"]
+            self.assertEqual("fail", start_check["status"])
+            self.assertTrue(start_check["detected"])
+            self.assertTrue(start_check["superseded_by_state_write"])
 
     def test_interop_checker_flags_unreadable_codex_state_schema(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

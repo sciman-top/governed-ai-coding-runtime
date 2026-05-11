@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib import error as urllib_error
+from urllib import request as urllib_request
 
 
 REQUIRED_CONFIG = {
@@ -57,6 +59,8 @@ def _windows_no_window_kwargs() -> dict[str, Any]:
     return {"creationflags": creationflags} if creationflags else {}
 USAGE_DASHBOARD_URL = "https://chatgpt.com/codex/settings/usage"
 USAGE_STALE_AFTER_SECONDS = 300
+DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1"
+CODEX_API_AUTH_MODE = "apikey"
 CONTEXT_COMPACT_RATIO_MIN = 0.75
 CONTEXT_COMPACT_RATIO_MAX = 0.90
 DEFAULT_CONTEXT_COMPACT_RATIO = 0.81
@@ -76,6 +80,7 @@ class CodexAuthProfile:
     file: str
     active: bool
     auth_mode: str
+    api_base_url: str
     last_refresh: str
     email: str
     display_name: str
@@ -97,6 +102,7 @@ class CodexAuthProfile:
             "file": self.file,
             "active": self.active,
             "auth_mode": self.auth_mode,
+            "api_base_url": self.api_base_url,
             "last_refresh": self.last_refresh,
             "email": self.email,
             "display_name": self.display_name,
@@ -162,19 +168,169 @@ def switch_auth_profile(name: str, home: Path | None = None, *, dry_run: bool = 
     target = matches[0]
     active_path = home / "auth.json"
     if target.active:
-        return {"status": "ok", "changed": False, "active_profile": target.to_dict()}
+        target_payload = _read_auth_json(Path(target.full_name))
+        config_projection = project_codex_auth_config(home, target_payload, dry_run=dry_run)
+        return {
+            "status": "ok",
+            "changed": bool(config_projection.get("changed")) and not dry_run,
+            "active_profile": target.to_dict(),
+            "config_projection": config_projection,
+        }
     if dry_run:
-        return {"status": "ok", "changed": False, "dry_run": True, "target_profile": target.to_dict()}
+        target_payload = _read_auth_json(Path(target.full_name))
+        return {
+            "status": "ok",
+            "changed": False,
+            "dry_run": True,
+            "target_profile": target.to_dict(),
+            "config_projection": project_codex_auth_config(home, target_payload, dry_run=True),
+        }
 
     backup_path = backup_active_auth(home)
     shutil.copyfile(target.full_name, active_path)
+    target_payload = _read_auth_json(Path(target.full_name))
+    config_projection = project_codex_auth_config(home, target_payload)
     new_active = _auth_profile_from_path(active_path, _short_file_hash(active_path))
     return {
         "status": "ok",
         "changed": True,
         "backup_path": str(backup_path),
+        "config_projection": config_projection,
         "active_profile": new_active.to_dict(),
         "target_profile": target.to_dict(),
+    }
+
+
+def save_api_auth_profile(
+    name: str,
+    api_key: str,
+    base_url: str,
+    home: Path | None = None,
+    *,
+    label: str = "",
+    switch_now: bool = False,
+    dry_run: bool = False,
+    probe: bool = False,
+) -> dict[str, Any]:
+    normalized_name = _normalize_snapshot_name(name)
+    if not normalized_name:
+        return {"status": "error", "error": "missing or invalid API profile name"}
+    api_key = _first_string(api_key)
+    if not api_key:
+        return {"status": "error", "error": "missing OPENAI_API_KEY"}
+    normalized_base_url = _normalize_api_base_url(base_url)
+    if not normalized_base_url:
+        return {"status": "error", "error": "missing API base URL"}
+
+    home = codex_home(str(home) if home else None)
+    probe_result = {"attempted": False, "status": "skipped"}
+    if probe:
+        probe_result = probe_codex_api_account(normalized_base_url, api_key)
+        if probe_result.get("status") != "ok":
+            return {"status": "error", "error": "API probe failed", "probe": probe_result}
+
+    profiles_dir = home / "auth-profiles"
+    target_path = profiles_dir / f"{normalized_name}.json"
+    payload = _build_api_auth_payload(
+        api_key=api_key,
+        base_url=normalized_base_url,
+        label=_first_string(label, normalized_name),
+    )
+    redacted_payload = _redact_auth_payload(payload)
+    projection_preview = project_codex_auth_config(home, payload, dry_run=True)
+    if dry_run:
+        return {
+            "status": "ok",
+            "changed": False,
+            "dry_run": True,
+            "profile_name": normalized_name,
+            "profile_path": str(target_path),
+            "auth_payload": redacted_payload,
+            "base_url": normalized_base_url,
+            "probe": probe_result,
+            "config_projection": projection_preview,
+        }
+
+    backup_path = None
+    if target_path.exists():
+        backup_path = backup_saved_auth_snapshot(target_path, home)
+    profiles_dir.mkdir(parents=True, exist_ok=True)
+    _write_json_atomic(target_path, payload)
+    profile = _auth_profile_from_path(target_path, _short_file_hash(home / "auth.json") if (home / "auth.json").exists() else "")
+    result: dict[str, Any] = {
+        "status": "ok",
+        "changed": True,
+        "profile_name": normalized_name,
+        "profile_path": str(target_path),
+        "profile": profile.to_dict(),
+        "base_url": normalized_base_url,
+        "auth_payload": redacted_payload,
+        "probe": probe_result,
+        "config_projection": projection_preview,
+    }
+    if backup_path is not None:
+        result["backup_path"] = str(backup_path)
+    if switch_now:
+        switch_result = switch_auth_profile(normalized_name, home)
+        result["switch"] = switch_result
+        result["config_projection"] = switch_result.get("config_projection", projection_preview)
+    return result
+
+
+def probe_codex_api_account(base_url: str, api_key: str, *, timeout_seconds: int = 15) -> dict[str, Any]:
+    normalized_base_url = _normalize_api_base_url(base_url)
+    if not normalized_base_url:
+        return {"attempted": True, "status": "error", "error": "missing API base URL"}
+    if not _first_string(api_key):
+        return {"attempted": True, "status": "error", "error": "missing OPENAI_API_KEY"}
+    url = normalized_base_url.rstrip("/") + "/models"
+    request = urllib_request.Request(
+        url,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Accept": "application/json",
+            "User-Agent": "governed-runtime-codex-api-probe",
+        },
+        method="GET",
+    )
+    started = time.time()
+    try:
+        with urllib_request.urlopen(request, timeout=timeout_seconds) as response:
+            status_code = int(getattr(response, "status", 0) or 0)
+            raw = response.read(256 * 1024)
+    except urllib_error.HTTPError as exc:
+        body = exc.read(4096).decode("utf-8", errors="replace")
+        return {
+            "attempted": True,
+            "status": "error",
+            "url": url,
+            "http_status": exc.code,
+            "elapsed_seconds": round(time.time() - started, 3),
+            "error": _first_non_empty_line(body) or str(exc),
+        }
+    except (urllib_error.URLError, TimeoutError, OSError) as exc:
+        return {
+            "attempted": True,
+            "status": "error",
+            "url": url,
+            "elapsed_seconds": round(time.time() - started, 3),
+            "error": str(exc),
+        }
+
+    model_count = None
+    try:
+        payload = json.loads(raw.decode("utf-8", errors="replace"))
+        if isinstance(payload, dict) and isinstance(payload.get("data"), list):
+            model_count = len(payload["data"])
+    except json.JSONDecodeError:
+        payload = None
+    return {
+        "attempted": True,
+        "status": "ok" if 200 <= status_code < 300 else "error",
+        "url": url,
+        "http_status": status_code,
+        "elapsed_seconds": round(time.time() - started, 3),
+        "model_count": model_count,
     }
 
 
@@ -546,6 +702,12 @@ def config_health(home: Path | None = None) -> dict[str, Any]:
     return {
         "status": "ok" if all(check["ok"] for check in checks) and not secret_hits else "attention",
         "path": str(config_path),
+        "auth_projection": {
+            "model_provider": _find_top_level_value(text, "model_provider"),
+            "forced_login_method": _find_top_level_value(text, "forced_login_method"),
+            "openai_base_url": _find_top_level_value(text, "openai_base_url"),
+            "history_bucket": _find_top_level_value(text, "model_provider") or "unknown",
+        },
         "checks": checks,
         "advisory_checks": advisory_checks,
         "secret_like_markers": secret_hits,
@@ -912,19 +1074,103 @@ def backup_saved_auth_snapshot(path: Path, home: Path | None = None) -> Path:
     return backup_path
 
 
+def backup_config_toml(home: Path | None = None) -> Path | None:
+    home = codex_home(str(home) if home else None)
+    config_path = home / "config.toml"
+    if not config_path.exists():
+        return None
+    backup_dir = home / "config-backups"
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    backup_path = backup_dir / f"config-{timestamp}.toml"
+    shutil.copyfile(config_path, backup_path)
+    return backup_path
+
+
+def project_codex_auth_config(
+    home: Path | None,
+    auth_payload: dict[str, Any],
+    *,
+    dry_run: bool = False,
+) -> dict[str, Any]:
+    home = codex_home(str(home) if home else None)
+    config_path = home / "config.toml"
+    before_text = config_path.read_text(encoding="utf-8", errors="replace") if config_path.exists() else ""
+    auth_mode = _auth_mode_from_payload(auth_payload)
+    base_url = _normalize_api_base_url(
+        _first_string(
+            auth_payload.get("api_base_url"),
+            auth_payload.get("base_url"),
+            auth_payload.get("OPENAI_BASE_URL"),
+        )
+    )
+    if auth_mode == CODEX_API_AUTH_MODE:
+        forced_login_method = "api"
+        openai_base_url = "" if _is_default_openai_base_url(base_url) else base_url
+    else:
+        forced_login_method = "chatgpt"
+        openai_base_url = ""
+
+    after_text = _remove_openai_builtin_provider_table(before_text)
+    after_text = _set_top_level_toml_value(after_text, "model_provider", "openai")
+    after_text = _set_top_level_toml_value(after_text, "forced_login_method", forced_login_method)
+    if openai_base_url:
+        after_text = _set_top_level_toml_value(after_text, "openai_base_url", openai_base_url)
+    else:
+        after_text = _remove_top_level_toml_key(after_text, "openai_base_url")
+    after_text = _normalize_text_eof(after_text)
+    changed = after_text != _normalize_text_eof(before_text)
+
+    summary = {
+        "auth_mode": auth_mode,
+        "history_bucket": "openai",
+        "model_provider": "openai",
+        "forced_login_method": forced_login_method,
+        "openai_base_url": openai_base_url,
+        "config_path": str(config_path),
+        "changed": changed,
+        "dry_run": dry_run,
+        "process_management": "not_performed",
+    }
+    if dry_run or not changed:
+        return summary
+
+    backup_path = backup_config_toml(home)
+    _write_text_atomic(config_path, after_text)
+    if backup_path is not None:
+        summary["backup_path"] = str(backup_path)
+    summary["written"] = True
+    return summary
+
+
 def _auth_profile_from_path(path: Path, active_hash: str) -> CodexAuthProfile:
     payload = _read_auth_json(path)
     tokens = payload.get("tokens") if isinstance(payload.get("tokens"), dict) else {}
+    auth_mode = _auth_mode_from_payload(payload)
+    api_key = _api_key_from_auth_payload(payload)
     account_id = _first_string(tokens.get("account_id"), payload.get("account_id"))
+    if not account_id and auth_mode == CODEX_API_AUTH_MODE and api_key:
+        account_id = f"codex_apikey_{hashlib.sha256(api_key.encode('utf-8')).hexdigest()[:24]}"
     file_hash = _short_file_hash(path)
     claims = _auth_claims(payload, tokens)
     account_hash = _short_string_hash(account_id) if account_id else ""
-    account_label = claims["email"] or claims["display_name"] or account_hash or path.stem
+    account_label = _first_string(
+        payload.get("account_label"),
+        payload.get("label"),
+        claims["email"],
+        claims["display_name"],
+        path.stem if auth_mode == CODEX_API_AUTH_MODE and path.stem != "auth" else "",
+        account_hash,
+        path.stem,
+    )
     return CodexAuthProfile(
         name=path.stem,
         file=path.name,
         active=file_hash == active_hash,
-        auth_mode=str(payload.get("auth_mode") or ""),
+        auth_mode=auth_mode,
+        api_base_url=_normalize_api_base_url(
+            _first_string(payload.get("api_base_url"), payload.get("base_url"), payload.get("OPENAI_BASE_URL"))
+        ),
         last_refresh=str(payload.get("last_refresh") or ""),
         email=claims["email"],
         display_name=claims["display_name"],
@@ -998,6 +1244,141 @@ def _normalize_snapshot_name(value: str) -> str:
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}", normalized):
         return ""
     return normalized
+
+
+def _build_api_auth_payload(*, api_key: str, base_url: str, label: str) -> dict[str, Any]:
+    normalized_base_url = _normalize_api_base_url(base_url)
+    account_id = f"codex_apikey_{hashlib.sha256(api_key.encode('utf-8')).hexdigest()[:24]}"
+    return {
+        "auth_mode": CODEX_API_AUTH_MODE,
+        "OPENAI_API_KEY": api_key,
+        "api_base_url": normalized_base_url,
+        "base_url": normalized_base_url,
+        "account_id": account_id,
+        "account_label": _first_string(label) or account_id,
+        "last_refresh": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+    }
+
+
+def _redact_auth_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    redacted: dict[str, Any] = {}
+    for key, value in payload.items():
+        if key.upper() in {"OPENAI_API_KEY", "API_KEY"}:
+            redacted[key] = _redact_secret(str(value or ""))
+        elif key == "tokens" and isinstance(value, dict):
+            redacted[key] = {token_key: _redact_secret(str(token_value or "")) for token_key, token_value in value.items()}
+        else:
+            redacted[key] = value
+    return redacted
+
+
+def _redact_secret(value: str) -> str:
+    raw = str(value or "")
+    if not raw:
+        return ""
+    if len(raw) <= 8:
+        return "<redacted>"
+    return f"{raw[:3]}...{raw[-4:]}"
+
+
+def _api_key_from_auth_payload(payload: dict[str, Any]) -> str:
+    return _first_string(payload.get("OPENAI_API_KEY"), payload.get("api_key"))
+
+
+def _auth_mode_from_payload(payload: dict[str, Any]) -> str:
+    raw_mode = str(payload.get("auth_mode") or "").strip().lower()
+    if raw_mode in {"apikey", "api_key", "api-key", "api"}:
+        return CODEX_API_AUTH_MODE
+    if _api_key_from_auth_payload(payload):
+        return CODEX_API_AUTH_MODE
+    tokens = payload.get("tokens")
+    if isinstance(tokens, dict) and (tokens.get("id_token") or tokens.get("access_token") or tokens.get("refresh_token")):
+        return "chatgpt"
+    return raw_mode or "unknown"
+
+
+def _normalize_api_base_url(value: Any) -> str:
+    raw = _first_string(value)
+    if not raw:
+        return ""
+    normalized = raw.rstrip("/")
+    if normalized.endswith("/v1"):
+        return normalized
+    return normalized
+
+
+def _is_default_openai_base_url(value: str) -> bool:
+    return _normalize_api_base_url(value).lower() == DEFAULT_OPENAI_BASE_URL.lower()
+
+
+def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
+    _write_text_atomic(path, json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+
+
+def _write_text_atomic(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.tmp.{os.getpid()}.{time.time_ns()}")
+    temporary.write_text(content, encoding="utf-8")
+    temporary.replace(path)
+
+
+def _normalize_text_eof(text: str) -> str:
+    return text.rstrip() + "\n" if text.strip() else ""
+
+
+def _toml_value(value: Any) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int):
+        return str(value)
+    escaped = str(value).replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'
+
+
+def _set_top_level_toml_value(text: str, key: str, value: Any) -> str:
+    lines = text.splitlines()
+    rendered = f"{key} = {_toml_value(value)}"
+    first_section_index = next((index for index, line in enumerate(lines) if line.strip().startswith("[") and line.strip().endswith("]")), len(lines))
+    for index, line in enumerate(lines[:first_section_index]):
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            continue
+        if re.match(rf"^{re.escape(key)}\s*=", stripped):
+            lines[index] = rendered
+            return "\n".join(lines)
+    insert_index = first_section_index
+    if insert_index > 0 and lines[insert_index - 1].strip() == "":
+        insert_index -= 1
+    lines.insert(insert_index, rendered)
+    return "\n".join(lines)
+
+
+def _remove_top_level_toml_key(text: str, key: str) -> str:
+    lines = text.splitlines()
+    first_section_index = next((index for index, line in enumerate(lines) if line.strip().startswith("[") and line.strip().endswith("]")), len(lines))
+    kept = []
+    for index, line in enumerate(lines):
+        if index < first_section_index and re.match(rf"^\s*{re.escape(key)}\s*=", line):
+            continue
+        kept.append(line)
+    return "\n".join(kept)
+
+
+def _remove_openai_builtin_provider_table(text: str) -> str:
+    lines = text.splitlines()
+    kept: list[str] = []
+    skipping = False
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            table_name = stripped.strip("[]").strip()
+            normalized = table_name.replace('"', "").replace("'", "")
+            skipping = normalized == "model_providers.openai"
+            if skipping:
+                continue
+        if not skipping:
+            kept.append(line)
+    return "\n".join(kept)
 
 
 def _suggest_snapshot_name(active_profile: CodexAuthProfile, profiles: list[CodexAuthProfile]) -> str:

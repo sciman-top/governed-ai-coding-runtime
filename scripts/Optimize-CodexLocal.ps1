@@ -545,7 +545,7 @@ $plan = [ordered]@{
         sqlite_home = $CodexHome
         history_persistence = 'save-all'
         shared_profiles = @('shared-chatgpt', 'shared-openai-api', 'shared-current-provider', 'shared-cockpit-api', 'shared-cockpit-auth')
-        launchers = @('codex-shared', 'codex-shared-exec', 'codex-shared-resume', 'codex-shared-app', 'codex-cockpit', 'codex-cockpit-exec', 'codex-cockpit-resume', 'codex-cockpit-app', 'codex-cockpit-app-restart', 'codex-relay', 'codex-relay-exec', 'codex-relay-resume', 'codex-relay-app', 'codex-interop-check', 'codex-interop-repair', 'codex-switch-record', 'codex-switch-guard', 'codex-switch-guard-status', 'codex-switch-guard-start')
+        launchers = @('codex-shared', 'codex-shared-exec', 'codex-shared-resume', 'codex-shared-app', 'codex-cockpit', 'codex-cockpit-exec', 'codex-cockpit-resume', 'codex-cockpit-app', 'codex-cockpit-app-restart', 'codex-relay', 'codex-relay-exec', 'codex-relay-resume', 'codex-relay-app', 'codex-interop-check', 'codex-interop-repair', 'codex-cockpit-install-noop-launcher', 'codex-switch-record', 'codex-switch-guard', 'codex-switch-guard-status', 'codex-switch-guard-start')
     }
     compatibility = [ordered]@{
         strategy = 'Use one shared CodexHome plus the built-in openai model_provider bucket for Codex coding history/state; switch auth/provider endpoint inside that bucket.'
@@ -604,6 +604,7 @@ if ($InstallAccountSwitcher) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'codex-cockpit-switch-guard.py') -Destination (Join-Path $scriptsDir 'codex-cockpit-switch-guard.py') -Force
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Start-CodexCockpitSwitchGuard.ps1') -Destination (Join-Path $scriptsDir 'Start-CodexCockpitSwitchGuard.ps1') -Force
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Save-CodexCockpitSwitchRecord.ps1') -Destination (Join-Path $scriptsDir 'Save-CodexCockpitSwitchRecord.ps1') -Force
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Install-CodexCockpitNoopLauncher.ps1') -Destination (Join-Path $scriptsDir 'Install-CodexCockpitNoopLauncher.ps1') -Force
     Set-Content -LiteralPath (Join-Path $binDir 'codex-account.cmd') -Value '@echo off
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Switch-CodexAccount.ps1" %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-shared.cmd') -Value '@echo off
@@ -636,6 +637,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Star
 python "%USERPROFILE%\.codex\scripts\codex-interop-check.py" --codex-home "%USERPROFILE%\.codex" --cc-switch-db "%USERPROFILE%\.cc-switch\cc-switch.db" --cockpit-home "%USERPROFILE%\.antigravity_cockpit" %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-interop-repair.cmd') -Value '@echo off
 python "%USERPROFILE%\.codex\scripts\codex-interop-check.py" --codex-home "%USERPROFILE%\.codex" --cc-switch-db "%USERPROFILE%\.cc-switch\cc-switch.db" --cockpit-home "%USERPROFILE%\.antigravity_cockpit" --apply --migrate-provider-bucket %*' -Encoding ascii
+    Set-Content -LiteralPath (Join-Path $binDir 'codex-cockpit-install-noop-launcher.cmd') -Value '@echo off
+pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Install-CodexCockpitNoopLauncher.ps1" %*' -Encoding ascii
     $saveRecordScriptForCmd = Join-Path $PSScriptRoot 'Save-CodexCockpitSwitchRecord.ps1'
     Set-Content -LiteralPath (Join-Path $binDir 'codex-switch-record.cmd') -Value ("@echo off`r`npwsh -NoProfile -ExecutionPolicy Bypass -File `"{0}`" %*" -f $saveRecordScriptForCmd) -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-switch-guard.cmd') -Value '@echo off

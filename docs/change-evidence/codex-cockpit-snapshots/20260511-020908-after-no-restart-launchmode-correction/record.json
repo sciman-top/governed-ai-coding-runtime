@@ -1,0 +1,839 @@
+{
+  "schema_version": 1,
+  "label": "after-no-restart-launchmode-correction",
+  "watch_seconds": 0.0,
+  "before": {
+    "timestamp": "2026-05-11T02:09:08",
+    "paths": {
+      "codex_home": "C:\\Users\\sciman\\.codex",
+      "cockpit_home": "C:\\Users\\sciman\\.antigravity_cockpit"
+    },
+    "files": {
+      "cockpit_config": {
+        "path": "C:\\Users\\sciman\\.antigravity_cockpit\\config.json",
+        "exists": true,
+        "size": 4138,
+        "mtime": 1778436513.95649,
+        "mtime_iso": "2026-05-11T02:08:33",
+        "sha256": "462c6d07330e210087614e392219235c0e57df370635d5097eaeeb6ba342ec6a"
+      },
+      "cockpit_accounts": {
+        "path": "C:\\Users\\sciman\\.antigravity_cockpit\\codex_accounts.json",
+        "exists": true,
+        "size": 2256,
+        "mtime": 1778436024.9537046,
+        "mtime_iso": "2026-05-11T02:00:24",
+        "sha256": "aec3b7e587516c2735001ce38069598bb1db1ba337bfd4c8944a6c781c1762d3"
+      },
+      "cockpit_instances": {
+        "path": "C:\\Users\\sciman\\.antigravity_cockpit\\codex_instances.json",
+        "exists": true,
+        "size": 210,
+        "mtime": 1778436513.957491,
+        "mtime_iso": "2026-05-11T02:08:33",
+        "sha256": "887ffd29b23bd4fe1e0c233505749589803b23c4a00c9964a767484bd9447468"
+      },
+      "cockpit_model_providers": {
+        "path": "C:\\Users\\sciman\\.antigravity_cockpit\\codex_model_providers.json",
+        "exists": true,
+        "size": 859,
+        "mtime": 1778331641.8843303,
+        "mtime_iso": "2026-05-09T21:00:41",
+        "sha256": "685441b231a91c2903da32bf1d6681e350f8ee615f5b9eedc8495d2b8f078f16"
+      },
+      "codex_config": {
+        "path": "C:\\Users\\sciman\\.codex\\config.toml",
+        "exists": true,
+        "size": 111322,
+        "mtime": 1778436044.8457158,
+        "mtime_iso": "2026-05-11T02:00:44",
+        "sha256": "d6addf0d170b9f4509700a4e32ff9a406b08d007bc43a20047acfd0b58c4c198"
+      },
+      "codex_auth": {
+        "path": "C:\\Users\\sciman\\.codex\\auth.json",
+        "exists": true,
+        "size": 4388,
+        "mtime": 1778436029.1810756,
+        "mtime_iso": "2026-05-11T02:00:29",
+        "sha256": "216ecdfa0cd1b025c61d2fed0a197bb30027001d34bac79aa2599f2234a32239"
+      },
+      "codex_cockpit_auth_projection": {
+        "path": "C:\\Users\\sciman\\.codex\\.cockpit_codex_auth.json",
+        "exists": true,
+        "size": 190,
+        "mtime": 1778436025.438064,
+        "mtime_iso": "2026-05-11T02:00:25",
+        "sha256": "1d8e285753a74a35d70d8bbf583e2f8db0c646bd0f3458d8669b3c1f8b781fb0"
+      },
+      "codex_state_db": {
+        "path": "C:\\Users\\sciman\\.codex\\state_5.sqlite",
+        "exists": true,
+        "size": 15216640,
+        "mtime": 1778436029.195627,
+        "mtime_iso": "2026-05-11T02:00:29",
+        "sha256": "1ab99d64c630f331ea476e4ad1a37b45e92189686e5b9a69ae4bfa6d7ed59a2d"
+      }
+    },
+    "cockpit": {
+      "current_account_id": "codex_c641df4d56baceca12b3ffcd597061b3",
+      "current_account": {
+        "id": "codex_c641df4d56baceca12b3ffcd597061b3",
+        "email": "ai.sciman.top@gmail.com",
+        "auth_mode": "oauth",
+        "api_provider_mode": "openai_builtin",
+        "user_id": "user-tnzYfgCcHsbfkfkpEaHTk2e1",
+        "plan_type": "plus",
+        "subscription_active_until": "2026-05-10T02:33:11+00:00",
+        "account_id": "d23cbc21-b2fb-475f-81e6-82fc669e47aa",
+        "organization_id": null,
+        "account_structure": "personal",
+        "tokens": {
+          "id_token": "<redacted>",
+          "access_token": "<redacted>",
+          "refresh_token": "<redacted>"
+        },
+        "token_generation": 2,
+        "token_updated_at": 1778076358,
+        "token_source_mode": "managed",
+        "quota": {
+          "hourly_percentage": 48,
+          "hourly_reset_time": 1778450684,
+          "hourly_window_minutes": 300,
+          "hourly_window_present": true,
+          "weekly_percentage": 41,
+          "weekly_reset_time": 1778677438,
+          "weekly_window_minutes": 10080,
+          "weekly_window_present": true,
+          "raw_data": {
+            "account_id": "user-tnzYfgCcHsbfkfkpEaHTk2e1",
+            "additional_rate_limits": null,
+            "code_review_rate_limit": null,
+            "credits": {
+              "approx_cloud_messages": [
+                0,
+                0
+              ],
+              "approx_local_messages": [
+                0,
+                0
+              ],
+              "balance": "0",
+              "has_credits": false,
+              "overage_limit_reached": false,
+              "unlimited": false
+            },
+            "email": "ai.sciman.top@gmail.com",
+            "plan_type": "plus",
+            "promo": null,
+            "rate_limit": {
+              "allowed": true,
+              "limit_reached": false,
+              "primary_window": {
+                "limit_window_seconds": 18000,
+                "reset_after_seconds": 14175,
+                "reset_at": 1778450684,
+                "used_percent": 52
+              },
+              "secondary_window": {
+                "limit_window_seconds": 604800,
+                "reset_after_seconds": 240929,
+                "reset_at": 1778677438,
+                "used_percent": 59
+              }
+            },
+            "rate_limit_reached_type": null,
+            "referral_beacon": null,
+            "spend_control": {
+              "individual_limit": null,
+              "reached": false
+            },
+            "user_id": "user-tnzYfgCcHsbfkfkpEaHTk2e1"
+          }
+        },
+        "usage_updated_at": 1778436510,
+        "tags": null,
+        "created_at": 1778075767,
+        "last_used": 1778436024
+      },
+      "launch_flags": {
+        "codex_launch_on_switch": false,
+        "codex_restart_specified_app_on_switch": false,
+        "codex_specified_app_path": ""
+      },
+      "default_instance": {
+        "bindAccountId": null,
+        "extraArgs": "",
+        "workingDir": null,
+        "launchMode": "app",
+        "followLocalAccount": true,
+        "lastPid": null
+      },
+      "model_providers": {}
+    },
+    "codex": {
+      "config": {
+        "exists": true,
+        "approval_policy": "never",
+        "forced_login_method": "chatgpt",
+        "sandbox_mode": "workspace-write",
+        "project_doc_max_bytes": "32768",
+        "model_provider": "openai",
+        "model_providers": {
+          "rightcode": {
+            "name": "rightcode",
+            "base_url": "https://right.codes/codex/v1",
+            "wire_api": "responses"
+          },
+          "cmp_1778246510288_1": {
+            "name": "RightCode",
+            "base_url": "https://right.codes/codex/v1",
+            "wire_api": "responses"
+          },
+          "cmp_1778165666417_1": {
+            "name": "35.213.82.91",
+            "base_url": "http://35.213.82.91:8003/v1",
+            "wire_api": "responses"
+          },
+          "provider_openai": {
+            "name": "35.213.82.91",
+            "base_url": "http://35.213.82.91:8003/v1",
+            "wire_api": "responses"
+          }
+        }
+      },
+      "auth": {
+        "auth_mode": "chatgpt",
+        "has_openai_api_key": false,
+        "has_tokens": true,
+        "base_url": null,
+        "provider": null,
+        "keys": [
+          "OPENAI_API_KEY",
+          "auth_mode",
+          "last_refresh",
+          "tokens"
+        ]
+      },
+      "cockpit_auth_projection": {
+        "version": 1,
+        "writer": "cockpit",
+        "account_id": "codex_c641df4d56baceca12b3ffcd597061b3",
+        "email": "ai.sciman.top@gmail.com",
+        "token_generation": 2,
+        "written_at": 1778436025
+      },
+      "state_db": {
+        "exists": true,
+        "tables": [
+          "_sqlx_migrations",
+          "agent_job_items",
+          "agent_jobs",
+          "backfill_state",
+          "jobs",
+          "remote_control_enrollments",
+          "sqlite_stat1",
+          "stage1_outputs",
+          "thread_dynamic_tools",
+          "thread_goals",
+          "thread_spawn_edges",
+          "threads"
+        ],
+        "threads_by_model_provider": [
+          {
+            "model_provider": "openai",
+            "count": 1640
+          }
+        ],
+        "threads_by_cwd_top": [
+          {
+            "cwd": "\\\\?\\D:\\CODE\\ClassroomToolkit",
+            "count": 537
+          },
+          {
+            "cwd": "\\\\?\\D:\\CODE\\governed-ai-coding-runtime",
+            "count": 386
+          },
+          {
+            "cwd": "\\\\?\\D:\\CODE\\skills-manager",
+            "count": 244
+          },
+          {
+            "cwd": "\\\\?\\C:\\Users\\sciman",
+            "count": 88
+          },
+          {
+            "cwd": "e:\\PythonProject\\ClassroomTools",
+            "count": 74
+          },
+          {
+            "cwd": "E:\\CODE\\governance-kit",
+            "count": 53
+          },
+          {
+            "cwd": "\\\\?\\D:\\CODE\\k12-question-graph",
+            "count": 41
+          },
+          {
+            "cwd": "\\\\?\\D:\\CODE\\vps-ssh-launcher",
+            "count": 36
+          }
+        ]
+      }
+    },
+    "processes": [
+      {
+        "Id": 41544,
+        "ProcessName": "cockpit-tools",
+        "StartTime": "/Date(1778418481389)/",
+        "Path": "C:\\Users\\sciman\\AppData\\Local\\Cockpit Tools\\cockpit-tools.exe"
+      },
+      {
+        "Id": 24504,
+        "ProcessName": "Codex",
+        "StartTime": "/Date(1778436029765)/",
+        "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.506.3741.0_x64__2p2nqsd0c76g0\\app\\Codex.exe"
+      },
+      {
+        "Id": 33236,
+        "ProcessName": "Codex",
+        "StartTime": "/Date(1778436029204)/",
+        "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.506.3741.0_x64__2p2nqsd0c76g0\\app\\Codex.exe"
+      },
+      {
+        "Id": 36756,
+        "ProcessName": "codex",
+        "StartTime": "/Date(1778436029658)/",
+        "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.506.3741.0_x64__2p2nqsd0c76g0\\app\\resources\\codex.exe"
+      },
+      {
+        "Id": 39516,
+        "ProcessName": "Codex",
+        "StartTime": "/Date(1778436029152)/",
+        "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.506.3741.0_x64__2p2nqsd0c76g0\\app\\Codex.exe"
+      },
+      {
+        "Id": 41948,
+        "ProcessName": "Codex",
+        "StartTime": "/Date(1778436029039)/",
+        "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.506.3741.0_x64__2p2nqsd0c76g0\\app\\Codex.exe"
+      },
+      {
+        "Id": 44336,
+        "ProcessName": "Codex",
+        "StartTime": "/Date(1778436028638)/",
+        "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.506.3741.0_x64__2p2nqsd0c76g0\\app\\Codex.exe"
+      }
+    ],
+    "guard_status": {
+      "task_state": "Running",
+      "healthy": true,
+      "process_count": 1,
+      "process_ids": [
+        44112
+      ]
+    },
+    "recent_cockpit_events": [
+      "app.log.2026-05-10: 2026-05-11T01:01:43.216966200+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, email=ai***p@g***l.com, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:01:43.235070700+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=false",
+      "app.log.2026-05-10: 2026-05-11T01:01:45.839106400+08:00  INFO [Codex Start] 启动策略候选=system-store-entry app_id=OpenAI.Codex_2p2nqsd0c76g0!App",
+      "app.log.2026-05-10: 2026-05-11T01:01:46.137664900+08:00  INFO [Codex Start] 已通过系统入口启动 Codex: OpenAI.Codex_2p2nqsd0c76g0!App",
+      "app.log.2026-05-10: 2026-05-11T01:01:46.579471900+08:00  INFO [Codex Start] 启动策略=system-store-entry app_id=OpenAI.Codex_2p2nqsd0c76g0!App pid=28856",
+      "app.log.2026-05-10: 2026-05-11T01:01:46.600228300+08:00  INFO 已关闭切换 Codex 时自动重启指定应用",
+      "app.log.2026-05-10: 2026-05-11T01:29:15.193375100+08:00  INFO [Codex切号] 开始切换账号: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex",
+      "app.log.2026-05-10: 2026-05-11T01:29:15.193390400+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:29:15.214817+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:29:15.222875600+08:00  INFO [Codex切号] 已替换目录登录信息: target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:29:15.236720900+08:00  INFO 已同步更新 Codex 默认实例绑定账号: codex_apikey_8b8853f15e823dc53bd156163035bc78",
+      "app.log.2026-05-10: 2026-05-11T01:29:15.719950100+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:29:15.743869600+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:29:18.445383300+08:00  INFO [Codex Start] 启动策略候选=system-store-entry app_id=OpenAI.Codex_2p2nqsd0c76g0!App",
+      "app.log.2026-05-10: 2026-05-11T01:29:18.791784600+08:00  INFO [Codex Start] 已通过系统入口启动 Codex: OpenAI.Codex_2p2nqsd0c76g0!App",
+      "app.log.2026-05-10: 2026-05-11T01:29:19.244574100+08:00  INFO [Codex Start] 启动策略=system-store-entry app_id=OpenAI.Codex_2p2nqsd0c76g0!App pid=43412",
+      "app.log.2026-05-10: 2026-05-11T01:29:19.264772200+08:00  INFO 已关闭切换 Codex 时自动重启指定应用",
+      "app.log.2026-05-10: 2026-05-11T01:32:34.929452700+08:00  INFO [Codex切号] 开始切换账号: account_id=codex_c641df4d56baceca12b3ffcd597061b3, email=ai***p@g***l.com, target_dir=C:\\Users\\sciman\\.codex",
+      "app.log.2026-05-10: 2026-05-11T01:32:34.929470900+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, email=ai***p@g***l.com, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:32:34.948173100+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=false",
+      "app.log.2026-05-10: 2026-05-11T01:32:34.956101900+08:00  INFO [Codex切号] 已替换目录登录信息: target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:32:34.968234900+08:00  INFO 已同步更新 Codex 默认实例绑定账号: codex_c641df4d56baceca12b3ffcd597061b3",
+      "app.log.2026-05-10: 2026-05-11T01:32:35.460891700+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, email=ai***p@g***l.com, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:32:35.477375400+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=false",
+      "app.log.2026-05-10: 2026-05-11T01:32:38.058377800+08:00  INFO [Codex Start] 启动策略候选=system-store-entry app_id=OpenAI.Codex_2p2nqsd0c76g0!App",
+      "app.log.2026-05-10: 2026-05-11T01:32:38.365055800+08:00  INFO [Codex Start] 已通过系统入口启动 Codex: OpenAI.Codex_2p2nqsd0c76g0!App",
+      "app.log.2026-05-10: 2026-05-11T01:32:38.809575200+08:00  INFO [Codex Start] 启动策略=system-store-entry app_id=OpenAI.Codex_2p2nqsd0c76g0!App pid=28500",
+      "app.log.2026-05-10: 2026-05-11T01:32:38.831950900+08:00  INFO 已关闭切换 Codex 时自动重启指定应用",
+      "app.log.2026-05-10: 2026-05-11T01:48:32.571152300+08:00  INFO [Codex切号] 开始切换账号: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex",
+      "app.log.2026-05-10: 2026-05-11T01:48:32.571180200+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:48:32.592649800+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:48:32.603008600+08:00  INFO [Codex切号] 已替换目录登录信息: target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:48:32.617244900+08:00  INFO 已同步更新 Codex 默认实例绑定账号: codex_apikey_8b8853f15e823dc53bd156163035bc78",
+      "app.log.2026-05-10: 2026-05-11T01:48:33.097887700+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:48:33.121001100+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:48:33.135414400+08:00  INFO 已关闭切换 Codex 时自动重启指定应用",
+      "app.log.2026-05-10: 2026-05-11T01:55:48.437504700+08:00  INFO [Codex切号] 开始切换账号: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex",
+      "app.log.2026-05-10: 2026-05-11T01:55:48.437519900+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:55:48.457562300+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:55:48.465129200+08:00  INFO [Codex切号] 已替换目录登录信息: target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:55:48.478074600+08:00  INFO 已同步更新 Codex 默认实例绑定账号: codex_apikey_8b8853f15e823dc53bd156163035bc78",
+      "app.log.2026-05-10: 2026-05-11T01:55:48.910124800+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:55:48.929198+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:55:48.938761800+08:00  INFO 已关闭切换 Codex 时自动重启指定应用",
+      "app.log.2026-05-10: 2026-05-11T01:56:25.314292700+08:00  INFO [Codex切号] 开始切换账号: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex",
+      "app.log.2026-05-10: 2026-05-11T01:56:25.314308900+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:56:25.334459100+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:56:25.342190+08:00  INFO [Codex切号] 已替换目录登录信息: target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:56:25.355035300+08:00  INFO 已同步更新 Codex 默认实例绑定账号: codex_apikey_8b8853f15e823dc53bd156163035bc78",
+      "app.log.2026-05-10: 2026-05-11T01:56:25.799325200+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:56:25.819115600+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:56:25.829099900+08:00  INFO 已关闭切换 Codex 时自动重启指定应用",
+      "app.log.2026-05-10: 2026-05-11T01:57:11.254657900+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:57:11.275716+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:57:12.673239900+08:00  INFO [Codex切号] 开始切换账号: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex",
+      "app.log.2026-05-10: 2026-05-11T01:57:12.673254400+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:57:12.696828200+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:57:12.704233500+08:00  INFO [Codex切号] 已替换目录登录信息: target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:57:12.717139400+08:00  INFO 已同步更新 Codex 默认实例绑定账号: codex_apikey_8b8853f15e823dc53bd156163035bc78",
+      "app.log.2026-05-10: 2026-05-11T01:57:13.140341700+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:57:13.163335200+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:57:13.173458200+08:00  INFO 已关闭切换 Codex 时自动重启指定应用",
+      "app.log.2026-05-10: 2026-05-11T02:00:04.008161400+08:00  INFO [Codex切号] 开始切换账号: account_id=codex_c641df4d56baceca12b3ffcd597061b3, email=ai***p@g***l.com, target_dir=C:\\Users\\sciman\\.codex",
+      "app.log.2026-05-10: 2026-05-11T02:00:04.008179400+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, email=ai***p@g***l.com, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T02:00:04.028199800+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=false",
+      "app.log.2026-05-10: 2026-05-11T02:00:04.036413900+08:00  INFO [Codex切号] 已替换目录登录信息: target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T02:00:04.049767700+08:00  INFO 已同步更新 Codex 默认实例绑定账号: codex_c641df4d56baceca12b3ffcd597061b3",
+      "app.log.2026-05-10: 2026-05-11T02:00:04.566222600+08:00  INFO [AG Close] taskkill start pid=22308",
+      "app.log.2026-05-10: 2026-05-11T02:00:04.774964900+08:00  INFO [AG Close] taskkill success pid=22308 status=exit code: 0",
+      "app.log.2026-05-10: 2026-05-11T02:00:05.175487700+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, email=ai***p@g***l.com, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T02:00:05.193666+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=false",
+      "app.log.2026-05-10: 2026-05-11T02:00:05.203635200+08:00  INFO 已关闭切换 Codex 时自动重启指定应用",
+      "app.log.2026-05-10: 2026-05-11T02:00:24.931545400+08:00  INFO [Codex切号] 开始切换账号: account_id=codex_c641df4d56baceca12b3ffcd597061b3, email=ai***p@g***l.com, target_dir=C:\\Users\\sciman\\.codex",
+      "app.log.2026-05-10: 2026-05-11T02:00:24.931563700+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, email=ai***p@g***l.com, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T02:00:24.949944100+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=false",
+      "app.log.2026-05-10: 2026-05-11T02:00:24.957936200+08:00  INFO [Codex切号] 已替换目录登录信息: target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T02:00:24.970655200+08:00  INFO 已同步更新 Codex 默认实例绑定账号: codex_c641df4d56baceca12b3ffcd597061b3",
+      "app.log.2026-05-10: 2026-05-11T02:00:25.413713100+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, email=ai***p@g***l.com, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T02:00:25.434044800+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=false",
+      "app.log.2026-05-10: 2026-05-11T02:00:25.444625300+08:00  INFO 已关闭切换 Codex 时自动重启指定应用"
+    ]
+  },
+  "after": {
+    "timestamp": "2026-05-11T02:09:10",
+    "paths": {
+      "codex_home": "C:\\Users\\sciman\\.codex",
+      "cockpit_home": "C:\\Users\\sciman\\.antigravity_cockpit"
+    },
+    "files": {
+      "cockpit_config": {
+        "path": "C:\\Users\\sciman\\.antigravity_cockpit\\config.json",
+        "exists": true,
+        "size": 4138,
+        "mtime": 1778436513.95649,
+        "mtime_iso": "2026-05-11T02:08:33",
+        "sha256": "462c6d07330e210087614e392219235c0e57df370635d5097eaeeb6ba342ec6a"
+      },
+      "cockpit_accounts": {
+        "path": "C:\\Users\\sciman\\.antigravity_cockpit\\codex_accounts.json",
+        "exists": true,
+        "size": 2256,
+        "mtime": 1778436024.9537046,
+        "mtime_iso": "2026-05-11T02:00:24",
+        "sha256": "aec3b7e587516c2735001ce38069598bb1db1ba337bfd4c8944a6c781c1762d3"
+      },
+      "cockpit_instances": {
+        "path": "C:\\Users\\sciman\\.antigravity_cockpit\\codex_instances.json",
+        "exists": true,
+        "size": 210,
+        "mtime": 1778436513.957491,
+        "mtime_iso": "2026-05-11T02:08:33",
+        "sha256": "887ffd29b23bd4fe1e0c233505749589803b23c4a00c9964a767484bd9447468"
+      },
+      "cockpit_model_providers": {
+        "path": "C:\\Users\\sciman\\.antigravity_cockpit\\codex_model_providers.json",
+        "exists": true,
+        "size": 859,
+        "mtime": 1778331641.8843303,
+        "mtime_iso": "2026-05-09T21:00:41",
+        "sha256": "685441b231a91c2903da32bf1d6681e350f8ee615f5b9eedc8495d2b8f078f16"
+      },
+      "codex_config": {
+        "path": "C:\\Users\\sciman\\.codex\\config.toml",
+        "exists": true,
+        "size": 111322,
+        "mtime": 1778436044.8457158,
+        "mtime_iso": "2026-05-11T02:00:44",
+        "sha256": "d6addf0d170b9f4509700a4e32ff9a406b08d007bc43a20047acfd0b58c4c198"
+      },
+      "codex_auth": {
+        "path": "C:\\Users\\sciman\\.codex\\auth.json",
+        "exists": true,
+        "size": 4388,
+        "mtime": 1778436029.1810756,
+        "mtime_iso": "2026-05-11T02:00:29",
+        "sha256": "216ecdfa0cd1b025c61d2fed0a197bb30027001d34bac79aa2599f2234a32239"
+      },
+      "codex_cockpit_auth_projection": {
+        "path": "C:\\Users\\sciman\\.codex\\.cockpit_codex_auth.json",
+        "exists": true,
+        "size": 190,
+        "mtime": 1778436025.438064,
+        "mtime_iso": "2026-05-11T02:00:25",
+        "sha256": "1d8e285753a74a35d70d8bbf583e2f8db0c646bd0f3458d8669b3c1f8b781fb0"
+      },
+      "codex_state_db": {
+        "path": "C:\\Users\\sciman\\.codex\\state_5.sqlite",
+        "exists": true,
+        "size": 15216640,
+        "mtime": 1778436029.195627,
+        "mtime_iso": "2026-05-11T02:00:29",
+        "sha256": "1ab99d64c630f331ea476e4ad1a37b45e92189686e5b9a69ae4bfa6d7ed59a2d"
+      }
+    },
+    "cockpit": {
+      "current_account_id": "codex_c641df4d56baceca12b3ffcd597061b3",
+      "current_account": {
+        "id": "codex_c641df4d56baceca12b3ffcd597061b3",
+        "email": "ai.sciman.top@gmail.com",
+        "auth_mode": "oauth",
+        "api_provider_mode": "openai_builtin",
+        "user_id": "user-tnzYfgCcHsbfkfkpEaHTk2e1",
+        "plan_type": "plus",
+        "subscription_active_until": "2026-05-10T02:33:11+00:00",
+        "account_id": "d23cbc21-b2fb-475f-81e6-82fc669e47aa",
+        "organization_id": null,
+        "account_structure": "personal",
+        "tokens": {
+          "id_token": "<redacted>",
+          "access_token": "<redacted>",
+          "refresh_token": "<redacted>"
+        },
+        "token_generation": 2,
+        "token_updated_at": 1778076358,
+        "token_source_mode": "managed",
+        "quota": {
+          "hourly_percentage": 48,
+          "hourly_reset_time": 1778450684,
+          "hourly_window_minutes": 300,
+          "hourly_window_present": true,
+          "weekly_percentage": 41,
+          "weekly_reset_time": 1778677438,
+          "weekly_window_minutes": 10080,
+          "weekly_window_present": true,
+          "raw_data": {
+            "account_id": "user-tnzYfgCcHsbfkfkpEaHTk2e1",
+            "additional_rate_limits": null,
+            "code_review_rate_limit": null,
+            "credits": {
+              "approx_cloud_messages": [
+                0,
+                0
+              ],
+              "approx_local_messages": [
+                0,
+                0
+              ],
+              "balance": "0",
+              "has_credits": false,
+              "overage_limit_reached": false,
+              "unlimited": false
+            },
+            "email": "ai.sciman.top@gmail.com",
+            "plan_type": "plus",
+            "promo": null,
+            "rate_limit": {
+              "allowed": true,
+              "limit_reached": false,
+              "primary_window": {
+                "limit_window_seconds": 18000,
+                "reset_after_seconds": 14175,
+                "reset_at": 1778450684,
+                "used_percent": 52
+              },
+              "secondary_window": {
+                "limit_window_seconds": 604800,
+                "reset_after_seconds": 240929,
+                "reset_at": 1778677438,
+                "used_percent": 59
+              }
+            },
+            "rate_limit_reached_type": null,
+            "referral_beacon": null,
+            "spend_control": {
+              "individual_limit": null,
+              "reached": false
+            },
+            "user_id": "user-tnzYfgCcHsbfkfkpEaHTk2e1"
+          }
+        },
+        "usage_updated_at": 1778436510,
+        "tags": null,
+        "created_at": 1778075767,
+        "last_used": 1778436024
+      },
+      "launch_flags": {
+        "codex_launch_on_switch": false,
+        "codex_restart_specified_app_on_switch": false,
+        "codex_specified_app_path": ""
+      },
+      "default_instance": {
+        "bindAccountId": null,
+        "extraArgs": "",
+        "workingDir": null,
+        "launchMode": "app",
+        "followLocalAccount": true,
+        "lastPid": null
+      },
+      "model_providers": {}
+    },
+    "codex": {
+      "config": {
+        "exists": true,
+        "approval_policy": "never",
+        "forced_login_method": "chatgpt",
+        "sandbox_mode": "workspace-write",
+        "project_doc_max_bytes": "32768",
+        "model_provider": "openai",
+        "model_providers": {
+          "rightcode": {
+            "name": "rightcode",
+            "base_url": "https://right.codes/codex/v1",
+            "wire_api": "responses"
+          },
+          "cmp_1778246510288_1": {
+            "name": "RightCode",
+            "base_url": "https://right.codes/codex/v1",
+            "wire_api": "responses"
+          },
+          "cmp_1778165666417_1": {
+            "name": "35.213.82.91",
+            "base_url": "http://35.213.82.91:8003/v1",
+            "wire_api": "responses"
+          },
+          "provider_openai": {
+            "name": "35.213.82.91",
+            "base_url": "http://35.213.82.91:8003/v1",
+            "wire_api": "responses"
+          }
+        }
+      },
+      "auth": {
+        "auth_mode": "chatgpt",
+        "has_openai_api_key": false,
+        "has_tokens": true,
+        "base_url": null,
+        "provider": null,
+        "keys": [
+          "OPENAI_API_KEY",
+          "auth_mode",
+          "last_refresh",
+          "tokens"
+        ]
+      },
+      "cockpit_auth_projection": {
+        "version": 1,
+        "writer": "cockpit",
+        "account_id": "codex_c641df4d56baceca12b3ffcd597061b3",
+        "email": "ai.sciman.top@gmail.com",
+        "token_generation": 2,
+        "written_at": 1778436025
+      },
+      "state_db": {
+        "exists": true,
+        "tables": [
+          "_sqlx_migrations",
+          "agent_job_items",
+          "agent_jobs",
+          "backfill_state",
+          "jobs",
+          "remote_control_enrollments",
+          "sqlite_stat1",
+          "stage1_outputs",
+          "thread_dynamic_tools",
+          "thread_goals",
+          "thread_spawn_edges",
+          "threads"
+        ],
+        "threads_by_model_provider": [
+          {
+            "model_provider": "openai",
+            "count": 1640
+          }
+        ],
+        "threads_by_cwd_top": [
+          {
+            "cwd": "\\\\?\\D:\\CODE\\ClassroomToolkit",
+            "count": 537
+          },
+          {
+            "cwd": "\\\\?\\D:\\CODE\\governed-ai-coding-runtime",
+            "count": 386
+          },
+          {
+            "cwd": "\\\\?\\D:\\CODE\\skills-manager",
+            "count": 244
+          },
+          {
+            "cwd": "\\\\?\\C:\\Users\\sciman",
+            "count": 88
+          },
+          {
+            "cwd": "e:\\PythonProject\\ClassroomTools",
+            "count": 74
+          },
+          {
+            "cwd": "E:\\CODE\\governance-kit",
+            "count": 53
+          },
+          {
+            "cwd": "\\\\?\\D:\\CODE\\k12-question-graph",
+            "count": 41
+          },
+          {
+            "cwd": "\\\\?\\D:\\CODE\\vps-ssh-launcher",
+            "count": 36
+          }
+        ]
+      }
+    },
+    "processes": [
+      {
+        "Id": 41544,
+        "ProcessName": "cockpit-tools",
+        "StartTime": "/Date(1778418481389)/",
+        "Path": "C:\\Users\\sciman\\AppData\\Local\\Cockpit Tools\\cockpit-tools.exe"
+      },
+      {
+        "Id": 24504,
+        "ProcessName": "Codex",
+        "StartTime": "/Date(1778436029765)/",
+        "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.506.3741.0_x64__2p2nqsd0c76g0\\app\\Codex.exe"
+      },
+      {
+        "Id": 33236,
+        "ProcessName": "Codex",
+        "StartTime": "/Date(1778436029204)/",
+        "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.506.3741.0_x64__2p2nqsd0c76g0\\app\\Codex.exe"
+      },
+      {
+        "Id": 36756,
+        "ProcessName": "codex",
+        "StartTime": "/Date(1778436029658)/",
+        "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.506.3741.0_x64__2p2nqsd0c76g0\\app\\resources\\codex.exe"
+      },
+      {
+        "Id": 39516,
+        "ProcessName": "Codex",
+        "StartTime": "/Date(1778436029152)/",
+        "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.506.3741.0_x64__2p2nqsd0c76g0\\app\\Codex.exe"
+      },
+      {
+        "Id": 41948,
+        "ProcessName": "Codex",
+        "StartTime": "/Date(1778436029039)/",
+        "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.506.3741.0_x64__2p2nqsd0c76g0\\app\\Codex.exe"
+      },
+      {
+        "Id": 44336,
+        "ProcessName": "Codex",
+        "StartTime": "/Date(1778436028638)/",
+        "Path": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.506.3741.0_x64__2p2nqsd0c76g0\\app\\Codex.exe"
+      }
+    ],
+    "guard_status": {
+      "task_state": "Running",
+      "healthy": true,
+      "process_count": 1,
+      "process_ids": [
+        44112
+      ]
+    },
+    "recent_cockpit_events": [
+      "app.log.2026-05-10: 2026-05-11T01:01:43.216966200+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, email=ai***p@g***l.com, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:01:43.235070700+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=false",
+      "app.log.2026-05-10: 2026-05-11T01:01:45.839106400+08:00  INFO [Codex Start] 启动策略候选=system-store-entry app_id=OpenAI.Codex_2p2nqsd0c76g0!App",
+      "app.log.2026-05-10: 2026-05-11T01:01:46.137664900+08:00  INFO [Codex Start] 已通过系统入口启动 Codex: OpenAI.Codex_2p2nqsd0c76g0!App",
+      "app.log.2026-05-10: 2026-05-11T01:01:46.579471900+08:00  INFO [Codex Start] 启动策略=system-store-entry app_id=OpenAI.Codex_2p2nqsd0c76g0!App pid=28856",
+      "app.log.2026-05-10: 2026-05-11T01:01:46.600228300+08:00  INFO 已关闭切换 Codex 时自动重启指定应用",
+      "app.log.2026-05-10: 2026-05-11T01:29:15.193375100+08:00  INFO [Codex切号] 开始切换账号: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex",
+      "app.log.2026-05-10: 2026-05-11T01:29:15.193390400+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:29:15.214817+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:29:15.222875600+08:00  INFO [Codex切号] 已替换目录登录信息: target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:29:15.236720900+08:00  INFO 已同步更新 Codex 默认实例绑定账号: codex_apikey_8b8853f15e823dc53bd156163035bc78",
+      "app.log.2026-05-10: 2026-05-11T01:29:15.719950100+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:29:15.743869600+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:29:18.445383300+08:00  INFO [Codex Start] 启动策略候选=system-store-entry app_id=OpenAI.Codex_2p2nqsd0c76g0!App",
+      "app.log.2026-05-10: 2026-05-11T01:29:18.791784600+08:00  INFO [Codex Start] 已通过系统入口启动 Codex: OpenAI.Codex_2p2nqsd0c76g0!App",
+      "app.log.2026-05-10: 2026-05-11T01:29:19.244574100+08:00  INFO [Codex Start] 启动策略=system-store-entry app_id=OpenAI.Codex_2p2nqsd0c76g0!App pid=43412",
+      "app.log.2026-05-10: 2026-05-11T01:29:19.264772200+08:00  INFO 已关闭切换 Codex 时自动重启指定应用",
+      "app.log.2026-05-10: 2026-05-11T01:32:34.929452700+08:00  INFO [Codex切号] 开始切换账号: account_id=codex_c641df4d56baceca12b3ffcd597061b3, email=ai***p@g***l.com, target_dir=C:\\Users\\sciman\\.codex",
+      "app.log.2026-05-10: 2026-05-11T01:32:34.929470900+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, email=ai***p@g***l.com, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:32:34.948173100+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=false",
+      "app.log.2026-05-10: 2026-05-11T01:32:34.956101900+08:00  INFO [Codex切号] 已替换目录登录信息: target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:32:34.968234900+08:00  INFO 已同步更新 Codex 默认实例绑定账号: codex_c641df4d56baceca12b3ffcd597061b3",
+      "app.log.2026-05-10: 2026-05-11T01:32:35.460891700+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, email=ai***p@g***l.com, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:32:35.477375400+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=false",
+      "app.log.2026-05-10: 2026-05-11T01:32:38.058377800+08:00  INFO [Codex Start] 启动策略候选=system-store-entry app_id=OpenAI.Codex_2p2nqsd0c76g0!App",
+      "app.log.2026-05-10: 2026-05-11T01:32:38.365055800+08:00  INFO [Codex Start] 已通过系统入口启动 Codex: OpenAI.Codex_2p2nqsd0c76g0!App",
+      "app.log.2026-05-10: 2026-05-11T01:32:38.809575200+08:00  INFO [Codex Start] 启动策略=system-store-entry app_id=OpenAI.Codex_2p2nqsd0c76g0!App pid=28500",
+      "app.log.2026-05-10: 2026-05-11T01:32:38.831950900+08:00  INFO 已关闭切换 Codex 时自动重启指定应用",
+      "app.log.2026-05-10: 2026-05-11T01:48:32.571152300+08:00  INFO [Codex切号] 开始切换账号: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex",
+      "app.log.2026-05-10: 2026-05-11T01:48:32.571180200+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:48:32.592649800+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:48:32.603008600+08:00  INFO [Codex切号] 已替换目录登录信息: target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:48:32.617244900+08:00  INFO 已同步更新 Codex 默认实例绑定账号: codex_apikey_8b8853f15e823dc53bd156163035bc78",
+      "app.log.2026-05-10: 2026-05-11T01:48:33.097887700+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:48:33.121001100+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:48:33.135414400+08:00  INFO 已关闭切换 Codex 时自动重启指定应用",
+      "app.log.2026-05-10: 2026-05-11T01:55:48.437504700+08:00  INFO [Codex切号] 开始切换账号: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex",
+      "app.log.2026-05-10: 2026-05-11T01:55:48.437519900+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:55:48.457562300+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:55:48.465129200+08:00  INFO [Codex切号] 已替换目录登录信息: target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:55:48.478074600+08:00  INFO 已同步更新 Codex 默认实例绑定账号: codex_apikey_8b8853f15e823dc53bd156163035bc78",
+      "app.log.2026-05-10: 2026-05-11T01:55:48.910124800+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:55:48.929198+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:55:48.938761800+08:00  INFO 已关闭切换 Codex 时自动重启指定应用",
+      "app.log.2026-05-10: 2026-05-11T01:56:25.314292700+08:00  INFO [Codex切号] 开始切换账号: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex",
+      "app.log.2026-05-10: 2026-05-11T01:56:25.314308900+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:56:25.334459100+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:56:25.342190+08:00  INFO [Codex切号] 已替换目录登录信息: target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:56:25.355035300+08:00  INFO 已同步更新 Codex 默认实例绑定账号: codex_apikey_8b8853f15e823dc53bd156163035bc78",
+      "app.log.2026-05-10: 2026-05-11T01:56:25.799325200+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:56:25.819115600+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:56:25.829099900+08:00  INFO 已关闭切换 Codex 时自动重启指定应用",
+      "app.log.2026-05-10: 2026-05-11T01:57:11.254657900+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:57:11.275716+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:57:12.673239900+08:00  INFO [Codex切号] 开始切换账号: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex",
+      "app.log.2026-05-10: 2026-05-11T01:57:12.673254400+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:57:12.696828200+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:57:12.704233500+08:00  INFO [Codex切号] 已替换目录登录信息: target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:57:12.717139400+08:00  INFO 已同步更新 Codex 默认实例绑定账号: codex_apikey_8b8853f15e823dc53bd156163035bc78",
+      "app.log.2026-05-10: 2026-05-11T01:57:13.140341700+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, email=api-key-8b8853f1, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T01:57:13.163335200+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_apikey_8b8853f15e823dc53bd156163035bc78, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=true",
+      "app.log.2026-05-10: 2026-05-11T01:57:13.173458200+08:00  INFO 已关闭切换 Codex 时自动重启指定应用",
+      "app.log.2026-05-10: 2026-05-11T02:00:04.008161400+08:00  INFO [Codex切号] 开始切换账号: account_id=codex_c641df4d56baceca12b3ffcd597061b3, email=ai***p@g***l.com, target_dir=C:\\Users\\sciman\\.codex",
+      "app.log.2026-05-10: 2026-05-11T02:00:04.008179400+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, email=ai***p@g***l.com, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T02:00:04.028199800+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=false",
+      "app.log.2026-05-10: 2026-05-11T02:00:04.036413900+08:00  INFO [Codex切号] 已替换目录登录信息: target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T02:00:04.049767700+08:00  INFO 已同步更新 Codex 默认实例绑定账号: codex_c641df4d56baceca12b3ffcd597061b3",
+      "app.log.2026-05-10: 2026-05-11T02:00:04.566222600+08:00  INFO [AG Close] taskkill start pid=22308",
+      "app.log.2026-05-10: 2026-05-11T02:00:04.774964900+08:00  INFO [AG Close] taskkill success pid=22308 status=exit code: 0",
+      "app.log.2026-05-10: 2026-05-11T02:00:05.175487700+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, email=ai***p@g***l.com, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T02:00:05.193666+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=false",
+      "app.log.2026-05-10: 2026-05-11T02:00:05.203635200+08:00  INFO 已关闭切换 Codex 时自动重启指定应用",
+      "app.log.2026-05-10: 2026-05-11T02:00:24.931545400+08:00  INFO [Codex切号] 开始切换账号: account_id=codex_c641df4d56baceca12b3ffcd597061b3, email=ai***p@g***l.com, target_dir=C:\\Users\\sciman\\.codex",
+      "app.log.2026-05-10: 2026-05-11T02:00:24.931563700+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, email=ai***p@g***l.com, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T02:00:24.949944100+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=false",
+      "app.log.2026-05-10: 2026-05-11T02:00:24.957936200+08:00  INFO [Codex切号] 已替换目录登录信息: target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T02:00:24.970655200+08:00  INFO 已同步更新 Codex 默认实例绑定账号: codex_c641df4d56baceca12b3ffcd597061b3",
+      "app.log.2026-05-10: 2026-05-11T02:00:25.413713100+08:00  INFO [Codex切号] 准备写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, email=ai***p@g***l.com, target_dir=C:\\Users\\sciman\\.codex, target_file=C:\\Users\\sciman\\.codex\\auth.json",
+      "app.log.2026-05-10: 2026-05-11T02:00:25.434044800+08:00  INFO [Codex切号] 已写入登录信息: account_id=codex_c641df4d56baceca12b3ffcd597061b3, target_file=C:\\Users\\sciman\\.codex\\auth.json, has_base_url=false",
+      "app.log.2026-05-10: 2026-05-11T02:00:25.444625300+08:00  INFO 已关闭切换 Codex 时自动重启指定应用"
+    ]
+  },
+  "change_events": [],
+  "changed_files": [],
+  "interpretation": [
+    "cockpit_* changes are Cockpit Tools state writes",
+    "codex_auth changes affect Codex App/CLI login projection",
+    "codex_config changes affect provider/profile projection",
+    "codex_state_db changes affect history visibility buckets"
+  ]
+}

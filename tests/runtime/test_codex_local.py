@@ -274,6 +274,99 @@ class CodexLocalTests(unittest.TestCase):
             self.assertTrue((home / "auth.json").exists())
             self.assertTrue((home / "auth3-2.json").exists())
 
+    def test_save_api_auth_profile_projects_shared_openai_history_bucket(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_auth(home / "auth.json", account_id="oauth-account")
+            (home / "config.toml").write_text(
+                "\n".join(
+                    [
+                        'model_provider = "cmp_old"',
+                        'forced_login_method = "chatgpt"',
+                        'openai_base_url = "http://old.example/v1"',
+                        "",
+                        "[model_providers.openai]",
+                        'base_url = "http://wrong.example/v1"',
+                        "",
+                        "[mcp_servers.context7]",
+                        'transport = "stdio"',
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            result = codex_local.save_api_auth_profile(
+                "api-35",
+                "relay-secret-value",
+                "http://35.213.82.91:8003/v1",
+                home,
+                switch_now=True,
+            )
+
+            self.assertEqual("ok", result["status"])
+            self.assertNotIn("relay-secret-value", json.dumps(result, ensure_ascii=False))
+            self.assertEqual("ok", result["switch"]["status"])
+            auth_payload = json.loads((home / "auth.json").read_text(encoding="utf-8"))
+            self.assertEqual("apikey", auth_payload["auth_mode"])
+            self.assertEqual("relay-secret-value", auth_payload["OPENAI_API_KEY"])
+            config = (home / "config.toml").read_text(encoding="utf-8")
+            self.assertIn('model_provider = "openai"', config)
+            self.assertIn('forced_login_method = "api"', config)
+            self.assertIn('openai_base_url = "http://35.213.82.91:8003/v1"', config)
+            self.assertNotIn("[model_providers.openai]", config)
+            self.assertIn("[mcp_servers.context7]", config)
+            status = codex_local.codex_status(home)
+            self.assertEqual("api-35", status["active_account"]["name"])
+            self.assertEqual("apikey", status["active_account"]["auth_mode"])
+            self.assertEqual("http://35.213.82.91:8003/v1", status["active_account"]["api_base_url"])
+            self.assertEqual("openai", status["config"]["auth_projection"]["model_provider"])
+
+    def test_switch_auth_profile_to_chatgpt_clears_api_projection(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_auth(home / "auth.json", account_id="oauth-account")
+            (home / "config.toml").write_text(
+                "\n".join(
+                    [
+                        'model_provider = "openai"',
+                        'forced_login_method = "api"',
+                        'openai_base_url = "http://35.213.82.91:8003/v1"',
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            profiles = home / "auth-profiles"
+            profiles.mkdir()
+            _write_auth(profiles / "oauth-main.json", account_id="oauth-account-2")
+
+            result = codex_local.switch_auth_profile("oauth-main", home)
+
+            self.assertEqual("ok", result["status"])
+            config = (home / "config.toml").read_text(encoding="utf-8")
+            self.assertIn('model_provider = "openai"', config)
+            self.assertIn('forced_login_method = "chatgpt"', config)
+            self.assertNotIn("openai_base_url", config)
+
+    def test_save_api_auth_profile_probe_failure_does_not_write_profile(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_auth(home / "auth.json", account_id="oauth-account")
+
+            with mock.patch(
+                "lib.codex_local.probe_codex_api_account",
+                return_value={"attempted": True, "status": "error", "error": "unreachable"},
+            ):
+                result = codex_local.save_api_auth_profile(
+                    "bad-api",
+                    "relay-secret-value",
+                    "http://127.0.0.1:65530/v1",
+                    home,
+                    probe=True,
+                )
+
+            self.assertEqual("error", result["status"])
+            self.assertFalse((home / "auth-profiles" / "bad-api.json").exists())
+
     def test_config_health_reports_recommended_defaults_without_secret_values(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)

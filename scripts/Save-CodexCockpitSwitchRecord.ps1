@@ -68,10 +68,13 @@ $summary = [ordered]@{
     timestamp = Get-JsonPropertyOrNull -Object $after -Name 'timestamp'
     cockpit_current_account_id = Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object $after -Name 'cockpit') -Name 'current_account_id'
     codex_launch_on_switch = Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object $after -Name 'cockpit') -Name 'launch_flags') -Name 'codex_launch_on_switch'
+    codex_app_path = Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object $after -Name 'cockpit') -Name 'launch_flags') -Name 'codex_app_path'
     codex_restart_specified_app_on_switch = Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object $after -Name 'cockpit') -Name 'launch_flags') -Name 'codex_restart_specified_app_on_switch'
     codex_specified_app_path = Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object $after -Name 'cockpit') -Name 'launch_flags') -Name 'codex_specified_app_path'
+    antigravity_dual_switch_no_restart_enabled = Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object $after -Name 'cockpit') -Name 'launch_flags') -Name 'antigravity_dual_switch_no_restart_enabled'
     cockpit_bind_account_id = Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object $after -Name 'cockpit') -Name 'default_instance') -Name 'bindAccountId'
     cockpit_follow_local_account = Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object $after -Name 'cockpit') -Name 'default_instance') -Name 'followLocalAccount'
+    cockpit_launch_mode = Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object $after -Name 'cockpit') -Name 'default_instance') -Name 'launchMode'
     codex_forced_login_method = Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object $after -Name 'codex') -Name 'config') -Name 'forced_login_method'
     codex_model_provider = Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object $after -Name 'codex') -Name 'config') -Name 'model_provider'
     codex_openai_base_url = Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object (Get-JsonPropertyOrNull -Object $after -Name 'codex') -Name 'config') -Name 'openai_base_url'
@@ -97,5 +100,8 @@ else {
     Write-Host "  model_provider: $($summary.codex_model_provider)"
     Write-Host "  openai_base_url: $($summary.codex_openai_base_url)"
     Write-Host "  cockpit launch_on_switch: $($summary.codex_launch_on_switch)"
+    Write-Host "  cockpit app_path: $($summary.codex_app_path)"
+    Write-Host "  cockpit no_restart: $($summary.antigravity_dual_switch_no_restart_enabled)"
     Write-Host "  cockpit bindAccountId: $($summary.cockpit_bind_account_id)"
+    Write-Host "  cockpit launchMode: $($summary.cockpit_launch_mode)"
 }

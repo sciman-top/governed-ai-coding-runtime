@@ -1,0 +1,21 @@
+{
+  "label": "after-noop-launcher-record-schema",
+  "record_path": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\codex-cockpit-snapshots\\20260511-023305-after-noop-launcher-record-schema\\record.json",
+  "timestamp": "2026-05-11T02:33:07",
+  "cockpit_current_account_id": "codex_c641df4d56baceca12b3ffcd597061b3",
+  "codex_launch_on_switch": false,
+  "codex_app_path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-noop-launcher.exe",
+  "codex_restart_specified_app_on_switch": false,
+  "codex_specified_app_path": "",
+  "antigravity_dual_switch_no_restart_enabled": true,
+  "cockpit_bind_account_id": null,
+  "cockpit_follow_local_account": true,
+  "cockpit_launch_mode": "app",
+  "codex_forced_login_method": "chatgpt",
+  "codex_model_provider": "openai",
+  "codex_openai_base_url": null,
+  "codex_auth_mode": "chatgpt",
+  "codex_auth_has_api_key": false,
+  "codex_auth_has_tokens": true,
+  "changed_files_within_watch": []
+}

@@ -31,6 +31,12 @@ def render_interactive_script(
   const historyList = document.getElementById('ui-history');
   const codexAccounts = document.getElementById('codex-accounts');
   const codexCacheState = document.getElementById('codex-cache-state');
+  const codexApiForm = document.getElementById('codex-api-form');
+  const codexApiName = document.getElementById('codex-api-name');
+  const codexApiBaseUrl = document.getElementById('codex-api-base-url');
+  const codexApiKey = document.getElementById('codex-api-key');
+  const codexApiProbe = document.getElementById('codex-api-probe');
+  const codexApiSwitchNow = document.getElementById('codex-api-switch-now');
   const claudeProviders = document.getElementById('claude-providers');
   const feedbackStatus = document.getElementById('feedback-status');
   const feedbackCacheState = document.getElementById('feedback-cache-state');
@@ -782,6 +788,9 @@ def render_interactive_script(
     if (value === 'chatgpt') {{
       return currentUiLanguage() === 'zh-CN' ? 'ChatGPT 登录' : 'ChatGPT sign-in';
     }}
+    if (value === 'apikey') {{
+      return currentUiLanguage() === 'zh-CN' ? 'API Key' : 'API key';
+    }}
     return authMode;
   }}
 
@@ -1510,6 +1519,10 @@ def render_interactive_script(
           formatAuthModeLabel(account.auth_mode)
         ),
         createInfoLine(
+          currentUiLanguage() === 'zh-CN' ? 'API' : 'API',
+          account.api_base_url || ''
+        ),
+        createInfoLine(
           currentUiLanguage() === 'zh-CN' ? '套餐' : 'plan',
           createMultilineInfoValue(formatSubscriptionExpirySummary(account))
         )
@@ -1722,6 +1735,50 @@ def render_interactive_script(
       const payload = await response.json();
       setOutput(JSON.stringify(payload, null, 2));
       await refreshCodexStatus();
+    }} catch (error) {{
+      setOutput(String(error));
+    }} finally {{
+      setBusy(false);
+    }}
+  }}
+
+  async function saveCodexApiAccount(event) {{
+    if (event) {{
+      event.preventDefault();
+    }}
+    const name = String(codexApiName && codexApiName.value || '').trim();
+    const baseUrl = String(codexApiBaseUrl && codexApiBaseUrl.value || '').trim();
+    const apiKey = String(codexApiKey && codexApiKey.value || '').trim();
+    if (!name || !baseUrl || !apiKey) {{
+      setOutput({text['codex_api_missing']!r});
+      return;
+    }}
+    const confirmMessage = codexApiForm ? codexApiForm.querySelector('button[type="submit"]')?.getAttribute('data-confirm') : '';
+    if (confirmMessage && !window.confirm(confirmMessage)) {{
+      return;
+    }}
+    setBusy(true);
+    try {{
+      const response = await fetch('/api/codex/save-api', {{
+        method: 'POST',
+        headers: {{ 'content-type': 'application/json' }},
+        body: JSON.stringify({{
+          name,
+          label: name,
+          base_url: baseUrl,
+          api_key: apiKey,
+          probe: !!(codexApiProbe && codexApiProbe.checked),
+          switch_now: !!(codexApiSwitchNow && codexApiSwitchNow.checked)
+        }})
+      }});
+      const payload = await response.json();
+      setOutput(JSON.stringify(payload, null, 2));
+      if (response.ok) {{
+        if (codexApiKey) {{
+          codexApiKey.value = '';
+        }}
+        await refreshCodexStatus();
+      }}
     }} catch (error) {{
       setOutput(String(error));
     }} finally {{
@@ -2005,6 +2062,9 @@ def render_interactive_script(
   document.querySelector('[data-codex-refresh]').addEventListener('click', () => refreshCodexStatus());
   document.querySelector('[data-codex-refresh-online]').addEventListener('click', () => refreshCodexStatusOnline());
   document.querySelector('[data-codex-usage]').addEventListener('click', () => window.open('https://chatgpt.com/codex/settings/usage', '_blank', 'noopener'));
+  if (codexApiForm) {{
+    codexApiForm.addEventListener('submit', saveCodexApiAccount);
+  }}
   codexAccounts.addEventListener('click', (event) => {{
     const deleteButton = event.target.closest('button[data-codex-delete-name]');
     if (deleteButton) {{

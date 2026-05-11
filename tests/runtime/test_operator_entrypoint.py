@@ -536,6 +536,7 @@ class OperatorEntrypointTests(unittest.TestCase):
             self.assertEqual("error", module.run_codex_switch({"name": ""})["status"])
             self.assertEqual("error", module.run_codex_sync_active({"name": "missing-profile"})["status"])
             self.assertEqual("error", module.run_codex_save_active({"name": ""})["status"])
+            self.assertEqual("error", module.run_codex_save_api({"name": ""})["status"])
             self.assertEqual("error", module.run_codex_delete({"name": ""})["status"])
             self.assertIn(module.load_claude_status()["status"], {"ok", "error"})
             self.assertEqual("error", module.run_claude_switch({"name": ""})["status"])
@@ -571,6 +572,38 @@ class OperatorEntrypointTests(unittest.TestCase):
             "packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui_text.py",
             process_status["source_files"],
         )
+
+    def test_operator_ui_can_save_codex_api_profile_without_exposing_key(self) -> None:
+        module = _load_serve_operator_ui_module()
+        module.invalidate_status_cache()
+
+        with mock.patch.object(
+            module,
+            "save_api_auth_profile",
+            return_value={
+                "status": "ok",
+                "changed": True,
+                "profile_name": "api-35",
+                "base_url": "http://35.213.82.91:8003/v1",
+            },
+        ) as save_mock:
+            result = module.run_codex_save_api(
+                {
+                    "name": "api-35",
+                    "api_key": "relay-secret-value",
+                    "base_url": "http://35.213.82.91:8003/v1",
+                    "switch_now": True,
+                    "probe": True,
+                }
+            )
+
+        self.assertEqual("ok", result["status"])
+        self.assertNotIn("relay-secret-value", json.dumps(result, ensure_ascii=False))
+        save_mock.assert_called_once()
+        _, args, kwargs = save_mock.mock_calls[0]
+        self.assertEqual(("api-35", "relay-secret-value", "http://35.213.82.91:8003/v1"), args[:3])
+        self.assertTrue(kwargs["switch_now"])
+        self.assertTrue(kwargs["probe"])
 
     def test_operator_ui_server_refuses_stale_content_and_disables_cache(self) -> None:
         script = (ROOT / "scripts" / "serve-operator-ui.py").read_text(encoding="utf-8")
