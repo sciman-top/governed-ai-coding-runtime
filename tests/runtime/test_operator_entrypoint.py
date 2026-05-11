@@ -537,6 +537,7 @@ class OperatorEntrypointTests(unittest.TestCase):
             self.assertEqual("error", module.run_codex_sync_active({"name": "missing-profile"})["status"])
             self.assertEqual("error", module.run_codex_save_active({"name": ""})["status"])
             self.assertEqual("error", module.run_codex_save_api({"name": ""})["status"])
+            self.assertEqual("error", module.run_codex_import_payload({"content": ""})["status"])
             self.assertEqual("error", module.run_codex_delete({"name": ""})["status"])
             self.assertIn(module.load_claude_status()["status"], {"ok", "error"})
             self.assertEqual("error", module.run_claude_switch({"name": ""})["status"])
@@ -604,6 +605,41 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertEqual(("api-35", "relay-secret-value", "http://35.213.82.91:8003/v1"), args[:3])
         self.assertTrue(kwargs["switch_now"])
         self.assertTrue(kwargs["probe"])
+
+    def test_operator_ui_can_import_cockpit_and_probe_codex_profiles(self) -> None:
+        module = _load_serve_operator_ui_module()
+        module.invalidate_status_cache()
+
+        with (
+            mock.patch.object(
+                module,
+                "import_cockpit_codex_accounts",
+                return_value={"status": "ok", "summary": {"imported": 8, "api_key": 1, "oauth": 7}},
+            ) as cockpit_mock,
+            mock.patch.object(
+                module,
+                "import_codex_accounts_from_payload",
+                return_value={"status": "ok", "summary": {"imported": 1, "api_key": 0, "oauth": 1}},
+            ) as payload_mock,
+            mock.patch.object(
+                module,
+                "probe_auth_profiles",
+                return_value={"status": "ok", "total": 2, "ok": 2, "failed": 0},
+            ) as probe_mock,
+        ):
+            cockpit_result = module.run_codex_import_cockpit({"probe": True})
+            payload_result = module.run_codex_import_payload({"content": "{}", "source_format": "cpa", "dry_run": True})
+            probe_result = module.run_codex_probe({"include_oauth": True, "include_api": True})
+
+        self.assertEqual("ok", cockpit_result["status"])
+        self.assertEqual("ok", payload_result["status"])
+        self.assertEqual("ok", probe_result["status"])
+        cockpit_mock.assert_called_once()
+        self.assertTrue(cockpit_mock.mock_calls[0].kwargs["probe"])
+        payload_mock.assert_called_once()
+        self.assertEqual("cpa", payload_mock.mock_calls[0].kwargs["source_format"])
+        self.assertTrue(payload_mock.mock_calls[0].kwargs["dry_run"])
+        probe_mock.assert_called_once()
 
     def test_operator_ui_server_refuses_stale_content_and_disables_cache(self) -> None:
         script = (ROOT / "scripts" / "serve-operator-ui.py").read_text(encoding="utf-8")

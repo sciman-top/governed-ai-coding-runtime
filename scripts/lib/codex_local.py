@@ -60,7 +60,9 @@ def _windows_no_window_kwargs() -> dict[str, Any]:
 USAGE_DASHBOARD_URL = "https://chatgpt.com/codex/settings/usage"
 USAGE_STALE_AFTER_SECONDS = 300
 DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1"
+CHATGPT_ACCOUNT_CHECK_URL = "https://chatgpt.com/backend-api/wham/accounts/check"
 CODEX_API_AUTH_MODE = "apikey"
+COCKPIT_CODEX_DIR = Path.home() / ".antigravity_cockpit"
 CONTEXT_COMPACT_RATIO_MIN = 0.75
 CONTEXT_COMPACT_RATIO_MAX = 0.90
 DEFAULT_CONTEXT_COMPACT_RATIO = 0.81
@@ -277,6 +279,182 @@ def save_api_auth_profile(
     return result
 
 
+def cockpit_codex_source_status(cockpit_dir: Path | None = None) -> dict[str, Any]:
+    source_dir = (cockpit_dir or COCKPIT_CODEX_DIR).expanduser()
+    index_path = source_dir / "codex_accounts.json"
+    accounts_dir = source_dir / "codex_accounts"
+    if not index_path.exists():
+        return {
+            "status": "missing",
+            "source": "cockpit",
+            "source_dir": str(source_dir),
+            "index_path": str(index_path),
+            "accounts": [],
+            "error": "missing Cockpit Codex account index",
+        }
+    try:
+        accounts = _load_cockpit_codex_accounts(source_dir)
+    except Exception as exc:
+        return {
+            "status": "error",
+            "source": "cockpit",
+            "source_dir": str(source_dir),
+            "index_path": str(index_path),
+            "accounts_dir": str(accounts_dir),
+            "accounts": [],
+            "error": str(exc),
+        }
+    current_id = _load_cockpit_current_account_id(source_dir)
+    summaries = [_summarize_import_candidate(candidate, current_id=current_id) for candidate in accounts]
+    return {
+        "status": "ok",
+        "source": "cockpit",
+        "source_dir": str(source_dir),
+        "index_path": str(index_path),
+        "accounts_dir": str(accounts_dir),
+        "current_account_id": current_id,
+        "total": len(summaries),
+        "api_key_count": sum(1 for item in summaries if item.get("auth_mode") == CODEX_API_AUTH_MODE),
+        "oauth_count": sum(1 for item in summaries if item.get("auth_mode") == "chatgpt"),
+        "accounts": summaries,
+    }
+
+
+def import_cockpit_codex_accounts(
+    home: Path | None = None,
+    *,
+    cockpit_dir: Path | None = None,
+    dry_run: bool = False,
+    probe: bool = False,
+    account_ids: list[str] | None = None,
+) -> dict[str, Any]:
+    home = codex_home(str(home) if home else None)
+    source_dir = (cockpit_dir or COCKPIT_CODEX_DIR).expanduser()
+    source_status = cockpit_codex_source_status(source_dir)
+    if source_status.get("status") != "ok":
+        return source_status
+    selected_ids = {str(item).strip() for item in (account_ids or []) if str(item).strip()}
+    current_id = _first_string(source_status.get("current_account_id"))
+    imported = []
+    skipped = []
+    errors = []
+    for candidate in _load_cockpit_codex_accounts(source_dir):
+        candidate_id = _first_string(candidate.get("id"), candidate.get("account_id"))
+        if selected_ids and candidate_id not in selected_ids:
+            skipped.append({"id": candidate_id, "reason": "not selected"})
+            continue
+        try:
+            imported.append(
+                _import_codex_account_candidate(
+                    candidate,
+                    home=home,
+                    source="cockpit",
+                    current_id=current_id,
+                    dry_run=dry_run,
+                    probe=probe,
+                )
+            )
+        except Exception as exc:
+            errors.append(
+                {
+                    "id": candidate_id,
+                    "label": _candidate_label(candidate),
+                    "error": str(exc),
+                }
+            )
+    return {
+        "status": "ok" if not errors else "attention",
+        "source": "cockpit",
+        "source_dir": str(source_dir),
+        "dry_run": dry_run,
+        "probe": probe,
+        "imported": imported,
+        "skipped": skipped,
+        "errors": errors,
+        "summary": {
+            "imported": len(imported),
+            "skipped": len(skipped),
+            "errors": len(errors),
+            "api_key": sum(1 for item in imported if item.get("auth_mode") == CODEX_API_AUTH_MODE),
+            "oauth": sum(1 for item in imported if item.get("auth_mode") == "chatgpt"),
+        },
+    }
+
+
+def import_codex_accounts_from_payload(
+    raw_content: str,
+    home: Path | None = None,
+    *,
+    source_format: str = "auto",
+    dry_run: bool = False,
+    probe: bool = False,
+) -> dict[str, Any]:
+    home = codex_home(str(home) if home else None)
+    candidates = _parse_codex_import_payload(raw_content, source_format=source_format)
+    imported = []
+    errors = []
+    for index, candidate in enumerate(candidates):
+        try:
+            imported.append(
+                _import_codex_account_candidate(
+                    candidate,
+                    home=home,
+                    source=source_format or "payload",
+                    current_id="",
+                    dry_run=dry_run,
+                    probe=probe,
+                    fallback_index=index,
+                )
+            )
+        except Exception as exc:
+            errors.append({"index": index, "label": _candidate_label(candidate), "error": str(exc)})
+    return {
+        "status": "ok" if not errors else "attention",
+        "source": source_format or "payload",
+        "dry_run": dry_run,
+        "probe": probe,
+        "imported": imported,
+        "errors": errors,
+        "summary": {
+            "imported": len(imported),
+            "errors": len(errors),
+            "api_key": sum(1 for item in imported if item.get("auth_mode") == CODEX_API_AUTH_MODE),
+            "oauth": sum(1 for item in imported if item.get("auth_mode") == "chatgpt"),
+        },
+    }
+
+
+def probe_auth_profiles(
+    home: Path | None = None,
+    *,
+    names: list[str] | None = None,
+    include_oauth: bool = True,
+    include_api: bool = True,
+) -> dict[str, Any]:
+    home = codex_home(str(home) if home else None)
+    selected = {str(name).strip() for name in (names or []) if str(name).strip()}
+    results = []
+    for profile in list_auth_profiles(home):
+        if profile.file == "auth.json":
+            continue
+        if selected and profile.name not in selected and profile.file not in selected and profile.account_id not in selected:
+            continue
+        if profile.auth_mode == CODEX_API_AUTH_MODE and not include_api:
+            continue
+        if profile.auth_mode != CODEX_API_AUTH_MODE and not include_oauth:
+            continue
+        payload = _read_auth_json(Path(profile.full_name))
+        results.append(_probe_codex_auth_payload(payload, label=profile.account_label or profile.name))
+    ok_count = sum(1 for item in results if item.get("status") == "ok")
+    return {
+        "status": "ok" if ok_count == len(results) else "attention",
+        "total": len(results),
+        "ok": ok_count,
+        "failed": len(results) - ok_count,
+        "results": results,
+    }
+
+
 def probe_codex_api_account(base_url: str, api_key: str, *, timeout_seconds: int = 15) -> dict[str, Any]:
     normalized_base_url = _normalize_api_base_url(base_url)
     if not normalized_base_url:
@@ -331,6 +509,59 @@ def probe_codex_api_account(base_url: str, api_key: str, *, timeout_seconds: int
         "http_status": status_code,
         "elapsed_seconds": round(time.time() - started, 3),
         "model_count": model_count,
+    }
+
+
+def probe_codex_oauth_account(access_token: str, *, account_id: str = "", timeout_seconds: int = 15) -> dict[str, Any]:
+    access_token = _first_string(access_token)
+    if not access_token:
+        return {"attempted": True, "status": "error", "error": "missing access_token"}
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Accept": "application/json",
+        "User-Agent": "governed-runtime-codex-oauth-probe",
+    }
+    if _first_string(account_id):
+        headers["ChatGPT-Account-Id"] = _first_string(account_id)
+    request = urllib_request.Request(CHATGPT_ACCOUNT_CHECK_URL, headers=headers, method="GET")
+    started = time.time()
+    try:
+        with urllib_request.urlopen(request, timeout=timeout_seconds) as response:
+            status_code = int(getattr(response, "status", 0) or 0)
+            raw = response.read(256 * 1024)
+    except urllib_error.HTTPError as exc:
+        body = exc.read(4096).decode("utf-8", errors="replace")
+        return {
+            "attempted": True,
+            "status": "error",
+            "url": CHATGPT_ACCOUNT_CHECK_URL,
+            "http_status": exc.code,
+            "elapsed_seconds": round(time.time() - started, 3),
+            "error": _first_non_empty_line(body) or str(exc),
+        }
+    except (urllib_error.URLError, TimeoutError, OSError) as exc:
+        return {
+            "attempted": True,
+            "status": "error",
+            "url": CHATGPT_ACCOUNT_CHECK_URL,
+            "elapsed_seconds": round(time.time() - started, 3),
+            "error": str(exc),
+        }
+
+    account_count = None
+    try:
+        payload = json.loads(raw.decode("utf-8", errors="replace"))
+        if isinstance(payload, dict) and isinstance(payload.get("accounts"), list):
+            account_count = len(payload["accounts"])
+    except json.JSONDecodeError:
+        pass
+    return {
+        "attempted": True,
+        "status": "ok" if 200 <= status_code < 300 else "error",
+        "url": CHATGPT_ACCOUNT_CHECK_URL,
+        "http_status": status_code,
+        "elapsed_seconds": round(time.time() - started, 3),
+        "account_count": account_count,
     }
 
 
@@ -1235,6 +1466,323 @@ def _select_display_profile(duplicates: list[CodexAuthProfile]) -> CodexAuthProf
     return max(duplicates, key=lambda profile: (profile.last_refresh or "", 0 if profile.name != "auth" else 1, profile.name))
 
 
+def _load_cockpit_codex_accounts(source_dir: Path) -> list[dict[str, Any]]:
+    index_path = source_dir / "codex_accounts.json"
+    accounts_dir = source_dir / "codex_accounts"
+    index = json.loads(index_path.read_text(encoding="utf-8"))
+    if not isinstance(index, dict):
+        raise ValueError(f"invalid Cockpit Codex account index: {index_path}")
+    raw_accounts = index.get("accounts")
+    if not isinstance(raw_accounts, list):
+        raw_accounts = []
+    accounts = []
+    for item in raw_accounts:
+        if not isinstance(item, dict):
+            continue
+        account_id = _first_string(item.get("id"), item.get("account_id"))
+        if not account_id:
+            continue
+        detail_path = accounts_dir / f"{account_id}.json"
+        if not detail_path.exists():
+            accounts.append({**item, "_source_path": str(detail_path), "_source_missing": True})
+            continue
+        detail = json.loads(detail_path.read_text(encoding="utf-8"))
+        if not isinstance(detail, dict):
+            raise ValueError(f"invalid Cockpit Codex account detail: {detail_path}")
+        accounts.append({**item, **detail, "_source_path": str(detail_path)})
+    return accounts
+
+
+def _load_cockpit_current_account_id(source_dir: Path) -> str:
+    index_path = source_dir / "codex_accounts.json"
+    try:
+        index = json.loads(index_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return ""
+    if not isinstance(index, dict):
+        return ""
+    return _first_string(index.get("current_account_id"))
+
+
+def _summarize_import_candidate(candidate: dict[str, Any], *, current_id: str = "") -> dict[str, Any]:
+    auth_mode = _candidate_auth_mode(candidate)
+    api_key = _candidate_api_key(candidate)
+    account_id = _candidate_account_id(candidate)
+    return {
+        "id": account_id,
+        "name": _candidate_profile_name(candidate, fallback_index=0),
+        "label": _candidate_label(candidate),
+        "email": _first_string(candidate.get("email"), candidate.get("account_email")),
+        "auth_mode": auth_mode,
+        "plan_type": _first_string(candidate.get("plan_type")),
+        "api_base_url": _normalize_api_base_url(
+            _first_string(candidate.get("api_base_url"), candidate.get("base_url"), candidate.get("OPENAI_BASE_URL"))
+        ),
+        "api_provider_id": _first_string(candidate.get("api_provider_id")),
+        "api_provider_name": _first_string(candidate.get("api_provider_name")),
+        "api_key_hash": _short_string_hash(api_key) if api_key else "",
+        "has_api_key": bool(api_key),
+        "has_tokens": isinstance(candidate.get("tokens"), dict)
+        and bool(candidate["tokens"].get("id_token") or candidate["tokens"].get("access_token") or candidate["tokens"].get("refresh_token")),
+        "current": bool(current_id and account_id == current_id),
+        "source_path": _first_string(candidate.get("_source_path")),
+        "source_missing": bool(candidate.get("_source_missing")),
+    }
+
+
+def _import_codex_account_candidate(
+    candidate: dict[str, Any],
+    *,
+    home: Path,
+    source: str,
+    current_id: str = "",
+    dry_run: bool,
+    probe: bool,
+    fallback_index: int = 0,
+) -> dict[str, Any]:
+    profile_name = _candidate_profile_name(candidate, fallback_index=fallback_index)
+    if not profile_name:
+        raise ValueError("missing import profile name")
+    payload = _candidate_to_auth_payload(candidate)
+    target_path = home / "auth-profiles" / f"{profile_name}.json"
+    auth_mode = _auth_mode_from_payload(payload)
+    probe_result = {"attempted": False, "status": "skipped"}
+    if probe:
+        probe_result = _probe_codex_auth_payload(payload, label=_candidate_label(candidate))
+    redacted_payload = _redact_auth_payload(payload)
+    changed = True
+    if target_path.exists():
+        try:
+            changed = _normalize_json_for_compare(_read_auth_json(target_path)) != _normalize_json_for_compare(payload)
+        except Exception:
+            changed = True
+    result: dict[str, Any] = {
+        "status": "ok",
+        "source": source,
+        "changed": changed and not dry_run,
+        "dry_run": dry_run,
+        "name": profile_name,
+        "profile_path": str(target_path),
+        "auth_mode": auth_mode,
+        "label": _candidate_label(candidate),
+        "account_id": _candidate_account_id(candidate),
+        "current_in_source": bool(current_id and _candidate_account_id(candidate) == current_id),
+        "api_base_url": _normalize_api_base_url(
+            _first_string(payload.get("api_base_url"), payload.get("base_url"), payload.get("OPENAI_BASE_URL"))
+        ),
+        "auth_payload": redacted_payload,
+        "probe": probe_result,
+    }
+    if dry_run:
+        return result
+    backup_path = None
+    if target_path.exists() and changed:
+        backup_path = backup_saved_auth_snapshot(target_path, home)
+    home.joinpath("auth-profiles").mkdir(parents=True, exist_ok=True)
+    _write_json_atomic(target_path, payload)
+    if backup_path is not None:
+        result["backup_path"] = str(backup_path)
+    result["profile"] = _auth_profile_from_path(
+        target_path,
+        _short_file_hash(home / "auth.json") if (home / "auth.json").exists() else "",
+    ).to_dict()
+    return result
+
+
+def _candidate_to_auth_payload(candidate: dict[str, Any]) -> dict[str, Any]:
+    auth_mode = _candidate_auth_mode(candidate)
+    account_id = _candidate_account_id(candidate)
+    label = _candidate_label(candidate)
+    if auth_mode == CODEX_API_AUTH_MODE:
+        api_key = _candidate_api_key(candidate)
+        if not api_key:
+            raise ValueError("API account missing key")
+        base_url = _normalize_api_base_url(
+            _first_string(candidate.get("api_base_url"), candidate.get("base_url"), candidate.get("OPENAI_BASE_URL"))
+        )
+        payload = _build_api_auth_payload(api_key=api_key, base_url=base_url, label=label)
+        payload["source"] = "cockpit"
+        payload["source_account_id"] = account_id
+        if candidate.get("email"):
+            payload["email"] = candidate.get("email")
+        if candidate.get("api_provider_id"):
+            payload["api_provider_id"] = candidate.get("api_provider_id")
+        if candidate.get("api_provider_name"):
+            payload["api_provider_name"] = candidate.get("api_provider_name")
+        return payload
+
+    tokens = candidate.get("tokens") if isinstance(candidate.get("tokens"), dict) else {}
+    id_token = _first_string(candidate.get("id_token"), tokens.get("id_token"))
+    access_token = _first_string(candidate.get("access_token"), tokens.get("access_token"))
+    refresh_token = _first_string(candidate.get("refresh_token"), tokens.get("refresh_token"))
+    if not (id_token or access_token or refresh_token):
+        raise ValueError("OAuth account missing tokens")
+    payload: dict[str, Any] = {
+        "auth_mode": "chatgpt",
+        "tokens": {
+            "id_token": id_token,
+            "access_token": access_token,
+        },
+        "account_id": account_id,
+        "account_label": label,
+        "last_refresh": _normalize_time_for_payload(candidate.get("token_updated_at"), candidate.get("last_refresh")),
+        "source": "cockpit",
+        "source_account_id": account_id,
+    }
+    if refresh_token:
+        payload["tokens"]["refresh_token"] = refresh_token
+    for key in (
+        "email",
+        "plan_type",
+        "subscription_active_until",
+        "user_id",
+        "organization_id",
+        "account_structure",
+    ):
+        if candidate.get(key) not in (None, ""):
+            payload[key] = candidate.get(key)
+    return payload
+
+
+def _parse_codex_import_payload(raw_content: str, *, source_format: str = "auto") -> list[dict[str, Any]]:
+    raw = str(raw_content or "").strip()
+    if not raw:
+        raise ValueError("empty import payload")
+    if not raw.startswith("{") and not raw.startswith("["):
+        candidates = []
+        for index, line in enumerate(raw.splitlines()):
+            token = line.strip()
+            if not token:
+                continue
+            candidates.append({"refresh_token": token, "email": f"refresh-token-{index + 1}", "auth_mode": "chatgpt"})
+        if candidates:
+            return candidates
+    parsed = json.loads(raw)
+    return _extract_import_candidates(parsed, source_format=source_format)
+
+
+def _extract_import_candidates(value: Any, *, source_format: str) -> list[dict[str, Any]]:
+    if isinstance(value, list):
+        result: list[dict[str, Any]] = []
+        for item in value:
+            result.extend(_extract_import_candidates(item, source_format=source_format))
+        return result
+    if not isinstance(value, dict):
+        return []
+    if isinstance(value.get("accounts"), list):
+        accounts = value["accounts"]
+        if value.get("type") == "sub2api-data" or source_format == "sub2api":
+            return [_sub2api_account_to_candidate(item) for item in accounts if isinstance(item, dict)]
+        return _extract_import_candidates(accounts, source_format=source_format)
+    if isinstance(value.get("credentials"), dict):
+        return [_sub2api_account_to_candidate(value)]
+    return [value]
+
+
+def _sub2api_account_to_candidate(item: dict[str, Any]) -> dict[str, Any]:
+    credentials = item.get("credentials") if isinstance(item.get("credentials"), dict) else {}
+    return {
+        "auth_mode": "chatgpt",
+        "email": _first_string(credentials.get("email"), item.get("name")),
+        "account_id": _first_string(credentials.get("chatgpt_account_id"), credentials.get("account_id")),
+        "plan_type": _first_string(credentials.get("plan_type")),
+        "subscription_active_until": _first_string(credentials.get("subscription_expires_at")),
+        "tokens": {
+            "id_token": _first_string(credentials.get("id_token")),
+            "access_token": _first_string(credentials.get("access_token")),
+            "refresh_token": _first_string(credentials.get("refresh_token")),
+        },
+    }
+
+
+def _candidate_auth_mode(candidate: dict[str, Any]) -> str:
+    if _candidate_api_key(candidate):
+        return CODEX_API_AUTH_MODE
+    raw_mode = _first_string(candidate.get("auth_mode"), candidate.get("authMode")).lower()
+    if raw_mode in {"apikey", "api_key", "api-key", "api"}:
+        return CODEX_API_AUTH_MODE
+    return "chatgpt"
+
+
+def _candidate_api_key(candidate: dict[str, Any]) -> str:
+    return _first_string(
+        candidate.get("OPENAI_API_KEY"),
+        candidate.get("openai_api_key"),
+        candidate.get("api_key"),
+    )
+
+
+def _candidate_account_id(candidate: dict[str, Any]) -> str:
+    tokens = candidate.get("tokens") if isinstance(candidate.get("tokens"), dict) else {}
+    api_key = _candidate_api_key(candidate)
+    if api_key and not _first_string(candidate.get("id"), candidate.get("account_id"), tokens.get("account_id")):
+        return f"codex_apikey_{hashlib.sha256(api_key.encode('utf-8')).hexdigest()[:24]}"
+    return _first_string(candidate.get("id"), candidate.get("account_id"), tokens.get("account_id"))
+
+
+def _candidate_label(candidate: dict[str, Any]) -> str:
+    return _first_string(
+        candidate.get("account_label"),
+        candidate.get("account_name"),
+        candidate.get("label"),
+        candidate.get("email"),
+        candidate.get("api_provider_name"),
+        _candidate_account_id(candidate),
+    )
+
+
+def _candidate_profile_name(candidate: dict[str, Any], *, fallback_index: int) -> str:
+    account_id = _candidate_account_id(candidate)
+    label = _candidate_label(candidate)
+    if _candidate_auth_mode(candidate) == CODEX_API_AUTH_MODE:
+        base = _first_string(candidate.get("api_provider_name"), label, account_id, f"api-{fallback_index + 1}")
+        return _normalize_snapshot_name(f"cockpit-api-{_slugify_profile_segment(base)}")
+    base = _first_string(label, account_id, f"oauth-{fallback_index + 1}")
+    return _normalize_snapshot_name(f"cockpit-{_slugify_profile_segment(base)}")
+
+
+def _slugify_profile_segment(value: str) -> str:
+    raw = str(value or "").strip().lower()
+    raw = re.sub(r"[^a-z0-9._-]+", "-", raw)
+    raw = raw.strip(".-_")
+    if not raw:
+        return "account"
+    return raw[:52].strip(".-_") or "account"
+
+
+def _normalize_time_for_payload(*values: Any) -> str:
+    for value in values:
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+        if isinstance(value, (int, float)) and value > 0:
+            return _timestamp_iso(value)
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def _normalize_json_for_compare(payload: dict[str, Any]) -> str:
+    return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def _probe_codex_auth_payload(payload: dict[str, Any], *, label: str) -> dict[str, Any]:
+    auth_mode = _auth_mode_from_payload(payload)
+    if auth_mode == CODEX_API_AUTH_MODE:
+        api_key = _api_key_from_auth_payload(payload)
+        base_url = _normalize_api_base_url(
+            _first_string(payload.get("api_base_url"), payload.get("base_url"), payload.get("OPENAI_BASE_URL"))
+        )
+        result = probe_codex_api_account(base_url, api_key)
+        result["label"] = label
+        result["auth_mode"] = auth_mode
+        return result
+    tokens = payload.get("tokens") if isinstance(payload.get("tokens"), dict) else {}
+    access_token = _first_string(tokens.get("access_token"), payload.get("access_token"))
+    account_id = _first_string(payload.get("account_id"), tokens.get("account_id"))
+    result = probe_codex_oauth_account(access_token, account_id=account_id)
+    result["label"] = label
+    result["auth_mode"] = auth_mode
+    return result
+
+
 def _normalize_snapshot_name(value: str) -> str:
     normalized = str(value or "").strip()
     if normalized.lower().endswith(".json"):
@@ -1263,7 +1811,7 @@ def _build_api_auth_payload(*, api_key: str, base_url: str, label: str) -> dict[
 def _redact_auth_payload(payload: dict[str, Any]) -> dict[str, Any]:
     redacted: dict[str, Any] = {}
     for key, value in payload.items():
-        if key.upper() in {"OPENAI_API_KEY", "API_KEY"}:
+        if key.upper() in {"OPENAI_API_KEY", "API_KEY"} or key == "openai_api_key":
             redacted[key] = _redact_secret(str(value or ""))
         elif key == "tokens" and isinstance(value, dict):
             redacted[key] = {token_key: _redact_secret(str(token_value or "")) for token_key, token_value in value.items()}
@@ -1276,13 +1824,11 @@ def _redact_secret(value: str) -> str:
     raw = str(value or "")
     if not raw:
         return ""
-    if len(raw) <= 8:
-        return "<redacted>"
-    return f"{raw[:3]}...{raw[-4:]}"
+    return f"<redacted:{hashlib.sha256(raw.encode('utf-8')).hexdigest()[:12]}>"
 
 
 def _api_key_from_auth_payload(payload: dict[str, Any]) -> str:
-    return _first_string(payload.get("OPENAI_API_KEY"), payload.get("api_key"))
+    return _first_string(payload.get("OPENAI_API_KEY"), payload.get("openai_api_key"), payload.get("api_key"))
 
 
 def _auth_mode_from_payload(payload: dict[str, Any]) -> str:
@@ -1768,7 +2314,10 @@ def _auth_claims(payload: dict[str, Any], tokens: dict[str, Any]) -> dict[str, s
             nested_auth.get("plan_type"),
         ),
         "subscription_active_start": _claim_time_iso(nested_auth.get("chatgpt_subscription_active_start")),
-        "subscription_active_until": _claim_time_iso(nested_auth.get("chatgpt_subscription_active_until")),
+        "subscription_active_until": _first_string(
+            _claim_time_iso(payload.get("subscription_active_until")),
+            _claim_time_iso(nested_auth.get("chatgpt_subscription_active_until")),
+        ),
         "subscription_last_checked": _claim_time_iso(nested_auth.get("chatgpt_subscription_last_checked")),
         "id_token_expires_at": _jwt_expiry_iso(id_claims.get("exp")),
         "access_token_expires_at": _jwt_expiry_iso(access_claims.get("exp")),

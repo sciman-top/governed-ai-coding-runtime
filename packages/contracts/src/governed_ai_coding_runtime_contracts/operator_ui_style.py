@@ -179,7 +179,7 @@ def render_style_block() -> str:
     .shortcut-item .meta {{ margin: 0; }}
     .shortcut-blocked {{ color: var(--warning); font-weight: 650; }}
     .shortcut-item button {{ text-align: center; min-height: 34px; }}
-    button, select, input {{ font: inherit; }}
+    button, select, input, textarea {{ font: inherit; }}
     button {{ border: 1px solid var(--line); background: linear-gradient(180deg, #ffffff, #f8fbfb); color: var(--ink); border-radius: 7px; padding: 9px 11px; cursor: pointer; text-align: left; transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease; }}
     button:hover {{ border-color: var(--accent); box-shadow: 0 7px 16px rgba(8, 121, 111, 0.10); }}
     button.primary {{ background: linear-gradient(135deg, var(--accent), var(--accent-strong)); border-color: var(--accent-strong); color: #fff; font-weight: 760; box-shadow: 0 8px 18px rgba(3, 79, 73, 0.16); }}
@@ -187,8 +187,9 @@ def render_style_block() -> str:
     button:disabled {{ cursor: not-allowed; opacity: 0.55; }}
     .setting-grid {{ display: grid; gap: 10px; }}
     label {{ display: grid; gap: 4px; color: var(--muted); font-size: 0.82rem; min-width: 0; }}
-    select, input[type="number"], input[type="text"], input[type="password"] {{ width: 100%; min-width: 0; max-width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 8px 9px; color: var(--ink); background: #fff; box-shadow: var(--shadow-tight); }}
-    select:focus, input:focus, button:focus-visible {{ outline: 2px solid rgba(11, 118, 110, 0.24); outline-offset: 2px; }}
+    select, input[type="number"], input[type="text"], input[type="password"], textarea {{ width: 100%; min-width: 0; max-width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 8px 9px; color: var(--ink); background: #fff; box-shadow: var(--shadow-tight); }}
+    textarea {{ resize: vertical; min-height: 112px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.82rem; line-height: 1.45; }}
+    select:focus, input:focus, textarea:focus, button:focus-visible {{ outline: 2px solid rgba(11, 118, 110, 0.24); outline-offset: 2px; }}
     .checkbox-row {{ display: flex; align-items: center; gap: 8px; color: var(--ink); }}
     .target-picker {{ display: grid; gap: 8px; border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: linear-gradient(180deg, #ffffff, #f9fcfb); box-shadow: var(--shadow-tight); }}
     .target-picker-head {{ display: grid; gap: 2px; }}
@@ -223,6 +224,9 @@ def render_style_block() -> str:
     .codex-api-fields {{ display: grid; grid-template-columns: minmax(120px, 0.7fr) minmax(220px, 1.2fr) minmax(180px, 1fr); gap: 10px; align-items: end; }}
     .codex-api-options {{ display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; justify-content: flex-end; }}
     .codex-api-options .checkbox-row {{ width: auto; }}
+    .codex-import-form {{ display: grid; gap: 10px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: linear-gradient(180deg, #ffffff, #f8fbfb); box-shadow: var(--shadow-tight); }}
+    .codex-import-form h3 {{ margin-bottom: 0; }}
+    .codex-import-grid {{ display: grid; grid-template-columns: minmax(150px, 0.65fr) auto auto; gap: 10px; align-items: center; }}
     .codex-grid {{ display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: start; }}
     .codex-list {{ display: grid; gap: 8px; }}
     .codex-account {{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: start; border: 1px solid var(--line); border-radius: 8px; padding: 13px; background: linear-gradient(180deg, #ffffff, #f8fbfb); box-shadow: var(--shadow-tight); }}
@@ -253,7 +257,7 @@ def render_style_block() -> str:
       main {{ padding: 12px 10px 28px; }}
       header {{ padding: 14px; margin-bottom: 12px; }}
       h1 {{ font-size: 1.2rem; }}
-      .console-layout, .summary-grid, .policy-grid, .feedback-grid, .runtime-shell, .details-grid, .codex-grid, .codex-account, .codex-api-fields, .claude-console-grid, .feedback-shell, .feedback-runs-grid, .surface-grid {{ grid-template-columns: 1fr; }}
+      .console-layout, .summary-grid, .policy-grid, .feedback-grid, .runtime-shell, .details-grid, .codex-grid, .codex-account, .codex-api-fields, .codex-import-grid, .claude-console-grid, .feedback-shell, .feedback-runs-grid, .surface-grid {{ grid-template-columns: 1fr; }}
       .dashboard {{ gap: 12px; }}
       .view-tabs {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; }}
       .view-tab {{ text-align: center; padding: 8px 7px; }}

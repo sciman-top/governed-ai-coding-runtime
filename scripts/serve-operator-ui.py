@@ -29,7 +29,11 @@ from governed_ai_coding_runtime_contracts.runtime_status import RuntimeStatusSto
 from lib.claude_local import claude_home, claude_status, delete_provider_profile, optimize_claude_local, provider_profiles_path, settings_path, switch_provider
 from lib.codex_local import (
     codex_status,
+    cockpit_codex_source_status,
     delete_auth_profile,
+    import_codex_accounts_from_payload,
+    import_cockpit_codex_accounts,
+    probe_auth_profiles,
     save_active_auth_snapshot,
     save_api_auth_profile,
     switch_auth_profile,
@@ -225,6 +229,11 @@ def _build_handler(*, default_language: str, host: str, port: int):
                 status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.INTERNAL_SERVER_ERROR
                 self._send_json(result, status=status)
                 return
+            if parsed.path == "/api/codex/cockpit":
+                result = cockpit_codex_source_status()
+                status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.NOT_FOUND
+                self._send_json(result, status=status)
+                return
             if parsed.path == "/api/claude/status":
                 result = load_claude_status()
                 status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.INTERNAL_SERVER_ERROR
@@ -293,6 +302,21 @@ def _build_handler(*, default_language: str, host: str, port: int):
                 if parsed.path == "/api/codex/save-api":
                     result = run_codex_save_api(self._read_json_body())
                     status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
+                    self._send_json(result, status=status)
+                    return
+                if parsed.path == "/api/codex/import-cockpit":
+                    result = run_codex_import_cockpit(self._read_json_body())
+                    status = HTTPStatus.OK if result.get("status") in {"ok", "attention"} else HTTPStatus.BAD_REQUEST
+                    self._send_json(result, status=status)
+                    return
+                if parsed.path == "/api/codex/import-payload":
+                    result = run_codex_import_payload(self._read_json_body())
+                    status = HTTPStatus.OK if result.get("status") in {"ok", "attention"} else HTTPStatus.BAD_REQUEST
+                    self._send_json(result, status=status)
+                    return
+                if parsed.path == "/api/codex/probe":
+                    result = run_codex_probe(self._read_json_body())
+                    status = HTTPStatus.OK if result.get("status") in {"ok", "attention"} else HTTPStatus.BAD_REQUEST
                     self._send_json(result, status=status)
                     return
                 if parsed.path == "/api/codex/delete":
@@ -667,6 +691,55 @@ def run_codex_save_api(payload: dict) -> dict:
     if result.get("status") == "ok" and (result.get("changed") or result.get("switch")):
         invalidate_status_cache("codex")
     return result
+
+
+def run_codex_import_cockpit(payload: dict) -> dict:
+    if "_json_error" in payload:
+        return {"status": "error", "error": payload["_json_error"]}
+    dry_run = bool(payload.get("dry_run", False))
+    probe = bool(payload.get("probe", False))
+    account_ids = payload.get("account_ids")
+    if not isinstance(account_ids, list):
+        account_ids = None
+    try:
+        result = import_cockpit_codex_accounts(dry_run=dry_run, probe=probe, account_ids=account_ids)
+    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
+        return {"status": "error", "error": str(exc)}
+    if result.get("status") in {"ok", "attention"} and not dry_run:
+        invalidate_status_cache("codex")
+    return result
+
+
+def run_codex_import_payload(payload: dict) -> dict:
+    if "_json_error" in payload:
+        return {"status": "error", "error": payload["_json_error"]}
+    content = _string(payload.get("content"), "")
+    source_format = _string(payload.get("source_format"), "auto") or "auto"
+    dry_run = bool(payload.get("dry_run", False))
+    probe = bool(payload.get("probe", False))
+    if not content:
+        return {"status": "error", "error": "missing import content"}
+    try:
+        result = import_codex_accounts_from_payload(content, source_format=source_format, dry_run=dry_run, probe=probe)
+    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
+        return {"status": "error", "error": str(exc)}
+    if result.get("status") in {"ok", "attention"} and not dry_run:
+        invalidate_status_cache("codex")
+    return result
+
+
+def run_codex_probe(payload: dict) -> dict:
+    if "_json_error" in payload:
+        return {"status": "error", "error": payload["_json_error"]}
+    names = payload.get("names")
+    if not isinstance(names, list):
+        names = None
+    include_oauth = bool(payload.get("include_oauth", True))
+    include_api = bool(payload.get("include_api", True))
+    try:
+        return probe_auth_profiles(names=names, include_oauth=include_oauth, include_api=include_api)
+    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
+        return {"status": "error", "error": str(exc)}
 
 
 def run_codex_delete(payload: dict) -> dict:

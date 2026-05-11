@@ -76,6 +76,36 @@ def _jwt(payload: dict[str, object]) -> str:
     return f"{encode({'alg': 'none', 'typ': 'JWT'})}.{encode(payload)}."
 
 
+def _write_cockpit_codex_account(
+    root: Path,
+    account_id: str,
+    payload: dict[str, object],
+    *,
+    current: bool = False,
+) -> None:
+    accounts_dir = root / "codex_accounts"
+    accounts_dir.mkdir(parents=True, exist_ok=True)
+    index_path = root / "codex_accounts.json"
+    if index_path.exists():
+        index = json.loads(index_path.read_text(encoding="utf-8"))
+    else:
+        index = {"version": "1.0", "accounts": [], "current_account_id": ""}
+    index["accounts"].append(
+        {
+            "id": account_id,
+            "email": payload.get("email", account_id),
+            "plan_type": payload.get("plan_type", ""),
+        }
+    )
+    if current:
+        index["current_account_id"] = account_id
+    index_path.write_text(json.dumps(index, ensure_ascii=False), encoding="utf-8")
+    accounts_dir.joinpath(f"{account_id}.json").write_text(
+        json.dumps({"id": account_id, **payload}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+
 class CodexLocalTests(unittest.TestCase):
     def test_local_status_subprocesses_are_windowless_on_windows(self) -> None:
         with (
@@ -366,6 +396,106 @@ class CodexLocalTests(unittest.TestCase):
 
             self.assertEqual("error", result["status"])
             self.assertFalse((home / "auth-profiles" / "bad-api.json").exists())
+
+    def test_import_cockpit_codex_accounts_imports_oauth_and_api_without_secret_output(self) -> None:
+        with tempfile.TemporaryDirectory() as home_dir, tempfile.TemporaryDirectory() as cockpit_dir:
+            home = Path(home_dir)
+            cockpit = Path(cockpit_dir)
+            _write_auth(home / "auth.json", account_id="active-oauth")
+            _write_cockpit_codex_account(
+                cockpit,
+                "codex_oauth_1",
+                {
+                    "email": "oauth@example.com",
+                    "auth_mode": "oauth",
+                    "plan_type": "plus",
+                    "tokens": {
+                        "id_token": _jwt({"email": "oauth@example.com"}),
+                        "access_token": _jwt({"exp": 1893456000}),
+                        "refresh_token": "rt_secret",
+                    },
+                },
+                current=True,
+            )
+            _write_cockpit_codex_account(
+                cockpit,
+                "codex_apikey_md5",
+                {
+                    "email": "api-key-abcd",
+                    "auth_mode": "apikey",
+                    "openai_api_key": "sk-secret-value",
+                    "api_base_url": "http://35.213.82.91:8003/v1",
+                    "api_provider_name": "35.213.82.91",
+                    "plan_type": "API_KEY",
+                },
+            )
+
+            with (
+                mock.patch(
+                    "lib.codex_local.probe_codex_oauth_account",
+                    return_value={"attempted": True, "status": "ok", "http_status": 200, "account_count": 1},
+                ),
+                mock.patch(
+                    "lib.codex_local.probe_codex_api_account",
+                    return_value={"attempted": True, "status": "ok", "http_status": 200, "model_count": 2},
+                ),
+            ):
+                result = codex_local.import_cockpit_codex_accounts(home, cockpit_dir=cockpit, probe=True)
+
+            self.assertEqual("ok", result["status"])
+            self.assertEqual({"imported": 2, "skipped": 0, "errors": 0, "api_key": 1, "oauth": 1}, result["summary"])
+            serialized = json.dumps(result, ensure_ascii=False)
+            self.assertNotIn("sk-secret-value", serialized)
+            self.assertNotIn("rt_secret", serialized)
+            self.assertNotIn("sk-", serialized)
+            self.assertTrue((home / "auth-profiles" / "cockpit-oauth-example.com.json").exists())
+            api_profile = home / "auth-profiles" / "cockpit-api-35.213.82.91.json"
+            self.assertTrue(api_profile.exists())
+            api_payload = json.loads(api_profile.read_text(encoding="utf-8"))
+            self.assertEqual("apikey", api_payload["auth_mode"])
+            self.assertEqual("sk-secret-value", api_payload["OPENAI_API_KEY"])
+            self.assertEqual("http://35.213.82.91:8003/v1", api_payload["api_base_url"])
+
+    def test_import_codex_accounts_from_payload_accepts_cpa_and_sub2api_shapes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_auth(home / "auth.json", account_id="active-oauth")
+            cpa = {
+                "id_token": _jwt({"email": "cpa@example.com"}),
+                "access_token": _jwt({"exp": 1893456000}),
+                "refresh_token": "rt_cpa",
+                "account_id": "acct_cpa",
+                "email": "cpa@example.com",
+            }
+            sub2api = {
+                "type": "sub2api-data",
+                "version": 1,
+                "proxies": [],
+                "accounts": [
+                    {
+                        "name": "sub@example.com",
+                        "platform": "openai",
+                        "type": "oauth",
+                        "credentials": {
+                            "access_token": _jwt({"exp": 1893456000}),
+                            "refresh_token": "rt_sub",
+                            "id_token": _jwt({"email": "sub@example.com"}),
+                            "email": "sub@example.com",
+                            "chatgpt_account_id": "acct_sub",
+                        },
+                        "concurrency": 0,
+                        "priority": 0,
+                    }
+                ],
+            }
+
+            first = codex_local.import_codex_accounts_from_payload(json.dumps(cpa), home, dry_run=True)
+            second = codex_local.import_codex_accounts_from_payload(json.dumps(sub2api), home, source_format="sub2api", dry_run=True)
+
+            self.assertEqual("ok", first["status"])
+            self.assertEqual("ok", second["status"])
+            self.assertEqual("cockpit-cpa-example.com", first["imported"][0]["name"])
+            self.assertEqual("cockpit-sub-example.com", second["imported"][0]["name"])
 
     def test_config_health_reports_recommended_defaults_without_secret_values(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

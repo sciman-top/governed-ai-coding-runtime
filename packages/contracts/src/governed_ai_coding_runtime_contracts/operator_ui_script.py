@@ -37,6 +37,11 @@ def render_interactive_script(
   const codexApiKey = document.getElementById('codex-api-key');
   const codexApiProbe = document.getElementById('codex-api-probe');
   const codexApiSwitchNow = document.getElementById('codex-api-switch-now');
+  const codexImportForm = document.getElementById('codex-import-form');
+  const codexImportFormat = document.getElementById('codex-import-format');
+  const codexImportContent = document.getElementById('codex-import-content');
+  const codexImportProbe = document.getElementById('codex-import-probe');
+  const codexImportDryRun = document.getElementById('codex-import-dry-run');
   const claudeProviders = document.getElementById('claude-providers');
   const feedbackStatus = document.getElementById('feedback-status');
   const feedbackCacheState = document.getElementById('feedback-cache-state');
@@ -1786,6 +1791,88 @@ def render_interactive_script(
     }}
   }}
 
+  async function importCockpitCodexAccounts(confirmMessage) {{
+    if (confirmMessage && !window.confirm(confirmMessage)) {{
+      return;
+    }}
+    setBusy(true);
+    try {{
+      const response = await fetch('/api/codex/import-cockpit', {{
+        method: 'POST',
+        headers: {{ 'content-type': 'application/json' }},
+        body: JSON.stringify({{ probe: true }})
+      }});
+      const payload = await response.json();
+      setOutput(JSON.stringify(payload, null, 2));
+      if (response.ok) {{
+        await refreshCodexStatus();
+      }}
+    }} catch (error) {{
+      setOutput(String(error));
+    }} finally {{
+      setBusy(false);
+    }}
+  }}
+
+  async function probeCodexProfiles() {{
+    setBusy(true);
+    try {{
+      const response = await fetch('/api/codex/probe', {{
+        method: 'POST',
+        headers: {{ 'content-type': 'application/json' }},
+        body: JSON.stringify({{ include_oauth: true, include_api: true }})
+      }});
+      const payload = await response.json();
+      setOutput(JSON.stringify(payload, null, 2));
+      if (response.ok) {{
+        await refreshCodexStatus();
+      }}
+    }} catch (error) {{
+      setOutput(String(error));
+    }} finally {{
+      setBusy(false);
+    }}
+  }}
+
+  async function importCodexPayload(event) {{
+    if (event) {{
+      event.preventDefault();
+    }}
+    const content = String(codexImportContent && codexImportContent.value || '').trim();
+    if (!content) {{
+      setOutput({text['codex_import_missing']!r});
+      return;
+    }}
+    const submit = codexImportForm ? codexImportForm.querySelector('button[type="submit"]') : null;
+    const confirmMessage = submit ? submit.getAttribute('data-confirm') : '';
+    if (confirmMessage && !window.confirm(confirmMessage)) {{
+      return;
+    }}
+    setBusy(true);
+    try {{
+      const response = await fetch('/api/codex/import-payload', {{
+        method: 'POST',
+        headers: {{ 'content-type': 'application/json' }},
+        body: JSON.stringify({{
+          content,
+          source_format: String(codexImportFormat && codexImportFormat.value || 'auto'),
+          probe: !!(codexImportProbe && codexImportProbe.checked),
+          dry_run: !!(codexImportDryRun && codexImportDryRun.checked)
+        }})
+      }});
+      const payload = await response.json();
+      setOutput(JSON.stringify(payload, null, 2));
+      if (response.ok && !(codexImportDryRun && codexImportDryRun.checked)) {{
+        codexImportContent.value = '';
+        await refreshCodexStatus();
+      }}
+    }} catch (error) {{
+      setOutput(String(error));
+    }} finally {{
+      setBusy(false);
+    }}
+  }}
+
   async function deleteCodexAccount(name, confirmMessage) {{
     if (!name) {{
       return;
@@ -2062,8 +2149,16 @@ def render_interactive_script(
   document.querySelector('[data-codex-refresh]').addEventListener('click', () => refreshCodexStatus());
   document.querySelector('[data-codex-refresh-online]').addEventListener('click', () => refreshCodexStatusOnline());
   document.querySelector('[data-codex-usage]').addEventListener('click', () => window.open('https://chatgpt.com/codex/settings/usage', '_blank', 'noopener'));
+  document.querySelector('[data-codex-import-cockpit]').addEventListener('click', (event) => {{
+    const button = event.currentTarget;
+    importCockpitCodexAccounts(button ? button.getAttribute('data-confirm') || '' : '');
+  }});
+  document.querySelector('[data-codex-probe]').addEventListener('click', () => probeCodexProfiles());
   if (codexApiForm) {{
     codexApiForm.addEventListener('submit', saveCodexApiAccount);
+  }}
+  if (codexImportForm) {{
+    codexImportForm.addEventListener('submit', importCodexPayload);
   }}
   codexAccounts.addEventListener('click', (event) => {{
     const deleteButton = event.target.closest('button[data-codex-delete-name]');
