@@ -296,12 +296,10 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("--cockpit-home", completed.stdout)
         self.assertNotIn("--apply", completed.stdout)
 
-    def test_operator_codex_interop_repair_and_switch_helpers_are_available_as_dry_run(self) -> None:
+    def test_operator_codex_readonly_switch_helpers_are_available_as_dry_run(self) -> None:
         cases = [
-            ("CodexInteropRepair", "codex-interop-repair", "scripts/codex-interop-check.py", "--apply"),
             ("CodexSwitchRecord", "codex-switch-record", "scripts/Save-CodexCockpitSwitchRecord.ps1", "-Label"),
             ("CodexSwitchGuardStatus", "codex-switch-guard-status", "scripts/Start-CodexCockpitSwitchGuard.ps1", "-Status"),
-            ("CodexSwitchGuardStart", "codex-switch-guard-start", "scripts/Start-CodexCockpitSwitchGuard.ps1", "-Start"),
         ]
         for action, step_name, script_name, expected_arg in cases:
             with self.subTest(action=action):
@@ -517,10 +515,10 @@ class OperatorEntrypointTests(unittest.TestCase):
             self.assertIn("uninstall_governance", module.ALLOWED_ACTIONS)
             self.assertIn("codex_local_optimize", module.ALLOWED_ACTIONS)
             self.assertIn("codex_interop_check", module.ALLOWED_ACTIONS)
-            self.assertIn("codex_interop_repair", module.ALLOWED_ACTIONS)
             self.assertIn("codex_switch_record", module.ALLOWED_ACTIONS)
             self.assertIn("codex_guard_status", module.ALLOWED_ACTIONS)
-            self.assertIn("codex_guard_start", module.ALLOWED_ACTIONS)
+            self.assertNotIn("codex_interop_repair", module.ALLOWED_ACTIONS)
+            self.assertNotIn("codex_guard_start", module.ALLOWED_ACTIONS)
             self.assertIn("evolution_review", module.ALLOWED_ACTIONS)
             self.assertIn("evolution_materialize", module.ALLOWED_ACTIONS)
             self.assertIn("core_principle_materialize", module.ALLOWED_ACTIONS)

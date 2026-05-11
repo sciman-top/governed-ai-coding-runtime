@@ -3,7 +3,7 @@ param(
     [switch] $Apply,
     [switch] $InstallAccountSwitcher = $true,
     [switch] $RepairThirdPartyInterop = $true,
-    [bool] $MigrateProviderBucket = $true,
+    [bool] $MigrateProviderBucket = $false,
     [switch] $SkipInteropCheck,
     [string] $CodexHome = $(if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $HOME '.codex' }),
     [string[]] $TrustedRepoRoot = @((Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path),
@@ -341,6 +341,10 @@ function Update-ConfigToml {
     })
     $lines = Remove-TomlTable -Lines $lines -Header '[model_providers.cockpit]'
     foreach ($entry in $Recommended.GetEnumerator()) {
+        if ($entry.Key -eq 'model_provider' -and (Test-CustomModelProviderId -Value $activeModelProvider)) {
+            $lines = Set-TopLevelTomlValue -Lines $lines -Key $entry.Key -Value (ConvertTo-TomlString $activeModelProvider)
+            continue
+        }
         $lines = Set-TopLevelTomlValue -Lines $lines -Key $entry.Key -Value $entry.Value
     }
     $lines = Set-TopLevelTomlValue -Lines $lines -Key 'sqlite_home' -Value (ConvertTo-TomlString $HomePath)
@@ -361,9 +365,17 @@ function Update-ConfigToml {
         forced_login_method = '"api"'
         model_provider = '"openai"'
     }
-    $lines = Set-TomlTableValues -Lines $lines -Header '[profiles.shared-cockpit-api]' -Values @{
-        forced_login_method = '"api"'
-        model_provider = '"openai"'
+    if (Test-CustomModelProviderId -Value $activeModelProvider) {
+        $lines = Set-TomlTableValues -Lines $lines -Header '[profiles.shared-cockpit-api]' -Values @{
+            forced_login_method = '"api"'
+            model_provider = (ConvertTo-TomlString $activeModelProvider)
+        }
+    }
+    else {
+        $lines = Set-TomlTableValues -Lines $lines -Header '[profiles.shared-cockpit-api]' -Values @{
+            forced_login_method = '"api"'
+            model_provider = '"openai"'
+        }
     }
     $lines = Set-TomlTableValues -Lines $lines -Header '[profiles.shared-cockpit-auth]' -Values @{
         forced_login_method = '"chatgpt"'
@@ -479,10 +491,10 @@ function Invoke-CodexInteropCheck {
         '--cc-switch-db', $CcSwitchDb,
         '--cockpit-home', $CockpitStateHome
     )
-    if ($ApplyRepair) {
-        $args += '--apply'
-        if ($MigrateHistoryProviderBucket) {
-            $args += '--migrate-provider-bucket'
+    if ($ApplyRepair -or $MigrateHistoryProviderBucket) {
+        return [ordered]@{
+            status = 'blocked'
+            reason = 'Codex/Cockpit write repair and provider bucket migration are deprecated. Cockpit Tools owns auth/API switching; project code may only run read-only interop diagnostics.'
         }
     }
 
@@ -545,11 +557,11 @@ $plan = [ordered]@{
         sqlite_home = $CodexHome
         history_persistence = 'save-all'
         shared_profiles = @('shared-chatgpt', 'shared-openai-api', 'shared-current-provider', 'shared-cockpit-api', 'shared-cockpit-auth')
-        launchers = @('codex-shared', 'codex-shared-exec', 'codex-shared-resume', 'codex-shared-app', 'codex-cockpit', 'codex-cockpit-exec', 'codex-cockpit-resume', 'codex-cockpit-app', 'codex-cockpit-app-restart', 'codex-relay', 'codex-relay-exec', 'codex-relay-resume', 'codex-relay-app', 'codex-interop-check', 'codex-interop-repair', 'codex-cockpit-install-noop-launcher', 'codex-switch-record', 'codex-switch-guard', 'codex-switch-guard-status', 'codex-switch-guard-start')
+        launchers = @('codex-shared', 'codex-shared-exec', 'codex-shared-resume', 'codex-shared-app', 'codex-cockpit', 'codex-cockpit-exec', 'codex-cockpit-resume', 'codex-cockpit-app', 'codex-cockpit-app-restart', 'codex-relay', 'codex-relay-exec', 'codex-relay-resume', 'codex-relay-app', 'codex-interop-check', 'codex-switch-record')
     }
     compatibility = [ordered]@{
-        strategy = 'Use one shared CodexHome plus the built-in openai model_provider bucket for Codex coding history/state; switch auth/provider endpoint inside that bucket.'
-        cockpit_tools = 'Cockpit Tools owns Codex auth/API switching on this host; Codex launchers read the current Cockpit Codex account and normalize all API providers to the shared openai provider bucket.'
+        strategy = 'Use one shared CodexHome for local state, but keep API accounts on explicit custom model_provider buckets for connectivity; shared history is secondary for API relays.'
+        cockpit_tools = 'Cockpit Tools owns Codex auth/API switching on this host; Codex launchers read the current Cockpit Codex account and project API providers as custom providers instead of normalizing them into openai.'
         cc_switch = 'CC Switch is treated as the Claude/third-party API switcher boundary and is not used as the Codex provider source.'
         boundary = 'Use an isolated CODEX_HOME only for identities, relays, or privacy boundaries that must not share local coding sessions.'
     }
@@ -573,7 +585,7 @@ $plan = [ordered]@{
 if (-not $Apply) {
     $plan.interop = Invoke-CodexInteropCheck -HomePath $CodexHome -CcSwitchDb $ccSwitchDbPath -CockpitStateHome $cockpitHomePath
     $plan.status = 'dry_run'
-    $plan.next = 'Re-run with -Apply to write the current implementation under the efficiency-first principle and install the account switcher.'
+    $plan.next = 'Re-run with -Apply to write the current implementation. API provider connectivity is primary; history bucket migration is explicit only.'
     $plan | ConvertTo-Json -Depth 5
     exit 0
 }
@@ -601,10 +613,7 @@ if ($InstallAccountSwitcher) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Start-CodexShared.ps1') -Destination (Join-Path $scriptsDir 'Start-CodexShared.ps1') -Force
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'codex-interop-check.py') -Destination (Join-Path $scriptsDir 'codex-interop-check.py') -Force
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'codex-cockpit-switch-trace.py') -Destination (Join-Path $scriptsDir 'codex-cockpit-switch-trace.py') -Force
-    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'codex-cockpit-switch-guard.py') -Destination (Join-Path $scriptsDir 'codex-cockpit-switch-guard.py') -Force
-    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Start-CodexCockpitSwitchGuard.ps1') -Destination (Join-Path $scriptsDir 'Start-CodexCockpitSwitchGuard.ps1') -Force
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Save-CodexCockpitSwitchRecord.ps1') -Destination (Join-Path $scriptsDir 'Save-CodexCockpitSwitchRecord.ps1') -Force
-    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Install-CodexCockpitNoopLauncher.ps1') -Destination (Join-Path $scriptsDir 'Install-CodexCockpitNoopLauncher.ps1') -Force
     Set-Content -LiteralPath (Join-Path $binDir 'codex-account.cmd') -Value '@echo off
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Switch-CodexAccount.ps1" %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-shared.cmd') -Value '@echo off
@@ -635,33 +644,23 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Star
 pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexShared.ps1" -Surface app -UseCockpitCurrentAccount %*' -Encoding ascii
     Set-Content -LiteralPath (Join-Path $binDir 'codex-interop-check.cmd') -Value '@echo off
 python "%USERPROFILE%\.codex\scripts\codex-interop-check.py" --codex-home "%USERPROFILE%\.codex" --cc-switch-db "%USERPROFILE%\.cc-switch\cc-switch.db" --cockpit-home "%USERPROFILE%\.antigravity_cockpit" %*' -Encoding ascii
-    Set-Content -LiteralPath (Join-Path $binDir 'codex-interop-repair.cmd') -Value '@echo off
-python "%USERPROFILE%\.codex\scripts\codex-interop-check.py" --codex-home "%USERPROFILE%\.codex" --cc-switch-db "%USERPROFILE%\.cc-switch\cc-switch.db" --cockpit-home "%USERPROFILE%\.antigravity_cockpit" --apply --migrate-provider-bucket %*' -Encoding ascii
-    Set-Content -LiteralPath (Join-Path $binDir 'codex-cockpit-install-noop-launcher.cmd') -Value '@echo off
-pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Install-CodexCockpitNoopLauncher.ps1" %*' -Encoding ascii
     $saveRecordScriptForCmd = Join-Path $PSScriptRoot 'Save-CodexCockpitSwitchRecord.ps1'
     Set-Content -LiteralPath (Join-Path $binDir 'codex-switch-record.cmd') -Value ("@echo off`r`npwsh -NoProfile -ExecutionPolicy Bypass -File `"{0}`" %*" -f $saveRecordScriptForCmd) -Encoding ascii
-    Set-Content -LiteralPath (Join-Path $binDir 'codex-switch-guard.cmd') -Value '@echo off
-pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexCockpitSwitchGuard.ps1" %*' -Encoding ascii
-    Set-Content -LiteralPath (Join-Path $binDir 'codex-switch-guard-status.cmd') -Value '@echo off
-pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexCockpitSwitchGuard.ps1" -Status %*' -Encoding ascii
-    Set-Content -LiteralPath (Join-Path $binDir 'codex-switch-guard-start.cmd') -Value '@echo off
-pwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.codex\scripts\Start-CodexCockpitSwitchGuard.ps1" -Start %*' -Encoding ascii
     $plan.account_switcher_installed = $true
     $plan.shared_launcher_installed = $true
-    $plan.interop_shortcuts_installed = $true
+    $plan.interop_shortcuts_installed = 'read_only_check_only'
 }
 
 $plan.interop = Invoke-CodexInteropCheck `
     -HomePath $CodexHome `
     -CcSwitchDb $ccSwitchDbPath `
     -CockpitStateHome $cockpitHomePath `
-    -ApplyRepair:([bool]$RepairThirdPartyInterop) `
-    -MigrateHistoryProviderBucket:([bool]$MigrateProviderBucket)
+    -ApplyRepair:$false `
+    -MigrateHistoryProviderBucket:$false
 
 if ($plan.interop.status -eq 'fail') {
     $plan.status = 'blocked'
-    $plan.blocked_reason = 'Third-party Codex interop still has shared-history blockers after apply.'
+    $plan.blocked_reason = 'Third-party Codex provider/auth interop still has blockers after apply.'
     $plan | ConvertTo-Json -Depth 8
     exit 2
 }

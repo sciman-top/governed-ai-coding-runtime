@@ -304,7 +304,7 @@ class CodexLocalTests(unittest.TestCase):
             self.assertTrue((home / "auth.json").exists())
             self.assertTrue((home / "auth3-2.json").exists())
 
-    def test_save_api_auth_profile_projects_shared_openai_history_bucket(self) -> None:
+    def test_save_api_auth_profile_projects_custom_api_provider_bucket(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)
             _write_auth(home / "auth.json", account_id="oauth-account")
@@ -340,16 +340,63 @@ class CodexLocalTests(unittest.TestCase):
             self.assertEqual("apikey", auth_payload["auth_mode"])
             self.assertEqual("relay-secret-value", auth_payload["OPENAI_API_KEY"])
             config = (home / "config.toml").read_text(encoding="utf-8")
-            self.assertIn('model_provider = "openai"', config)
+            self.assertIn('model_provider = "provider_35_213_82_91"', config)
             self.assertIn('forced_login_method = "api"', config)
-            self.assertIn('openai_base_url = "http://35.213.82.91:8003/v1"', config)
+            self.assertNotIn("openai_base_url", config)
+            self.assertIn("[model_providers.provider_35_213_82_91]", config)
+            self.assertIn('base_url = "http://35.213.82.91:8003/v1"', config)
+            self.assertIn("requires_openai_auth = false", config)
+            self.assertIn("supports_websockets = false", config)
             self.assertNotIn("[model_providers.openai]", config)
             self.assertIn("[mcp_servers.context7]", config)
             status = codex_local.codex_status(home)
             self.assertEqual("api-35", status["active_account"]["name"])
             self.assertEqual("apikey", status["active_account"]["auth_mode"])
             self.assertEqual("http://35.213.82.91:8003/v1", status["active_account"]["api_base_url"])
-            self.assertEqual("openai", status["config"]["auth_projection"]["model_provider"])
+            self.assertEqual("provider_35_213_82_91", status["config"]["auth_projection"]["model_provider"])
+
+    def test_save_api_auth_profile_persists_switch_to_cockpit_accounts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            home = root / "codex"
+            cockpit = root / "cockpit"
+            home.mkdir()
+            cockpit.mkdir()
+            _write_auth(home / "auth.json", account_id="oauth-account")
+            (home / "config.toml").write_text('model_provider = "openai"\nforced_login_method = "chatgpt"\n', encoding="utf-8")
+            (cockpit / "codex_accounts.json").write_text(
+                json.dumps({"version": "1.0", "accounts": [], "current_account_id": None}),
+                encoding="utf-8",
+            )
+            (cockpit / "codex_model_providers.json").write_text("[]", encoding="utf-8")
+
+            result = codex_local.save_api_auth_profile(
+                "api-35",
+                "relay-secret-value",
+                "http://35.213.82.91:8003/v1",
+                home,
+                label="35.213.82.91",
+                switch_now=True,
+                cockpit_dir=cockpit,
+            )
+
+            self.assertEqual("ok", result["status"])
+            self.assertNotIn("relay-secret-value", json.dumps(result, ensure_ascii=False))
+            projection = result["cockpit_projection"]
+            self.assertEqual("ok", projection["status"])
+            self.assertTrue(projection["changed"])
+            account_id = projection["account_id"]
+            index = json.loads((cockpit / "codex_accounts.json").read_text(encoding="utf-8"))
+            self.assertEqual(account_id, index["current_account_id"])
+            self.assertIn(account_id, [item["id"] for item in index["accounts"]])
+            detail = json.loads((cockpit / "codex_accounts" / f"{account_id}.json").read_text(encoding="utf-8"))
+            self.assertEqual("apikey", detail["auth_mode"])
+            self.assertEqual("http://35.213.82.91:8003/v1", detail["api_base_url"])
+            self.assertEqual("custom", detail["api_provider_mode"])
+            self.assertEqual("35.213.82.91", detail["api_provider_name"])
+            self.assertEqual("relay-secret-value", detail["openai_api_key"])
+            providers = json.loads((cockpit / "codex_model_providers.json").read_text(encoding="utf-8"))
+            self.assertEqual("http://35.213.82.91:8003/v1", providers[0]["baseUrl"])
 
     def test_switch_auth_profile_to_chatgpt_clears_api_projection(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -396,6 +443,88 @@ class CodexLocalTests(unittest.TestCase):
 
             self.assertEqual("error", result["status"])
             self.assertFalse((home / "auth-profiles" / "bad-api.json").exists())
+
+    def test_switch_auth_profile_blocks_api_snapshot_without_base_url(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_auth(home / "auth.json", account_id="oauth-account")
+            (home / "config.toml").write_text('model_provider = "openai"\nforced_login_method = "chatgpt"\n', encoding="utf-8")
+            profiles = home / "auth-profiles"
+            profiles.mkdir()
+            (profiles / "auto-fdb75e04ea.json").write_text(
+                json.dumps({"auth_mode": "apikey", "OPENAI_API_KEY": "sk-relay-secret"}),
+                encoding="utf-8",
+            )
+
+            result = codex_local.switch_auth_profile("auto-fdb75e04ea", home)
+
+            self.assertEqual("error", result["status"])
+            self.assertIn("missing api_base_url", result["error"])
+            self.assertEqual("chatgpt", json.loads((home / "auth.json").read_text(encoding="utf-8"))["auth_mode"])
+            self.assertNotIn("openai_base_url", (home / "config.toml").read_text(encoding="utf-8"))
+
+    def test_codex_status_prefers_switchable_api_duplicate_over_legacy_auto_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_auth(home / "auth.json", account_id="oauth-account")
+            (home / "config.toml").write_text('model_provider = "openai"\nforced_login_method = "chatgpt"\n', encoding="utf-8")
+            profiles = home / "auth-profiles"
+            profiles.mkdir()
+            api_key = "sk-relay-secret"
+            (profiles / "auto-fdb75e04ea.json").write_text(
+                json.dumps({"auth_mode": "apikey", "OPENAI_API_KEY": api_key}),
+                encoding="utf-8",
+            )
+            (profiles / "cockpit-api-35.213.82.91.json").write_text(
+                json.dumps(
+                    {
+                        "auth_mode": "apikey",
+                        "OPENAI_API_KEY": api_key,
+                        "api_base_url": "http://35.213.82.91:8003/v1",
+                        "base_url": "http://35.213.82.91:8003/v1",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            status = codex_local.codex_status(home)
+            api_accounts = [account for account in status["accounts"] if account["auth_mode"] == "apikey"]
+
+            self.assertEqual(1, len(api_accounts))
+            self.assertEqual("cockpit-api-35.213.82.91", api_accounts[0]["name"])
+            self.assertEqual("35.213.82.91", api_accounts[0]["account_label"])
+            self.assertEqual("http://35.213.82.91:8003/v1", api_accounts[0]["api_base_url"])
+            self.assertTrue(api_accounts[0]["switchable"])
+            self.assertEqual(2, api_accounts[0]["duplicate_count"])
+
+    def test_codex_status_collapses_oauth_profiles_by_email_across_sources(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            _write_auth(home / "auth.json", account_id="active-account", email="active@example.com")
+            _write_auth(
+                home / "auth1.json",
+                account_id="legacy-account-id",
+                last_refresh="2026-05-01T00:00:00Z",
+                email="sciman.top@gmail.com",
+                plan_type="plus",
+            )
+            profiles = home / "auth-profiles"
+            profiles.mkdir()
+            _write_auth(
+                profiles / "cockpit-sciman.top-gmail.com.json",
+                account_id="codex_cockpit_account_id",
+                last_refresh="2026-05-06T00:00:00Z",
+                email="sciman.top@gmail.com",
+                plan_type="plus",
+            )
+
+            status = codex_local.codex_status(home)
+            matching = [account for account in status["accounts"] if account["email"] == "sciman.top@gmail.com"]
+
+            self.assertEqual(1, len(matching))
+            self.assertEqual("cockpit-sciman.top-gmail.com", matching[0]["name"])
+            self.assertEqual(2, matching[0]["duplicate_count"])
+            self.assertEqual(["auth1"], matching[0]["hidden_duplicate_names"])
 
     def test_import_cockpit_codex_accounts_imports_oauth_and_api_without_secret_output(self) -> None:
         with tempfile.TemporaryDirectory() as home_dir, tempfile.TemporaryDirectory() as cockpit_dir:

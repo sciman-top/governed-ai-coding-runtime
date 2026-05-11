@@ -89,7 +89,7 @@ def redact(value: Any) -> Any:
         out: dict[str, Any] = {}
         for key, child in value.items():
             if SECRET_KEY_RE.search(str(key)):
-                out[key] = "<redacted>" if child not in (None, "", []) else child
+                out[key] = child if child in (None, "", []) or isinstance(child, bool) else "<redacted>"
             else:
                 out[key] = redact(child)
         return out
@@ -121,24 +121,39 @@ def compact_toml_values(text: str | None) -> dict[str, Any]:
             if match:
                 result[key] = match.group(1).strip().strip('"')
     provider_blocks: dict[str, dict[str, Any]] = {}
+    profile_blocks: dict[str, dict[str, Any]] = {}
     current_provider: str | None = None
+    current_profile: str | None = None
     for line in text.splitlines():
         provider_match = re.match(r'\s*\[model_providers\."?([^"\]]+)"?\]\s*$', line)
         if provider_match:
             current_provider = provider_match.group(1)
+            current_profile = None
             provider_blocks.setdefault(current_provider, {})
+            continue
+        profile_match = re.match(r'\s*\[profiles\."?([^"\]]+)"?\]\s*$', line)
+        if profile_match:
+            current_provider = None
+            current_profile = profile_match.group(1)
+            profile_blocks.setdefault(current_profile, {})
             continue
         section_match = re.match(r"\s*\[.+\]\s*$", line)
         if section_match:
             current_provider = None
+            current_profile = None
             continue
-        if current_provider and "=" in line:
+        if (current_provider or current_profile) and "=" in line:
             key, raw = line.split("=", 1)
             key = key.strip()
-            if key in {"name", "base_url", "wire_api", "env_key"}:
-                provider_blocks[current_provider][key] = raw.strip().strip('"')
+            value = raw.strip().strip('"')
+            if current_provider and key in {"name", "base_url", "wire_api", "env_key", "requires_openai_auth", "supports_websockets"}:
+                provider_blocks[current_provider][key] = value
+            if current_profile and key in {"forced_login_method", "model_provider", "openai_base_url"}:
+                profile_blocks[current_profile][key] = value
     if provider_blocks:
         result["model_providers"] = provider_blocks
+    if profile_blocks:
+        result["profiles"] = profile_blocks
     return result
 
 
@@ -152,6 +167,26 @@ def summarize_auth(auth: Any) -> dict[str, Any]:
         "base_url": auth.get("base_url") or auth.get("api_base_url") or auth.get("OPENAI_BASE_URL"),
         "provider": auth.get("provider") or auth.get("api_provider"),
         "keys": sorted(auth.keys()),
+    }
+
+
+def summarize_cockpit_account(account: Any) -> dict[str, Any]:
+    if not isinstance(account, dict):
+        return {"exists": account is not None, "shape": type(account).__name__}
+    return {
+        "id": account.get("id"),
+        "auth_mode": account.get("auth_mode") or account.get("mode"),
+        "api_provider_id": account.get("api_provider_id") or account.get("apiProviderId"),
+        "api_provider_name": account.get("api_provider_name") or account.get("apiProviderName"),
+        "base_url": (
+            account.get("api_base_url")
+            or account.get("base_url")
+            or account.get("baseUrl")
+            or account.get("apiBaseUrl")
+            or account.get("OPENAI_BASE_URL")
+        ),
+        "has_openai_api_key": bool(account.get("OPENAI_API_KEY") or account.get("openai_api_key")),
+        "has_tokens": bool(account.get("tokens") or account.get("access_token") or account.get("refresh_token")),
     }
 
 
@@ -208,6 +243,7 @@ def summarize_cockpit(cockpit_home: Path) -> dict[str, Any]:
         {
             "current_account_id": current_account_id,
             "current_account": account_detail,
+            "current_account_summary": summarize_cockpit_account(account_detail),
             "launch_flags": launch_flags,
             "default_instance": default_instance,
             "model_providers": provider_summary,
@@ -432,6 +468,11 @@ COMPARE_FIELDS = {
     "guard.process_count": "guard_status.process_count",
     "guard.task_state": "guard_status.task_state",
     "cockpit.current_account_id": "cockpit.current_account_id",
+    "cockpit.current_account.auth_mode": "cockpit.current_account_summary.auth_mode",
+    "cockpit.current_account.api_provider_id": "cockpit.current_account_summary.api_provider_id",
+    "cockpit.current_account.api_provider_name": "cockpit.current_account_summary.api_provider_name",
+    "cockpit.current_account.base_url": "cockpit.current_account_summary.base_url",
+    "cockpit.current_account.has_openai_api_key": "cockpit.current_account_summary.has_openai_api_key",
     "cockpit.codex_launch_on_switch": "cockpit.launch_flags.codex_launch_on_switch",
     "cockpit.codex_app_path": "cockpit.launch_flags.codex_app_path",
     "cockpit.codex_restart_specified_app_on_switch": "cockpit.launch_flags.codex_restart_specified_app_on_switch",
@@ -444,6 +485,8 @@ COMPARE_FIELDS = {
     "codex.config.model_provider": "codex.config.model_provider",
     "codex.config.openai_base_url": "codex.config.openai_base_url",
     "codex.config.forced_login_method": "codex.config.forced_login_method",
+    "codex.profile.shared-cockpit-api.model_provider": "codex.config.profiles.shared-cockpit-api.model_provider",
+    "codex.profile.shared-cockpit-api.openai_base_url": "codex.config.profiles.shared-cockpit-api.openai_base_url",
     "codex.auth.auth_mode": "codex.auth.auth_mode",
     "codex.auth.has_openai_api_key": "codex.auth.has_openai_api_key",
     "codex.auth.has_tokens": "codex.auth.has_tokens",
@@ -454,12 +497,21 @@ COMPARE_FIELDS = {
 
 def summarize_report(report: dict[str, Any], path: Path | None = None) -> dict[str, Any]:
     after = report.get("after", {})
+    config = _get_path(after, "codex.config")
+    active_provider = config.get("model_provider") if isinstance(config, dict) else None
+    model_providers = config.get("model_providers") if isinstance(config, dict) else {}
+    active_provider_info = model_providers.get(active_provider) if isinstance(model_providers, dict) else None
+    shared_api_profile = _get_path(after, "codex.config.profiles.shared-cockpit-api")
     summary = {
         "path": str(path) if path else None,
         "label": report.get("label"),
         "timestamp": after.get("timestamp"),
         "history_threads_by_provider": _history_distribution(after),
         "changed_files_within_watch": [item.get("file") for item in report.get("changed_files", [])],
+        "codex.active_provider.requires_openai_auth": active_provider_info.get("requires_openai_auth") if isinstance(active_provider_info, dict) else None,
+        "codex.active_provider.supports_websockets": active_provider_info.get("supports_websockets") if isinstance(active_provider_info, dict) else None,
+        "codex.profile.shared-cockpit-api.model_provider": shared_api_profile.get("model_provider") if isinstance(shared_api_profile, dict) else None,
+        "codex.profile.shared-cockpit-api.openai_base_url": shared_api_profile.get("openai_base_url") if isinstance(shared_api_profile, dict) else None,
     }
     for name, source_path in COMPARE_FIELDS.items():
         summary[name] = _get_path(after, source_path)

@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib import error as urllib_error
+from urllib.parse import urlparse
 from urllib import request as urllib_request
 
 
@@ -169,8 +170,11 @@ def switch_auth_profile(name: str, home: Path | None = None, *, dry_run: bool = 
         return {"status": "error", "error": f"ambiguous auth profile: {normalized_name}"}
     target = matches[0]
     active_path = home / "auth.json"
+    target_payload = _read_auth_json(Path(target.full_name))
+    validation = _validate_auth_profile_for_switch(target_payload, profile_name=target.name)
+    if validation.get("status") != "ok":
+        return validation
     if target.active:
-        target_payload = _read_auth_json(Path(target.full_name))
         config_projection = project_codex_auth_config(home, target_payload, dry_run=dry_run)
         return {
             "status": "ok",
@@ -179,7 +183,6 @@ def switch_auth_profile(name: str, home: Path | None = None, *, dry_run: bool = 
             "config_projection": config_projection,
         }
     if dry_run:
-        target_payload = _read_auth_json(Path(target.full_name))
         return {
             "status": "ok",
             "changed": False,
@@ -190,7 +193,6 @@ def switch_auth_profile(name: str, home: Path | None = None, *, dry_run: bool = 
 
     backup_path = backup_active_auth(home)
     shutil.copyfile(target.full_name, active_path)
-    target_payload = _read_auth_json(Path(target.full_name))
     config_projection = project_codex_auth_config(home, target_payload)
     new_active = _auth_profile_from_path(active_path, _short_file_hash(active_path))
     return {
@@ -213,6 +215,7 @@ def save_api_auth_profile(
     switch_now: bool = False,
     dry_run: bool = False,
     probe: bool = False,
+    cockpit_dir: Path | None = None,
 ) -> dict[str, Any]:
     normalized_name = _normalize_snapshot_name(name)
     if not normalized_name:
@@ -276,7 +279,251 @@ def save_api_auth_profile(
         switch_result = switch_auth_profile(normalized_name, home)
         result["switch"] = switch_result
         result["config_projection"] = switch_result.get("config_projection", projection_preview)
+    should_project_cockpit = cockpit_dir is not None or home == codex_home(None)
+    cockpit_projection = (
+        persist_api_auth_profile_to_cockpit(
+            payload,
+            cockpit_dir=cockpit_dir,
+            set_current=switch_now,
+        )
+        if should_project_cockpit
+        else {
+            "status": "skipped",
+            "reason": "Non-default Codex home; Cockpit Tools projection requires an explicit cockpit_dir.",
+            "changed": False,
+        }
+    )
+    result["cockpit_projection"] = cockpit_projection
     return result
+
+
+def persist_api_auth_profile_to_cockpit(
+    payload: dict[str, Any],
+    *,
+    cockpit_dir: Path | None = None,
+    set_current: bool = False,
+) -> dict[str, Any]:
+    source_dir = (cockpit_dir or COCKPIT_CODEX_DIR).expanduser()
+    index_path = source_dir / "codex_accounts.json"
+    accounts_dir = source_dir / "codex_accounts"
+    providers_path = source_dir / "codex_model_providers.json"
+    if not source_dir.exists():
+        return {
+            "status": "skipped",
+            "reason": "Cockpit Tools state directory is missing.",
+            "source_dir": str(source_dir),
+            "changed": False,
+        }
+    api_key = _api_key_from_auth_payload(payload)
+    base_url = _normalize_api_base_url(
+        _first_string(payload.get("api_base_url"), payload.get("base_url"), payload.get("OPENAI_BASE_URL"))
+    )
+    if not api_key or not base_url:
+        return {
+            "status": "error",
+            "error": "API auth payload is missing OPENAI_API_KEY or api_base_url.",
+            "source_dir": str(source_dir),
+            "changed": False,
+        }
+    account_id = _first_string(payload.get("account_id")) or f"codex_apikey_{hashlib.sha256(api_key.encode('utf-8')).hexdigest()[:24]}"
+    label = _first_string(payload.get("account_label"), _api_base_url_display_name(base_url), account_id)
+    now = int(time.time())
+    provider_result = _upsert_cockpit_api_provider(
+        providers_path,
+        api_key=api_key,
+        base_url=base_url,
+        label=label,
+        now=now,
+    )
+    account_result = _upsert_cockpit_api_account(
+        index_path=index_path,
+        accounts_dir=accounts_dir,
+        account_id=account_id,
+        api_key=api_key,
+        base_url=base_url,
+        label=label,
+        provider_id=str(provider_result.get("provider_id") or ""),
+        provider_name=str(provider_result.get("provider_name") or label),
+        set_current=set_current,
+        now=now,
+    )
+    return {
+        "status": "ok" if provider_result.get("status") == "ok" and account_result.get("status") == "ok" else "error",
+        "changed": bool(provider_result.get("changed") or account_result.get("changed")),
+        "source_dir": str(source_dir),
+        "account_id": account_id,
+        "set_current": set_current,
+        "provider": provider_result,
+        "account": account_result,
+    }
+
+
+def _upsert_cockpit_api_provider(
+    providers_path: Path,
+    *,
+    api_key: str,
+    base_url: str,
+    label: str,
+    now: int,
+) -> dict[str, Any]:
+    providers: list[dict[str, Any]]
+    if providers_path.exists():
+        raw = json.loads(providers_path.read_text(encoding="utf-8"))
+        providers = raw if isinstance(raw, list) else []
+    else:
+        providers = []
+    provider = next(
+        (
+            item
+            for item in providers
+            if isinstance(item, dict)
+            and _normalize_api_base_url(_first_string(item.get("baseUrl"), item.get("base_url"))) == base_url
+        ),
+        None,
+    )
+    changed = False
+    if provider is None:
+        provider = {
+            "id": f"cmp_{now}_1",
+            "name": label,
+            "baseUrl": base_url,
+            "apiKeys": [],
+            "createdAt": now * 1000,
+            "updatedAt": now * 1000,
+        }
+        providers.append(provider)
+        changed = True
+    api_keys = provider.get("apiKeys")
+    if not isinstance(api_keys, list):
+        api_keys = []
+        provider["apiKeys"] = api_keys
+        changed = True
+    if not any(isinstance(item, dict) and item.get("apiKey") == api_key for item in api_keys):
+        api_keys.append(
+            {
+                "id": f"cmk_{now}_1",
+                "name": "",
+                "apiKey": api_key,
+                "createdAt": now * 1000,
+                "updatedAt": now * 1000,
+            }
+        )
+        provider["updatedAt"] = now * 1000
+        changed = True
+    if _first_string(provider.get("name")) != label:
+        provider["name"] = label
+        provider["updatedAt"] = now * 1000
+        changed = True
+    if _normalize_api_base_url(_first_string(provider.get("baseUrl"))) != base_url:
+        provider["baseUrl"] = base_url
+        provider["updatedAt"] = now * 1000
+        changed = True
+    if changed:
+        _backup_file_if_exists(providers_path, suffix="api-provider")
+        _write_json_atomic(providers_path, providers)
+    return {
+        "status": "ok",
+        "changed": changed,
+        "path": str(providers_path),
+        "provider_id": provider.get("id"),
+        "provider_name": provider.get("name"),
+        "base_url": base_url,
+        "api_key_present": True,
+    }
+
+
+def _upsert_cockpit_api_account(
+    *,
+    index_path: Path,
+    accounts_dir: Path,
+    account_id: str,
+    api_key: str,
+    base_url: str,
+    label: str,
+    provider_id: str,
+    provider_name: str,
+    set_current: bool,
+    now: int,
+) -> dict[str, Any]:
+    if index_path.exists():
+        index = json.loads(index_path.read_text(encoding="utf-8"))
+        if not isinstance(index, dict):
+            index = {}
+    else:
+        index = {}
+    accounts = index.get("accounts")
+    if not isinstance(accounts, list):
+        accounts = []
+    changed = False
+    summary = next((item for item in accounts if isinstance(item, dict) and item.get("id") == account_id), None)
+    if summary is None:
+        summary = {
+            "id": account_id,
+            "email": label,
+            "plan_type": "API_KEY",
+            "created_at": now,
+            "last_used": now,
+        }
+        accounts.append(summary)
+        changed = True
+    else:
+        for key, value in {
+            "email": label,
+            "plan_type": "API_KEY",
+            "last_used": now,
+        }.items():
+            if summary.get(key) != value:
+                summary[key] = value
+                changed = True
+        summary.setdefault("created_at", now)
+    index["version"] = _first_string(index.get("version")) or "1.0"
+    index["accounts"] = accounts
+    if set_current and index.get("current_account_id") != account_id:
+        index["current_account_id"] = account_id
+        changed = True
+    account_path = accounts_dir / f"{account_id}.json"
+    existing = json.loads(account_path.read_text(encoding="utf-8")) if account_path.exists() else {}
+    if not isinstance(existing, dict):
+        existing = {}
+    detail = {
+        **existing,
+        "id": account_id,
+        "email": label,
+        "auth_mode": CODEX_API_AUTH_MODE,
+        "openai_api_key": api_key,
+        "api_base_url": base_url,
+        "api_provider_mode": "custom",
+        "api_provider_id": provider_id,
+        "api_provider_name": provider_name,
+        "user_id": existing.get("user_id"),
+        "plan_type": "API_KEY",
+        "account_id": existing.get("account_id"),
+        "organization_id": existing.get("organization_id"),
+        "tokens": existing.get("tokens") if isinstance(existing.get("tokens"), dict) else {"id_token": "", "access_token": ""},
+        "token_generation": existing.get("token_generation", 0),
+        "token_updated_at": now,
+        "token_source_mode": existing.get("token_source_mode", "managed"),
+        "quota": existing.get("quota"),
+        "tags": existing.get("tags"),
+        "created_at": existing.get("created_at", now),
+        "last_used": now,
+    }
+    detail_changed = _normalize_json_for_compare(existing) != _normalize_json_for_compare(detail)
+    if changed:
+        _backup_file_if_exists(index_path, suffix="api-account-index")
+        _write_json_atomic(index_path, index)
+    if detail_changed:
+        _backup_file_if_exists(account_path, suffix="api-account")
+        _write_json_atomic(account_path, detail)
+    return {
+        "status": "ok",
+        "changed": changed or detail_changed,
+        "index_path": str(index_path),
+        "account_path": str(account_path),
+        "account_id": account_id,
+        "current_account_id": index.get("current_account_id"),
+        "api_key_present": True,
+    }
 
 
 def cockpit_codex_source_status(cockpit_dir: Path | None = None) -> dict[str, Any]:
@@ -1335,29 +1582,52 @@ def project_codex_auth_config(
             auth_payload.get("OPENAI_BASE_URL"),
         )
     )
+    if auth_mode == CODEX_API_AUTH_MODE and not base_url:
+        return {
+            "status": "error",
+            "error": "API auth profile is missing api_base_url; refusing to project an ambiguous API endpoint",
+            "auth_mode": auth_mode,
+            "config_path": str(config_path),
+            "changed": False,
+            "dry_run": dry_run,
+            "process_management": "not_performed",
+        }
     if auth_mode == CODEX_API_AUTH_MODE:
         forced_login_method = "api"
-        openai_base_url = "" if _is_default_openai_base_url(base_url) else base_url
+        provider_id = _first_string(auth_payload.get("api_provider_id")) or _provider_id_from_api_base_url(base_url)
+        provider_name = _first_string(auth_payload.get("api_provider_name"), auth_payload.get("account_label")) or _api_base_url_display_name(base_url) or provider_id
     else:
         forced_login_method = "chatgpt"
-        openai_base_url = ""
+        provider_id = "openai"
+        provider_name = "OpenAI"
 
     after_text = _remove_openai_builtin_provider_table(before_text)
-    after_text = _set_top_level_toml_value(after_text, "model_provider", "openai")
+    after_text = _set_top_level_toml_value(after_text, "model_provider", provider_id)
     after_text = _set_top_level_toml_value(after_text, "forced_login_method", forced_login_method)
-    if openai_base_url:
-        after_text = _set_top_level_toml_value(after_text, "openai_base_url", openai_base_url)
-    else:
-        after_text = _remove_top_level_toml_key(after_text, "openai_base_url")
+    after_text = _remove_top_level_toml_key(after_text, "openai_base_url")
+    if auth_mode == CODEX_API_AUTH_MODE and provider_id != "openai":
+        after_text = _replace_model_provider_table(
+            after_text,
+            provider_id,
+            {
+                "name": provider_name,
+                "base_url": base_url,
+                "wire_api": "responses",
+                "requires_openai_auth": False,
+                "supports_websockets": False,
+            },
+        )
     after_text = _normalize_text_eof(after_text)
     changed = after_text != _normalize_text_eof(before_text)
 
     summary = {
         "auth_mode": auth_mode,
-        "history_bucket": "openai",
-        "model_provider": "openai",
+        "history_bucket": provider_id,
+        "model_provider": provider_id,
         "forced_login_method": forced_login_method,
-        "openai_base_url": openai_base_url,
+        "openai_base_url": "",
+        "provider_name": provider_name,
+        "supports_websockets": False if auth_mode == CODEX_API_AUTH_MODE and provider_id != "openai" else None,
         "config_path": str(config_path),
         "changed": changed,
         "dry_run": dry_run,
@@ -1385,7 +1655,12 @@ def _auth_profile_from_path(path: Path, active_hash: str) -> CodexAuthProfile:
     file_hash = _short_file_hash(path)
     claims = _auth_claims(payload, tokens)
     account_hash = _short_string_hash(account_id) if account_id else ""
+    api_base_url = _normalize_api_base_url(
+        _first_string(payload.get("api_base_url"), payload.get("base_url"), payload.get("OPENAI_BASE_URL"))
+    )
     account_label = _first_string(
+        payload.get("api_provider_name") if auth_mode == CODEX_API_AUTH_MODE else "",
+        _api_base_url_display_name(api_base_url) if auth_mode == CODEX_API_AUTH_MODE else "",
         payload.get("account_label"),
         payload.get("label"),
         claims["email"],
@@ -1399,9 +1674,7 @@ def _auth_profile_from_path(path: Path, active_hash: str) -> CodexAuthProfile:
         file=path.name,
         active=file_hash == active_hash,
         auth_mode=auth_mode,
-        api_base_url=_normalize_api_base_url(
-            _first_string(payload.get("api_base_url"), payload.get("base_url"), payload.get("OPENAI_BASE_URL"))
-        ),
+        api_base_url=api_base_url,
         last_refresh=str(payload.get("last_refresh") or ""),
         email=claims["email"],
         display_name=claims["display_name"],
@@ -1430,6 +1703,13 @@ def _display_auth_profiles(profiles: list[CodexAuthProfile]) -> list[dict[str, A
         preferred = _select_display_profile(duplicates)
         rendered_profile = preferred.to_dict()
         rendered_profile["active"] = any(profile.active for profile in duplicates)
+        rendered_profile["switchable"] = _profile_is_switchable(preferred)
+        if preferred.auth_mode == CODEX_API_AUTH_MODE and not preferred.api_base_url:
+            rendered_profile["switch_block_reason"] = "missing_api_base_url"
+        rendered_profile["duplicate_count"] = len(duplicates)
+        rendered_profile["hidden_duplicate_names"] = [
+            profile.name for profile in duplicates if profile.full_name != preferred.full_name
+        ]
         rendered.append(rendered_profile)
 
     return sorted(rendered, key=lambda item: (0 if item.get("active") else 1, item.get("name") or item.get("file") or ""))
@@ -1438,6 +1718,7 @@ def _display_auth_profiles(profiles: list[CodexAuthProfile]) -> list[dict[str, A
 def _display_profile_rank(profile: CodexAuthProfile) -> tuple[int, int, str]:
     # Prefer named saved profiles over the auth.json live mirror when both point to the same account snapshot.
     return (
+        0 if _profile_is_switchable(profile) else 1,
         1 if profile.name == "auth" else 0,
         0 if profile.active else 1,
         profile.name,
@@ -1445,6 +1726,9 @@ def _display_profile_rank(profile: CodexAuthProfile) -> tuple[int, int, str]:
 
 
 def _display_group_key(profile: CodexAuthProfile) -> str:
+    normalized_email = _normalized_profile_email(profile)
+    if profile.auth_mode != CODEX_API_AUTH_MODE and normalized_email:
+        return f"oauth-email:{normalized_email}"
     if profile.account_id:
         return f"account:{profile.account_id}"
     if profile.account_hash:
@@ -1462,8 +1746,38 @@ def _select_display_profile(duplicates: list[CodexAuthProfile]) -> CodexAuthProf
         ]
         if exact_named_mirror:
             return min(exact_named_mirror, key=_display_profile_rank)
+        if not _profile_is_switchable(active_profile):
+            switchable = [profile for profile in duplicates if _profile_is_switchable(profile)]
+            if switchable:
+                return min(switchable, key=_display_profile_rank)
         return active_profile
-    return max(duplicates, key=lambda profile: (profile.last_refresh or "", 0 if profile.name != "auth" else 1, profile.name))
+    switchable = [profile for profile in duplicates if _profile_is_switchable(profile)]
+    candidates = switchable or duplicates
+    return max(candidates, key=lambda profile: (profile.last_refresh or "", 0 if profile.name != "auth" else 1, profile.name))
+
+
+def _profile_is_switchable(profile: CodexAuthProfile) -> bool:
+    if profile.auth_mode == CODEX_API_AUTH_MODE:
+        return bool(profile.api_base_url)
+    return bool(profile.auth_mode == "chatgpt" or profile.account_id or profile.last_refresh)
+
+
+def _validate_auth_profile_for_switch(payload: dict[str, Any], *, profile_name: str) -> dict[str, Any]:
+    auth_mode = _auth_mode_from_payload(payload)
+    if auth_mode != CODEX_API_AUTH_MODE:
+        return {"status": "ok"}
+    base_url = _normalize_api_base_url(
+        _first_string(payload.get("api_base_url"), payload.get("base_url"), payload.get("OPENAI_BASE_URL"))
+    )
+    if base_url:
+        return {"status": "ok"}
+    return {
+        "status": "error",
+        "error": "API auth profile is missing api_base_url; switch blocked to avoid Codex reconnecting against the wrong endpoint",
+        "profile_name": profile_name,
+        "auth_mode": auth_mode,
+        "remediation": "Re-import this API account from Cockpit Tools or save it again with a Base URL.",
+    }
 
 
 def _load_cockpit_codex_accounts(source_dir: Path) -> list[dict[str, Any]]:
@@ -1721,6 +2035,20 @@ def _candidate_account_id(candidate: dict[str, Any]) -> str:
 
 
 def _candidate_label(candidate: dict[str, Any]) -> str:
+    auth_mode = _candidate_auth_mode(candidate)
+    if auth_mode == CODEX_API_AUTH_MODE:
+        api_base_url = _normalize_api_base_url(
+            _first_string(candidate.get("api_base_url"), candidate.get("base_url"), candidate.get("OPENAI_BASE_URL"))
+        )
+        return _first_string(
+            candidate.get("api_provider_name"),
+            _api_base_url_display_name(api_base_url),
+            candidate.get("account_label"),
+            candidate.get("account_name"),
+            candidate.get("label"),
+            candidate.get("email"),
+            _candidate_account_id(candidate),
+        )
     return _first_string(
         candidate.get("account_label"),
         candidate.get("account_name"),
@@ -1729,6 +2057,23 @@ def _candidate_label(candidate: dict[str, Any]) -> str:
         candidate.get("api_provider_name"),
         _candidate_account_id(candidate),
     )
+
+
+def _normalized_profile_email(profile: CodexAuthProfile) -> str:
+    value = _first_string(profile.email, profile.account_label)
+    if "@" not in value:
+        return ""
+    return value.strip().lower()
+
+
+def _api_base_url_display_name(api_base_url: str) -> str:
+    if not api_base_url:
+        return ""
+    try:
+        parsed = urlparse(api_base_url)
+    except ValueError:
+        return ""
+    return parsed.hostname or ""
 
 
 def _candidate_profile_name(candidate: dict[str, Any], *, fallback_index: int) -> str:
@@ -1797,13 +2142,17 @@ def _normalize_snapshot_name(value: str) -> str:
 def _build_api_auth_payload(*, api_key: str, base_url: str, label: str) -> dict[str, Any]:
     normalized_base_url = _normalize_api_base_url(base_url)
     account_id = f"codex_apikey_{hashlib.sha256(api_key.encode('utf-8')).hexdigest()[:24]}"
+    provider_name = _first_string(label) or _api_base_url_display_name(normalized_base_url) or account_id
     return {
         "auth_mode": CODEX_API_AUTH_MODE,
         "OPENAI_API_KEY": api_key,
         "api_base_url": normalized_base_url,
         "base_url": normalized_base_url,
+        "api_provider_mode": "custom",
+        "api_provider_id": _provider_id_from_api_base_url(normalized_base_url),
+        "api_provider_name": provider_name,
         "account_id": account_id,
-        "account_label": _first_string(label) or account_id,
+        "account_label": provider_name,
         "last_refresh": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
     }
 
@@ -1857,7 +2206,7 @@ def _is_default_openai_base_url(value: str) -> bool:
     return _normalize_api_base_url(value).lower() == DEFAULT_OPENAI_BASE_URL.lower()
 
 
-def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
+def _write_json_atomic(path: Path, payload: Any) -> None:
     _write_text_atomic(path, json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
 
 
@@ -1866,6 +2215,14 @@ def _write_text_atomic(path: Path, content: str) -> None:
     temporary = path.with_name(f".{path.name}.tmp.{os.getpid()}.{time.time_ns()}")
     temporary.write_text(content, encoding="utf-8")
     temporary.replace(path)
+
+
+def _backup_file_if_exists(path: Path, *, suffix: str) -> str:
+    if not path.exists():
+        return ""
+    backup_path = path.with_name(f"{path.name}.{datetime.now().strftime('%Y%m%d-%H%M%S')}.{suffix}.bak")
+    shutil.copyfile(path, backup_path)
+    return str(backup_path)
 
 
 def _normalize_text_eof(text: str) -> str:
@@ -1925,6 +2282,47 @@ def _remove_openai_builtin_provider_table(text: str) -> str:
         if not skipping:
             kept.append(line)
     return "\n".join(kept)
+
+
+def _remove_model_provider_table_from_text(text: str, provider_id: str) -> str:
+    escaped = re.escape(provider_id)
+    header_pattern = re.compile(rf'^\s*\[model_providers\.(?:"{escaped}"|{escaped})\]\s*$', re.IGNORECASE)
+    kept: list[str] = []
+    skipping = False
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            skipping = bool(header_pattern.match(stripped))
+            if skipping:
+                continue
+        if not skipping:
+            kept.append(line)
+    return "\n".join(kept)
+
+
+def _replace_model_provider_table(text: str, provider_id: str, values: dict[str, Any]) -> str:
+    text = _remove_model_provider_table_from_text(text, provider_id)
+    lines = text.splitlines()
+    if lines and lines[-1].strip():
+        lines.append("")
+    lines.append(f"[model_providers.{provider_id}]")
+    for key, value in values.items():
+        lines.append(f"{key} = {_toml_value(value)}")
+    return "\n".join(lines)
+
+
+def _provider_id_from_api_base_url(base_url: str) -> str:
+    try:
+        parsed = urlparse(base_url)
+        host = parsed.hostname or ""
+    except ValueError:
+        host = ""
+    if not host:
+        host = re.sub(r"^[a-zA-Z][a-zA-Z0-9+.-]*://", "", str(base_url or "")).split("/", 1)[0]
+    normalized = re.sub(r"[^a-z0-9_-]+", "_", host.lower()).strip("_-")
+    if not normalized or not normalized[0].isalpha() or normalized in {"openai", "ollama", "lmstudio"}:
+        normalized = f"provider_{normalized or 'custom'}"
+    return normalized
 
 
 def _suggest_snapshot_name(active_profile: CodexAuthProfile, profiles: list[CodexAuthProfile]) -> str:

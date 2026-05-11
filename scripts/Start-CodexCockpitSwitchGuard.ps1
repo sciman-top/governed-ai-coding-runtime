@@ -41,93 +41,18 @@ function Get-GuardProcess {
         Select-Object Name, ProcessId, ParentProcessId, CreationDate, CommandLine
 }
 
-function New-GuardTaskSettings {
-    try {
-        return New-ScheduledTaskSettingsSet `
-            -AllowStartIfOnBatteries `
-            -StartWhenAvailable `
-            -ExecutionTimeLimit ([timespan]::Zero) `
-            -RestartCount 999 `
-            -RestartInterval (New-TimeSpan -Minutes 1)
-    }
-    catch {
-        return New-ScheduledTaskSettingsSet `
-            -AllowStartIfOnBatteries `
-            -StartWhenAvailable `
-            -ExecutionTimeLimit ([timespan]::Zero)
-    }
-}
-
-function Start-GuardProcessFallback {
-    $pwshPath = (Get-Command pwsh).Source
-    $argumentList = @(
-        '-NoProfile',
-        '-ExecutionPolicy',
-        'Bypass',
-        '-WindowStyle',
-        'Hidden',
-        '-File',
-        $PSCommandPath,
-        '-RunWorker',
-        '-CodexHome',
-        $CodexHome,
-        '-CockpitHome',
-        $CockpitHome,
-        '-CcSwitchDb',
-        $CcSwitchDb
-    )
-    Start-Process -FilePath $pwshPath -ArgumentList $argumentList -WindowStyle Hidden -PassThru
-}
-
-function Wait-GuardProcess {
-    param([int] $TimeoutSeconds = 8)
-
-    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
-    do {
-        $processes = @(Get-GuardProcess)
-        if ($processes.Count -gt 0) {
-            return $processes
-        }
-        Start-Sleep -Milliseconds 500
-    } while ((Get-Date) -lt $deadline)
-    return @()
-}
-
-$repoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
-$guardScript = Join-Path $PSScriptRoot 'codex-cockpit-switch-guard.py'
 $logPath = Join-Path (Join-Path $CodexHome 'log') 'codex-cockpit-switch-guard.jsonl'
 
+$deprecatedReason = 'codex-cockpit-switch-guard is deprecated. Cockpit Tools owns Codex auth/API switching and launch-on-switch; this project must not install or start a background repair guard.'
+
 if ($RunWorker) {
-    & python $guardScript `
-        --watch `
-        --codex-home $CodexHome `
-        --cockpit-home $CockpitHome `
-        --cc-switch-db $CcSwitchDb `
-        --log-path $logPath
-    exit $LASTEXITCODE
+    Write-Error $deprecatedReason
+    exit 2
 }
 
 if ($InstallTask) {
-    $pwshPath = (Get-Command pwsh).Source
-    $argument = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$PSCommandPath`" -RunWorker -CodexHome `"$CodexHome`" -CockpitHome `"$CockpitHome`" -CcSwitchDb `"$CcSwitchDb`""
-    $action = New-ScheduledTaskAction -Execute $pwshPath -Argument $argument
-    $logonTrigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
-    $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Limited
-    $settings = New-GuardTaskSettings
-    $settings.MultipleInstances = 'IgnoreNew'
-    $settings.StopIfGoingOnBatteries = $false
-    $settings.Hidden = $true
-    try {
-        $startupTrigger = New-ScheduledTaskTrigger -AtStartup
-        $task = New-ScheduledTask -Action $action -Trigger @($logonTrigger, $startupTrigger) -Principal $principal -Settings $settings
-        Register-ScheduledTask -TaskName $TaskName -InputObject $task -Force | Out-Null
-        Write-Host "Installed scheduled task: $TaskName (logon_and_startup)"
-    }
-    catch {
-        $task = New-ScheduledTask -Action $action -Trigger $logonTrigger -Principal $principal -Settings $settings
-        Register-ScheduledTask -TaskName $TaskName -InputObject $task -Force | Out-Null
-        Write-Host "Installed scheduled task: $TaskName (logon_only_fallback)"
-    }
+    Write-Error $deprecatedReason
+    exit 2
 }
 elseif ($UninstallTask) {
     Stop-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue | Out-Null
@@ -135,22 +60,8 @@ elseif ($UninstallTask) {
     Write-Host "Uninstalled scheduled task: $TaskName"
 }
 elseif ($Start) {
-    $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
-    if ($task) {
-        Start-ScheduledTask -TaskName $TaskName
-        $processes = @(Wait-GuardProcess)
-        if ($processes.Count -gt 0) {
-            Write-Host "Started scheduled task: $TaskName"
-        }
-        else {
-            $process = Start-GuardProcessFallback
-            Write-Host "Scheduled task did not produce a guard worker; started fallback process: $($process.Id)"
-        }
-    }
-    else {
-        $process = Start-GuardProcessFallback
-        Write-Host "Started guard process: $($process.Id)"
-    }
+    Write-Error $deprecatedReason
+    exit 2
 }
 elseif ($Stop) {
     Stop-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue | Out-Null

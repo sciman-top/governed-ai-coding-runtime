@@ -91,7 +91,7 @@ codex-cockpit-app D:\CODE\governed-ai-coding-runtime
 codex-cockpit-app-restart D:\CODE\governed-ai-coding-runtime
 ```
 
-`Cockpit Tools` 负责 Codex App/CLI 的 ChatGPT auth 和 Codex API provider 切换；`cc-switch` 负责 Claude CLI、GLM、DeepSeek 等第三方 API 切换。关键约束是让 Codex 始终使用同一个 `~/.codex`，并把 Cockpit 当前 Codex account 投影到稳定内置 `model_provider = "openai"` 历史 bucket；API relay 只能通过顶层 `openai_base_url` 切换，严禁定义 `[model_providers.openai]` 覆盖内置 provider。`Optimize-CodexLocal.ps1 -Apply` 会实读 Cockpit 当前账号，写入 Codex 配置并迁移 `state_5.sqlite` 的 provider metadata。Cockpit 的 `codex_launch_on_switch` 必须保持关闭，避免切号后绕过本仓共享历史修复链直接 raw-launch Codex App。Codex App 切换后如 UI 未热刷新，先创建 restart-guard 备份；确需刷新 UI 时由操作者手动关闭后再用 `codex-cockpit-app` 打开，`codex-cockpit-app-restart` 只作为明确授权后的手动入口。
+`Cockpit Tools` 负责 Codex App/CLI 的 ChatGPT auth、Codex API provider 切换、会话可见性修复和 launch-on-switch 设置；`cc-switch` 负责 Claude CLI、GLM、DeepSeek 等第三方 API 切换。关键约束是让 Codex 始终使用同一个 `~/.codex`，但 API 账号优先保留 Cockpit 的明确 custom provider bucket；RightCode、35.213.82.91 等 API relay 必须写入对应 `model_provider`、`base_url`、`requires_openai_auth = false` 与 `supports_websockets = false`，严禁定义 `[model_providers.openai]` 覆盖内置 provider。`Optimize-CodexLocal.ps1 -Apply` 只可做 provider-first 本机配置和只读互操作检查；不得迁移历史 bucket、安装 guard/no-op launcher、强改 Cockpit `codex_launch_on_switch`，也不得用 no-op launcher、restart wrapper、no-restart shim、SQLite trigger 或后台 guard 拦截 Cockpit Tools 原生行为。`codex_launch_on_switch` 是 Cockpit UI 用户设置，本仓不得强制开启或关闭。
 
 复现切号覆盖问题时，先开只读追踪窗口，再手动切换 Cockpit 账号：
 

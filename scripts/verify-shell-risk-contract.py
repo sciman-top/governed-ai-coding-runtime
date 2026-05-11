@@ -138,6 +138,13 @@ ALLOWLIST = (
         "expected_count": 2,
         "reason": "parallel runtime flow deletes per-target temporary stderr capture files after process completion or timeout",
     },
+    {
+        "kind": "powershell_move_item",
+        "path": "scripts/Disable-CodexProjectInterop.ps1",
+        "line_contains": "Move-Item -LiteralPath $Path -Destination $target -Force",
+        "expected_count": 1,
+        "reason": "project interop disable only renames managed Codex shortcut files after source and target containment under the configured bin directory",
+    },
 )
 
 

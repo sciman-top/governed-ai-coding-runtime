@@ -67,6 +67,26 @@ function Get-JsonStringProperty {
     return ''
 }
 
+function Get-CodexProviderIdFromBaseUrl {
+    param([string] $BaseUrl)
+    $value = ([string]$BaseUrl).Trim()
+    if ([string]::IsNullOrWhiteSpace($value)) {
+        return 'provider_custom'
+    }
+    try {
+        $uri = [System.Uri]$value
+        $hostName = $uri.Host
+    }
+    catch {
+        $hostName = ($value -replace '^[a-zA-Z][a-zA-Z0-9+.-]*://', '').Split('/')[0]
+    }
+    $normalized = ($hostName.ToLowerInvariant() -replace '[^a-z0-9_-]+', '_').Trim('_', '-')
+    if ([string]::IsNullOrWhiteSpace($normalized) -or $normalized -eq 'openai' -or $normalized[0] -notmatch '[a-z]') {
+        $normalized = 'provider_' + ($(if ([string]::IsNullOrWhiteSpace($normalized)) { 'custom' } else { $normalized }))
+    }
+    return $normalized
+}
+
 function Assert-CockpitApiAccountUsable {
     param(
         [string] $BaseUrl,
@@ -236,8 +256,6 @@ function Invoke-CodexInteropRepair {
         '--codex-home', $HomePath,
         '--cc-switch-db', $CcSwitchDb,
         '--cockpit-home', $CockpitStateHome,
-        '--apply',
-        '--migrate-provider-bucket',
         '--quick-launch'
     )
     if (-not [string]::IsNullOrWhiteSpace($AccountId)) {
@@ -251,14 +269,10 @@ function Invoke-CodexInteropRepair {
     }
     try {
         $payload = $text | ConvertFrom-Json
-        Write-Host ("interop_repair_status={0}" -f $payload.status)
-        $changedActions = @($payload.actions | Where-Object { $_.status -eq 'changed' })
-        if ($changedActions.Count -gt 0) {
-            Write-Host ("interop_repair_actions={0}" -f (($changedActions | ForEach-Object { $_.id }) -join ','))
-        }
+        Write-Host ("interop_check_status={0}" -f $payload.status)
     }
     catch {
-        Write-Host 'interop_repair_status=unknown'
+        Write-Host 'interop_check_status=unknown'
     }
     return $true
 }
@@ -341,10 +355,12 @@ if ($UseCockpitCurrentAccount) {
         $env:OPENAI_API_KEY = $apiKey
         $forcedLoginMethod = 'api'
         $requiresOpenAiAuth = $false
-        if ($PSBoundParameters.ContainsKey('ModelProvider') -and -not [string]::IsNullOrWhiteSpace($ModelProvider) -and $ModelProvider -ne 'openai') {
-            Write-Warning 'Cockpit launchers share Codex App history through the built-in openai provider bucket; ignoring custom ModelProvider for history continuity.'
+        if (-not $PSBoundParameters.ContainsKey('ModelProvider') -or [string]::IsNullOrWhiteSpace($ModelProvider) -or $ModelProvider -eq 'openai') {
+            $ModelProvider = Get-JsonStringProperty -Object $cockpitAccount -Name 'api_provider_id'
+            if ([string]::IsNullOrWhiteSpace($ModelProvider) -or $ModelProvider -eq 'openai') {
+                $ModelProvider = Get-CodexProviderIdFromBaseUrl -BaseUrl $accountBaseUrl
+            }
         }
-        $ModelProvider = 'openai'
         if (-not $PSBoundParameters.ContainsKey('Profile')) {
             $Profile = 'shared-cockpit-api'
         }

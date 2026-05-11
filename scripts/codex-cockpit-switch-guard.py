@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Background guard for Cockpit Tools -> Codex state drift.
+"""Deprecated background guard for Cockpit Tools -> Codex state drift.
 
-The guard does not launch, stop, or restart Codex App. It watches the local
-Cockpit/Codex state files that Cockpit Tools rewrites during account/provider
-switching, then runs the existing interop repair path after a short debounce.
+The former guard is intentionally disabled. Cockpit Tools owns Codex auth/API
+switching and launch-on-switch; this project must not run a background process
+that rewrites Codex/Cockpit provider, auth, history bucket, or launcher state.
 """
 
 from __future__ import annotations
@@ -96,44 +96,21 @@ def run_interop_repair(
     cc_switch_db: Path,
     timeout_seconds: int,
 ) -> dict[str, Any]:
-    command = [
-        sys.executable,
-        str(repair_script),
-        "--codex-home",
-        str(codex_home),
-        "--cc-switch-db",
-        str(cc_switch_db),
-        "--cockpit-home",
-        str(cockpit_home),
-        "--apply",
-        "--migrate-provider-bucket",
-        "--quick-launch",
-    ]
     started = dt.datetime.now().isoformat(timespec="seconds")
-    completed = subprocess.run(
-        command,
-        cwd=str(repair_script.resolve().parents[1]),
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        timeout=timeout_seconds,
-        check=False,
-    )
-    parsed_stdout: Any = None
-    try:
-        parsed_stdout = json.loads(completed.stdout) if completed.stdout.strip() else None
-    except json.JSONDecodeError:
-        parsed_stdout = None
     return {
         "timestamp": started,
-        "command": command,
-        "exit_code": completed.returncode,
-        "stdout_status": parsed_stdout.get("status") if isinstance(parsed_stdout, dict) else None,
-        "stdout_actions": parsed_stdout.get("actions") if isinstance(parsed_stdout, dict) else None,
-        "stdout": parsed_stdout if isinstance(parsed_stdout, dict) else completed.stdout[-8000:],
-        "stderr": completed.stderr[-8000:],
+        "command": [],
+        "exit_code": 2,
+        "stdout_status": "deprecated",
+        "stdout_actions": [
+            {
+                "id": "codex_cockpit_switch_guard_deprecated",
+                "status": "blocked",
+                "reason": "Background Codex/Cockpit repair guard is disabled to prevent project interference with Cockpit native switching.",
+            }
+        ],
+        "stdout": "",
+        "stderr": "codex-cockpit-switch-guard is deprecated and performs no repair.",
     }
 
 
@@ -161,6 +138,17 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    event = {
+        "event": "guard_deprecated",
+        "timestamp": dt.datetime.now().isoformat(timespec="seconds"),
+        "reason": "Background Codex/Cockpit repair guard is disabled to prevent project interference with Cockpit native switching.",
+        "codex_home": str(args.codex_home),
+        "cockpit_home": str(args.cockpit_home),
+    }
+    append_log(args.log_path, event)
+    print(json.dumps(event, ensure_ascii=False, indent=2))
+    return 2
+
     if not args.once and not args.watch:
         args.once = True
 
@@ -207,15 +195,17 @@ def main(argv: list[str] | None = None) -> int:
             continue
         now = time.monotonic()
         if now - last_repair_at < args.min_repair_interval_seconds:
+            wait_seconds = max(0.0, args.min_repair_interval_seconds - (now - last_repair_at))
             append_log(
                 args.log_path,
                 {
-                    "event": "change_skipped_min_interval",
+                    "event": "change_delayed_min_interval",
                     "timestamp": first_seen,
                     "changed_paths": changes,
+                    "delay_seconds": round(wait_seconds, 3),
                 },
             )
-            continue
+            time.sleep(wait_seconds)
         repair = run_interop_repair(
             repair_script=args.repair_script,
             codex_home=args.codex_home,

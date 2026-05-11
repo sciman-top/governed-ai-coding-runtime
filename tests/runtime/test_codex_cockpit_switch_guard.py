@@ -37,7 +37,7 @@ class CodexCockpitSwitchGuardTests(unittest.TestCase):
 
             self.assertIn(str(config), guard.changed_paths(before, after))
 
-    def test_repair_command_uses_apply_migrate_and_quick_launch(self) -> None:
+    def test_repair_command_is_deprecated_and_does_not_run_checker(self) -> None:
         guard = load_guard_module()
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
@@ -56,21 +56,27 @@ class CodexCockpitSwitchGuardTests(unittest.TestCase):
                 timeout_seconds=10,
             )
 
-            argv = result["stdout"]["argv"]
-            self.assertEqual(0, result["exit_code"])
-            self.assertIn("--apply", argv)
-            self.assertIn("--migrate-provider-bucket", argv)
-            self.assertIn("--quick-launch", argv)
+            self.assertEqual(2, result["exit_code"])
+            self.assertEqual([], result["command"])
+            self.assertEqual("deprecated", result["stdout_status"])
+            self.assertIn("deprecated", result["stderr"])
 
-    def test_powershell_launcher_installs_keepalive_task_and_reports_health(self) -> None:
+    def test_powershell_launcher_refuses_install_and_start(self) -> None:
         source = (ROOT / "scripts" / "Start-CodexCockpitSwitchGuard.ps1").read_text(encoding="utf-8")
 
-        self.assertIn("-RestartCount 999", source)
-        self.assertIn("-RestartInterval (New-TimeSpan -Minutes 1)", source)
-        self.assertIn("-StartWhenAvailable", source)
-        self.assertIn("New-ScheduledTaskTrigger -AtStartup", source)
-        self.assertIn("Start-GuardProcessFallback", source)
+        self.assertIn("codex-cockpit-switch-guard is deprecated", source)
+        self.assertIn("if ($InstallTask)", source)
+        self.assertIn("elseif ($Start)", source)
+        self.assertNotIn("Register-ScheduledTask", source)
+        self.assertNotIn("Start-GuardProcessFallback", source)
         self.assertIn("guard_worker_not_running", source)
+
+    def test_watch_loop_delays_rather_than_drops_min_interval_changes(self) -> None:
+        source = SCRIPT_PATH.read_text(encoding="utf-8")
+
+        self.assertIn("change_delayed_min_interval", source)
+        self.assertIn("time.sleep(wait_seconds)", source)
+        self.assertNotIn("change_skipped_min_interval", source)
 
 
 if __name__ == "__main__":

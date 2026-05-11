@@ -330,8 +330,11 @@ def render_interactive_script(
         button.textContent = isSelected ? surfaceCurrentLabel : surfaceOpenLabel;
       }}
     }});
-    if (selected === 'codex' && !codexLoaded) {{
-      hydratePanelCache('codex', codexCacheKey);
+    if (selected === 'codex') {{
+      if (!codexLoaded) {{
+        hydratePanelCache('codex', codexCacheKey);
+      }}
+      refreshCodexStatus();
     }}
     if (selected === 'claude' && !claudeLoaded) {{
       hydratePanelCache('claude', claudeCacheKey);
@@ -1515,29 +1518,30 @@ def render_interactive_script(
       const infoList = document.createElement('div');
       infoList.className = 'info-list';
       infoList.append(
-        createInfoLine(
-          currentUiLanguage() === 'zh-CN' ? '配置' : 'profile',
-          account.name || account.file || 'auth'
-        ),
-        createInfoLine(
-          currentUiLanguage() === 'zh-CN' ? '登录' : 'sign-in',
-          formatAuthModeLabel(account.auth_mode)
-        ),
-        createInfoLine(
-          currentUiLanguage() === 'zh-CN' ? 'API' : 'API',
-          account.api_base_url || ''
-        ),
-        createInfoLine(
-          currentUiLanguage() === 'zh-CN' ? '套餐' : 'plan',
-          createMultilineInfoValue(formatSubscriptionExpirySummary(account))
-        )
+        createInfoLine(currentUiLanguage() === 'zh-CN' ? '类型' : 'type', formatAuthModeLabel(account.auth_mode)),
+        createInfoLine(currentUiLanguage() === 'zh-CN' ? '配置' : 'profile', account.name || account.file || 'auth')
       );
-      infoList.appendChild(
-        createInfoLine(
-          currentUiLanguage() === 'zh-CN' ? '额度' : 'usage',
-          createUsageMeter(account)
-        )
-      );
+      if (account.auth_mode === 'apikey') {{
+        infoList.appendChild(
+          createInfoLine(
+            currentUiLanguage() === 'zh-CN' ? '地址' : 'endpoint',
+            account.api_base_url || (currentUiLanguage() === 'zh-CN' ? '缺少 Base URL' : 'missing Base URL')
+          )
+        );
+      }} else {{
+        infoList.appendChild(
+          createInfoLine(
+            currentUiLanguage() === 'zh-CN' ? '套餐' : 'plan',
+            createMultilineInfoValue(formatSubscriptionExpirySummary(account))
+          )
+        );
+        infoList.appendChild(
+          createInfoLine(
+            currentUiLanguage() === 'zh-CN' ? '额度' : 'usage',
+            createUsageMeter(account)
+          )
+        );
+      }}
       row.title = [
         account.file ? `file=${{account.file}}` : '',
         account.account_hash ? `hash=${{account.account_hash}}` : '',
@@ -1557,8 +1561,14 @@ def render_interactive_script(
         : (isCliActive
           ? {text['codex_cli_active']!r}
           : (isOfficialAppCurrent ? {text['codex_app_persisted']!r} : {text['codex_switch']!r}));
-      if (isCliActive) {{
+      if (isCliActive || account.switchable === false) {{
         switchButton.disabled = true;
+        if (!isCliActive && account.switchable === false) {{
+          switchButton.textContent = currentUiLanguage() === 'zh-CN' ? '不可切换' : 'blocked';
+          switchButton.title = account.switch_block_reason === 'missing_api_base_url'
+            ? (currentUiLanguage() === 'zh-CN' ? '缺少 Base URL，已阻止切换。请重新导入或补全 API 地址。' : 'Missing Base URL; switch blocked. Re-import or add the API endpoint.')
+            : '';
+        }}
       }} else {{
         switchButton.dataset.codexSwitchName = account.name || '';
       }}
@@ -2276,7 +2286,7 @@ def render_interactive_script(
   hydratePanelCache('feedback', feedbackCacheKey);
   hydratePanelCache('next-work', nextWorkCacheKey);
   activateView('runtime');
-  // Page load and tab switches stay side-effect-light: process-backed host
-  // probes run only after the operator clicks a refresh/action button.
+  // Page load stays side-effect-light; opening Codex refreshes local status only.
+  // Process-backed host probes still run only after the operator clicks an action.
 }})();
 </script>"""

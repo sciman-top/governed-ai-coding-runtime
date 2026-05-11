@@ -1,0 +1,206 @@
+{
+  "timestamp": "20260512-001327",
+  "apply": false,
+  "codex_home": "C:\\Users\\sciman\\.codex",
+  "cockpit_home": "C:\\Users\\sciman\\.antigravity_cockpit",
+  "bin_dir": "C:\\Users\\sciman\\.local\\bin",
+  "backup_root": "",
+  "disabled_project_shortcuts": true,
+  "actions": [
+    {
+      "id": "backup_file",
+      "status": "would_backup",
+      "path": "C:\\Users\\sciman\\.antigravity_cockpit\\config.json",
+      "backup": "dry-run:C:\\Users\\sciman\\.antigravity_cockpit\\config.json"
+    },
+    {
+      "id": "backup_file",
+      "status": "would_backup",
+      "path": "C:\\Users\\sciman\\.antigravity_cockpit\\codex_instances.json",
+      "backup": "dry-run:C:\\Users\\sciman\\.antigravity_cockpit\\codex_instances.json"
+    },
+    {
+      "id": "backup_file",
+      "status": "would_backup",
+      "path": "C:\\Users\\sciman\\.codex\\config.toml",
+      "backup": "dry-run:C:\\Users\\sciman\\.codex\\config.toml"
+    },
+    {
+      "id": "backup_file",
+      "status": "would_backup",
+      "path": "C:\\Users\\sciman\\.codex\\auth.json",
+      "backup": "dry-run:C:\\Users\\sciman\\.codex\\auth.json"
+    },
+    {
+      "id": "backup_file",
+      "status": "would_backup",
+      "path": "C:\\Users\\sciman\\.codex\\state_5.sqlite",
+      "backup": "dry-run:C:\\Users\\sciman\\.codex\\state_5.sqlite"
+    },
+    {
+      "id": "guard_task_found",
+      "status": "attention",
+      "task_name": "codex-cockpit-switch-guard",
+      "state": "Running"
+    },
+    {
+      "id": "guard_task_disabled",
+      "status": "would_change",
+      "task_name": "codex-cockpit-switch-guard"
+    },
+    {
+      "id": "guard_process_stopped",
+      "status": "would_change",
+      "process_id": 25068
+    },
+    {
+      "id": "cockpit_native_launch_restored",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.antigravity_cockpit\\config.json",
+      "before": {
+        "codex_app_path": "",
+        "codex_launch_on_switch": true,
+        "codex_restart_specified_app_on_switch": false,
+        "codex_specified_app_path": "",
+        "antigravity_dual_switch_no_restart_enabled": false
+      }
+    },
+    {
+      "id": "cockpit_instances_follow_current_account",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.antigravity_cockpit\\codex_instances.json"
+    },
+    {
+      "id": "codex_provider_bucket_triggers_removed",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.codex\\state_5.sqlite",
+      "result": {
+        "existing": [
+          "trg_threads_shared_provider_after_insert",
+          "trg_threads_shared_provider_after_update"
+        ],
+        "dropped": []
+      }
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-noop-launcher.exe",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-noop-launcher.exe.disabled-20260512-001327"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-install-noop-launcher.cmd",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-install-noop-launcher.cmd.disabled-20260512-001327"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit.cmd",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit.cmd.disabled-20260512-001327"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-exec.cmd",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-exec.cmd.disabled-20260512-001327"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-resume.cmd",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-resume.cmd.disabled-20260512-001327"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-app.cmd",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-app.cmd.disabled-20260512-001327"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-app-restart.cmd",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-app-restart.cmd.disabled-20260512-001327"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-shared.cmd",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-shared.cmd.disabled-20260512-001327"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-shared-exec.cmd",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-shared-exec.cmd.disabled-20260512-001327"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-shared-resume.cmd",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-shared-resume.cmd.disabled-20260512-001327"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-shared-app.cmd",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-shared-app.cmd.disabled-20260512-001327"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-relay.cmd",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-relay.cmd.disabled-20260512-001327"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-relay-exec.cmd",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-relay-exec.cmd.disabled-20260512-001327"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-relay-resume.cmd",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-relay-resume.cmd.disabled-20260512-001327"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-relay-app.cmd",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-relay-app.cmd.disabled-20260512-001327"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-interop-check.cmd",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-interop-check.cmd.disabled-20260512-001327"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-interop-repair.cmd",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-interop-repair.cmd.disabled-20260512-001327"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-switch-guard.cmd",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-switch-guard.cmd.disabled-20260512-001327"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-switch-guard-status.cmd",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-switch-guard-status.cmd.disabled-20260512-001327"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "would_change",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-switch-guard-start.cmd",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-switch-guard-start.cmd.disabled-20260512-001327"
+    }
+  ]
+}

@@ -64,7 +64,23 @@ class CodexCockpitSwitchTraceTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (codex_home / "config.toml").write_text(
-                'forced_login_method = "api"\nmodel_provider = "openai"\n[model_providers.openai]\nbase_url = "http://35.213.82.91:8003/v1"\n',
+                "\n".join(
+                    [
+                        'forced_login_method = "api"',
+                        'model_provider = "cmp_35"',
+                        "",
+                        "[model_providers.cmp_35]",
+                        'base_url = "http://35.213.82.91:8003/v1"',
+                        'wire_api = "responses"',
+                        "requires_openai_auth = false",
+                        "supports_websockets = false",
+                        "",
+                        "[profiles.shared-cockpit-api]",
+                        'forced_login_method = "api"',
+                        'model_provider = "cmp_35"',
+                    ]
+                )
+                + "\n",
                 encoding="utf-8",
             )
             (codex_home / "auth.json").write_text(
@@ -89,8 +105,14 @@ class CodexCockpitSwitchTraceTests(unittest.TestCase):
             self.assertTrue(report["cockpit"]["launch_flags"]["codex_launch_on_switch"])
             self.assertEqual(report["cockpit"]["launch_flags"]["codex_app_path"], "C:/tmp/codex-noop.exe")
             self.assertEqual(report["codex"]["config"]["forced_login_method"], "api")
+            self.assertEqual(report["codex"]["config"]["model_provider"], "cmp_35")
+            self.assertEqual(report["codex"]["config"]["model_providers"]["cmp_35"]["requires_openai_auth"], "false")
+            self.assertEqual(report["codex"]["config"]["model_providers"]["cmp_35"]["supports_websockets"], "false")
+            self.assertEqual(report["codex"]["config"]["profiles"]["shared-cockpit-api"]["model_provider"], "cmp_35")
             self.assertTrue(report["codex"]["auth"]["has_openai_api_key"])
             self.assertEqual(report["codex"]["state_db"]["threads_by_model_provider"][0]["model_provider"], "openai")
+            self.assertEqual(report["cockpit"]["current_account_summary"]["base_url"], "http://35.213.82.91:8003/v1")
+            self.assertIs(report["cockpit"]["current_account_summary"]["has_openai_api_key"], True)
             self.assertIn("guard_status", report)
             self.assertIn("healthy", report["guard_status"])
 
@@ -118,6 +140,7 @@ class CodexCockpitSwitchTraceTests(unittest.TestCase):
                         "model_provider": "openai",
                         "forced_login_method": "chatgpt",
                         "openai_base_url": "https://api.openai.com/v1",
+                        "profiles": {"shared-cockpit-api": {"model_provider": "openai"}},
                     },
                     "auth": {"auth_mode": "chatgpt", "has_openai_api_key": False, "has_tokens": True},
                     "state_db": {"threads_by_model_provider": [{"model_provider": "openai", "count": 10}]},
@@ -142,6 +165,7 @@ class CodexCockpitSwitchTraceTests(unittest.TestCase):
                         "model_provider": "openai",
                         "forced_login_method": "api",
                         "openai_base_url": "http://35.213.82.91:8003/v1",
+                        "profiles": {"shared-cockpit-api": {"model_provider": "cmp_35"}},
                     },
                     "auth": {"auth_mode": "apikey", "has_openai_api_key": True, "has_tokens": False},
                     "state_db": {"threads_by_model_provider": [{"model_provider": "openai", "count": 10}]},
@@ -165,6 +189,7 @@ class CodexCockpitSwitchTraceTests(unittest.TestCase):
         self.assertEqual(fields["cockpit.codex_app_path"]["after"], "C:/tmp/codex-noop.exe")
         self.assertEqual(fields["codex.config.forced_login_method"]["after"], "api")
         self.assertEqual(fields["codex.config.openai_base_url"]["after"], "http://35.213.82.91:8003/v1")
+        self.assertEqual(fields["codex.profile.shared-cockpit-api.model_provider"]["after"], "cmp_35")
         self.assertEqual(comparison["transitions"][0]["file_changes"][0]["file"], "codex_auth")
 
 

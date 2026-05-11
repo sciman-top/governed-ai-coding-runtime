@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "record_count": 2,
+  "records": [
+    {
+      "path": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\codex-cockpit-snapshots\\20260511-022524-current-after-user-api-still-failed\\record.json",
+      "label": "current-after-user-api-still-failed",
+      "timestamp": "2026-05-11T02:25:27",
+      "history_threads_by_provider": "openai:1640",
+      "changed_files_within_watch": [],
+      "codex.active_provider.requires_openai_auth": null,
+      "codex.active_provider.supports_websockets": null,
+      "codex.profile.shared-cockpit-api.model_provider": null,
+      "codex.profile.shared-cockpit-api.openai_base_url": null,
+      "guard.healthy": true,
+      "guard.process_count": 1,
+      "guard.task_state": "Running",
+      "cockpit.current_account_id": "codex_c641df4d56baceca12b3ffcd597061b3",
+      "cockpit.current_account.auth_mode": null,
+      "cockpit.current_account.api_provider_id": null,
+      "cockpit.current_account.api_provider_name": null,
+      "cockpit.current_account.base_url": null,
+      "cockpit.current_account.has_openai_api_key": null,
+      "cockpit.codex_launch_on_switch": false,
+      "cockpit.codex_app_path": null,
+      "cockpit.codex_restart_specified_app_on_switch": false,
+      "cockpit.codex_specified_app_path": "",
+      "cockpit.antigravity_dual_switch_no_restart_enabled": true,
+      "cockpit.default.bindAccountId": null,
+      "cockpit.default.followLocalAccount": true,
+      "cockpit.default.launchMode": "app",
+      "cockpit.default.lastPid": 456,
+      "codex.config.model_provider": "openai",
+      "codex.config.openai_base_url": null,
+      "codex.config.forced_login_method": "chatgpt",
+      "codex.auth.auth_mode": "chatgpt",
+      "codex.auth.has_openai_api_key": false,
+      "codex.auth.has_tokens": true,
+      "codex.auth.base_url": null,
+      "codex.auth.provider": null
+    },
+    {
+      "path": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\codex-cockpit-snapshots\\20260511-230830-current-provider-first-snapshot-schema\\record.json",
+      "label": "current-provider-first-snapshot-schema",
+      "timestamp": "2026-05-11T23:08:32",
+      "history_threads_by_provider": "openai:1647",
+      "changed_files_within_watch": [],
+      "codex.active_provider.requires_openai_auth": null,
+      "codex.active_provider.supports_websockets": null,
+      "codex.profile.shared-cockpit-api.model_provider": "cmp_1778165666417_1",
+      "codex.profile.shared-cockpit-api.openai_base_url": null,
+      "guard.healthy": true,
+      "guard.process_count": 1,
+      "guard.task_state": "Running",
+      "cockpit.current_account_id": "codex_52c6816e7d3ae9a075f9f237b058b6d8",
+      "cockpit.current_account.auth_mode": "oauth",
+      "cockpit.current_account.api_provider_id": null,
+      "cockpit.current_account.api_provider_name": null,
+      "cockpit.current_account.base_url": null,
+      "cockpit.current_account.has_openai_api_key": "<redacted>",
+      "cockpit.codex_launch_on_switch": false,
+      "cockpit.codex_app_path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-noop-launcher.exe",
+      "cockpit.codex_restart_specified_app_on_switch": false,
+      "cockpit.codex_specified_app_path": "",
+      "cockpit.antigravity_dual_switch_no_restart_enabled": true,
+      "cockpit.default.bindAccountId": null,
+      "cockpit.default.followLocalAccount": true,
+      "cockpit.default.launchMode": "app",
+      "cockpit.default.lastPid": null,
+      "codex.config.model_provider": "openai",
+      "codex.config.openai_base_url": null,
+      "codex.config.forced_login_method": "chatgpt",
+      "codex.auth.auth_mode": "chatgpt",
+      "codex.auth.has_openai_api_key": false,
+      "codex.auth.has_tokens": true,
+      "codex.auth.base_url": null,
+      "codex.auth.provider": null
+    }
+  ],
+  "transitions": [
+    {
+      "from": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\codex-cockpit-snapshots\\20260511-022524-current-after-user-api-still-failed\\record.json",
+      "to": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\codex-cockpit-snapshots\\20260511-230830-current-provider-first-snapshot-schema\\record.json",
+      "from_label": "current-after-user-api-still-failed",
+      "to_label": "current-provider-first-snapshot-schema",
+      "field_changes": [
+        {
+          "field": "cockpit.current_account_id",
+          "before": "codex_c641df4d56baceca12b3ffcd597061b3",
+          "after": "codex_52c6816e7d3ae9a075f9f237b058b6d8"
+        },
+        {
+          "field": "cockpit.current_account.auth_mode",
+          "before": null,
+          "after": "oauth"
+        },
+        {
+          "field": "cockpit.current_account.has_openai_api_key",
+          "before": null,
+          "after": "<redacted>"
+        },
+        {
+          "field": "cockpit.codex_app_path",
+          "before": null,
+          "after": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-noop-launcher.exe"
+        },
+        {
+          "field": "cockpit.default.lastPid",
+          "before": 456,
+          "after": null
+        },
+        {
+          "field": "codex.profile.shared-cockpit-api.model_provider",
+          "before": null,
+          "after": "cmp_1778165666417_1"
+        },
+        {
+          "field": "history_threads_by_provider",
+          "before": "openai:1640",
+          "after": "openai:1647"
+        }
+      ],
+      "file_changes": [
+        {
+          "file": "cockpit_config",
+          "before_mtime": "2026-05-11T02:08:33",
+          "after_mtime": "2026-05-11T22:33:07",
+          "before_sha256": "462c6d07330e210087614e392219235c0e57df370635d5097eaeeb6ba342ec6a",
+          "after_sha256": "257b3d2a343cb59144d4b7060de99fbf1d041a600ac50685d8e6845f7340fa44"
+        },
+        {
+          "file": "cockpit_accounts",
+          "before_mtime": "2026-05-11T02:22:48",
+          "after_mtime": "2026-05-11T22:35:26",
+          "before_sha256": "895c002563afd89a4750e49b611135567801ddc30c66fa1c633a84165eee2ae8",
+          "after_sha256": "b8a6b1793167f2de613ac51c442c1101346c209ad1351c71c7f3e94fbc633f98"
+        },
+        {
+          "file": "cockpit_instances",
+          "before_mtime": "2026-05-11T02:22:39",
+          "after_mtime": "2026-05-11T22:44:09",
+          "before_sha256": "55564c9bd9f093188fb45d22e5e776b341db06f70648228fc8a89a1b8de07e13",
+          "after_sha256": "887ffd29b23bd4fe1e0c233505749589803b23c4a00c9964a767484bd9447468"
+        },
+        {
+          "file": "cockpit_model_providers",
+          "before_mtime": "2026-05-09T21:00:41",
+          "after_mtime": "2026-05-11T21:28:29",
+          "before_sha256": "685441b231a91c2903da32bf1d6681e350f8ee615f5b9eedc8495d2b8f078f16",
+          "after_sha256": "521516c446ce96eebb7ed96531b247d4489f261d84b546da054d604ca528aa22"
+        },
+        {
+          "file": "codex_config",
+          "before_mtime": "2026-05-11T02:22:58",
+          "after_mtime": "2026-05-11T22:44:09",
+          "before_sha256": "c772ac503bcd9225b79f56917857cd382f52d96d2507909949aca4b4461d36c4",
+          "after_sha256": "3534d5e09bb13a88118eeb4d62f09779f47b73f0d290173476cc9df5d5be9bf3"
+        },
+        {
+          "file": "codex_auth",
+          "before_mtime": "2026-05-11T02:22:38",
+          "after_mtime": "2026-05-11T22:44:09",
+          "before_sha256": "216ecdfa0cd1b025c61d2fed0a197bb30027001d34bac79aa2599f2234a32239",
+          "after_sha256": "e62cb4376336dc92cf1bad7f6a7de8177bc1ba085c7c96f2876c4fd490ee054d"
+        },
+        {
+          "file": "codex_cockpit_auth_projection",
+          "before_mtime": "2026-05-11T02:22:36",
+          "after_mtime": "2026-05-11T22:35:26",
+          "before_sha256": "911b8759dd75c2fa78bb3ca3e4e576fbe666ec3a4de1e03804119d4905ac16d8",
+          "after_sha256": "483f8ae4f6d3238f8614565f981a9ad5c3470c059dd7fe24e3e477aa358391e6"
+        },
+        {
+          "file": "codex_state_db",
+          "before_mtime": "2026-05-11T02:22:38",
+          "after_mtime": "2026-05-11T23:06:00",
+          "before_sha256": "05c73f62b72f9babe4a579f9ead252fadadfb4508d5f20162f91153b7acb309d",
+          "after_sha256": "fc0df53cddaa1e793fb3d1c39c24060a4cf9440120aebc6b6557f2c8bbbadae6"
+        }
+      ]
+    }
+  ]
+}
