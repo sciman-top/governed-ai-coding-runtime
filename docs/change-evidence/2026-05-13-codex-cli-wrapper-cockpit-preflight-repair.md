@@ -15,11 +15,14 @@
   - Wrapper runs preflight before launching the real Codex binary and filters stale PID cleanup stderr.
 - repair behavior:
   - Cockpit API account metadata: if an API account has been rewritten to `api_base_url = null` / `openai_builtin`, restore provider metadata from the sibling `.bak` account file or from `codex_model_providers.json` by matching the saved API key.
-  - API account: writes `auth.json` with API key auth, top-level `forced_login_method = "api"`, `model_provider = "openai"`, and `openai_base_url = <cockpit api_base_url>`.
+  - API account: writes `auth.json` with API key auth and top-level `forced_login_method = "api"`.
+  - API relay account with Cockpit custom provider metadata: writes top-level `model_provider = "<cmp_...>"`, removes top-level `openai_base_url`, and writes `[model_providers.<cmp_...>]` with `base_url`, `wire_api = "responses"`, `env_key = "OPENAI_API_KEY"`, `requires_openai_auth = false`, and `supports_websockets = false`.
+  - API account without a non-built-in custom provider: falls back to built-in `model_provider = "openai"` plus top-level `openai_base_url` when a non-official base URL is available.
   - OAuth account: writes OAuth `auth.json`, top-level `forced_login_method = "chatgpt"`, top-level `model_provider = "openai"`, and removes top-level `openai_base_url`.
-  - SQLite: backs up `state_5.sqlite` and migrates `threads.model_provider` to `openai`.
-  - Session JSONL metadata: best-effort rewrite of unlocked `model_provider` fields to `openai`; locked active session files are skipped.
+  - SQLite: backs up `state_5.sqlite` and migrates `threads.model_provider` to the current account's target provider bucket.
+  - Session JSONL metadata: not scanned on the default startup hot path. `--repair-sessions` explicitly enables the slower best-effort rewrite of unlocked `model_provider` fields to the current account's target provider; locked active session files are skipped.
   - Existing custom Cockpit provider tables are patched to `requires_openai_auth = false` and `supports_websockets = false` when they are known from the current Cockpit account.
+  - Built-in provider IDs are never overridden; this script must not write `[model_providers.openai]`.
 - commands:
   - `python -m py_compile D:\CODE\governed-ai-coding-runtime\scripts\codex-cockpit-cli-preflight-repair.py C:\Users\sciman\.local\bin\codex-cockpit-cli-preflight-repair.py`
   - `python C:\Users\sciman\.local\bin\codex-cockpit-cli-preflight-repair.py --dry-run`
@@ -47,6 +50,18 @@
   - The degraded API account `codex_apikey_8b8853f15e823dc53bd156163035bc78` was restored to `api_base_url=http://35.213.82.91:8003/v1`, `api_provider_mode=custom`, `api_provider_id=cmp_1778165666417_1`, `api_provider_name=35.213.82.91`.
   - App native `codex.exe` reported `codex-cli 0.130.0-alpha.5`, so the wrapper keeps the npm packaged native binary first; `codex --version` reports `codex-cli 0.130.0`.
   - Remaining limitation: `成功: 已终止 PID ...` is stdout from the interactive Codex cleanup path. The current wrapper filters stderr only; stdout filtering would require a PTY-aware wrapper or upstream Codex fix to avoid breaking the TUI.
+  - 2026-05-13 follow-up: the wrapper no longer scans session JSONL files by default; `python C:\Users\sciman\.local\bin\codex-cockpit-cli-preflight-repair.py --dry-run` measured about `106ms`, and `codex --version` measured about `198ms`.
+  - 2026-05-13 follow-up: simulated API relay config generation produced `model_provider = "cmp_test_1"` plus `[model_providers.cmp_test_1]` with `requires_openai_auth = false` and `supports_websockets = false`, and removed top-level `openai_base_url`.
+  - 2026-05-13 follow-up: live OAuth config has top-level `forced_login_method=chatgpt`, top-level `model_provider=openai`, no `[model_providers.openai]`, and `state_5.sqlite` remains `[["openai", 0, 1682], ["openai", 1, 1]]`. The remaining `openai_base_url` occurrence is under an API profile block, not top-level OAuth projection.
+  - 2026-05-13 log evidence: `C:\Users\sciman\.codex\log\codex-tui.log` recorded `startup websocket prewarm setup failed: unexpected status 404 Not Found: Invalid URL (GET /v1/responses), url: ws://35.213.82.91:8003/v1/responses`, matching the API relay `Reconnecting` symptom when routed through a websocket-capable built-in provider.
+  - 2026-05-13 correction: project history showed the durable policy is provider-first, not shared-history-first. The wrapper now keeps saved Cockpit API provider tables projected even while the current account is OAuth.
+  - 2026-05-13 live drift found before correction: `C:\Users\sciman\.codex\config.toml` had no `[model_providers.*]` tables, while `C:\Users\sciman\.antigravity_cockpit\codex_model_providers.json` still contained `cmp_1778165666417_1` and `cmp_1778246510288_1`. This prevented `supports_websockets = false` from applying to either API provider.
+  - 2026-05-13 live correction restored:
+    - `model_providers.cmp_1778165666417_1`: `base_url = "http://35.213.82.91:8003/v1"`, `requires_openai_auth = false`, `supports_websockets = false`
+    - `model_providers.cmp_1778246510288_1`: `base_url = "https://right.codes/codex/v1"`, `requires_openai_auth = false`, `supports_websockets = false`
+  - 2026-05-13 live correction also restored `C:\Users\sciman\.antigravity_cockpit\codex_instances.json` default settings to `followLocalAccount=true`, `bindAccountId=null`, `launchMode=app`, `lastPid=null`, preventing a fixed OAuth binding from relaunching after an API switch.
+  - 2026-05-13 verification: `python scripts\codex-interop-check.py --codex-home C:\Users\sciman\.codex --cc-switch-db C:\Users\sciman\.cc-switch\cc-switch.db --cockpit-home C:\Users\sciman\.antigravity_cockpit --quick-launch` returned `status=pass`.
+  - 2026-05-13 verification: live API `/models` probes returned HTTP 200 for both `35.213.82.91` with `model_count=9` and `RightCode` with `model_count=17`, so the "all API fail" symptom is local projection/startup-state, not both API services being offline.
 - compatibility:
   - This fix does not require rebuilding or reinstalling Cockpit Tools.
   - Official/unmodified Cockpit Tools can still overwrite live Codex files, but every CLI `codex` startup repairs them before Codex reads them.

@@ -23,6 +23,7 @@ from typing import Any
 
 OFFICIAL_OPENAI_BASE_URL = "https://api.openai.com/v1"
 OPENAI_PROVIDER_ID = "openai"
+CODEX_BUILTIN_PROVIDER_IDS = {OPENAI_PROVIDER_ID, "ollama", "lmstudio"}
 
 
 def main() -> int:
@@ -31,10 +32,20 @@ def main() -> int:
     parser.add_argument("--cockpit-home", type=Path, default=Path.home() / ".antigravity_cockpit")
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--repair-sessions",
+        action="store_true",
+        help="Also rewrite unlocked session JSONL model_provider metadata; slow on large histories.",
+    )
     args = parser.parse_args()
 
     try:
-        changes = repair(args.codex_home, args.cockpit_home, dry_run=args.dry_run)
+        changes = repair(
+            args.codex_home,
+            args.cockpit_home,
+            dry_run=args.dry_run,
+            repair_sessions=args.repair_sessions,
+        )
     except Exception as exc:  # noqa: BLE001 - wrapper preflight must never hide launch path details
         if not args.quiet:
             print(f"[codex-preflight] repair failed: {exc}", file=sys.stderr)
@@ -45,7 +56,13 @@ def main() -> int:
     return 0
 
 
-def repair(codex_home: Path, cockpit_home: Path, *, dry_run: bool) -> list[str]:
+def repair(
+    codex_home: Path,
+    cockpit_home: Path,
+    *,
+    dry_run: bool,
+    repair_sessions: bool = False,
+) -> list[str]:
     cockpit_metadata_changes = repair_cockpit_api_account_metadata(cockpit_home, dry_run=dry_run)
     if cockpit_metadata_changes:
         # Reload the account after metadata repair so the projection uses restored provider fields.
@@ -53,9 +70,13 @@ def repair(codex_home: Path, cockpit_home: Path, *, dry_run: bool) -> list[str]:
     current = read_current_cockpit_account(cockpit_home)
     auth_mode = str(current.get("auth_mode") or "oauth").lower()
     is_api = auth_mode in {"apikey", "api_key", "api-key"} or bool(current.get("openai_api_key"))
+    target_provider = desired_model_provider(current, is_api=is_api)
     changes: list[str] = []
     if cockpit_metadata_changes:
         changes.append(f"cockpit_accounts:{cockpit_metadata_changes}")
+    instance_changes = repair_cockpit_codex_instances(cockpit_home, dry_run=dry_run)
+    if instance_changes:
+        changes.append("cockpit_instances")
 
     codex_home.mkdir(parents=True, exist_ok=True)
     auth_path = codex_home / "auth.json"
@@ -71,21 +92,59 @@ def repair(codex_home: Path, cockpit_home: Path, *, dry_run: bool) -> list[str]:
 
     existing_config = config_path.read_text(encoding="utf-8") if config_path.exists() else ""
     desired_config = repair_config_text(existing_config, current, is_api=is_api)
+    desired_config = repair_saved_custom_provider_tables(
+        desired_config,
+        collect_saved_custom_provider_specs(cockpit_home),
+    )
     if desired_config != existing_config:
         changes.append("config.toml")
         if not dry_run:
             backup_file(config_path)
             atomic_write_text(config_path, desired_config)
 
-    sqlite_changes = repair_state_db(codex_home / "state_5.sqlite", dry_run=dry_run)
+    sqlite_changes = repair_state_db(
+        codex_home / "state_5.sqlite",
+        target_provider=target_provider,
+        dry_run=dry_run,
+    )
     if sqlite_changes:
         changes.append(f"state_5.sqlite:{sqlite_changes}")
 
-    session_changes = repair_session_jsonl_providers(codex_home, dry_run=dry_run)
-    if session_changes:
-        changes.append(f"sessions:{session_changes}")
+    if repair_sessions:
+        session_changes = repair_session_jsonl_providers(
+            codex_home,
+            target_provider=target_provider,
+            dry_run=dry_run,
+        )
+        if session_changes:
+            changes.append(f"sessions:{session_changes}")
 
     return changes
+
+
+def repair_cockpit_codex_instances(cockpit_home: Path, *, dry_run: bool) -> bool:
+    instances_path = cockpit_home / "codex_instances.json"
+    data = read_json_or_none(instances_path)
+    if not isinstance(data, dict):
+        return False
+    settings = data.get("defaultSettings")
+    if not isinstance(settings, dict):
+        return False
+    updated = json.loads(json.dumps(data))
+    updated_settings = updated["defaultSettings"]
+    changed = False
+    if updated_settings.get("followLocalAccount") is not True:
+        updated_settings["followLocalAccount"] = True
+        changed = True
+    if updated_settings.get("bindAccountId") is not None:
+        updated_settings["bindAccountId"] = None
+        changed = True
+    if not changed:
+        return False
+    if not dry_run:
+        backup_file(instances_path)
+        atomic_write_text(instances_path, json.dumps(updated, ensure_ascii=False, indent=2) + "\n")
+    return True
 
 
 def repair_cockpit_api_account_metadata(cockpit_home: Path, *, dry_run: bool) -> int:
@@ -171,6 +230,46 @@ def restore_api_metadata_from_provider_store(
     return None
 
 
+def collect_saved_custom_provider_specs(cockpit_home: Path) -> list[dict[str, str]]:
+    specs: dict[str, dict[str, str]] = {}
+
+    providers = read_json_or_none(cockpit_home / "codex_model_providers.json")
+    provider_items = providers if isinstance(providers, list) else []
+    for provider in provider_items:
+        if not isinstance(provider, dict):
+            continue
+        provider_id = first_string(provider.get("id"))
+        base_url = normalize_base_url(first_string(provider.get("baseUrl"), provider.get("base_url")))
+        if not provider_id or provider_id in CODEX_BUILTIN_PROVIDER_IDS or not base_url:
+            continue
+        specs[provider_id] = {
+            "id": provider_id,
+            "name": first_string(provider.get("name")) or provider_id,
+            "base_url": base_url,
+        }
+
+    accounts_dir = cockpit_home / "codex_accounts"
+    if accounts_dir.exists():
+        for account_path in accounts_dir.glob("*.json"):
+            if account_path.name.endswith(".bak"):
+                continue
+            account = read_json_or_none(account_path)
+            if not isinstance(account, dict):
+                continue
+            provider_id = first_string(account.get("api_provider_id"))
+            base_url = account_base_url(account)
+            if not provider_id or provider_id in CODEX_BUILTIN_PROVIDER_IDS or not base_url:
+                continue
+            specs[provider_id] = {
+                "id": provider_id,
+                "name": first_string(account.get("api_provider_name"), account.get("name"))
+                or provider_id,
+                "base_url": base_url,
+            }
+
+    return sorted(specs.values(), key=lambda item: item["id"])
+
+
 def provider_contains_api_key(value: Any, api_key: str) -> bool:
     if isinstance(value, str):
         return value == api_key
@@ -249,21 +348,44 @@ def auth_matches(existing_auth: Any, desired_auth: dict[str, Any], *, is_api: bo
     return existing == desired
 
 
+def desired_model_provider(account: dict[str, Any], *, is_api: bool) -> str:
+    if not is_api:
+        return OPENAI_PROVIDER_ID
+    provider_id = first_string(account.get("api_provider_id"))
+    base_url = account_base_url(account)
+    if (
+        provider_id
+        and provider_id not in CODEX_BUILTIN_PROVIDER_IDS
+        and base_url
+        and base_url != OFFICIAL_OPENAI_BASE_URL
+    ):
+        return provider_id
+    return OPENAI_PROVIDER_ID
+
+
+def account_base_url(account: dict[str, Any]) -> str | None:
+    return normalize_base_url(
+        first_string(
+            account.get("api_base_url"),
+            account.get("base_url"),
+            account.get("baseUrl"),
+            account.get("OPENAI_BASE_URL"),
+        )
+    )
+
+
 def repair_config_text(config: str, account: dict[str, Any], *, is_api: bool) -> str:
     text = config
+    target_provider = desired_model_provider(account, is_api=is_api)
     text = set_top_level_key(text, "forced_login_method", "api" if is_api else "chatgpt")
-    text = set_top_level_key(text, "model_provider", OPENAI_PROVIDER_ID)
+    text = set_top_level_key(text, "model_provider", target_provider)
 
     if is_api:
-        base_url = normalize_base_url(
-            first_string(
-                account.get("api_base_url"),
-                account.get("base_url"),
-                account.get("baseUrl"),
-                account.get("OPENAI_BASE_URL"),
-            )
-        )
-        if base_url and base_url != OFFICIAL_OPENAI_BASE_URL:
+        base_url = account_base_url(account)
+        if target_provider != OPENAI_PROVIDER_ID:
+            text = remove_top_level_key(text, "openai_base_url")
+            text = upsert_custom_provider_table(text, target_provider, account)
+        elif base_url and base_url != OFFICIAL_OPENAI_BASE_URL:
             text = set_top_level_key(text, "openai_base_url", base_url)
         else:
             text = remove_top_level_key(text, "openai_base_url")
@@ -274,6 +396,65 @@ def repair_config_text(config: str, account: dict[str, Any], *, is_api: bool) ->
     if text and not text.endswith("\n"):
         text += "\n"
     return text
+
+
+def repair_saved_custom_provider_tables(config: str, provider_specs: list[dict[str, str]]) -> str:
+    text = config
+    for spec in provider_specs:
+        provider_id = spec["id"]
+        if provider_id in CODEX_BUILTIN_PROVIDER_IDS:
+            continue
+        text = upsert_custom_provider_table(
+            text,
+            provider_id,
+            {
+                "api_provider_name": spec["name"],
+                "api_base_url": spec["base_url"],
+            },
+        )
+    return text
+
+
+def upsert_custom_provider_table(config: str, provider_id: str, account: dict[str, Any]) -> str:
+    if provider_id in CODEX_BUILTIN_PROVIDER_IDS:
+        return config
+    base_url = account_base_url(account)
+    if not base_url:
+        raise RuntimeError(f"Cockpit API provider {provider_id} has no base URL")
+    provider_name = first_string(account.get("api_provider_name"), account.get("name")) or provider_id
+    text = remove_model_provider_table(config, provider_id).rstrip()
+    block = "\n".join(
+        [
+            f"[model_providers.{provider_id}]",
+            f'name = "{escape_toml_string(provider_name)}"',
+            f'base_url = "{escape_toml_string(base_url)}"',
+            'wire_api = "responses"',
+            'env_key = "OPENAI_API_KEY"',
+            "requires_openai_auth = false",
+            "supports_websockets = false",
+        ]
+    )
+    return (text + "\n\n" if text else "") + block + "\n"
+
+
+def remove_model_provider_table(config: str, provider_id: str) -> str:
+    lines = config.splitlines()
+    out: list[str] = []
+    skip = False
+    table_re = re.compile(r'^\s*\[model_providers\.(?:"([^"]+)"|([A-Za-z0-9_-]+))\]\s*$')
+    any_table_re = re.compile(r"^\s*\[.*\]\s*$")
+    for line in lines:
+        match = table_re.match(line)
+        if match:
+            active_provider = match.group(1) or match.group(2)
+            skip = active_provider == provider_id
+            if skip:
+                continue
+        elif skip and any_table_re.match(line):
+            skip = False
+        if not skip:
+            out.append(line)
+    return "\n".join(out) + ("\n" if config.endswith("\n") and out else "")
 
 
 def repair_custom_provider_auth_flags(config: str, account: dict[str, Any]) -> str:
@@ -365,7 +546,7 @@ def remove_top_level_key(config: str, key: str) -> str:
     return "\n".join(out) + ("\n" if config.endswith("\n") and out else "")
 
 
-def repair_state_db(db_path: Path, *, dry_run: bool) -> int:
+def repair_state_db(db_path: Path, *, target_provider: str, dry_run: bool) -> int:
     if not db_path.exists():
         return 0
     try:
@@ -377,7 +558,7 @@ def repair_state_db(db_path: Path, *, dry_run: bool) -> int:
                 return 0
             count = connection.execute(
                 "SELECT COUNT(*) FROM threads WHERE COALESCE(model_provider, '') <> ?",
-                (OPENAI_PROVIDER_ID,),
+                (target_provider,),
             ).fetchone()[0]
             if not count:
                 return 0
@@ -386,7 +567,7 @@ def repair_state_db(db_path: Path, *, dry_run: bool) -> int:
             backup_file(db_path)
             connection.execute(
                 "UPDATE threads SET model_provider = ? WHERE COALESCE(model_provider, '') <> ?",
-                (OPENAI_PROVIDER_ID, OPENAI_PROVIDER_ID),
+                (target_provider, target_provider),
             )
             connection.commit()
             return int(count)
@@ -394,7 +575,7 @@ def repair_state_db(db_path: Path, *, dry_run: bool) -> int:
         raise RuntimeError(f"SQLite repair failed: {db_path}: {exc}") from exc
 
 
-def repair_session_jsonl_providers(codex_home: Path, *, dry_run: bool) -> int:
+def repair_session_jsonl_providers(codex_home: Path, *, target_provider: str, dry_run: bool) -> int:
     sessions_dir = codex_home / "sessions"
     if not sessions_dir.exists():
         return 0
@@ -408,7 +589,7 @@ def repair_session_jsonl_providers(codex_home: Path, *, dry_run: bool) -> int:
             continue
         repaired = re.sub(
             r'("model_provider"\s*:\s*")([^"]+)(")',
-            lambda match: match.group(1) + OPENAI_PROVIDER_ID + match.group(3),
+            lambda match: match.group(1) + target_provider + match.group(3),
             text,
         )
         if repaired == text:
