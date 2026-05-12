@@ -266,7 +266,7 @@ def _inspect_local_agent_config(*, home_path: Path) -> dict[str, Any]:
             status=codex_context_probe.get("status") in {"pass", "platform_na"},
             reason="Codex context window and auto-compact thresholds should remain coherent before changing model defaults.",
             evidence_ref="~/.codex/config.toml model_context_window + model_auto_compact_token_limit",
-            remediation="Run `python scripts/codex-account.py context-probe --run-codex --all-catalogs --probe-exec` and align the configured context policy with the local Codex debug models catalogs before changing defaults.",
+            remediation="Run the read-only Codex context probe from `scripts/lib/codex_local.py` through the runtime tests before changing defaults; do not restore the deleted codex-account mutation CLI.",
         ),
         _check(
             check_id="claude_sensitive_settings_read_denied",

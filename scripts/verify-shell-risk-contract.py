@@ -56,13 +56,6 @@ ALLOWLIST = (
     },
     {
         "kind": "powershell_remove_item",
-        "path": "scripts/codex-account.ps1",
-        "line_contains": "Remove-Item -LiteralPath $candidate.FullName -Force",
-        "expected_count": 1,
-        "reason": "auth snapshot deletion is guarded by active-profile checks, home-root containment, backup, and ShouldProcess",
-    },
-    {
-        "kind": "powershell_remove_item",
         "path": "scripts/git-acl-guard.ps1",
         "line_contains": "Remove-Item -LiteralPath $indexLock -Force",
         "expected_count": 1,

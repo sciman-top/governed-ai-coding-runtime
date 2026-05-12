@@ -699,7 +699,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertEqual("claude", first_claude["cache_kind"])
         self.assertEqual(1, codex_mock.call_count)
         self.assertEqual(1, claude_mock.call_count)
-        codex_mock.assert_called_with(refresh_online=False, ensure_saved_snapshot=True)
+        codex_mock.assert_called_with(refresh_online=False)
         self.assertEqual(first_codex["cached_at"], second_codex["cached_at"])
         self.assertEqual(first_claude["cached_at"], second_claude["cached_at"])
 
@@ -711,7 +711,7 @@ class OperatorEntrypointTests(unittest.TestCase):
             payload = module.load_codex_status(refresh_if_stale=True)
 
         self.assertEqual("ok", payload["status"])
-        codex_mock.assert_called_once_with(refresh_online=False, refresh_if_stale=True, ensure_saved_snapshot=True)
+        codex_mock.assert_called_once_with(refresh_online=False, refresh_if_stale=True)
 
     def test_operator_ui_restart_request_is_throttled(self) -> None:
         module = _load_serve_operator_ui_module()

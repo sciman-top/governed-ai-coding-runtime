@@ -34,99 +34,17 @@ class CodexSharedLauncherTests(unittest.TestCase):
                     ),
                 )
 
-    def test_optimizer_apply_is_deprecated_and_does_not_write_config(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            codex_home = Path(tmp_dir) / "codex-home"
-            codex_home.mkdir()
-            (codex_home / "config.toml").write_text(
-                '\n'.join(
-                    [
-                        'model_provider = "rightcode"',
-                        "disable_response_storage = true",
-                        "",
-                        "[model_providers.rightcode]",
-                        'base_url = "https://right.codes/codex/v1"',
-                        'wire_api = "responses"',
-                        "",
-                        "[[skills.config]]",
-                        'path = "C:\\Users\\example\\.agents\\skills\\duplicate-skill"',
-                        "enabled = false",
-                        "",
-                        "[[skills.config]]",
-                        'path = "C:\\Users\\example\\.agents\\skills\\duplicate-skill"',
-                        "enabled = false",
-                    ]
-                ),
-                encoding="utf-8",
-            )
-            before_config = (codex_home / "config.toml").read_text(encoding="utf-8")
+    def test_project_managed_codex_launchers_are_removed(self) -> None:
+        removed_paths = [
+            ROOT / "scripts" / "Optimize-CodexLocal.ps1",
+            ROOT / "scripts" / "Start-CodexShared.ps1",
+            ROOT / "scripts" / "codex-account.py",
+            ROOT / "scripts" / "codex-account.ps1",
+        ]
 
-            completed = subprocess.run(
-                [
-                    "pwsh",
-                    "-NoProfile",
-                    "-ExecutionPolicy",
-                    "Bypass",
-                    "-File",
-                    str(ROOT / "scripts" / "Optimize-CodexLocal.ps1"),
-                    "-Apply",
-                    "-InstallAccountSwitcher:$false",
-                    "-SkipInteropCheck",
-                    "-CodexHome",
-                    str(codex_home),
-                    "-TrustedRepoRoot",
-                    str(ROOT),
-                ],
-                cwd=ROOT,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                capture_output=True,
-                timeout=60,
-            )
-
-            self.assertEqual(completed.returncode, 2, completed.stdout + completed.stderr)
-            payload = json.loads(completed.stdout)
-            self.assertEqual("deprecated", payload["status"])
-            self.assertFalse(payload["changed"])
-            self.assertEqual(before_config, (codex_home / "config.toml").read_text(encoding="utf-8"))
-
-    def test_shared_launcher_is_deprecated_and_blocks_project_startup_wrapping(self) -> None:
-        script = (ROOT / "scripts" / "Start-CodexShared.ps1").read_text(encoding="utf-8")
-
-        self.assertIn("PositionalBinding = $false", script)
-        self.assertIn("[ValidateSet('cli', 'exec', 'app', 'resume')]", script)
-        self.assertIn("deprecated and blocked", script)
-        self.assertIn("must not project Cockpit auth", script)
-        self.assertNotIn("SetEnvironmentVariable('OPENAI_API_KEY'", script)
-        self.assertNotIn("Stop-Process", script)
-        self.assertNotIn("codex-interop-check.py", script)
-        self.assertNotIn("Start-Process", script)
-
-    def test_optimizer_no_longer_installs_project_launchers(self) -> None:
-        script = (ROOT / "scripts" / "Optimize-CodexLocal.ps1").read_text(encoding="utf-8")
-
-        self.assertIn("deprecated", script)
-        self.assertIn("Disable-CodexProjectInterop.ps1", script)
-        self.assertNotIn("Set-Content -LiteralPath", script)
-        self.assertNotIn("Copy-Item -LiteralPath", script)
-        self.assertNotIn("Start-CodexShared.ps1", script)
-        self.assertNotIn("codex-interop-check.cmd", script)
-        self.assertNotIn("codex-interop-repair.cmd", script)
-        self.assertNotIn("codex-cockpit.cmd", script)
-        self.assertNotIn("codex-cockpit-exec.cmd", script)
-        self.assertNotIn("codex-cockpit-resume.cmd", script)
-        self.assertNotIn("codex-cockpit-app.cmd", script)
-        self.assertNotIn("codex-cockpit-app-restart.cmd", script)
-        self.assertNotIn("codex-relay.cmd", script)
-        self.assertNotIn("codex-relay-exec.cmd", script)
-        self.assertNotIn("codex-relay-resume.cmd", script)
-        self.assertNotIn("codex-relay-app.cmd", script)
-        self.assertNotIn("codex-shared-resume.cmd", script)
-        self.assertNotIn("codex-cockpit-install-noop-launcher.cmd", script)
-        self.assertNotIn("codex-switch-guard-start.cmd", script)
-        self.assertNotIn("codex-switch-guard.cmd", script)
-        self.assertNotIn("--apply %*", script)
+        for path in removed_paths:
+            with self.subTest(path=path):
+                self.assertFalse(path.exists())
 
     def test_disable_project_interop_disables_top_level_codex_shims(self) -> None:
         script = (ROOT / "scripts" / "Disable-CodexProjectInterop.ps1").read_text(encoding="utf-8")

@@ -5,6 +5,9 @@
 - landing:
   - `scripts/Optimize-CodexLocal.ps1`
   - `scripts/Start-CodexShared.ps1`
+  - `scripts/codex-account.py`
+  - `scripts/codex-account.ps1`
+  - `scripts/lib/codex_local.py`
   - `scripts/operator.ps1`
   - `scripts/serve-operator-ui.py`
   - `packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui*.py`
@@ -26,8 +29,20 @@ This made it possible for a user-visible button or shortcut to re-enter project-
 
 ## Changes
 
-- Replaced `Optimize-CodexLocal.ps1` with a compatibility stub that returns `status=deprecated`, `changed=false`, and exits `2`.
-- Replaced `Start-CodexShared.ps1` with a compatibility stub that refuses to project Cockpit auth, rewrite Codex config, stop/restart Codex App, or wrap Codex startup.
+- Deleted `Optimize-CodexLocal.ps1` and `Start-CodexShared.ps1`; no project-managed compatibility launcher remains.
+- Deleted `codex-account.py` and `codex-account.ps1`; no project-managed account switch/import CLI remains.
+- Removed the auth/config mutation entrypoints from `scripts/lib/codex_local.py`:
+  - `switch_auth_profile`
+  - `save_api_auth_profile`
+  - `sync_active_auth_snapshot`
+  - `save_active_auth_snapshot`
+  - `delete_auth_profile`
+  - `import_cockpit_codex_accounts`
+  - `import_codex_accounts_from_payload`
+  - `install_account_switcher`
+  - `project_codex_auth_config`
+  - `persist_api_auth_profile_to_cockpit`
+  - `ensure_active_auth_snapshot`
 - Removed `CodexLocalOptimize` from `scripts/operator.ps1`.
 - Removed `codex_local_optimize` from Operator UI backend allowlist and UI rendering.
 - Removed Codex write controls/routes from Operator UI:
@@ -77,6 +92,16 @@ Post-cleanup PATH evidence:
 - `Get-Command codex -All` now resolves first to `C:\Users\sciman\AppData\Roaming\npm\codex.ps1`, then official/native Codex paths.
 - `Get-Command codex-account -All` returns no command.
 
+Additional live Cockpit state cleanup:
+
+- file: `C:\Users\sciman\.antigravity_cockpit\codex_instances.json`
+- backup: `C:\Users\sciman\.antigravity_cockpit\backups\codex_instances-20260512-224733.json`
+- changed only JSON state, no process restart/kill:
+  - `defaultSettings.followLocalAccount = true`
+  - `defaultSettings.bindAccountId = null`
+  - `defaultSettings.lastPid = null`
+- reason: live interop check found `cockpit_codex_instances_follow_current_account=fail`; a fixed `bindAccountId` could relaunch an old account after Cockpit account switching even after project code deletion.
+
 ## Verification
 
 Commands:
@@ -84,24 +109,28 @@ Commands:
 ```powershell
 python -m unittest tests.runtime.test_codex_shared_launcher tests.runtime.test_operator_entrypoint tests.runtime.test_operator_ui
 python -m unittest tests.runtime.test_codex_shared_launcher tests.runtime.test_operator_entrypoint tests.runtime.test_operator_ui tests.runtime.test_codex_cockpit_switch_guard tests.runtime.test_codex_cockpit_switch_trace
+python -m unittest tests.runtime.test_codex_local tests.runtime.test_codex_shared_launcher tests.runtime.test_operator_entrypoint tests.runtime.test_operator_ui tests.runtime.test_codex_cockpit_switch_guard tests.runtime.test_codex_cockpit_switch_trace
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\build-runtime.ps1
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify-repo.ps1 -Check Runtime
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify-repo.ps1 -Check Contract
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\doctor-runtime.ps1
 python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch
 codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox "请只运行一个 PowerShell 命令输出当前目录：Get-Location；然后输出 OK；不要修改文件。"
+git diff --check
 ```
 
 Results:
 
-- targeted unit tests: `67` tests passed.
+- targeted unit tests: `67` tests passed before hard deletion; `91` tests passed after hard deletion.
 - build: `OK python-bytecode`, `OK python-import`.
 - runtime gate: `112` test files passed; `failures=0`.
 - contract gate: passed.
 - doctor: exit `0`; residual `WARN codex-capability-degraded` only.
-- interop check: `status=pass`.
-- `codex exec`: reached official Codex CLI with `workdir: D:\CODE\governed-ai-coding-runtime`, `provider: openai`, `approval: never`, `sandbox: danger-full-access`; command then stopped on current Codex usage quota, not login:
-  - `You've hit your usage limit... try again at May 13th, 2026 2:05 AM.`
+- interop check: initially failed only on live `cockpit_codex_instances_follow_current_account`; after JSON cleanup, `status=pass`.
+- `codex exec`: reached official Codex CLI with `workdir: D:\CODE\governed-ai-coding-runtime`, `provider: openai`, `approval: never`, `sandbox: danger-full-access`; command succeeded and printed:
+  - `D:\CODE\governed-ai-coding-runtime`
+  - `OK`
+- `git diff --check`: passed; only CRLF normalization warnings.
 
 ## Compatibility
 
@@ -113,4 +142,5 @@ Results:
 
 - Restore repository changes from git history.
 - Restore live files from `C:\Users\sciman\.codex\backups\disable-project-interop-20260512-215910` if the old project-managed shims are intentionally needed.
+- Restore `C:\Users\sciman\.antigravity_cockpit\codex_instances.json` from `C:\Users\sciman\.antigravity_cockpit\backups\codex_instances-20260512-224733.json` if the fixed Cockpit account binding is intentionally needed again.
 - Rename disabled shortcuts back from `*.disabled-20260512-215910` only after explicitly accepting the old project-managed Codex/Cockpit mutation behavior.

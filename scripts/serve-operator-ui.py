@@ -455,12 +455,12 @@ def load_codex_status(*, refresh_online: bool = False, refresh_if_stale: bool = 
         invalidate_status_cache("codex")
         return _load_status_payload(
             "codex",
-            lambda: codex_status(refresh_online=refresh_online, refresh_if_stale=refresh_if_stale, ensure_saved_snapshot=True),
+            lambda: codex_status(refresh_online=refresh_online, refresh_if_stale=refresh_if_stale),
         )
     return _load_status_cached(
         "codex",
         ttl_seconds=CODEX_STATUS_CACHE_TTL_SECONDS,
-        loader=lambda: codex_status(refresh_online=False, ensure_saved_snapshot=True),
+        loader=lambda: codex_status(refresh_online=False),
     )
 
 

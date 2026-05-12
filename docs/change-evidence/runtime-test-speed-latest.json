@@ -1,29 +1,11 @@
 {
-  "elapsed_seconds": 155.70099110000046,
+  "elapsed_seconds": 114.66102820000015,
   "failure_count": 0,
   "failures": [],
   "prioritized_target_count": 10,
   "slowest": [
     {
-      "duration_seconds": 148.66518739999992,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_runtime_evolution",
-        "path": "tests\\runtime\\test_runtime_evolution.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 103.0148825999986,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_transition_stack_convergence",
-        "path": "tests\\runtime\\test_transition_stack_convergence.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 100.55862160000106,
+      "duration_seconds": 91.12256049999996,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_flow_preset",
@@ -32,7 +14,25 @@
       }
     },
     {
-      "duration_seconds": 83.12090110000099,
+      "duration_seconds": 69.16896590000033,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_runtime_evolution",
+        "path": "tests\\runtime\\test_runtime_evolution.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 59.01607250000052,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_transition_stack_convergence",
+        "path": "tests\\runtime\\test_transition_stack_convergence.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 58.12553990000015,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_dependency_baseline",
@@ -41,7 +41,7 @@
       }
     },
     {
-      "duration_seconds": 80.94091829999888,
+      "duration_seconds": 55.61370480000005,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_functional_effectiveness",
@@ -50,34 +50,7 @@
       }
     },
     {
-      "duration_seconds": 72.1782862,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_autonomous_next_work_selection",
-        "path": "tests\\runtime\\test_autonomous_next_work_selection.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 66.79623100000026,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_operator_entrypoint",
-        "path": "tests\\runtime\\test_operator_entrypoint.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 55.89047849999952,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_evidence_recovery_posture",
-        "path": "tests\\runtime\\test_evidence_recovery_posture.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 53.29500299999927,
+      "duration_seconds": 46.799010000000635,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_attached_repo_e2e",
@@ -86,11 +59,38 @@
       }
     },
     {
-      "duration_seconds": 52.91782610000155,
+      "duration_seconds": 46.771895299998505,
       "exit_code": 0,
       "target": {
-        "module": "tests.runtime.test_governance_hub_certification",
-        "path": "tests\\runtime\\test_governance_hub_certification.py",
+        "module": "tests.runtime.test_operator_entrypoint",
+        "path": "tests\\runtime\\test_operator_entrypoint.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 46.547448799999984,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_autonomous_next_work_selection",
+        "path": "tests\\runtime\\test_autonomous_next_work_selection.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 36.15205590000005,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_host_feedback_summary",
+        "path": "tests\\runtime\\test_host_feedback_summary.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 36.06242829999974,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_evidence_recovery_posture",
+        "path": "tests\\runtime\\test_evidence_recovery_posture.py",
         "suite": "runtime"
       }
     }

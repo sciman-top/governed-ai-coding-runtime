@@ -283,7 +283,7 @@
             "check_id": "codex_context_window_policy_sane",
             "evidence_ref": "~/.codex/config.toml model_context_window + model_auto_compact_token_limit",
             "reason": "Codex context window and auto-compact thresholds should remain coherent before changing model defaults.",
-            "remediation": "Run `python scripts/codex-account.py context-probe --run-codex --all-catalogs --probe-exec` and align the configured context policy with the local Codex debug models catalogs before changing defaults.",
+            "remediation": "Run the read-only Codex context probe from `scripts/lib/codex_local.py` through the runtime tests before changing defaults; do not restore the deleted codex-account mutation CLI.",
             "status": "pass"
           },
           {

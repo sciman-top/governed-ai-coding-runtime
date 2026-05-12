@@ -76,36 +76,6 @@ def _jwt(payload: dict[str, object]) -> str:
     return f"{encode({'alg': 'none', 'typ': 'JWT'})}.{encode(payload)}."
 
 
-def _write_cockpit_codex_account(
-    root: Path,
-    account_id: str,
-    payload: dict[str, object],
-    *,
-    current: bool = False,
-) -> None:
-    accounts_dir = root / "codex_accounts"
-    accounts_dir.mkdir(parents=True, exist_ok=True)
-    index_path = root / "codex_accounts.json"
-    if index_path.exists():
-        index = json.loads(index_path.read_text(encoding="utf-8"))
-    else:
-        index = {"version": "1.0", "accounts": [], "current_account_id": ""}
-    index["accounts"].append(
-        {
-            "id": account_id,
-            "email": payload.get("email", account_id),
-            "plan_type": payload.get("plan_type", ""),
-        }
-    )
-    if current:
-        index["current_account_id"] = account_id
-    index_path.write_text(json.dumps(index, ensure_ascii=False), encoding="utf-8")
-    accounts_dir.joinpath(f"{account_id}.json").write_text(
-        json.dumps({"id": account_id, **payload}, ensure_ascii=False),
-        encoding="utf-8",
-    )
-
-
 class CodexLocalTests(unittest.TestCase):
     def test_local_status_subprocesses_are_windowless_on_windows(self) -> None:
         with (
@@ -117,7 +87,7 @@ class CodexLocalTests(unittest.TestCase):
             self.assertEqual({"creationflags": 0x08000000}, codex_local._windows_no_window_kwargs())
             self.assertEqual({"creationflags": 0x08000000}, claude_local._windows_no_window_kwargs())
 
-    def test_auth_profiles_are_sanitized_and_switchable(self) -> None:
+    def test_auth_profiles_are_sanitized_for_read_only_status(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)
             _write_auth(
@@ -154,12 +124,6 @@ class CodexLocalTests(unittest.TestCase):
             self.assertNotIn('"id_token":', rendered)
             self.assertNotIn('"access_token":', rendered)
             self.assertNotIn('"refresh_token":', rendered)
-
-            result = codex_local.switch_auth_profile("auth1", home)
-            self.assertEqual("ok", result["status"])
-            self.assertTrue(result["changed"])
-            self.assertTrue((home / "auth-backups").exists())
-            self.assertEqual("auth", codex_local.active_auth_status(home)["active_profile"]["name"])
 
     def test_status_deduplicates_auth_json_mirror_from_same_saved_profile(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -200,268 +164,24 @@ class CodexLocalTests(unittest.TestCase):
             self.assertEqual("drifted", status["active_account"]["snapshot_status"]["status"])
             self.assertEqual(["auth"], [account["name"] for account in status["accounts"]])
 
-    def test_sync_active_snapshot_overwrites_named_profile_and_keeps_backup(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            home = Path(tmp_dir)
-            _write_auth(
-                home / "auth.json",
-                account_id="account-a",
-                email="same@example.com",
-                plan_type="team",
-                last_refresh="2026-05-02T03:00:00Z",
-            )
-            _write_auth(
-                home / "auth2.json",
-                account_id="account-a",
-                email="same@example.com",
-                plan_type="team",
-                last_refresh="2026-04-29T21:01:17Z",
-            )
+    def test_codex_local_has_no_auth_mutation_entrypoints(self) -> None:
+        removed_entrypoints = [
+            "switch_auth_profile",
+            "save_api_auth_profile",
+            "sync_active_auth_snapshot",
+            "save_active_auth_snapshot",
+            "delete_auth_profile",
+            "import_cockpit_codex_accounts",
+            "import_codex_accounts_from_payload",
+            "install_account_switcher",
+            "project_codex_auth_config",
+            "persist_api_auth_profile_to_cockpit",
+            "ensure_active_auth_snapshot",
+        ]
 
-            result = codex_local.sync_active_auth_snapshot(home, target_name="auth2")
-
-            self.assertEqual("ok", result["status"])
-            self.assertTrue(result["changed"])
-            self.assertTrue((home / "auth-backups").exists())
-            self.assertEqual(
-                (home / "auth.json").read_text(encoding="utf-8"),
-                (home / "auth2.json").read_text(encoding="utf-8"),
-            )
-            self.assertEqual("synced", codex_local.codex_status(home)["snapshot_status"]["status"])
-
-    def test_save_active_snapshot_creates_new_named_profile_for_untracked_login(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            home = Path(tmp_dir)
-            _write_auth(
-                home / "auth.json",
-                account_id="account-a",
-                email="same@example.com",
-                plan_type="team",
-                last_refresh="2026-05-02T03:00:00Z",
-            )
-
-            result = codex_local.save_active_auth_snapshot("team-main", home)
-
-            self.assertEqual("ok", result["status"])
-            self.assertTrue(result["changed"])
-            self.assertTrue((home / "auth-profiles" / "team-main.json").exists())
-            self.assertEqual(
-                (home / "auth.json").read_text(encoding="utf-8"),
-                (home / "auth-profiles" / "team-main.json").read_text(encoding="utf-8"),
-            )
-            status = codex_local.codex_status(home)
-            self.assertEqual("synced", status["snapshot_status"]["status"])
-            self.assertEqual("team-main", status["active_account"]["name"])
-
-    def test_status_can_auto_save_missing_named_snapshot(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            home = Path(tmp_dir)
-            _write_auth(home / "auth.json", account_id="account-a", email="same@example.com", plan_type="team")
-
-            status = codex_local.codex_status(home, ensure_saved_snapshot=True)
-
-            self.assertEqual("synced", status["snapshot_status"]["status"])
-            self.assertTrue((home / "auth-profiles").exists())
-            self.assertEqual("ok", status["auto_snapshot"]["status"])
-            self.assertTrue(status["auto_snapshot"]["changed"])
-            self.assertNotEqual("auth", status["active_account"]["name"])
-
-    def test_save_active_snapshot_rejects_invalid_name(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            home = Path(tmp_dir)
-            _write_auth(home / "auth.json", account_id="account-a")
-
-            result = codex_local.save_active_auth_snapshot("../bad", home)
-
-            self.assertEqual("error", result["status"])
-            self.assertFalse((home / ".." / "bad.json").exists())
-
-    def test_delete_auth_profile_backs_up_and_removes_inactive_snapshot(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            home = Path(tmp_dir)
-            _write_auth(home / "auth.json", account_id="account-a")
-            _write_auth(home / "auth1.json", account_id="account-b")
-
-            result = codex_local.delete_auth_profile("auth1", home)
-
-            self.assertEqual("ok", result["status"])
-            self.assertTrue(result["changed"])
-            self.assertFalse((home / "auth1.json").exists())
-            self.assertTrue(Path(result["backup_path"]).exists())
-            self.assertEqual("auth1", result["deleted_profile"]["name"])
-
-    def test_delete_auth_profile_refuses_current_auth_snapshot(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            home = Path(tmp_dir)
-            _write_auth(home / "auth.json", account_id="account-a")
-            (home / "auth3-2.json").write_text((home / "auth.json").read_text(encoding="utf-8"), encoding="utf-8")
-
-            active_result = codex_local.delete_auth_profile("auth", home)
-            mirrored_result = codex_local.delete_auth_profile("auth3-2", home)
-
-            self.assertEqual("error", active_result["status"])
-            self.assertEqual("error", mirrored_result["status"])
-            self.assertTrue((home / "auth.json").exists())
-            self.assertTrue((home / "auth3-2.json").exists())
-
-    def test_save_api_auth_profile_projects_custom_api_provider_bucket(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            home = Path(tmp_dir)
-            _write_auth(home / "auth.json", account_id="oauth-account")
-            (home / "config.toml").write_text(
-                "\n".join(
-                    [
-                        'model_provider = "cmp_old"',
-                        'forced_login_method = "chatgpt"',
-                        'openai_base_url = "http://old.example/v1"',
-                        "",
-                        "[model_providers.openai]",
-                        'base_url = "http://wrong.example/v1"',
-                        "",
-                        "[mcp_servers.context7]",
-                        'transport = "stdio"',
-                    ]
-                ),
-                encoding="utf-8",
-            )
-
-            result = codex_local.save_api_auth_profile(
-                "api-35",
-                "relay-secret-value",
-                "http://35.213.82.91:8003/v1",
-                home,
-                switch_now=True,
-            )
-
-            self.assertEqual("ok", result["status"])
-            self.assertNotIn("relay-secret-value", json.dumps(result, ensure_ascii=False))
-            self.assertEqual("ok", result["switch"]["status"])
-            auth_payload = json.loads((home / "auth.json").read_text(encoding="utf-8"))
-            self.assertEqual("apikey", auth_payload["auth_mode"])
-            self.assertEqual("relay-secret-value", auth_payload["OPENAI_API_KEY"])
-            config = (home / "config.toml").read_text(encoding="utf-8")
-            self.assertIn('model_provider = "provider_35_213_82_91"', config)
-            self.assertIn('forced_login_method = "api"', config)
-            self.assertNotIn("openai_base_url", config)
-            self.assertIn("[model_providers.provider_35_213_82_91]", config)
-            self.assertIn('base_url = "http://35.213.82.91:8003/v1"', config)
-            self.assertIn("requires_openai_auth = false", config)
-            self.assertIn("supports_websockets = false", config)
-            self.assertNotIn("[model_providers.openai]", config)
-            self.assertIn("[mcp_servers.context7]", config)
-            status = codex_local.codex_status(home)
-            self.assertEqual("api-35", status["active_account"]["name"])
-            self.assertEqual("apikey", status["active_account"]["auth_mode"])
-            self.assertEqual("http://35.213.82.91:8003/v1", status["active_account"]["api_base_url"])
-            self.assertEqual("provider_35_213_82_91", status["config"]["auth_projection"]["model_provider"])
-
-    def test_save_api_auth_profile_persists_switch_to_cockpit_accounts(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            root = Path(tmp_dir)
-            home = root / "codex"
-            cockpit = root / "cockpit"
-            home.mkdir()
-            cockpit.mkdir()
-            _write_auth(home / "auth.json", account_id="oauth-account")
-            (home / "config.toml").write_text('model_provider = "openai"\nforced_login_method = "chatgpt"\n', encoding="utf-8")
-            (cockpit / "codex_accounts.json").write_text(
-                json.dumps({"version": "1.0", "accounts": [], "current_account_id": None}),
-                encoding="utf-8",
-            )
-            (cockpit / "codex_model_providers.json").write_text("[]", encoding="utf-8")
-
-            result = codex_local.save_api_auth_profile(
-                "api-35",
-                "relay-secret-value",
-                "http://35.213.82.91:8003/v1",
-                home,
-                label="35.213.82.91",
-                switch_now=True,
-                cockpit_dir=cockpit,
-            )
-
-            self.assertEqual("ok", result["status"])
-            self.assertNotIn("relay-secret-value", json.dumps(result, ensure_ascii=False))
-            projection = result["cockpit_projection"]
-            self.assertEqual("ok", projection["status"])
-            self.assertTrue(projection["changed"])
-            account_id = projection["account_id"]
-            index = json.loads((cockpit / "codex_accounts.json").read_text(encoding="utf-8"))
-            self.assertEqual(account_id, index["current_account_id"])
-            self.assertIn(account_id, [item["id"] for item in index["accounts"]])
-            detail = json.loads((cockpit / "codex_accounts" / f"{account_id}.json").read_text(encoding="utf-8"))
-            self.assertEqual("apikey", detail["auth_mode"])
-            self.assertEqual("http://35.213.82.91:8003/v1", detail["api_base_url"])
-            self.assertEqual("custom", detail["api_provider_mode"])
-            self.assertEqual("35.213.82.91", detail["api_provider_name"])
-            self.assertEqual("relay-secret-value", detail["openai_api_key"])
-            providers = json.loads((cockpit / "codex_model_providers.json").read_text(encoding="utf-8"))
-            self.assertEqual("http://35.213.82.91:8003/v1", providers[0]["baseUrl"])
-
-    def test_switch_auth_profile_to_chatgpt_clears_api_projection(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            home = Path(tmp_dir)
-            _write_auth(home / "auth.json", account_id="oauth-account")
-            (home / "config.toml").write_text(
-                "\n".join(
-                    [
-                        'model_provider = "openai"',
-                        'forced_login_method = "api"',
-                        'openai_base_url = "http://35.213.82.91:8003/v1"',
-                    ]
-                ),
-                encoding="utf-8",
-            )
-            profiles = home / "auth-profiles"
-            profiles.mkdir()
-            _write_auth(profiles / "oauth-main.json", account_id="oauth-account-2")
-
-            result = codex_local.switch_auth_profile("oauth-main", home)
-
-            self.assertEqual("ok", result["status"])
-            config = (home / "config.toml").read_text(encoding="utf-8")
-            self.assertIn('model_provider = "openai"', config)
-            self.assertIn('forced_login_method = "chatgpt"', config)
-            self.assertNotIn("openai_base_url", config)
-
-    def test_save_api_auth_profile_probe_failure_does_not_write_profile(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            home = Path(tmp_dir)
-            _write_auth(home / "auth.json", account_id="oauth-account")
-
-            with mock.patch(
-                "lib.codex_local.probe_codex_api_account",
-                return_value={"attempted": True, "status": "error", "error": "unreachable"},
-            ):
-                result = codex_local.save_api_auth_profile(
-                    "bad-api",
-                    "relay-secret-value",
-                    "http://127.0.0.1:65530/v1",
-                    home,
-                    probe=True,
-                )
-
-            self.assertEqual("error", result["status"])
-            self.assertFalse((home / "auth-profiles" / "bad-api.json").exists())
-
-    def test_switch_auth_profile_blocks_api_snapshot_without_base_url(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            home = Path(tmp_dir)
-            _write_auth(home / "auth.json", account_id="oauth-account")
-            (home / "config.toml").write_text('model_provider = "openai"\nforced_login_method = "chatgpt"\n', encoding="utf-8")
-            profiles = home / "auth-profiles"
-            profiles.mkdir()
-            (profiles / "auto-fdb75e04ea.json").write_text(
-                json.dumps({"auth_mode": "apikey", "OPENAI_API_KEY": "sk-relay-secret"}),
-                encoding="utf-8",
-            )
-
-            result = codex_local.switch_auth_profile("auto-fdb75e04ea", home)
-
-            self.assertEqual("error", result["status"])
-            self.assertIn("missing api_base_url", result["error"])
-            self.assertEqual("chatgpt", json.loads((home / "auth.json").read_text(encoding="utf-8"))["auth_mode"])
-            self.assertNotIn("openai_base_url", (home / "config.toml").read_text(encoding="utf-8"))
+        for name in removed_entrypoints:
+            with self.subTest(name=name):
+                self.assertFalse(hasattr(codex_local, name))
 
     def test_codex_status_prefers_switchable_api_duplicate_over_legacy_auto_snapshot(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -525,106 +245,6 @@ class CodexLocalTests(unittest.TestCase):
             self.assertEqual("cockpit-sciman.top-gmail.com", matching[0]["name"])
             self.assertEqual(2, matching[0]["duplicate_count"])
             self.assertEqual(["auth1"], matching[0]["hidden_duplicate_names"])
-
-    def test_import_cockpit_codex_accounts_imports_oauth_and_api_without_secret_output(self) -> None:
-        with tempfile.TemporaryDirectory() as home_dir, tempfile.TemporaryDirectory() as cockpit_dir:
-            home = Path(home_dir)
-            cockpit = Path(cockpit_dir)
-            _write_auth(home / "auth.json", account_id="active-oauth")
-            _write_cockpit_codex_account(
-                cockpit,
-                "codex_oauth_1",
-                {
-                    "email": "oauth@example.com",
-                    "auth_mode": "oauth",
-                    "plan_type": "plus",
-                    "tokens": {
-                        "id_token": _jwt({"email": "oauth@example.com"}),
-                        "access_token": _jwt({"exp": 1893456000}),
-                        "refresh_token": "rt_secret",
-                    },
-                },
-                current=True,
-            )
-            _write_cockpit_codex_account(
-                cockpit,
-                "codex_apikey_md5",
-                {
-                    "email": "api-key-abcd",
-                    "auth_mode": "apikey",
-                    "openai_api_key": "sk-secret-value",
-                    "api_base_url": "http://35.213.82.91:8003/v1",
-                    "api_provider_name": "35.213.82.91",
-                    "plan_type": "API_KEY",
-                },
-            )
-
-            with (
-                mock.patch(
-                    "lib.codex_local.probe_codex_oauth_account",
-                    return_value={"attempted": True, "status": "ok", "http_status": 200, "account_count": 1},
-                ),
-                mock.patch(
-                    "lib.codex_local.probe_codex_api_account",
-                    return_value={"attempted": True, "status": "ok", "http_status": 200, "model_count": 2},
-                ),
-            ):
-                result = codex_local.import_cockpit_codex_accounts(home, cockpit_dir=cockpit, probe=True)
-
-            self.assertEqual("ok", result["status"])
-            self.assertEqual({"imported": 2, "skipped": 0, "errors": 0, "api_key": 1, "oauth": 1}, result["summary"])
-            serialized = json.dumps(result, ensure_ascii=False)
-            self.assertNotIn("sk-secret-value", serialized)
-            self.assertNotIn("rt_secret", serialized)
-            self.assertNotIn("sk-", serialized)
-            self.assertTrue((home / "auth-profiles" / "cockpit-oauth-example.com.json").exists())
-            api_profile = home / "auth-profiles" / "cockpit-api-35.213.82.91.json"
-            self.assertTrue(api_profile.exists())
-            api_payload = json.loads(api_profile.read_text(encoding="utf-8"))
-            self.assertEqual("apikey", api_payload["auth_mode"])
-            self.assertEqual("sk-secret-value", api_payload["OPENAI_API_KEY"])
-            self.assertEqual("http://35.213.82.91:8003/v1", api_payload["api_base_url"])
-
-    def test_import_codex_accounts_from_payload_accepts_cpa_and_sub2api_shapes(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            home = Path(tmp_dir)
-            _write_auth(home / "auth.json", account_id="active-oauth")
-            cpa = {
-                "id_token": _jwt({"email": "cpa@example.com"}),
-                "access_token": _jwt({"exp": 1893456000}),
-                "refresh_token": "rt_cpa",
-                "account_id": "acct_cpa",
-                "email": "cpa@example.com",
-            }
-            sub2api = {
-                "type": "sub2api-data",
-                "version": 1,
-                "proxies": [],
-                "accounts": [
-                    {
-                        "name": "sub@example.com",
-                        "platform": "openai",
-                        "type": "oauth",
-                        "credentials": {
-                            "access_token": _jwt({"exp": 1893456000}),
-                            "refresh_token": "rt_sub",
-                            "id_token": _jwt({"email": "sub@example.com"}),
-                            "email": "sub@example.com",
-                            "chatgpt_account_id": "acct_sub",
-                        },
-                        "concurrency": 0,
-                        "priority": 0,
-                    }
-                ],
-            }
-
-            first = codex_local.import_codex_accounts_from_payload(json.dumps(cpa), home, dry_run=True)
-            second = codex_local.import_codex_accounts_from_payload(json.dumps(sub2api), home, source_format="sub2api", dry_run=True)
-
-            self.assertEqual("ok", first["status"])
-            self.assertEqual("ok", second["status"])
-            self.assertEqual("cockpit-cpa-example.com", first["imported"][0]["name"])
-            self.assertEqual("cockpit-sub-example.com", second["imported"][0]["name"])
 
     def test_config_health_reports_recommended_defaults_without_secret_values(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
