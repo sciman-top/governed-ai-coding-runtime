@@ -147,7 +147,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("AI 推荐", completed.stdout)
         self.assertIn("FastFeedback", completed.stdout)
         self.assertIn("Readiness", completed.stdout)
-        self.assertIn("CodexLocalOptimize", completed.stdout)
+        self.assertNotIn("CodexLocalOptimize", completed.stdout)
         self.assertIn("CodexInteropCheck", completed.stdout)
         self.assertIn("FeedbackReport", completed.stdout)
         self.assertIn("CleanupTargets", completed.stdout)
@@ -243,7 +243,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("-PruneRetiredManagedFiles", completed.stdout)
         self.assertIn("-DisableManagedAssetRemoval", completed.stdout)
 
-    def test_operator_codex_local_optimize_is_available_as_dry_run(self) -> None:
+    def test_operator_codex_local_optimize_action_is_removed(self) -> None:
         completed = subprocess.run(
             [
                 "pwsh",
@@ -256,7 +256,6 @@ class OperatorEntrypointTests(unittest.TestCase):
                 "CodexLocalOptimize",
                 "-DryRun",
             ],
-            check=True,
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -264,10 +263,8 @@ class OperatorEntrypointTests(unittest.TestCase):
             cwd=ROOT,
         )
 
-        self.assertIn("DRY-RUN codex-local-optimize", completed.stdout)
-        self.assertIn("scripts/Optimize-CodexLocal.ps1", completed.stdout)
-        self.assertIn("-Apply", completed.stdout)
-        self.assertNotIn("-ApplyManagedAssetRemoval", completed.stdout)
+        self.assertNotEqual(0, completed.returncode)
+        self.assertIn("CodexLocalOptimize", completed.stderr)
 
     def test_operator_codex_interop_check_is_available_as_dry_run(self) -> None:
         completed = subprocess.run(
@@ -513,7 +510,7 @@ class OperatorEntrypointTests(unittest.TestCase):
             self.assertIn("feedback_report", module.ALLOWED_ACTIONS)
             self.assertIn("cleanup_targets", module.ALLOWED_ACTIONS)
             self.assertIn("uninstall_governance", module.ALLOWED_ACTIONS)
-            self.assertIn("codex_local_optimize", module.ALLOWED_ACTIONS)
+            self.assertNotIn("codex_local_optimize", module.ALLOWED_ACTIONS)
             self.assertIn("codex_interop_check", module.ALLOWED_ACTIONS)
             self.assertIn("codex_switch_record", module.ALLOWED_ACTIONS)
             self.assertIn("codex_guard_status", module.ALLOWED_ACTIONS)
@@ -531,12 +528,12 @@ class OperatorEntrypointTests(unittest.TestCase):
             self.assertIn("Governed AI Coding Runtime", module.read_repo_file("README.md")["content"])
             self.assertIn("escapes repository root", module.read_repo_file("../outside.txt")["error"])
             self.assertIn(module.load_codex_status()["status"], {"ok", "error"})
-            self.assertEqual("error", module.run_codex_switch({"name": ""})["status"])
-            self.assertEqual("error", module.run_codex_sync_active({"name": "missing-profile"})["status"])
-            self.assertEqual("error", module.run_codex_save_active({"name": ""})["status"])
-            self.assertEqual("error", module.run_codex_save_api({"name": ""})["status"])
-            self.assertEqual("error", module.run_codex_import_payload({"content": ""})["status"])
-            self.assertEqual("error", module.run_codex_delete({"name": ""})["status"])
+            self.assertFalse(hasattr(module, "run_codex_switch"))
+            self.assertFalse(hasattr(module, "run_codex_sync_active"))
+            self.assertFalse(hasattr(module, "run_codex_save_active"))
+            self.assertFalse(hasattr(module, "run_codex_save_api"))
+            self.assertFalse(hasattr(module, "run_codex_import_payload"))
+            self.assertFalse(hasattr(module, "run_codex_delete"))
             self.assertIn(module.load_claude_status()["status"], {"ok", "error"})
             self.assertEqual("error", module.run_claude_switch({"name": ""})["status"])
             self.assertEqual("error", module.run_claude_delete({"name": ""})["status"])
@@ -572,71 +569,21 @@ class OperatorEntrypointTests(unittest.TestCase):
             process_status["source_files"],
         )
 
-    def test_operator_ui_can_save_codex_api_profile_without_exposing_key(self) -> None:
+    def test_operator_ui_codex_panel_keeps_only_read_only_probe(self) -> None:
         module = _load_serve_operator_ui_module()
         module.invalidate_status_cache()
 
         with mock.patch.object(
             module,
-            "save_api_auth_profile",
-            return_value={
-                "status": "ok",
-                "changed": True,
-                "profile_name": "api-35",
-                "base_url": "http://35.213.82.91:8003/v1",
-            },
-        ) as save_mock:
-            result = module.run_codex_save_api(
-                {
-                    "name": "api-35",
-                    "api_key": "relay-secret-value",
-                    "base_url": "http://35.213.82.91:8003/v1",
-                    "switch_now": True,
-                    "probe": True,
-                }
-            )
-
-        self.assertEqual("ok", result["status"])
-        self.assertNotIn("relay-secret-value", json.dumps(result, ensure_ascii=False))
-        save_mock.assert_called_once()
-        _, args, kwargs = save_mock.mock_calls[0]
-        self.assertEqual(("api-35", "relay-secret-value", "http://35.213.82.91:8003/v1"), args[:3])
-        self.assertTrue(kwargs["switch_now"])
-        self.assertTrue(kwargs["probe"])
-
-    def test_operator_ui_can_import_cockpit_and_probe_codex_profiles(self) -> None:
-        module = _load_serve_operator_ui_module()
-        module.invalidate_status_cache()
-
-        with (
-            mock.patch.object(
-                module,
-                "import_cockpit_codex_accounts",
-                return_value={"status": "ok", "summary": {"imported": 8, "api_key": 1, "oauth": 7}},
-            ) as cockpit_mock,
-            mock.patch.object(
-                module,
-                "import_codex_accounts_from_payload",
-                return_value={"status": "ok", "summary": {"imported": 1, "api_key": 0, "oauth": 1}},
-            ) as payload_mock,
-            mock.patch.object(
-                module,
-                "probe_auth_profiles",
-                return_value={"status": "ok", "total": 2, "ok": 2, "failed": 0},
-            ) as probe_mock,
-        ):
-            cockpit_result = module.run_codex_import_cockpit({"probe": True})
-            payload_result = module.run_codex_import_payload({"content": "{}", "source_format": "cpa", "dry_run": True})
+            "probe_auth_profiles",
+            return_value={"status": "ok", "total": 2, "ok": 2, "failed": 0},
+        ) as probe_mock:
             probe_result = module.run_codex_probe({"include_oauth": True, "include_api": True})
 
-        self.assertEqual("ok", cockpit_result["status"])
-        self.assertEqual("ok", payload_result["status"])
+        self.assertFalse(hasattr(module, "run_codex_save_api"))
+        self.assertFalse(hasattr(module, "run_codex_import_cockpit"))
+        self.assertFalse(hasattr(module, "run_codex_import_payload"))
         self.assertEqual("ok", probe_result["status"])
-        cockpit_mock.assert_called_once()
-        self.assertTrue(cockpit_mock.mock_calls[0].kwargs["probe"])
-        payload_mock.assert_called_once()
-        self.assertEqual("cpa", payload_mock.mock_calls[0].kwargs["source_format"])
-        self.assertTrue(payload_mock.mock_calls[0].kwargs["dry_run"])
         probe_mock.assert_called_once()
 
     def test_operator_ui_server_refuses_stale_content_and_disables_cache(self) -> None:

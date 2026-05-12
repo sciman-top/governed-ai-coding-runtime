@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexLocalOptimize", "CodexInteropCheck", "CodexSwitchRecord", "CodexSwitchGuardStatus", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
+  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexInteropCheck", "CodexSwitchRecord", "CodexSwitchGuardStatus", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
   [string]$Action = "Help",
 
   [ValidateSet("quick", "full", "l1", "l2", "l3")]
@@ -250,7 +250,6 @@ AI 推荐:
   Targets                列出 target catalog 中的 active target repos。
   FastFeedback           执行本仓日常编码快速反馈：build + quick feedback tests；不替代交付前 Readiness。
   Readiness              执行 build -> test -> contract/invariant -> hotspot，然后生成 operator UI。
-  CodexLocalOptimize     一键应用本机 Codex provider 优先配置，安装 codex-account / codex-shared* 启动器；不安装 guard/no-op launcher。
   CodexInteropCheck      检查 Cockpit Tools Codex 切换是否仍共享同一个 Codex 历史根；不写入。
   CodexSwitchRecord      保存当前 Cockpit/Codex 切换快照到 docs/change-evidence/codex-cockpit-snapshots。
   CodexSwitchGuardStatus 查看本机切换守护任务状态。
@@ -323,10 +322,6 @@ function Invoke-FastFeedback {
     -Name "quick-feedback" `
     -ScriptPath "scripts/verify-repo.ps1" `
     -ScriptArguments @("-Check", "RuntimeQuick")
-}
-
-function Invoke-CodexLocalOptimize {
-  Invoke-PwshScript -Name "codex-local-optimize" -ScriptPath "scripts/Optimize-CodexLocal.ps1" -ScriptArguments @("-Apply")
 }
 
 function Invoke-CodexInteropCheck {
@@ -480,7 +475,6 @@ try {
     "Targets" { Invoke-Targets }
     "FastFeedback" { Invoke-FastFeedback }
     "Readiness" { Invoke-Readiness }
-    "CodexLocalOptimize" { Invoke-CodexLocalOptimize }
     "CodexInteropCheck" { Invoke-CodexInteropCheck }
     "CodexSwitchRecord" { Invoke-CodexSwitchRecord }
     "CodexSwitchGuardStatus" { Invoke-CodexSwitchGuardStatus }

@@ -219,14 +219,6 @@ def render_style_block() -> str:
     .history-item small {{ color: var(--muted); overflow-wrap: anywhere; }}
     .codex-toolbar {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }}
     .codex-toolbar select {{ width: min(100%, 260px); }}
-    .codex-api-form {{ display: grid; gap: 10px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: linear-gradient(180deg, #ffffff, #f8fbfb); box-shadow: var(--shadow-tight); }}
-    .codex-api-form h3 {{ margin-bottom: 0; }}
-    .codex-api-fields {{ display: grid; grid-template-columns: minmax(120px, 0.7fr) minmax(220px, 1.2fr) minmax(180px, 1fr); gap: 10px; align-items: end; }}
-    .codex-api-options {{ display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; justify-content: flex-end; }}
-    .codex-api-options .checkbox-row {{ width: auto; }}
-    .codex-import-form {{ display: grid; gap: 10px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: linear-gradient(180deg, #ffffff, #f8fbfb); box-shadow: var(--shadow-tight); }}
-    .codex-import-form h3 {{ margin-bottom: 0; }}
-    .codex-import-grid {{ display: grid; grid-template-columns: minmax(150px, 0.65fr) auto auto; gap: 10px; align-items: center; }}
     .codex-history-form {{ display: grid; gap: 10px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: linear-gradient(180deg, #ffffff, #f8fbfb); box-shadow: var(--shadow-tight); }}
     .codex-history-form h3, .codex-history-form .meta {{ margin-bottom: 0; }}
     .codex-history-fields {{ display: grid; grid-template-columns: minmax(120px, 0.55fr) minmax(220px, 1.2fr) minmax(220px, 1fr) minmax(90px, 0.35fr); gap: 10px; align-items: end; }}
@@ -236,15 +228,10 @@ def render_style_block() -> str:
     .codex-history-row strong {{ overflow-wrap: anywhere; color: var(--ink-strong); }}
     .codex-grid {{ display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: start; }}
     .codex-list {{ display: grid; gap: 8px; }}
-    .codex-account {{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: start; border: 1px solid var(--line); border-radius: 8px; padding: 13px; background: linear-gradient(180deg, #ffffff, #f8fbfb); box-shadow: var(--shadow-tight); }}
+    .codex-account {{ display: grid; gap: 16px; align-items: start; border: 1px solid var(--line); border-radius: 8px; padding: 13px; background: linear-gradient(180deg, #ffffff, #f8fbfb); box-shadow: var(--shadow-tight); }}
     .codex-account-body {{ min-width: 0; display: grid; gap: 3px; }}
-    .codex-account-actions {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; justify-content: flex-end; }}
     .codex-account strong, .codex-account small {{ display: block; overflow-wrap: anywhere; }}
     .codex-badge {{ display: inline-flex; align-items: center; align-self: start; border: 1px solid #bde0da; border-radius: 999px; padding: 4px 10px; color: var(--accent-strong); background: var(--accent-soft); font-size: 0.78rem; font-weight: 760; white-space: nowrap; }}
-    .codex-account-switch {{ display: inline-flex; align-items: center; justify-content: center; min-width: 68px; min-height: 34px; padding: 8px 14px; border-radius: 7px; text-align: center; font-weight: 700; }}
-    .codex-account-switch.is-current {{ border-color: #bde0da; color: var(--accent-strong); background: var(--accent-soft); }}
-    .codex-account-switch.danger {{ border-color: #f0b8b8; color: #9f2020; background: #fff5f5; }}
-    .codex-account-switch[disabled] {{ opacity: 1; cursor: default; box-shadow: none; transform: none; }}
     .claude-toolbar {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }}
     .claude-console-grid {{ display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(290px, 0.65fr); gap: 12px; align-items: start; }}
     .claude-summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }}
@@ -264,7 +251,7 @@ def render_style_block() -> str:
       main {{ padding: 12px 10px 28px; }}
       header {{ padding: 14px; margin-bottom: 12px; }}
       h1 {{ font-size: 1.2rem; }}
-      .console-layout, .summary-grid, .policy-grid, .feedback-grid, .runtime-shell, .details-grid, .codex-grid, .codex-account, .codex-api-fields, .codex-import-grid, .codex-history-fields, .claude-console-grid, .feedback-shell, .feedback-runs-grid, .surface-grid {{ grid-template-columns: 1fr; }}
+      .console-layout, .summary-grid, .policy-grid, .feedback-grid, .runtime-shell, .details-grid, .codex-grid, .codex-account, .codex-history-fields, .claude-console-grid, .feedback-shell, .feedback-runs-grid, .surface-grid {{ grid-template-columns: 1fr; }}
       .dashboard {{ gap: 12px; }}
       .view-tabs {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; }}
       .view-tab {{ text-align: center; padding: 8px 7px; }}
@@ -272,7 +259,6 @@ def render_style_block() -> str:
       .info-list {{ grid-template-columns: 1fr; }}
       .sidebar {{ position: static; }}
       .output {{ min-height: 220px; }}
-      .codex-account-actions {{ justify-content: flex-start; }}
       .panel, .metric, .policy-item, .table-wrap {{ box-shadow: 0 4px 16px rgba(12, 31, 36, 0.06); }}
       .table-wrap {{ overflow-x: visible; }}
       table, thead, tbody, tr, th, td {{ display: block; min-width: 0; width: 100%; }}

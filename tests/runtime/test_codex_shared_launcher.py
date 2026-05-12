@@ -34,7 +34,7 @@ class CodexSharedLauncherTests(unittest.TestCase):
                     ),
                 )
 
-    def test_optimizer_apply_writes_shared_history_config_without_fixed_relay_id(self) -> None:
+    def test_optimizer_apply_is_deprecated_and_does_not_write_config(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             codex_home = Path(tmp_dir) / "codex-home"
             codex_home.mkdir()
@@ -59,6 +59,7 @@ class CodexSharedLauncherTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
+            before_config = (codex_home / "config.toml").read_text(encoding="utf-8")
 
             completed = subprocess.run(
                 [
@@ -84,93 +85,56 @@ class CodexSharedLauncherTests(unittest.TestCase):
                 timeout=60,
             )
 
-            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertEqual(completed.returncode, 2, completed.stdout + completed.stderr)
             payload = json.loads(completed.stdout)
-            self.assertEqual("ok", payload["status"])
+            self.assertEqual("deprecated", payload["status"])
+            self.assertFalse(payload["changed"])
+            self.assertEqual(before_config, (codex_home / "config.toml").read_text(encoding="utf-8"))
 
-            config = (codex_home / "config.toml").read_text(encoding="utf-8")
-            escaped_home = str(codex_home).replace("\\", "\\\\")
-            self.assertIn(f'sqlite_home = "{escaped_home}"', config)
-            self.assertIn("[history]", config)
-            self.assertIn('persistence = "save-all"', config)
-            self.assertIn("[profiles.shared-chatgpt]", config)
-            self.assertIn("[profiles.shared-openai-api]", config)
-            self.assertIn("[profiles.shared-cockpit-api]", config)
-            self.assertIn("[profiles.shared-cockpit-auth]", config)
-            self.assertIn("[profiles.shared-current-provider]", config)
-            first_table = config.split("[", 1)[0]
-            self.assertIn('model_provider = "rightcode"', first_table)
-            shared_chatgpt = config.split("[profiles.shared-chatgpt]", 1)[1].split("[profiles.", 1)[0]
-            self.assertIn('forced_login_method = "chatgpt"', shared_chatgpt)
-            self.assertIn('model_provider = "openai"', shared_chatgpt)
-            shared_api = config.split("[profiles.shared-cockpit-api]", 1)[1].split("[profiles.", 1)[0]
-            self.assertIn('forced_login_method = "api"', shared_api)
-            self.assertIn('model_provider = "rightcode"', shared_api)
-            self.assertNotIn("disable_response_storage", config)
-            self.assertNotIn("cmp_1778246510288_1", config)
-            self.assertEqual(1, config.count('path = "C:\\Users\\example\\.agents\\skills\\duplicate-skill"'))
-
-    def test_shared_launcher_supports_cli_exec_and_app_surfaces(self) -> None:
+    def test_shared_launcher_is_deprecated_and_blocks_project_startup_wrapping(self) -> None:
         script = (ROOT / "scripts" / "Start-CodexShared.ps1").read_text(encoding="utf-8")
 
         self.assertIn("PositionalBinding = $false", script)
         self.assertIn("[ValidateSet('cli', 'exec', 'app', 'resume')]", script)
-        self.assertIn("Position = 0, ValueFromRemainingArguments = $true", script)
-        self.assertIn("$Surface -eq 'app'", script)
-        self.assertIn("$Workdir = $Prompt[0]", script)
-        self.assertIn("model_provider={0}", script)
-        self.assertIn("$Surface -eq 'exec'", script)
-        self.assertIn("$Surface -eq 'resume'", script)
-        self.assertIn("Codex app accepts a workspace path", script)
-        self.assertIn("UseCockpitCurrentAccount", script)
-        self.assertIn("'--cockpit-account-id', $AccountId", script)
-        self.assertIn("OPENAI_API_KEY sourced from current Cockpit Tools account", script)
-        self.assertIn("[Environment]::SetEnvironmentVariable('OPENAI_API_KEY', $null, 'Process')", script)
-        self.assertIn("refusing to fall back to OpenAI Official", script)
-        self.assertIn("[switch] $SkipCockpitApiValidation", script)
-        self.assertIn("function Assert-CockpitApiAccountUsable", script)
-        self.assertIn("/models validation", script)
-        self.assertIn("refusing to launch Codex with a broken API account", script)
-        self.assertIn("Get-CodexProviderIdFromBaseUrl", script)
-        self.assertIn("api_provider_id", script)
-        self.assertNotIn("$ModelProvider = 'cockpit_http'", script)
-        self.assertIn("function Invoke-CodexInteropRepair", script)
-        self.assertIn("function Wait-CockpitCodexStateStable", script)
-        self.assertIn("Wait-CockpitCodexStateStable -CockpitStateHome $CockpitHome", script)
-        self.assertNotIn("'--migrate-provider-bucket',", script)
-        self.assertIn("--quick-launch", script)
-        self.assertIn("function Stop-CodexAppProcesses", script)
-        self.assertIn("Get-Process -Name 'Codex', 'codex'", script)
-        self.assertIn("Stop-Process -Id $liveProcess.Id", script)
-        self.assertIn("$Surface -eq 'app' -and $RestartExistingCodexApp -and -not $UseCockpitCurrentAccount", script)
-        self.assertLess(
-            script.index("Invoke-CodexInteropRepair -HomePath $resolvedHome"),
-            script.rindex("Stop-CodexAppProcesses"),
-        )
+        self.assertIn("deprecated and blocked", script)
+        self.assertIn("must not project Cockpit auth", script)
+        self.assertNotIn("SetEnvironmentVariable('OPENAI_API_KEY'", script)
+        self.assertNotIn("Stop-Process", script)
+        self.assertNotIn("codex-interop-check.py", script)
+        self.assertNotIn("Start-Process", script)
 
-    def test_optimizer_installs_interop_shortcuts_when_switcher_install_is_enabled(self) -> None:
+    def test_optimizer_no_longer_installs_project_launchers(self) -> None:
         script = (ROOT / "scripts" / "Optimize-CodexLocal.ps1").read_text(encoding="utf-8")
 
-        self.assertIn("codex-interop-check.cmd", script)
+        self.assertIn("deprecated", script)
+        self.assertIn("Disable-CodexProjectInterop.ps1", script)
+        self.assertNotIn("Set-Content -LiteralPath", script)
+        self.assertNotIn("Copy-Item -LiteralPath", script)
+        self.assertNotIn("Start-CodexShared.ps1", script)
+        self.assertNotIn("codex-interop-check.cmd", script)
         self.assertNotIn("codex-interop-repair.cmd", script)
-        self.assertIn("codex-interop-check.py", script)
-        self.assertIn("codex-cockpit.cmd", script)
-        self.assertIn("codex-cockpit-exec.cmd", script)
-        self.assertIn("codex-cockpit-resume.cmd", script)
-        self.assertIn("codex-cockpit-app.cmd", script)
-        self.assertIn("codex-cockpit-app-restart.cmd", script)
-        self.assertIn("codex-relay.cmd", script)
-        self.assertIn("codex-relay-exec.cmd", script)
-        self.assertIn("codex-relay-resume.cmd", script)
-        self.assertIn("codex-relay-app.cmd", script)
-        self.assertIn("codex-shared-resume.cmd", script)
-        self.assertIn("-Surface resume -UseCockpitCurrentAccount --all --include-non-interactive", script)
-        self.assertIn("--cc-switch-db", script)
-        self.assertIn("--cockpit-home", script)
+        self.assertNotIn("codex-cockpit.cmd", script)
+        self.assertNotIn("codex-cockpit-exec.cmd", script)
+        self.assertNotIn("codex-cockpit-resume.cmd", script)
+        self.assertNotIn("codex-cockpit-app.cmd", script)
+        self.assertNotIn("codex-cockpit-app-restart.cmd", script)
+        self.assertNotIn("codex-relay.cmd", script)
+        self.assertNotIn("codex-relay-exec.cmd", script)
+        self.assertNotIn("codex-relay-resume.cmd", script)
+        self.assertNotIn("codex-relay-app.cmd", script)
+        self.assertNotIn("codex-shared-resume.cmd", script)
         self.assertNotIn("codex-cockpit-install-noop-launcher.cmd", script)
         self.assertNotIn("codex-switch-guard-start.cmd", script)
         self.assertNotIn("codex-switch-guard.cmd", script)
         self.assertNotIn("--apply %*", script)
+
+    def test_disable_project_interop_disables_top_level_codex_shims(self) -> None:
+        script = (ROOT / "scripts" / "Disable-CodexProjectInterop.ps1").read_text(encoding="utf-8")
+
+        self.assertIn("'codex.cmd'", script)
+        self.assertIn("'codex.ps1'", script)
+        self.assertIn("'codex-account.cmd'", script)
+        self.assertIn("codex-cockpit.cmd", script)
 
     def test_interop_checker_fails_when_any_active_thread_uses_non_shared_provider(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

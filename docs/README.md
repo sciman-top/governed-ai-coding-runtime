@@ -127,11 +127,11 @@
   - after explicit permission, add `-ConfirmCorePrincipleProposalWrite` to write reviewable proposal/manifest files under `docs/change-evidence/core-principle-change-*`
   - for audit-only persistence, add `-WriteCorePrincipleDryRunReport` to write only a dry-run report under `docs/change-evidence/core-principle-change-reports/`
   - does not directly change active core-principles policy, specs, verifiers, target repositories, push, or merge
-- Codex local optimizer: `scripts/Optimize-CodexLocal.ps1`
-  - default mode is dry-run; use `-Apply` to write the current recommended user-level Codex config and install `codex-account`
-  - the stable policy is still `efficiency first`; the current default combo is only the present implementation under that rule
-  - account switching preserves user-owned ChatGPT auth files and never prints tokens
-  - usage limits are surfaced as `unknown` unless a stable official local source is available
+- Codex local boundary:
+  - use the official `codex` entrypoint and Cockpit Tools native controls for login, provider switching, and app launch state
+  - this repository no longer installs or wraps Codex CLI/App launchers and no longer writes Codex auth, provider profiles, SQLite history bucket, or Cockpit launch state
+  - use `python scripts/codex-interop-check.py ... --quick-launch` for read-only diagnostics
+  - use `scripts/Disable-CodexProjectInterop.ps1 -Apply -DisableProjectShortcuts` only for reversible cleanup of old project shims
 - Claude Code local optimizer: `scripts/Optimize-ClaudeLocal.ps1`
   - default mode is dry-run; use `-Apply` to write recommended user-level Claude Code settings for third-party Anthropic-compatible providers and install `claude-provider`
   - provider profiles include BigModel GLM and DeepSeek without storing API keys in the repository

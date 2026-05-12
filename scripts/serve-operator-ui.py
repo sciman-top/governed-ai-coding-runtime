@@ -32,14 +32,7 @@ from lib.claude_local import claude_home, claude_status, delete_provider_profile
 from lib.codex_local import (
     codex_status,
     cockpit_codex_source_status,
-    delete_auth_profile,
-    import_codex_accounts_from_payload,
-    import_cockpit_codex_accounts,
     probe_auth_profiles,
-    save_active_auth_snapshot,
-    save_api_auth_profile,
-    switch_auth_profile,
-    sync_active_auth_snapshot,
 )
 
 
@@ -88,7 +81,6 @@ ALLOWED_ACTIONS = {
         "allow_multi_target": True,
         "managed_asset_removal": True,
     },
-    "codex_local_optimize": {"operator_action": "CodexLocalOptimize", "timeout_seconds": 300},
     "codex_interop_check": {"operator_action": "CodexInteropCheck", "timeout_seconds": 120},
     "codex_switch_record": {"operator_action": "CodexSwitchRecord", "timeout_seconds": 120},
     "codex_guard_status": {"operator_action": "CodexSwitchGuardStatus", "timeout_seconds": 60},
@@ -289,44 +281,9 @@ def _build_handler(*, default_language: str, host: str, port: int):
         def do_POST(self) -> None:
             parsed = urlparse(self.path)
             if parsed.path != "/api/run":
-                if parsed.path == "/api/codex/switch":
-                    result = run_codex_switch(self._read_json_body())
-                    status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
-                    self._send_json(result, status=status)
-                    return
-                if parsed.path == "/api/codex/sync-active":
-                    result = run_codex_sync_active(self._read_json_body())
-                    status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
-                    self._send_json(result, status=status)
-                    return
-                if parsed.path == "/api/codex/save-active":
-                    result = run_codex_save_active(self._read_json_body())
-                    status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
-                    self._send_json(result, status=status)
-                    return
-                if parsed.path == "/api/codex/save-api":
-                    result = run_codex_save_api(self._read_json_body())
-                    status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
-                    self._send_json(result, status=status)
-                    return
-                if parsed.path == "/api/codex/import-cockpit":
-                    result = run_codex_import_cockpit(self._read_json_body())
-                    status = HTTPStatus.OK if result.get("status") in {"ok", "attention"} else HTTPStatus.BAD_REQUEST
-                    self._send_json(result, status=status)
-                    return
-                if parsed.path == "/api/codex/import-payload":
-                    result = run_codex_import_payload(self._read_json_body())
-                    status = HTTPStatus.OK if result.get("status") in {"ok", "attention"} else HTTPStatus.BAD_REQUEST
-                    self._send_json(result, status=status)
-                    return
                 if parsed.path == "/api/codex/probe":
                     result = run_codex_probe(self._read_json_body())
                     status = HTTPStatus.OK if result.get("status") in {"ok", "attention"} else HTTPStatus.BAD_REQUEST
-                    self._send_json(result, status=status)
-                    return
-                if parsed.path == "/api/codex/delete":
-                    result = run_codex_delete(self._read_json_body())
-                    status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
                     self._send_json(result, status=status)
                     return
                 if parsed.path == "/api/codex/refresh":
@@ -821,110 +778,6 @@ def render_next_work_panel(*, language: str) -> str:
     )
 
 
-def run_codex_switch(payload: dict) -> dict:
-    if "_json_error" in payload:
-        return {"status": "error", "error": payload["_json_error"]}
-    name = _string(payload.get("name"), "")
-    dry_run = bool(payload.get("dry_run", False))
-    try:
-        result = switch_auth_profile(name, dry_run=dry_run)
-    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
-        return {"status": "error", "error": str(exc)}
-    if result.get("status") == "ok" and result.get("changed"):
-        invalidate_status_cache("codex")
-    return result
-
-
-def run_codex_sync_active(payload: dict) -> dict:
-    if "_json_error" in payload:
-        return {"status": "error", "error": payload["_json_error"]}
-    name = _string(payload.get("name"), "") or None
-    dry_run = bool(payload.get("dry_run", False))
-    try:
-        result = sync_active_auth_snapshot(target_name=name, dry_run=dry_run)
-    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
-        return {"status": "error", "error": str(exc)}
-    if result.get("status") == "ok" and result.get("changed"):
-        invalidate_status_cache("codex")
-    return result
-
-
-def run_codex_save_active(payload: dict) -> dict:
-    if "_json_error" in payload:
-        return {"status": "error", "error": payload["_json_error"]}
-    name = _string(payload.get("name"), "")
-    dry_run = bool(payload.get("dry_run", False))
-    try:
-        result = save_active_auth_snapshot(name, dry_run=dry_run)
-    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
-        return {"status": "error", "error": str(exc)}
-    if result.get("status") == "ok":
-        invalidate_status_cache("codex")
-    return result
-
-
-def run_codex_save_api(payload: dict) -> dict:
-    if "_json_error" in payload:
-        return {"status": "error", "error": payload["_json_error"]}
-    name = _string(payload.get("name"), "")
-    api_key = _string(payload.get("api_key"), "")
-    base_url = _string(payload.get("base_url"), "")
-    label = _string(payload.get("label"), "")
-    dry_run = bool(payload.get("dry_run", False))
-    switch_now = bool(payload.get("switch_now", False))
-    probe = bool(payload.get("probe", False))
-    try:
-        result = save_api_auth_profile(
-            name,
-            api_key,
-            base_url,
-            label=label,
-            dry_run=dry_run,
-            switch_now=switch_now,
-            probe=probe,
-        )
-    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
-        return {"status": "error", "error": str(exc)}
-    if result.get("status") == "ok" and (result.get("changed") or result.get("switch")):
-        invalidate_status_cache("codex")
-    return result
-
-
-def run_codex_import_cockpit(payload: dict) -> dict:
-    if "_json_error" in payload:
-        return {"status": "error", "error": payload["_json_error"]}
-    dry_run = bool(payload.get("dry_run", False))
-    probe = bool(payload.get("probe", False))
-    account_ids = payload.get("account_ids")
-    if not isinstance(account_ids, list):
-        account_ids = None
-    try:
-        result = import_cockpit_codex_accounts(dry_run=dry_run, probe=probe, account_ids=account_ids)
-    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
-        return {"status": "error", "error": str(exc)}
-    if result.get("status") in {"ok", "attention"} and not dry_run:
-        invalidate_status_cache("codex")
-    return result
-
-
-def run_codex_import_payload(payload: dict) -> dict:
-    if "_json_error" in payload:
-        return {"status": "error", "error": payload["_json_error"]}
-    content = _string(payload.get("content"), "")
-    source_format = _string(payload.get("source_format"), "auto") or "auto"
-    dry_run = bool(payload.get("dry_run", False))
-    probe = bool(payload.get("probe", False))
-    if not content:
-        return {"status": "error", "error": "missing import content"}
-    try:
-        result = import_codex_accounts_from_payload(content, source_format=source_format, dry_run=dry_run, probe=probe)
-    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
-        return {"status": "error", "error": str(exc)}
-    if result.get("status") in {"ok", "attention"} and not dry_run:
-        invalidate_status_cache("codex")
-    return result
-
-
 def run_codex_probe(payload: dict) -> dict:
     if "_json_error" in payload:
         return {"status": "error", "error": payload["_json_error"]}
@@ -937,20 +790,6 @@ def run_codex_probe(payload: dict) -> dict:
         return probe_auth_profiles(names=names, include_oauth=include_oauth, include_api=include_api)
     except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
         return {"status": "error", "error": str(exc)}
-
-
-def run_codex_delete(payload: dict) -> dict:
-    if "_json_error" in payload:
-        return {"status": "error", "error": payload["_json_error"]}
-    name = _string(payload.get("name"), "")
-    dry_run = bool(payload.get("dry_run", False))
-    try:
-        result = delete_auth_profile(name, dry_run=dry_run)
-    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
-        return {"status": "error", "error": str(exc)}
-    if result.get("status") == "ok" and result.get("changed"):
-        invalidate_status_cache("codex")
-    return result
 
 
 def run_claude_switch(payload: dict) -> dict:

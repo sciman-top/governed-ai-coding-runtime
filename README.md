@@ -86,7 +86,7 @@ AI 推荐的交付前 readiness：
 - 根目录短入口：`run.ps1`。它把常用动作压成场景化短命令，例如 `.\run.ps1 fast`、`.\run.ps1 readiness -OpenUi`、`.\run.ps1 daily -Mode quick`、`.\run.ps1 rules-check`、`.\run.ps1 feedback`；底层仍转交 `scripts/operator.ps1`。
 - 操作者聚合入口：`scripts/operator.ps1`。它把 readiness、自检、规则漂移/同步、目标仓批量流和 operator UI 生成收成同一个入口；默认 `-Action Help`，适合日常少记长命令。
 - 宿主反馈汇总入口：`scripts/operator.ps1 -Action FeedbackReport`。它统一汇总 `Codex/Claude` 本机状态、规则同步面、parity 文档面和最新 target-run evidence。
-- Codex 本机优化入口：`scripts/Optimize-CodexLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入本项目当前推荐的 provider 优先配置。API 账号优先保留明确 custom `model_provider`、`base_url`、`requires_openai_auth = false` 与 `supports_websockets = false`；历史共享降级为次要目标，不再提供历史 bucket 迁移、SQLite trigger、后台 guard 或 no-op launcher。严禁在 `config.toml` 中定义 `[model_providers.openai]`，新版本 Codex CLI 不允许覆盖内置 provider。`CC Switch` 在本机只作为 Claude/第三方 API 切换边界，不再作为 Codex provider 真源。长期优先级是“综合效率优先，安全边界约束”：少打扰、自动连续执行、节省 token / 成本、保留必要解释、高效率；当前暂行实现是 `cli_auth_credentials_store = "file"`、`model = "gpt-5.5"`、`model_reasoning_effort = "medium"`、`approval_policy = "never"`、`model_context_window = 272000`、`model_auto_compact_token_limit = 220000`、`history.persistence = "save-all"`、`sqlite_home = "~/.codex"`、`log_dir = "~/.codex/log"`。账号/API/中转站不再靠切换多套 `CODEX_HOME` 隔离，但 API 连通性优先于历史合桶；只有需要隐私或信任隔离时才另建独立 `CODEX_HOME`。脚本同时会安装 `codex-account`、`codex-shared*`、`codex-cockpit*`、`codex-relay*` 入口，并把当前仓加入 trusted project。
+- Codex 本机配置边界：本仓不再安装或包装 `codex` / Codex App / Cockpit Tools 启动入口，也不再写入 Codex auth、provider、profile、SQLite history bucket 或 Cockpit launch state。`scripts/Optimize-CodexLocal.ps1` 与 `scripts/Start-CodexShared.ps1` 已保留为兼容 stub，执行时 fail-closed。只读诊断使用 `python scripts/codex-interop-check.py ... --quick-launch`；清理旧项目 shim 使用 `scripts/Disable-CodexProjectInterop.ps1 -Apply -DisableProjectShortcuts`。
 - Claude Code 本机优化入口：`scripts/Optimize-ClaudeLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入第三方 Anthropic-compatible provider 推荐配置、安装 `claude-provider` 切换入口；密钥只保留在用户本机 settings/env，不写入仓库 profile。`claude-provider continuity` 会只读检查 `~/.claude/projects`、`~/.claude/sessions`、`history.jsonl` 和 `CLAUDE_CONFIG_DIR`，确认 GLM、DeepSeek 等 provider 切换仍锚定同一个 Claude home，从而保留 `claude --continue`、`claude --resume`、`/resume` 的本地 session 连续性；只有明确需要隔离时才应使用独立 Claude config/context 目录。
 - 核心原则变更候选入口：`scripts/operator.ps1 -Action CorePrincipleMaterialize`。默认只 dry-run 报告候选；得到明确允许后加 `-ConfirmCorePrincipleProposalWrite` 才写 reviewable proposal/manifest；如只需审计留痕，加 `-WriteCorePrincipleDryRunReport` 只写 dry-run report。以上路径仍不直接改 active core-principles policy、spec、verifier 或目标仓。
 - 目标仓日常运行/批量下发总入口：`scripts/runtime-flow-preset.ps1`。它读取 `docs/targets/target-repos-catalog.json`，可以对单个 target 或所有 active targets 执行 attach、daily gate、治理基线同步、特性基线同步和里程碑提交。
@@ -140,46 +140,12 @@ Claude provider 切换连续性只读检查：
 claude-provider continuity
 ```
 
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/Optimize-CodexLocal.ps1
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/Optimize-CodexLocal.ps1 -Apply
-```
-
-共享历史启动器会固定使用同一个 `CODEX_HOME`，再用 profile 或环境变量切换登录/API/中转站：
-
-```powershell
-codex-shared -Profile shared-chatgpt
-
-codex-shared-exec -Profile shared-openai-api "检查当前仓库状态"
-
-codex-shared -Profile shared-current-provider
-
-codex-shared -Profile shared-openai-api -ApiKeyEnv OPENAI_API_KEY -BaseUrl https://example-relay/v1
-
-codex-shared-app -Profile shared-chatgpt D:\CODE\governed-ai-coding-runtime
-
-codex-cockpit-exec "检查当前仓库状态"
-
-codex-cockpit-app D:\CODE\governed-ai-coding-runtime
-
-# Manual only after an explicit restart decision and a fresh restart-guard backup:
-codex-cockpit-app-restart D:\CODE\governed-ai-coding-runtime
-```
-
-也可以走本仓统一操作入口：
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action CodexLocalOptimize
-```
-
-切换 `Cockpit Tools` 的 Codex auth/API 账号、恢复 Cockpit 备份或新增 Codex provider 后，可先执行只读互操作检查：
+Codex CLI/App 直接使用官方 `codex` 入口和 Cockpit Tools 原生 controls。本仓只保留只读诊断与旧 shim 清理：
 
 ```powershell
 .\run.ps1 codex-interop
-codex-interop-check
+python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Disable-CodexProjectInterop.ps1 -Apply -DisableProjectShortcuts
 ```
 
 要定位 Cockpit 切号到底改了哪些文件，可先启动只读追踪窗口，再在 Cockpit Tools 里手动切换账号；报告会记录 Cockpit 状态、Codex auth/config、history bucket 和相关日志事件，但会脱敏 token/API key：

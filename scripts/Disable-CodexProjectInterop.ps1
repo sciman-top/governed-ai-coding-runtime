@@ -271,6 +271,10 @@ $disabledProjectShortcuts = [bool]$DisableProjectShortcuts
 
 if ($DisableProjectShortcuts) {
     $shortcutNames = @(
+        'codex.cmd',
+        'codex.ps1',
+        'codex-account.cmd',
+        'codex-account.ps1',
         'codex-cockpit.cmd',
         'codex-cockpit-exec.cmd',
         'codex-cockpit-resume.cmd',

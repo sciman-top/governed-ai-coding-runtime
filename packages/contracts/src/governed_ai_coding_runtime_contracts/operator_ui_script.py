@@ -31,17 +31,6 @@ def render_interactive_script(
   const historyList = document.getElementById('ui-history');
   const codexAccounts = document.getElementById('codex-accounts');
   const codexCacheState = document.getElementById('codex-cache-state');
-  const codexApiForm = document.getElementById('codex-api-form');
-  const codexApiName = document.getElementById('codex-api-name');
-  const codexApiBaseUrl = document.getElementById('codex-api-base-url');
-  const codexApiKey = document.getElementById('codex-api-key');
-  const codexApiProbe = document.getElementById('codex-api-probe');
-  const codexApiSwitchNow = document.getElementById('codex-api-switch-now');
-  const codexImportForm = document.getElementById('codex-import-form');
-  const codexImportFormat = document.getElementById('codex-import-format');
-  const codexImportContent = document.getElementById('codex-import-content');
-  const codexImportProbe = document.getElementById('codex-import-probe');
-  const codexImportDryRun = document.getElementById('codex-import-dry-run');
   const codexHistoryForm = document.getElementById('codex-history-form');
   const codexHistorySource = document.getElementById('codex-history-source');
   const codexHistoryCwd = document.getElementById('codex-history-cwd');
@@ -1558,40 +1547,16 @@ def render_interactive_script(
       ].filter(Boolean).join(' · ');
       body.append(name, infoList);
       row.appendChild(body);
-      const actions = document.createElement('div');
-      actions.className = 'codex-account-actions';
-      const switchButton = document.createElement('button');
-      switchButton.type = 'button';
       const isCliActive = !!account.active;
       const isOfficialAppCurrent = !!account.official_app_current;
-      switchButton.className = (isCliActive || isOfficialAppCurrent) ? 'codex-account-switch is-current' : 'codex-account-switch';
-      switchButton.textContent = isCliActive && isOfficialAppCurrent
+      const stateBadge = document.createElement('span');
+      stateBadge.className = (isCliActive || isOfficialAppCurrent) ? 'provider-status-pill ready' : 'provider-status-pill';
+      stateBadge.textContent = isCliActive && isOfficialAppCurrent
         ? {text['codex_cli_and_app']!r}
         : (isCliActive
           ? {text['codex_cli_active']!r}
-          : (isOfficialAppCurrent ? {text['codex_app_persisted']!r} : {text['codex_switch']!r}));
-      if (isCliActive || account.switchable === false) {{
-        switchButton.disabled = true;
-        if (!isCliActive && account.switchable === false) {{
-          switchButton.textContent = currentUiLanguage() === 'zh-CN' ? '不可切换' : 'blocked';
-          switchButton.title = account.switch_block_reason === 'missing_api_base_url'
-            ? (currentUiLanguage() === 'zh-CN' ? '缺少 Base URL，已阻止切换。请重新导入或补全 API 地址。' : 'Missing Base URL; switch blocked. Re-import or add the API endpoint.')
-            : '';
-        }}
-      }} else {{
-        switchButton.dataset.codexSwitchName = account.name || '';
-      }}
-      actions.appendChild(switchButton);
-      if (!isCliActive) {{
-        const deleteButton = document.createElement('button');
-        deleteButton.type = 'button';
-        deleteButton.className = 'codex-account-switch danger';
-        deleteButton.textContent = {text['codex_delete']!r};
-        deleteButton.dataset.codexDeleteName = account.name || account.file || '';
-        deleteButton.dataset.confirm = {text['codex_delete_confirm']!r};
-        actions.appendChild(deleteButton);
-      }}
-      row.appendChild(actions);
+          : (isOfficialAppCurrent ? {text['codex_app_persisted']!r} : {text['codex_history_readonly']!r}));
+      infoList.appendChild(createInfoLine(currentUiLanguage() === 'zh-CN' ? '状态' : 'state', stateBadge));
       if (isCliActive) {{
         const snapshot = account.snapshot_status || payload.snapshot_status || null;
         infoList.append(
@@ -1611,24 +1576,6 @@ def render_interactive_script(
               {text['codex_app_ambiguous']!r}
             )
           );
-        }}
-        if (snapshot && snapshot.status === 'drifted' && snapshot.profile_name) {{
-          const syncButton = document.createElement('button');
-          syncButton.type = 'button';
-          syncButton.className = 'codex-account-switch';
-          syncButton.textContent = {text['codex_sync_active']!r};
-          syncButton.dataset.codexSyncName = snapshot.profile_name;
-          syncButton.dataset.confirm = {text['codex_sync_confirm']!r};
-          actions.appendChild(syncButton);
-        }} else if (snapshot && snapshot.status === 'missing_named_snapshot') {{
-          const saveButton = document.createElement('button');
-          saveButton.type = 'button';
-          saveButton.className = 'codex-account-switch';
-          saveButton.textContent = {text['codex_save_active']!r};
-          saveButton.dataset.codexSaveActive = '1';
-          saveButton.dataset.prompt = {text['codex_save_active_prompt']!r};
-          saveButton.dataset.confirm = {text['codex_save_active_confirm']!r};
-          actions.appendChild(saveButton);
         }}
       }}
       codexAccounts.appendChild(row);
@@ -1791,145 +1738,6 @@ def render_interactive_script(
     }}
   }}
 
-  async function switchCodexAccount(name) {{
-    if (!name) {{
-      return;
-    }}
-    setBusy(true);
-    try {{
-      const response = await fetch('/api/codex/switch', {{
-        method: 'POST',
-        headers: {{ 'content-type': 'application/json' }},
-        body: JSON.stringify({{ name }})
-      }});
-      const payload = await response.json();
-      setOutput(JSON.stringify(payload, null, 2));
-      await refreshCodexStatus();
-    }} catch (error) {{
-      setOutput(String(error));
-    }} finally {{
-      setBusy(false);
-    }}
-  }}
-
-  async function syncCodexActiveSnapshot(name, confirmMessage) {{
-    if (confirmMessage && !window.confirm(confirmMessage)) {{
-      return;
-    }}
-    setBusy(true);
-    try {{
-      const response = await fetch('/api/codex/sync-active', {{
-        method: 'POST',
-        headers: {{ 'content-type': 'application/json' }},
-        body: JSON.stringify({{ name }})
-      }});
-      const payload = await response.json();
-      setOutput(JSON.stringify(payload, null, 2));
-      await refreshCodexStatus();
-    }} catch (error) {{
-      setOutput(String(error));
-    }} finally {{
-      setBusy(false);
-    }}
-  }}
-
-  async function saveCodexActiveSnapshot(promptMessage, confirmMessage) {{
-    const requested = window.prompt(promptMessage || '', '');
-    if (requested === null) {{
-      return;
-    }}
-    const name = String(requested || '').trim();
-    if (!name) {{
-      setOutput(currentUiLanguage() === 'zh-CN' ? '缺少新的快照名。' : 'Missing snapshot name.');
-      return;
-    }}
-    if (confirmMessage && !window.confirm(confirmMessage)) {{
-      return;
-    }}
-    setBusy(true);
-    try {{
-      const response = await fetch('/api/codex/save-active', {{
-        method: 'POST',
-        headers: {{ 'content-type': 'application/json' }},
-        body: JSON.stringify({{ name }})
-      }});
-      const payload = await response.json();
-      setOutput(JSON.stringify(payload, null, 2));
-      await refreshCodexStatus();
-    }} catch (error) {{
-      setOutput(String(error));
-    }} finally {{
-      setBusy(false);
-    }}
-  }}
-
-  async function saveCodexApiAccount(event) {{
-    if (event) {{
-      event.preventDefault();
-    }}
-    const name = String(codexApiName && codexApiName.value || '').trim();
-    const baseUrl = String(codexApiBaseUrl && codexApiBaseUrl.value || '').trim();
-    const apiKey = String(codexApiKey && codexApiKey.value || '').trim();
-    if (!name || !baseUrl || !apiKey) {{
-      setOutput({text['codex_api_missing']!r});
-      return;
-    }}
-    const confirmMessage = codexApiForm ? codexApiForm.querySelector('button[type="submit"]')?.getAttribute('data-confirm') : '';
-    if (confirmMessage && !window.confirm(confirmMessage)) {{
-      return;
-    }}
-    setBusy(true);
-    try {{
-      const response = await fetch('/api/codex/save-api', {{
-        method: 'POST',
-        headers: {{ 'content-type': 'application/json' }},
-        body: JSON.stringify({{
-          name,
-          label: name,
-          base_url: baseUrl,
-          api_key: apiKey,
-          probe: !!(codexApiProbe && codexApiProbe.checked),
-          switch_now: !!(codexApiSwitchNow && codexApiSwitchNow.checked)
-        }})
-      }});
-      const payload = await response.json();
-      setOutput(JSON.stringify(payload, null, 2));
-      if (response.ok) {{
-        if (codexApiKey) {{
-          codexApiKey.value = '';
-        }}
-        await refreshCodexStatus();
-      }}
-    }} catch (error) {{
-      setOutput(String(error));
-    }} finally {{
-      setBusy(false);
-    }}
-  }}
-
-  async function importCockpitCodexAccounts(confirmMessage) {{
-    if (confirmMessage && !window.confirm(confirmMessage)) {{
-      return;
-    }}
-    setBusy(true);
-    try {{
-      const response = await fetch('/api/codex/import-cockpit', {{
-        method: 'POST',
-        headers: {{ 'content-type': 'application/json' }},
-        body: JSON.stringify({{ probe: true }})
-      }});
-      const payload = await response.json();
-      setOutput(JSON.stringify(payload, null, 2));
-      if (response.ok) {{
-        await refreshCodexStatus();
-      }}
-    }} catch (error) {{
-      setOutput(String(error));
-    }} finally {{
-      setBusy(false);
-    }}
-  }}
-
   async function probeCodexProfiles() {{
     setBusy(true);
     try {{
@@ -1943,69 +1751,6 @@ def render_interactive_script(
       if (response.ok) {{
         await refreshCodexStatus();
       }}
-    }} catch (error) {{
-      setOutput(String(error));
-    }} finally {{
-      setBusy(false);
-    }}
-  }}
-
-  async function importCodexPayload(event) {{
-    if (event) {{
-      event.preventDefault();
-    }}
-    const content = String(codexImportContent && codexImportContent.value || '').trim();
-    if (!content) {{
-      setOutput({text['codex_import_missing']!r});
-      return;
-    }}
-    const submit = codexImportForm ? codexImportForm.querySelector('button[type="submit"]') : null;
-    const confirmMessage = submit ? submit.getAttribute('data-confirm') : '';
-    if (confirmMessage && !window.confirm(confirmMessage)) {{
-      return;
-    }}
-    setBusy(true);
-    try {{
-      const response = await fetch('/api/codex/import-payload', {{
-        method: 'POST',
-        headers: {{ 'content-type': 'application/json' }},
-        body: JSON.stringify({{
-          content,
-          source_format: String(codexImportFormat && codexImportFormat.value || 'auto'),
-          probe: !!(codexImportProbe && codexImportProbe.checked),
-          dry_run: !!(codexImportDryRun && codexImportDryRun.checked)
-        }})
-      }});
-      const payload = await response.json();
-      setOutput(JSON.stringify(payload, null, 2));
-      if (response.ok && !(codexImportDryRun && codexImportDryRun.checked)) {{
-        codexImportContent.value = '';
-        await refreshCodexStatus();
-      }}
-    }} catch (error) {{
-      setOutput(String(error));
-    }} finally {{
-      setBusy(false);
-    }}
-  }}
-
-  async function deleteCodexAccount(name, confirmMessage) {{
-    if (!name) {{
-      return;
-    }}
-    if (confirmMessage && !window.confirm(confirmMessage)) {{
-      return;
-    }}
-    setBusy(true);
-    try {{
-      const response = await fetch('/api/codex/delete', {{
-        method: 'POST',
-        headers: {{ 'content-type': 'application/json' }},
-        body: JSON.stringify({{ name }})
-      }});
-      const payload = await response.json();
-      setOutput(JSON.stringify(payload, null, 2));
-      await refreshCodexStatus();
     }} catch (error) {{
       setOutput(String(error));
     }} finally {{
@@ -2265,17 +2010,7 @@ def render_interactive_script(
   document.querySelector('[data-codex-refresh]').addEventListener('click', () => refreshCodexStatus());
   document.querySelector('[data-codex-refresh-online]').addEventListener('click', () => refreshCodexStatusOnline());
   document.querySelector('[data-codex-usage]').addEventListener('click', () => window.open('https://chatgpt.com/codex/settings/usage', '_blank', 'noopener'));
-  document.querySelector('[data-codex-import-cockpit]').addEventListener('click', (event) => {{
-    const button = event.currentTarget;
-    importCockpitCodexAccounts(button ? button.getAttribute('data-confirm') || '' : '');
-  }});
   document.querySelector('[data-codex-probe]').addEventListener('click', () => probeCodexProfiles());
-  if (codexApiForm) {{
-    codexApiForm.addEventListener('submit', saveCodexApiAccount);
-  }}
-  if (codexImportForm) {{
-    codexImportForm.addEventListener('submit', importCodexPayload);
-  }}
   if (codexHistoryForm) {{
     codexHistoryForm.addEventListener('submit', (event) => {{
       event.preventDefault();
@@ -2301,37 +2036,6 @@ def render_interactive_script(
       }}
     }});
   }}
-  codexAccounts.addEventListener('click', (event) => {{
-    const deleteButton = event.target.closest('button[data-codex-delete-name]');
-    if (deleteButton) {{
-      deleteCodexAccount(
-        deleteButton.getAttribute('data-codex-delete-name') || '',
-        deleteButton.getAttribute('data-confirm') || ''
-      );
-      return;
-    }}
-    const syncButton = event.target.closest('button[data-codex-sync-name]');
-    if (syncButton) {{
-      syncCodexActiveSnapshot(
-        syncButton.getAttribute('data-codex-sync-name') || '',
-        syncButton.getAttribute('data-confirm') || ''
-      );
-      return;
-    }}
-    const saveButton = event.target.closest('button[data-codex-save-active]');
-    if (saveButton) {{
-      saveCodexActiveSnapshot(
-        saveButton.getAttribute('data-prompt') || '',
-        saveButton.getAttribute('data-confirm') || ''
-      );
-      return;
-    }}
-    const button = event.target.closest('button[data-codex-switch-name]');
-    if (!button) {{
-      return;
-    }}
-    switchCodexAccount(button.getAttribute('data-codex-switch-name') || '');
-  }});
   document.querySelector('[data-claude-refresh]').addEventListener('click', () => refreshClaudeStatus());
   document.querySelector('[data-claude-optimize-preview]').addEventListener('click', () => optimizeClaudeConfig(false));
   document.querySelector('[data-claude-optimize-apply]').addEventListener('click', (event) => {{

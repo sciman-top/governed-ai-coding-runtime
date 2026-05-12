@@ -14,7 +14,7 @@
 ### 总入口速记
 - 操作者聚合入口：`scripts/operator.ps1`
 - 宿主反馈汇总：`scripts/operator.ps1 -Action FeedbackReport`
-- Codex 共享历史本机优化：`scripts/Optimize-CodexLocal.ps1 -Apply`
+- Codex 本机边界：使用官方 `codex` 入口和 Cockpit Tools 原生 controls；本仓只做只读诊断与旧项目 shim 清理。
 - 目标仓日常运行/批量一键应用：`scripts/runtime-flow-preset.ps1`
 - 全局/项目级 AI 规则同步：`scripts/sync-agent-rules.ps1`
 - 本仓完整自检：`scripts/verify-repo.ps1 -Check All`
@@ -65,33 +65,22 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Opera
 这个 UI 在 `127.0.0.1` 上运行本地常驻交互服务，后续可直接访问 `http://127.0.0.1:8770/?lang=zh-CN`；状态/停止/重启使用 `scripts/operator-ui-service.ps1 -Action Status|Stop|Restart`。可点击执行 allowlist 内的 readiness、目标仓列表、规则漂移检查、规则同步、治理基线下发、daily 和全部功能应用；可选择全部目标仓或单个目标仓，也可调整语言、验证模式、并发、fail-fast、只预演与里程碑标签；执行结果会写入输出区和本地浏览器执行历史，并可点击 evidence/artifact/verification refs 查看文件内容。若只想生成只读快照，去掉 `-OpenUi`，输出位于 `.runtime/artifacts/operator-ui/index.html`。
 `Codex` 页签会把“综合效率优先”单独作为长期原则展示，而把当前模型组合只当作暂行实现，这样以后默认模型更新时，不会把更高层原则一起改没。
 
-### Codex 共享历史启动
-本机 Codex CLI/App 的推荐归宿是单一 `~/.codex` 共享历史根：`auth.json`、API provider 和中转站可以切换，但 `sessions`、`history`、SQLite state 和 logs 尽量共享。先应用本机优化：
+### Codex 本机边界
+本机 Codex CLI/App 的推荐归宿仍是单一 `~/.codex` 共享历史根，但登录、provider、profile、App 启动和 Cockpit launch state 由官方 Codex CLI/App 与 Cockpit Tools 自己负责。本仓不再安装 `codex-shared*`、`codex-cockpit*`、`codex-relay*`，也不再通过脚本投影 `auth.json`、`config.toml`、SQLite history bucket 或 Cockpit `codex_instances.json`。
+
+只读互操作检查：
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/Optimize-CodexLocal.ps1 -Apply
+python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch
 ```
 
-等价统一操作入口：
+旧项目 shim 清理：
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action CodexLocalOptimize
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Disable-CodexProjectInterop.ps1 -Apply -DisableProjectShortcuts
 ```
 
-随后用安装到 `~/.local/bin` 的启动器：
-
-```powershell
-codex-shared -Profile shared-chatgpt
-codex-shared-exec -Profile shared-openai-api "检查当前仓库状态"
-codex-shared -Profile shared-current-provider
-codex-shared-app -Profile shared-chatgpt D:\CODE\governed-ai-coding-runtime
-codex-cockpit-exec "检查当前仓库状态"
-codex-cockpit-app D:\CODE\governed-ai-coding-runtime
-# 仅在明确决定重启并已创建 restart-guard 备份后手动执行：
-codex-cockpit-app-restart D:\CODE\governed-ai-coding-runtime
-```
-
-`Cockpit Tools` 负责 Codex App/CLI 的 ChatGPT auth、Codex API provider 切换、会话可见性修复和 launch-on-switch 设置；`cc-switch` 负责 Claude CLI、GLM、DeepSeek 等第三方 API 切换。关键约束是让 Codex 始终使用同一个 `~/.codex`，但 API 账号优先保留 Cockpit 的明确 custom provider bucket；RightCode、35.213.82.91 等 API relay 必须写入对应 `model_provider`、`base_url`、`requires_openai_auth = false` 与 `supports_websockets = false`，严禁定义 `[model_providers.openai]` 覆盖内置 provider。`Optimize-CodexLocal.ps1 -Apply` 只可做 provider-first 本机配置和只读互操作检查；不得迁移历史 bucket、安装 guard/no-op launcher、强改 Cockpit `codex_launch_on_switch`，也不得用 no-op launcher、restart wrapper、no-restart shim、SQLite trigger 或后台 guard 拦截 Cockpit Tools 原生行为。`codex_launch_on_switch` 是 Cockpit UI 用户设置，本仓不得强制开启或关闭。
+`Cockpit Tools` 负责 Codex App/CLI 的 ChatGPT auth、Codex API provider 切换、会话可见性修复和 launch-on-switch 设置；`cc-switch` 负责 Claude CLI、GLM、DeepSeek 等第三方 API 切换。本仓不得覆盖内置 `[model_providers.openai]`，不得强改 `codex_launch_on_switch`，不得使用 no-op launcher、restart wrapper、no-restart shim、SQLite trigger、后台 guard 或 CLI wrapper 拦截 Cockpit Tools 原生行为。
 
 复现切号覆盖问题时，先开只读追踪窗口，再手动切换 Cockpit 账号：
 
