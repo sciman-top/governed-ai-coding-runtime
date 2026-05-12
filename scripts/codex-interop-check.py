@@ -356,10 +356,10 @@ def _inspect_cockpit_current_provider_bucket(
         login_issues.append(
             f"forced_login_method is {active_forced_login}, expected {expected_forced_login}"
         )
-    if active_provider != "openai" and expected_forced_login == "api" and requires_openai_auth is not False:
-        login_issues.append("active provider still requires OpenAI auth while current Cockpit account is API key mode")
-    if active_provider != "openai" and expected_forced_login == "chatgpt" and requires_openai_auth is False:
-        login_issues.append("active provider disables OpenAI auth while current Cockpit account is ChatGPT auth mode")
+    if active_provider != "openai" and expected_forced_login == "api" and requires_openai_auth is not True:
+        login_issues.append("active provider must use Codex auth.json for Cockpit API key mode")
+    if active_provider != "openai" and expected_forced_login == "chatgpt":
+        login_issues.append("active custom provider is incompatible with ChatGPT auth mode")
     login_status = "fail" if login_issues else "pass"
     return [
         {
@@ -913,8 +913,10 @@ def _inspect_cockpit_saved_api_provider_profiles(*, cockpit_home: Path, config_t
             issues.append(f"base_url is {actual_base_url or '<empty>'}, expected {expected_base_url}")
         if info and info.get("wire_api") != "responses":
             issues.append(f"wire_api is {info.get('wire_api')!r}, expected 'responses'")
-        if info and info.get("requires_openai_auth") is not False:
-            issues.append("requires_openai_auth must be false for Cockpit API providers")
+        if info and info.get("env_key"):
+            issues.append("env_key must be omitted so Codex App can use auth.json instead of a process environment variable")
+        if info and info.get("requires_openai_auth") is not True:
+            issues.append("requires_openai_auth must be true for Cockpit API providers")
         if info and info.get("supports_websockets") is not False:
             issues.append("supports_websockets must be false for Cockpit API relays")
         if issues:

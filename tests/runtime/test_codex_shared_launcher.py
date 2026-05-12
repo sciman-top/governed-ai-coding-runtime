@@ -188,7 +188,7 @@ class CodexSharedLauncherTests(unittest.TestCase):
                         'name = "35.213.82.91"',
                         'base_url = "http://35.213.82.91:8003/v1"',
                         'wire_api = "responses"',
-                        "requires_openai_auth = false",
+                        "requires_openai_auth = true",
                         "supports_websockets = false",
                     ]
                 )

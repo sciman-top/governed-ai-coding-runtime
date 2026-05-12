@@ -33,6 +33,11 @@ def main() -> int:
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
+        "--print-env",
+        action="store_true",
+        help="Print non-secret environment export lines needed for the wrapper.",
+    )
+    parser.add_argument(
         "--repair-sessions",
         action="store_true",
         help="Also rewrite unlocked session JSONL model_provider metadata; slow on large histories.",
@@ -50,6 +55,11 @@ def main() -> int:
         if not args.quiet:
             print(f"[codex-preflight] repair failed: {exc}", file=sys.stderr)
         return 2
+
+    if args.print_env:
+        env = wrapper_environment(args.codex_home)
+        for key in sorted(env):
+            print(f"{key}={env[key]}")
 
     if changes and not args.quiet:
         print("[codex-preflight] repaired: " + ", ".join(changes), file=sys.stderr)
@@ -120,6 +130,16 @@ def repair(
             changes.append(f"sessions:{session_changes}")
 
     return changes
+
+
+def wrapper_environment(codex_home: Path) -> dict[str, str]:
+    auth = read_json_or_none(codex_home / "auth.json")
+    if not isinstance(auth, dict):
+        return {}
+    api_key = first_string(auth.get("OPENAI_API_KEY"), auth.get("openai_api_key"))
+    if not api_key:
+        return {}
+    return {"OPENAI_API_KEY": api_key}
 
 
 def repair_cockpit_codex_instances(cockpit_home: Path, *, dry_run: bool) -> bool:
@@ -303,10 +323,16 @@ def build_auth_json(
         api_key = first_string(account.get("openai_api_key"), account.get("OPENAI_API_KEY"))
         if not api_key:
             raise RuntimeError("Current Cockpit API account has no OPENAI_API_KEY")
-        return {
+        auth = {
             "auth_mode": "apikey",
             "OPENAI_API_KEY": api_key,
         }
+        base_url = account_base_url(account)
+        if base_url:
+            auth["api_base_url"] = base_url
+            auth["base_url"] = base_url
+            auth["OPENAI_BASE_URL"] = base_url
+        return auth
 
     tokens = account.get("tokens")
     if not isinstance(tokens, dict):
@@ -429,8 +455,7 @@ def upsert_custom_provider_table(config: str, provider_id: str, account: dict[st
             f'name = "{escape_toml_string(provider_name)}"',
             f'base_url = "{escape_toml_string(base_url)}"',
             'wire_api = "responses"',
-            'env_key = "OPENAI_API_KEY"',
-            "requires_openai_auth = false",
+            "requires_openai_auth = true",
             "supports_websockets = false",
         ]
     )
@@ -481,14 +506,16 @@ def repair_custom_provider_auth_flags(config: str, account: dict[str, Any]) -> s
         elif any_table_re.match(line):
             if active_provider in provider_ids:
                 if not seen_requires.get(active_provider, False):
-                    out.append("requires_openai_auth = false")
+                    out.append("requires_openai_auth = true")
                 if not seen_websocket.get(active_provider, False):
                     out.append("supports_websockets = false")
             active_provider = None
 
         if active_provider in provider_ids:
+            if re.match(r"^\s*env_key\s*=", line):
+                continue
             if re.match(r"^\s*requires_openai_auth\s*=", line):
-                out.append("requires_openai_auth = false")
+                out.append("requires_openai_auth = true")
                 seen_requires[active_provider] = True
                 continue
             if re.match(r"^\s*supports_websockets\s*=", line):
@@ -500,7 +527,7 @@ def repair_custom_provider_auth_flags(config: str, account: dict[str, Any]) -> s
 
     if active_provider in provider_ids:
         if not seen_requires.get(active_provider, False):
-            out.append("requires_openai_auth = false")
+            out.append("requires_openai_auth = true")
         if not seen_websocket.get(active_provider, False):
             out.append("supports_websockets = false")
 
@@ -549,30 +576,34 @@ def remove_top_level_key(config: str, key: str) -> str:
 def repair_state_db(db_path: Path, *, target_provider: str, dry_run: bool) -> int:
     if not db_path.exists():
         return 0
+    connection: sqlite3.Connection | None = None
     try:
-        with sqlite3.connect(str(db_path), timeout=3) as connection:
-            columns = {
-                row[1] for row in connection.execute("PRAGMA table_info(threads)").fetchall()
-            }
-            if "model_provider" not in columns:
-                return 0
-            count = connection.execute(
-                "SELECT COUNT(*) FROM threads WHERE COALESCE(model_provider, '') <> ?",
-                (target_provider,),
-            ).fetchone()[0]
-            if not count:
-                return 0
-            if dry_run:
-                return int(count)
-            backup_file(db_path)
-            connection.execute(
-                "UPDATE threads SET model_provider = ? WHERE COALESCE(model_provider, '') <> ?",
-                (target_provider, target_provider),
-            )
-            connection.commit()
+        connection = sqlite3.connect(str(db_path), timeout=3)
+        columns = {
+            row[1] for row in connection.execute("PRAGMA table_info(threads)").fetchall()
+        }
+        if "model_provider" not in columns:
+            return 0
+        count = connection.execute(
+            "SELECT COUNT(*) FROM threads WHERE COALESCE(model_provider, '') <> ?",
+            (target_provider,),
+        ).fetchone()[0]
+        if not count:
+            return 0
+        if dry_run:
             return int(count)
+        backup_file(db_path)
+        connection.execute(
+            "UPDATE threads SET model_provider = ? WHERE COALESCE(model_provider, '') <> ?",
+            (target_provider, target_provider),
+        )
+        connection.commit()
+        return int(count)
     except sqlite3.Error as exc:
         raise RuntimeError(f"SQLite repair failed: {db_path}: {exc}") from exc
+    finally:
+        if connection is not None:
+            connection.close()
 
 
 def repair_session_jsonl_providers(codex_home: Path, *, target_provider: str, dry_run: bool) -> int:
