@@ -132,11 +132,11 @@
   - this repository no longer installs or wraps Codex CLI/App launchers and no longer writes Codex auth, provider profiles, SQLite history bucket, or Cockpit launch state
   - use `python scripts/codex-interop-check.py ... --quick-launch` for read-only diagnostics
   - use `scripts/Disable-CodexProjectInterop.ps1 -Apply -DisableProjectShortcuts` only for reversible cleanup of old project shims
-- Claude Code local optimizer: `scripts/Optimize-ClaudeLocal.ps1`
-  - default mode is dry-run; use `-Apply` to write recommended user-level Claude Code settings for third-party Anthropic-compatible providers and install `claude-provider`
-  - provider profiles include BigModel GLM and DeepSeek without storing API keys in the repository
-  - provider switching fails closed when the required credential env is missing
-  - session continuity is checked with `claude-provider continuity`; the expected shared-history posture is one Claude home with `projects/`, `sessions/`, and `history.jsonl` preserved while provider profiles change
+- Claude local boundary:
+  - Claude Code / Claude Desktop account, API, and provider switching is owned by CC Switch only
+  - this repository no longer writes `~/.claude/settings.json`, provider profiles, current process env, `CLAUDE_CONFIG_DIR`, or Claude Desktop data roots
+  - old `scripts/Optimize-ClaudeLocal.ps1` and `claude-provider switch|install|optimize|delete` return a boundary error instead of changing local state
+  - session continuity is checked read-only with `claude-provider continuity`; the expected shared-history posture is one Claude home with `projects/`, `sessions/`, and `history.jsonl` preserved while CC Switch changes providers
 - Target-repo daily/batch entrypoint: `scripts/runtime-flow-preset.ps1`
   - source of truth: `docs/targets/target-repos-catalog.json`
   - typical uses: `-ListTargets`, `-Target <id> -FlowMode daily`, `-AllTargets -ApplyGovernanceBaselineOnly`, `-AllTargets -ApplyAllFeatures`

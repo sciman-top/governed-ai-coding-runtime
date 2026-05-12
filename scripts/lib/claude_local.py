@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import shutil
+import sqlite3
 import subprocess
 from copy import deepcopy
 from dataclasses import dataclass
@@ -16,7 +17,7 @@ PROVIDER_PROFILES_FILE = "provider-profiles.json"
 CLAUDE_USAGE_NOTE = "Third-party provider usage and quota data is not exposed through a stable Claude Code local API."
 CLAUDE_SESSION_CONTINUITY_NOTE = (
     "Claude Code resume continuity is anchored in the Claude home transcript directories. "
-    "Provider switching should update settings/env only and keep the same Claude home unless isolation is intentional."
+    "CC Switch owns provider switching; this repository only verifies that the same Claude home remains visible unless isolation is intentional."
 )
 
 
@@ -111,18 +112,18 @@ DEFAULT_PROVIDER_PROFILES = [
         "label": "DeepSeek v4",
         "provider": "deepseek",
         "base_url": "https://api.deepseek.com/anthropic",
-        "auth_env": "ANTHROPIC_API_KEY",
+        "auth_env": "ANTHROPIC_AUTH_TOKEN",
         "docs_url": "https://api-docs.deepseek.com/guides/anthropic_api",
         "models": {
-            "opus": "deepseek-v4-pro[1m]",
-            "sonnet": "deepseek-v4-pro[1m]",
+            "opus": "deepseek-v4-pro",
+            "sonnet": "deepseek-v4-pro",
             "haiku": "deepseek-v4-flash",
         },
         "env": {
             "API_TIMEOUT_MS": "1800000",
             "ANTHROPIC_BASE_URL": "https://api.deepseek.com/anthropic",
-            "ANTHROPIC_DEFAULT_OPUS_MODEL": "deepseek-v4-pro[1m]",
-            "ANTHROPIC_DEFAULT_SONNET_MODEL": "deepseek-v4-pro[1m]",
+            "ANTHROPIC_DEFAULT_OPUS_MODEL": "deepseek-v4-pro",
+            "ANTHROPIC_DEFAULT_SONNET_MODEL": "deepseek-v4-pro",
             "ANTHROPIC_DEFAULT_HAIKU_MODEL": "deepseek-v4-flash",
             "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "70",
             "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "450000",
@@ -131,6 +132,30 @@ DEFAULT_PROVIDER_PROFILES = [
         "note": "Recommended DeepSeek profile for this machine: use the 1M alias as headroom, but keep the effective coding context around 250k-500k with early compaction.",
     },
 ]
+
+CLAUDE_PROVIDER_MANAGEMENT_DISABLED_ERROR = "project_managed_claude_switching_disabled"
+CLAUDE_PROVIDER_MANAGEMENT_DISABLED_MESSAGE = (
+    "Project-managed Claude Code/Desktop account/API switching is disabled. "
+    "Use CC Switch for Claude Code and Claude Desktop account/API/provider changes; "
+    "this repository only performs read-only Claude status and session-continuity diagnostics."
+)
+
+
+def provider_management_disabled(action: str, *, home: Path | None = None, dry_run: bool | None = None) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "status": "error",
+        "error": CLAUDE_PROVIDER_MANAGEMENT_DISABLED_ERROR,
+        "action": action,
+        "message": CLAUDE_PROVIDER_MANAGEMENT_DISABLED_MESSAGE,
+        "owner": "CC Switch",
+        "repo_policy": "read_only_diagnostics_only",
+        "changed": False,
+    }
+    if home is not None:
+        payload["claude_home"] = str(claude_home(str(home)))
+    if dry_run is not None:
+        payload["dry_run"] = dry_run
+    return payload
 
 PROVIDER_AUTH_KEYS = ("ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_API_KEY")
 
@@ -205,26 +230,12 @@ def load_provider_profiles(home: Path | None = None) -> list[ClaudeProviderProfi
 
 
 def write_default_provider_profiles(home: Path | None = None, *, active: str | None = None, overwrite: bool = False) -> dict[str, Any]:
-    home = claude_home(str(home) if home else None)
-    path = provider_profiles_path(home)
-    if path.exists() and not overwrite:
-        payload = _load_provider_profiles_payload(home)
-        updated = _default_provider_profiles_payload(home, payload, active=active)
-        changed = payload != updated
-        if changed:
-            _write_json(path, updated)
-        return {"status": "ok", "changed": changed, "path": str(path)}
-    payload = _default_provider_profiles_payload(home, {
-        "schema_version": 1,
-        "profiles": DEFAULT_PROVIDER_PROFILES,
-    }, active=active)
-    _write_json(path, payload)
-    return {"status": "ok", "changed": True, "path": str(path)}
+    return provider_management_disabled("write_default_provider_profiles", home=home)
 
 
-def claude_status(home: Path | None = None) -> dict[str, Any]:
+def claude_status(home: Path | None = None, *, cc_switch_db: Path | None = None) -> dict[str, Any]:
     home = claude_home(str(home) if home else None)
-    return {
+    payload = {
         "claude_home": str(home),
         "command": _run_command(["claude", "--version"], timeout_seconds=15),
         "settings": settings_summary(home),
@@ -239,6 +250,9 @@ def claude_status(home: Path | None = None) -> dict[str, Any]:
             "note": CLAUDE_USAGE_NOTE,
         },
     }
+    if cc_switch_db:
+        payload["cc_switch"] = cc_switch_status(cc_switch_db)
+    return payload
 
 
 def session_continuity_status(home: Path | None = None) -> dict[str, Any]:
@@ -257,8 +271,8 @@ def session_continuity_status(home: Path | None = None) -> dict[str, Any]:
         _check_value("history_jsonl.exists", True, history_path.exists()),
         {
             "key": "provider_switch_preserves_home",
-            "expected": "same Claude home across provider switches",
-            "actual": "switch_provider writes settings.json and provider-profiles.json only",
+            "expected": "same Claude home remains visible across CC Switch provider changes",
+            "actual": "read-only continuity diagnostic; project-managed switch_provider is disabled",
             "ok": True,
         },
     ]
@@ -368,49 +382,27 @@ def config_health(home: Path | None = None) -> dict[str, Any]:
     }
 
 
-def switch_provider(name: str, home: Path | None = None, *, dry_run: bool = False) -> dict[str, Any]:
+def switch_provider(
+    name: str,
+    home: Path | None = None,
+    *,
+    dry_run: bool = False,
+    cc_switch_db: Path | None = None,
+) -> dict[str, Any]:
     normalized = str(name or "").strip()
     if not normalized:
         return {"status": "error", "error": "missing provider profile name"}
-    home = claude_home(str(home) if home else None)
-    profiles = load_provider_profiles(home)
-    matches = [profile for profile in profiles if profile.name == normalized or profile.provider == normalized or profile.label == normalized]
-    if not matches:
-        return {"status": "error", "error": f"unknown provider profile: {normalized}"}
-    if len(matches) > 1:
-        return {"status": "error", "error": f"ambiguous provider profile: {normalized}"}
-    target = matches[0]
-    settings = load_settings(home)
-    env = _dict(settings.get("env"))
-    credential_present, credential_source = _credential_present(target.auth_env, env)
-    if not credential_present:
-        return {
-            "status": "error",
-            "error": f"missing credential: {target.auth_env}",
-            "provider": target.to_dict(),
-            "next": f"Set {target.auth_env} in ~/.claude/settings.json env or in the shell before switching.",
-        }
-    updated = _optimized_settings(settings, target)
-    if dry_run:
-        return {
-            "status": "ok",
-            "changed": settings != updated,
-            "dry_run": True,
-            "provider": target.to_dict(),
-            "credential_source": credential_source,
-            "session_continuity": session_continuity_status(home),
-        }
+    return provider_management_disabled("switch", home=home, dry_run=dry_run)
 
-    backup_path = backup_settings(home)
-    _write_json(settings_path(home), updated)
-    _set_active_provider_name(home, target.name)
+
+def cc_switch_status(db_path: Path) -> dict[str, Any]:
+    providers = _load_cc_switch_claude_providers(db_path)
     return {
-        "status": "ok",
-        "changed": True,
-        "backup_path": str(backup_path),
-        "provider": target.to_dict(),
-        "credential_source": credential_source,
-        "session_continuity": session_continuity_status(home),
+        "path": str(db_path),
+        "exists": db_path.exists(),
+        "provider_count": len(providers),
+        "current": next((_redacted_cc_switch_provider(provider) for provider in providers if provider.get("is_current")), None),
+        "providers": [_redacted_cc_switch_provider(provider) for provider in providers],
     }
 
 
@@ -418,48 +410,7 @@ def delete_provider_profile(name: str, home: Path | None = None, *, dry_run: boo
     normalized = str(name or "").strip()
     if not normalized:
         return {"status": "error", "error": "missing provider profile name"}
-    home = claude_home(str(home) if home else None)
-    profiles = load_provider_profiles(home)
-    matches = [profile for profile in profiles if profile.name == normalized or profile.provider == normalized or profile.label == normalized]
-    if not matches:
-        return {"status": "error", "error": f"unknown provider profile: {normalized}"}
-    if len(matches) > 1:
-        return {"status": "error", "error": f"ambiguous provider profile: {normalized}"}
-    target = matches[0]
-    if target.active:
-        return {"status": "error", "error": "refusing to delete the active Claude provider profile; switch away first"}
-
-    payload = _load_provider_profiles_payload(home)
-    raw_profiles = payload.get("profiles") if isinstance(payload.get("profiles"), list) else DEFAULT_PROVIDER_PROFILES
-    kept_profiles = [
-        deepcopy(profile)
-        for profile in raw_profiles
-        if isinstance(profile, dict) and str(profile.get("name") or "") != target.name
-    ]
-    if len(kept_profiles) == len([profile for profile in raw_profiles if isinstance(profile, dict)]):
-        return {"status": "error", "error": f"provider profile is not persisted by name: {target.name}"}
-    if not kept_profiles:
-        return {"status": "error", "error": "refusing to delete the last Claude provider profile"}
-    updated = dict(payload)
-    updated["schema_version"] = updated.get("schema_version") or 1
-    updated["profiles"] = kept_profiles
-    retired_profiles = _retired_provider_names(payload)
-    retired_profiles.add(target.name)
-    updated["retired_profiles"] = sorted(retired_profiles)
-    if updated.get("active") == target.name:
-        return {"status": "error", "error": "refusing to delete the active Claude provider profile; switch away first"}
-    if dry_run:
-        return {"status": "ok", "changed": False, "dry_run": True, "provider": target.to_dict()}
-
-    path = provider_profiles_path(home)
-    backup_path = backup_provider_profiles(home) if path.exists() else None
-    _write_json(path, updated)
-    return {
-        "status": "ok",
-        "changed": True,
-        "backup_path": str(backup_path) if backup_path else "",
-        "provider": target.to_dict(),
-    }
+    return provider_management_disabled("delete", home=home, dry_run=dry_run)
 
 
 def optimize_claude_local(
@@ -469,34 +420,7 @@ def optimize_claude_local(
     apply: bool = False,
     install_switcher: bool = True,
 ) -> dict[str, Any]:
-    home = claude_home(str(home) if home else None)
-    profile_result = (
-        write_default_provider_profiles(home, active=provider_name)
-        if apply
-        else preview_default_provider_profiles(home, active=provider_name)
-    )
-    plan: dict[str, Any] = {
-        "status": "dry_run",
-        "apply": apply,
-        "claude_home": str(home),
-        "provider_profiles": profile_result,
-        "provider": provider_name,
-    }
-    if not apply:
-        plan["current"] = claude_status(home)
-        plan["next"] = "Re-run with -Apply to write ~/.claude/settings.json and install claude-provider."
-        return plan
-
-    switch_result = switch_provider(provider_name, home)
-    plan["settings"] = switch_result
-    if switch_result.get("status") != "ok":
-        plan["status"] = "error"
-        return plan
-    if install_switcher:
-        plan["switcher"] = install_provider_switcher(home)
-    plan["status"] = "ok"
-    plan["current"] = claude_status(home)
-    return plan
+    return provider_management_disabled("optimize", home=home, dry_run=not apply)
 
 
 def preview_default_provider_profiles(home: Path | None = None, *, active: str | None = None) -> dict[str, Any]:
@@ -544,29 +468,7 @@ def backup_provider_profiles(home: Path | None = None) -> Path:
 
 
 def install_provider_switcher(home: Path | None = None, bin_dir: Path | None = None) -> dict[str, Any]:
-    home = claude_home(str(home) if home else None)
-    bin_dir = (bin_dir or (Path.home() / ".local" / "bin")).expanduser()
-    scripts_dir = home / "scripts"
-    user_lib_dir = scripts_dir / "lib"
-    scripts_dir.mkdir(parents=True, exist_ok=True)
-    user_lib_dir.mkdir(parents=True, exist_ok=True)
-    bin_dir.mkdir(parents=True, exist_ok=True)
-    source_dir = Path(__file__).resolve().parents[1]
-    source = source_dir / "claude-provider.ps1"
-    source_py = source_dir / "claude-provider.py"
-    source_lib = source_dir / "lib" / "claude_local.py"
-    target = scripts_dir / "Switch-ClaudeProvider.ps1"
-    target_py = scripts_dir / "claude-provider.py"
-    target_lib = user_lib_dir / "claude_local.py"
-    shim = bin_dir / "claude-provider.cmd"
-    shutil.copyfile(source, target)
-    shutil.copyfile(source_py, target_py)
-    shutil.copyfile(source_lib, target_lib)
-    shim.write_text(
-        '@echo off\npwsh -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\\.claude\\scripts\\Switch-ClaudeProvider.ps1" %*\n',
-        encoding="utf-8",
-    )
-    return {"status": "ok", "script": str(target), "python": str(target_py), "library": str(target_lib), "shim": str(shim)}
+    return provider_management_disabled("install", home=home)
 
 
 def _optimized_settings(settings: dict[str, Any], profile: ClaudeProviderProfile) -> dict[str, Any]:
@@ -711,6 +613,76 @@ def _credential_present(auth_env: str, settings_env: dict[str, Any]) -> tuple[bo
     if auth_env and os.environ.get(auth_env):
         return True, "process.env"
     return False, ""
+
+
+def _load_cc_switch_claude_providers(db_path: Path) -> list[dict[str, Any]]:
+    path = Path(db_path).expanduser()
+    if not path.exists():
+        return []
+    rows: list[dict[str, Any]] = []
+    conn = sqlite3.connect(path)
+    try:
+        conn.row_factory = sqlite3.Row
+        for row in conn.execute(
+            """
+            select id, name, settings_config, website_url, category, is_current
+            from providers
+            where app_type = 'claude'
+            order by is_current desc, name
+            """
+        ):
+            config = _loads_json_object(row["settings_config"])
+            env = _dict(config.get("env"))
+            rows.append(
+                {
+                    "id": row["id"],
+                    "name": row["name"],
+                    "website_url": row["website_url"],
+                    "category": row["category"],
+                    "is_current": bool(row["is_current"]),
+                    "model": config.get("model"),
+                    "env": env,
+                    "base_url": str(env.get("ANTHROPIC_BASE_URL") or ""),
+                }
+            )
+    finally:
+        conn.close()
+    return rows
+
+
+def _matching_cc_switch_provider(name: str, target: ClaudeProviderProfile, db_path: Path | None) -> dict[str, Any] | None:
+    if not db_path:
+        return None
+    normalized = name.casefold()
+    target_base_url = target.base_url.rstrip("/")
+    for provider in _load_cc_switch_claude_providers(db_path):
+        provider_name = str(provider.get("name") or "").casefold()
+        provider_base_url = str(provider.get("base_url") or "").rstrip("/")
+        if normalized in {provider_name, provider_base_url.casefold()}:
+            return provider
+        if target.provider and target.provider.casefold() in provider_name:
+            return provider
+        if target_base_url and provider_base_url == target_base_url:
+            return provider
+    return None
+
+
+def _redacted_cc_switch_provider(provider: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not provider:
+        return None
+    redacted = {key: value for key, value in provider.items() if key != "env"}
+    redacted["env"] = [_safe_env_item(str(key), value, source="cc-switch.db") for key, value in sorted(_dict(provider.get("env")).items())]
+    return redacted
+
+
+def _loads_json_object(value: Any) -> dict[str, Any]:
+    if not isinstance(value, str) or not value.strip():
+        return {}
+    try:
+        payload = json.loads(value)
+    except json.JSONDecodeError:
+        return {}
+    return payload if isinstance(payload, dict) else {}
 
 
 def _safe_env_item(name: str, value: Any, *, source: str) -> dict[str, Any]:

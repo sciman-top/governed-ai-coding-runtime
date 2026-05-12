@@ -1816,21 +1816,8 @@ def render_interactive_script(
       switchButton.type = 'button';
       switchButton.className = provider.active ? 'codex-account-switch is-current' : 'codex-account-switch';
       switchButton.textContent = provider.active ? {text['claude_active']!r} : {text['claude_switch']!r};
-      if (provider.active) {{
-        switchButton.disabled = true;
-      }} else {{
-        switchButton.dataset.claudeSwitchName = provider.name || '';
-      }}
+      switchButton.disabled = true;
       actions.appendChild(switchButton);
-      if (!provider.active) {{
-        const deleteButton = document.createElement('button');
-        deleteButton.type = 'button';
-        deleteButton.className = 'codex-account-switch danger';
-        deleteButton.textContent = {text['claude_delete']!r};
-        deleteButton.dataset.claudeDeleteName = provider.name || '';
-        deleteButton.dataset.confirm = {text['claude_delete_confirm']!r};
-        actions.appendChild(deleteButton);
-      }}
       row.appendChild(actions);
       if (provider.active) {{
         infoList.append(
@@ -1889,79 +1876,6 @@ def render_interactive_script(
     }} catch (error) {{
       claudeProviders.innerHTML = `<p class="meta">${{String(error)}}</p>`;
       setPanelCacheState('claude', 'error');
-    }}
-  }}
-
-  async function switchClaudeProvider(name) {{
-    const targetName = String(name || '').trim();
-    if (!targetName) {{
-      return;
-    }}
-    setBusy(true);
-    try {{
-      const response = await fetch('/api/claude/switch', {{
-        method: 'POST',
-        headers: {{ 'content-type': 'application/json' }},
-        body: JSON.stringify({{ name: targetName }})
-      }});
-      const payload = await response.json();
-      setOutput(JSON.stringify(payload, null, 2));
-      await refreshClaudeStatus();
-    }} catch (error) {{
-      setOutput(String(error));
-    }} finally {{
-      setBusy(false);
-    }}
-  }}
-
-  async function deleteClaudeProvider(name, confirmMessage) {{
-    const targetName = String(name || '').trim();
-    if (!targetName) {{
-      return;
-    }}
-    if (confirmMessage && !window.confirm(confirmMessage)) {{
-      return;
-    }}
-    setBusy(true);
-    try {{
-      const response = await fetch('/api/claude/delete', {{
-        method: 'POST',
-        headers: {{ 'content-type': 'application/json' }},
-        body: JSON.stringify({{ name: targetName }})
-      }});
-      const payload = await response.json();
-      setOutput(JSON.stringify(payload, null, 2));
-      await refreshClaudeStatus();
-    }} catch (error) {{
-      setOutput(String(error));
-    }} finally {{
-      setBusy(false);
-    }}
-  }}
-
-  async function optimizeClaudeConfig(apply) {{
-    const provider = lastClaudePayload && lastClaudePayload.active_provider ? lastClaudePayload.active_provider : null;
-    const providerName = provider && provider.name ? String(provider.name) : '';
-    if (!providerName) {{
-      setOutput({text['claude_no_active_provider']!r});
-      return;
-    }}
-    setBusy(true);
-    try {{
-      const response = await fetch('/api/claude/optimize', {{
-        method: 'POST',
-        headers: {{ 'content-type': 'application/json' }},
-        body: JSON.stringify({{ provider: providerName, apply: Boolean(apply) }})
-      }});
-      const payload = await response.json();
-      setOutput(JSON.stringify(payload, null, 2));
-      if (apply) {{
-        await refreshClaudeStatus();
-      }}
-    }} catch (error) {{
-      setOutput(String(error));
-    }} finally {{
-      setBusy(false);
     }}
   }}
 
@@ -2037,31 +1951,8 @@ def render_interactive_script(
     }});
   }}
   document.querySelector('[data-claude-refresh]').addEventListener('click', () => refreshClaudeStatus());
-  document.querySelector('[data-claude-optimize-preview]').addEventListener('click', () => optimizeClaudeConfig(false));
-  document.querySelector('[data-claude-optimize-apply]').addEventListener('click', (event) => {{
-    const message = event.currentTarget.getAttribute('data-confirm');
-    if (message && !window.confirm(message)) {{
-      return;
-    }}
-    optimizeClaudeConfig(true);
-  }});
   document.querySelectorAll('button[data-claude-file]').forEach((button) => {{
     button.addEventListener('click', () => viewClaudeLocalFile(button.getAttribute('data-claude-file') || ''));
-  }});
-  claudeProviders.addEventListener('click', (event) => {{
-    const deleteButton = event.target.closest('button[data-claude-delete-name]');
-    if (deleteButton) {{
-      deleteClaudeProvider(
-        deleteButton.getAttribute('data-claude-delete-name') || '',
-        deleteButton.getAttribute('data-confirm') || ''
-      );
-      return;
-    }}
-    const button = event.target.closest('button[data-claude-switch-name]');
-    if (!button) {{
-      return;
-    }}
-    switchClaudeProvider(button.getAttribute('data-claude-switch-name') || '');
   }});
   document.querySelector('[data-feedback-refresh]').addEventListener('click', () => refreshFeedbackSummaryWithMode(true));
   const continuityRefreshButton = document.querySelector('[data-continuity-refresh]');

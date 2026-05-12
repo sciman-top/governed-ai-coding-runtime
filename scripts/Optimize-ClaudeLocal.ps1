@@ -7,6 +7,9 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+if (Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue) {
+    $PSNativeCommandUseErrorActionPreference = $false
+}
 
 $script = Join-Path $PSScriptRoot 'claude-provider.py'
 $arguments = @($script, 'optimize', '--provider', $Provider)
@@ -18,3 +21,4 @@ if (-not $InstallProviderSwitcher) {
 }
 
 python @arguments
+exit $LASTEXITCODE

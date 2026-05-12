@@ -702,10 +702,9 @@ def _render_claude_panel(text: dict[str, str], *, interactive: bool) -> str:
         [
             "<section class='panel'>",
             f"<h2>{escape(text['claude_console'])}</h2>",
+            f"<p class='meta'>{escape(text['claude_managed_by_cc_switch'])}</p>",
             "<div class='claude-toolbar'>",
             f"<button type='button' data-claude-refresh='1'>{escape(text['claude_refresh'])}</button>",
-            f"<button type='button' data-claude-optimize-preview='1'>{escape(text['claude_optimize_preview'])}</button>",
-            f"<button type='button' class='primary' data-claude-optimize-apply='1' data-confirm='{escape(text['claude_apply_recommended_confirm'])}'>{escape(text['claude_optimize_apply'])}</button>",
             "</div>",
             "<div class='claude-console-grid'>",
             "<div class='claude-side-panel'>",

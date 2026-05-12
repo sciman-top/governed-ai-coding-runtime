@@ -3,12 +3,12 @@
   "governance_override_enforced": false,
   "metrics": {
     "clarification_reduction_proxy": 1.0,
-    "estimated_token_cost": 5963,
+    "estimated_token_cost": 5987,
     "excluded_archive_candidate_count": 182,
     "file_selection_accuracy": 1.0,
     "max_tokens": 6000,
     "required_file_override_count": 0,
-    "selected_file_count": 33
+    "selected_file_count": 32
   },
   "repo_id": "governed-ai-coding-runtime",
   "required_governance_files": [
@@ -51,8 +51,7 @@
     "scripts/Start-CodexCockpitSwitchGuard.ps1",
     "scripts/agent-continuity.py",
     "scripts/lib/__init__.py",
-    "docs/governed-runtime-batch-validation.md",
-    "docs/product/claim-exceptions.json"
+    "docs/governed-runtime-batch-validation.md"
   ],
   "strategy_id": "governed-ai-coding-runtime-default",
   "strategy_path": ".governed-ai/repo-map-context-shaping.json"

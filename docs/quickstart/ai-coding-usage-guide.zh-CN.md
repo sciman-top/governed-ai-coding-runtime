@@ -80,7 +80,7 @@ python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Disable-CodexProjectInterop.ps1 -Apply -DisableProjectShortcuts
 ```
 
-`Cockpit Tools` 负责 Codex App/CLI 的 ChatGPT auth、Codex API provider 切换、会话可见性修复和 launch-on-switch 设置；`cc-switch` 负责 Claude CLI、GLM、DeepSeek 等第三方 API 切换。本仓不得覆盖内置 `[model_providers.openai]`，不得强改 `codex_launch_on_switch`，不得使用 no-op launcher、restart wrapper、no-restart shim、SQLite trigger、后台 guard 或 CLI wrapper 拦截 Cockpit Tools 原生行为。
+`Cockpit Tools` 只负责 Codex App/CLI 的账号与 API 切换；`CC Switch` 只负责 Claude Code / Claude Desktop 的账号与 API 切换。本仓不参与两侧账号/API 切换、修写、拦截、安装或重启包装；只保留只读诊断和旧 shim 清理。本仓不得覆盖内置 `[model_providers.openai]`，不得强改 `codex_launch_on_switch`，不得使用 no-op launcher、restart wrapper、no-restart shim、SQLite trigger、后台 guard 或 CLI wrapper 拦截 Cockpit Tools 原生行为，也不得改写 Claude `settings.json`、provider profile、当前进程 env、`CLAUDE_CONFIG_DIR` 或 Claude Desktop 数据根。
 
 复现切号覆盖问题时，先开只读追踪窗口，再手动切换 Cockpit 账号：
 

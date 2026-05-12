@@ -380,14 +380,15 @@ def build_claude_continuity_record(
         task_summary="Read-only Claude Code continuity posture anchored in one Claude home.",
         decisions=[
             {
-                "summary": "Claude provider switching should preserve the same Claude home unless isolation is intentional.",
-                "evidence_ref": "docs/change-evidence/2026-05-10-claude-provider-session-continuity.md",
+                "summary": "CC Switch owns Claude account/API switching; this repository only verifies that the same Claude home remains visible unless isolation is intentional.",
+                "evidence_ref": "docs/change-evidence/2026-05-12-agent-switching-ownership-boundary.md",
             }
         ],
         changed_files=[],
         next_actions=[],
         evidence_refs=[
             _ref("file", "docs/change-evidence/2026-05-10-claude-provider-session-continuity.md", "Claude continuity evidence"),
+            _ref("file", "docs/change-evidence/2026-05-12-agent-switching-ownership-boundary.md", "Claude switching ownership boundary"),
             _ref("file", str(home / "settings.json"), "Claude settings path"),
         ],
         handoff_refs=[],

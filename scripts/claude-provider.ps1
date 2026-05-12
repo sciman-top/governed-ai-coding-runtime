@@ -7,13 +7,19 @@ param(
     [Parameter(Position = 1)]
     [string] $Name,
 
+    [Alias('dry-run')]
     [switch] $DryRun,
     [switch] $Apply,
-    [string] $Provider = 'bigmodel-glm'
+    [string] $Provider = 'bigmodel-glm',
+    [Alias('cc-switch-db')]
+    [string] $CcSwitchDb
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+if (Get-Variable -Name PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue) {
+    $PSNativeCommandUseErrorActionPreference = $false
+}
 
 $script = Join-Path $PSScriptRoot 'claude-provider.py'
 if (-not (Test-Path -LiteralPath $script)) {
@@ -25,12 +31,20 @@ if (-not (Test-Path -LiteralPath $script)) {
 
 $arguments = @($script, $Command)
 switch ($Command) {
+    'status' {
+        if (-not [string]::IsNullOrWhiteSpace($CcSwitchDb)) {
+            $arguments += @('--cc-switch-db', $CcSwitchDb)
+        }
+    }
     'switch' {
         if ([string]::IsNullOrWhiteSpace($Name)) {
             throw 'Provider profile name is required for switch.'
         }
         $arguments += $Name
         if ($DryRun) { $arguments += '--dry-run' }
+        if (-not [string]::IsNullOrWhiteSpace($CcSwitchDb)) {
+            $arguments += @('--cc-switch-db', $CcSwitchDb)
+        }
     }
     'delete' {
         if ([string]::IsNullOrWhiteSpace($Name)) {
@@ -46,3 +60,4 @@ switch ($Command) {
 }
 
 python @arguments
+exit $LASTEXITCODE
