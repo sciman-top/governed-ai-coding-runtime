@@ -42,6 +42,13 @@ def render_interactive_script(
   const codexImportContent = document.getElementById('codex-import-content');
   const codexImportProbe = document.getElementById('codex-import-probe');
   const codexImportDryRun = document.getElementById('codex-import-dry-run');
+  const codexHistoryForm = document.getElementById('codex-history-form');
+  const codexHistorySource = document.getElementById('codex-history-source');
+  const codexHistoryCwd = document.getElementById('codex-history-cwd');
+  const codexHistorySearch = document.getElementById('codex-history-search');
+  const codexHistoryLimit = document.getElementById('codex-history-limit');
+  const codexHistoryState = document.getElementById('codex-history-state');
+  const codexHistoryResults = document.getElementById('codex-history-results');
   const claudeProviders = document.getElementById('claude-providers');
   const feedbackStatus = document.getElementById('feedback-status');
   const feedbackCacheState = document.getElementById('feedback-cache-state');
@@ -86,6 +93,8 @@ def render_interactive_script(
   let nextWorkLoaded = false;
   let lastClaudePayload = null;
   let lastCodexPayload = null;
+  let codexHistoryOffset = 0;
+  let lastCodexHistoryPayload = null;
   let lastNextWorkPayload = null;
 
   function readHistory() {{
@@ -1631,6 +1640,103 @@ def render_interactive_script(
 
   }}
 
+  function formatCodexHistoryTime(row) {{
+    const ms = Number(row && row.updated_at_ms);
+    if (Number.isFinite(ms) && ms > 0) {{
+      return formatCompactTimestamp(new Date(ms).toISOString());
+    }}
+    const seconds = Number(row && row.updated_at);
+    if (Number.isFinite(seconds) && seconds > 0) {{
+      return formatCompactTimestamp(new Date(seconds * 1000).toISOString());
+    }}
+    return currentUiLanguage() === 'zh-CN' ? '时间未知' : 'unknown time';
+  }}
+
+  function renderCodexHistory(payload) {{
+    lastCodexHistoryPayload = payload;
+    if (!codexHistoryResults || !codexHistoryState) {{
+      return;
+    }}
+    const rows = Array.isArray(payload.rows) ? payload.rows : [];
+    const total = Number(payload.total || 0);
+    const offset = Number(payload.offset || 0);
+    const limit = Number(payload.limit || 50);
+    const readOnlyLabel = payload.read_only ? {text['codex_history_readonly']!r} : '';
+    const rangeLabel = total > 0 ? `${{offset + 1}}-${{Math.min(offset + rows.length, total)}} / ${{total}}` : `0 / 0`;
+    codexHistoryState.textContent = `${{readOnlyLabel}} · ${{rangeLabel}} · ${{payload.state_path || ''}}`;
+    codexHistoryResults.innerHTML = '';
+    if (!rows.length) {{
+      codexHistoryResults.innerHTML = `<p class="meta">{text['codex_history_empty']}</p>`;
+    }} else {{
+      rows.forEach((row) => {{
+        const item = document.createElement('div');
+        item.className = 'codex-history-row';
+        const title = document.createElement('strong');
+        title.textContent = row.title || row.first_user_message || row.id || 'thread';
+        const summary = document.createElement('div');
+        summary.className = 'info-list';
+        summary.append(
+          createInfoLine(currentUiLanguage() === 'zh-CN' ? '项目' : 'project', row.repo || row.cwd || ''),
+          createInfoLine('source', [row.source, row.thread_source].filter(Boolean).join(' / ') || ''),
+          createInfoLine('provider', row.model_provider || row.model || ''),
+          createInfoLine(currentUiLanguage() === 'zh-CN' ? '更新时间' : 'updated', formatCodexHistoryTime(row))
+        );
+        if (row.cwd) {{
+          summary.appendChild(createInfoLine('cwd', row.cwd));
+        }}
+        if (row.rollout_path) {{
+          summary.appendChild(createInfoLine('rollout', row.rollout_path));
+        }}
+        if (row.first_user_message && row.first_user_message !== row.title) {{
+          summary.appendChild(createInfoLine(currentUiLanguage() === 'zh-CN' ? '首条消息' : 'first message', row.first_user_message));
+        }}
+        item.append(title, summary);
+        codexHistoryResults.appendChild(item);
+      }});
+    }}
+    const prevButton = document.querySelector('[data-codex-history-prev]');
+    const nextButton = document.querySelector('[data-codex-history-next]');
+    if (prevButton) {{
+      prevButton.disabled = offset <= 0;
+    }}
+    if (nextButton) {{
+      nextButton.disabled = offset + limit >= total;
+    }}
+  }}
+
+  async function refreshCodexHistory(resetOffset = false) {{
+    if (!codexHistoryResults || !codexHistoryState) {{
+      return;
+    }}
+    if (resetOffset) {{
+      codexHistoryOffset = 0;
+    }}
+    codexHistoryState.textContent = {text['codex_history_loading']!r};
+    const params = new URLSearchParams();
+    params.set('source', codexHistorySource ? codexHistorySource.value || 'vscode,cli' : 'vscode,cli');
+    params.set('limit', codexHistoryLimit ? codexHistoryLimit.value || '50' : '50');
+    params.set('offset', String(codexHistoryOffset));
+    if (codexHistoryCwd && codexHistoryCwd.value.trim()) {{
+      params.set('cwd', codexHistoryCwd.value.trim());
+    }}
+    if (codexHistorySearch && codexHistorySearch.value.trim()) {{
+      params.set('search', codexHistorySearch.value.trim());
+    }}
+    try {{
+      const response = await fetch('/api/codex/history?' + params.toString(), {{ cache: 'no-store' }});
+      const payload = await response.json();
+      if (!response.ok) {{
+        codexHistoryState.textContent = payload.error || response.statusText;
+        codexHistoryResults.innerHTML = '';
+        return;
+      }}
+      renderCodexHistory(payload);
+    }} catch (error) {{
+      codexHistoryState.textContent = String(error);
+      codexHistoryResults.innerHTML = '';
+    }}
+  }}
+
   async function refreshCodexStatus() {{
     if (!codexAccounts) {{
       return;
@@ -2169,6 +2275,31 @@ def render_interactive_script(
   }}
   if (codexImportForm) {{
     codexImportForm.addEventListener('submit', importCodexPayload);
+  }}
+  if (codexHistoryForm) {{
+    codexHistoryForm.addEventListener('submit', (event) => {{
+      event.preventDefault();
+      refreshCodexHistory(true);
+    }});
+  }}
+  const codexHistoryPrev = document.querySelector('[data-codex-history-prev]');
+  if (codexHistoryPrev) {{
+    codexHistoryPrev.addEventListener('click', () => {{
+      const limit = Number(lastCodexHistoryPayload && lastCodexHistoryPayload.limit) || Number(codexHistoryLimit && codexHistoryLimit.value) || 50;
+      codexHistoryOffset = Math.max(0, codexHistoryOffset - limit);
+      refreshCodexHistory(false);
+    }});
+  }}
+  const codexHistoryNext = document.querySelector('[data-codex-history-next]');
+  if (codexHistoryNext) {{
+    codexHistoryNext.addEventListener('click', () => {{
+      const limit = Number(lastCodexHistoryPayload && lastCodexHistoryPayload.limit) || Number(codexHistoryLimit && codexHistoryLimit.value) || 50;
+      const total = Number(lastCodexHistoryPayload && lastCodexHistoryPayload.total) || 0;
+      if (codexHistoryOffset + limit < total) {{
+        codexHistoryOffset += limit;
+        refreshCodexHistory(false);
+      }}
+    }});
   }}
   codexAccounts.addEventListener('click', (event) => {{
     const deleteButton = event.target.closest('button[data-codex-delete-name]');

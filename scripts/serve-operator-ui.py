@@ -6,7 +6,9 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import importlib.util
 import json
+import os
 import shutil
+import sqlite3
 import subprocess
 import sys
 import time
@@ -230,6 +232,11 @@ def _build_handler(*, default_language: str, host: str, port: int):
             if parsed.path == "/api/codex/cockpit":
                 result = cockpit_codex_source_status()
                 status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.NOT_FOUND
+                self._send_json(result, status=status)
+                return
+            if parsed.path == "/api/codex/history":
+                result = load_codex_history(parse_qs(parsed.query))
+                status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
                 self._send_json(result, status=status)
                 return
             if parsed.path == "/api/claude/status":
@@ -498,6 +505,198 @@ def load_codex_status(*, refresh_online: bool = False, refresh_if_stale: bool = 
         ttl_seconds=CODEX_STATUS_CACHE_TTL_SECONDS,
         loader=lambda: codex_status(refresh_online=False, ensure_saved_snapshot=True),
     )
+
+
+def load_codex_history(params: dict[str, list[str]] | None = None) -> dict:
+    params = params or {}
+    state_path = _codex_state_path()
+    if not state_path.exists():
+        return {
+            "status": "error",
+            "error": "codex state_5.sqlite not found",
+            "read_only": True,
+            "state_path": str(state_path),
+        }
+
+    sources = _query_sources(params)
+    cwd_filter = (_query_string(params, "cwd") or "").strip()
+    search = (_query_string(params, "search") or "").strip()
+    limit = _bounded_int(_query_string(params, "limit") or "", default=50, minimum=1, maximum=200)
+    offset = _bounded_int(_query_string(params, "offset") or "", default=0, minimum=0, maximum=100_000)
+
+    try:
+        connection = sqlite3.connect(f"file:{state_path}?mode=ro", uri=True)
+        connection.row_factory = sqlite3.Row
+        try:
+            columns = {row["name"] for row in connection.execute("pragma table_info(threads)")}
+            if not {"id", "cwd", "source", "updated_at"}.issubset(columns):
+                return {
+                    "status": "error",
+                    "error": "threads table does not expose the expected Codex history columns",
+                    "read_only": True,
+                    "state_path": str(state_path),
+                }
+
+            where_sql, values = _codex_history_where_clause(
+                columns,
+                sources=sources,
+                cwd_filter=cwd_filter,
+                search=search,
+            )
+            updated_expr = _codex_history_updated_expr(columns)
+            total = connection.execute(f"select count(*) from threads {where_sql}", values).fetchone()[0]
+            rows = connection.execute(
+                f"""
+                select {_codex_history_select_columns(columns)}
+                from threads
+                {where_sql}
+                order by {updated_expr} desc, updated_at desc, id desc
+                limit ? offset ?
+                """,
+                [*values, limit, offset],
+            ).fetchall()
+            repo_rows = connection.execute(
+                f"""
+                select cwd, count(*) as count, max({updated_expr}) as latest_updated_at_ms
+                from threads
+                {where_sql}
+                group by cwd
+                order by count desc, latest_updated_at_ms desc
+                limit 30
+                """,
+                values,
+            ).fetchall()
+        finally:
+            connection.close()
+    except sqlite3.Error as exc:
+        return {
+            "status": "error",
+            "error": str(exc),
+            "read_only": True,
+            "state_path": str(state_path),
+        }
+
+    return {
+        "status": "ok",
+        "read_only": True,
+        "state_path": str(state_path),
+        "sources": sources,
+        "cwd": cwd_filter,
+        "search": search,
+        "limit": limit,
+        "offset": offset,
+        "total": total,
+        "returned": len(rows),
+        "rows": [_codex_history_row_to_dict(row) for row in rows],
+        "repo_counts": [_codex_history_repo_count_to_dict(row) for row in repo_rows],
+    }
+
+
+def _codex_state_path() -> Path:
+    codex_home = os.environ.get("CODEX_HOME")
+    if codex_home:
+        return Path(codex_home).expanduser() / "state_5.sqlite"
+    return Path.home() / ".codex" / "state_5.sqlite"
+
+
+def _query_sources(params: dict[str, list[str]]) -> list[str]:
+    raw_values: list[str] = []
+    for value in params.get("source", []):
+        raw_values.extend(str(value).split(","))
+    sources = []
+    for value in raw_values or ["vscode", "cli"]:
+        normalized = value.strip().lower()
+        if normalized and normalized not in sources:
+            sources.append(normalized)
+    return sources[:8] or ["vscode", "cli"]
+
+
+def _bounded_int(value: str, *, default: int, minimum: int, maximum: int) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        parsed = default
+    return max(minimum, min(maximum, parsed))
+
+
+def _codex_history_where_clause(
+    columns: set[str],
+    *,
+    sources: list[str],
+    cwd_filter: str,
+    search: str,
+) -> tuple[str, list[object]]:
+    clauses = ["coalesce(archived, 0) = 0"] if "archived" in columns else []
+    values: list[object] = []
+    if sources:
+        clauses.append(f"source in ({','.join('?' for _ in sources)})")
+        values.extend(sources)
+    if cwd_filter:
+        normalized = _normalize_codex_cwd(cwd_filter)
+        clauses.append("(cwd like ? or replace(cwd, '\\\\?\\', '') like ?)")
+        values.extend([f"%{cwd_filter}%", f"%{normalized}%"])
+    if search:
+        searchable_columns = [name for name in ("title", "first_user_message", "cwd", "id") if name in columns]
+        if searchable_columns:
+            clauses.append("(" + " or ".join(f"{name} like ?" for name in searchable_columns) + ")")
+            values.extend([f"%{search}%"] * len(searchable_columns))
+    if not clauses:
+        return "", values
+    return "where " + " and ".join(clauses), values
+
+
+def _codex_history_select_columns(columns: set[str]) -> str:
+    wanted = [
+        "id",
+        "title",
+        "first_user_message",
+        "cwd",
+        "source",
+        "thread_source",
+        "model_provider",
+        "model",
+        "updated_at",
+        "updated_at_ms",
+        "created_at",
+        "created_at_ms",
+        "rollout_path",
+        "tokens_used",
+        "git_branch",
+        "agent_nickname",
+        "agent_role",
+    ]
+    return ", ".join(name for name in wanted if name in columns)
+
+
+def _codex_history_updated_expr(columns: set[str]) -> str:
+    if "updated_at_ms" in columns:
+        return "coalesce(updated_at_ms, updated_at * 1000)"
+    return "updated_at * 1000"
+
+
+def _codex_history_row_to_dict(row: sqlite3.Row) -> dict:
+    item = {key: row[key] for key in row.keys()}
+    if item.get("updated_at_ms") is None and item.get("updated_at") is not None:
+        item["updated_at_ms"] = int(item["updated_at"]) * 1000
+    if item.get("created_at_ms") is None and item.get("created_at") is not None:
+        item["created_at_ms"] = int(item["created_at"]) * 1000
+    if item.get("cwd"):
+        item["repo"] = Path(_normalize_codex_cwd(str(item["cwd"]))).name
+    return item
+
+
+def _codex_history_repo_count_to_dict(row: sqlite3.Row) -> dict:
+    cwd = str(row["cwd"] or "")
+    return {
+        "cwd": cwd,
+        "repo": Path(_normalize_codex_cwd(cwd)).name if cwd else "",
+        "count": int(row["count"] or 0),
+        "latest_updated_at_ms": int(row["latest_updated_at_ms"] or 0),
+    }
+
+
+def _normalize_codex_cwd(value: str) -> str:
+    return value.replace("\\\\?\\", "").replace("//?/", "")
 
 
 def load_claude_status() -> dict:

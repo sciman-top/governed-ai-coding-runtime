@@ -227,6 +227,13 @@ def render_style_block() -> str:
     .codex-import-form {{ display: grid; gap: 10px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: linear-gradient(180deg, #ffffff, #f8fbfb); box-shadow: var(--shadow-tight); }}
     .codex-import-form h3 {{ margin-bottom: 0; }}
     .codex-import-grid {{ display: grid; grid-template-columns: minmax(150px, 0.65fr) auto auto; gap: 10px; align-items: center; }}
+    .codex-history-form {{ display: grid; gap: 10px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: linear-gradient(180deg, #ffffff, #f8fbfb); box-shadow: var(--shadow-tight); }}
+    .codex-history-form h3, .codex-history-form .meta {{ margin-bottom: 0; }}
+    .codex-history-fields {{ display: grid; grid-template-columns: minmax(120px, 0.55fr) minmax(220px, 1.2fr) minmax(220px, 1fr) minmax(90px, 0.35fr); gap: 10px; align-items: end; }}
+    .codex-history-actions {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-end; }}
+    .codex-history-results {{ display: grid; gap: 8px; max-height: 430px; overflow: auto; padding-right: 2px; }}
+    .codex-history-row {{ display: grid; gap: 5px; border: 1px solid var(--line); border-radius: 8px; padding: 10px 11px; background: #fff; box-shadow: var(--shadow-tight); }}
+    .codex-history-row strong {{ overflow-wrap: anywhere; color: var(--ink-strong); }}
     .codex-grid {{ display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: start; }}
     .codex-list {{ display: grid; gap: 8px; }}
     .codex-account {{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: start; border: 1px solid var(--line); border-radius: 8px; padding: 13px; background: linear-gradient(180deg, #ffffff, #f8fbfb); box-shadow: var(--shadow-tight); }}
@@ -257,7 +264,7 @@ def render_style_block() -> str:
       main {{ padding: 12px 10px 28px; }}
       header {{ padding: 14px; margin-bottom: 12px; }}
       h1 {{ font-size: 1.2rem; }}
-      .console-layout, .summary-grid, .policy-grid, .feedback-grid, .runtime-shell, .details-grid, .codex-grid, .codex-account, .codex-api-fields, .codex-import-grid, .claude-console-grid, .feedback-shell, .feedback-runs-grid, .surface-grid {{ grid-template-columns: 1fr; }}
+      .console-layout, .summary-grid, .policy-grid, .feedback-grid, .runtime-shell, .details-grid, .codex-grid, .codex-account, .codex-api-fields, .codex-import-grid, .codex-history-fields, .claude-console-grid, .feedback-shell, .feedback-runs-grid, .surface-grid {{ grid-template-columns: 1fr; }}
       .dashboard {{ gap: 12px; }}
       .view-tabs {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; }}
       .view-tab {{ text-align: center; padding: 8px 7px; }}
