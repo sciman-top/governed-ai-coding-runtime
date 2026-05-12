@@ -14,9 +14,11 @@
   - Installed `C:\Users\sciman\.local\bin\codex.ps1` and `C:\Users\sciman\.local\bin\codex.cmd`.
   - Wrapper runs preflight before launching the real Codex binary and filters stale PID cleanup stderr.
 - repair behavior:
+  - Cockpit API account metadata: if an API account has been rewritten to `api_base_url = null` / `openai_builtin`, restore provider metadata from the sibling `.bak` account file or from `codex_model_providers.json` by matching the saved API key.
   - API account: writes `auth.json` with API key auth, top-level `forced_login_method = "api"`, `model_provider = "openai"`, and `openai_base_url = <cockpit api_base_url>`.
   - OAuth account: writes OAuth `auth.json`, top-level `forced_login_method = "chatgpt"`, top-level `model_provider = "openai"`, and removes top-level `openai_base_url`.
   - SQLite: backs up `state_5.sqlite` and migrates `threads.model_provider` to `openai`.
+  - Session JSONL metadata: best-effort rewrite of unlocked `model_provider` fields to `openai`; locked active session files are skipped.
   - Existing custom Cockpit provider tables are patched to `requires_openai_auth = false` and `supports_websockets = false` when they are known from the current Cockpit account.
 - commands:
   - `python -m py_compile D:\CODE\governed-ai-coding-runtime\scripts\codex-cockpit-cli-preflight-repair.py C:\Users\sciman\.local\bin\codex-cockpit-cli-preflight-repair.py`
@@ -38,6 +40,13 @@
   - `codex --version` returned `codex-cli 0.130.0`.
   - `codex login status` reported API key login.
   - `diff --check` passed for both this repo and the local Cockpit Tools source patch; Cockpit Tools emitted only the existing LF-to-CRLF warning.
+- follow-up evidence:
+  - After switching Cockpit to OAuth, the wrapper was corrected to preserve OAuth `last_refresh` idempotently and use timezone-aware UTC timestamps.
+  - Live OAuth projection after correction: top-level `forced_login_method=chatgpt`, `model_provider=openai`, no top-level `openai_base_url`, no `[model_providers.openai]`.
+  - Live `state_5.sqlite` provider distribution remained `[["openai", 1682]]`.
+  - The degraded API account `codex_apikey_8b8853f15e823dc53bd156163035bc78` was restored to `api_base_url=http://35.213.82.91:8003/v1`, `api_provider_mode=custom`, `api_provider_id=cmp_1778165666417_1`, `api_provider_name=35.213.82.91`.
+  - App native `codex.exe` reported `codex-cli 0.130.0-alpha.5`, so the wrapper keeps the npm packaged native binary first; `codex --version` reports `codex-cli 0.130.0`.
+  - Remaining limitation: `成功: 已终止 PID ...` is stdout from the interactive Codex cleanup path. The current wrapper filters stderr only; stdout filtering would require a PTY-aware wrapper or upstream Codex fix to avoid breaking the TUI.
 - compatibility:
   - This fix does not require rebuilding or reinstalling Cockpit Tools.
   - Official/unmodified Cockpit Tools can still overwrite live Codex files, but every CLI `codex` startup repairs them before Codex reads them.

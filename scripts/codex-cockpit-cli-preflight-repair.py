@@ -16,7 +16,7 @@ import shutil
 import sqlite3
 import sys
 import tempfile
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -46,17 +46,24 @@ def main() -> int:
 
 
 def repair(codex_home: Path, cockpit_home: Path, *, dry_run: bool) -> list[str]:
+    cockpit_metadata_changes = repair_cockpit_api_account_metadata(cockpit_home, dry_run=dry_run)
+    if cockpit_metadata_changes:
+        # Reload the account after metadata repair so the projection uses restored provider fields.
+        pass
     current = read_current_cockpit_account(cockpit_home)
     auth_mode = str(current.get("auth_mode") or "oauth").lower()
     is_api = auth_mode in {"apikey", "api_key", "api-key"} or bool(current.get("openai_api_key"))
     changes: list[str] = []
+    if cockpit_metadata_changes:
+        changes.append(f"cockpit_accounts:{cockpit_metadata_changes}")
 
     codex_home.mkdir(parents=True, exist_ok=True)
     auth_path = codex_home / "auth.json"
     config_path = codex_home / "config.toml"
 
-    desired_auth = build_auth_json(current, is_api=is_api)
-    if read_json_or_none(auth_path) != desired_auth:
+    existing_auth = read_json_or_none(auth_path)
+    desired_auth = build_auth_json(current, is_api=is_api, existing_auth=existing_auth)
+    if not auth_matches(existing_auth, desired_auth, is_api=is_api):
         changes.append("auth.json")
         if not dry_run:
             backup_file(auth_path)
@@ -74,7 +81,104 @@ def repair(codex_home: Path, cockpit_home: Path, *, dry_run: bool) -> list[str]:
     if sqlite_changes:
         changes.append(f"state_5.sqlite:{sqlite_changes}")
 
+    session_changes = repair_session_jsonl_providers(codex_home, dry_run=dry_run)
+    if session_changes:
+        changes.append(f"sessions:{session_changes}")
+
     return changes
+
+
+def repair_cockpit_api_account_metadata(cockpit_home: Path, *, dry_run: bool) -> int:
+    accounts_dir = cockpit_home / "codex_accounts"
+    if not accounts_dir.exists():
+        return 0
+    providers = read_json_or_none(cockpit_home / "codex_model_providers.json")
+    provider_items = providers if isinstance(providers, list) else []
+    changed = 0
+
+    for account_path in accounts_dir.glob("*.json"):
+        if account_path.name.endswith(".bak"):
+            continue
+        account = read_json_or_none(account_path)
+        if not isinstance(account, dict):
+            continue
+        auth_mode = str(account.get("auth_mode") or "").lower()
+        if auth_mode not in {"apikey", "api_key", "api-key"} and not account.get("openai_api_key"):
+            continue
+        if first_string(account.get("api_base_url")) and account.get("api_provider_mode") == "custom":
+            continue
+
+        restored = restore_api_metadata_from_backup(account_path, account)
+        if restored is None:
+            restored = restore_api_metadata_from_provider_store(account, provider_items)
+        if restored is None:
+            continue
+
+        updated = dict(account)
+        updated.update(restored)
+        if updated == account:
+            continue
+        changed += 1
+        if not dry_run:
+            backup_file(account_path)
+            atomic_write_text(account_path, json.dumps(updated, ensure_ascii=False, indent=2) + "\n")
+
+    return changed
+
+
+def restore_api_metadata_from_backup(account_path: Path, account: dict[str, Any]) -> dict[str, Any] | None:
+    backup_path = Path(str(account_path) + ".bak")
+    backup = read_json_or_none(backup_path)
+    if not isinstance(backup, dict):
+        return None
+    if backup.get("id") != account.get("id"):
+        return None
+    base_url = first_string(backup.get("api_base_url"))
+    provider_id = first_string(backup.get("api_provider_id"))
+    provider_name = first_string(backup.get("api_provider_name"))
+    if not base_url:
+        return None
+    return {
+        "api_base_url": base_url,
+        "api_provider_mode": "custom" if provider_id else backup.get("api_provider_mode") or "custom",
+        "api_provider_id": provider_id,
+        "api_provider_name": provider_name,
+    }
+
+
+def restore_api_metadata_from_provider_store(
+    account: dict[str, Any],
+    providers: list[Any],
+) -> dict[str, Any] | None:
+    api_key = first_string(account.get("openai_api_key"), account.get("OPENAI_API_KEY"))
+    if not api_key:
+        return None
+    for provider in providers:
+        if not isinstance(provider, dict):
+            continue
+        if not provider_contains_api_key(provider.get("apiKeys"), api_key):
+            continue
+        base_url = first_string(provider.get("baseUrl"), provider.get("base_url"))
+        provider_id = first_string(provider.get("id"))
+        if not base_url or not provider_id:
+            continue
+        return {
+            "api_base_url": normalize_base_url(base_url),
+            "api_provider_mode": "custom",
+            "api_provider_id": provider_id,
+            "api_provider_name": first_string(provider.get("name")) or provider_id,
+        }
+    return None
+
+
+def provider_contains_api_key(value: Any, api_key: str) -> bool:
+    if isinstance(value, str):
+        return value == api_key
+    if isinstance(value, dict):
+        return any(provider_contains_api_key(child, api_key) for child in value.values())
+    if isinstance(value, list):
+        return any(provider_contains_api_key(child, api_key) for child in value)
+    return False
 
 
 def read_current_cockpit_account(cockpit_home: Path) -> dict[str, Any]:
@@ -90,7 +194,12 @@ def read_current_cockpit_account(cockpit_home: Path) -> dict[str, Any]:
     return account
 
 
-def build_auth_json(account: dict[str, Any], *, is_api: bool) -> dict[str, Any]:
+def build_auth_json(
+    account: dict[str, Any],
+    *,
+    is_api: bool,
+    existing_auth: Any,
+) -> dict[str, Any]:
     if is_api:
         api_key = first_string(account.get("openai_api_key"), account.get("OPENAI_API_KEY"))
         if not api_key:
@@ -115,11 +224,29 @@ def build_auth_json(account: dict[str, Any], *, is_api: bool) -> dict[str, Any]:
     account_id = first_string(account.get("account_id"), tokens.get("account_id"))
     if account_id:
         codex_tokens["account_id"] = account_id
+    last_refresh = None
+    if isinstance(existing_auth, dict):
+        last_refresh = existing_auth.get("last_refresh")
+    if not isinstance(last_refresh, str) or not last_refresh.strip():
+        last_refresh = datetime.now(UTC).isoformat(timespec="microseconds").replace("+00:00", "Z")
+
     return {
         "OPENAI_API_KEY": None,
         "tokens": codex_tokens,
-        "last_refresh": datetime.utcnow().isoformat(timespec="microseconds") + "Z",
+        "last_refresh": last_refresh,
     }
+
+
+def auth_matches(existing_auth: Any, desired_auth: dict[str, Any], *, is_api: bool) -> bool:
+    if not isinstance(existing_auth, dict):
+        return False
+    if is_api:
+        return existing_auth == desired_auth
+    existing = dict(existing_auth)
+    desired = dict(desired_auth)
+    existing.pop("last_refresh", None)
+    desired.pop("last_refresh", None)
+    return existing == desired
 
 
 def repair_config_text(config: str, account: dict[str, Any], *, is_api: bool) -> str:
@@ -265,6 +392,36 @@ def repair_state_db(db_path: Path, *, dry_run: bool) -> int:
             return int(count)
     except sqlite3.Error as exc:
         raise RuntimeError(f"SQLite repair failed: {db_path}: {exc}") from exc
+
+
+def repair_session_jsonl_providers(codex_home: Path, *, dry_run: bool) -> int:
+    sessions_dir = codex_home / "sessions"
+    if not sessions_dir.exists():
+        return 0
+    changed = 0
+    for path in sessions_dir.rglob("*.jsonl"):
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (PermissionError, OSError, UnicodeDecodeError):
+            continue
+        if '"model_provider"' not in text:
+            continue
+        repaired = re.sub(
+            r'("model_provider"\s*:\s*")([^"]+)(")',
+            lambda match: match.group(1) + OPENAI_PROVIDER_ID + match.group(3),
+            text,
+        )
+        if repaired == text:
+            continue
+        changed += 1
+        if not dry_run:
+            backup_file(path)
+            try:
+                atomic_write_text(path, repaired)
+            except (PermissionError, OSError):
+                changed -= 1
+                continue
+    return changed
 
 
 def normalize_base_url(value: str | None) -> str | None:
