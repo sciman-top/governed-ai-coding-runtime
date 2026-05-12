@@ -1,0 +1,47 @@
+# 2026-05-13 Codex CLI Wrapper Cockpit Preflight Repair
+
+- rule_id: `codex-cockpit-cli-wrapper-preflight`
+- risk: `medium`
+- landing: user-level CLI wrapper in `C:\Users\sciman\.local\bin`; source repair script in this repo under `scripts/codex-cockpit-cli-preflight-repair.py`
+- destination: keep official/unmodified Cockpit Tools installs usable while ensuring CLI `codex` starts from a repaired Codex auth/provider/history projection
+- reason:
+  - Cockpit Tools official API switch can leave `forced_login_method = "chatgpt"` while writing an API key account.
+  - Cockpit Tools custom API providers can set `model_provider = "cmp_..."`, splitting CLI/App history away from the built-in `openai` bucket.
+  - The CLI startup path can print stale Windows process cleanup noise such as `错误: 没有找到进程 "<pid>"。`.
+- changes:
+  - Added `scripts/codex-cockpit-cli-preflight-repair.py`.
+  - Installed `C:\Users\sciman\.local\bin\codex-cockpit-cli-preflight-repair.py`.
+  - Installed `C:\Users\sciman\.local\bin\codex.ps1` and `C:\Users\sciman\.local\bin\codex.cmd`.
+  - Wrapper runs preflight before launching the real Codex binary and filters stale PID cleanup stderr.
+- repair behavior:
+  - API account: writes `auth.json` with API key auth, top-level `forced_login_method = "api"`, `model_provider = "openai"`, and `openai_base_url = <cockpit api_base_url>`.
+  - OAuth account: writes OAuth `auth.json`, top-level `forced_login_method = "chatgpt"`, top-level `model_provider = "openai"`, and removes top-level `openai_base_url`.
+  - SQLite: backs up `state_5.sqlite` and migrates `threads.model_provider` to `openai`.
+  - Existing custom Cockpit provider tables are patched to `requires_openai_auth = false` and `supports_websockets = false` when they are known from the current Cockpit account.
+- commands:
+  - `python -m py_compile D:\CODE\governed-ai-coding-runtime\scripts\codex-cockpit-cli-preflight-repair.py C:\Users\sciman\.local\bin\codex-cockpit-cli-preflight-repair.py`
+  - `python C:\Users\sciman\.local\bin\codex-cockpit-cli-preflight-repair.py --dry-run`
+  - `python C:\Users\sciman\.local\bin\codex-cockpit-cli-preflight-repair.py`
+  - `Get-Command codex -All`
+  - `codex --version`
+  - `codex login status`
+  - `git -C D:\CODE\governed-ai-coding-runtime diff --check`
+  - `git -C D:\CODE\_vendor\cockpit-tools diff --check`
+- evidence:
+  - `Get-Command codex -All` now resolves `C:\Users\sciman\.local\bin\codex.ps1` before npm and native Codex entries.
+  - Initial dry-run reported `auth.json`, `config.toml`, and `state_5.sqlite:1681` would be repaired.
+  - Actual preflight repaired `auth.json`, `config.toml`, and `state_5.sqlite:1681`.
+  - Follow-up dry-run produced no changes.
+  - Top-level live config after repair: `forced_login_method=api`, `model_provider=openai`, `openai_base_url=http://35.213.82.91:8003/v1`.
+  - Live `state_5.sqlite` provider distribution after repair: `[["openai", 1682]]`.
+  - Live `auth.json` shape after repair: `auth_mode=apikey`, API key present, OAuth tokens absent.
+  - `codex --version` returned `codex-cli 0.130.0`.
+  - `codex login status` reported API key login.
+  - `diff --check` passed for both this repo and the local Cockpit Tools source patch; Cockpit Tools emitted only the existing LF-to-CRLF warning.
+- compatibility:
+  - This fix does not require rebuilding or reinstalling Cockpit Tools.
+  - Official/unmodified Cockpit Tools can still overwrite live Codex files, but every CLI `codex` startup repairs them before Codex reads them.
+  - This does not intercept Cockpit Tools UI paths that launch Codex App/native binary without invoking `codex` from PATH.
+- rollback:
+  - Delete or rename `C:\Users\sciman\.local\bin\codex.ps1`, `C:\Users\sciman\.local\bin\codex.cmd`, and `C:\Users\sciman\.local\bin\codex-cockpit-cli-preflight-repair.py`.
+  - Restore backups from `C:\Users\sciman\.codex\backups\codex-cockpit-cli-preflight\` if needed.
