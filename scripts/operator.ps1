@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexInteropCheck", "CodexSwitchRecord", "CodexSwitchGuardStatus", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
+  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexInteropCheck", "CodexInteropRepair", "CodexSwitchRecord", "CodexSwitchGuardStatus", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
   [string]$Action = "Help",
 
   [ValidateSet("quick", "full", "l1", "l2", "l3")]
@@ -335,6 +335,19 @@ function Invoke-CodexInteropCheck {
   )
 }
 
+function Invoke-CodexInteropRepair {
+  Invoke-PythonScript -Name "codex-interop-repair-current-account" -ScriptPath "scripts/codex-interop-check.py" -ScriptArguments @(
+    "--codex-home",
+    (Join-Path $HOME ".codex"),
+    "--cc-switch-db",
+    (Join-Path $HOME ".cc-switch\cc-switch.db"),
+    "--cockpit-home",
+    (Join-Path $HOME ".antigravity_cockpit"),
+    "--quick-launch",
+    "--repair-current-cockpit-account-projection"
+  )
+}
+
 function Invoke-CodexSwitchRecord {
   $label = "operator-ui-" + (Get-Date -Format "yyyyMMdd-HHmmss")
   Invoke-PwshScript -Name "codex-switch-record" -ScriptPath "scripts/Save-CodexCockpitSwitchRecord.ps1" -ScriptArguments @("-Label", $label)
@@ -476,6 +489,7 @@ try {
     "FastFeedback" { Invoke-FastFeedback }
     "Readiness" { Invoke-Readiness }
     "CodexInteropCheck" { Invoke-CodexInteropCheck }
+    "CodexInteropRepair" { Invoke-CodexInteropRepair }
     "CodexSwitchRecord" { Invoke-CodexSwitchRecord }
     "CodexSwitchGuardStatus" { Invoke-CodexSwitchGuardStatus }
     "RulesDryRun" { Invoke-RulesDryRun }

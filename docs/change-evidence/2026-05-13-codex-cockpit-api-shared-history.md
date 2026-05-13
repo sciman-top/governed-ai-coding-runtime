@@ -127,9 +127,9 @@
   - `pwsh -File scripts\Start-CodexCockpitSwitchGuard.ps1 -Status`: `task_state=not_installed`, `process_count=0`.
   - `state_5.sqlite` trigger query: `trigger_count=0`.
   - `C:\Users\sciman\.codex\log\codex-cockpit-switch-guard.jsonl` last write remained `2026-05-12 00:13:24`, so the old guard log was historical.
-- Source status:
-  - Repo `scripts\codex-cockpit-switch-guard.py` is deprecated and performs no repair.
-  - Repo `scripts\Start-CodexCockpitSwitchGuard.ps1` blocks `-InstallTask`, `-Start`, and `-RunWorker`.
+- Source status at the time of the guard audit:
+  - Repo `scripts\codex-cockpit-switch-guard.py` was deprecated and performed no repair.
+  - Repo `scripts\Start-CodexCockpitSwitchGuard.ps1` blocked `-InstallTask`, `-Start`, and `-RunWorker`.
   - Repo `scripts\codex-interop-check.py --apply` is blocked/deprecated; `--migrate-provider-bucket` is blocked/deprecated; `ensure_codex_provider_bucket_triggers` returns `codex_provider_bucket_triggers_deprecated`.
   - The only allowed write path is explicit `--repair-current-cockpit-api-projection`, which projects the selected Cockpit API account and migrates `threads.model_provider` to that account's `api_provider_id`.
 - Dormant installed-copy risk found and neutralized:
@@ -164,7 +164,13 @@
   - `docs/product/codex-cli-app-integration-guide.zh-CN.md`
 - Source hardening:
   - `scripts/codex-interop-check.py` stale reasons no longer say API mode must preserve the built-in `openai` bucket.
-  - `tests/runtime/test_codex_cockpit_switch_guard.py` now asserts the guard is deprecated and unreachable instead of expecting old watch-loop behavior.
+  - `tests/runtime/test_codex_cockpit_switch_guard.py` asserted the old guard was deprecated and unreachable instead of expecting old watch-loop behavior.
+- 2026-05-13 follow-up hardening after API/OAuth symmetric switch failures:
+  - Reintroduced `scripts/codex-cockpit-switch-guard.py` as a narrow current-account projection guard.
+  - The new guard only invokes `codex-interop-check.py --quick-launch --repair-current-cockpit-account-projection`.
+  - It does not call generic `--apply`, does not call `--migrate-provider-bucket`, does not create SQLite triggers, and does not launch/stop/kill Codex.
+  - `scripts\Start-CodexCockpitSwitchGuard.ps1` can now install/start the guard as a hidden user scheduled task or process fallback.
+  - `scripts\operator.ps1 -Action CodexInteropRepair` now exposes the same explicit current-account projection as an operator action.
 
 ## Rollback
 - Repo code: revert the changes to `scripts/codex-interop-check.py` and `tests/runtime/test_codex_shared_launcher.py`.

@@ -186,6 +186,44 @@ The repeated failure had four coupled causes.
   - `C:\Users\sciman\.codex\backups\state_5.sqlite.20260513_220223_cockpit-account-projection.bak`
   - `C:\Users\sciman\.antigravity_cockpit\backups\codex_instances.json.20260513_220223_cockpit-account-projection.bak`
 
+## API Current Account Projection Follow-up
+- Observed after explicitly switching Cockpit Tools back to API:
+  - CLI startup error: `ChatGPT login is required, but an API key is currently being used. Logging out.`
+  - Cockpit current account: `codex_apikey_8b8853f15e823dc53bd156163035bc78`, `auth_mode = apikey`, `api_provider_id = cmp_1778165666417_1`
+  - Live Codex config before repair: `forced_login_method = chatgpt`, `model_provider = codex_local_access`, active provider `requires_openai_auth = true`
+  - Live Codex auth before repair: no API-key auth projection in `auth.json`
+- Root cause:
+  - The OAuth and API errors are the same class of failure in opposite directions. Cockpit Tools can switch the current account without atomically rewriting Codex `config.toml`, `auth.json`, custom provider metadata, `codex_instances.json`, and `state_5.sqlite`.
+  - Manual live repair is insufficient because the next Cockpit switch can reintroduce the half-switched state.
+- Repo change:
+  - `scripts/codex-cockpit-switch-guard.py` is no longer a deprecated no-op. It is now a narrow projector that only invokes `codex-interop-check.py --quick-launch --repair-current-cockpit-account-projection`.
+  - `scripts/Start-CodexCockpitSwitchGuard.ps1` can install/start that projector without launching, stopping, or killing Codex.
+  - If Windows denies scheduled-task registration, `-InstallTask` now installs a hidden current-user Startup-folder VBS fallback.
+  - `scripts/operator.ps1 -Action CodexInteropRepair` exposes the same repair through the operator entrypoint.
+  - Regression coverage now asserts the guard command contains `--repair-current-cockpit-account-projection` and does not contain legacy `--apply` or `--migrate-provider-bucket`.
+- Live repair evidence:
+  - `python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch --repair-current-cockpit-account-projection`
+  - exit_code: `0`
+  - before: `status = fail`
+  - after: `status = pass`
+  - action delegated to `repair_current_cockpit_api_projection`
+  - final provider: `cmp_1778165666417_1`
+  - final thread distribution: `{ "cmp_1778165666417_1": 1699 }`
+  - `cockpit_live_login_mode_matches_current_account = pass`
+  - `codex_auth_matches_cockpit_current_account = pass`
+  - `cockpit_saved_api_provider_profiles_projectable = pass`
+- Live connectivity smoke:
+  - `codex exec --ephemeral --skip-git-repo-check --output-last-message .runtime\codex-api-smoke-after-switch.txt "Reply exactly: API_OK"`
+  - exit_code: `0`
+  - final message: `API_OK`
+  - provider: `cmp_1778165666417_1`
+- Guard installation evidence:
+  - `python scripts\codex-cockpit-switch-guard.py --once ... --repair-script scripts\codex-interop-check.py`: exit_code `0`, `stdout_status = pass`, command included `--repair-current-cockpit-account-projection`.
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Start-CodexCockpitSwitchGuard.ps1 -InstallTask`: scheduled-task registration was denied by Windows, so the script installed Startup fallback `C:\Users\sciman\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\codex-cockpit-switch-guard.vbs`.
+  - Startup fallback VBS was regenerated after hardening `Write-StartupLauncher`; verification showed `line_count = 2` and the `shell.Run` command stayed on one line with `-RunWorker`.
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Start-CodexCockpitSwitchGuard.ps1 -Start`: started hidden process fallback.
+  - Status after start: `task_state = not_installed`, `process_count = 1`, `startup_launcher_exists = true`, `issue = null`.
+
 ## Verification
 - `python -m py_compile scripts\codex-cockpit-cli-preflight-repair.py`
 - `python -m py_compile scripts\codex-interop-check.py scripts\codex-cockpit-cli-preflight-repair.py`
@@ -196,6 +234,26 @@ The repeated failure had four coupled causes.
 - `python -m unittest tests.runtime.test_codex_shared_launcher tests.runtime.test_codex_cockpit_switch_trace`
   - `Ran 21 tests`
   - `OK`
+- `python -m unittest tests.runtime.test_codex_cockpit_switch_guard tests.runtime.test_codex_shared_launcher tests.runtime.test_operator_entrypoint tests.runtime.test_codex_cockpit_cli_preflight_repair`
+  - `Ran 67 tests`
+  - `OK`
+- `git diff --check`
+  - exit_code: `0`
+  - only LF-to-CRLF working-copy warnings
+- `python scripts\codex-interop-check.py --codex-home "$env:USERPROFILE\.codex" --cc-switch-db "$env:USERPROFILE\.cc-switch\cc-switch.db" --cockpit-home "$env:USERPROFILE\.antigravity_cockpit" --quick-launch`
+  - `status = pass`
+- `python scripts\verify-shell-risk-contract.py --json`
+  - `status = pass`
+  - `finding_count = 0`
+  - new allowlist entries are scoped to the managed Startup VBS fallback and hidden `pwsh` worker start
+- `python -m unittest tests.runtime.test_shell_risk_contract tests.runtime.test_codex_cockpit_switch_guard tests.runtime.test_operator_entrypoint`
+  - `Ran 49 tests`
+  - `OK`
+- `codex exec --ephemeral --skip-git-repo-check --output-last-message .runtime\codex-api-smoke-projector-after-code-fix.txt "Reply exactly: PROJECTOR_API_OK"`
+  - exit_code: `0`
+  - provider: `cmp_1778165666417_1`
+  - final message: `PROJECTOR_API_OK`
+  - known non-blocking startup noise remained: `ERROR: The process "<pid>" not found.`
 - `python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch`
   - exit_code: `0`
   - status: `attention`

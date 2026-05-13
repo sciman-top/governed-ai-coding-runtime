@@ -293,6 +293,34 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("--cockpit-home", completed.stdout)
         self.assertNotIn("--apply", completed.stdout)
 
+    def test_operator_codex_interop_repair_current_account_is_available_as_dry_run(self) -> None:
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "operator.ps1"),
+                "-Action",
+                "CodexInteropRepair",
+                "-DryRun",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+        )
+
+        self.assertIn("DRY-RUN codex-interop-repair-current-account", completed.stdout)
+        self.assertIn("scripts/codex-interop-check.py", completed.stdout)
+        self.assertIn("--quick-launch", completed.stdout)
+        self.assertIn("--repair-current-cockpit-account-projection", completed.stdout)
+        self.assertNotIn("--apply", completed.stdout)
+        self.assertNotIn("--migrate-provider-bucket", completed.stdout)
+
     def test_operator_codex_readonly_switch_helpers_are_available_as_dry_run(self) -> None:
         cases = [
             ("CodexSwitchRecord", "codex-switch-record", "scripts/Save-CodexCockpitSwitchRecord.ps1", "-Label"),

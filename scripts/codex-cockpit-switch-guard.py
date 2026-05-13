@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Deprecated background guard for Cockpit Tools -> Codex state drift.
+"""Project Cockpit Tools current Codex account into Codex live state.
 
-The former guard is intentionally disabled. Cockpit Tools owns Codex auth/API
-switching and launch-on-switch; this project must not run a background process
-that rewrites Codex/Cockpit provider, auth, history bucket, or launcher state.
+The guard is intentionally narrow: it only runs the explicit current-account
+projection path in codex-interop-check.py. It must not use generic --apply,
+create SQLite triggers, or launch/kill Codex processes.
 """
 
 from __future__ import annotations
@@ -97,20 +97,57 @@ def run_interop_repair(
     timeout_seconds: int,
 ) -> dict[str, Any]:
     started = dt.datetime.now().isoformat(timespec="seconds")
+    command = [
+        sys.executable,
+        str(repair_script),
+        "--codex-home",
+        str(codex_home),
+        "--cc-switch-db",
+        str(cc_switch_db),
+        "--cockpit-home",
+        str(cockpit_home),
+        "--quick-launch",
+        "--repair-current-cockpit-account-projection",
+    ]
+    try:
+        completed = subprocess.run(
+            command,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            capture_output=True,
+            timeout=timeout_seconds,
+        )
+    except subprocess.TimeoutExpired as exc:
+        return {
+            "timestamp": started,
+            "command": command,
+            "exit_code": 124,
+            "stdout_status": "timeout",
+            "stdout_actions": [],
+            "stdout": exc.stdout or "",
+            "stderr": exc.stderr or f"timed out after {timeout_seconds}s",
+        }
+
+    stdout_status = None
+    stdout_actions: list[dict[str, Any]] = []
+    try:
+        payload = json.loads(completed.stdout)
+        stdout_status = payload.get("status") if isinstance(payload, dict) else None
+        actions = payload.get("actions") if isinstance(payload, dict) else None
+        if isinstance(actions, list):
+            stdout_actions = [action for action in actions if isinstance(action, dict)]
+    except json.JSONDecodeError:
+        stdout_status = "unparseable"
+
     return {
         "timestamp": started,
-        "command": [],
-        "exit_code": 2,
-        "stdout_status": "deprecated",
-        "stdout_actions": [
-            {
-                "id": "codex_cockpit_switch_guard_deprecated",
-                "status": "blocked",
-                "reason": "Background Codex/Cockpit repair guard is disabled to prevent project interference with Cockpit native switching.",
-            }
-        ],
-        "stdout": "",
-        "stderr": "codex-cockpit-switch-guard is deprecated and performs no repair.",
+        "command": command,
+        "exit_code": int(completed.returncode),
+        "stdout_status": stdout_status,
+        "stdout_actions": stdout_actions,
+        "stdout": completed.stdout,
+        "stderr": completed.stderr,
     }
 
 
@@ -138,17 +175,6 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    event = {
-        "event": "guard_deprecated",
-        "timestamp": dt.datetime.now().isoformat(timespec="seconds"),
-        "reason": "Background Codex/Cockpit repair guard is disabled to prevent project interference with Cockpit native switching.",
-        "codex_home": str(args.codex_home),
-        "cockpit_home": str(args.cockpit_home),
-    }
-    append_log(args.log_path, event)
-    print(json.dumps(event, ensure_ascii=False, indent=2))
-    return 2
-
     if not args.once and not args.watch:
         args.once = True
 

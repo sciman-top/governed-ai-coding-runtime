@@ -42,26 +42,117 @@ function Get-GuardProcess {
 }
 
 $logPath = Join-Path (Join-Path $CodexHome 'log') 'codex-cockpit-switch-guard.jsonl'
+$startupLauncherPath = Join-Path ([Environment]::GetFolderPath('Startup')) "$TaskName.vbs"
 
-$deprecatedReason = 'codex-cockpit-switch-guard is deprecated. Cockpit Tools owns Codex auth/API switching and launch-on-switch; this project must not install or start a background repair guard.'
+function Resolve-PwshPath {
+    $command = Get-Command pwsh -ErrorAction Stop | Select-Object -First 1
+    return [string]$command.Source
+}
+
+function Write-StartupLauncher {
+    param(
+        [Parameter(Mandatory = $true)][string] $LauncherPath,
+        [Parameter(Mandatory = $true)][string] $PwshPath
+    )
+
+    [string] $pwshExecutable = @($PwshPath -split '\r?\n' | Where-Object { $_.Trim() } | Select-Object -First 1)[0].Trim()
+    $arguments = @(
+        '-NoProfile',
+        '-ExecutionPolicy',
+        'Bypass',
+        '-WindowStyle',
+        'Hidden',
+        '-File',
+        $PSCommandPath,
+        '-RunWorker',
+        '-CodexHome',
+        $CodexHome,
+        '-CockpitHome',
+        $CockpitHome,
+        '-CcSwitchDb',
+        $CcSwitchDb
+    )
+    [string] $command = '"' + $pwshExecutable + '" ' + (($arguments | ForEach-Object { '"' + ($_ -replace '"', '""') + '"' }) -join ' ')
+    [string] $escapedCommand = ($command -replace '"', '""') -replace '[\r\n]+', ''
+    $vbs = @(
+        'Set shell = CreateObject("WScript.Shell")',
+        ('shell.Run "{0}", 0, False' -f $escapedCommand)
+    ) -join "`r`n"
+    Set-Content -LiteralPath $LauncherPath -Value $vbs -Encoding ASCII
+}
 
 if ($RunWorker) {
-    Write-Error $deprecatedReason
-    exit 2
+    $python = (Get-Command python -ErrorAction Stop).Source
+    $guardScript = Join-Path $PSScriptRoot 'codex-cockpit-switch-guard.py'
+    $repairScript = Join-Path $PSScriptRoot 'codex-interop-check.py'
+    & $python $guardScript `
+        --codex-home $CodexHome `
+        --cockpit-home $CockpitHome `
+        --cc-switch-db $CcSwitchDb `
+        --repair-script $repairScript `
+        --watch `
+        --log-path $logPath
+    exit $LASTEXITCODE
 }
 
 if ($InstallTask) {
-    Write-Error $deprecatedReason
-    exit 2
+    $pwsh = Resolve-PwshPath
+    $action = New-ScheduledTaskAction -Execute $pwsh -Argument (
+        '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "{0}" -RunWorker -CodexHome "{1}" -CockpitHome "{2}" -CcSwitchDb "{3}"' -f
+        $PSCommandPath,
+        $CodexHome,
+        $CockpitHome,
+        $CcSwitchDb
+    )
+    $trigger = New-ScheduledTaskTrigger -AtLogOn
+    $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Days 7)
+    try {
+        Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings -Description 'Projects Cockpit Tools current Codex account into Codex live config/auth/history without launching or killing Codex.' -Force | Out-Null
+        if (Test-Path -LiteralPath $startupLauncherPath) {
+            Remove-Item -LiteralPath $startupLauncherPath -Force
+        }
+        Write-Host "Installed scheduled task: $TaskName"
+    }
+    catch {
+        Write-StartupLauncher -LauncherPath $startupLauncherPath -PwshPath $pwsh
+        Write-Host "Scheduled task install failed; installed startup launcher fallback: $startupLauncherPath"
+    }
 }
 elseif ($UninstallTask) {
     Stop-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue | Out-Null
     Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
+    if (Test-Path -LiteralPath $startupLauncherPath) {
+        Remove-Item -LiteralPath $startupLauncherPath -Force
+        Write-Host "Removed startup launcher fallback: $startupLauncherPath"
+    }
     Write-Host "Uninstalled scheduled task: $TaskName"
 }
 elseif ($Start) {
-    Write-Error $deprecatedReason
-    exit 2
+    $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+    if ($task) {
+        Start-ScheduledTask -TaskName $TaskName
+        Write-Host "Started scheduled task: $TaskName"
+    }
+    else {
+        $pwsh = Resolve-PwshPath
+        Start-Process -FilePath $pwsh -ArgumentList @(
+            '-NoProfile',
+            '-ExecutionPolicy',
+            'Bypass',
+            '-WindowStyle',
+            'Hidden',
+            '-File',
+            $PSCommandPath,
+            '-RunWorker',
+            '-CodexHome',
+            $CodexHome,
+            '-CockpitHome',
+            $CockpitHome,
+            '-CcSwitchDb',
+            $CcSwitchDb
+        ) -WindowStyle Hidden | Out-Null
+        Write-Host "Started guard process fallback: $TaskName"
+    }
 }
 elseif ($Stop) {
     Stop-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue | Out-Null
@@ -80,6 +171,8 @@ else {
         process_count = $processes.Count
         process_ids = @($processes | ForEach-Object { $_.ProcessId })
         log_path = $logPath
+        startup_launcher_path = $startupLauncherPath
+        startup_launcher_exists = Test-Path -LiteralPath $startupLauncherPath
         issue = if ($processes.Count -eq 0) { 'guard_worker_not_running' } else { $null }
     } | ConvertTo-Json -Depth 4
 }

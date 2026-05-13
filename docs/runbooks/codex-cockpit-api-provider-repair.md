@@ -17,6 +17,7 @@ This runbook is for local Codex/Cockpit interoperability only. Do not restart, s
 - Built-in `openai` plus `openai_base_url` can preserve one historical bucket, but cannot disable WebSocket retries for relays such as `http://35.213.82.91:8003/v1`.
 - Historical project guards made the problem worse by creating SQLite triggers or running generic provider-bucket repairs that could pull history back toward `openai` or race Cockpit Tools state writes.
 - OAuth/ChatGPT switching has the symmetric failure mode: Cockpit can make an OAuth account current while Codex live projection still has `forced_login_method = "api"` or a missing/stale `auth.json`. In that state Codex CLI requires API-key login even though the current account is ChatGPT/OAuth.
+- API switching has the opposite symmetric failure mode: Cockpit can make an API-key account current while Codex live projection still has `forced_login_method = "chatgpt"`, a ChatGPT-only provider, or no API-key `auth.json`. In that state Codex CLI requires ChatGPT login even though the current account is API-key mode.
 
 ## Fixed Shape
 For a Cockpit API account:
@@ -53,6 +54,16 @@ For a ChatGPT/OAuth account:
   ```powershell
   python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch --repair-current-cockpit-account-projection
   ```
+- Install and start the narrow current-account projection guard. This guard only runs the explicit projection command above after Cockpit/Codex state files change; it must not launch, stop, or kill Codex:
+  ```powershell
+  pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Start-CodexCockpitSwitchGuard.ps1 -InstallTask
+  pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Start-CodexCockpitSwitchGuard.ps1 -Start
+  ```
+  If Windows denies scheduled-task registration, `-InstallTask` writes a hidden current-user Startup-folder VBS fallback instead. The fallback must contain exactly two lines, with the full `shell.Run "... -RunWorker ...", 0, False` command on the second line; embedded newlines inside the command break logon startup.
+- Operator entrypoint for the same explicit projection:
+  ```powershell
+  pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexInteropRepair
+  ```
 - Legacy shim cleanup:
   ```powershell
   pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Disable-CodexProjectInterop.ps1 -Apply -DisableProjectShortcuts
@@ -62,7 +73,7 @@ For a ChatGPT/OAuth account:
 - Do not use generic `--apply` as a repair path.
 - Do not use `--migrate-provider-bucket` as a repair path.
 - Do not create SQLite triggers such as `trg_threads_shared_provider_after_insert` or `trg_threads_shared_provider_after_update`.
-- Do not install or start `codex-cockpit-switch-guard`.
+- Do not install or start any guard that calls generic `--apply`, calls `--migrate-provider-bucket`, creates SQLite triggers, edits launcher paths, or starts/stops Codex.
 - Do not install no-op launchers, restart wrappers, no-restart shims, or CLI preflight wrappers to intercept Cockpit Tools.
 - Do not force `codex_launch_on_switch` on or off; it is a Cockpit UI/user setting.
 
@@ -74,8 +85,9 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Start-CodexCockpitSwitchGu
 ```
 
 Expected:
-- `task_state = "not_installed"`
-- `process_count = 0`
+- if the current-account projection guard is installed: `task_state = "Running"` or `process_count > 0`
+- if intentionally disabled: `task_state = "not_installed"` and `process_count = 0`
+- no other guard/checker process should run with `--apply`, `--migrate-provider-bucket`, or trigger-writing code
 
 ```powershell
 @'
