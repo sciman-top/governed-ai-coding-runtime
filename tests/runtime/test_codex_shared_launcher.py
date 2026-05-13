@@ -1192,7 +1192,6 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertIn("supports_websockets = false", config_text)
             self.assertNotIn("[model_providers.codex_local_access]", config_text)
             auth = json.loads((codex_home / "auth.json").read_text(encoding="utf-8"))
-            self.assertEqual("apikey", auth["auth_mode"])
             self.assertEqual("sk-test-secret", auth["OPENAI_API_KEY"])
             self.assertEqual("http://35.213.82.91:8003/v1", auth["base_url"])
             instances = json.loads((cockpit_home / "codex_instances.json").read_text(encoding="utf-8"))
@@ -1332,7 +1331,7 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertEqual("pass", checks["codex_auth_matches_cockpit_current_account"]["status"])
             self.assertEqual("pass", checks["cockpit_codex_instances_follow_current_account"]["status"])
 
-    def test_interop_checker_repairs_current_oauth_account_projection_after_api_switch(self) -> None:
+    def test_interop_checker_blocks_generic_current_account_projection(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
             codex_home = root / "codex-home"
@@ -1429,40 +1428,34 @@ class CodexSharedLauncherTests(unittest.TestCase):
                 quick_launch=True,
             )
 
-            self.assertEqual(0, repaired.returncode, repaired.stdout + repaired.stderr)
+            self.assertEqual(2, repaired.returncode, repaired.stdout + repaired.stderr)
             payload = json.loads(repaired.stdout)
-            action = {item["id"]: item for item in payload["actions"]}["repair_current_cockpit_account_projection"]
-            self.assertEqual("changed", action["status"])
-            self.assertEqual("codex_oauth", action["account_id"])
-            self.assertEqual("openai", action["provider_id"])
-            self.assertTrue(action["cockpit_instance_binding_changed"])
+            action = {item["id"]: item for item in payload["actions"]}[
+                "repair_current_cockpit_account_projection_deprecated"
+            ]
+            self.assertEqual("blocked", action["status"])
             self.assertNotIn("oauth-token", repaired.stdout)
 
             config_text = (codex_home / "config.toml").read_text(encoding="utf-8")
-            self.assertIn('model_provider = "openai"', config_text)
-            self.assertIn('forced_login_method = "chatgpt"', config_text)
-            self.assertNotIn('openai_base_url = "http://35.213.82.91:8003/v1"', config_text)
-            self.assertIn("[profiles.shared-cockpit-api]", config_text)
+            self.assertIn('model_provider = "cmp_35"', config_text)
+            self.assertIn('forced_login_method = "api"', config_text)
             self.assertIn('model_provider = "cmp_35"', config_text)
             self.assertIn("[model_providers.cmp_35]", config_text)
             self.assertIn("supports_websockets = false", config_text)
-            auth = json.loads((codex_home / "auth.json").read_text(encoding="utf-8"))
-            self.assertEqual("chatgpt", auth["auth_mode"])
-            self.assertEqual("oauth-token", auth["tokens"]["access_token"])
-            self.assertEqual("codex_oauth", auth["source_account_id"])
+            self.assertFalse((codex_home / "auth.json").exists())
             instances = json.loads((cockpit_home / "codex_instances.json").read_text(encoding="utf-8"))
-            self.assertTrue(instances["defaultSettings"]["followLocalAccount"])
-            self.assertIsNone(instances["defaultSettings"]["bindAccountId"])
+            self.assertFalse(instances["defaultSettings"]["followLocalAccount"])
+            self.assertEqual("codex_api", instances["defaultSettings"]["bindAccountId"])
 
             checked = _run_interop_checker(codex_home, cc_switch_db, cockpit_home, quick_launch=True)
-            self.assertEqual(0, checked.returncode, checked.stdout + checked.stderr)
+            self.assertEqual(2, checked.returncode, checked.stdout + checked.stderr)
             checked_payload = json.loads(checked.stdout)
             checks = {check["id"]: check for check in checked_payload["after"]["checks"]}
-            self.assertEqual("pass", checks["cockpit_live_login_mode_matches_current_account"]["status"])
-            self.assertEqual("pass", checks["codex_auth_matches_cockpit_current_account"]["status"])
-            self.assertEqual("pass", checks["cockpit_saved_api_provider_profiles_projectable"]["status"])
+            self.assertEqual("fail", checks["cockpit_live_login_mode_matches_current_account"]["status"])
+            self.assertEqual("fail", checks["codex_auth_matches_cockpit_current_account"]["status"])
+            self.assertEqual("fail", checks["cockpit_saved_api_provider_profiles_projectable"]["status"])
             self.assertEqual(
-                {"openai": 2},
+                {"cmp_35": 2},
                 checks["codex_thread_provider_distribution"]["distribution"],
             )
 

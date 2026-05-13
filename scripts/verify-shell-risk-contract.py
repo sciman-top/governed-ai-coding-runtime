@@ -138,20 +138,6 @@ ALLOWLIST = (
         "expected_count": 1,
         "reason": "project interop disable only renames managed Codex shortcut files after source and target containment under the configured bin directory",
     },
-    {
-        "kind": "powershell_remove_item",
-        "path": "scripts/Start-CodexCockpitSwitchGuard.ps1",
-        "line_contains": "Remove-Item -LiteralPath $startupLauncherPath -Force",
-        "expected_count": 2,
-        "reason": "Cockpit switch guard removes only the managed current-user Startup-folder VBS fallback path derived from TaskName",
-    },
-    {
-        "kind": "powershell_start_process",
-        "path": "scripts/Start-CodexCockpitSwitchGuard.ps1",
-        "line_contains": "Start-Process -FilePath $pwsh -ArgumentList @(",
-        "expected_count": 1,
-        "reason": "Cockpit switch guard starts only the resolved pwsh worker fallback with -WindowStyle Hidden and bounded script arguments",
-    },
 )
 
 

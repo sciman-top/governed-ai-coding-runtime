@@ -51,8 +51,8 @@ CODEX_TUI_LOG_ROTATE_BYTES = 100 * 1024 * 1024
 DEPRECATED_WRITE_REPAIR_REASON = (
     "Project-managed Codex/Cockpit interop repair is disabled. Cockpit Tools owns "
     "Codex account switching and launch-on-switch; general write repair and history "
-    "bucket migration are disabled. Use --repair-current-cockpit-account-projection "
-    "for an explicit current Cockpit account auth/config projection."
+    "bucket migration are disabled. Use --repair-current-cockpit-api-projection only "
+    "for an explicit Cockpit API account auth/config/no-WebSocket provider projection."
 )
 
 
@@ -66,6 +66,7 @@ def main() -> int:
     parser.add_argument("--migrate-provider-bucket", action="store_true")
     parser.add_argument("--repair-current-cockpit-account-projection", action="store_true")
     parser.add_argument("--repair-current-cockpit-api-projection", action="store_true")
+    parser.add_argument("--repair-cockpit-instance-follow-current", action="store_true")
     parser.add_argument("--prefer-cockpit-api-account", action="store_true")
     parser.add_argument("--quick-launch", action="store_true")
     args = parser.parse_args()
@@ -111,12 +112,15 @@ def main() -> int:
         )
     if args.repair_current_cockpit_account_projection:
         actions.append(
-            repair_current_cockpit_account_projection(
-                codex_home=codex_home,
-                cockpit_home=cockpit_home,
-                cockpit_account_id=args.cockpit_account_id,
-            )
+            {
+                "id": "repair_current_cockpit_account_projection_deprecated",
+                "tool": "codex",
+                "status": "blocked",
+                "reason": "Generic Cockpit account projection is disabled because it can rewrite OAuth/API state from a background guard. Use --repair-current-cockpit-api-projection for the explicit API repair path.",
+            }
         )
+    if args.repair_cockpit_instance_follow_current:
+        actions.append(repair_cockpit_instance_follow_current(cockpit_home=cockpit_home))
     after = inspect_interop(
         codex_home=codex_home,
         cc_switch_db=cc_switch_db,
@@ -130,6 +134,7 @@ def main() -> int:
         "apply": bool(args.apply),
         "repair_current_cockpit_account_projection": bool(args.repair_current_cockpit_account_projection),
         "repair_current_cockpit_api_projection": bool(args.repair_current_cockpit_api_projection),
+        "repair_cockpit_instance_follow_current": bool(args.repair_cockpit_instance_follow_current),
         "prefer_cockpit_api_account": bool(args.prefer_cockpit_api_account),
         "migrate_provider_bucket": bool(args.migrate_provider_bucket),
         "quick_launch": bool(args.quick_launch),
@@ -990,6 +995,55 @@ def repair_current_cockpit_api_projection(
         "history_rows_changed": history_rows_changed,
         "history_visibility_rows_changed": history_visibility_rows_changed,
         "backups": backups,
+    }
+
+
+def repair_cockpit_instance_follow_current(*, cockpit_home: Path) -> dict[str, Any]:
+    instances_path = cockpit_home / "codex_instances.json"
+    instances = _read_json(instances_path)
+    if not isinstance(instances, dict):
+        return {
+            "id": "repair_cockpit_instance_follow_current",
+            "tool": "cockpit_tools",
+            "status": "blocked",
+            "reason": "Cockpit codex_instances.json is missing or invalid.",
+            "path": str(instances_path),
+        }
+    default_settings = instances.setdefault("defaultSettings", {})
+    if not isinstance(default_settings, dict):
+        return {
+            "id": "repair_cockpit_instance_follow_current",
+            "tool": "cockpit_tools",
+            "status": "blocked",
+            "reason": "Cockpit codex_instances.json defaultSettings is not an object.",
+            "path": str(instances_path),
+        }
+    before = {
+        "followLocalAccount": default_settings.get("followLocalAccount"),
+        "bindAccountId": default_settings.get("bindAccountId"),
+    }
+    changed = (
+        default_settings.get("followLocalAccount") is not True
+        or default_settings.get("bindAccountId") not in (None, "")
+    )
+    backup_path = None
+    if changed:
+        backup_path = str(_backup_file(instances_path, suffix="cockpit-instance-follow-current"))
+        default_settings["followLocalAccount"] = True
+        default_settings["bindAccountId"] = None
+        instances_path.write_text(json.dumps(instances, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return {
+        "id": "repair_cockpit_instance_follow_current",
+        "tool": "cockpit_tools",
+        "status": "changed" if changed else "pass",
+        "reason": "Cockpit default Codex launch settings now follow the current account and do not pin bindAccountId.",
+        "path": str(instances_path),
+        "before": before,
+        "after": {
+            "followLocalAccount": True,
+            "bindAccountId": None,
+        },
+        "backup_path": backup_path,
     }
 
 

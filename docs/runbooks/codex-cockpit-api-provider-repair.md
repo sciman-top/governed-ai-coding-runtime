@@ -53,19 +53,18 @@ For a ChatGPT/OAuth account:
   python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch --repair-current-cockpit-api-projection --prefer-cockpit-api-account
   ```
 - Operator UI entrypoint for the same explicit API projection: open `http://127.0.0.1:8770/?lang=zh-CN`, go to the `Codex` tab, expand `Cockpit compatibility diagnostics`, then click `Repair API projection`. The button must run only the explicit API projection command above, create backups, and must not restart, stop, kill, or auto-launch Codex.
-- Explicit current account projection for the currently selected Cockpit account, including OAuth/ChatGPT:
-  ```powershell
-  python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch --repair-current-cockpit-account-projection
-  ```
-- Install and start the narrow current-account projection guard. This guard only runs the explicit projection command above after Cockpit/Codex state files change; it must not launch, stop, or kill Codex:
-  ```powershell
-  pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Start-CodexCockpitSwitchGuard.ps1 -InstallTask
-  pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Start-CodexCockpitSwitchGuard.ps1 -Start
-  ```
-  If Windows denies scheduled-task registration, `-InstallTask` writes a hidden current-user Startup-folder VBS fallback instead. The fallback must contain exactly two lines, with the full `shell.Run "... -RunWorker ...", 0, False` command on the second line; embedded newlines inside the command break logon startup.
 - Operator entrypoint for the same explicit projection:
   ```powershell
   pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexApiProjectionRepair
+  ```
+- If `cockpit_codex_instances_follow_current_account` fails, repair only Cockpit launch binding. This writes a `codex_instances.json` backup, sets `defaultSettings.followLocalAccount = true`, clears `defaultSettings.bindAccountId`, and must not touch Codex auth/config/history:
+  ```powershell
+  pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexLaunchBindingRepair
+  ```
+  The same action is available in the 8770 `Codex` tab as `Repair launch follow`.
+- Verify that no retired background guard, startup fallback, worker, or installed wrapper remains:
+  ```powershell
+  pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Test-CodexGuardAbsence.ps1
   ```
 - Legacy shim cleanup:
   ```powershell
@@ -76,7 +75,8 @@ For a ChatGPT/OAuth account:
 - Do not use generic `--apply` as a repair path.
 - Do not use `--migrate-provider-bucket` as a repair path.
 - Do not create SQLite triggers such as `trg_threads_shared_provider_after_insert` or `trg_threads_shared_provider_after_update`.
-- Do not install or start any guard that calls generic `--apply`, calls `--migrate-provider-bucket`, creates SQLite triggers, edits launcher paths, or starts/stops Codex.
+- Do not install or start any background guard, including the former current-account projection guard.
+- Do not call `--repair-current-cockpit-account-projection`; generic OAuth/API account projection is deprecated because a background guard can rewrite the live state behind Cockpit Tools.
 - Do not install no-op launchers, restart wrappers, no-restart shims, or CLI preflight wrappers to intercept Cockpit Tools.
 - Do not force `codex_launch_on_switch` on or off; it is a Cockpit UI/user setting.
 
@@ -84,13 +84,14 @@ For a ChatGPT/OAuth account:
 Use these before claiming the issue is fixed:
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Start-CodexCockpitSwitchGuard.ps1 -Status
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Test-CodexGuardAbsence.ps1
 ```
 
 Expected:
-- if the current-account projection guard is installed: `task_state = "Running"` or `process_count > 0`
-- if intentionally disabled: `task_state = "not_installed"` and `process_count = 0`
-- no other guard/checker process should run with `--apply`, `--migrate-provider-bucket`, or trigger-writing code
+- `status = "pass"`
+- `scheduled_task_present = false`, `startup_launcher_present = false`, and `process_count = 0`
+- `retired_installed_files_present = []`
+- no other guard/checker process should run with `--apply`, `--migrate-provider-bucket`, `--repair-current-cockpit-account-projection`, or trigger-writing code
 
 ```powershell
 @'
@@ -135,6 +136,6 @@ The 2026-05-13 reference incident is recorded in:
 - `docs/change-evidence/2026-05-13-codex-cockpit-api-shared-history.md`
 
 ## Rollback
-- Restore the timestamped backups created by `--repair-current-cockpit-api-projection` or `--repair-current-cockpit-account-projection`.
+- Restore the timestamped backups created by `--repair-current-cockpit-api-projection`.
 - Restore `~/.codex/config.toml`, `~/.codex/auth.json`, `~/.codex/state_5.sqlite`, and Cockpit provider metadata together. Do not restore only one file unless the evidence shows only that file drifted.
 - Re-run the guard audit and read-only interop check after rollback.

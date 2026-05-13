@@ -348,10 +348,39 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertNotIn("--apply", completed.stdout)
         self.assertNotIn("--migrate-provider-bucket", completed.stdout)
 
+    def test_operator_codex_launch_binding_repair_is_available_as_dry_run(self) -> None:
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "operator.ps1"),
+                "-Action",
+                "CodexLaunchBindingRepair",
+                "-DryRun",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+        )
+
+        self.assertIn("DRY-RUN codex-launch-binding-repair", completed.stdout)
+        self.assertIn("scripts/codex-interop-check.py", completed.stdout)
+        self.assertIn("--quick-launch", completed.stdout)
+        self.assertIn("--repair-cockpit-instance-follow-current", completed.stdout)
+        self.assertNotIn("--repair-current-cockpit-account-projection", completed.stdout)
+        self.assertNotIn("--apply", completed.stdout)
+        self.assertNotIn("--migrate-provider-bucket", completed.stdout)
+
     def test_operator_codex_readonly_switch_helpers_are_available_as_dry_run(self) -> None:
         cases = [
             ("CodexSwitchRecord", "codex-switch-record", "scripts/Save-CodexCockpitSwitchRecord.ps1", "-Label"),
-            ("CodexSwitchGuardStatus", "codex-switch-guard-status", "scripts/Start-CodexCockpitSwitchGuard.ps1", "-Status"),
+            ("CodexGuardAbsenceCheck", "codex-guard-absence-check", "scripts/Test-CodexGuardAbsence.ps1", ""),
         ]
         for action, step_name, script_name, expected_arg in cases:
             with self.subTest(action=action):
@@ -377,7 +406,8 @@ class OperatorEntrypointTests(unittest.TestCase):
 
                 self.assertIn(f"DRY-RUN {step_name}", completed.stdout)
                 self.assertIn(script_name, completed.stdout)
-                self.assertIn(expected_arg, completed.stdout)
+                if expected_arg:
+                    self.assertIn(expected_arg, completed.stdout)
 
     def test_operator_preserves_codex_interop_check_failure_exit_code(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -572,8 +602,18 @@ class OperatorEntrypointTests(unittest.TestCase):
                 "CodexApiProjectionRepair",
                 module.ALLOWED_ACTIONS["codex_api_projection_repair"]["operator_action"],
             )
+            self.assertIn("codex_launch_binding_repair", module.ALLOWED_ACTIONS)
+            self.assertEqual(
+                "CodexLaunchBindingRepair",
+                module.ALLOWED_ACTIONS["codex_launch_binding_repair"]["operator_action"],
+            )
             self.assertIn("codex_switch_record", module.ALLOWED_ACTIONS)
-            self.assertIn("codex_guard_status", module.ALLOWED_ACTIONS)
+            self.assertIn("codex_guard_absence_check", module.ALLOWED_ACTIONS)
+            self.assertEqual(
+                "CodexGuardAbsenceCheck",
+                module.ALLOWED_ACTIONS["codex_guard_absence_check"]["operator_action"],
+            )
+            self.assertNotIn("codex_guard_status", module.ALLOWED_ACTIONS)
             self.assertNotIn("codex_interop_repair", module.ALLOWED_ACTIONS)
             self.assertNotIn("codex_guard_start", module.ALLOWED_ACTIONS)
             self.assertIn("evolution_review", module.ALLOWED_ACTIONS)
