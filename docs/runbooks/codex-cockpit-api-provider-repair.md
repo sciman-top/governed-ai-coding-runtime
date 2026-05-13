@@ -1,7 +1,11 @@
-# Codex/Cockpit API Provider Repair Runbook
+# Codex/Cockpit Account Projection Repair Runbook
 
 ## Scope
-Use this runbook when Codex App can see local history but shows `Reconnecting`, or Codex CLI can connect while the picker/history appears empty after Cockpit Tools switches Codex to an API provider.
+Use this runbook when Codex App can see local history but shows `Reconnecting`, Codex CLI can connect while the picker/history appears empty after Cockpit Tools switches Codex to an API provider, or Codex CLI fails after switching Cockpit Tools back to OAuth/ChatGPT with:
+
+```text
+API key login is required, but ChatGPT is currently being used. Logging out.
+```
 
 This runbook is for local Codex/Cockpit interoperability only. Do not restart, stop, kill, or auto-launch Codex App unless the operator explicitly confirms that action for the current incident.
 
@@ -12,6 +16,7 @@ This runbook is for local Codex/Cockpit interoperability only. Do not restart, s
 - The durable invariant is: active `config.toml` provider, Cockpit current API account `api_provider_id`, and `threads.model_provider` must match.
 - Built-in `openai` plus `openai_base_url` can preserve one historical bucket, but cannot disable WebSocket retries for relays such as `http://35.213.82.91:8003/v1`.
 - Historical project guards made the problem worse by creating SQLite triggers or running generic provider-bucket repairs that could pull history back toward `openai` or race Cockpit Tools state writes.
+- OAuth/ChatGPT switching has the symmetric failure mode: Cockpit can make an OAuth account current while Codex live projection still has `forced_login_method = "api"` or a missing/stale `auth.json`. In that state Codex CLI requires API-key login even though the current account is ChatGPT/OAuth.
 
 ## Fixed Shape
 For a Cockpit API account:
@@ -28,8 +33,12 @@ For a Cockpit API account:
 - Cockpit provider metadata records the same provider id and `supports_websockets = false`.
 
 For a ChatGPT/OAuth account:
+- `~/.codex/config.toml` top-level `forced_login_method = "chatgpt"`.
 - `model_provider = "openai"` remains valid.
 - Do not define `[model_providers.openai]`.
+- `~/.codex/auth.json` has `auth_mode = "chatgpt"` and current Cockpit OAuth tokens.
+- `~/.codex/state_5.sqlite.threads.model_provider` uses `openai` for active OAuth/ChatGPT history.
+- Saved Cockpit API provider profiles should remain present as non-built-in custom providers with `supports_websockets = false`, so switching back to API does not lose relay compatibility.
 
 ## Allowed Actions
 - Read-only diagnosis:
@@ -39,6 +48,10 @@ For a ChatGPT/OAuth account:
 - Explicit current API account projection when the operator wants to repair the current Cockpit API account:
   ```powershell
   python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch --repair-current-cockpit-api-projection --prefer-cockpit-api-account
+  ```
+- Explicit current account projection for the currently selected Cockpit account, including OAuth/ChatGPT:
+  ```powershell
+  python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch --repair-current-cockpit-account-projection
   ```
 - Legacy shim cleanup:
   ```powershell
@@ -105,6 +118,6 @@ The 2026-05-13 reference incident is recorded in:
 - `docs/change-evidence/2026-05-13-codex-cockpit-api-shared-history.md`
 
 ## Rollback
-- Restore the timestamped backups created by `--repair-current-cockpit-api-projection`.
+- Restore the timestamped backups created by `--repair-current-cockpit-api-projection` or `--repair-current-cockpit-account-projection`.
 - Restore `~/.codex/config.toml`, `~/.codex/auth.json`, `~/.codex/state_5.sqlite`, and Cockpit provider metadata together. Do not restore only one file unless the evidence shows only that file drifted.
 - Re-run the guard audit and read-only interop check after rollback.

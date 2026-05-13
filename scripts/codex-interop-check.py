@@ -51,8 +51,8 @@ CODEX_TUI_LOG_ROTATE_BYTES = 100 * 1024 * 1024
 DEPRECATED_WRITE_REPAIR_REASON = (
     "Project-managed Codex/Cockpit interop repair is disabled. Cockpit Tools owns "
     "Codex account switching and launch-on-switch; general write repair and history "
-    "bucket migration are disabled. Use --repair-current-cockpit-api-projection only "
-    "for an explicit Cockpit API account auth/config projection."
+    "bucket migration are disabled. Use --repair-current-cockpit-account-projection "
+    "for an explicit current Cockpit account auth/config projection."
 )
 
 
@@ -64,6 +64,7 @@ def main() -> int:
     parser.add_argument("--cockpit-account-id")
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--migrate-provider-bucket", action="store_true")
+    parser.add_argument("--repair-current-cockpit-account-projection", action="store_true")
     parser.add_argument("--repair-current-cockpit-api-projection", action="store_true")
     parser.add_argument("--prefer-cockpit-api-account", action="store_true")
     parser.add_argument("--quick-launch", action="store_true")
@@ -108,6 +109,14 @@ def main() -> int:
                 prefer_api_account=args.prefer_cockpit_api_account,
             )
         )
+    if args.repair_current_cockpit_account_projection:
+        actions.append(
+            repair_current_cockpit_account_projection(
+                codex_home=codex_home,
+                cockpit_home=cockpit_home,
+                cockpit_account_id=args.cockpit_account_id,
+            )
+        )
     after = inspect_interop(
         codex_home=codex_home,
         cc_switch_db=cc_switch_db,
@@ -119,6 +128,7 @@ def main() -> int:
     payload = {
         "status": after["status"],
         "apply": bool(args.apply),
+        "repair_current_cockpit_account_projection": bool(args.repair_current_cockpit_account_projection),
         "repair_current_cockpit_api_projection": bool(args.repair_current_cockpit_api_projection),
         "prefer_cockpit_api_account": bool(args.prefer_cockpit_api_account),
         "migrate_provider_bucket": bool(args.migrate_provider_bucket),
@@ -972,6 +982,112 @@ def repair_current_cockpit_api_projection(
     }
 
 
+def repair_current_cockpit_account_projection(
+    *,
+    codex_home: Path,
+    cockpit_home: Path,
+    cockpit_account_id: str | None = None,
+) -> dict[str, Any]:
+    current = _cockpit_account(cockpit_home, account_id=cockpit_account_id)
+    if _cockpit_account_is_api(current):
+        delegated = repair_current_cockpit_api_projection(
+            codex_home=codex_home,
+            cockpit_home=cockpit_home,
+            cockpit_account_id=cockpit_account_id,
+        )
+        delegated["id"] = "repair_current_cockpit_account_projection"
+        delegated["delegated_repair"] = "repair_current_cockpit_api_projection"
+        return delegated
+
+    auth_mode = str(current.get("auth_mode") or "").strip().lower() if isinstance(current, dict) else ""
+    expected_auth_mode = _codex_auth_mode_for_cockpit_auth(auth_mode)
+    if expected_auth_mode != "chatgpt":
+        return {
+            "id": "repair_current_cockpit_account_projection",
+            "tool": "codex",
+            "status": "blocked",
+            "reason": "Selected Cockpit Codex account is not a supported OAuth/ChatGPT account.",
+            "account_id": current.get("id") if isinstance(current, dict) else None,
+            "auth_mode": auth_mode or None,
+        }
+
+    tokens = current.get("tokens") if isinstance(current, dict) else None
+    if not isinstance(tokens, dict) or not tokens.get("access_token"):
+        return {
+            "id": "repair_current_cockpit_account_projection",
+            "tool": "codex",
+            "status": "blocked",
+            "reason": "Selected Cockpit OAuth/ChatGPT account has no tokens to project into Codex.",
+            "account_id": current.get("id"),
+            "auth_mode": auth_mode,
+        }
+
+    codex_home.mkdir(parents=True, exist_ok=True)
+    config_path = codex_home / "config.toml"
+    auth_path = codex_home / "auth.json"
+    state_path = codex_home / "state_5.sqlite"
+    instances_path = cockpit_home / "codex_instances.json"
+    backups: list[dict[str, str]] = []
+    if config_path.exists():
+        backups.append({"path": str(config_path), "backup_path": str(_backup_file(config_path, suffix="cockpit-account-projection"))})
+    if auth_path.exists():
+        backups.append({"path": str(auth_path), "backup_path": str(_backup_file(auth_path, suffix="cockpit-account-projection"))})
+    if state_path.exists():
+        backups.append({"path": str(state_path), "backup_path": str(_backup_file(state_path, suffix="cockpit-account-projection"))})
+
+    config_text = _read_text(config_path)
+    config_path.write_text(
+        _project_cockpit_chatgpt_config(
+            config_text,
+            api_profiles=_cockpit_api_provider_profiles(cockpit_home),
+        ),
+        encoding="utf-8",
+    )
+    auth_payload = {
+        "auth_mode": "chatgpt",
+        "tokens": tokens,
+        "email": current.get("email"),
+        "source": "cockpit",
+        "source_account_id": current.get("id"),
+        "last_refresh": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+    auth_path.write_text(json.dumps(auth_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    instance_binding_changed = False
+    instances = _read_json(instances_path)
+    if isinstance(instances, dict):
+        default_settings = instances.setdefault("defaultSettings", {})
+        if isinstance(default_settings, dict) and (
+            default_settings.get("followLocalAccount") is not True
+            or default_settings.get("bindAccountId") not in (None, "")
+        ):
+            if instances_path.exists():
+                backups.append(
+                    {
+                        "path": str(instances_path),
+                        "backup_path": str(_backup_file(instances_path, suffix="cockpit-account-projection")),
+                    }
+                )
+            default_settings["followLocalAccount"] = True
+            default_settings["bindAccountId"] = None
+            instances_path.write_text(json.dumps(instances, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            instance_binding_changed = True
+
+    history_rows_changed = _migrate_threads_provider_bucket(state_path, target_provider=OPENAI_SHARED_PROVIDER_ID)
+    return {
+        "id": "repair_current_cockpit_account_projection",
+        "tool": "codex",
+        "status": "changed",
+        "reason": "Projected the current Cockpit OAuth/ChatGPT account into Codex auth.json and config.toml.",
+        "account_id": current.get("id"),
+        "auth_mode": auth_mode,
+        "provider_id": OPENAI_SHARED_PROVIDER_ID,
+        "cockpit_instance_binding_changed": instance_binding_changed,
+        "history_rows_changed": history_rows_changed,
+        "backups": backups,
+    }
+
+
 def _migrate_threads_provider_bucket(state_path: Path, *, target_provider: str) -> int | None:
     if not state_path.exists():
         return None
@@ -1232,6 +1348,121 @@ def _project_cockpit_api_config(
             "supports_websockets = false",
         ]
     )
+
+    return "\n".join(out).rstrip() + "\n"
+
+
+def _project_cockpit_chatgpt_config(config_text: str, *, api_profiles: list[dict[str, str]]) -> str:
+    section_re = re.compile(r"^\s*\[([^\]]+)\]\s*$")
+    filtered: list[str] = []
+    skip_model_provider = False
+    for line in config_text.splitlines():
+        section_match = section_re.match(line)
+        if section_match:
+            section = section_match.group(1).strip()
+            skip_model_provider = section == "model_providers" or section.startswith("model_providers.")
+        if skip_model_provider:
+            continue
+        filtered.append(line)
+
+    preferred_api = api_profiles[0] if api_profiles else None
+    top_values = {
+        "forced_login_method": '"chatgpt"',
+        "model_provider": '"openai"',
+        "openai_base_url": None,
+    }
+    profile_values = {
+        "profiles.shared-current-provider": {
+            "forced_login_method": '"chatgpt"',
+            "model_provider": '"openai"',
+            "openai_base_url": None,
+        },
+        "profiles.shared-cockpit-auth": {
+            "forced_login_method": '"chatgpt"',
+            "model_provider": '"openai"',
+            "openai_base_url": None,
+        },
+    }
+    if preferred_api:
+        profile_values["profiles.shared-cockpit-api"] = {
+            "forced_login_method": '"api"',
+            "model_provider": json.dumps(preferred_api["provider_id"]),
+            "openai_base_url": None,
+        }
+
+    out: list[str] = []
+    seen_top: set[str] = set()
+    seen_sections: set[str] = set()
+    seen_profile_keys = {profile: set() for profile in profile_values}
+    section: str | None = None
+    key_value_re = re.compile(r"^(\s*)([A-Za-z0-9_-]+)(\s*=\s*)(.*)$")
+
+    def close_profile_section() -> None:
+        if section not in profile_values:
+            return
+        for key, value in profile_values[section].items():
+            if value is not None and key not in seen_profile_keys[section]:
+                out.append(f"{key} = {value}")
+
+    for line in filtered:
+        section_match = section_re.match(line)
+        if section_match:
+            close_profile_section()
+            section = section_match.group(1).strip()
+            seen_sections.add(section)
+            out.append(line)
+            continue
+
+        key_match = key_value_re.match(line)
+        if section is None and key_match and key_match.group(2) in top_values:
+            key = key_match.group(2)
+            seen_top.add(key)
+            if top_values[key] is not None:
+                out.append(f"{key} = {top_values[key]}")
+            continue
+
+        if section in profile_values and key_match and key_match.group(2) in profile_values[section]:
+            key = key_match.group(2)
+            value = profile_values[section][key]
+            seen_profile_keys[section].add(key)
+            if value is None:
+                continue
+            out.append(f"{key} = {value}")
+            continue
+
+        out.append(line)
+
+    close_profile_section()
+    first_section_index = next((index for index, line in enumerate(out) if section_re.match(line)), len(out))
+    missing_top = [
+        f"{key} = {value}"
+        for key, value in top_values.items()
+        if key not in seen_top and value is not None
+    ]
+    out[first_section_index:first_section_index] = missing_top
+
+    for profile, values in profile_values.items():
+        if profile in seen_sections:
+            continue
+        out.extend(["", f"[{profile}]"])
+        for key, value in values.items():
+            if value is not None:
+                out.append(f"{key} = {value}")
+
+    if api_profiles:
+        out.extend(["", "[model_providers]"])
+        for profile in api_profiles:
+            out.extend(
+                [
+                    "",
+                    f"[model_providers.{profile['provider_id']}]",
+                    f"name = {json.dumps(profile['provider_name'])}",
+                    f"base_url = {json.dumps(_normalize_base_url(profile['base_url']))}",
+                    'wire_api = "responses"',
+                    "requires_openai_auth = false",
+                    "supports_websockets = false",
+                ]
+            )
 
     return "\n".join(out).rstrip() + "\n"
 

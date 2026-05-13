@@ -147,6 +147,45 @@ The repeated failure had four coupled causes.
   - `codex exec --ephemeral --skip-git-repo-check --output-last-message <temp> "Reply exactly OK."`: exit_code `0`, last_message `OK`, provider `cmp_1778165666417_1`
   - no-arg `codex-interop-check.py --quick-launch`: exit_code `0`, status `attention`, all auth/API/provider/instance checks pass
 
+## OAuth Current Account Projection Evidence
+- Observed after explicitly switching Cockpit Tools back to OAuth:
+  - CLI startup error: `API key login is required, but ChatGPT is currently being used. Logging out.`
+  - Cockpit current account: `codex_52c6816e7d3ae9a075f9f237b058b6d8`, `auth_mode = oauth`
+  - Initial checker failure: `forced_login_method = api`, expected `chatgpt`, and `auth.json` was missing.
+  - After manual OAuth projection, the login blocker was gone, but saved API provider profiles were no longer fully projectable; the checker still failed `cockpit_saved_api_provider_profiles_projectable`.
+- Root cause:
+  - API and OAuth switching must be treated as one current-account projection contract, not two independent one-off edits.
+  - OAuth requires `forced_login_method = "chatgpt"`, `model_provider = "openai"`, `auth.json.auth_mode = "chatgpt"`, active history bucket `openai`, and preserved saved API custom provider tables for future API switches.
+- Repo change:
+  - Added `--repair-current-cockpit-account-projection` to `scripts/codex-interop-check.py`.
+  - The new repair delegates API accounts to the API projection path and directly repairs OAuth/ChatGPT accounts to the built-in `openai` bucket.
+  - OAuth repair also keeps saved Cockpit API providers projectable with `supports_websockets = false`, so switching back to API does not regress into the relay WebSocket failure.
+- Live repair command:
+  - `python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch --repair-current-cockpit-account-projection`
+- Live repair result:
+  - exit_code: `0`
+  - before: `status = fail`
+  - after: `status = pass`
+  - action: `repair_current_cockpit_account_projection`
+  - `provider_id = openai`
+  - `cockpit_instance_binding_changed = true`
+  - `history_rows_changed = 1`
+  - final thread distribution: `{ "openai": 1699 }`
+  - `cockpit_live_login_mode_matches_current_account = pass`
+  - `codex_auth_matches_cockpit_current_account = pass`
+  - `cockpit_saved_api_provider_profiles_projectable = pass`
+- Live connectivity smoke after OAuth repair:
+  - `codex exec --ephemeral --skip-git-repo-check --output-last-message .runtime\codex-oauth-smoke.txt "Reply exactly: OAUTH_OK"`
+  - exit_code: `0`
+  - final message: `OAUTH_OK`
+  - provider: `openai`
+  - residual non-blocking startup noise: `ERROR: The process "<stale pid>" not found.`
+- Backups:
+  - `C:\Users\sciman\.codex\backups\config.toml.20260513_220223_cockpit-account-projection.bak`
+  - `C:\Users\sciman\.codex\backups\auth.json.20260513_220223_cockpit-account-projection.bak`
+  - `C:\Users\sciman\.codex\backups\state_5.sqlite.20260513_220223_cockpit-account-projection.bak`
+  - `C:\Users\sciman\.antigravity_cockpit\backups\codex_instances.json.20260513_220223_cockpit-account-projection.bak`
+
 ## Verification
 - `python -m py_compile scripts\codex-cockpit-cli-preflight-repair.py`
 - `python -m py_compile scripts\codex-interop-check.py scripts\codex-cockpit-cli-preflight-repair.py`
