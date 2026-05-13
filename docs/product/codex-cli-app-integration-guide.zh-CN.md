@@ -69,6 +69,17 @@
 2. 用本仓库做 readiness、verification、evidence/handoff/replay 侧的治理留痕。
 3. 需要边界化治理时，再用 session-bridge 命令面执行。
 
+## 本机 Cockpit API 互操作边界
+Cockpit Tools 拥有 Codex 登录、provider 切换和 launch-on-switch 行为。本仓不得安装后台 guard、SQLite trigger、no-op launcher、restart wrapper、no-restart shim 或 CLI preflight wrapper 去拦截这些行为。
+
+唯一写入例外是显式 current-account API projection：
+
+```powershell
+python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch --repair-current-cockpit-api-projection --prefer-cockpit-api-account
+```
+
+2026-05-13 API Reconnecting/历史分裂的根因是 provider bucket 不一致。Codex App 历史可见性跟随 `state_5.sqlite.threads.model_provider`，而不支持 Codex Responses WebSocket route 的 relay 需要 `supports_websockets = false`，该配置只能落在 custom provider 上。修复后的不变量是：active `model_provider`、Cockpit 当前 API account 的 `api_provider_id`、custom provider metadata 和 `threads.model_provider` 必须一致。详见 [Codex/Cockpit API Provider Repair](../runbooks/codex-cockpit-api-provider-repair.md)。
+
 ## 当前还没实现的部分
 - 还没有“替代上游 Codex 宿主 UI”的 runtime-owned 全接管形态
 - 仍不拥有上游 Codex 认证（设计上保持 user-owned）

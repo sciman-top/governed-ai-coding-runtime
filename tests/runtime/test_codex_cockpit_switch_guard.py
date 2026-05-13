@@ -71,12 +71,13 @@ class CodexCockpitSwitchGuardTests(unittest.TestCase):
         self.assertNotIn("Start-GuardProcessFallback", source)
         self.assertIn("guard_worker_not_running", source)
 
-    def test_watch_loop_delays_rather_than_drops_min_interval_changes(self) -> None:
+    def test_watch_loop_is_unreachable_after_deprecation_exit(self) -> None:
         source = SCRIPT_PATH.read_text(encoding="utf-8")
 
-        self.assertIn("change_delayed_min_interval", source)
-        self.assertIn("time.sleep(wait_seconds)", source)
+        self.assertIn("guard_deprecated", source)
         self.assertNotIn("change_skipped_min_interval", source)
+        self.assertIn("return 2", source)
+        self.assertIn("if not args.once and not args.watch", source)
 
 
 if __name__ == "__main__":

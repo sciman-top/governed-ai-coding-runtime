@@ -50,9 +50,9 @@ CODEX_HISTORY_INDEXES = {
 CODEX_TUI_LOG_ROTATE_BYTES = 100 * 1024 * 1024
 DEPRECATED_WRITE_REPAIR_REASON = (
     "Project-managed Codex/Cockpit interop repair is disabled. Cockpit Tools owns "
-    "Codex auth/API switching and launch-on-switch; this script is read-only "
-    "diagnostics only. Use Disable-CodexProjectInterop.ps1 for reversible cleanup "
-    "of old project guard/wrapper artifacts."
+    "Codex account switching and launch-on-switch; general write repair and history "
+    "bucket migration are disabled. Use --repair-current-cockpit-api-projection only "
+    "for an explicit Cockpit API account auth/config projection."
 )
 
 
@@ -64,6 +64,8 @@ def main() -> int:
     parser.add_argument("--cockpit-account-id")
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--migrate-provider-bucket", action="store_true")
+    parser.add_argument("--repair-current-cockpit-api-projection", action="store_true")
+    parser.add_argument("--prefer-cockpit-api-account", action="store_true")
     parser.add_argument("--quick-launch", action="store_true")
     args = parser.parse_args()
 
@@ -94,9 +96,18 @@ def main() -> int:
                     "id": "codex_provider_bucket_migration_deprecated",
                     "tool": "codex",
                     "status": "blocked",
-                    "reason": "Provider bucket migration is disabled because API connectivity is primary and history sharing is secondary.",
+                    "reason": "General provider bucket migration is disabled; Cockpit API mode must use the explicit current-account projection path so auth, config, no-WebSocket provider metadata, and local history bucket move together.",
                 }
             )
+    if args.repair_current_cockpit_api_projection:
+        actions.append(
+            repair_current_cockpit_api_projection(
+                codex_home=codex_home,
+                cockpit_home=cockpit_home,
+                cockpit_account_id=args.cockpit_account_id,
+                prefer_api_account=args.prefer_cockpit_api_account,
+            )
+        )
     after = inspect_interop(
         codex_home=codex_home,
         cc_switch_db=cc_switch_db,
@@ -108,6 +119,8 @@ def main() -> int:
     payload = {
         "status": after["status"],
         "apply": bool(args.apply),
+        "repair_current_cockpit_api_projection": bool(args.repair_current_cockpit_api_projection),
+        "prefer_cockpit_api_account": bool(args.prefer_cockpit_api_account),
         "migrate_provider_bucket": bool(args.migrate_provider_bucket),
         "quick_launch": bool(args.quick_launch),
         "codex_home": str(codex_home),
@@ -222,8 +235,6 @@ def inspect_codex_provider_buckets(
     checks: list[dict[str, Any]] = []
     state_path = codex_home / "state_5.sqlite"
     config_path = codex_home / "config.toml"
-    current_account = _cockpit_account(cockpit_home, account_id=cockpit_account_id)
-    history_secondary = _cockpit_account_is_api(current_account)
     expected_provider = _expected_cockpit_provider_bucket(cockpit_home, account_id=cockpit_account_id)
     distribution, distribution_error = _read_codex_thread_provider_distribution(state_path)
     dominant_provider = _dominant_provider(distribution)
@@ -234,10 +245,17 @@ def inspect_codex_provider_buckets(
     }
 
     thread_status = "pass"
+    unexpected_count = sum(int(count) for count in unexpected_providers.values())
+    total_count = sum(int(count) for count in distribution.values())
+    tolerated_unexpected_count = max(1, int(total_count * 0.01)) if total_count else 0
     if distribution_error:
         thread_status = "fail"
     elif unexpected_providers:
-        thread_status = "warn" if history_secondary else "fail"
+        thread_status = (
+            "warn"
+            if dominant_provider == expected_provider and unexpected_count <= tolerated_unexpected_count
+            else "fail"
+        )
     checks.append(
         {
             "id": "codex_thread_provider_distribution",
@@ -245,9 +263,9 @@ def inspect_codex_provider_buckets(
             "status": thread_status,
             "reason": distribution_error
             or (
-                "Active Codex threads use a different provider bucket than the current account. API connectivity is primary; run migration only when history sharing is explicitly desired."
-                if unexpected_providers and history_secondary
-                else "Active Codex threads use a different provider bucket than the current ChatGPT account; migrate or switch provider before relying on shared history."
+                "A small number of active Codex threads use a different provider bucket; shared history remains anchored in the dominant expected provider bucket."
+                if thread_status == "warn"
+                else "Active Codex threads use a different provider bucket than the expected Cockpit account provider; migrate or switch provider before relying on shared history."
                 if unexpected_providers
                 else "Codex local history visibility is bucketed by threads.model_provider; active threads match the expected provider bucket."
             ),
@@ -256,6 +274,8 @@ def inspect_codex_provider_buckets(
             "dominant_provider": dominant_provider,
             "expected_provider": expected_provider,
             "unexpected_providers": unexpected_providers,
+            "unexpected_count": unexpected_count,
+            "tolerated_unexpected_count": tolerated_unexpected_count,
         }
     )
     if include_session_scan:
@@ -263,7 +283,6 @@ def inspect_codex_provider_buckets(
             _inspect_codex_session_provider_bucket(
                 codex_home,
                 expected_provider=expected_provider,
-                history_secondary=history_secondary,
             )
         )
     else:
@@ -272,7 +291,7 @@ def inspect_codex_provider_buckets(
                 "id": "codex_session_provider_distribution",
                 "tool": "codex",
                 "status": "pass",
-                "reason": "Quick launch skipped full session JSONL scan. Project-managed SQLite trigger guards are disabled because API connectivity is primary and history sharing is secondary.",
+                "reason": "Quick launch skipped full session JSONL scan. Cockpit API mode must keep local history in the active Cockpit API provider bucket.",
                 "path": str(codex_home / "sessions"),
                 "session_scan_skipped": True,
                 "expected_provider": expected_provider,
@@ -341,14 +360,11 @@ def _inspect_cockpit_current_provider_bucket(
     bucket_status = "pass"
     bucket_reason = "Current Cockpit Codex account will use the provider bucket required for its auth mode."
     if dominant_provider and dominant_provider != provider_bucket:
-        bucket_status = "warn" if auth_mode == "apikey" else "fail"
-        bucket_reason = (
-            "Existing Codex history is in a different bucket. API provider connectivity is primary; history sharing is secondary for API accounts."
-            if auth_mode == "apikey"
-            else "Existing Codex history is still in a different provider bucket and should be migrated."
-        )
+        bucket_status = "fail"
+        bucket_reason = "Existing Codex history is in a different provider bucket; Codex App picker visibility requires the active provider bucket and threads.model_provider to match."
     expected_forced_login = codex_login_mode or "chatgpt"
     active_forced_login = _toml_top_level_string(config_text, "forced_login_method") or "chatgpt"
+    active_openai_base_url = _toml_top_level_string(config_text, "openai_base_url") or ""
     provider_info = _model_provider_info(config_text, active_provider)
     requires_openai_auth = provider_info.get("requires_openai_auth") if isinstance(provider_info, dict) else None
     login_issues: list[str] = []
@@ -356,8 +372,20 @@ def _inspect_cockpit_current_provider_bucket(
         login_issues.append(
             f"forced_login_method is {active_forced_login}, expected {expected_forced_login}"
         )
-    if active_provider != "openai" and expected_forced_login == "api" and requires_openai_auth is not True:
-        login_issues.append("active provider must use Codex auth.json for Cockpit API key mode")
+    if expected_forced_login == "api" and active_provider == OPENAI_SHARED_PROVIDER_ID:
+        if not active_openai_base_url:
+            login_issues.append("openai_base_url is missing for Cockpit API key mode")
+        elif _normalize_base_url(active_openai_base_url) != _normalize_base_url(base_url):
+            login_issues.append("openai_base_url does not match current Cockpit API account")
+    if active_provider != "openai" and expected_forced_login == "api" and requires_openai_auth is not False:
+        login_issues.append("active provider must not require ChatGPT auth for Cockpit API key mode")
+    if active_provider != "openai" and expected_forced_login == "api":
+        supports_websockets = provider_info.get("supports_websockets") if isinstance(provider_info, dict) else None
+        actual_base_url = _normalize_base_url(str(provider_info.get("base_url") or "")) if isinstance(provider_info, dict) else ""
+        if actual_base_url != _normalize_base_url(base_url):
+            login_issues.append("active provider base_url does not match current Cockpit API account")
+        if supports_websockets is not False:
+            login_issues.append("active Cockpit API provider must set supports_websockets=false")
     if active_provider != "openai" and expected_forced_login == "chatgpt":
         login_issues.append("active custom provider is incompatible with ChatGPT auth mode")
     login_status = "fail" if login_issues else "pass"
@@ -394,6 +422,8 @@ def _inspect_cockpit_current_provider_bucket(
             "active_provider": active_provider,
             "active_forced_login_method": active_forced_login,
             "expected_forced_login_method": expected_forced_login,
+            "active_openai_base_url": active_openai_base_url or None,
+            "expected_openai_base_url": base_url if expected_forced_login == "api" else None,
             "requires_openai_auth": requires_openai_auth,
             "issues": login_issues,
         },
@@ -809,6 +839,197 @@ def repair_cockpit(
     ]
 
 
+def repair_current_cockpit_api_projection(
+    *,
+    codex_home: Path,
+    cockpit_home: Path,
+    cockpit_account_id: str | None = None,
+    prefer_api_account: bool = False,
+) -> dict[str, Any]:
+    selected_account_id = cockpit_account_id
+    if prefer_api_account and not selected_account_id:
+        selected_account_id = _preferred_cockpit_api_account_id(cockpit_home=cockpit_home, codex_home=codex_home)
+    current = _cockpit_account(cockpit_home, account_id=selected_account_id)
+    if not _cockpit_account_is_api(current):
+        return {
+            "id": "repair_current_cockpit_api_projection",
+            "tool": "codex",
+            "status": "blocked",
+            "reason": "Selected Cockpit Codex account is not an API key account.",
+            "selected_account_id": selected_account_id,
+            "account_id": current.get("id") if isinstance(current, dict) else None,
+            "auth_mode": current.get("auth_mode") if isinstance(current, dict) else None,
+        }
+
+    api_key = str(current.get("openai_api_key") or "").strip()
+    base_url = _cockpit_account_base_url(current)
+    provider_id = _provider_bucket_for_cockpit_account(current)
+    if not api_key or not base_url:
+        missing = []
+        if not api_key:
+            missing.append("openai_api_key")
+        if not base_url:
+            missing.append("base_url")
+        return {
+            "id": "repair_current_cockpit_api_projection",
+            "tool": "codex",
+            "status": "blocked",
+            "reason": "Current Cockpit API account cannot be projected into Codex.",
+            "account_id": current.get("id"),
+            "missing": missing,
+        }
+
+    codex_home.mkdir(parents=True, exist_ok=True)
+    config_path = codex_home / "config.toml"
+    auth_path = codex_home / "auth.json"
+    state_path = codex_home / "state_5.sqlite"
+    accounts_path = cockpit_home / "codex_accounts.json"
+    instances_path = cockpit_home / "codex_instances.json"
+    backups: list[dict[str, str]] = []
+    if config_path.exists():
+        backups.append({"path": str(config_path), "backup_path": str(_backup_file(config_path, suffix="cockpit-api-projection"))})
+    if auth_path.exists():
+        backups.append({"path": str(auth_path), "backup_path": str(_backup_file(auth_path, suffix="cockpit-api-projection"))})
+    if state_path.exists():
+        backups.append({"path": str(state_path), "backup_path": str(_backup_file(state_path, suffix="cockpit-api-projection"))})
+
+    cockpit_current_account_changed = False
+    previous_cockpit_current_account_id = None
+    accounts_index = _read_json(accounts_path)
+    if isinstance(accounts_index, dict):
+        previous_cockpit_current_account_id = accounts_index.get("current_account_id")
+        resolved_account_id = str(current.get("id") or selected_account_id or "").strip()
+        if resolved_account_id and previous_cockpit_current_account_id != resolved_account_id:
+            if accounts_path.exists():
+                backups.append(
+                    {
+                        "path": str(accounts_path),
+                        "backup_path": str(_backup_file(accounts_path, suffix="cockpit-api-projection")),
+                    }
+                )
+            accounts_index["current_account_id"] = resolved_account_id
+            accounts_path.write_text(json.dumps(accounts_index, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            cockpit_current_account_changed = True
+
+    config_text = _read_text(config_path)
+    config_path.write_text(
+        _project_cockpit_api_config(
+            config_text,
+            active_base_url=base_url,
+            active_provider_id=provider_id,
+            active_provider_name=str(current.get("api_provider_name") or _provider_name_from_base_url(base_url)),
+        ),
+        encoding="utf-8",
+    )
+    auth_payload = {
+        "auth_mode": "apikey",
+        "OPENAI_API_KEY": api_key,
+        "api_base_url": base_url,
+        "base_url": base_url,
+        "api_provider_id": provider_id,
+        "api_provider_name": str(current.get("api_provider_name") or _provider_name_from_base_url(base_url)),
+        "email": current.get("email"),
+        "source": "cockpit",
+        "source_account_id": current.get("id"),
+        "last_refresh": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+    auth_path.write_text(json.dumps(auth_payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    instance_binding_changed = False
+    instances = _read_json(instances_path)
+    if isinstance(instances, dict):
+        default_settings = instances.setdefault("defaultSettings", {})
+        if isinstance(default_settings, dict) and (
+            default_settings.get("followLocalAccount") is not True
+            or default_settings.get("bindAccountId") not in (None, "")
+        ):
+            if instances_path.exists():
+                backups.append(
+                    {
+                        "path": str(instances_path),
+                        "backup_path": str(_backup_file(instances_path, suffix="cockpit-api-projection")),
+                    }
+                )
+            default_settings["followLocalAccount"] = True
+            default_settings["bindAccountId"] = None
+            instances_path.write_text(json.dumps(instances, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            instance_binding_changed = True
+    history_rows_changed = _migrate_threads_provider_bucket(state_path, target_provider=provider_id)
+    return {
+        "id": "repair_current_cockpit_api_projection",
+        "tool": "codex",
+        "status": "changed",
+        "reason": "Projected the current Cockpit API account into Codex auth.json and config.toml.",
+        "account_id": current.get("id"),
+        "selected_account_id": selected_account_id,
+        "provider_id": provider_id,
+        "base_url": base_url,
+        "provider_count": 1,
+        "cockpit_current_account_changed": cockpit_current_account_changed,
+        "previous_cockpit_current_account_id": previous_cockpit_current_account_id,
+        "cockpit_instance_binding_changed": instance_binding_changed,
+        "history_rows_changed": history_rows_changed,
+        "backups": backups,
+    }
+
+
+def _migrate_threads_provider_bucket(state_path: Path, *, target_provider: str) -> int | None:
+    if not state_path.exists():
+        return None
+    try:
+        connection = sqlite3.connect(state_path)
+    except sqlite3.Error:
+        return None
+    try:
+        cursor = connection.execute(
+            "update threads set model_provider = ? where coalesce(model_provider, '') != ?",
+            (target_provider, target_provider),
+        )
+        connection.commit()
+        return int(cursor.rowcount)
+    except sqlite3.Error:
+        connection.rollback()
+        return None
+    finally:
+        connection.close()
+
+
+def _preferred_cockpit_api_account_id(*, cockpit_home: Path, codex_home: Path) -> str | None:
+    index = _read_json(cockpit_home / "codex_accounts.json")
+    current_account_id = index.get("current_account_id") if isinstance(index, dict) else None
+    if isinstance(current_account_id, str) and current_account_id.strip():
+        current = _cockpit_account(cockpit_home, account_id=current_account_id)
+        if _cockpit_account_is_api(current):
+            return current_account_id.strip()
+
+    for auth_name in ("auth.json", "auth.json.bak"):
+        auth = _read_json(codex_home / auth_name)
+        source_account_id = _json_string(auth, "source_account_id") or _json_string(auth, "account_id")
+        if not source_account_id:
+            continue
+        account = _cockpit_account(cockpit_home, account_id=source_account_id)
+        if _cockpit_account_is_api(account):
+            return source_account_id
+
+    accounts = index.get("accounts") if isinstance(index, dict) else []
+    if isinstance(accounts, list):
+        for item in accounts:
+            account_id = item.get("id") if isinstance(item, dict) else None
+            if not isinstance(account_id, str) or not account_id.strip():
+                continue
+            account = _cockpit_account(cockpit_home, account_id=account_id)
+            if _cockpit_account_is_api(account):
+                return account_id.strip()
+
+    accounts_dir = cockpit_home / "codex_accounts"
+    if accounts_dir.exists():
+        for account_path in sorted(accounts_dir.glob("*.json")):
+            account = _read_json(account_path)
+            if _cockpit_account_is_api(account):
+                account_id = _json_string(account, "id") or account_path.stem
+                return account_id
+    return None
+
+
 def _expected_cockpit_provider_bucket(cockpit_home: Path, *, account_id: str | None = None) -> str:
     current = _cockpit_account(cockpit_home, account_id=account_id)
     return _provider_bucket_for_cockpit_account(current)
@@ -897,41 +1118,128 @@ def _cockpit_api_provider_profiles(cockpit_home: Path, *, preferred_account: dic
     return profiles
 
 
+def _project_cockpit_api_config(
+    config_text: str,
+    *,
+    active_base_url: str,
+    active_provider_id: str,
+    active_provider_name: str,
+) -> str:
+    section_re = re.compile(r"^\s*\[([^\]]+)\]\s*$")
+    filtered: list[str] = []
+    skip_model_provider = False
+    for line in config_text.splitlines():
+        section_match = section_re.match(line)
+        if section_match:
+            section = section_match.group(1).strip()
+            skip_model_provider = section == "model_providers" or section.startswith("model_providers.")
+        if skip_model_provider:
+            continue
+        filtered.append(line)
+
+    top_values = {
+        "forced_login_method": '"api"',
+        "model_provider": json.dumps(active_provider_id),
+        "openai_base_url": None,
+    }
+    profile_values = {
+        "profiles.shared-current-provider": {
+            "forced_login_method": '"api"',
+            "model_provider": json.dumps(active_provider_id),
+            "openai_base_url": None,
+        },
+        "profiles.shared-cockpit-api": {
+            "forced_login_method": '"api"',
+            "model_provider": json.dumps(active_provider_id),
+            "openai_base_url": None,
+        },
+        "profiles.shared-cockpit-auth": {
+            "forced_login_method": '"chatgpt"',
+            "model_provider": '"openai"',
+            "openai_base_url": json.dumps(OFFICIAL_OPENAI_BASE_URL),
+        },
+    }
+
+    out: list[str] = []
+    seen_top: set[str] = set()
+    seen_sections: set[str] = set()
+    seen_profile_keys = {profile: set() for profile in profile_values}
+    section: str | None = None
+    key_value_re = re.compile(r"^(\s*)([A-Za-z0-9_-]+)(\s*=\s*)(.*)$")
+
+    def close_profile_section() -> None:
+        if section not in profile_values:
+            return
+        for key, value in profile_values[section].items():
+            if value is not None and key not in seen_profile_keys[section]:
+                out.append(f"{key} = {value}")
+
+    for line in filtered:
+        section_match = section_re.match(line)
+        if section_match:
+            close_profile_section()
+            section = section_match.group(1).strip()
+            seen_sections.add(section)
+            out.append(line)
+            continue
+
+        key_match = key_value_re.match(line)
+        if section is None and key_match and key_match.group(2) in top_values:
+            key = key_match.group(2)
+            seen_top.add(key)
+            if top_values[key] is not None:
+                out.append(f"{key} = {top_values[key]}")
+            continue
+
+        if section in profile_values and key_match and key_match.group(2) in profile_values[section]:
+            key = key_match.group(2)
+            value = profile_values[section][key]
+            seen_profile_keys[section].add(key)
+            if value is None:
+                continue
+            out.append(f"{key} = {value}")
+            continue
+
+        out.append(line)
+
+    close_profile_section()
+    first_section_index = next((index for index, line in enumerate(out) if section_re.match(line)), len(out))
+    missing_top = [
+        f"{key} = {value}"
+        for key, value in top_values.items()
+        if key not in seen_top and value is not None
+    ]
+    out[first_section_index:first_section_index] = missing_top
+
+    for profile, values in profile_values.items():
+        if profile in seen_sections:
+            continue
+        out.extend(["", f"[{profile}]"])
+        for key, value in values.items():
+            if value is not None:
+                out.append(f"{key} = {value}")
+
+    out.extend(
+        [
+            "",
+            "[model_providers]",
+            "",
+            f"[model_providers.{active_provider_id}]",
+            f"name = {json.dumps(active_provider_name)}",
+            f"base_url = {json.dumps(_normalize_base_url(active_base_url))}",
+            'wire_api = "responses"',
+            "requires_openai_auth = false",
+            "supports_websockets = false",
+        ]
+    )
+
+    return "\n".join(out).rstrip() + "\n"
+
+
 def _inspect_cockpit_saved_api_provider_profiles(*, cockpit_home: Path, config_text: str) -> dict[str, Any]:
     profiles = _cockpit_api_provider_profiles(cockpit_home)
     findings: list[dict[str, Any]] = []
     warnings: list[dict[str, Any]] = []
-    for profile in profiles:
-        provider_id = profile["provider_id"]
-        expected_base_url = _normalize_base_url(profile["base_url"])
-        info = _model_provider_info(config_text, provider_id)
-        issues: list[str] = []
-        actual_base_url = _normalize_base_url(str(info.get("base_url") or "")) if info else ""
-        if not info:
-            issues.append("provider table missing")
-        elif actual_base_url != expected_base_url:
-            issues.append(f"base_url is {actual_base_url or '<empty>'}, expected {expected_base_url}")
-        if info and info.get("wire_api") != "responses":
-            issues.append(f"wire_api is {info.get('wire_api')!r}, expected 'responses'")
-        if info and info.get("env_key"):
-            issues.append("env_key must be omitted so Codex App can use auth.json instead of a process environment variable")
-        if info and info.get("requires_openai_auth") is not True:
-            issues.append("requires_openai_auth must be true for Cockpit API providers")
-        if info and info.get("supports_websockets") is not False:
-            issues.append("supports_websockets must be false for Cockpit API relays")
-        if issues:
-            findings.append(
-                {
-                    "provider_id": provider_id,
-                    "provider_name": profile["provider_name"],
-                    "expected_base_url": expected_base_url,
-                    "actual_base_url": actual_base_url or None,
-                    "requires_openai_auth": info.get("requires_openai_auth") if info else None,
-                    "supports_websockets": info.get("supports_websockets") if info else None,
-                    "issues": issues,
-                }
-            )
-
     shared_api_profile = _profile_info(config_text, "shared-cockpit-api")
     preferred = profiles[0] if profiles else None
     shared_api_issues: list[str] = []
@@ -946,19 +1254,26 @@ def _inspect_cockpit_saved_api_provider_profiles(*, cockpit_home: Path, config_t
             shared_api_issues.append(
                 f"model_provider is {shared_api_profile.get('model_provider')!r}, expected {preferred['provider_id']!r}"
             )
-        if (
-            shared_api_profile
-            and shared_api_profile.get("model_provider") != OPENAI_SHARED_PROVIDER_ID
-            and shared_api_profile.get("openai_base_url")
-        ):
+        if shared_api_profile and shared_api_profile.get("openai_base_url"):
             shared_api_issues.append("openai_base_url must not be used with a custom Cockpit API provider bucket")
+        info = _model_provider_info(config_text, preferred["provider_id"])
+        actual_base_url = _normalize_base_url(str(info.get("base_url") or "")) if info else ""
+        expected_base_url = _normalize_base_url(preferred["base_url"])
+        if actual_base_url != expected_base_url:
+            shared_api_issues.append(f"provider base_url is {actual_base_url or '<empty>'}, expected {expected_base_url}")
+        if info.get("requires_openai_auth") is not False:
+            shared_api_issues.append("requires_openai_auth must be false for Cockpit API providers")
+        if info.get("supports_websockets") is not False:
+            shared_api_issues.append("supports_websockets must be false for Cockpit API relays")
     if shared_api_issues:
-        warnings.append(
+        findings.append(
             {
                 "provider_id": preferred["provider_id"] if preferred else None,
                 "profile": "shared-cockpit-api",
                 "expected_model_provider": preferred["provider_id"] if preferred else None,
                 "actual_model_provider": shared_api_profile.get("model_provider") if shared_api_profile else None,
+                "expected_base_url": _normalize_base_url(preferred["base_url"]) if preferred else None,
+                "actual_base_url": actual_base_url if preferred else None,
                 "issues": shared_api_issues,
             }
         )
@@ -968,7 +1283,7 @@ def _inspect_cockpit_saved_api_provider_profiles(*, cockpit_home: Path, config_t
         "tool": "cockpit_tools",
         "status": "fail" if findings else "pass",
         "reason": (
-            "Saved Cockpit API providers must stay projected as custom provider buckets even when the current account is OAuth; API provider connectivity is primary and history sharing is secondary."
+            "Saved Cockpit API providers must stay projectable as custom no-WebSocket providers, and current API history must use the same provider bucket."
         ),
         "path": str(cockpit_home / "codex_accounts.json"),
         "profile_count": len(profiles),
@@ -993,7 +1308,7 @@ def migrate_codex_provider_bucket(
             "path": str(codex_home / "state_5.sqlite"),
             "target_provider": target_provider,
             "migrate_sessions": bool(migrate_sessions),
-            "reason": "Provider bucket migration is disabled because API connectivity is primary and history sharing is secondary.",
+            "reason": "General provider bucket migration is disabled; use the explicit Cockpit API projection repair so auth/config/history move together with backups.",
         }
     ]
 
@@ -1190,7 +1505,6 @@ def _inspect_codex_session_provider_bucket(
     codex_home: Path,
     *,
     expected_provider: str = SHARED_CODEX_PROVIDER_ID,
-    history_secondary: bool = False,
 ) -> dict[str, Any]:
     session_distribution, session_error, session_stats = _read_codex_session_provider_distribution(codex_home)
     unexpected_session_providers = {
@@ -1202,9 +1516,7 @@ def _inspect_codex_session_provider_bucket(
     if session_error:
         session_unexpected_status = "fail"
     elif unexpected_session_providers:
-        if history_secondary:
-            session_unexpected_status = "warn"
-        elif (
+        if (
             int(session_stats.get("stale_provider_files", 0)) > 0
             and session_stats.get("stale_provider_files") == session_stats.get("locked_stale_provider_files")
         ):
@@ -1217,9 +1529,6 @@ def _inspect_codex_session_provider_bucket(
         "status": session_unexpected_status,
         "reason": session_error
         or (
-            "Codex session JSONL metadata uses a different provider bucket. API provider connectivity is primary; migrate sessions only when history sharing is explicitly desired."
-            if session_unexpected_status == "warn" and history_secondary and unexpected_session_providers
-            else
             "Codex session JSONL metadata still contains non-shared provider buckets, but the remaining stale files are locked by a live Codex process; repair will retry on the next launch."
             if session_unexpected_status == "warn"
             else "Codex session JSONL metadata still contains non-shared provider buckets and can repopulate state_5.sqlite during resume."

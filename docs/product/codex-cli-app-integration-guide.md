@@ -69,6 +69,17 @@ Use this when you want minimal workflow change.
 2. Use this runtime for readiness checks, governed verification, and evidence/handoff/replay inspection.
 3. Use session-bridge commands only for bounded governed operations when needed.
 
+## Local Cockpit API Interop Boundary
+Cockpit Tools owns Codex login, provider switching, and launch-on-switch behavior. This repository must not install background guards, SQLite triggers, no-op launchers, restart wrappers, no-restart shims, or CLI preflight wrappers to intercept that behavior.
+
+The one write-side exception is explicit current-account API projection:
+
+```powershell
+python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch --repair-current-cockpit-api-projection --prefer-cockpit-api-account
+```
+
+The root cause behind the 2026-05-13 API reconnect/history split was provider-bucket mismatch. Codex App history visibility follows `state_5.sqlite.threads.model_provider`, while relays that do not support the Codex Responses WebSocket route need `supports_websockets = false`, which is available only on custom providers. The fixed invariant is: active `model_provider`, Cockpit current API account `api_provider_id`, custom provider metadata, and `threads.model_provider` must match. See [Codex/Cockpit API Provider Repair](../runbooks/codex-cockpit-api-provider-repair.md).
+
 ## What Is Not Implemented Yet
 - no runtime-owned replacement of the upstream Codex host UX
 - no service-owned Codex authentication model (by design)

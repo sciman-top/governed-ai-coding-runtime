@@ -14,7 +14,7 @@
 ### 总入口速记
 - 操作者聚合入口：`scripts/operator.ps1`
 - 宿主反馈汇总：`scripts/operator.ps1 -Action FeedbackReport`
-- Codex 本机边界：使用官方 `codex` 入口和 Cockpit Tools 原生 controls；本仓只做只读诊断与旧项目 shim 清理。
+- Codex 本机边界：使用官方 `codex` 入口和 Cockpit Tools 原生 controls；本仓只做只读诊断、旧项目 shim 清理，以及显式 API projection repair。
 - 目标仓日常运行/批量一键应用：`scripts/runtime-flow-preset.ps1`
 - 全局/项目级 AI 规则同步：`scripts/sync-agent-rules.ps1`
 - 本仓完整自检：`scripts/verify-repo.ps1 -Check All`
@@ -66,7 +66,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Opera
 `Codex` 页签会把“综合效率优先”单独作为长期原则展示，而把当前模型组合只当作暂行实现，这样以后默认模型更新时，不会把更高层原则一起改没。
 
 ### Codex 本机边界
-本机 Codex CLI/App 的推荐归宿仍是单一 `~/.codex` 共享历史根，但登录、provider、profile、App 启动和 Cockpit launch state 由官方 Codex CLI/App 与 Cockpit Tools 自己负责。本仓不再安装 `codex-shared*`、`codex-cockpit*`、`codex-relay*`，也不再通过脚本投影 `auth.json`、`config.toml`、SQLite history bucket 或 Cockpit `codex_instances.json`。
+本机 Codex CLI/App 的推荐归宿仍是单一 `~/.codex` 共享历史根，但登录、provider、profile、App 启动和 Cockpit launch state 由官方 Codex CLI/App 与 Cockpit Tools 自己负责。本仓不再安装 `codex-shared*`、`codex-cockpit*`、`codex-relay*`，也不再自动投影 `auth.json`、`config.toml`、SQLite history bucket 或 Cockpit `codex_instances.json`；唯一写入例外是显式 `--repair-current-cockpit-api-projection`。
 
 只读互操作检查：
 
@@ -80,7 +80,13 @@ python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Disable-CodexProjectInterop.ps1 -Apply -DisableProjectShortcuts
 ```
 
-`Cockpit Tools` 只负责 Codex App/CLI 的账号与 API 切换；`CC Switch` 只负责 Claude Code / Claude Desktop 的账号与 API 切换。本仓不参与两侧账号/API 切换、修写、拦截、安装或重启包装；只保留只读诊断和旧 shim 清理。本仓不得覆盖内置 `[model_providers.openai]`，不得强改 `codex_launch_on_switch`，不得使用 no-op launcher、restart wrapper、no-restart shim、SQLite trigger、后台 guard 或 CLI wrapper 拦截 Cockpit Tools 原生行为，也不得改写 Claude `settings.json`、provider profile、当前进程 env、`CLAUDE_CONFIG_DIR` 或 Claude Desktop 数据根。
+显式 Cockpit API account 投影修复：
+
+```powershell
+python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch --repair-current-cockpit-api-projection --prefer-cockpit-api-account
+```
+
+`Cockpit Tools` 只负责 Codex App/CLI 的账号与 API 切换；`CC Switch` 只负责 Claude Code / Claude Desktop 的账号与 API 切换。本仓不参与两侧账号/API 切换、拦截、安装或重启包装；只保留只读诊断、旧 shim 清理，以及显式 `--repair-current-cockpit-api-projection` API 投影修复。本仓不得覆盖内置 `[model_providers.openai]`，不得强改 `codex_launch_on_switch`，不得使用 no-op launcher、restart wrapper、no-restart shim、SQLite trigger、后台 guard 或 CLI wrapper 拦截 Cockpit Tools 原生行为，也不得改写 Claude `settings.json`、provider profile、当前进程 env、`CLAUDE_CONFIG_DIR` 或 Claude Desktop 数据根。API 修复时必须保持 active `model_provider`、Cockpit `api_provider_id` 与 `state_5.sqlite.threads.model_provider` 一致；详见 [Codex/Cockpit API Provider Repair](../runbooks/codex-cockpit-api-provider-repair.md)。
 
 复现切号覆盖问题时，先开只读追踪窗口，再手动切换 Cockpit 账号：
 

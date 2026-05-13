@@ -51,6 +51,7 @@ class CodexSharedLauncherTests(unittest.TestCase):
 
         self.assertIn("'codex.cmd'", script)
         self.assertIn("'codex.ps1'", script)
+        self.assertIn("'codex-cockpit-cli-preflight-repair.py'", script)
         self.assertIn("'codex-account.cmd'", script)
         self.assertIn("codex-cockpit.cmd", script)
 
@@ -111,7 +112,81 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertEqual({"rightcode": 2}, provider_check["unexpected_providers"])
             self.assertIn("different provider bucket", provider_check["reason"])
 
-    def test_interop_checker_warns_when_api_history_bucket_differs(self) -> None:
+    def test_interop_checker_warns_for_single_stray_provider_thread(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            codex_home = root / "codex-home"
+            codex_home.mkdir()
+            _create_codex_state_db(codex_home / "state_5.sqlite")
+            connection = sqlite3.connect(codex_home / "state_5.sqlite")
+            try:
+                connection.execute("delete from threads")
+                for i in range(120):
+                    connection.execute(
+                        "insert into threads(id, model_provider, archived, updated_at, updated_at_ms) values(?, ?, ?, ?, ?)",
+                        (f"thread-openai-{i}", "openai", 0, "2026-05-09T03:00:00Z", i),
+                    )
+                connection.execute(
+                    "insert into threads(id, model_provider, archived, updated_at, updated_at_ms) values(?, ?, ?, ?, ?)",
+                    ("thread-stray", "codex_local_access", 0, "2026-05-09T04:00:00Z", 200),
+                )
+                connection.commit()
+            finally:
+                connection.close()
+            cc_switch_db = root / ".cc-switch" / "cc-switch.db"
+            cc_switch_db.parent.mkdir()
+            _create_cc_switch_db(cc_switch_db)
+            cockpit_home = root / ".antigravity_cockpit"
+            cockpit_home.mkdir()
+            (cockpit_home / "codex_accounts").mkdir()
+            (cockpit_home / "codex_accounts.json").write_text(
+                json.dumps({"accounts": [{"id": "codex_chatgpt"}], "current_account_id": "codex_chatgpt"}),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_accounts" / "codex_chatgpt.json").write_text(
+                json.dumps({"id": "codex_chatgpt", "auth_mode": "chatgpt", "tokens": {"access_token": "token"}}),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_model_providers.json").write_text(
+                json.dumps([{"id": "openai", "name": "OpenAI"}]),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_instances.json").write_text(
+                json.dumps(
+                    {
+                        "instances": [],
+                        "defaultSettings": {
+                            "extraArgs": "",
+                            "lastPid": None,
+                            "followLocalAccount": True,
+                            "bindAccountId": None,
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (codex_home / "auth.json").write_text(
+                json.dumps({"auth_mode": "chatgpt", "tokens": {"access_token": "token"}}),
+                encoding="utf-8",
+            )
+            (codex_home / "config.toml").write_text(
+                'model_provider = "openai"\nforced_login_method = "chatgpt"\n',
+                encoding="utf-8",
+            )
+
+            checked = _run_interop_checker(codex_home, cc_switch_db, cockpit_home, quick_launch=True)
+
+            self.assertEqual(0, checked.returncode, checked.stdout + checked.stderr)
+            payload = json.loads(checked.stdout)
+            self.assertEqual("attention", payload["status"])
+            checks = {check["id"]: check for check in payload["after"]["checks"]}
+            provider_check = checks["codex_thread_provider_distribution"]
+            self.assertEqual("warn", provider_check["status"])
+            self.assertEqual({"codex_local_access": 1}, provider_check["unexpected_providers"])
+            self.assertEqual(1, provider_check["unexpected_count"])
+            self.assertIn("small number", provider_check["reason"])
+
+    def test_interop_checker_fails_when_api_history_bucket_differs(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
             codex_home = root / "codex-home"
@@ -188,7 +263,7 @@ class CodexSharedLauncherTests(unittest.TestCase):
                         'name = "35.213.82.91"',
                         'base_url = "http://35.213.82.91:8003/v1"',
                         'wire_api = "responses"',
-                        "requires_openai_auth = true",
+                        "requires_openai_auth = false",
                         "supports_websockets = false",
                     ]
                 )
@@ -209,13 +284,13 @@ class CodexSharedLauncherTests(unittest.TestCase):
 
             checked = _run_interop_checker(codex_home, cc_switch_db, cockpit_home, quick_launch=True)
 
-            self.assertEqual(0, checked.returncode, checked.stdout + checked.stderr)
+            self.assertEqual(2, checked.returncode, checked.stdout + checked.stderr)
             payload = json.loads(checked.stdout)
-            self.assertEqual("attention", payload["status"])
+            self.assertEqual("fail", payload["status"])
             checks = {check["id"]: check for check in payload["after"]["checks"]}
-            self.assertEqual("warn", checks["codex_thread_provider_distribution"]["status"])
+            self.assertEqual("fail", checks["codex_thread_provider_distribution"]["status"])
             self.assertIn(
-                "API connectivity is primary",
+                "different provider bucket",
                 checks["codex_thread_provider_distribution"]["reason"],
             )
             self.assertEqual("warn", checks["codex_live_provider_bucket"]["status"])
@@ -323,7 +398,7 @@ class CodexSharedLauncherTests(unittest.TestCase):
                 check["id"]: check for check in dry_payload["after"]["checks"]
             }
             self.assertEqual(
-                "warn",
+                "fail",
                 dry_check_ids["cockpit_current_provider_bucket"]["status"],
             )
             self.assertEqual(
@@ -910,7 +985,7 @@ class CodexSharedLauncherTests(unittest.TestCase):
                         'name = "35.213.82.91"',
                         'base_url = "http://35.213.82.91:8003/v1"',
                         'wire_api = "responses"',
-                        "requires_openai_auth = true",
+                        "requires_openai_auth = false",
                         "",
                         "[profiles.shared-cockpit-api]",
                         'forced_login_method = "api"',
@@ -1017,6 +1092,319 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertNotIn("normalize_saved_api_provider_profiles", actions)
             self.assertEqual(before_config, (codex_home / "config.toml").read_text(encoding="utf-8"))
             self.assertEqual(before_auth, (codex_home / "auth.json").read_text(encoding="utf-8"))
+
+    def test_interop_checker_repairs_current_cockpit_api_projection_explicitly(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            codex_home = root / "codex-home"
+            codex_home.mkdir()
+            _create_codex_state_db(codex_home / "state_5.sqlite")
+            connection = sqlite3.connect(codex_home / "state_5.sqlite")
+            try:
+                connection.execute("update threads set model_provider = 'openai' where archived = 0")
+                connection.commit()
+            finally:
+                connection.close()
+            (codex_home / "config.toml").write_text(
+                "\n".join(
+                    [
+                        'model_provider = "codex_local_access"',
+                        'forced_login_method = "chatgpt"',
+                        "",
+                        "[profiles.shared-cockpit-api]",
+                        'forced_login_method = "api"',
+                        'model_provider = "openai"',
+                        'openai_base_url = "https://api.openai.com/v1"',
+                        "",
+                        "[model_providers.codex_local_access]",
+                        'name = "35.213.82.91"',
+                        'base_url = "http://35.213.82.91:8003/v1"',
+                        'wire_api = "responses"',
+                        "requires_openai_auth = true",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            cc_switch_db = root / ".cc-switch" / "cc-switch.db"
+            cc_switch_db.parent.mkdir()
+            _create_cc_switch_db(cc_switch_db)
+            cockpit_home = root / ".antigravity_cockpit"
+            cockpit_home.mkdir()
+            (cockpit_home / "codex_accounts").mkdir()
+            (cockpit_home / "codex_accounts.json").write_text(
+                json.dumps({"accounts": [{"id": "codex_api"}], "current_account_id": "codex_api"}),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_accounts" / "codex_api.json").write_text(
+                json.dumps(
+                    {
+                        "id": "codex_api",
+                        "email": "api-key-test",
+                        "auth_mode": "apikey",
+                        "openai_api_key": "sk-test-secret",
+                        "api_base_url": "http://35.213.82.91:8003/v1",
+                        "api_provider_id": "cmp_35",
+                        "api_provider_name": "35.213.82.91",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_model_providers.json").write_text(
+                json.dumps([{"id": "cmp_35", "name": "35.213.82.91", "baseUrl": "http://35.213.82.91:8003/v1"}]),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_instances.json").write_text(
+                json.dumps(
+                    {
+                        "instances": [],
+                        "defaultSettings": {
+                            "lastPid": None,
+                            "followLocalAccount": False,
+                            "bindAccountId": "codex_old_oauth",
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            repaired = _run_interop_checker(
+                codex_home,
+                cc_switch_db,
+                cockpit_home,
+                repair_current_cockpit_api_projection=True,
+                quick_launch=True,
+            )
+
+            self.assertEqual(0, repaired.returncode, repaired.stdout + repaired.stderr)
+            payload = json.loads(repaired.stdout)
+            actions = {action["id"]: action for action in payload["actions"]}
+            self.assertEqual("changed", actions["repair_current_cockpit_api_projection"]["status"])
+            self.assertTrue(actions["repair_current_cockpit_api_projection"]["cockpit_instance_binding_changed"])
+            self.assertNotIn("sk-test-secret", repaired.stdout)
+
+            config_text = (codex_home / "config.toml").read_text(encoding="utf-8")
+            self.assertIn('model_provider = "cmp_35"', config_text)
+            self.assertIn('forced_login_method = "api"', config_text)
+            self.assertNotIn('openai_base_url = "http://35.213.82.91:8003/v1"', config_text)
+            self.assertIn("[model_providers.cmp_35]", config_text)
+            self.assertIn("requires_openai_auth = false", config_text)
+            self.assertIn("supports_websockets = false", config_text)
+            self.assertNotIn("[model_providers.codex_local_access]", config_text)
+            auth = json.loads((codex_home / "auth.json").read_text(encoding="utf-8"))
+            self.assertEqual("apikey", auth["auth_mode"])
+            self.assertEqual("sk-test-secret", auth["OPENAI_API_KEY"])
+            self.assertEqual("http://35.213.82.91:8003/v1", auth["base_url"])
+            instances = json.loads((cockpit_home / "codex_instances.json").read_text(encoding="utf-8"))
+            self.assertTrue(instances["defaultSettings"]["followLocalAccount"])
+            self.assertIsNone(instances["defaultSettings"]["bindAccountId"])
+
+            checks = {check["id"]: check for check in payload["after"]["checks"]}
+            self.assertEqual("pass", checks["cockpit_live_login_mode_matches_current_account"]["status"])
+            self.assertEqual("pass", checks["codex_auth_matches_cockpit_current_account"]["status"])
+            self.assertEqual("pass", checks["cockpit_saved_api_provider_profiles_projectable"]["status"])
+
+    def test_interop_checker_prefers_api_account_after_cockpit_oauth_switch(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            codex_home = root / "codex-home"
+            codex_home.mkdir()
+            _create_codex_state_db(codex_home / "state_5.sqlite")
+            connection = sqlite3.connect(codex_home / "state_5.sqlite")
+            try:
+                connection.execute("update threads set model_provider = 'openai' where archived = 0")
+                connection.commit()
+            finally:
+                connection.close()
+            (codex_home / "config.toml").write_text(
+                'model_provider = "openai"\nforced_login_method = "api"\n',
+                encoding="utf-8",
+            )
+            (codex_home / "auth.json.bak").write_text(
+                json.dumps(
+                    {
+                        "auth_mode": "apikey",
+                        "OPENAI_API_KEY": "sk-test-secret",
+                        "api_base_url": "http://35.213.82.91:8003/v1",
+                        "source_account_id": "codex_api",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            cc_switch_db = root / ".cc-switch" / "cc-switch.db"
+            cc_switch_db.parent.mkdir()
+            _create_cc_switch_db(cc_switch_db)
+            cockpit_home = root / ".antigravity_cockpit"
+            cockpit_home.mkdir()
+            (cockpit_home / "codex_accounts").mkdir()
+            (cockpit_home / "codex_accounts.json").write_text(
+                json.dumps(
+                    {
+                        "accounts": [{"id": "codex_oauth"}, {"id": "codex_api"}],
+                        "current_account_id": "codex_oauth",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_accounts" / "codex_oauth.json").write_text(
+                json.dumps(
+                    {
+                        "id": "codex_oauth",
+                        "email": "user@example.test",
+                        "auth_mode": "oauth",
+                        "tokens": {"access_token": "oauth-token"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_accounts" / "codex_api.json").write_text(
+                json.dumps(
+                    {
+                        "id": "codex_api",
+                        "email": "api-key-test",
+                        "auth_mode": "apikey",
+                        "openai_api_key": "sk-test-secret",
+                        "api_base_url": "http://35.213.82.91:8003/v1",
+                        "api_provider_id": "cmp_35",
+                        "api_provider_name": "35.213.82.91",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_model_providers.json").write_text(
+                json.dumps([{"id": "cmp_35", "name": "35.213.82.91", "baseUrl": "http://35.213.82.91:8003/v1"}]),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_instances.json").write_text(
+                json.dumps(
+                    {
+                        "instances": [],
+                        "defaultSettings": {
+                            "lastPid": None,
+                            "followLocalAccount": False,
+                            "bindAccountId": "codex_oauth",
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            repaired = _run_interop_checker(
+                codex_home,
+                cc_switch_db,
+                cockpit_home,
+                repair_current_cockpit_api_projection=True,
+                prefer_cockpit_api_account=True,
+                quick_launch=True,
+            )
+
+            self.assertEqual(0, repaired.returncode, repaired.stdout + repaired.stderr)
+            payload = json.loads(repaired.stdout)
+            action = {item["id"]: item for item in payload["actions"]}["repair_current_cockpit_api_projection"]
+            self.assertEqual("changed", action["status"])
+            self.assertEqual("codex_api", action["account_id"])
+            self.assertTrue(action["cockpit_current_account_changed"])
+            self.assertEqual("codex_oauth", action["previous_cockpit_current_account_id"])
+            self.assertTrue(action["cockpit_instance_binding_changed"])
+            self.assertNotIn("sk-test-secret", repaired.stdout)
+
+            accounts = json.loads((cockpit_home / "codex_accounts.json").read_text(encoding="utf-8"))
+            self.assertEqual("codex_api", accounts["current_account_id"])
+            auth = json.loads((codex_home / "auth.json").read_text(encoding="utf-8"))
+            self.assertEqual("apikey", auth["auth_mode"])
+            self.assertEqual("codex_api", auth["source_account_id"])
+            config_text = (codex_home / "config.toml").read_text(encoding="utf-8")
+            self.assertIn('model_provider = "cmp_35"', config_text)
+            self.assertIn('forced_login_method = "api"', config_text)
+            self.assertNotIn('openai_base_url = "http://35.213.82.91:8003/v1"', config_text)
+            self.assertIn("[model_providers.cmp_35]", config_text)
+            self.assertIn("supports_websockets = false", config_text)
+            instances = json.loads((cockpit_home / "codex_instances.json").read_text(encoding="utf-8"))
+            self.assertTrue(instances["defaultSettings"]["followLocalAccount"])
+            self.assertIsNone(instances["defaultSettings"]["bindAccountId"])
+
+            checked = _run_interop_checker(codex_home, cc_switch_db, cockpit_home, quick_launch=True)
+            self.assertEqual(0, checked.returncode, checked.stdout + checked.stderr)
+            checked_payload = json.loads(checked.stdout)
+            checks = {check["id"]: check for check in checked_payload["after"]["checks"]}
+            self.assertEqual("codex_api", checks["cockpit_codex_current_account_present"]["current_account_id"])
+            self.assertEqual("pass", checks["cockpit_live_login_mode_matches_current_account"]["status"])
+            self.assertEqual("pass", checks["codex_auth_matches_cockpit_current_account"]["status"])
+            self.assertEqual("pass", checks["cockpit_codex_instances_follow_current_account"]["status"])
+
+    def test_interop_checker_fails_when_saved_api_provider_bucket_is_missing_from_live_config(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            codex_home = root / "codex-home"
+            codex_home.mkdir()
+            _create_codex_state_db(codex_home / "state_5.sqlite")
+            (codex_home / "config.toml").write_text(
+                'model_provider = "codex_local_access"\nforced_login_method = "api"\n',
+                encoding="utf-8",
+            )
+            (codex_home / "auth.json").write_text(
+                json.dumps(
+                    {
+                        "auth_mode": "apikey",
+                        "OPENAI_API_KEY": "secret",
+                        "api_base_url": "http://35.213.82.91:8003/v1",
+                        "base_url": "http://35.213.82.91:8003/v1",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            cc_switch_db = root / ".cc-switch" / "cc-switch.db"
+            cc_switch_db.parent.mkdir()
+            _create_cc_switch_db(cc_switch_db)
+            cockpit_home = root / ".antigravity_cockpit"
+            cockpit_home.mkdir()
+            (cockpit_home / "codex_accounts").mkdir()
+            (cockpit_home / "codex_accounts.json").write_text(
+                json.dumps(
+                    {
+                        "accounts": [{"id": "codex_api"}],
+                        "current_account_id": "codex_api",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_accounts" / "codex_api.json").write_text(
+                json.dumps(
+                    {
+                        "id": "codex_api",
+                        "email": "api-key-test",
+                        "auth_mode": "apikey",
+                        "openai_api_key": "secret",
+                        "api_base_url": "http://35.213.82.91:8003/v1",
+                        "api_provider_id": "cmp_35",
+                        "api_provider_name": "35.213.82.91",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_model_providers.json").write_text(
+                json.dumps([{"id": "cmp_35", "name": "35.213.82.91", "baseUrl": "http://35.213.82.91:8003/v1"}]),
+                encoding="utf-8",
+            )
+            (cockpit_home / "config.json").write_text(
+                json.dumps({"codex_launch_on_switch": False, "antigravity_dual_switch_no_restart_enabled": False}),
+                encoding="utf-8",
+            )
+            (cockpit_home / "codex_instances.json").write_text(
+                json.dumps({"instances": [], "defaultSettings": {"lastPid": None}}),
+                encoding="utf-8",
+            )
+
+            checked = _run_interop_checker(codex_home, cc_switch_db, cockpit_home, quick_launch=True)
+
+            self.assertEqual(2, checked.returncode, checked.stdout + checked.stderr)
+            payload = json.loads(checked.stdout)
+            checks = {check["id"]: check for check in payload["after"]["checks"]}
+            saved_provider_check = checks["cockpit_saved_api_provider_profiles_projectable"]
+            self.assertEqual("fail", saved_provider_check["status"])
+            self.assertEqual("normalize_saved_api_provider_profiles", saved_provider_check["repair_strategy"])
+            self.assertEqual("cmp_35", saved_provider_check["findings"][0]["provider_id"])
+            self.assertIn("profiles.shared-cockpit-api missing", saved_provider_check["findings"][0]["issues"])
 
     def test_interop_checker_detects_recent_cockpit_raw_start_after_switch(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -1225,6 +1613,8 @@ def _run_interop_checker(
     cockpit_home: Path,
     *,
     apply: bool = False,
+    repair_current_cockpit_api_projection: bool = False,
+    prefer_cockpit_api_account: bool = False,
     migrate_provider_bucket: bool = False,
     quick_launch: bool = False,
     cockpit_account_id: str | None = None,
@@ -1241,6 +1631,10 @@ def _run_interop_checker(
     ]
     if apply:
         command.append("--apply")
+    if repair_current_cockpit_api_projection:
+        command.append("--repair-current-cockpit-api-projection")
+    if prefer_cockpit_api_account:
+        command.append("--prefer-cockpit-api-account")
     if migrate_provider_bucket:
         command.append("--migrate-provider-bucket")
     if quick_launch:
@@ -1304,7 +1698,7 @@ def _create_cc_switch_db(path: Path) -> None:
                                 "[model_providers.rightcode]",
                                 'base_url = "https://right.codes/codex/v1"',
                                 'wire_api = "responses"',
-                                "requires_openai_auth = true",
+                                "requires_openai_auth = false",
                             ]
                         ),
                     }

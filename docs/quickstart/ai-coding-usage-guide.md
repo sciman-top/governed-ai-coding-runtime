@@ -64,6 +64,23 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Opera
 This UI runs a persistent local `127.0.0.1` interactive service. Later visits can use `http://127.0.0.1:8770/?lang=en` directly; use `scripts/operator-ui-service.ps1 -Action Status|Stop|Restart` to inspect or control the service. It can run allowlisted actions for readiness, target listing, rule drift checks, rule sync, governance baseline rollout, daily, all-feature apply that deletes proven-safe retired managed files by default, one-click retired-file cleanup, and one-click governance uninstall. It can target all repos or one selected target repo, exposes settings for language, mode, parallelism, fail-fast, dry-run, managed-removal apply, and milestone tag; dry-run disables deletes, while cleanup/uninstall require the managed-removal apply checkbox for real deletion or patching. It records results in the output panel and local browser history, and refs can be clicked to preview evidence/artifact/verification files. Remove `-OpenUi` when you only want to generate a read-only `.runtime/artifacts/operator-ui/index.html` snapshot.
 The `Codex` tab treats `efficiency first` as the long-lived rule and renders the current model combo only as the present implementation choice, so future model updates do not replace the underlying principle.
 
+### Codex Local Boundary
+Use the official `codex` entrypoint and Cockpit Tools native controls for login, provider switching, and app launch state. This repository keeps read-only diagnostics, old shim cleanup, and one explicit API projection repair path.
+
+Read-only interop check:
+
+```powershell
+python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch
+```
+
+Explicit current Cockpit API account projection repair:
+
+```powershell
+python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch --repair-current-cockpit-api-projection --prefer-cockpit-api-account
+```
+
+The repair must keep active `model_provider`, Cockpit `api_provider_id`, and `state_5.sqlite.threads.model_provider` aligned. It must use a custom no-WebSocket provider for API relays that need `supports_websockets = false`; do not override `[model_providers.openai]`. Do not use no-op launchers, restart wrappers, no-restart shims, SQLite triggers, background guards, or CLI wrappers to intercept Cockpit Tools native behavior. See [Codex/Cockpit API Provider Repair](../runbooks/codex-cockpit-api-provider-repair.md).
+
 ### Host feedback summary
 If you want one place to judge whether a feature is really working in Codex and Claude, whether a problem is host-local or runtime-local, and what should be optimized next, generate the unified report instead of reading isolated logs:
 

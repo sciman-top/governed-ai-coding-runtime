@@ -1,0 +1,212 @@
+{
+  "timestamp": "20260513-091610",
+  "apply": true,
+  "codex_home": "C:\\Users\\sciman\\.codex",
+  "cockpit_home": "C:\\Users\\sciman\\.antigravity_cockpit",
+  "bin_dir": "C:\\Users\\sciman\\.local\\bin",
+  "backup_root": "C:\\Users\\sciman\\.codex\\backups\\disable-project-interop-20260513-091610",
+  "disabled_project_shortcuts": true,
+  "actions": [
+    {
+      "id": "backup_file",
+      "status": "ok",
+      "backup": "C:\\Users\\sciman\\.codex\\backups\\disable-project-interop-20260513-091610\\C_Users_sciman_.antigravity_cockpit--config.json",
+      "path": "C:\\Users\\sciman\\.antigravity_cockpit\\config.json"
+    },
+    {
+      "id": "backup_file",
+      "status": "ok",
+      "backup": "C:\\Users\\sciman\\.codex\\backups\\disable-project-interop-20260513-091610\\C_Users_sciman_.antigravity_cockpit--codex_instances.json",
+      "path": "C:\\Users\\sciman\\.antigravity_cockpit\\codex_instances.json"
+    },
+    {
+      "id": "backup_file",
+      "status": "ok",
+      "backup": "C:\\Users\\sciman\\.codex\\backups\\disable-project-interop-20260513-091610\\C_Users_sciman_.codex--config.toml",
+      "path": "C:\\Users\\sciman\\.codex\\config.toml"
+    },
+    {
+      "id": "backup_file",
+      "status": "ok",
+      "backup": "C:\\Users\\sciman\\.codex\\backups\\disable-project-interop-20260513-091610\\C_Users_sciman_.codex--auth.json",
+      "path": "C:\\Users\\sciman\\.codex\\auth.json"
+    },
+    {
+      "id": "backup_file",
+      "status": "ok",
+      "backup": "C:\\Users\\sciman\\.codex\\backups\\disable-project-interop-20260513-091610\\C_Users_sciman_.codex--state_5.sqlite",
+      "path": "C:\\Users\\sciman\\.codex\\state_5.sqlite"
+    },
+    {
+      "id": "guard_task_absent",
+      "status": "ok",
+      "task_name": "codex-cockpit-switch-guard"
+    },
+    {
+      "id": "cockpit_project_launch_interception_removed",
+      "status": "changed",
+      "before": {
+        "codex_app_path": "",
+        "codex_launch_on_switch": false,
+        "codex_restart_specified_app_on_switch": false,
+        "codex_specified_app_path": "",
+        "antigravity_dual_switch_no_restart_enabled": false
+      },
+      "path": "C:\\Users\\sciman\\.antigravity_cockpit\\config.json",
+      "preserved_codex_launch_on_switch": false
+    },
+    {
+      "id": "cockpit_instances_follow_current_account",
+      "status": "changed",
+      "path": "C:\\Users\\sciman\\.antigravity_cockpit\\codex_instances.json"
+    },
+    {
+      "id": "codex_provider_bucket_triggers_removed",
+      "status": "changed",
+      "result": {
+        "existing": [],
+        "dropped": []
+      },
+      "path": "C:\\Users\\sciman\\.codex\\state_5.sqlite"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-noop-launcher.exe"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-install-noop-launcher.cmd"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "changed",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex.cmd.disabled-20260513-091610",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex.cmd"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "changed",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex.ps1.disabled-20260513-091610",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex.ps1"
+    },
+    {
+      "id": "shortcut_disabled",
+      "status": "changed",
+      "disabled_path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-cli-preflight-repair.py.disabled-20260513-091610",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-cli-preflight-repair.py"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-account.cmd"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-account.ps1"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit.cmd"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-exec.cmd"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-resume.cmd"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-app.cmd"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-cockpit-app-restart.cmd"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-shared.cmd"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-shared-exec.cmd"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-shared-resume.cmd"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-shared-app.cmd"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-relay.cmd"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-relay-exec.cmd"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-relay-resume.cmd"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-relay-app.cmd"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-interop-check.cmd"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-interop-repair.cmd"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-switch-guard.cmd"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-switch-guard-status.cmd"
+    },
+    {
+      "id": "shortcut_absent",
+      "status": "ok",
+      "path": "C:\\Users\\sciman\\.local\\bin\\codex-switch-guard-start.cmd"
+    },
+    {
+      "id": "cockpit_runtime_reload_required",
+      "status": "attention",
+      "latest_process_start": "2026-05-13T08:53:14.5861310+08:00",
+      "reason": "Cockpit Tools caches config.json in process memory; external disk repair is not hot-loaded by the running process.",
+      "latest_disabled_launch_log": "2026-05-13T08:56:30.575139300+08:00  INFO 已关闭切换 Codex 时自动启动 Codex App",
+      "process_ids": [
+        17048
+      ],
+      "remediation": "Reload Cockpit Tools or toggle/save the Cockpit UI setting for Codex launch-on-switch before expecting native Codex App launch."
+    }
+  ]
+}
