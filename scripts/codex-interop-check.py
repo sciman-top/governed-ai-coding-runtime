@@ -288,6 +288,12 @@ def inspect_codex_provider_buckets(
             "tolerated_unexpected_count": tolerated_unexpected_count,
         }
     )
+    checks.append(
+        _inspect_codex_history_visibility_metadata(
+            state_path,
+            expected_provider=expected_provider,
+        )
+    )
     if include_session_scan:
         checks.append(
             _inspect_codex_session_provider_bucket(
@@ -964,6 +970,10 @@ def repair_current_cockpit_api_projection(
             instances_path.write_text(json.dumps(instances, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
             instance_binding_changed = True
     history_rows_changed = _migrate_threads_provider_bucket(state_path, target_provider=provider_id)
+    history_visibility_rows_changed = _repair_codex_history_visibility_flags(
+        state_path,
+        target_provider=provider_id,
+    )
     return {
         "id": "repair_current_cockpit_api_projection",
         "tool": "codex",
@@ -978,6 +988,7 @@ def repair_current_cockpit_api_projection(
         "previous_cockpit_current_account_id": previous_cockpit_current_account_id,
         "cockpit_instance_binding_changed": instance_binding_changed,
         "history_rows_changed": history_rows_changed,
+        "history_visibility_rows_changed": history_visibility_rows_changed,
         "backups": backups,
     }
 
@@ -1074,6 +1085,10 @@ def repair_current_cockpit_account_projection(
             instance_binding_changed = True
 
     history_rows_changed = _migrate_threads_provider_bucket(state_path, target_provider=OPENAI_SHARED_PROVIDER_ID)
+    history_visibility_rows_changed = _repair_codex_history_visibility_flags(
+        state_path,
+        target_provider=OPENAI_SHARED_PROVIDER_ID,
+    )
     return {
         "id": "repair_current_cockpit_account_projection",
         "tool": "codex",
@@ -1084,6 +1099,7 @@ def repair_current_cockpit_account_projection(
         "provider_id": OPENAI_SHARED_PROVIDER_ID,
         "cockpit_instance_binding_changed": instance_binding_changed,
         "history_rows_changed": history_rows_changed,
+        "history_visibility_rows_changed": history_visibility_rows_changed,
         "backups": backups,
     }
 
@@ -1099,6 +1115,39 @@ def _migrate_threads_provider_bucket(state_path: Path, *, target_provider: str) 
         cursor = connection.execute(
             "update threads set model_provider = ? where coalesce(model_provider, '') != ?",
             (target_provider, target_provider),
+        )
+        connection.commit()
+        return int(cursor.rowcount)
+    except sqlite3.Error:
+        connection.rollback()
+        return None
+    finally:
+        connection.close()
+
+
+def _repair_codex_history_visibility_flags(state_path: Path, *, target_provider: str) -> int | None:
+    if not state_path.exists():
+        return None
+    try:
+        connection = sqlite3.connect(state_path)
+    except sqlite3.Error:
+        return None
+    try:
+        columns = _sqlite_table_columns(connection, "threads")
+        if not {"archived", "model_provider", "first_user_message", "has_user_event"}.issubset(columns):
+            return None
+        predicates = [
+            "coalesce(archived, 0) = 0",
+            "coalesce(model_provider, '') = ?",
+            "trim(coalesce(first_user_message, '')) != ''",
+            "coalesce(has_user_event, 0) = 0",
+        ]
+        assignments = ["has_user_event = 1"]
+        if "thread_source" in columns:
+            assignments.append("thread_source = coalesce(thread_source, 'user')")
+        cursor = connection.execute(
+            f"update threads set {', '.join(assignments)} where {' and '.join(predicates)}",
+            (target_provider,),
         )
         connection.commit()
         return int(cursor.rowcount)
@@ -1730,6 +1779,117 @@ def _read_codex_thread_provider_distribution(state_path: Path) -> tuple[dict[str
         except UnboundLocalError:
             pass
     return {str(provider or "<empty>"): int(count) for provider, count in rows}, None
+
+
+def _inspect_codex_history_visibility_metadata(
+    state_path: Path,
+    *,
+    expected_provider: str,
+) -> dict[str, Any]:
+    if not state_path.exists():
+        return {
+            "id": "codex_history_visibility_metadata",
+            "tool": "codex",
+            "status": "platform_na",
+            "reason": "Codex state database not found; cannot inspect picker visibility metadata.",
+            "path": str(state_path),
+            "expected_provider": expected_provider,
+        }
+    try:
+        connection = sqlite3.connect(f"file:{state_path}?mode=ro", uri=True)
+        columns = _sqlite_table_columns(connection, "threads")
+        required_columns = {"archived", "model_provider", "first_user_message", "has_user_event"}
+        if not columns:
+            return {
+                "id": "codex_history_visibility_metadata",
+                "tool": "codex",
+                "status": "fail",
+                "reason": "Codex state database has no threads table; cannot inspect picker visibility metadata.",
+                "path": str(state_path),
+                "expected_provider": expected_provider,
+            }
+        missing_columns = sorted(required_columns - columns)
+        if missing_columns:
+            return {
+                "id": "codex_history_visibility_metadata",
+                "tool": "codex",
+                "status": "pass",
+                "reason": "Codex threads table is missing visibility metadata columns.",
+                "path": str(state_path),
+                "expected_provider": expected_provider,
+                "missing_columns": missing_columns,
+                "visibility_scan_skipped": True,
+            }
+        row = connection.execute(
+            """
+            select
+              count(*) as active_threads,
+              sum(case when trim(coalesce(first_user_message, '')) != '' then 1 else 0 end) as user_message_threads,
+              sum(case when coalesce(has_user_event, 0) != 0 then 1 else 0 end) as visible_user_event_threads
+            from threads
+            where coalesce(archived, 0) = 0
+              and coalesce(model_provider, '') = ?
+            """,
+            (expected_provider,),
+        ).fetchone()
+        thread_source_counts: dict[str, int] = {}
+        if "thread_source" in columns:
+            thread_source_counts = {
+                str(source if source is not None else "<null>"): int(count)
+                for source, count in connection.execute(
+                    """
+                    select thread_source, count(*) as n
+                    from threads
+                    where coalesce(archived, 0) = 0
+                      and coalesce(model_provider, '') = ?
+                    group by thread_source
+                    order by n desc
+                    """,
+                    (expected_provider,),
+                ).fetchall()
+            }
+    except sqlite3.Error as exc:
+        return {
+            "id": "codex_history_visibility_metadata",
+            "tool": "codex",
+            "status": "fail",
+            "reason": f"Cannot inspect picker visibility metadata: {exc}",
+            "path": str(state_path),
+            "expected_provider": expected_provider,
+        }
+    finally:
+        try:
+            connection.close()
+        except UnboundLocalError:
+            pass
+
+    active_threads = int(row[0] or 0) if row else 0
+    user_message_threads = int(row[1] or 0) if row else 0
+    visible_user_event_threads = int(row[2] or 0) if row else 0
+    status = "pass"
+    reason = "Codex picker visibility metadata has user-event rows in the expected provider bucket."
+    if user_message_threads > 0 and visible_user_event_threads == 0:
+        status = "fail"
+        reason = (
+            "Codex history rows exist in the expected provider bucket, but has_user_event is zero; "
+            "CLI/App pickers can treat this as an empty history list."
+        )
+    elif active_threads > 0 and user_message_threads == 0:
+        status = "warn"
+        reason = "Codex active history rows exist, but no first_user_message metadata is available for picker visibility validation."
+    return {
+        "id": "codex_history_visibility_metadata",
+        "tool": "codex",
+        "status": status,
+        "reason": reason,
+        "path": str(state_path),
+        "expected_provider": expected_provider,
+        "active_threads": active_threads,
+        "user_message_threads": user_message_threads,
+        "visible_user_event_threads": visible_user_event_threads,
+        "thread_source_distribution": thread_source_counts,
+        "repair_strategy": "repair_current_cockpit_account_projection" if status == "fail" else "none",
+    }
 
 
 def _inspect_codex_session_provider_bucket(

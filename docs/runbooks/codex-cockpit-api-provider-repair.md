@@ -10,10 +10,10 @@ API key login is required, but ChatGPT is currently being used. Logging out.
 This runbook is for local Codex/Cockpit interoperability only. Do not restart, stop, kill, or auto-launch Codex App unless the operator explicitly confirms that action for the current incident.
 
 ## Root Cause Summary
-- Codex App picker visibility is bucketed by `state_5.sqlite.threads.model_provider`.
+- Codex App/CLI picker visibility is bucketed by `state_5.sqlite.threads.model_provider` and still depends on user-visible thread metadata such as `has_user_event` and `first_user_message`.
 - API relay connectivity needs a custom `model_providers.<id>` entry when the relay does not support the Codex Responses WebSocket route, because `supports_websockets = false` is available only on custom providers.
 - The old assumption was wrong: API mode does not have to stay in the built-in `openai` history bucket.
-- The durable invariant is: active `config.toml` provider, Cockpit current API account `api_provider_id`, and `threads.model_provider` must match.
+- The durable invariant is: active `config.toml` provider, Cockpit current API account `api_provider_id`, `threads.model_provider`, and picker-visible `threads.has_user_event` metadata must match.
 - Built-in `openai` plus `openai_base_url` can preserve one historical bucket, but cannot disable WebSocket retries for relays such as `http://35.213.82.91:8003/v1`.
 - Historical project guards made the problem worse by creating SQLite triggers or running generic provider-bucket repairs that could pull history back toward `openai` or race Cockpit Tools state writes.
 - OAuth/ChatGPT switching has the symmetric failure mode: Cockpit can make an OAuth account current while Codex live projection still has `forced_login_method = "api"` or a missing/stale `auth.json`. In that state Codex CLI requires API-key login even though the current account is ChatGPT/OAuth.
@@ -31,6 +31,7 @@ For a Cockpit API account:
   - `supports_websockets = false`
 - `~/.codex/auth.json` matches the current Cockpit API account key and base URL.
 - `~/.codex/state_5.sqlite.threads.model_provider` uses the same provider id for active local history.
+- Active local history rows with a non-empty `first_user_message` have `has_user_event = 1`; otherwise App/CLI pickers can show an empty list even when the provider bucket has rows.
 - Cockpit provider metadata records the same provider id and `supports_websockets = false`.
 
 For a ChatGPT/OAuth account:
@@ -39,6 +40,7 @@ For a ChatGPT/OAuth account:
 - Do not define `[model_providers.openai]`.
 - `~/.codex/auth.json` has `auth_mode = "chatgpt"` and current Cockpit OAuth tokens.
 - `~/.codex/state_5.sqlite.threads.model_provider` uses `openai` for active OAuth/ChatGPT history.
+- Active local history rows with a non-empty `first_user_message` have `has_user_event = 1`.
 - Saved Cockpit API provider profiles should remain present as non-built-in custom providers with `supports_websockets = false`, so switching back to API does not lose relay compatibility.
 
 ## Allowed Actions
@@ -115,12 +117,14 @@ Expected:
 - `status = "pass"`
 - `codex_live_provider_bucket.active_provider` matches the current Cockpit account provider bucket.
 - `codex_thread_provider_distribution.expected_provider` matches the active provider.
+- `codex_history_visibility_metadata.visible_user_event_threads` is non-zero when user-message threads exist.
 
 ## Evidence
 Record the final incident evidence in `docs/change-evidence/` with:
 - live `config.toml` provider id
 - current Cockpit account id and `api_provider_id`
 - thread provider distribution
+- history visibility metadata: `user_message_threads`, `visible_user_event_threads`, and `thread_source_distribution`
 - guard task/process status
 - SQLite trigger count
 - smoke result, such as a `codex exec` final message

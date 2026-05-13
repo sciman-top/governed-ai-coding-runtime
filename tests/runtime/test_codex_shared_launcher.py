@@ -1741,6 +1741,92 @@ class CodexSharedLauncherTests(unittest.TestCase):
             self.assertEqual("fail", checks["codex_thread_provider_distribution"]["status"])
             self.assertIn("threads", checks["codex_thread_provider_distribution"]["reason"])
 
+    def test_interop_checker_flags_hidden_history_visibility_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            codex_home = root / "codex-home"
+            codex_home.mkdir()
+            _create_codex_state_db_with_visibility(codex_home / "state_5.sqlite")
+            (codex_home / "config.toml").write_text(
+                "\n".join(
+                    [
+                        'model_provider = "cmp_35"',
+                        'forced_login_method = "api"',
+                        "",
+                        "[model_providers.cmp_35]",
+                        'name = "35.213.82.91"',
+                        'base_url = "http://35.213.82.91:8003/v1"',
+                        'wire_api = "responses"',
+                        "requires_openai_auth = false",
+                        "supports_websockets = false",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            cc_switch_db = root / ".cc-switch" / "cc-switch.db"
+            cc_switch_db.parent.mkdir()
+            _create_cc_switch_db(cc_switch_db)
+            cockpit_home = root / ".antigravity_cockpit"
+            _create_api_cockpit_home(cockpit_home)
+
+            checked = _run_interop_checker(codex_home, cc_switch_db, cockpit_home, quick_launch=True)
+
+            self.assertEqual(2, checked.returncode, checked.stdout + checked.stderr)
+            payload = json.loads(checked.stdout)
+            checks = {check["id"]: check for check in payload["after"]["checks"]}
+            visibility = checks["codex_history_visibility_metadata"]
+            self.assertEqual("fail", visibility["status"])
+            self.assertEqual(2, visibility["user_message_threads"])
+            self.assertEqual(0, visibility["visible_user_event_threads"])
+
+    def test_api_projection_repairs_history_visibility_flags(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            codex_home = root / "codex-home"
+            codex_home.mkdir()
+            _create_codex_state_db_with_visibility(codex_home / "state_5.sqlite")
+            (codex_home / "config.toml").write_text(
+                'model_provider = "cmp_35"\nforced_login_method = "api"\n',
+                encoding="utf-8",
+            )
+            cc_switch_db = root / ".cc-switch" / "cc-switch.db"
+            cc_switch_db.parent.mkdir()
+            _create_cc_switch_db(cc_switch_db)
+            cockpit_home = root / ".antigravity_cockpit"
+            _create_api_cockpit_home(cockpit_home)
+
+            repaired = _run_interop_checker(
+                codex_home,
+                cc_switch_db,
+                cockpit_home,
+                repair_current_cockpit_api_projection=True,
+                quick_launch=True,
+            )
+
+            self.assertEqual(0, repaired.returncode, repaired.stdout + repaired.stderr)
+            payload = json.loads(repaired.stdout)
+            action = {item["id"]: item for item in payload["actions"]}["repair_current_cockpit_api_projection"]
+            self.assertEqual(2, action["history_visibility_rows_changed"])
+            checks = {check["id"]: check for check in payload["after"]["checks"]}
+            visibility = checks["codex_history_visibility_metadata"]
+            self.assertEqual("pass", visibility["status"])
+            self.assertEqual(2, visibility["visible_user_event_threads"])
+
+            connection = sqlite3.connect(codex_home / "state_5.sqlite")
+            try:
+                rows = connection.execute(
+                    """
+                    select has_user_event, thread_source
+                    from threads
+                    where archived = 0 and trim(first_user_message) != ''
+                    order by id
+                    """
+                ).fetchall()
+            finally:
+                connection.close()
+            self.assertEqual([(1, "user"), (1, "user")], rows)
+
 def _run_interop_checker(
     codex_home: Path,
     cc_switch_db: Path,
@@ -1842,6 +1928,73 @@ def _create_cc_switch_db(path: Path) -> None:
                 ),
                 1,
             ),
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+
+def _create_api_cockpit_home(path: Path) -> None:
+    path.mkdir()
+    (path / "codex_accounts").mkdir()
+    (path / "codex_accounts.json").write_text(
+        json.dumps({"accounts": [{"id": "codex_api"}], "current_account_id": "codex_api"}),
+        encoding="utf-8",
+    )
+    (path / "codex_accounts" / "codex_api.json").write_text(
+        json.dumps(
+            {
+                "id": "codex_api",
+                "email": "api-key-test",
+                "auth_mode": "apikey",
+                "openai_api_key": "sk-test-secret",
+                "api_base_url": "http://35.213.82.91:8003/v1",
+                "api_provider_id": "cmp_35",
+                "api_provider_name": "35.213.82.91",
+            }
+        ),
+        encoding="utf-8",
+    )
+    (path / "codex_model_providers.json").write_text(
+        json.dumps([{"id": "cmp_35", "name": "35.213.82.91", "baseUrl": "http://35.213.82.91:8003/v1"}]),
+        encoding="utf-8",
+    )
+    (path / "codex_instances.json").write_text(
+        json.dumps({"instances": [], "defaultSettings": {"lastPid": None}}),
+        encoding="utf-8",
+    )
+
+
+def _create_codex_state_db_with_visibility(path: Path) -> None:
+    connection = sqlite3.connect(path)
+    try:
+        connection.execute(
+            """
+            create table threads(
+              id text primary key,
+              model_provider text,
+              archived integer,
+              updated_at text,
+              updated_at_ms integer,
+              first_user_message text not null default '',
+              has_user_event integer not null default 0,
+              thread_source text
+            )
+            """
+        )
+        connection.executemany(
+            """
+            insert into threads(
+              id, model_provider, archived, updated_at, updated_at_ms,
+              first_user_message, has_user_event, thread_source
+            ) values(?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                ("thread-user-1", "cmp_35", 0, "2026-05-09T01:00:00Z", 1, "hello", 0, None),
+                ("thread-user-2", "cmp_35", 0, "2026-05-09T02:00:00Z", 2, "fix history", 0, None),
+                ("thread-empty", "cmp_35", 0, "2026-05-09T03:00:00Z", 3, "", 0, None),
+                ("thread-archived", "cmp_35", 1, "2026-05-08T01:00:00Z", 4, "archived", 0, None),
+            ],
         )
         connection.commit()
     finally:
