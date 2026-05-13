@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexInteropCheck", "CodexInteropRepair", "CodexSwitchRecord", "CodexSwitchGuardStatus", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
+  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexInteropCheck", "CodexInteropRepair", "CodexApiProjectionRepair", "CodexSwitchRecord", "CodexSwitchGuardStatus", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
   [string]$Action = "Help",
 
   [ValidateSet("quick", "full", "l1", "l2", "l3")]
@@ -250,7 +250,9 @@ AI 推荐:
   Targets                列出 target catalog 中的 active target repos。
   FastFeedback           执行本仓日常编码快速反馈：build + quick feedback tests；不替代交付前 Readiness。
   Readiness              执行 build -> test -> contract/invariant -> hotspot，然后生成 operator UI。
-  CodexInteropCheck      检查 Cockpit Tools Codex 切换是否仍共享同一个 Codex 历史根；不写入。
+  CodexInteropCheck      检查 Cockpit Tools Codex 切换、API provider 和历史可见性；不写入。
+  CodexApiProjectionRepair
+                         显式修复当前 Cockpit API account 到 Codex CLI/App：auth/config/custom no-WebSocket provider/history bucket/picker 可见性；会创建备份，不重启 Codex。
   CodexSwitchRecord      保存当前 Cockpit/Codex 切换快照到 docs/change-evidence/codex-cockpit-snapshots。
   CodexSwitchGuardStatus 查看本机切换守护任务状态。
   RulesDryRun            只检查全局/项目级规则漂移，不写入。
@@ -335,8 +337,8 @@ function Invoke-CodexInteropCheck {
   )
 }
 
-function Invoke-CodexInteropRepair {
-  Invoke-PythonScript -Name "codex-interop-repair-current-account" -ScriptPath "scripts/codex-interop-check.py" -ScriptArguments @(
+function Invoke-CodexApiProjectionRepair {
+  Invoke-PythonScript -Name "codex-api-projection-repair" -ScriptPath "scripts/codex-interop-check.py" -ScriptArguments @(
     "--codex-home",
     (Join-Path $HOME ".codex"),
     "--cc-switch-db",
@@ -344,8 +346,13 @@ function Invoke-CodexInteropRepair {
     "--cockpit-home",
     (Join-Path $HOME ".antigravity_cockpit"),
     "--quick-launch",
-    "--repair-current-cockpit-account-projection"
+    "--repair-current-cockpit-api-projection",
+    "--prefer-cockpit-api-account"
   )
+}
+
+function Invoke-CodexInteropRepair {
+  Invoke-CodexApiProjectionRepair
 }
 
 function Invoke-CodexSwitchRecord {
@@ -490,6 +497,7 @@ try {
     "Readiness" { Invoke-Readiness }
     "CodexInteropCheck" { Invoke-CodexInteropCheck }
     "CodexInteropRepair" { Invoke-CodexInteropRepair }
+    "CodexApiProjectionRepair" { Invoke-CodexApiProjectionRepair }
     "CodexSwitchRecord" { Invoke-CodexSwitchRecord }
     "CodexSwitchGuardStatus" { Invoke-CodexSwitchGuardStatus }
     "RulesDryRun" { Invoke-RulesDryRun }

@@ -657,6 +657,7 @@ def _render_codex_panel(text: dict[str, str], *, interactive: bool) -> str:
             "<div class='codex-toolbar'>",
             f"<button type='button' data-action='codex_switch_record'>{escape(text['codex_switch_record'])}</button>",
             f"<button type='button' data-action='codex_interop_check'>{escape(text['codex_interop_check'])}</button>",
+            f"<button type='button' data-action='codex_api_projection_repair' data-confirm='{escape(text['codex_api_projection_repair_confirm'])}'>{escape(text['codex_api_projection_repair'])}</button>",
             f"<button type='button' data-action='codex_guard_status'>{escape(text['codex_guard_status'])}</button>",
             "</div>",
             "</details>",

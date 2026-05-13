@@ -82,6 +82,7 @@ ALLOWED_ACTIONS = {
         "managed_asset_removal": True,
     },
     "codex_interop_check": {"operator_action": "CodexInteropCheck", "timeout_seconds": 120},
+    "codex_api_projection_repair": {"operator_action": "CodexApiProjectionRepair", "timeout_seconds": 120},
     "codex_switch_record": {"operator_action": "CodexSwitchRecord", "timeout_seconds": 120},
     "codex_guard_status": {"operator_action": "CodexSwitchGuardStatus", "timeout_seconds": 60},
     "feedback_report": {"operator_action": "FeedbackReport", "run_alias": "feedback", "timeout_seconds": 600},

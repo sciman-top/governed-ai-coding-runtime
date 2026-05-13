@@ -1,20 +1,11 @@
 {
-  "elapsed_seconds": 178.0777070999975,
+  "elapsed_seconds": 136.63412619999872,
   "failure_count": 0,
   "failures": [],
   "prioritized_target_count": 10,
   "slowest": [
     {
-      "duration_seconds": 135.9197525999989,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_runtime_evolution",
-        "path": "tests\\runtime\\test_runtime_evolution.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 111.51963539999997,
+      "duration_seconds": 115.60932239999966,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_flow_preset",
@@ -23,34 +14,16 @@
       }
     },
     {
-      "duration_seconds": 90.97203150000132,
+      "duration_seconds": 84.81370830000014,
       "exit_code": 0,
       "target": {
-        "module": "tests.runtime.test_transition_stack_convergence",
-        "path": "tests\\runtime\\test_transition_stack_convergence.py",
+        "module": "tests.runtime.test_runtime_evolution",
+        "path": "tests\\runtime\\test_runtime_evolution.py",
         "suite": "runtime"
       }
     },
     {
-      "duration_seconds": 90.93218419999903,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_dependency_baseline",
-        "path": "tests\\runtime\\test_dependency_baseline.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 87.61567229999855,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_evidence_recovery_posture",
-        "path": "tests\\runtime\\test_evidence_recovery_posture.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 86.61680790000173,
+      "duration_seconds": 70.57873420000033,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_functional_effectiveness",
@@ -59,7 +32,25 @@
       }
     },
     {
-      "duration_seconds": 74.22623289999683,
+      "duration_seconds": 70.56397899999865,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_transition_stack_convergence",
+        "path": "tests\\runtime\\test_transition_stack_convergence.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 70.54054899999755,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_dependency_baseline",
+        "path": "tests\\runtime\\test_dependency_baseline.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 65.99819549999665,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_attached_repo_e2e",
@@ -68,16 +59,7 @@
       }
     },
     {
-      "duration_seconds": 68.26477700000032,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_governance_hub_certification",
-        "path": "tests\\runtime\\test_governance_hub_certification.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 60.85554279999997,
+      "duration_seconds": 54.545851399998355,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_operator_entrypoint",
@@ -86,11 +68,29 @@
       }
     },
     {
-      "duration_seconds": 53.82024910000109,
+      "duration_seconds": 47.13984129999881,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_autonomous_next_work_selection",
         "path": "tests\\runtime\\test_autonomous_next_work_selection.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 38.838977199997316,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_governance_hub_certification",
+        "path": "tests\\runtime\\test_governance_hub_certification.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 37.1399373000022,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_repo_slimming_surface",
+        "path": "tests\\runtime\\test_repo_slimming_surface.py",
         "suite": "runtime"
       }
     }

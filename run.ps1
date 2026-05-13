@@ -28,6 +28,7 @@ AI 推荐:
   .\run.ps1 readiness -OpenUi    执行 build -> test -> contract/invariant -> hotspot，并打开 UI。
   .\run.ps1 ui                   打开本地 operator UI。
   .\run.ps1 codex-interop        检查 Codex / Cockpit Tools 共享历史互操作状态。
+  .\run.ps1 codex-api-repair     显式修复当前 Cockpit API account 到 Codex CLI/App；创建备份，不重启 Codex。
   .\run.ps1 codex-record         保存当前 Codex / Cockpit Tools 切换记录。
   .\run.ps1 codex-guard-status   查看 Cockpit/Codex 切换守护状态。
   .\run.ps1 targets              列出 active target repos。
@@ -67,6 +68,9 @@ function Resolve-OperatorAction {
     "codex-interop" = "CodexInteropCheck"
     "codex-check" = "CodexInteropCheck"
     "cc-switch-check" = "CodexInteropCheck"
+    "codex-api-repair" = "CodexApiProjectionRepair"
+    "codex-repair-api" = "CodexApiProjectionRepair"
+    "codex-projection-repair" = "CodexApiProjectionRepair"
     "codex-record" = "CodexSwitchRecord"
     "codex-switch-record" = "CodexSwitchRecord"
     "cc-switch-record" = "CodexSwitchRecord"

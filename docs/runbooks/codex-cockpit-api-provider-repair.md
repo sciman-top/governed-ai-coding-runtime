@@ -52,6 +52,7 @@ For a ChatGPT/OAuth account:
   ```powershell
   python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch --repair-current-cockpit-api-projection --prefer-cockpit-api-account
   ```
+- Operator UI entrypoint for the same explicit API projection: open `http://127.0.0.1:8770/?lang=zh-CN`, go to the `Codex` tab, expand `Cockpit compatibility diagnostics`, then click `Repair API projection`. The button must run only the explicit API projection command above, create backups, and must not restart, stop, kill, or auto-launch Codex.
 - Explicit current account projection for the currently selected Cockpit account, including OAuth/ChatGPT:
   ```powershell
   python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch --repair-current-cockpit-account-projection
@@ -64,7 +65,7 @@ For a ChatGPT/OAuth account:
   If Windows denies scheduled-task registration, `-InstallTask` writes a hidden current-user Startup-folder VBS fallback instead. The fallback must contain exactly two lines, with the full `shell.Run "... -RunWorker ...", 0, False` command on the second line; embedded newlines inside the command break logon startup.
 - Operator entrypoint for the same explicit projection:
   ```powershell
-  pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexInteropRepair
+  pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexApiProjectionRepair
   ```
 - Legacy shim cleanup:
   ```powershell

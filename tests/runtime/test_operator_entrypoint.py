@@ -59,6 +59,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn(".\\run.ps1 readiness -OpenUi", completed.stdout)
         self.assertNotIn("codex-optimize", completed.stdout)
         self.assertIn("codex-interop", completed.stdout)
+        self.assertIn("codex-api-repair", completed.stdout)
         self.assertIn("rules-check", completed.stdout)
         self.assertIn("operator-help", completed.stdout)
         self.assertIn("cleanup-targets", completed.stdout)
@@ -123,6 +124,30 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("DRY-RUN quick-feedback", completed.stdout)
         self.assertIn("scripts/verify-repo.ps1", completed.stdout)
         self.assertIn("-Check RuntimeQuick", completed.stdout)
+
+    def test_root_run_entrypoint_codex_api_repair_alias(self) -> None:
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "run.ps1"),
+                "codex-api-repair",
+                "-DryRun",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+        )
+
+        self.assertIn("DRY-RUN codex-api-projection-repair", completed.stdout)
+        self.assertIn("--repair-current-cockpit-api-projection", completed.stdout)
+        self.assertIn("--prefer-cockpit-api-account", completed.stdout)
 
     def test_operator_entrypoint_help_succeeds(self) -> None:
         completed = subprocess.run(
@@ -293,7 +318,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("--cockpit-home", completed.stdout)
         self.assertNotIn("--apply", completed.stdout)
 
-    def test_operator_codex_interop_repair_current_account_is_available_as_dry_run(self) -> None:
+    def test_operator_codex_api_projection_repair_is_available_as_dry_run(self) -> None:
         completed = subprocess.run(
             [
                 "pwsh",
@@ -303,7 +328,7 @@ class OperatorEntrypointTests(unittest.TestCase):
                 "-File",
                 str(ROOT / "scripts" / "operator.ps1"),
                 "-Action",
-                "CodexInteropRepair",
+                "CodexApiProjectionRepair",
                 "-DryRun",
             ],
             check=True,
@@ -314,10 +339,12 @@ class OperatorEntrypointTests(unittest.TestCase):
             cwd=ROOT,
         )
 
-        self.assertIn("DRY-RUN codex-interop-repair-current-account", completed.stdout)
+        self.assertIn("DRY-RUN codex-api-projection-repair", completed.stdout)
         self.assertIn("scripts/codex-interop-check.py", completed.stdout)
         self.assertIn("--quick-launch", completed.stdout)
-        self.assertIn("--repair-current-cockpit-account-projection", completed.stdout)
+        self.assertIn("--repair-current-cockpit-api-projection", completed.stdout)
+        self.assertIn("--prefer-cockpit-api-account", completed.stdout)
+        self.assertNotIn("--repair-current-cockpit-account-projection", completed.stdout)
         self.assertNotIn("--apply", completed.stdout)
         self.assertNotIn("--migrate-provider-bucket", completed.stdout)
 
@@ -540,6 +567,11 @@ class OperatorEntrypointTests(unittest.TestCase):
             self.assertIn("uninstall_governance", module.ALLOWED_ACTIONS)
             self.assertNotIn("codex_local_optimize", module.ALLOWED_ACTIONS)
             self.assertIn("codex_interop_check", module.ALLOWED_ACTIONS)
+            self.assertIn("codex_api_projection_repair", module.ALLOWED_ACTIONS)
+            self.assertEqual(
+                "CodexApiProjectionRepair",
+                module.ALLOWED_ACTIONS["codex_api_projection_repair"]["operator_action"],
+            )
             self.assertIn("codex_switch_record", module.ALLOWED_ACTIONS)
             self.assertIn("codex_guard_status", module.ALLOWED_ACTIONS)
             self.assertNotIn("codex_interop_repair", module.ALLOWED_ACTIONS)
