@@ -18,17 +18,34 @@ $retiredInstalledFiles = @(
 )
 
 $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
-$processes = @(
-    Get-CimInstance Win32_Process |
-        Where-Object {
-            $_.CommandLine -and
-            (
-                $_.CommandLine.Contains('codex-cockpit-switch-guard.py') -or
-                $_.CommandLine.Contains('Start-CodexCockpitSwitchGuard.ps1')
-            )
-        } |
-        Select-Object Name, ProcessId, ParentProcessId, CreationDate, CommandLine
-)
+$guardPythonPattern = '(^|[\s"''])\S*codex-cockpit-switch-guard\.py([\s"'']|$)'
+$guardPowerShellPattern = '(^|[\s"''])\S*Start-CodexCockpitSwitchGuard\.ps1([\s"'']|$)'
+$processes = @()
+if ($TaskName -eq 'codex-cockpit-switch-guard') {
+    $processFilter = {
+        $_.CommandLine -and
+        $_.ProcessId -ne $PID -and
+        -not $_.CommandLine.Contains('Test-CodexGuardAbsence.ps1') -and
+        (
+            $_.CommandLine -match $guardPythonPattern -or
+            $_.CommandLine -match $guardPowerShellPattern
+        )
+    }
+    try {
+        $processes = @(
+            Get-CimInstance Win32_Process -Filter "CommandLine LIKE '%codex-cockpit-switch-guard.py%' OR CommandLine LIKE '%Start-CodexCockpitSwitchGuard.ps1%'" |
+                Where-Object $processFilter |
+                Select-Object Name, ProcessId, ParentProcessId, CreationDate, CommandLine
+        )
+    }
+    catch {
+        $processes = @(
+            Get-CimInstance Win32_Process |
+                Where-Object $processFilter |
+                Select-Object Name, ProcessId, ParentProcessId, CreationDate, CommandLine
+        )
+    }
+}
 $presentInstalledFiles = @(
     foreach ($name in $retiredInstalledFiles) {
         $path = Join-Path $installedScriptsRoot $name

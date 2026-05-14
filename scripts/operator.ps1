@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexInteropCheck", "CodexInteropRepair", "CodexApiProjectionRepair", "CodexLaunchBindingRepair", "CodexSwitchRecord", "CodexGuardAbsenceCheck", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
+  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexInteropCheck", "CodexInteropRepair", "CodexApiProjectionRepair", "CodexOauthProjectionRepair", "CodexLaunchBindingRepair", "CodexSwitchRecord", "CodexGuardAbsenceCheck", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
   [string]$Action = "Help",
 
   [ValidateSet("quick", "full", "l1", "l2", "l3")]
@@ -253,6 +253,8 @@ AI 推荐:
   CodexInteropCheck      检查 Cockpit Tools Codex 切换、API provider 和历史可见性；不写入。
   CodexApiProjectionRepair
                          显式修复当前 Cockpit API account 到 Codex CLI/App：auth/config/custom no-WebSocket provider/history bucket/picker 可见性；会创建备份，不重启 Codex。
+  CodexOauthProjectionRepair
+                         显式修复当前 Cockpit OAuth account 到 Codex CLI/App：auth/config/openai history bucket/picker 可见性；会创建备份，不重启 Codex。
   CodexLaunchBindingRepair
                          修复 Cockpit Codex 默认启动设置为 followLocalAccount，清除固定 bindAccountId；会创建备份，不重启 Codex。
   CodexSwitchRecord      保存当前 Cockpit/Codex 切换快照到 docs/change-evidence/codex-cockpit-snapshots。
@@ -356,6 +358,19 @@ function Invoke-CodexApiProjectionRepair {
 
 function Invoke-CodexInteropRepair {
   Invoke-CodexApiProjectionRepair
+}
+
+function Invoke-CodexOauthProjectionRepair {
+  Invoke-PythonScript -Name "codex-oauth-projection-repair" -ScriptPath "scripts/codex-interop-check.py" -ScriptArguments @(
+    "--codex-home",
+    (Join-Path $HOME ".codex"),
+    "--cc-switch-db",
+    (Join-Path $HOME ".cc-switch\cc-switch.db"),
+    "--cockpit-home",
+    (Join-Path $HOME ".antigravity_cockpit"),
+    "--quick-launch",
+    "--repair-current-cockpit-oauth-projection"
+  )
 }
 
 function Invoke-CodexLaunchBindingRepair {
@@ -514,6 +529,7 @@ try {
     "CodexInteropCheck" { Invoke-CodexInteropCheck }
     "CodexInteropRepair" { Invoke-CodexInteropRepair }
     "CodexApiProjectionRepair" { Invoke-CodexApiProjectionRepair }
+    "CodexOauthProjectionRepair" { Invoke-CodexOauthProjectionRepair }
     "CodexLaunchBindingRepair" { Invoke-CodexLaunchBindingRepair }
     "CodexSwitchRecord" { Invoke-CodexSwitchRecord }
     "CodexGuardAbsenceCheck" { Invoke-CodexGuardAbsenceCheck }

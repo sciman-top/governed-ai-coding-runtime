@@ -348,6 +348,35 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertNotIn("--apply", completed.stdout)
         self.assertNotIn("--migrate-provider-bucket", completed.stdout)
 
+    def test_operator_codex_oauth_projection_repair_is_available_as_dry_run(self) -> None:
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "operator.ps1"),
+                "-Action",
+                "CodexOauthProjectionRepair",
+                "-DryRun",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+        )
+
+        self.assertIn("DRY-RUN codex-oauth-projection-repair", completed.stdout)
+        self.assertIn("scripts/codex-interop-check.py", completed.stdout)
+        self.assertIn("--quick-launch", completed.stdout)
+        self.assertIn("--repair-current-cockpit-oauth-projection", completed.stdout)
+        self.assertNotIn("--repair-current-cockpit-account-projection", completed.stdout)
+        self.assertNotIn("--apply", completed.stdout)
+        self.assertNotIn("--migrate-provider-bucket", completed.stdout)
+
     def test_operator_codex_launch_binding_repair_is_available_as_dry_run(self) -> None:
         completed = subprocess.run(
             [
@@ -601,6 +630,11 @@ class OperatorEntrypointTests(unittest.TestCase):
             self.assertEqual(
                 "CodexApiProjectionRepair",
                 module.ALLOWED_ACTIONS["codex_api_projection_repair"]["operator_action"],
+            )
+            self.assertIn("codex_oauth_projection_repair", module.ALLOWED_ACTIONS)
+            self.assertEqual(
+                "CodexOauthProjectionRepair",
+                module.ALLOWED_ACTIONS["codex_oauth_projection_repair"]["operator_action"],
             )
             self.assertIn("codex_launch_binding_repair", module.ALLOWED_ACTIONS)
             self.assertEqual(

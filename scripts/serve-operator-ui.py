@@ -83,6 +83,7 @@ ALLOWED_ACTIONS = {
     },
     "codex_interop_check": {"operator_action": "CodexInteropCheck", "timeout_seconds": 120},
     "codex_api_projection_repair": {"operator_action": "CodexApiProjectionRepair", "timeout_seconds": 120},
+    "codex_oauth_projection_repair": {"operator_action": "CodexOauthProjectionRepair", "timeout_seconds": 120},
     "codex_launch_binding_repair": {"operator_action": "CodexLaunchBindingRepair", "timeout_seconds": 60},
     "codex_switch_record": {"operator_action": "CodexSwitchRecord", "timeout_seconds": 120},
     "codex_guard_absence_check": {"operator_action": "CodexGuardAbsenceCheck", "timeout_seconds": 60},

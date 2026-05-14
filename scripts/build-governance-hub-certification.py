@@ -4,6 +4,7 @@ import argparse
 import importlib.util
 import json
 import sys
+import uuid
 from collections import Counter
 from datetime import date
 from pathlib import Path
@@ -207,8 +208,18 @@ def build_governance_hub_certification(*, repo_root: Path, config_path: Path) ->
         "invalid_reasons": failures,
     }
 
-    output_path.write_text(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    _write_json_atomic(output_path, result)
     return result
+
+
+def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
+    temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+    try:
+        temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        temporary.replace(path)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
 
 
 def _load_script(path: Path, module_name: str):

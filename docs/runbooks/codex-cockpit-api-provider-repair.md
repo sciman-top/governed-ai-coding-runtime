@@ -57,6 +57,10 @@ For a ChatGPT/OAuth account:
   ```powershell
   pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexApiProjectionRepair
   ```
+- When switching back to a Cockpit OAuth account, use the explicit OAuth projection. It creates backups, restores ChatGPT auth/config to the built-in `openai` provider bucket, migrates local history metadata back to `openai`, and must not restart, stop, kill, or auto-launch Codex:
+  ```powershell
+  pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexOauthProjectionRepair
+  ```
 - If `cockpit_codex_instances_follow_current_account` fails, repair only Cockpit launch binding. This writes a `codex_instances.json` backup, sets `defaultSettings.followLocalAccount = true`, clears `defaultSettings.bindAccountId`, and must not touch Codex auth/config/history:
   ```powershell
   pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexLaunchBindingRepair
@@ -136,6 +140,6 @@ The 2026-05-13 reference incident is recorded in:
 - `docs/change-evidence/2026-05-13-codex-cockpit-api-shared-history.md`
 
 ## Rollback
-- Restore the timestamped backups created by `--repair-current-cockpit-api-projection`.
+- Restore the timestamped backups created by `--repair-current-cockpit-api-projection` or `--repair-current-cockpit-oauth-projection`.
 - Restore `~/.codex/config.toml`, `~/.codex/auth.json`, `~/.codex/state_5.sqlite`, and Cockpit provider metadata together. Do not restore only one file unless the evidence shows only that file drifted.
 - Re-run the guard audit and read-only interop check after rollback.
