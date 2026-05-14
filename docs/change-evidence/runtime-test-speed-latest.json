@@ -1,11 +1,11 @@
 {
-  "elapsed_seconds": 114.49939749999976,
+  "elapsed_seconds": 131.77986139999848,
   "failure_count": 0,
   "failures": [],
   "prioritized_target_count": 10,
   "slowest": [
     {
-      "duration_seconds": 94.46751149999909,
+      "duration_seconds": 109.00917160000245,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_flow_preset",
@@ -14,7 +14,7 @@
       }
     },
     {
-      "duration_seconds": 62.20155169999998,
+      "duration_seconds": 71.31531730000279,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_evolution",
@@ -23,7 +23,7 @@
       }
     },
     {
-      "duration_seconds": 53.52872690000004,
+      "duration_seconds": 66.8817549000014,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_transition_stack_convergence",
@@ -32,7 +32,7 @@
       }
     },
     {
-      "duration_seconds": 53.38430309999967,
+      "duration_seconds": 64.27283449999959,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_dependency_baseline",
@@ -41,7 +41,7 @@
       }
     },
     {
-      "duration_seconds": 53.38291509999908,
+      "duration_seconds": 63.31108970000059,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_functional_effectiveness",
@@ -50,7 +50,7 @@
       }
     },
     {
-      "duration_seconds": 50.11450699999841,
+      "duration_seconds": 59.81589619999795,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_attached_repo_e2e",
@@ -59,7 +59,7 @@
       }
     },
     {
-      "duration_seconds": 49.632561800000985,
+      "duration_seconds": 58.22790679999889,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_operator_entrypoint",
@@ -68,7 +68,7 @@
       }
     },
     {
-      "duration_seconds": 39.50912040000185,
+      "duration_seconds": 44.432694099999935,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_autonomous_next_work_selection",
@@ -77,25 +77,25 @@
       }
     },
     {
-      "duration_seconds": 36.325959499998135,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_runtime_doctor",
-        "path": "tests\\runtime\\test_runtime_doctor.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 35.08267060000071,
+      "duration_seconds": 37.101833999997325,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_repo_slimming_surface",
         "path": "tests\\runtime\\test_repo_slimming_surface.py",
         "suite": "runtime"
       }
+    },
+    {
+      "duration_seconds": 36.98539890000029,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_runtime_doctor",
+        "path": "tests\\runtime\\test_runtime_doctor.py",
+        "suite": "runtime"
+      }
     }
   ],
-  "target_count": 116,
+  "target_count": 117,
   "timeout_seconds": 180,
   "timing_history_path": "docs\\change-evidence\\runtime-test-speed-latest.json",
   "worker_count": 8

@@ -81,6 +81,10 @@
 - 根 `README.md`、`docs/README.md`、`docs/roadmap/*`、`docs/backlog/*` 叙述不一致时阻断。
 - `scripts/github/create-roadmap-issues.ps1` 与当前 roadmap/backlog 基线不一致时阻断。
 - agent rule sync drift、target governance consistency drift、dependency baseline drift 均属 contract 阻断。
+- 本机 Codex/Cockpit OAuth/API 往返、history bucket 或 repair 边界相关改动属最高优先级本机互操作风险；修改前必须先读 `docs/runbooks/codex-cockpit-api-provider-repair.md`，并用 `CodexProjectionSmoke` 或 `codex-interop-check.py --quick-launch` 建立当前状态。
+- Codex/Cockpit repair 只允许显式入口：`CodexApiProjectionRepair`、`CodexOauthProjectionRepair`、`CodexLaunchBindingRepair`；禁止恢复 generic `--apply`、`--migrate-provider-bucket`、SQLite provider trigger、后台 guard、no-op launcher、restart wrapper 或自动重启 Codex。
+- Codex/Cockpit OAuth 模式必须对齐 `forced_login_method=chatgpt`、`model_provider=openai`、`auth.json` ChatGPT tokens、`state_5.sqlite.threads.model_provider=openai` 和 picker 可见性元数据；API relay 模式必须对齐 Cockpit `api_provider_id`、custom no-WebSocket provider、`auth.json` API key/base URL、`threads.model_provider` 和 picker 可见性元数据。
+- 历史共享不能压过 API 连通性；API relay 若需要 `supports_websockets=false`，必须使用非内置 custom provider bucket 并同步迁移/验证 history bucket，不得用 `[model_providers.openai]` 或 `openai_base_url` 绕过已知 WebSocket/visibility 修复合同。
 
 ### C.4 证据与回滚
 - 证据统一落在 `docs/change-evidence/`；规划、schema、脚本、规则、治理 baseline 变更必须新增证据。
@@ -104,6 +108,7 @@
   - `E4`: `scripts/doctor-runtime.ps1` 与 `verify-repo.ps1 -Check Doctor` 承接健康/热点检查。
   - `E5`: `docs/dependency-baseline.*` 与 `scripts/verify-dependency-baseline.py` 承接供应链门禁。
   - `E6`: `docs/specs/*`、`schemas/jsonschema/*`、`schemas/catalog/schema-catalog.yaml`、`rules/manifest.json` 结构变化必须记录兼容性、迁移和回滚。
+  - `LocalCodexCockpit`: 本机 Codex/Cockpit OAuth/API 往返、history bucket 和 repair 边界是最高优先级互操作合同；`CodexProjectionSmoke`、`Test-CodexGuardAbsence.ps1`、`docs/runbooks/codex-cockpit-api-provider-repair.md` 和 `tests.runtime.test_codex_cockpit_policy_contract` 必须共同防止旧 repair/guard/bucket 错误回归。
 - 本文件属于控制仓 `governed-ai-coding-runtime/rules/manifest.json` 管理的规则家族；目标仓现场修改必须回写控制仓源文件后再同步。
 - 子文档只承载细节，不替代根文件中的硬门禁和项目事实。
 - 三工具协同约束：`AGENTS.md` 承载共同 A/C/D 项目事实；`CLAUDE.md` / `GEMINI.md` 通过 import 追加 B/D 平台差异，不复制共同正文。

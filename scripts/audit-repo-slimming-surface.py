@@ -169,9 +169,14 @@ def _collect_transient_inventory(root: Path) -> dict[str, dict[str, Any]]:
         byte_count = 0
         for directory in matches:
             for path in directory.rglob("*"):
-                if path.is_file():
-                    file_count += 1
-                    byte_count += path.stat().st_size
+                if not path.is_file():
+                    continue
+                try:
+                    size = path.stat().st_size
+                except FileNotFoundError:
+                    continue
+                file_count += 1
+                byte_count += size
         summary[name] = {
             "directory_count": len(matches),
             "file_count": file_count,

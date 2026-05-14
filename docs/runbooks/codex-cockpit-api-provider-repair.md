@@ -9,6 +9,14 @@ API key login is required, but ChatGPT is currently being used. Logging out.
 
 This runbook is for local Codex/Cockpit interoperability only. Do not restart, stop, kill, or auto-launch Codex App unless the operator explicitly confirms that action for the current incident.
 
+## Highest Priority Contract
+- Treat Codex/Cockpit OAuth/API roundtrips, `state_5.sqlite.threads.model_provider` history buckets, picker visibility metadata, and repair entrypoints as the highest-priority local interoperability contract for this repository.
+- Before changing any Codex/Cockpit auth, provider, API relay, launcher, history, or repair behavior, run a read-only baseline with `CodexProjectionSmoke` or `codex-interop-check.py --quick-launch` and inspect this runbook.
+- Only three write entrypoints are allowed: `CodexApiProjectionRepair`, `CodexOauthProjectionRepair`, and `CodexLaunchBindingRepair`. They must create backups, must not restart/stop/kill Codex, and must keep config, auth, Cockpit account/provider metadata, `threads.model_provider`, and picker visibility metadata aligned.
+- Do not reintroduce generic `--apply`, `--migrate-provider-bucket`, SQLite provider triggers, background guards / 后台 guard, no-op launchers, restart wrappers, CLI preflight wrappers, automatic Codex restart / 自动重启 Codex, or `[model_providers.openai]`.
+- History sharing must not override API relay connectivity. If a relay needs `supports_websockets=false`, use the Cockpit API account's non-built-in provider bucket and migrate/verify history into that bucket; when returning to OAuth, migrate/verify history back to `openai`.
+- Enforce this contract with `tests.runtime.test_codex_cockpit_policy_contract`, `tests.runtime.test_codex_shared_launcher`, `CodexProjectionSmoke`, and `Test-CodexGuardAbsence.ps1` before claiming the issue is fixed.
+
 ## Root Cause Summary
 - Codex App/CLI picker visibility is bucketed by `state_5.sqlite.threads.model_provider` and still depends on user-visible thread metadata such as `has_user_event` and `first_user_message`.
 - API relay connectivity needs a custom `model_providers.<id>` entry when the relay does not support the Codex Responses WebSocket route, because `supports_websockets = false` is available only on custom providers.

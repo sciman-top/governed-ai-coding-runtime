@@ -1096,12 +1096,31 @@ def _repair_cockpit_oauth_projection(
     config_path = codex_home / "config.toml"
     auth_path = codex_home / "auth.json"
     state_path = codex_home / "state_5.sqlite"
+    accounts_path = cockpit_home / "codex_accounts.json"
     instances_path = cockpit_home / "codex_instances.json"
     backup_suffix = "cockpit-oauth-projection" if explicit_repair else "cockpit-account-projection"
     backups = _backup_existing_files(
         (config_path, auth_path, state_path),
         suffix=backup_suffix,
     )
+
+    cockpit_current_account_changed = False
+    previous_cockpit_current_account_id = None
+    accounts_index = _read_json(accounts_path)
+    if isinstance(accounts_index, dict):
+        previous_cockpit_current_account_id = accounts_index.get("current_account_id")
+        resolved_account_id = str(current.get("id") or "").strip()
+        if resolved_account_id and previous_cockpit_current_account_id != resolved_account_id:
+            if accounts_path.exists():
+                backups.append(
+                    {
+                        "path": str(accounts_path),
+                        "backup_path": str(_backup_file(accounts_path, suffix=backup_suffix)),
+                    }
+                )
+            accounts_index["current_account_id"] = resolved_account_id
+            _write_json(accounts_path, accounts_index)
+            cockpit_current_account_changed = True
 
     config_text = _read_text(config_path)
     _write_text(
@@ -1140,6 +1159,8 @@ def _repair_cockpit_oauth_projection(
         "account_id": current.get("id"),
         "auth_mode": auth_mode,
         "provider_id": OPENAI_SHARED_PROVIDER_ID,
+        "cockpit_current_account_changed": cockpit_current_account_changed,
+        "previous_cockpit_current_account_id": previous_cockpit_current_account_id,
         "cockpit_instance_binding_changed": instance_binding_changed,
         "history_rows_changed": history_rows_changed,
         "history_visibility_rows_changed": history_visibility_rows_changed,
