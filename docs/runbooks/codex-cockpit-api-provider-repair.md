@@ -51,6 +51,13 @@ For a ChatGPT/OAuth account:
 - Active local history rows with a non-empty `first_user_message` have `has_user_event = 1`.
 - Saved Cockpit API provider profiles should remain present as non-built-in custom providers with `supports_websockets = false`, so switching back to API does not lose relay compatibility.
 
+## Cockpit Local API Service Boundary
+- Cockpit Tools' Codex API service is a separate local-access gateway, not the same thing as projecting the current Cockpit account into Codex `auth.json`/`config.toml`.
+- Do not assume the service is loopback-only just because the UI shows `127.0.0.1`. In the checked Cockpit Tools source snapshot, `codex_local_access.rs` uses `CODEX_LOCAL_ACCESS_BIND_HOST = "0.0.0.0"` while displaying `CODEX_LOCAL_ACCESS_URL_HOST = "127.0.0.1"`.
+- Until the running Cockpit build is verified to bind only to loopback or is protected by a host firewall rule, keep `codex_local_access.json.enabled = false` and do not point Codex CLI/App at `http://127.0.0.1:2876/v1`.
+- If the operator explicitly enables the API service, first run `CodexProjectionSmoke`, then verify listener scope with `netstat`/PowerShell and a local `/v1/models` probe. Do not enable Cockpit automatic account switching at the same time.
+- Editing `codex_local_access.json` alone may not start the listener in the already-running Cockpit process; the UI command `codex_local_access_set_enabled`/`codex_local_access_activate` starts the in-process gateway. Do not restart Cockpit or Codex to force this unless the operator confirms that action for the current incident.
+
 ## Allowed Actions
 - Read-only diagnosis:
   ```powershell
