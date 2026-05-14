@@ -10,10 +10,16 @@
 AI 推荐的日常入口：
 
 ```powershell
+.\run.ps1 fast
+```
+
+AI 推荐的交付前 readiness：
+
+```powershell
 .\run.ps1 readiness -OpenUi
 ```
 
-它会按本仓硬门禁顺序执行 `build -> test -> contract/invariant -> hotspot`，然后打开默认中文 operator UI。`run.ps1` 只是便捷层，真实实现仍在 `scripts/operator.ps1`；需要完整动作说明时运行：
+`fast` 执行 `build + quick feedback tests`，用于日常编码快速反馈；`readiness` 会按本仓硬门禁顺序执行 `build -> test -> contract/invariant -> hotspot`，然后打开默认中文 operator UI。`run.ps1` 只是便捷层，真实实现仍在 `scripts/operator.ps1`；需要完整动作说明时运行：
 
 ```powershell
 .\run.ps1 operator-help
@@ -92,10 +98,10 @@ AI 推荐的日常入口：
 - 路径 C（中高风险写入）：用 `govern-attachment-write -> decide-attachment-write -> execute-attachment-write` 走审批与回滚引用闭环。
 
 ## 当前总入口与一键应用
-- 根目录短入口：`run.ps1`。它把常用动作压成场景化短命令，例如 `.\run.ps1 readiness -OpenUi`、`.\run.ps1 daily -Mode quick`、`.\run.ps1 rules-check`、`.\run.ps1 feedback`；底层仍转交 `scripts/operator.ps1`。
+- 根目录短入口：`run.ps1`。它把常用动作压成场景化短命令，例如 `.\run.ps1 fast`、`.\run.ps1 readiness -OpenUi`、`.\run.ps1 daily -Mode quick`、`.\run.ps1 rules-check`、`.\run.ps1 feedback`；底层仍转交 `scripts/operator.ps1`。
 - 操作者聚合入口：`scripts/operator.ps1`。它把 readiness、自检、规则漂移/同步、目标仓批量流和 operator UI 生成收成同一个入口；默认 `-Action Help`。
-- Codex 本机边界：本仓不再安装或包装 `codex` / Codex App / Cockpit Tools 启动入口，也不再自动写入 Codex auth、provider、profile、SQLite history bucket 或 Cockpit launch state。只读诊断使用 `python scripts/codex-interop-check.py ... --quick-launch`；唯一写入例外是显式 `--repair-current-cockpit-api-projection`，用于把当前 Cockpit API account 的 auth/config/custom no-WebSocket provider/history bucket 一起投影。API 账号必须保留明确 custom `model_provider`、`base_url`、`requires_openai_auth = false` 与 `supports_websockets = false`；严禁在 `config.toml` 中定义 `[model_providers.openai]`。`CC Switch` 在本机只作为 Claude/第三方 API 切换边界，不再作为 Codex provider 真源。
-- Claude Code 本机优化入口：`scripts/Optimize-ClaudeLocal.ps1`。默认 dry-run；加 `-Apply` 后会备份并写入第三方 Anthropic-compatible provider 推荐配置、安装 `claude-provider` 切换入口；密钥只保留在用户本机 settings/env，不写入仓库 profile。
+- Codex 本机配置边界：本仓不再安装或包装 `codex` / Codex App / Cockpit Tools 启动入口，也不再自动写入 Codex auth、provider、profile、SQLite history bucket 或 Cockpit launch state。旧 `Optimize-CodexLocal.ps1`、`Start-CodexShared.ps1`、`codex-account.py`、`codex-account.ps1` 已删除；只读诊断使用 `python scripts/codex-interop-check.py ... --quick-launch`；唯一写入例外是显式 `--repair-current-cockpit-api-projection`，用于把当前 Cockpit API account 的 auth/config/custom no-WebSocket provider/history bucket 一起投影；清理旧项目 shim 使用 `scripts/Disable-CodexProjectInterop.ps1 -Apply -DisableProjectShortcuts`。
+- Claude 本机配置边界：Claude Code / Claude Desktop 的账号、API 和 provider 切换只由 `CC Switch` 负责。本仓不再写入 `~/.claude/settings.json`、`provider-profiles.json`，不安装 `claude-provider` 切换入口，也不删除/优化 provider profile；旧 `scripts/Optimize-ClaudeLocal.ps1`、`claude-provider switch|install|optimize|delete` 只返回边界错误。`claude-provider status|continuity` 仅做只读检查，核对 `~/.claude/projects`、`~/.claude/sessions`、`history.jsonl` 和 `CLAUDE_CONFIG_DIR`，用于确认 CC Switch 切换仍锚定同一个 Claude home；只有明确需要隔离时才应使用独立 Claude config/context 目录。
 - 核心原则变更候选入口：`scripts/operator.ps1 -Action CorePrincipleMaterialize`。默认只 dry-run 报告候选；得到明确允许后加 `-ConfirmCorePrincipleProposalWrite` 才写 reviewable proposal/manifest；如只需审计留痕，加 `-WriteCorePrincipleDryRunReport` 只写 dry-run report。以上路径仍不直接改 active core-principles policy、spec、verifier 或目标仓。
 - 目标仓日常运行/批量下发总入口：`scripts/runtime-flow-preset.ps1`。它读取 `docs/targets/target-repos-catalog.json`，支持单 target 或所有 active targets。
 - AI 规则文件同步入口：`scripts/sync-agent-rules.ps1`。它读取 `rules/manifest.json`，同步全局与项目级 `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`。
@@ -133,40 +139,20 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Opera
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en
 ```
 
-UI 使用方式：`-OpenUi` 会启动 `127.0.0.1` 本地常驻交互控制台并打开浏览器；后续可直接访问 `http://127.0.0.1:8770/?lang=zh-CN`。状态/停止/重启使用 `scripts/operator-ui-service.ps1 -Action Status|Stop|Restart`；登录自动启动可用 `-Action EnableAutoStart|DisableAutoStart|AutoStartStatus` 管理。页面可执行 allowlist 内的本仓 readiness、目标仓列表、规则漂移检查、规则同步、治理基线下发、daily、全部功能应用（默认删除已证明安全的退役托管文件）、一键清理退役治理文件和一键卸载治理；可选择全部目标仓、单个目标仓或勾选多个目标仓进行批量卸载，可调整语言、验证模式、并发、fail-fast、只预演、真实删除开关与里程碑标签；执行结果会写入输出区和本地浏览器执行历史；可点击 evidence/artifact/verification refs 查看文件内容。`Codex` 页签展示本机账号、额度和配置健康，并把“综合效率优先”单独标成长期核心原则，明确目标是少打扰、自动连续执行、节省 token / 成本、保留必要解释、高效率；`gpt-5.5 + medium + never` 仅作为当前暂行实现展示，`model_auto_compact_token_limit = 220000` 仍作为配套压缩阈值。以后如有新模型/新参数/新技术栈进入默认方案，也应优先保持这个原则，而不是固化当前组合。`Claude` 页签集中展示第三方 provider 状态，并内置 provider 切换、推荐配置预演/应用，以及 `settings.json`、`provider-profiles.json`、切换脚本的本机预览入口。若不加 `-OpenUi`，脚本只生成只读快照 `.runtime/artifacts/operator-ui/index.html` 并在 JSON 输出里给出 `file_url`。
+UI 使用方式：`-OpenUi` 会启动 `127.0.0.1` 本地常驻交互控制台并打开浏览器；后续可直接访问 `http://127.0.0.1:8770/?lang=zh-CN`。状态/停止/重启使用 `scripts/operator-ui-service.ps1 -Action Status|Stop|Restart`；登录自动启动可用 `-Action EnableAutoStart|DisableAutoStart|AutoStartStatus` 管理。页面可执行 allowlist 内的本仓 readiness、目标仓列表、规则漂移检查、规则同步、治理基线下发、daily、全部功能应用（默认删除已证明安全的退役托管文件）、一键清理退役治理文件和一键卸载治理；可选择全部目标仓、单个目标仓或勾选多个目标仓进行批量卸载，可调整语言、验证模式、并发、fail-fast、只预演、真实删除开关与里程碑标签；执行结果会写入输出区和本地浏览器执行历史；可点击 evidence/artifact/verification refs 查看文件内容。`Codex` 页签展示本机账号、额度和配置健康，并把“综合效率优先”单独标成长期核心原则，明确目标是少打扰、自动连续执行、节省 token / 成本、保留必要解释、高效率；`gpt-5.5 + medium + never` 仅作为当前暂行实现展示，`model_auto_compact_token_limit = 220000` 仍作为配套压缩阈值。以后如有新模型/新参数/新技术栈进入默认方案，也应优先保持这个原则，而不是固化当前组合。`Claude` 页签只展示第三方 provider 只读状态、session continuity 诊断，以及 `settings.json`、`provider-profiles.json` 的本机预览入口；Claude Code / Claude Desktop 的账号、API 和 provider 切换统一回到 `CC Switch`。若不加 `-OpenUi`，脚本只生成只读快照 `.runtime/artifacts/operator-ui/index.html` 并在 JSON 输出里给出 `file_url`。
 
-共享历史启动器会固定使用同一个 `CODEX_HOME`，再用 profile 或环境变量切换登录/API/中转站：
-
-```powershell
-codex-shared -Profile shared-chatgpt
-
-codex-shared-exec -Profile shared-openai-api "检查当前仓库状态"
-
-codex-shared -Profile shared-current-provider
-
-codex-shared -Profile shared-openai-api -ApiKeyEnv OPENAI_API_KEY -BaseUrl https://example-relay/v1
-
-codex-shared-app -Profile shared-chatgpt D:\CODE\governed-ai-coding-runtime
-
-codex-cockpit-exec "检查当前仓库状态"
-
-codex-cockpit-app D:\CODE\governed-ai-coding-runtime
-
-# 仅在明确决定重启并已创建 restart-guard 备份后手动执行：
-codex-cockpit-app-restart D:\CODE\governed-ai-coding-runtime
-```
-
-也可以走本仓统一操作入口：
+Claude provider 切换连续性只读检查：
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action CodexLocalOptimize
+claude-provider continuity
 ```
 
-切换 `Cockpit Tools` 的 Codex auth/API 账号、恢复 Cockpit 备份或新增 Codex provider 后，可先执行只读互操作检查：
+Codex CLI/App 直接使用官方 `codex` 入口和 Cockpit Tools 原生 controls。本仓只保留只读诊断与旧 shim 清理：
 
 ```powershell
 .\run.ps1 codex-interop
-codex-interop-check
+python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Disable-CodexProjectInterop.ps1 -Apply -DisableProjectShortcuts
 ```
 
 要定位 Cockpit 切号到底改了哪些文件，可先启动只读追踪窗口，再在 Cockpit Tools 里手动切换账号；报告会记录 Cockpit 状态、Codex auth/config、history bucket 和相关日志事件，但会脱敏 token/API key：
@@ -190,7 +176,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Compare-CodexCockpitSwitch
 
 `http://127.0.0.1:8770/?lang=zh-CN` 的 Codex 面板允许只读检查 `Cockpit Tools` 当前 Codex 账号是否可投影到 Codex App/CLI，并提供唯一写入按钮“修复 API 投影”：它只执行当前 Cockpit API account 的显式 projection repair，核对并修复 `auth/config/custom no-WebSocket provider`、`threads.model_provider` 与 picker 可见性元数据；不得走通用 bucket migration、不得安装 guard/no-op launcher、不得强改 Cockpit launch-on-switch，也不得重启 Codex。API 修复必须遵循 [Codex/Cockpit API Provider Repair](./docs/runbooks/codex-cockpit-api-provider-repair.md)。
 
-与本机 `Cockpit Tools` / `CC Switch` 的衔接边界：`Cockpit Tools` 负责 Codex App/CLI 的 ChatGPT auth、Codex API provider 切换、会话可见性修复和 launch-on-switch 设置；`cc-switch` 负责 Claude CLI、GLM、DeepSeek 等第三方 API 切换。Codex 侧统一读取 Cockpit 当前 Codex account 文件，API key 只注入当前启动进程；RightCode、35.213.82.91 等 Cockpit API provider 必须保留明确 custom `model_provider`，并写入对应 `base_url`、`requires_openai_auth = false` 与 `supports_websockets = false`。只有官方 ChatGPT/OAuth 或明确选择 OpenAI 内置路径时才使用内置 `model_provider = "openai"`；不得写 `[model_providers.openai]`。本仓不得用 no-op launcher、restart wrapper、no-restart shim、SQLite trigger 或后台 guard 拦截 Cockpit Tools 的原生行为；`codex_launch_on_switch` 是 Cockpit UI 用户设置，本仓不得强制开启或关闭。历史共享不能压过 API 连通性；显式 API projection repair 必须保持 active `model_provider`、Cockpit `api_provider_id`、`state_5.sqlite.threads.model_provider` 和 `has_user_event` 可见性元数据一致。
+与本机 `Cockpit Tools` / `CC Switch` 的衔接边界：`Cockpit Tools` 只负责 Codex App/CLI 的账号与 API 切换；`CC Switch` 只负责 Claude Code / Claude Desktop 的账号与 API 切换；本项目不参与两侧账号/API 切换、拦截、安装或重启包装。Codex 侧默认只允许只读诊断 Cockpit/Codex 当前状态；显式 API projection repair 是唯一 Codex 写入例外，且必须保持 active `model_provider`、Cockpit `api_provider_id`、`state_5.sqlite.threads.model_provider` 和 `has_user_event` 可见性元数据一致。Claude 侧只允许只读诊断 `~/.claude` session continuity，不得改 `settings.json`、provider profile、当前进程 env、`CLAUDE_CONFIG_DIR` 或 Claude Desktop 数据根。历史共享不能压过 API 连通性；不得用后台 guard、SQLite trigger 或通用 bucket migration 为了共享历史重写 provider bucket。
 
 先查看当前可用 target：
 

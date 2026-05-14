@@ -29,6 +29,10 @@ This directory holds executable implementation plans that translate strategy and
   - Status: active planning baseline created on `2026-05-10`; this queue starts after the completed `GAP-152..158` repo-slimming lane and does not mutate user-local Codex, Claude, Claude Desktop, provider, or auth state by itself
   - Scope: `GAP-159` through `GAP-164` for cross-host continuity scope fencing, continuity record schema, read-only continuity auditing, portable handoff and memory index, MCP/operator exposure, and closeout evidence across Codex App, Codex CLI, Claude Code, and Claude Desktop boundaries
   - Safety boundary: share classified metadata, refs, summaries, handoff packages, and evidence; do not merge vendor-owned native history stores or copy credentials.
+- [Codex CLI Continuity And Hot-Switch Plan](./codex-cli-continuity-and-hot-switch-plan.md)
+  - Status: owner-directed scoped spike created on `2026-05-15`; not a new heavy `GAP` mainline and not a live auth/provider mutation
+  - Scope: prove Codex CLI segmented continuity across Cockpit Tools account switches, add read-only switch-health guardrails, and defer API proxy or patched-client work until native CLI evidence shows it is necessary
+  - Safety boundary: Cockpit Tools remains the account/quota/switch owner; this repo must not take over Cockpit config, write auth by default, or restart Codex App.
 - [Long-Term Gap Trigger Audit Plan](./long-term-gap-trigger-audit-plan.md)
   - Status: completed trigger-audit queue for `GAP-090` through `GAP-092`; all `LTP-01..05` packages remain deferred pending future trigger evidence
   - Scope: final-state claim refresh, sustained real-workload evidence window, and gated decision for whether exactly one `LTP-01..05` package should start

@@ -10,10 +10,16 @@ If you only need to know what to run next, start with the repository-root shortc
 AI recommended daily entrypoint:
 
 ```powershell
+.\run.ps1 fast
+```
+
+AI recommended pre-delivery readiness:
+
+```powershell
 .\run.ps1 readiness -OpenUi
 ```
 
-It runs the repository hard-gate order `build -> test -> contract/invariant -> hotspot`, then opens the default Chinese operator UI. `run.ps1` is only a convenience layer; the real implementation remains `scripts/operator.ps1`. For the full action list, run:
+`fast` runs `build + quick feedback tests` for daily coding feedback; `readiness` runs the repository hard-gate order `build -> test -> contract/invariant -> hotspot`, then opens the default Chinese operator UI. `run.ps1` is only a convenience layer; the real implementation remains `scripts/operator.ps1`. For the full action list, run:
 
 ```powershell
 .\run.ps1 operator-help
@@ -92,9 +98,10 @@ What you should **not** claim yet:
 - Path C (risky writes): run `govern-attachment-write -> decide-attachment-write -> execute-attachment-write` for medium/high-risk mutations.
 
 ## Current Main Entrypoints And One-Command Apply
-- Repository-root shortcut: `run.ps1`. It compresses common actions into scenario commands such as `.\run.ps1 readiness -OpenUi`, `.\run.ps1 daily -Mode quick`, `.\run.ps1 rules-check`, and `.\run.ps1 feedback`; it still delegates to `scripts/operator.ps1`.
+- Repository-root shortcut: `run.ps1`. It compresses common actions into scenario commands such as `.\run.ps1 fast`, `.\run.ps1 readiness -OpenUi`, `.\run.ps1 daily -Mode quick`, `.\run.ps1 rules-check`, and `.\run.ps1 feedback`; it still delegates to `scripts/operator.ps1`.
 - Operator aggregate entrypoint: `scripts/operator.ps1`. It collects readiness checks, rule drift/sync, target-repo batch flows, and operator UI rendering behind one action-oriented entrypoint; default `-Action Help`.
-- Codex local boundary: use the official `codex` entrypoint and Cockpit Tools native controls for login, provider switching, and app launch state. This repository keeps read-only diagnostics, old shim cleanup, and one explicit API projection repair path: `python scripts\codex-interop-check.py ... --quick-launch --repair-current-cockpit-api-projection --prefer-cockpit-api-account`. That repair must keep active `model_provider`, Cockpit `api_provider_id`, custom no-WebSocket provider metadata, and `state_5.sqlite.threads.model_provider` aligned; see [Codex/Cockpit API Provider Repair](docs/runbooks/codex-cockpit-api-provider-repair.md).
+- Codex local boundary: use the official `codex` entrypoint and Cockpit Tools native controls for login, provider switching, and app launch state. This repository no longer installs or wraps Codex CLI/App launchers and no longer performs automatic Codex auth, provider profile, SQLite history bucket, or Cockpit launch state writes. Use `python scripts\codex-interop-check.py ... --quick-launch` for read-only diagnostics. Use explicit `--repair-current-cockpit-api-projection` only when repairing the current Cockpit API account; it must keep active `model_provider`, Cockpit `api_provider_id`, custom no-WebSocket provider metadata, and `state_5.sqlite.threads.model_provider` aligned. Use `scripts\Disable-CodexProjectInterop.ps1 -Apply -DisableProjectShortcuts` only for reversible cleanup of old project shims.
+- Claude local boundary: Claude Code / Claude Desktop account, API, and provider switching is owned by `CC Switch` only. This repository no longer writes `~/.claude/settings.json`, `provider-profiles.json`, current process env, `CLAUDE_CONFIG_DIR`, or Claude Desktop data roots. Old `scripts/Optimize-ClaudeLocal.ps1` and `claude-provider switch|install|optimize|delete` return a boundary error instead of changing local state. Session continuity is checked read-only with `claude-provider continuity`; the expected shared-history posture is one Claude home with `projects/`, `sessions/`, and `history.jsonl` preserved while CC Switch changes providers.
 - Core-principle change candidate entrypoint: `scripts/operator.ps1 -Action CorePrincipleMaterialize`. By default it only reports a dry-run candidate; after explicit permission, add `-ConfirmCorePrincipleProposalWrite` to write reviewable proposal/manifest files; for audit-only evidence, add `-WriteCorePrincipleDryRunReport` to write only the dry-run report. These paths still do not directly change active core-principles policy, specs, verifiers, or target repositories.
 - Target-repo daily/batch entrypoint: `scripts/runtime-flow-preset.ps1`. It reads `docs/targets/target-repos-catalog.json` and supports one target or all active targets.
 - Agent-rule sync entrypoint: `scripts/sync-agent-rules.ps1`. It reads `rules/manifest.json` and syncs global/project `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md`.
@@ -132,7 +139,44 @@ Open the English interactive UI:
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en
 ```
 
-How to use the UI: `-OpenUi` starts a persistent local `127.0.0.1` interactive control console and opens the browser; later visits can use `http://127.0.0.1:8770/?lang=en` directly. Use `scripts/operator-ui-service.ps1 -Action Status|Stop|Restart` to inspect or control the service, and `-Action EnableAutoStart|DisableAutoStart|AutoStartStatus` to manage logon autostart. The page can run allowlisted actions for repo readiness, target listing, rule drift checks, rule sync, governance baseline rollout, daily, all-feature apply that deletes proven-safe retired managed files by default, one-click retired-file cleanup, and one-click governance uninstall. It can target all repos, one selected target repo, or multiple checked target repos for batch uninstall, exposes settings for language, mode, parallelism, fail-fast, dry-run, managed-removal apply, and milestone tag, records results in the output panel and local browser history, and refs can be clicked to preview evidence/artifact/verification files. The `Codex` tab shows local account, usage, config health, Cockpit read-only interop checks, and one explicit `Repair API projection` button that only projects the current Cockpit API account into Codex CLI/App by aligning auth/config/custom no-WebSocket provider/history bucket/picker visibility metadata; it does not restart Codex or install guards/shims. The `Codex` tab also separates the long-lived core principle from the current implementation: the principle is efficiency first, meaning low interruption, continuous execution, lower token and cost burn, and high throughput; `gpt-5.5 + medium + never` is shown only as the current temporary choice, and `model_auto_compact_token_limit = 220000` remains the paired compact threshold. When future models, parameters, or tooling become the new default, preserve that principle first and replace the current implementation only when safety and gates do not regress. The `Claude` tab now centralizes third-party provider status, provider switching, recommended-config preview/apply, and safe previews for local `settings.json`, `provider-profiles.json`, and the switcher script. Without `-OpenUi`, the script only writes a read-only `.runtime/artifacts/operator-ui/index.html` snapshot and prints a JSON `file_url`.
+How to use the UI: `-OpenUi` starts a persistent local `127.0.0.1` interactive control console and opens the browser; later visits can use `http://127.0.0.1:8770/?lang=en` directly. Use `scripts/operator-ui-service.ps1 -Action Status|Stop|Restart` to inspect or control the service, and `-Action EnableAutoStart|DisableAutoStart|AutoStartStatus` to manage logon autostart. The page can run allowlisted actions for repo readiness, target listing, rule drift checks, rule sync, governance baseline rollout, daily, all-feature apply that deletes proven-safe retired managed files by default, one-click retired-file cleanup, and one-click governance uninstall. It can target all repos, one selected target repo, or multiple checked target repos for batch uninstall, exposes settings for language, mode, parallelism, fail-fast, dry-run, managed-removal apply, and milestone tag, records results in the output panel and local browser history, and refs can be clicked to preview evidence/artifact/verification files. The `Codex` tab shows local account, usage, config health, Cockpit read-only interop checks, and one explicit `Repair API projection` button that only projects the current Cockpit API account into Codex CLI/App by aligning auth/config/custom no-WebSocket provider/history bucket/picker visibility metadata; it does not restart Codex or install guards/shims. The `Codex` tab also separates the long-lived core principle from the current implementation: the principle is efficiency first, meaning low interruption, continuous execution, lower token and cost burn, and high throughput; `gpt-5.5 + medium + never` is shown only as the current temporary choice, and `model_auto_compact_token_limit = 220000` remains the paired compact threshold. When future models, parameters, or tooling become the new default, preserve that principle first and replace the current implementation only when safety and gates do not regress. The `Claude` tab only shows third-party provider read-only status, session continuity diagnostics, and safe previews for local `settings.json` and `provider-profiles.json`; Claude Code / Claude Desktop account, API, and provider switching stays in `CC Switch`. Without `-OpenUi`, the script only writes a read-only `.runtime/artifacts/operator-ui/index.html` snapshot and prints a JSON `file_url`.
+
+Read-only Claude provider-switch continuity check:
+
+```powershell
+claude-provider continuity
+```
+
+Codex CLI/App uses the official `codex` entrypoint and Cockpit Tools native controls directly. This repository only keeps read-only diagnostics and old-shim cleanup:
+
+```powershell
+.\run.ps1 codex-interop
+python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Disable-CodexProjectInterop.ps1 -Apply -DisableProjectShortcuts
+```
+
+To inspect what Cockpit account switching changed, start a read-only trace window, then switch accounts manually in Cockpit Tools. The report records Cockpit state, Codex auth/config, history bucket, and related log events with tokens and API keys redacted:
+
+```powershell
+python scripts\codex-cockpit-switch-trace.py --watch-seconds 45 --out docs\change-evidence\codex-cockpit-switch-trace-local.json
+```
+
+Fixed record commands for restart/account-switch troubleshooting:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Save-CodexCockpitSwitchRecord.ps1 -Label before-restart
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Save-CodexCockpitSwitchRecord.ps1 -Label api-reconnecting
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Save-CodexCockpitSwitchRecord.ps1 -Label oauth-restored
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Compare-CodexCockpitSwitchRecords.ps1
+```
+
+Records are saved under `docs/change-evidence/codex-cockpit-snapshots/`. When `Compare-CodexCockpitSwitchRecords.ps1` is called without `-Record`, it compares every `record.json` in that directory by filename order; explicit record paths are also supported.
+
+`codex-interop-repair`, `codex-switch-guard*`, and `codex-cockpit-install-noop-launcher` are retired. This repository must not automatically rewrite Cockpit/Codex provider, auth, history bucket, or launcher state. The only write exception is an explicit `codex-interop-check.py --repair-current-cockpit-api-projection`, which must project the current Cockpit API account's `api_provider_id`, `auth.json`, custom no-WebSocket provider table, `threads.model_provider`, and picker visibility metadata together and create a backup.
+
+The `http://127.0.0.1:8770/?lang=en` Codex panel may read-check whether the current Cockpit Tools Codex account can be projected into Codex App/CLI, and it exposes one write button, `Repair API projection`. That button only repairs the current Cockpit API account projection by aligning `auth/config/custom no-WebSocket provider`, `threads.model_provider`, and picker visibility metadata. It must not run generic bucket migration, install guard/no-op launchers, force Cockpit launch-on-switch, or restart Codex. API repair must follow [Codex/Cockpit API Provider Repair](./docs/runbooks/codex-cockpit-api-provider-repair.md).
+
+Local `Cockpit Tools` / `CC Switch` boundary: `Cockpit Tools` owns Codex App/CLI account and API switching; `CC Switch` owns Claude Code / Claude Desktop account and API switching. This project does not intercept, install, restart, or wrap either side's account/API switching. Codex-side behavior is read-only by default except the explicit API projection repair; Claude-side behavior is read-only session-continuity diagnostics only, with no writes to `settings.json`, provider profiles, process env, `CLAUDE_CONFIG_DIR`, or Claude Desktop data roots. Shared history must not override API connectivity, and background guards, SQLite triggers, or generic bucket migrations must not rewrite provider buckets just to share history.
 
 List available targets first:
 
