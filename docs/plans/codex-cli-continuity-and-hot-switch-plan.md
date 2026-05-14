@@ -3,7 +3,7 @@
 ## Status
 - Created: 2026-05-15.
 - Queue: owner-directed scoped spike, not a new heavy `GAP` mainline.
-- Current state: planning baseline only. No local Codex auth, Cockpit Tools state, provider profile, App process, or proxy configuration is changed by this plan.
+- Current state: CCHS-001 partial evidence and CCHS-002 read-only guard are implemented. No local Codex auth, Cockpit Tools state, provider profile, App process, or proxy configuration is changed by this plan.
 - Scope boundary: prioritize Codex CLI continuity through short-lived or resumable CLI runs. Treat Codex App hot account switching as unsupported by the native App path until official evidence changes.
 
 ## Goal
@@ -60,14 +60,14 @@ Codex App remains native and restart-required for account changes unless a later
 **Purpose:** Add a checker that prevents false confidence in auto-switch state.
 
 **Acceptance criteria:**
-- [ ] Report `codex_auto_switch_enabled`, thresholds, refresh interval, selected account count, selected plan types, restart-on-switch flags, and recent `401 token_invalidated` count.
-- [ ] Report whether selected account ids still resolve in `codex_accounts.json`.
-- [ ] Report `app_restart_required_for_account_change` when the target surface is Codex App.
-- [ ] Never write Cockpit or Codex config in default mode.
+- [x] Report `codex_auto_switch_enabled`, thresholds, refresh interval, selected account count, selected plan types, restart-on-switch flags, and recent `401 token_invalidated` count.
+- [x] Report whether selected account ids still resolve in `codex_accounts.json`.
+- [x] Report `app_restart_required_for_account_change` when the target surface is Codex App.
+- [x] Never write Cockpit or Codex config in default mode.
 
 **Verification:**
-- [ ] focused unit tests with fixture `config.json` and `codex_accounts.json`
-- [ ] `python -m unittest tests.runtime.test_codex_cockpit_switch_health`
+- [x] focused unit tests with fixture `config.json` and `codex_accounts.json`
+- [x] `python -m unittest tests.runtime.test_codex_cockpit_switch_health`
 
 **Dependencies:** CCHS-001.
 
