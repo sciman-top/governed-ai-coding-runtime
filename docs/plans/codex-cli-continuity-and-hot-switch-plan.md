@@ -3,7 +3,7 @@
 ## Status
 - Created: 2026-05-15.
 - Queue: owner-directed scoped spike, not a new heavy `GAP` mainline.
-- Current state: CCHS-001 partial evidence, CCHS-002 read-only guard, CCHS-003 mock-first runner spike, and CCHS-004 code-level operator visibility are implemented. No local Codex auth, Cockpit Tools state, provider profile, App process, or proxy configuration is changed by this plan.
+- Current state: CCHS-001 partial evidence, CCHS-002 read-only guard, CCHS-003 bounded multi-segment runner, and CCHS-004 code-level operator visibility are implemented. No local Codex auth, Cockpit Tools state, provider profile, App process, or proxy configuration is changed by this plan.
 - Scope boundary: prioritize Codex CLI continuity through short-lived or resumable CLI runs. Treat Codex App hot account switching as unsupported by the native App path until official evidence changes.
 
 ## Goal
@@ -78,12 +78,13 @@ Codex App remains native and restart-required for account changes unless a later
 - [x] Start a Codex CLI segment with task id, repo path, account alias, and evidence path.
 - [x] Detect quota, 401, and account-limit failures without swallowing unrelated errors.
 - [x] Wait for Cockpit current account to change or for quota health to recover.
-- [ ] Restart a new `codex exec` or `codex resume` segment using a generated handoff summary.
+- [x] Restart a new `codex exec` segment using a generated handoff summary after Cockpit account change is observed.
 - [x] Record every segment with command, exit code, account alias, failure reason, resume action, and rollback reference.
 
 **Verification:**
 - [x] unit tests for failure classification and handoff generation
 - [x] dry-run with mocked Codex command
+- [x] wrapper dry-run through `scripts/Start-CodexContinuity.ps1`
 - [ ] one live opt-in smoke after user approval
 
 **Dependencies:** CCHS-002.

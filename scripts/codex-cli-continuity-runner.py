@@ -27,6 +27,19 @@ class SegmentResult:
         self.stderr = stderr
 
 
+class SimulatedResults:
+    def __init__(self, items: list[SegmentResult]) -> None:
+        self._items = list(items)
+        self._index = 0
+
+    def next(self) -> SegmentResult | None:
+        if self._index >= len(self._items):
+            return None
+        item = self._items[self._index]
+        self._index += 1
+        return item
+
+
 def default_cockpit_home() -> Path:
     return Path.home() / ".antigravity_cockpit"
 
@@ -87,6 +100,16 @@ def build_codex_exec_command(repo: Path, prompt: str, output_last_message: Path 
     return command
 
 
+def segment_output_path(base: Path | None, segment_index: int) -> Path | None:
+    if base is None:
+        return None
+    if segment_index == 1:
+        return base
+    suffix = "".join(base.suffixes)
+    stem = base.name[: -len(suffix)] if suffix else base.name
+    return base.with_name(f"{stem}.segment-{segment_index}{suffix}")
+
+
 def run_segment(command: list[str], execute: bool, simulated: SegmentResult | None = None) -> SegmentResult:
     if simulated is not None:
         return simulated
@@ -94,6 +117,27 @@ def run_segment(command: list[str], execute: bool, simulated: SegmentResult | No
         return SegmentResult(0, "dry_run: codex exec not started", "")
     completed = subprocess.run(command, check=False, capture_output=True, text=True)
     return SegmentResult(completed.returncode, completed.stdout, completed.stderr)
+
+
+def parse_simulated_results(args: argparse.Namespace) -> SimulatedResults:
+    items: list[SegmentResult] = []
+    if args.simulate_results:
+        raw_items = json.loads(args.simulate_results)
+        if not isinstance(raw_items, list):
+            raise ValueError("--simulate-results must be a JSON array")
+        for item in raw_items:
+            if not isinstance(item, dict):
+                raise ValueError("--simulate-results items must be JSON objects")
+            items.append(
+                SegmentResult(
+                    int(item.get("exit_code", 0)),
+                    str(item.get("stdout", "")),
+                    str(item.get("stderr", "")),
+                )
+            )
+    if args.simulate_exit_code is not None:
+        items.append(SegmentResult(args.simulate_exit_code, args.simulate_stdout or "", args.simulate_stderr or ""))
+    return SimulatedResults(items)
 
 
 def wait_for_account_change(cockpit_home: Path, before: str | None, wait_seconds: int, poll_seconds: float = 1.0) -> dict[str, Any]:
@@ -150,40 +194,96 @@ def write_handoff(
     return path
 
 
-def execute_once(args: argparse.Namespace) -> dict[str, Any]:
+def build_resume_prompt(original_prompt: str, handoff_ref: str, failure_reason: str, segment_index: int) -> str:
+    return "\n\n".join(
+        [
+            "Continue the same task in a fresh Codex CLI segment.",
+            f"Previous segment failed with retryable reason: {failure_reason}.",
+            f"Handoff summary: {handoff_ref}",
+            f"New segment index: {segment_index}",
+            "Preserve the user's requested goal and continue from the prior state using repository files and evidence.",
+            "Original prompt:",
+            original_prompt,
+        ]
+    )
+
+
+def execute_continuity(args: argparse.Namespace) -> dict[str, Any]:
     repo = args.repo.resolve()
     prompt = args.prompt
-    command = build_codex_exec_command(repo, prompt, args.output_last_message)
-    before = current_account_id(args.cockpit_home)
-    simulated = None
-    if args.simulate_exit_code is not None:
-        simulated = SegmentResult(args.simulate_exit_code, args.simulate_stdout or "", args.simulate_stderr or "")
-    result = run_segment(command, args.execute, simulated)
-    reason = classify_failure(result)
-    account_wait = {"before_account_suffix": account_suffix(before), "after_account_suffix": account_suffix(before), "changed": False, "wait_seconds": 0}
-    handoff_ref = None
-    if retryable_failure(reason):
+    max_segments = max(1, args.max_segments)
+    simulations = parse_simulated_results(args)
+    segments: list[dict[str, Any]] = []
+    handoff_refs: list[str] = []
+    write_actions: list[str] = []
+    final_status = "unknown_error"
+
+    for segment_index in range(1, max_segments + 1):
+        before = current_account_id(args.cockpit_home)
+        output_path = segment_output_path(args.output_last_message, segment_index)
+        command = build_codex_exec_command(repo, prompt, output_path)
+        result = run_segment(command, args.execute, simulations.next())
+        reason = classify_failure(result)
+        account_wait = {
+            "before_account_suffix": account_suffix(before),
+            "after_account_suffix": account_suffix(before),
+            "changed": False,
+            "wait_seconds": 0,
+        }
+        segment_record: dict[str, Any] = {
+            "index": segment_index,
+            "command": command,
+            "exit_code": result.exit_code,
+            "failure_reason": reason,
+            "retryable": retryable_failure(reason),
+            "account_before_suffix": account_suffix(before),
+            "output_last_message": str(output_path) if output_path else None,
+        }
+        if reason == "success":
+            final_status = "success"
+            segments.append(segment_record)
+            break
+        if not retryable_failure(reason):
+            final_status = reason
+            segments.append(segment_record)
+            break
+
         account_wait = wait_for_account_change(args.cockpit_home, before, args.wait_seconds)
         after = current_account_id(args.cockpit_home)
         handoff_ref = str(
-            write_handoff(args.evidence_dir, args.task_id, repo, 1, reason, prompt, before, after)
+            write_handoff(args.evidence_dir, args.task_id, repo, segment_index, reason, prompt, before, after)
         )
+        handoff_refs.append(handoff_ref)
+        write_actions.append(handoff_ref)
+        segment_record["account_wait"] = account_wait
+        segment_record["handoff_ref"] = handoff_ref
+        segments.append(segment_record)
+
+        if segment_index >= max_segments:
+            final_status = "retry_limit_reached"
+            break
+        if not account_wait["changed"]:
+            final_status = "waiting_for_account_change"
+            break
+        prompt = build_resume_prompt(args.prompt, handoff_ref, reason, segment_index + 1)
+    else:  # pragma: no cover - loop exits through explicit branches
+        final_status = "retry_limit_reached"
+
     return {
         "schema_version": 1,
         "timestamp": _dt.datetime.now().isoformat(timespec="seconds"),
         "task_id": args.task_id,
         "mode": "execute" if args.execute else "dry_run",
-        "segment": {
-            "index": 1,
-            "command": command,
-            "exit_code": result.exit_code,
-            "failure_reason": reason,
-            "retryable": retryable_failure(reason),
-        },
-        "account_wait": account_wait,
-        "handoff_ref": handoff_ref,
-        "write_actions": [handoff_ref] if handoff_ref else [],
+        "status": final_status,
+        "max_segments": max_segments,
+        "segments": segments,
+        "handoff_refs": handoff_refs,
+        "write_actions": write_actions,
     }
+
+
+def execute_once(args: argparse.Namespace) -> dict[str, Any]:
+    return execute_continuity(args)
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -194,18 +294,20 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--evidence-dir", type=Path, default=Path("docs/change-evidence/codex-cli-continuity"))
     parser.add_argument("--cockpit-home", type=Path, default=default_cockpit_home())
     parser.add_argument("--wait-seconds", type=int, default=0)
+    parser.add_argument("--max-segments", type=int, default=1)
     parser.add_argument("--output-last-message", type=Path)
     parser.add_argument("--execute", action="store_true", help="Actually start codex exec. Default is dry-run.")
     parser.add_argument("--simulate-exit-code", type=int)
     parser.add_argument("--simulate-stdout", default="")
     parser.add_argument("--simulate-stderr", default="")
+    parser.add_argument("--simulate-results", help="JSON array of simulated segment results for tests and dry-run demos.")
     parser.add_argument("--json", action="store_true", help="Emit JSON. This is the default output format.")
     return parser.parse_args(argv)
 
 
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
-    report = execute_once(args)
+    report = execute_continuity(args)
     print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True))
     return 0
 
