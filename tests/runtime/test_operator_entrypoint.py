@@ -377,6 +377,36 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertNotIn("--apply", completed.stdout)
         self.assertNotIn("--migrate-provider-bucket", completed.stdout)
 
+    def test_operator_codex_projection_smoke_is_read_only_dry_run(self) -> None:
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "operator.ps1"),
+                "-Action",
+                "CodexProjectionSmoke",
+                "-DryRun",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+        )
+
+        self.assertIn("DRY-RUN codex-projection-smoke", completed.stdout)
+        self.assertIn("scripts/codex-interop-check.py", completed.stdout)
+        self.assertIn("--quick-launch", completed.stdout)
+        self.assertIn("DRY-RUN codex-guard-absence-check", completed.stdout)
+        self.assertNotIn("--repair-current-cockpit-api-projection", completed.stdout)
+        self.assertNotIn("--repair-current-cockpit-oauth-projection", completed.stdout)
+        self.assertNotIn("--apply", completed.stdout)
+        self.assertNotIn("--migrate-provider-bucket", completed.stdout)
+
     def test_operator_codex_launch_binding_repair_is_available_as_dry_run(self) -> None:
         completed = subprocess.run(
             [
@@ -630,6 +660,11 @@ class OperatorEntrypointTests(unittest.TestCase):
             self.assertEqual(
                 "CodexApiProjectionRepair",
                 module.ALLOWED_ACTIONS["codex_api_projection_repair"]["operator_action"],
+            )
+            self.assertIn("codex_projection_smoke", module.ALLOWED_ACTIONS)
+            self.assertEqual(
+                "CodexProjectionSmoke",
+                module.ALLOWED_ACTIONS["codex_projection_smoke"]["operator_action"],
             )
             self.assertIn("codex_oauth_projection_repair", module.ALLOWED_ACTIONS)
             self.assertEqual(

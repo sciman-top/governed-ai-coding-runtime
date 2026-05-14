@@ -1436,16 +1436,21 @@ def _project_codex_config(
     api_profiles: list[dict[str, str]],
 ) -> str:
     section_re = re.compile(r"^\s*\[([^\]]+)\]\s*$")
-    filtered: list[str] = []
-    skip_model_provider = False
-    for line in config_text.splitlines():
-        section_match = section_re.match(line)
-        if section_match:
-            section_name = section_match.group(1).strip()
-            skip_model_provider = section_name == "model_providers" or section_name.startswith("model_providers.")
-        if skip_model_provider:
-            continue
-        filtered.append(line)
+    if _toml_parse_error(config_text):
+        filtered = [
+            "# Existing config.toml was malformed; this repair rebuilt the Codex auth projection.",
+        ]
+    else:
+        filtered = []
+        skip_model_provider = False
+        for line in config_text.splitlines():
+            section_match = section_re.match(line)
+            if section_match:
+                section_name = section_match.group(1).strip()
+                skip_model_provider = section_name == "model_providers" or section_name.startswith("model_providers.")
+            if skip_model_provider:
+                continue
+            filtered.append(line)
 
     out: list[str] = []
     seen_top: set[str] = set()
@@ -1509,6 +1514,16 @@ def _project_codex_config(
     out.extend(_render_model_provider_sections(api_profiles))
 
     return "\n".join(out).rstrip() + "\n"
+
+
+def _toml_parse_error(config_text: str) -> str | None:
+    if not config_text.strip():
+        return None
+    try:
+        tomllib.loads(config_text)
+    except tomllib.TOMLDecodeError as exc:
+        return str(exc)
+    return None
 
 
 def _render_model_provider_sections(api_profiles: list[dict[str, str]]) -> list[str]:

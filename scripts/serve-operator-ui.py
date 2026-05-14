@@ -82,6 +82,7 @@ ALLOWED_ACTIONS = {
         "managed_asset_removal": True,
     },
     "codex_interop_check": {"operator_action": "CodexInteropCheck", "timeout_seconds": 120},
+    "codex_projection_smoke": {"operator_action": "CodexProjectionSmoke", "timeout_seconds": 180},
     "codex_api_projection_repair": {"operator_action": "CodexApiProjectionRepair", "timeout_seconds": 120},
     "codex_oauth_projection_repair": {"operator_action": "CodexOauthProjectionRepair", "timeout_seconds": 120},
     "codex_launch_binding_repair": {"operator_action": "CodexLaunchBindingRepair", "timeout_seconds": 60},

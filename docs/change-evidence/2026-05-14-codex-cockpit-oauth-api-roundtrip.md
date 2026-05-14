@@ -13,6 +13,8 @@
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexOauthProjectionRepair`
 - `codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox -o <temp> "只输出 OAUTH_PROBE_OK"`
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Test-CodexGuardAbsence.ps1`
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexProjectionSmoke`
+- `node <inline playwright smoke> http://127.0.0.1:8770/?lang=zh-CN`
 
 ## Findings
 
@@ -47,6 +49,14 @@
 - During full Runtime gate, `Test-CodexGuardAbsence.ps1` exposed and fixed a process-scan false positive under parallel tests; production default task process scan remains enabled, custom isolated task names skip global process scanning.
 - During full Runtime gate, governance hub certification exposed and fixed a concurrent report write race by writing through a unique temporary file before replacement.
 - Fresh post-refactor live quick check at `2026-05-14 21:10 +08:00` initially failed only on stale local projection details: `cockpit_saved_api_provider_profiles_projectable` and `cockpit_codex_instances_follow_current_account`. Running `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexOauthProjectionRepair` created backups, did not restart Codex, changed `history_visibility_rows_changed=6`, and the after-state returned `status=pass` with `codex_live_provider_bucket=pass`, `codex_auth_matches_cockpit_current_account=pass`, `cockpit_saved_api_provider_profiles_projectable=pass`, and `cockpit_codex_instances_follow_current_account=pass`.
+- Projection repair now treats malformed existing `config.toml` as unsafe to preserve: it keeps a timestamped backup and rebuilds a parseable minimal projection instead of splicing new provider/auth settings into invalid TOML.
+- Added focused malformed TOML regression coverage: `test_projection_rebuilds_malformed_toml_into_parseable_config` verifies the repaired config parses through `tomllib`, restores `model_provider=openai`, `forced_login_method=chatgpt`, and writes saved API providers as no-WebSocket custom providers.
+- Added `CodexProjectionSmoke` as a read-only operator action and `/api/actions` entry. The action runs `codex-interop-check.py --quick-launch` plus `Test-CodexGuardAbsence.ps1`; it does not pass repair flags, `--apply`, or `--migrate-provider-bucket`.
+- Live `CodexProjectionSmoke` passed at `2026-05-14 21:25 +08:00`: interop `status=pass`, `codex_live_provider_bucket=pass`, `codex_auth_matches_cockpit_current_account=pass`, `cockpit_saved_api_provider_profiles_projectable=pass`, `cockpit_codex_instances_follow_current_account=pass`, and guard absence `status=pass`.
+- The 8770 operator UI was refreshed after source changes; Playwright verified the Chinese Codex panel exposes the main-toolbar `投影 smoke` button with nonzero geometry and no text overflow. Screenshot evidence: `.runtime/artifacts/operator-ui/codex-projection-smoke-zh.png`.
+- Focused tests after projection smoke additions: `python -m unittest tests.runtime.test_codex_launch_binding_repair tests.runtime.test_operator_entrypoint tests.runtime.test_operator_ui` -> `54 tests OK`.
+- Script checks after projection smoke additions: `python -m py_compile scripts\codex-interop-check.py scripts\serve-operator-ui.py` -> pass; `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\verify-repo.ps1 -Check Scripts` -> pass.
+- Fresh full gates after projection smoke/UI visibility changes: `scripts\build-runtime.ps1` -> pass; `scripts\verify-repo.ps1 -Check Runtime` -> `114 test files`, `failures=0`; `scripts\verify-repo.ps1 -Check Contract` -> pass; `scripts\doctor-runtime.ps1` -> pass with existing `WARN codex-capability-degraded`; `git diff --check` -> pass with line-ending warnings only.
 
 ## Backups
 
@@ -63,3 +73,7 @@
 - `C:\Users\sciman\.codex\backups\auth.json.20260514_211044_cockpit-oauth-projection.bak`
 - `C:\Users\sciman\.codex\backups\state_5.sqlite.20260514_211044_cockpit-oauth-projection.bak`
 - `C:\Users\sciman\.antigravity_cockpit\backups\codex_instances.json.20260514_211044_cockpit-oauth-projection.bak`
+- `C:\Users\sciman\.codex\backups\config.toml.20260514_212341_cockpit-oauth-projection.bak`
+- `C:\Users\sciman\.codex\backups\auth.json.20260514_212341_cockpit-oauth-projection.bak`
+- `C:\Users\sciman\.codex\backups\state_5.sqlite.20260514_212341_cockpit-oauth-projection.bak`
+- `C:\Users\sciman\.antigravity_cockpit\backups\codex_instances.json.20260514_212341_cockpit-oauth-projection.bak`

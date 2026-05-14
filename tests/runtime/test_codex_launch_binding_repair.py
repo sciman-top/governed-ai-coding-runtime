@@ -4,6 +4,7 @@ import importlib.util
 import json
 import sqlite3
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 
@@ -132,6 +133,32 @@ class CodexLaunchBindingRepairTests(unittest.TestCase):
             self.assertIn('forced_login_method = "chatgpt"', config)
             backup_paths = [item["backup_path"] for item in action["backups"]]
             self.assertTrue(any("cockpit-oauth-projection" in path for path in backup_paths))
+
+    def test_projection_rebuilds_malformed_toml_into_parseable_config(self) -> None:
+        interop = load_interop_module()
+        malformed = 'model_provider = "broken\n[model_providers.openai]\nbase_url = "bad"\n'
+
+        repaired = interop._project_cockpit_chatgpt_config(
+            malformed,
+            api_profiles=[
+                {
+                    "provider_id": "cmp_relay",
+                    "provider_name": "relay",
+                    "base_url": "http://127.0.0.1:8003/v1",
+                }
+            ],
+        )
+
+        parsed = tomllib.loads(repaired)
+        self.assertEqual("openai", parsed["model_provider"])
+        self.assertEqual("chatgpt", parsed["forced_login_method"])
+        self.assertIn("Existing config.toml was malformed", repaired)
+        self.assertEqual(
+            "http://127.0.0.1:8003/v1",
+            parsed["model_providers"]["cmp_relay"]["base_url"],
+        )
+        self.assertFalse(parsed["model_providers"]["cmp_relay"]["requires_openai_auth"])
+        self.assertFalse(parsed["model_providers"]["cmp_relay"]["supports_websockets"])
 
     def test_history_visibility_repair_strategy_points_to_explicit_projection(self) -> None:
         interop = load_interop_module()
