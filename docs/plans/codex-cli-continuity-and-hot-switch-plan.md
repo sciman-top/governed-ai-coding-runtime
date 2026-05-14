@@ -4,6 +4,7 @@
 - Created: 2026-05-15.
 - Queue: owner-directed scoped spike, not a new heavy `GAP` mainline.
 - Current state: CCHS-001 partial evidence, CCHS-002 read-only guard, CCHS-003 bounded multi-segment runner, and CCHS-004 code-level operator visibility are implemented. No local Codex auth, Cockpit Tools state, provider profile, App process, or proxy configuration is changed by this plan.
+- Current local policy: Cockpit Tools automatic switching, Codex batch quota refresh, and Cockpit Codex API service stay disabled by default. Enable them only as an operator-directed temporary mode with fresh listener-scope and projection evidence.
 - Scope boundary: prioritize Codex CLI continuity through short-lived or resumable CLI runs. Treat Codex App hot account switching as unsupported by the native App path until official evidence changes.
 
 ## Goal
@@ -29,6 +30,7 @@ Codex App remains native and restart-required for account changes unless a later
 - Do not force hot account switching inside one long-running native Codex CLI process. Prefer small execution segments, `codex exec`, `codex resume`, and governed handoff summaries.
 - Do not enable Codex App restart-on-switch by default. App restart is a separate operator choice for "quota continuity over interruption" mode.
 - Do not implement proxy mode as the first step. Proxy is an experimental later track because it changes provider routing, credential custody, streaming behavior, and error attribution.
+- Do not treat Cockpit Tools' Codex API service at `127.0.0.1:2876/v1` as the default proxy implementation. It is an operator-owned local-access gateway and must remain off until the running build is proven loopback-only or protected by a host firewall rule.
 - Treat Cockpit config writes as high-risk. Default tools should read and diagnose; any repair must be explicit, backed up, narrow, and field-level.
 
 ## Mode Matrix
@@ -37,7 +39,7 @@ Codex App remains native and restart-required for account changes unless a later
 | `native_cli_segmented` | Continue CLI work across Cockpit account switches | New CLI segment reads current Cockpit/Codex auth state | Low | Yes |
 | `native_cli_same_process` | Hot switch inside one live CLI process | Not reliable as a public contract | Medium | No |
 | `native_app_restart_required` | App uses account after restart | Manual or explicitly enabled restart | Medium to high | Diagnostics only |
-| `proxy_experimental` | Route requests through local account proxy | Proxy chooses account per request or failure | Medium to high | Later PoC only |
+| `proxy_experimental` | Route requests through a dedicated local account proxy | Proxy chooses account per request or failure | Medium to high | Later PoC only; Cockpit API service is not the default proxy |
 
 ## Task List
 
@@ -108,6 +110,8 @@ Codex App remains native and restart-required for account changes unless a later
 
 **Acceptance criteria:**
 - [ ] Proxy binds only to `127.0.0.1` by default.
+- [ ] Cockpit Tools' Codex API service is treated as a temporary operator mode, not as the default proxy implementation.
+- [ ] If Cockpit API service is used, verify listener scope and host firewall posture before pointing Codex CLI/App at `http://127.0.0.1:2876/v1`.
 - [ ] Authorization headers, refresh tokens, and request bodies are redacted from logs.
 - [ ] Streaming, compact/resume behavior, tool-call traffic, and error propagation are tested against mocks before live use.
 - [ ] Cockpit remains either the account owner or the proxy owner is explicitly declared; both must not auto-switch independently.

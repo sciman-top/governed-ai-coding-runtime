@@ -78,6 +78,25 @@ class CodexCockpitPolicyContractTests(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertIn(text, content)
 
+    def test_hot_switch_plan_keeps_cockpit_api_service_opt_in(self) -> None:
+        plan = (ROOT / "docs" / "plans" / "codex-cli-continuity-and-hot-switch-plan.md").read_text(
+            encoding="utf-8"
+        )
+        index = (ROOT / "docs" / "plans" / "README.md").read_text(encoding="utf-8")
+
+        required_plan_text = [
+            "Cockpit Tools automatic switching, Codex batch quota refresh, and Cockpit Codex API service stay disabled by default",
+            "Do not treat Cockpit Tools' Codex API service at `127.0.0.1:2876/v1` as the default proxy implementation",
+            "Cockpit API service is not the default proxy",
+            "verify listener scope and host firewall posture",
+        ]
+        for text in required_plan_text:
+            with self.subTest(text=text):
+                self.assertIn(text, plan)
+
+        self.assertIn("treat Cockpit's `127.0.0.1:2876/v1` Codex API service as the default proxy", index)
+        self.assertIn("without listener-scope and firewall evidence", index)
+
 
 if __name__ == "__main__":
     unittest.main()
