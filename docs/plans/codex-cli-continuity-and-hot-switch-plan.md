@@ -3,7 +3,7 @@
 ## Status
 - Created: 2026-05-15.
 - Queue: owner-directed scoped spike, not a new heavy `GAP` mainline.
-- Current state: CCHS-001 partial evidence, CCHS-002 read-only guard, and CCHS-003 mock-first runner spike are implemented. No local Codex auth, Cockpit Tools state, provider profile, App process, or proxy configuration is changed by this plan.
+- Current state: CCHS-001 partial evidence, CCHS-002 read-only guard, CCHS-003 mock-first runner spike, and CCHS-004 code-level operator visibility are implemented. No local Codex auth, Cockpit Tools state, provider profile, App process, or proxy configuration is changed by this plan.
 - Scope boundary: prioritize Codex CLI continuity through short-lived or resumable CLI runs. Treat Codex App hot account switching as unsupported by the native App path until official evidence changes.
 
 ## Goal
@@ -92,12 +92,12 @@ Codex App remains native and restart-required for account changes unless a later
 **Purpose:** Show the difference between Cockpit switch state, CLI next-run state, and App restart-required state.
 
 **Acceptance criteria:**
-- [ ] 8770 Codex panel shows `native_cli_segmented` versus `native_app_restart_required`.
-- [ ] The panel distinguishes current Cockpit account from the already-open App account when known.
-- [ ] The panel provides no automatic restart action unless explicitly added as a separate operator-confirmed action.
+- [x] 8770 Codex panel shows `native_cli_segmented` versus `native_app_restart_required`.
+- [x] The panel distinguishes current Cockpit account from the already-open App account when known.
+- [x] The panel provides no automatic restart action unless explicitly added as a separate operator-confirmed action.
 
 **Verification:**
-- [ ] UI contract tests or snapshot tests for the new status labels
+- [x] UI contract tests or snapshot tests for the new status labels
 - [ ] live 8770 page verification after service refresh
 
 **Dependencies:** CCHS-002.

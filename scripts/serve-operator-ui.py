@@ -51,6 +51,21 @@ def _load_host_feedback_summary_builder():
 build_host_feedback_summary = _load_host_feedback_summary_builder()
 
 
+def _load_codex_switch_health_builder():
+    path = ROOT / "scripts" / "codex-cockpit-switch-health.py"
+    module_name = "codex_cockpit_switch_health_script"
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"could not load Codex switch health script: {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module.evaluate, module.default_cockpit_home
+
+
+build_codex_switch_health, default_codex_switch_health_cockpit_home = _load_codex_switch_health_builder()
+
+
 ALLOWED_ACTIONS = {
     "targets": {"operator_action": "Targets", "run_alias": "targets", "timeout_seconds": 300},
     "fast_feedback": {"operator_action": "FastFeedback", "run_alias": "fast", "timeout_seconds": 900},
@@ -113,6 +128,7 @@ UI_SOURCE_FILES = (
     ROOT / "packages" / "contracts" / "src" / "governed_ai_coding_runtime_contracts" / "runtime_status.py",
     ROOT / "scripts" / "lib" / "codex_local.py",
     ROOT / "scripts" / "lib" / "claude_local.py",
+    ROOT / "scripts" / "codex-cockpit-switch-health.py",
 )
 _STATUS_CACHE_LOCK = Lock()
 _STATUS_CACHE: dict[str, dict] = {}
@@ -457,15 +473,33 @@ def render_stale_service_html(language: str, *, restart_state: dict | None = Non
 def load_codex_status(*, refresh_online: bool = False, refresh_if_stale: bool = False) -> dict:
     if refresh_online or refresh_if_stale:
         invalidate_status_cache("codex")
-        return _load_status_payload(
+        return _with_codex_switch_health(_load_status_payload(
             "codex",
             lambda: codex_status(refresh_online=refresh_online, refresh_if_stale=refresh_if_stale),
-        )
-    return _load_status_cached(
+        ))
+    return _with_codex_switch_health(_load_status_cached(
         "codex",
         ttl_seconds=CODEX_STATUS_CACHE_TTL_SECONDS,
         loader=lambda: codex_status(refresh_online=False),
-    )
+    ))
+
+
+def _with_codex_switch_health(payload: dict) -> dict:
+    enriched = dict(payload)
+    try:
+        enriched["switch_health"] = build_codex_switch_health(default_codex_switch_health_cockpit_home(), "codex_app")
+    except Exception as exc:
+        enriched["switch_health"] = {
+            "status": "error",
+            "error": f"{type(exc).__name__}: {exc}",
+            "runtime_boundary": {
+                "codex_app_account_change_hot_reload_confirmed": False,
+                "codex_app_restart_required_for_account_change": True,
+                "codex_cli_new_process_reads_projected_auth": False,
+            },
+            "write_actions": [],
+        }
+    return enriched
 
 
 def load_codex_history(params: dict[str, list[str]] | None = None) -> dict:

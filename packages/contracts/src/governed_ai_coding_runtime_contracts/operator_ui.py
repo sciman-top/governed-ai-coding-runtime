@@ -684,6 +684,7 @@ def _render_codex_panel(text: dict[str, str], *, interactive: bool) -> str:
             "<div class='codex-grid'>",
             "<div>",
             f"<div class='status-line' id='codex-cache-state'>{escape(text['panel_cache_state'])}: {escape(text['panel_cache_cold'])}</div>",
+            f"<div class='status-line codex-switch-health' id='codex-switch-health'>{escape(text['codex_switch_health_loading'])}</div>",
             "<div id='codex-accounts' class='codex-list'></div>",
             "</div>",
             "</div>",

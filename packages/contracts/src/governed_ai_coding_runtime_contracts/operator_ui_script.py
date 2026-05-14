@@ -31,6 +31,7 @@ def render_interactive_script(
   const historyList = document.getElementById('ui-history');
   const codexAccounts = document.getElementById('codex-accounts');
   const codexCacheState = document.getElementById('codex-cache-state');
+  const codexSwitchHealth = document.getElementById('codex-switch-health');
   const codexHistoryForm = document.getElementById('codex-history-form');
   const codexHistorySource = document.getElementById('codex-history-source');
   const codexHistoryCwd = document.getElementById('codex-history-cwd');
@@ -252,6 +253,7 @@ def render_interactive_script(
     const usage = resolveAccountUsageSnapshot(active, payload);
     const config = payload && payload.config ? payload.config : {{}};
     const snapshot = active && active.snapshot_status ? active.snapshot_status : (payload && payload.snapshot_status ? payload.snapshot_status : null);
+    const switchHealthSummary = formatCodexSwitchHealthSummary(payload && payload.switch_health);
     setSurfaceSummary('codex', [
       active ? codexAccountLabel(active) : (currentUiLanguage() === 'zh-CN' ? '未识别当前账号' : 'No active account'),
       officialAppAccount && officialAppAccount.status === 'ok' && officialAppAccount.email
@@ -263,11 +265,42 @@ def render_interactive_script(
             ].filter(Boolean).join(' · ')
           : ''),
       formatConfigHealth(config),
+      switchHealthSummary,
       formatCodexSnapshotStatus(snapshot),
       usage && usage.source
         ? [formatUsageSourceLabel(usage.source), formatUsageFreshnessLabel(usage)].filter(Boolean).join(' · ')
         : codexSurfaceActionText,
     ]);
+  }}
+
+  function formatCodexSwitchHealthSummary(health) {{
+    if (!health || typeof health !== 'object') {{
+      return {text['codex_switch_health_loading']!r};
+    }}
+    const selected = health.selected_scope || {{}};
+    const recent = health.recent_auth_errors || {{}};
+    const boundary = health.runtime_boundary || {{}};
+    const mode = boundary.codex_app_restart_required_for_account_change
+      ? {text['codex_switch_native_app_restart_required']!r}
+      : {text['codex_switch_native_cli_segmented']!r};
+    const plans = Array.isArray(selected.selected_plan_types) && selected.selected_plan_types.length
+      ? selected.selected_plan_types.join(',')
+      : 'unknown';
+    return [
+      mode,
+      `${{ {text['codex_switch_selected_accounts']!r} }} ${{selected.selected_found_count ?? selected.selected_count ?? 0}}/${{selected.selected_count ?? 0}}`,
+      `${{ {text['codex_switch_selected_plans']!r} }} ${{plans}}`,
+      `${{ {text['codex_switch_recent_401']!r} }} ${{recent.token_invalidated_count ?? 0}}`,
+      {text['codex_switch_no_restart_action']!r},
+    ].filter(Boolean).join(' · ');
+  }}
+
+  function renderCodexSwitchHealth(health) {{
+    if (!codexSwitchHealth) {{
+      return;
+    }}
+    codexSwitchHealth.textContent = formatCodexSwitchHealthSummary(health);
+    codexSwitchHealth.dataset.status = health && health.status ? health.status : 'unknown';
   }}
 
   function updateClaudeSurfaceSummary(payload) {{
@@ -1500,6 +1533,7 @@ def render_interactive_script(
 
   function renderCodexStatus(payload) {{
     lastCodexPayload = payload;
+    renderCodexSwitchHealth(payload && payload.switch_health);
     const accounts = Array.isArray(payload.accounts) ? payload.accounts : [];
     const officialAppAccount = payload && payload.official_app_account && typeof payload.official_app_account === 'object'
       ? payload.official_app_account
