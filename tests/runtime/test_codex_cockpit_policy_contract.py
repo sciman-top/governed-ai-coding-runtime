@@ -85,22 +85,23 @@ class CodexCockpitPolicyContractTests(unittest.TestCase):
         index = (ROOT / "docs" / "plans" / "README.md").read_text(encoding="utf-8")
 
         required_plan_text = [
-            "Cockpit Tools automatic switching, Codex batch quota refresh, and Cockpit Codex API service stay disabled by default",
+            "Cockpit Tools local API service is enabled only as an operator-directed LiteLLM upstream mode",
             "Preferred gateway architecture: Cockpit owns ChatGPT/OAuth subscription-account state; LiteLLM owns normal API keys",
             "Plan rebaseline: keep CCHS-001 through CCHS-004 as completed or partial native-boundary groundwork",
-            "The active next implementation lane is CCHS-005A through CCHS-005F for `Codex -> LiteLLM -> Cockpit API service`",
+            "CCHS-005A through CCHS-005F now provide a live `Codex -> LiteLLM -> Cockpit API service` lane",
             "Rebaseline Cleanup",
             "Do not delete the segmented runner. It remains the fallback when gateway mode is disabled or broken.",
             "Supersede the old single CCHS-005 coarse PoC with CCHS-005A through CCHS-005F",
-            "Do not treat Cockpit Tools' Codex API service at `127.0.0.1:2876/v1` as the default proxy implementation",
-            "best placed behind a dedicated gateway such as LiteLLM",
+            "Do not bypass LiteLLM for Codex CLI gateway mode",
+            "operator-owned local-access upstream behind LiteLLM",
             "Cockpit API service is not the default proxy",
             "gateway_litellm_with_cockpit_upstream",
             "CCHS-005A LiteLLM Gateway Runtime Baseline",
             "CCHS-005B Cockpit API Upstream Hardening",
             "CCHS-005C LiteLLM Config With Cockpit Upstream",
             "CCHS-005D Codex Profile To LiteLLM Gateway",
-            "CCHS-005E Manual Cockpit Switch Follow Test",
+            "CCHS-005E Cockpit Current-Account Follow Test",
+            "CCHS-005G Cockpit Source Follow-Current Mode",
             "CCHS-005F Closeout, Operator Runbook, And Rollback",
             "A Cockpit-aware adapter is deferred until account-label, group, quota, or routing semantics are required",
             "model alias `cockpit-current`",
@@ -112,10 +113,10 @@ class CodexCockpitPolicyContractTests(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertIn(text, plan)
 
-        self.assertIn("`CCHS-005A..005F` are the active gateway lane", index)
-        self.assertIn("execute `CCHS-005A` through `CCHS-005F`", index)
-        self.assertIn("LiteLLM owns normal API-key providers", index)
-        self.assertIn("Cockpit API service can be a hardened opt-in upstream", index)
+        self.assertIn("prefer Cockpit follow-current single-account local access", index)
+        self.assertIn("use `Codex -> LiteLLM -> Cockpit API service` as the preferred opt-in local profile", index)
+        self.assertIn("LiteLLM owns the client-facing gateway", index)
+        self.assertIn("Cockpit owns ChatGPT OAuth account switching", index)
         self.assertIn("without listener-scope and firewall evidence", index)
 
 

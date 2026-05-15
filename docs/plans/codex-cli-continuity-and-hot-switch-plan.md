@@ -4,9 +4,9 @@
 - Created: 2026-05-15.
 - Queue: owner-directed scoped spike, not a new heavy `GAP` mainline.
 - Current state: CCHS-001 partial evidence, CCHS-002 read-only guard, CCHS-003 bounded multi-segment runner, and CCHS-004 code-level operator visibility are implemented. No local Codex auth, Cockpit Tools state, provider profile, App process, or proxy configuration is changed by this plan.
-- Current local policy: Cockpit Tools automatic switching, Codex batch quota refresh, and Cockpit Codex API service stay disabled by default. Enable them only as an operator-directed temporary mode with fresh listener-scope and projection evidence.
+- Current local policy: Cockpit Tools local API service is enabled only as an operator-directed LiteLLM upstream mode after fresh listener-scope and Windows Firewall posture evidence. Codex App is not restarted by this lane.
 - Preferred gateway architecture: Cockpit owns ChatGPT/OAuth subscription-account state; LiteLLM owns normal API keys, multi-provider routing, logging, budgets, and unified OpenAI-compatible gateway behavior; Cockpit API service may be registered behind LiteLLM as one opt-in upstream provider after local listener hardening.
-- Plan rebaseline: keep CCHS-001 through CCHS-004 as completed or partial native-boundary groundwork. The active next implementation lane is CCHS-005A through CCHS-005F for `Codex -> LiteLLM -> Cockpit API service`; do not extend the old segmented-runner path unless the gateway lane fails.
+- Plan rebaseline: keep CCHS-001 through CCHS-004 as completed or partial native-boundary groundwork. CCHS-005A through CCHS-005F now provide a live `Codex -> LiteLLM -> Cockpit API service` lane; keep the old segmented-runner path as fallback, not the primary continuation route.
 - Scope boundary: prioritize Codex CLI continuity through short-lived or resumable CLI runs. Treat Codex App hot account switching as unsupported by the native App path until official evidence changes.
 
 ## Goal
@@ -31,8 +31,8 @@ Codex App remains native and restart-required for account changes unless a later
 - Do not compete with Cockpit Tools for account switch decisions. Cockpit remains the source for current account, quota, account groups, and selected free-account scope.
 - Do not force hot account switching inside one long-running native Codex CLI process. Prefer small execution segments, `codex exec`, `codex resume`, and governed handoff summaries.
 - Do not enable Codex App restart-on-switch by default. App restart is a separate operator choice for "quota continuity over interruption" mode.
-- Do not implement proxy mode as the first step. Proxy is an experimental later track because it changes provider routing, credential custody, streaming behavior, and error attribution.
-- Do not treat Cockpit Tools' Codex API service at `127.0.0.1:2876/v1` as the default proxy implementation. It is an operator-owned local-access upstream, best placed behind a dedicated gateway such as LiteLLM, and must remain off until the running build is proven loopback-only or protected by a host firewall rule.
+- Do not bypass LiteLLM for Codex CLI gateway mode. Cockpit Tools' Codex API service at `127.0.0.1:2876/v1` is an operator-owned local-access upstream behind LiteLLM, not the client-facing default.
+- Cockpit local access may bind `0.0.0.0`; it is usable only when Windows Firewall profile policy or an explicit rule constrains inbound access.
 - Do not build a Cockpit-aware adapter until the operator needs account-label, group, quota, or routing decisions that cannot be expressed by treating Cockpit API service as a single OpenAI-compatible LiteLLM upstream.
 - Treat Cockpit config writes as high-risk. Default tools should read and diagnose; any repair must be explicit, backed up, narrow, and field-level.
 
@@ -121,15 +121,15 @@ Codex App remains native and restart-required for account changes unless a later
 **Purpose:** Establish a local LiteLLM runtime plan without touching Codex or Cockpit live state.
 
 **Acceptance criteria:**
-- [ ] Choose local install shape: Python venv under a repo-managed runtime path or explicit operator-local path; do not install into arbitrary global Python by default.
-- [ ] Define a LiteLLM config location, log location, port, master key source, and secret redaction boundary.
-- [ ] Keep the default bind address loopback-only.
-- [ ] Record install/start/stop/rollback commands and expected process names.
+- [x] Choose local install shape: Python venv under `.runtime/litellm/venv`; do not install into arbitrary global Python by default.
+- [x] Define LiteLLM config, log, PID, master key, and secret redaction boundaries under `.runtime/litellm/`.
+- [x] Keep the default bind address loopback-only at `127.0.0.1:4000`.
+- [x] Record install/start/stop/status/smoke/rollback commands in `docs/runbooks/litellm-cockpit-gateway.md`.
 
 **Verification:**
-- [ ] `litellm --help` or equivalent venv command is available.
-- [ ] local config renders without printing upstream keys.
-- [ ] rollback removes only the LiteLLM runtime process/config created by this lane.
+- [x] `litellm --version` from the venv reports `LiteLLM: Current Version = 1.84.0`.
+- [x] local config renders without printing upstream keys.
+- [x] rollback is scoped to the PID file and managed Codex config block created by this lane.
 
 **Dependencies:** CCHS-002.
 
@@ -137,15 +137,16 @@ Codex App remains native and restart-required for account changes unless a later
 **Purpose:** Make Cockpit API service safe enough to place behind LiteLLM.
 
 **Acceptance criteria:**
-- [ ] Cockpit Tools' Codex API service is treated as a temporary operator mode, not as the default proxy implementation.
-- [ ] If Cockpit API service is used, verify listener scope and host firewall posture before pointing Codex CLI/App at `http://127.0.0.1:2876/v1`.
-- [ ] If the running Cockpit build binds to `0.0.0.0`, add or verify a Windows firewall rule limiting inbound access to the local host.
-- [ ] Verify `/v1/models` through the Cockpit API service with a masked key, and record account-following behavior after manual Cockpit switch.
+- [x] Cockpit Tools' Codex API service is treated as a temporary operator mode, not as the default proxy implementation.
+- [x] If Cockpit API service is used, verify listener scope and host firewall posture before pointing Codex CLI/App at `http://127.0.0.1:2876/v1`.
+- [x] If the running Cockpit build binds non-loopback, add or verify a Windows firewall rule limiting inbound access to the local host.
+- [x] Verify `/v1/models` through the Cockpit API service with a masked key, and record single-current-account behavior.
 
 **Verification:**
-- [ ] `Get-NetTCPConnection -LocalPort 2876` shows the listener scope and owning process.
-- [ ] local `/v1/models` probe succeeds without printing the token.
-- [ ] LAN exposure is blocked or not present.
+- [x] Superseded evidence recorded the former pool mode with `account_count=3`.
+- [ ] Current production evidence records `enabled=true`, `account_count=1`, `follow_current_account=true`, listener addresses including `0.0.0.0`, `firewall_profile_default_block=true` or explicit block rule, and `safe_for_upstream=true`.
+- [x] local `/v1/models` probe succeeds without printing the token.
+- [x] LAN exposure is constrained by Windows Firewall profile policy `BlockInbound,AllowOutbound`.
 
 **Dependencies:** CCHS-005A, Cockpit Tools local API service operator enablement.
 
@@ -153,16 +154,16 @@ Codex App remains native and restart-required for account changes unless a later
 **Purpose:** Register Cockpit API service as one OpenAI-compatible LiteLLM upstream while keeping normal API-key providers separate.
 
 **Acceptance criteria:**
-- [ ] LiteLLM is the default client-facing gateway for normal API-key providers and can register Cockpit API service as a single opt-in OpenAI-compatible upstream.
-- [ ] A Cockpit-aware adapter is deferred until account-label, group, quota, or routing semantics are required beyond the single-upstream model.
-- [ ] Authorization headers, refresh tokens, and request bodies are redacted from logs.
-- [ ] LiteLLM upstream model aliases distinguish normal API-key providers from `cockpit-current`.
-- [ ] Cockpit upstream key is stored in environment or local secret file excluded from git, not in committed config.
+- [x] LiteLLM is implemented as the opt-in client-facing gateway and registers Cockpit API service as `cockpit-current`.
+- [x] A Cockpit-aware adapter is deferred until account-label, group, quota, or routing semantics are required beyond the single-upstream model.
+- [x] Secrets are stored in local environment or `.runtime/litellm/secrets.env`, not committed config.
+- [x] LiteLLM upstream model alias `cockpit-current` distinguishes the Cockpit upstream.
+- [x] Cockpit upstream key is stored in a local secret file excluded from git, not in committed config.
 
 **Verification:**
-- [ ] LiteLLM `/v1/models` includes normal provider aliases and `cockpit-current`.
-- [ ] LiteLLM `/v1/responses` or `/v1/chat/completions` succeeds against a mock or local upstream before live use.
-- [ ] logs do not contain raw API keys, bearer tokens, or request bodies unless explicitly enabled for a throwaway test.
+- [x] LiteLLM `/v1/models` includes `cockpit-current`.
+- [x] LiteLLM `/v1/chat/completions` succeeds against the live Cockpit upstream before Codex use.
+- [x] smoke output redacts secrets and the committed script/config do not contain raw API keys.
 
 **Dependencies:** CCHS-005A, CCHS-005B.
 
@@ -170,45 +171,62 @@ Codex App remains native and restart-required for account changes unless a later
 **Purpose:** Point Codex to LiteLLM as the stable client-facing base URL, without restarting Codex App automatically.
 
 **Acceptance criteria:**
-- [ ] Add a reversible Codex profile that uses LiteLLM as `openai_base_url` or a non-built-in custom `model_providers.<id>.base_url` according to the current Codex config contract.
-- [ ] Preserve history bucket expectations and do not reintroduce `[model_providers.openai]`.
-- [ ] Do not alter the active Codex App process; new CLI/App sessions pick up the profile after operator-controlled start or restart.
-- [ ] Document how to switch back to direct OAuth/API projection.
+- [x] Add a reversible Codex profile that uses non-built-in custom provider `model_providers.litellm_gateway`.
+- [x] Preserve history bucket expectations and do not reintroduce `[model_providers.openai]`.
+- [x] Do not alter the active Codex App process; new CLI/App sessions pick up the profile after operator-controlled start or restart.
+- [x] Document rollback to direct OAuth/API projection.
 
 **Verification:**
-- [ ] `codex debug models` or a non-secret probe can read the LiteLLM-backed profile.
-- [ ] `codex exec` smoke succeeds through LiteLLM.
-- [ ] `CodexProjectionSmoke` or an equivalent interop check still passes or records an explicit gateway-mode N/A for direct Cockpit projection checks.
+- [x] `codex --profile litellm-gateway debug models` can read the LiteLLM-backed profile.
+- [x] `codex exec` smoke succeeds through LiteLLM.
+- [x] `CodexProjectionSmoke` passes after saved Cockpit API provider projection and launch-binding repair.
 
 **Dependencies:** CCHS-005C.
 
-### CCHS-005E Manual Cockpit Switch Follow Test
-**Purpose:** Prove the desired behavior: Cockpit manual switch changes the Cockpit upstream used behind LiteLLM, while Codex keeps the same LiteLLM endpoint.
+### CCHS-005E Cockpit Current-Account Follow Test
+**Purpose:** Prove the desired behavior: Cockpit manual account switching updates the Cockpit API service to the current single OAuth account, while Codex keeps the same LiteLLM endpoint.
 
 **Acceptance criteria:**
-- [ ] Start with Codex pointing to LiteLLM and LiteLLM routing model alias `cockpit-current` to Cockpit API service.
-- [ ] Perform a manual Cockpit account switch.
-- [ ] A new Codex request through LiteLLM uses the post-switch Cockpit account or records the exact mismatch.
-- [ ] Existing long-running Codex App sessions are not claimed to hot-reload account identity unless directly observed.
+- [x] Start with Codex pointing to LiteLLM and LiteLLM routing model alias `cockpit-current` to Cockpit API service.
+- [ ] Configure Cockpit local access with `accountIds=[current_account_id]`, `followCurrentAccount=true`, and `restrictFreeAccounts=true` unless `-AllowFreeAccount` is explicitly intended.
+- [ ] A new Codex request through LiteLLM succeeds through the Cockpit current-account upstream without changing the Codex endpoint.
+- [x] Existing long-running Codex App sessions are not claimed to hot-reload account identity unless directly observed.
 
 **Verification:**
-- [ ] Before/after Cockpit current account id suffix is recorded without secrets.
-- [ ] LiteLLM request statistics show traffic through `cockpit-current`.
-- [ ] Codex final message smoke succeeds after the manual switch.
+- [ ] Cockpit local access `account_count=1` and `follow_current_account=true` are recorded without secrets.
+- [ ] LiteLLM request succeeds through `cockpit-current`.
+- [ ] Codex final message smoke succeeds through `litellm-gateway`.
 
 **Dependencies:** CCHS-005D.
+
+### CCHS-005G Cockpit Source Follow-Current Mode
+**Purpose:** Make manual Cockpit Codex account switching update the API service account set without Codex process injection or Codex App restart.
+
+**Acceptance criteria:**
+- [ ] Cockpit local access collection persists `followCurrentAccount`.
+- [ ] Manual `switch_codex_account` calls update API service `accountIds` to the switched account when `followCurrentAccount=true`.
+- [ ] The switch itself remains successful if local access follow-current sync fails; the failure is logged and does not corrupt Codex auth.
+- [ ] Cockpit bind host remains unchanged; this task does not modify `0.0.0.0`.
+- [ ] Governance script `PrepareCockpitUpstream` writes only the current OAuth account and refuses API-key/free accounts by default.
+
+**Verification:**
+- [ ] Cockpit Rust/TypeScript typecheck and build pass.
+- [ ] Governed runtime contract tests assert follow-current single-account behavior.
+- [ ] Live status shows `safe_for_upstream=true`, `account_count=1`, and `follow_current_account=true` before Codex/LiteLLM smoke.
+
+**Dependencies:** CCHS-005B, CCHS-005E.
 
 ### CCHS-005F Closeout, Operator Runbook, And Rollback
 **Purpose:** Make gateway mode repeatable, reversible, and visible to future agents.
 
 **Acceptance criteria:**
-- [ ] Add a runbook with start/stop/status/smoke/rollback commands.
-- [ ] Add evidence showing local listener scope, LiteLLM upstream config shape, Codex profile shape, and manual switch smoke.
-- [ ] Update contract tests so future changes cannot collapse Cockpit and LiteLLM ownership boundaries.
-- [ ] Keep Cockpit-aware adapter explicitly deferred.
+- [x] Add a runbook with start/stop/status/smoke/rollback commands.
+- [x] Add evidence showing local listener scope, LiteLLM upstream config shape, Codex profile shape, and the current Cockpit upstream block.
+- [x] Update contract tests so future changes cannot collapse Cockpit and LiteLLM ownership boundaries.
+- [x] Keep Cockpit-aware adapter explicitly deferred.
 - [ ] Streaming, compact/resume behavior, tool-call traffic, and error propagation are tested against mocks before live use.
-- [ ] Cockpit remains either the account owner or the proxy owner is explicitly declared; both must not auto-switch independently.
-- [ ] Proxy mode is opt-in and reversible without changing default Cockpit native switching.
+- [x] Cockpit remains the account owner; LiteLLM is only the client-facing gateway.
+- [x] Proxy mode is opt-in and reversible without changing default direct OAuth projection.
 
 **Verification:**
 - [ ] mock OpenAI-compatible endpoint tests

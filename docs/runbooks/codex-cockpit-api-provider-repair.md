@@ -9,10 +9,13 @@ API key login is required, but ChatGPT is currently being used. Logging out.
 
 This runbook is for local Codex/Cockpit interoperability only. Do not restart, stop, kill, or auto-launch Codex App unless the operator explicitly confirms that action for the current incident.
 
+This runbook does not repair the `Codex -> LiteLLM -> Cockpit API service` gateway lane. In gateway mode, Codex must stay on `model_provider = "litellm_gateway"` with `auth_mode = "apikey"` and `base_url = "http://127.0.0.1:4000/v1"`; direct Cockpit projection repairs intentionally overwrite that shape.
+
 ## Highest Priority Contract
 - Treat Codex/Cockpit OAuth/API roundtrips, `state_5.sqlite.threads.model_provider` history buckets, picker visibility metadata, and repair entrypoints as the highest-priority local interoperability contract for this repository.
 - Before changing any Codex/Cockpit auth, provider, API relay, launcher, history, or repair behavior, run a read-only baseline with `CodexProjectionSmoke` or `codex-interop-check.py --quick-launch` and inspect this runbook.
 - Only three write entrypoints are allowed: `CodexApiProjectionRepair`, `CodexOauthProjectionRepair`, and `CodexLaunchBindingRepair`. They must create backups, must not restart/stop/kill Codex, and must keep config, auth, Cockpit account/provider metadata, `threads.model_provider`, and picker visibility metadata aligned.
+- Do not run `CodexApiProjectionRepair` or `CodexOauthProjectionRepair` while the intended route is `Codex -> LiteLLM -> Cockpit API service`. Use `scripts\Manage-LiteLLMGateway.ps1 -Action PrepareCockpitUpstream` and `-Action WriteCodexProfile` instead.
 - Do not reintroduce generic `--apply`, `--migrate-provider-bucket`, SQLite provider triggers, background guards / 后台 guard, no-op launchers, restart wrappers, CLI preflight wrappers, automatic Codex restart / 自动重启 Codex, or `[model_providers.openai]`.
 - History sharing must not override API relay connectivity. If a relay needs `supports_websockets=false`, use the Cockpit API account's non-built-in provider bucket and migrate/verify history into that bucket; when returning to OAuth, migrate/verify history back to `openai`.
 - Enforce this contract with `tests.runtime.test_codex_cockpit_policy_contract`, `tests.runtime.test_codex_shared_launcher`, `CodexProjectionSmoke`, and `Test-CodexGuardAbsence.ps1` before claiming the issue is fixed.
@@ -53,10 +56,11 @@ For a ChatGPT/OAuth account:
 
 ## Cockpit Local API Service Boundary
 - Cockpit Tools' Codex API service is a separate local-access gateway, not the same thing as projecting the current Cockpit account into Codex `auth.json`/`config.toml`.
-- Do not assume the service is loopback-only just because the UI shows `127.0.0.1`. In the checked Cockpit Tools source snapshot, `codex_local_access.rs` uses `CODEX_LOCAL_ACCESS_BIND_HOST = "0.0.0.0"` while displaying `CODEX_LOCAL_ACCESS_URL_HOST = "127.0.0.1"`.
-- Until the running Cockpit build is verified to bind only to loopback or is protected by a host firewall rule, keep `codex_local_access.json.enabled = false` and do not point Codex CLI/App at `http://127.0.0.1:2876/v1`.
+- Do not assume the service is loopback-only just because the UI shows `127.0.0.1`. Verify the running Cockpit build with `netstat`/PowerShell before pointing Codex CLI/App at `http://127.0.0.1:2876/v1`.
+- The custom local Cockpit build changes `codex_local_access.rs` to bind `CODEX_LOCAL_ACCESS_BIND_HOST = "127.0.0.1"`. If an official build is used and it binds `0.0.0.0`, keep `codex_local_access.json.enabled = false` until a host firewall rule or default inbound block is verified.
 - If the operator explicitly enables the API service, first run `CodexProjectionSmoke`, then verify listener scope with `netstat`/PowerShell and a local `/v1/models` probe. Do not enable Cockpit automatic account switching at the same time.
 - Editing `codex_local_access.json` alone may not start the listener in the already-running Cockpit process; the UI command `codex_local_access_set_enabled`/`codex_local_access_activate` starts the in-process gateway. Do not restart Cockpit or Codex to force this unless the operator confirms that action for the current incident.
+- In the custom local Cockpit build, API-service activation must not clear Cockpit's current Codex account or bind the default instance to `__api_service__`. The governed gateway lane keeps Codex pointed at LiteLLM and lets Cockpit local access follow the current account as the upstream.
 
 ## Allowed Actions
 - Read-only diagnosis:
