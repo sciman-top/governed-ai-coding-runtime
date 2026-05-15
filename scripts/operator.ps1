@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexInteropCheck", "CodexProjectionSmoke", "CodexInteropRepair", "CodexApiProjectionRepair", "CodexOauthProjectionRepair", "CodexLaunchBindingRepair", "CodexGatewayEnable", "CodexGatewayRollback", "CodexSwitchRecord", "CodexGuardAbsenceCheck", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
+  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexInteropCheck", "CodexProjectionSmoke", "CodexInteropRepair", "CodexApiProjectionRepair", "CodexOauthProjectionRepair", "CodexLaunchBindingRepair", "CodexGatewayEnable", "CodexGatewayRollback", "CodexModeSync", "CodexSwitchRecord", "CodexGuardAbsenceCheck", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
   [string]$Action = "Help",
 
   [ValidateSet("quick", "full", "l1", "l2", "l3")]
@@ -260,6 +260,7 @@ AI 推荐:
                          修复 Cockpit Codex 默认启动设置为 followLocalAccount，清除固定 bindAccountId；会创建备份，不重启 Codex。
   CodexGatewayEnable     切到新模式：启用 Codex -> LiteLLM -> Cockpit API service gateway；会写入可回滚 Codex profile，不重启 Codex。
   CodexGatewayRollback   从新模式回滚：停止本仓管理的 LiteLLM 进程并移除 managed gateway config block；旧 direct OAuth/API projection 仍用上面两个 repair 动作选择。
+  CodexModeSync          读取 Cockpit 的 codex_runtime_mode.json，并按 direct_projection/gateway_litellm 自动同步本机 Codex/LiteLLM 状态；不重启 Codex。
   CodexSwitchRecord      保存当前 Cockpit/Codex 切换快照到 docs/change-evidence/codex-cockpit-snapshots。
   CodexGuardAbsenceCheck
                          确认本机不存在已退役 Codex/Cockpit 后台 guard、启动项、worker 和 installed wrapper。
@@ -410,6 +411,10 @@ function Invoke-CodexGatewayRollback {
   Invoke-PwshScript -Name "codex-gateway-rollback" -ScriptPath "scripts/Manage-LiteLLMGateway.ps1" -ScriptArguments @("-Action", "Rollback")
 }
 
+function Invoke-CodexModeSync {
+  Invoke-PwshScript -Name "codex-mode-sync" -ScriptPath "scripts/Sync-CodexCockpitMode.ps1"
+}
+
 function Invoke-CodexSwitchRecord {
   $label = "operator-ui-" + (Get-Date -Format "yyyyMMdd-HHmmss")
   Invoke-PwshScript -Name "codex-switch-record" -ScriptPath "scripts/Save-CodexCockpitSwitchRecord.ps1" -ScriptArguments @("-Label", $label)
@@ -558,6 +563,7 @@ try {
     "CodexLaunchBindingRepair" { Invoke-CodexLaunchBindingRepair }
     "CodexGatewayEnable" { Invoke-CodexGatewayEnable }
     "CodexGatewayRollback" { Invoke-CodexGatewayRollback }
+    "CodexModeSync" { Invoke-CodexModeSync }
     "CodexSwitchRecord" { Invoke-CodexSwitchRecord }
     "CodexGuardAbsenceCheck" { Invoke-CodexGuardAbsenceCheck }
     "RulesDryRun" { Invoke-RulesDryRun }

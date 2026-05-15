@@ -38,6 +38,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action Codex
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexOauthProjectionRepair
 ```
 
+When Cockpit self-use builds are the mode owner, the canonical state file is `~/.antigravity_cockpit/codex_runtime_mode.json`. Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexModeSync` to materialize that state into either gateway mode or the old direct API/OAuth projection mode.
+
 The same choices are exposed through root shortcuts: `.\run.ps1 codex-mode-new`, `.\run.ps1 codex-mode-rollback`, `.\run.ps1 codex-mode-old-api`, and `.\run.ps1 codex-mode-old-oauth`.
 
 Install or refresh LiteLLM:

@@ -160,11 +160,12 @@ Codex/Cockpit now has an explicit old/new mode switch. The new mode uses `Codex 
 ```powershell
 .\run.ps1 codex-mode-new
 .\run.ps1 codex-mode-rollback
+.\run.ps1 codex-mode-sync
 .\run.ps1 codex-mode-old-api
 .\run.ps1 codex-mode-old-oauth
 ```
 
-`codex-mode-new` enables the repository-managed LiteLLM gateway profile. `codex-mode-old-api` and `codex-mode-old-oauth` call `CodexApiProjectionRepair` and `CodexOauthProjectionRepair`, preserving the old direct API/OAuth projection switching path. These actions must not restart Codex App or restore background guards, generic `--apply`, provider bucket migration, no-op launchers, or restart wrappers.
+`codex-mode-sync` reads `~/.antigravity_cockpit/codex_runtime_mode.json` written by the Cockpit self-use build, then materializes either LiteLLM gateway mode or the old direct API/OAuth projection mode. `codex-mode-new` enables the repository-managed LiteLLM gateway profile. `codex-mode-old-api` and `codex-mode-old-oauth` call `CodexApiProjectionRepair` and `CodexOauthProjectionRepair`, preserving the old direct API/OAuth projection switching path. These actions must not restart Codex App or restore background guards, generic `--apply`, provider bucket migration, no-op launchers, or restart wrappers.
 
 To inspect what Cockpit account switching changed, start a read-only trace window, then switch accounts manually in Cockpit Tools. The report records Cockpit state, Codex auth/config, history bucket, and related log events with tokens and API keys redacted:
 

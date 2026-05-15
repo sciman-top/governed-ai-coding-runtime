@@ -16,6 +16,7 @@ Use the mode switch deliberately:
 - Old direct API projection mode: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexApiProjectionRepair`
 - Old direct OAuth projection mode: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexOauthProjectionRepair`
 - Gateway rollback before returning to direct projection when needed: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexGatewayRollback`
+- Cockpit-owned automatic materialization: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexModeSync` reads `~/.antigravity_cockpit/codex_runtime_mode.json` and chooses the matching path.
 
 This runbook does not repair the `Codex -> LiteLLM -> Cockpit API service` gateway lane. In gateway mode, Codex must stay on `model_provider = "litellm_gateway"` with `auth_mode = "apikey"` and `base_url = "http://127.0.0.1:4000/v1"`; direct Cockpit projection repairs intentionally overwrite that shape.
 
