@@ -86,15 +86,20 @@ class CodexCockpitPolicyContractTests(unittest.TestCase):
 
         required_plan_text = [
             "Cockpit Tools automatic switching, Codex batch quota refresh, and Cockpit Codex API service stay disabled by default",
+            "Preferred gateway architecture: Cockpit owns ChatGPT/OAuth subscription-account state; LiteLLM owns normal API keys",
             "Do not treat Cockpit Tools' Codex API service at `127.0.0.1:2876/v1` as the default proxy implementation",
+            "best placed behind a dedicated gateway such as LiteLLM",
             "Cockpit API service is not the default proxy",
+            "gateway_litellm_with_cockpit_upstream",
+            "A Cockpit-aware adapter is deferred until account-label, group, quota, or routing semantics are required",
             "verify listener scope and host firewall posture",
         ]
         for text in required_plan_text:
             with self.subTest(text=text):
                 self.assertIn(text, plan)
 
-        self.assertIn("treat Cockpit's `127.0.0.1:2876/v1` Codex API service as the default proxy", index)
+        self.assertIn("LiteLLM owns normal API-key providers", index)
+        self.assertIn("Cockpit API service can be a hardened opt-in upstream", index)
         self.assertIn("without listener-scope and firewall evidence", index)
 
 
