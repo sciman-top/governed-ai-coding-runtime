@@ -74,6 +74,11 @@ class LiteLlmGatewayContractTests(unittest.TestCase):
 
         self.assertIn("Codex -> LiteLLM -> Cockpit API service", runbook)
         self.assertIn("Cockpit Tools remains the owner", runbook)
+        self.assertIn("selectable mode, not a replacement for the old direct Codex App/CLI OAuth/API projection", runbook)
+        self.assertIn("CodexGatewayEnable", runbook)
+        self.assertIn("CodexGatewayRollback", runbook)
+        self.assertIn("CodexApiProjectionRepair", runbook)
+        self.assertIn("CodexOauthProjectionRepair", runbook)
         self.assertIn("LiteLLM binds to `127.0.0.1:4000` by default", runbook)
         self.assertIn("activates `model_provider = \"litellm_gateway\"`", runbook)
         self.assertIn("Codex App is not restarted by this lane", runbook)

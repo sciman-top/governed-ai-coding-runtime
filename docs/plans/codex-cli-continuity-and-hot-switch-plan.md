@@ -7,6 +7,7 @@
 - Current local policy: Cockpit Tools local API service is enabled only as an operator-directed LiteLLM upstream mode after fresh listener-scope and Windows Firewall posture evidence. Codex App is not restarted by this lane.
 - Preferred gateway architecture: Cockpit owns ChatGPT/OAuth subscription-account state; LiteLLM owns normal API keys, multi-provider routing, logging, budgets, and unified OpenAI-compatible gateway behavior; Cockpit API service may be registered behind LiteLLM as one opt-in upstream provider after local listener hardening.
 - Plan rebaseline: keep CCHS-001 through CCHS-004 as completed or partial native-boundary groundwork. CCHS-005A through CCHS-005F now provide a live `Codex -> LiteLLM -> Cockpit API service` lane; keep the old segmented-runner path as fallback, not the primary continuation route.
+- Compatibility supplement: the new gateway lane must not retire the old direct Cockpit projection lane. Codex App/CLI must still support explicit OAuth/API roundtrip switching through `CodexOauthProjectionRepair` and `CodexApiProjectionRepair`; the operator-facing choice is `new_gateway_litellm` versus `old_direct_projection_api` / `old_direct_projection_oauth`.
 - Scope boundary: prioritize Codex CLI continuity through short-lived or resumable CLI runs. Treat Codex App hot account switching as unsupported by the native App path until official evidence changes.
 
 ## Goal
@@ -44,6 +45,9 @@ Codex App remains native and restart-required for account changes unless a later
 | `native_app_restart_required` | App uses account after restart | Manual or explicitly enabled restart | Medium to high | Diagnostics only |
 | `gateway_litellm_default` | Route normal API-key traffic through LiteLLM | LiteLLM owns API keys, provider routing, logging, budgets, and limits | Low to medium | Preferred long-term gateway |
 | `gateway_litellm_with_cockpit_upstream` | Register Cockpit API service as one LiteLLM upstream | Cockpit owns current OAuth/subscription account; LiteLLM owns client-facing gateway | Medium | Preferred Cockpit integration shape after listener hardening |
+| `old_direct_projection_api` | Preserve the old explicit API roundtrip path for Codex App/CLI | `CodexApiProjectionRepair` projects the current Cockpit API account directly into Codex auth/config/provider/history | Medium | Supported compatibility mode |
+| `old_direct_projection_oauth` | Preserve the old explicit OAuth roundtrip path for Codex App/CLI | `CodexOauthProjectionRepair` projects the current Cockpit OAuth account back to built-in `openai` auth/config/history | Medium | Supported compatibility mode |
+| `new_gateway_litellm` | Use the new gateway lane | `Manage-LiteLLMGateway.ps1 -Action All` writes the reversible `litellm_gateway` profile and uses Cockpit API service behind LiteLLM | Medium | Preferred new opt-in mode |
 | `cockpit_aware_adapter` | Route based on Cockpit account labels, groups, or quota metadata | Custom adapter reads Cockpit state and exposes finer routing controls | Medium to high | Only if single-upstream Cockpit API is insufficient |
 | `proxy_experimental` | Route requests through a dedicated local account proxy | Proxy chooses account per request or failure | Medium to high | Later PoC only; Cockpit API service is not the default proxy |
 
@@ -52,6 +56,7 @@ Codex App remains native and restart-required for account changes unless a later
 ### Rebaseline Cleanup
 - Keep CCHS-002, CCHS-003, and CCHS-004 because they already provide read-only switch health, bounded CLI segment continuity, and operator visibility.
 - Do not delete the segmented runner. It remains the fallback when gateway mode is disabled or broken.
+- Do not delete or deprecate the old direct OAuth/API projection roundtrip. It remains the compatibility lane for Codex App/CLI when the operator chooses direct Cockpit projection instead of LiteLLM gateway mode.
 - Do not treat CCHS-003 live smoke as a blocker for the LiteLLM lane. Gateway mode should be validated through its own mock, local, and live smoke gates.
 - Supersede the old single CCHS-005 coarse PoC with CCHS-005A through CCHS-005F below.
 
@@ -236,16 +241,36 @@ Codex App remains native and restart-required for account changes unless a later
 
 **Dependencies:** CCHS-005E.
 
+### CCHS-005H Operator Mode Switch
+**Purpose:** Provide an explicit old/new choice switch without hiding the old App/CLI OAuth/API roundtrip behavior.
+
+**Acceptance criteria:**
+- [x] `scripts/operator.ps1 -Action CodexGatewayEnable` selects the new `Codex -> LiteLLM -> Cockpit API service` lane by calling `scripts/Manage-LiteLLMGateway.ps1 -Action All`.
+- [x] `scripts/operator.ps1 -Action CodexGatewayRollback` removes the managed gateway shape by calling `scripts/Manage-LiteLLMGateway.ps1 -Action Rollback`.
+- [x] `CodexApiProjectionRepair` and `CodexOauthProjectionRepair` remain the old direct projection switches for API and OAuth respectively.
+- [x] Root shortcuts expose the same choice: `.\run.ps1 codex-mode-new`, `.\run.ps1 codex-mode-old-api`, `.\run.ps1 codex-mode-old-oauth`, and `.\run.ps1 codex-mode-rollback`.
+- [x] The switch does not restore generic `--apply`, provider-bucket migration, background guard, no-op launcher, restart wrapper, or automatic Codex restart behavior.
+
+**Verification:**
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action CodexGatewayEnable -DryRun`
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action CodexGatewayRollback -DryRun`
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action CodexApiProjectionRepair -DryRun`
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action CodexOauthProjectionRepair -DryRun`
+
+**Dependencies:** CCHS-005D, direct projection repair runbook.
+
 ## Recommended Execution Order
 1. Complete CCHS-001 and preserve evidence.
 2. Implement CCHS-002 as read-only guard.
 3. Build CCHS-003 against mocks before any live Codex run.
 4. Add CCHS-004 only after the status vocabulary is stable.
 5. Execute CCHS-005A through CCHS-005F as the active gateway lane for `Codex -> LiteLLM -> Cockpit API service`.
-6. Build a Cockpit-aware adapter only if the single Cockpit upstream model cannot satisfy account-label, group, quota, or routing requirements.
+6. Keep CCHS-005H available as the old/new operator switch: new gateway mode is preferred for local gateway work, while old direct API/OAuth projection remains supported for Codex App/CLI roundtrips.
+7. Build a Cockpit-aware adapter only if the single Cockpit upstream model cannot satisfy account-label, group, quota, or routing requirements.
 
 ## Rollback
 - Planning-only rollback: revert this file and its plan-index entry.
 - Checker rollback: remove the read-only checker and tests; no live state should need restoration.
 - Runner rollback: disable the CLI runner entrypoint and fall back to manual `codex exec` / `codex resume`.
 - Gateway rollback: restore `config.toml` provider/base URL from backup, stop LiteLLM, disable Cockpit API service, remove any temporary firewall rule only if it was created by this lane, and return to Cockpit native account switching.
+- Mode-switch rollback: run `scripts/operator.ps1 -Action CodexGatewayRollback`, then choose the old direct path explicitly with `CodexApiProjectionRepair` or `CodexOauthProjectionRepair` according to the current Cockpit account type.

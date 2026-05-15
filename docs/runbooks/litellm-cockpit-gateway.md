@@ -9,6 +9,8 @@ Codex -> LiteLLM -> Cockpit API service
 
 Cockpit Tools remains the owner of ChatGPT/OAuth subscription accounts, quota facts, refresh, and manual account switching. LiteLLM is the client-facing gateway for normal API-key providers and can register Cockpit API service as one opt-in upstream named `cockpit-current`.
 
+This new gateway lane is a selectable mode, not a replacement for the old direct Codex App/CLI OAuth/API projection behavior. Keep the old mode available through `CodexApiProjectionRepair` and `CodexOauthProjectionRepair` when the operator wants Cockpit Tools to project the current API or OAuth account directly into Codex.
+
 ## Safety Boundary
 - LiteLLM is installed under `.runtime/litellm/venv`; it is not installed into global Python.
 - Runtime config, logs, PID, and local secrets live under `.runtime/litellm/`, which is gitignored.
@@ -26,6 +28,17 @@ Cockpit Tools remains the owner of ChatGPT/OAuth subscription accounts, quota fa
 - The current self-build disables Codex quota auto-refresh by default and skips automatic quota refresh after Codex account import/token add. Manual refresh remains available, but the gateway lane should not sweep large imported free-account pools.
 
 ## Commands
+
+Mode switch overview:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexGatewayEnable
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexGatewayRollback
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexApiProjectionRepair
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexOauthProjectionRepair
+```
+
+The same choices are exposed through root shortcuts: `.\run.ps1 codex-mode-new`, `.\run.ps1 codex-mode-rollback`, `.\run.ps1 codex-mode-old-api`, and `.\run.ps1 codex-mode-old-oauth`.
 
 Install or refresh LiteLLM:
 

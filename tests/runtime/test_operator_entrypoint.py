@@ -59,6 +59,10 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn(".\\run.ps1 readiness -OpenUi", completed.stdout)
         self.assertNotIn("codex-optimize", completed.stdout)
         self.assertIn("codex-interop", completed.stdout)
+        self.assertIn("codex-mode-new", completed.stdout)
+        self.assertIn("codex-mode-old-api", completed.stdout)
+        self.assertIn("codex-mode-old-oauth", completed.stdout)
+        self.assertIn("codex-mode-rollback", completed.stdout)
         self.assertIn("codex-api-repair", completed.stdout)
         self.assertIn("rules-check", completed.stdout)
         self.assertIn("operator-help", completed.stdout)
@@ -174,6 +178,8 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("Readiness", completed.stdout)
         self.assertNotIn("CodexLocalOptimize", completed.stdout)
         self.assertIn("CodexInteropCheck", completed.stdout)
+        self.assertIn("CodexGatewayEnable", completed.stdout)
+        self.assertIn("CodexGatewayRollback", completed.stdout)
         self.assertIn("FeedbackReport", completed.stdout)
         self.assertIn("CleanupTargets", completed.stdout)
         self.assertIn("UninstallGovernance", completed.stdout)
@@ -376,6 +382,40 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertNotIn("--repair-current-cockpit-account-projection", completed.stdout)
         self.assertNotIn("--apply", completed.stdout)
         self.assertNotIn("--migrate-provider-bucket", completed.stdout)
+
+    def test_operator_codex_gateway_mode_switches_are_available_as_dry_run(self) -> None:
+        cases = [
+            ("CodexGatewayEnable", "codex-gateway-enable", "All"),
+            ("CodexGatewayRollback", "codex-gateway-rollback", "Rollback"),
+        ]
+        for action, step_name, manage_action in cases:
+            with self.subTest(action=action):
+                completed = subprocess.run(
+                    [
+                        "pwsh",
+                        "-NoProfile",
+                        "-ExecutionPolicy",
+                        "Bypass",
+                        "-File",
+                        str(ROOT / "scripts" / "operator.ps1"),
+                        "-Action",
+                        action,
+                        "-DryRun",
+                    ],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    cwd=ROOT,
+                )
+
+                self.assertIn(f"DRY-RUN {step_name}", completed.stdout)
+                self.assertIn("scripts/Manage-LiteLLMGateway.ps1", completed.stdout)
+                self.assertIn("-Action", completed.stdout)
+                self.assertIn(manage_action, completed.stdout)
+                self.assertNotIn("--apply", completed.stdout)
+                self.assertNotIn("--migrate-provider-bucket", completed.stdout)
 
     def test_operator_codex_projection_smoke_is_read_only_dry_run(self) -> None:
         completed = subprocess.run(

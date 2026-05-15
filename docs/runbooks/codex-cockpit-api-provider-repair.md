@@ -9,6 +9,14 @@ API key login is required, but ChatGPT is currently being used. Logging out.
 
 This runbook is for local Codex/Cockpit interoperability only. Do not restart, stop, kill, or auto-launch Codex App unless the operator explicitly confirms that action for the current incident.
 
+This runbook covers the old direct Cockpit projection mode. It remains supported for Codex App/CLI OAuth/API roundtrips even though the new preferred gateway lane is `Codex -> LiteLLM -> Cockpit API service`.
+
+Use the mode switch deliberately:
+- New gateway mode: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexGatewayEnable`
+- Old direct API projection mode: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexApiProjectionRepair`
+- Old direct OAuth projection mode: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexOauthProjectionRepair`
+- Gateway rollback before returning to direct projection when needed: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexGatewayRollback`
+
 This runbook does not repair the `Codex -> LiteLLM -> Cockpit API service` gateway lane. In gateway mode, Codex must stay on `model_provider = "litellm_gateway"` with `auth_mode = "apikey"` and `base_url = "http://127.0.0.1:4000/v1"`; direct Cockpit projection repairs intentionally overwrite that shape.
 
 ## Highest Priority Contract
@@ -16,6 +24,7 @@ This runbook does not repair the `Codex -> LiteLLM -> Cockpit API service` gatew
 - Before changing any Codex/Cockpit auth, provider, API relay, launcher, history, or repair behavior, run a read-only baseline with `CodexProjectionSmoke` or `codex-interop-check.py --quick-launch` and inspect this runbook.
 - Only three write entrypoints are allowed: `CodexApiProjectionRepair`, `CodexOauthProjectionRepair`, and `CodexLaunchBindingRepair`. They must create backups, must not restart/stop/kill Codex, and must keep config, auth, Cockpit account/provider metadata, `threads.model_provider`, and picker visibility metadata aligned.
 - Do not run `CodexApiProjectionRepair` or `CodexOauthProjectionRepair` while the intended route is `Codex -> LiteLLM -> Cockpit API service`. Use `scripts\Manage-LiteLLMGateway.ps1 -Action PrepareCockpitUpstream` and `-Action WriteCodexProfile` instead.
+- Do not treat the gateway lane as a replacement for direct projection. It is a new selectable mode; the old `CodexApiProjectionRepair` / `CodexOauthProjectionRepair` roundtrip must continue to work for Codex App/CLI.
 - Do not reintroduce generic `--apply`, `--migrate-provider-bucket`, SQLite provider triggers, background guards / 后台 guard, no-op launchers, restart wrappers, CLI preflight wrappers, automatic Codex restart / 自动重启 Codex, or `[model_providers.openai]`.
 - History sharing must not override API relay connectivity. If a relay needs `supports_websockets=false`, use the Cockpit API account's non-built-in provider bucket and migrate/verify history into that bucket; when returning to OAuth, migrate/verify history back to `openai`.
 - Enforce this contract with `tests.runtime.test_codex_cockpit_policy_contract`, `tests.runtime.test_codex_shared_launcher`, `CodexProjectionSmoke`, and `Test-CodexGuardAbsence.ps1` before claiming the issue is fixed.
