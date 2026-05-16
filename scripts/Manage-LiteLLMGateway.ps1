@@ -227,6 +227,11 @@ model_list:
       model: openai/$UpstreamModel
       api_base: http://127.0.0.1:$CockpitPort/v1
       api_key: $cockpitApiKey
+  - model_name: $UpstreamModel
+    litellm_params:
+      model: openai/$UpstreamModel
+      api_base: http://127.0.0.1:$CockpitPort/v1
+      api_key: $cockpitApiKey
 
 general_settings:
   master_key: $masterKey

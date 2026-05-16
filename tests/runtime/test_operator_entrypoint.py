@@ -62,7 +62,6 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("codex-mode-new", completed.stdout)
         self.assertIn("codex-mode-old-api", completed.stdout)
         self.assertIn("codex-mode-old-oauth", completed.stdout)
-        self.assertIn("codex-mode-sync", completed.stdout)
         self.assertIn("codex-mode-rollback", completed.stdout)
         self.assertIn("codex-api-repair", completed.stdout)
         self.assertIn("rules-check", completed.stdout)
@@ -181,7 +180,6 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("CodexInteropCheck", completed.stdout)
         self.assertIn("CodexGatewayEnable", completed.stdout)
         self.assertIn("CodexGatewayRollback", completed.stdout)
-        self.assertIn("CodexModeSync", completed.stdout)
         self.assertIn("FeedbackReport", completed.stdout)
         self.assertIn("CleanupTargets", completed.stdout)
         self.assertIn("UninstallGovernance", completed.stdout)
@@ -418,30 +416,6 @@ class OperatorEntrypointTests(unittest.TestCase):
                 self.assertIn(manage_action, completed.stdout)
                 self.assertNotIn("--apply", completed.stdout)
                 self.assertNotIn("--migrate-provider-bucket", completed.stdout)
-
-    def test_operator_codex_mode_sync_is_available_as_dry_run(self) -> None:
-        completed = subprocess.run(
-            [
-                "pwsh",
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                str(ROOT / "scripts" / "operator.ps1"),
-                "-Action",
-                "CodexModeSync",
-                "-DryRun",
-            ],
-            check=True,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            cwd=ROOT,
-        )
-
-        self.assertIn("DRY-RUN codex-mode-sync", completed.stdout)
-        self.assertIn("scripts/Sync-CodexCockpitMode.ps1", completed.stdout)
 
     def test_operator_codex_projection_smoke_is_read_only_dry_run(self) -> None:
         completed = subprocess.run(

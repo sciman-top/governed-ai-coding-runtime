@@ -160,12 +160,11 @@ Codex/Cockpit 现在有明确的新旧模式开关。新模式走 `Codex -> Lite
 ```powershell
 .\run.ps1 codex-mode-new
 .\run.ps1 codex-mode-rollback
-.\run.ps1 codex-mode-sync
 .\run.ps1 codex-mode-old-api
 .\run.ps1 codex-mode-old-oauth
 ```
 
-`codex-mode-sync` 会读取 Cockpit 自用版写入的 `~/.antigravity_cockpit/codex_runtime_mode.json`，再自动同步到 LiteLLM gateway 或旧 direct API/OAuth projection。`codex-mode-new` 会启用本仓管理的 LiteLLM gateway profile；`codex-mode-old-api` / `codex-mode-old-oauth` 分别调用 `CodexApiProjectionRepair` 和 `CodexOauthProjectionRepair`，继续保留旧的 API/OAuth 直接投影切换能力。以上动作都不得重启 Codex App，也不得恢复后台 guard、generic `--apply`、provider bucket migration、no-op launcher 或 restart wrapper。
+自用版 Cockpit 是 `direct_projection` / `gateway_litellm` 的运行时模式 owner：它负责写入 Codex App/CLI 的最终投影，并保持 API/OAuth 切换、LiteLLM API 指向和 Picker 历史可见性。本仓只保留契约、runbook、smoke 与显式 repair 入口。`codex-mode-new` 会启用本仓管理的 LiteLLM gateway profile；`codex-mode-old-api` / `codex-mode-old-oauth` 分别调用 `CodexApiProjectionRepair` 和 `CodexOauthProjectionRepair`，继续保留旧的 API/OAuth 直接投影修复能力。以上动作都不得重启 Codex App，也不得恢复后台 guard、generic `--apply`、provider bucket migration、no-op launcher 或 restart wrapper。
 
 要定位 Cockpit 切号到底改了哪些文件，可先启动只读追踪窗口，再在 Cockpit Tools 里手动切换账号；报告会记录 Cockpit 状态、Codex auth/config、history bucket 和相关日志事件，但会脱敏 token/API key：
 

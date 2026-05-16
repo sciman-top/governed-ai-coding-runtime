@@ -247,8 +247,8 @@ Codex App remains native and restart-required for account changes unless a later
 **Acceptance criteria:**
 - [x] `scripts/operator.ps1 -Action CodexGatewayEnable` selects the new `Codex -> LiteLLM -> Cockpit API service` lane by calling `scripts/Manage-LiteLLMGateway.ps1 -Action All`.
 - [x] `scripts/operator.ps1 -Action CodexGatewayRollback` removes the managed gateway shape by calling `scripts/Manage-LiteLLMGateway.ps1 -Action Rollback`.
-- [x] Cockpit self-use builds persist the canonical choice in `codex_runtime_mode.json` with `mode=direct_projection|gateway_litellm`, `accountKind=oauth|api|unknown`, `currentAccountId`, and `updatedAt`.
-- [x] `scripts/operator.ps1 -Action CodexModeSync` reads `codex_runtime_mode.json` and materializes the matching governed runtime state.
+- [x] Cockpit self-use builds own the canonical choice with `mode=direct_projection|gateway_litellm`, `accountKind=oauth|api|unknown`, `currentAccountId`, and `updatedAt`.
+- [x] Cockpit materializes the matching Codex App/CLI projection directly; this repository keeps contract, smoke, rollback, and explicit repair checks instead of acting as the runtime mode executor.
 - [x] `CodexApiProjectionRepair` and `CodexOauthProjectionRepair` remain the old direct projection switches for API and OAuth respectively.
 - [x] Root shortcuts expose the same choice: `.\run.ps1 codex-mode-new`, `.\run.ps1 codex-mode-old-api`, `.\run.ps1 codex-mode-old-oauth`, and `.\run.ps1 codex-mode-rollback`.
 - [x] The switch does not restore generic `--apply`, provider-bucket migration, background guard, no-op launcher, restart wrapper, or automatic Codex restart behavior.

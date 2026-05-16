@@ -21,7 +21,8 @@ This new gateway lane is a selectable mode, not a replacement for the old direct
 - This lane intentionally avoids the 409-account free pool. Routing strategy becomes a non-factor because the upstream pool contains exactly one OAuth account.
 - Codex App is not restarted by this lane. New Codex CLI/App sessions use the local gateway after operator-controlled start.
 - An already-running Codex App process may keep showing its previous OAuth session until it is restarted by the operator. The file-level truth for new Codex processes is `~/.codex/config.toml` plus `~/.codex/auth.json`.
-- The Codex config change is reversible but active: it activates `model_provider = "litellm_gateway"`, `forced_login_method = "api"`, and `model = "cockpit-current"` at top level, writes a local API-key `auth.json`, and keeps a managed `profiles.litellm-gateway` / `model_providers.litellm_gateway` block for traceability.
+- The repository-managed compatibility profile is reversible: it activates `model_provider = "litellm_gateway"`, `forced_login_method = "api"`, and `model = "cockpit-current"` at top level, writes a local API-key `auth.json`, and keeps a managed `profiles.litellm-gateway` / `model_providers.litellm_gateway` block for traceability.
+- The self-use Cockpit runtime switch uses the same provider-first shape: `model_provider = "litellm_gateway"`, `forced_login_method = "api"`, `base_url = "http://127.0.0.1:4000/v1"`, and `supports_websockets = false`. Picker history is kept visible by projecting or migrating the active history bucket during mode switches, not by forcing gateway traffic through the built-in `openai` provider.
 - The setup clears Cockpit default-instance fixed account binding by setting `codex_instances.json.defaultSettings.followLocalAccount=true`, `bindAccountId=null`, and `lastPid=null`. A fixed `bindAccountId` can make a later Cockpit launch re-project an old OAuth account and bypass `127.0.0.1:4000`.
 - LiteLLM proxy `master_key` is intentionally synchronized to the Cockpit local access key for this local-only lane. This avoids a second virtual-key database and keeps Codex's `Authorization` header valid if LiteLLM forwards it to the Cockpit upstream.
 - The current self-build uses `gpt-5.5` as the LiteLLM upstream default. Override `-UpstreamModel` only for a documented compatibility probe.
@@ -38,7 +39,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action Codex
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexOauthProjectionRepair
 ```
 
-When Cockpit self-use builds are the mode owner, the canonical state file is `~/.antigravity_cockpit/codex_runtime_mode.json`. Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexModeSync` to materialize that state into either gateway mode or the old direct API/OAuth projection mode.
+When Cockpit self-use builds are the mode owner, the mode state is internal to Cockpit and Cockpit materializes the final Codex App/CLI projection itself. `gateway_litellm` points Codex App/CLI at the local LiteLLM API; `direct_projection` restores the current Cockpit API/OAuth account directly into Codex App/CLI. This repository only verifies and repairs explicit failure modes.
 
 The same choices are exposed through root shortcuts: `.\run.ps1 codex-mode-new`, `.\run.ps1 codex-mode-rollback`, `.\run.ps1 codex-mode-old-api`, and `.\run.ps1 codex-mode-old-oauth`.
 

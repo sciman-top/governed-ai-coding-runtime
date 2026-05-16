@@ -16,9 +16,9 @@ Use the mode switch deliberately:
 - Old direct API projection mode: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexApiProjectionRepair`
 - Old direct OAuth projection mode: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexOauthProjectionRepair`
 - Gateway rollback before returning to direct projection when needed: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexGatewayRollback`
-- Cockpit-owned automatic materialization: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\operator.ps1 -Action CodexModeSync` reads `~/.antigravity_cockpit/codex_runtime_mode.json` and chooses the matching path.
+- Cockpit-owned automatic materialization lives in the self-use Cockpit build: `direct_projection` writes the current Cockpit API/OAuth account directly into Codex App/CLI, while `gateway_litellm` writes Codex App/CLI to the local LiteLLM API. This repository keeps explicit repair and smoke entrypoints only.
 
-This runbook does not repair the `Codex -> LiteLLM -> Cockpit API service` gateway lane. In gateway mode, Codex must stay on `model_provider = "litellm_gateway"` with `auth_mode = "apikey"` and `base_url = "http://127.0.0.1:4000/v1"`; direct Cockpit projection repairs intentionally overwrite that shape.
+This runbook does not repair the `Codex -> LiteLLM -> Cockpit API service` gateway lane. In Cockpit-owned gateway mode, Codex must use a non-built-in `litellm_gateway` provider with `forced_login_method = "api"` and `supports_websockets = false`; direct Cockpit projection repairs intentionally overwrite that shape when returning to OAuth or direct API.
 
 ## Highest Priority Contract
 - Treat Codex/Cockpit OAuth/API roundtrips, `state_5.sqlite.threads.model_provider` history buckets, picker visibility metadata, and repair entrypoints as the highest-priority local interoperability contract for this repository.

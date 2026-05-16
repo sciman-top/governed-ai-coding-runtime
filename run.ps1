@@ -31,7 +31,6 @@ AI 推荐:
   .\run.ps1 codex-mode-new       切到新模式：Codex -> LiteLLM -> Cockpit API service gateway。
   .\run.ps1 codex-mode-old-api   切到旧 direct API projection 模式：当前 Cockpit API account -> Codex CLI/App。
   .\run.ps1 codex-mode-old-oauth 切到旧 direct OAuth projection 模式：当前 Cockpit OAuth account -> Codex CLI/App。
-  .\run.ps1 codex-mode-sync      读取 Cockpit mode state 并自动同步到 LiteLLM 或旧 direct projection。
   .\run.ps1 codex-mode-rollback  回滚本仓管理的 LiteLLM gateway 配置块与进程。
   .\run.ps1 codex-api-repair     显式修复当前 Cockpit API account 到 Codex CLI/App；创建备份，不重启 Codex。
   .\run.ps1 codex-record         保存当前 Codex / Cockpit Tools 切换记录。
@@ -78,8 +77,6 @@ function Resolve-OperatorAction {
     "codex-gateway-enable" = "CodexGatewayEnable"
     "codex-mode-rollback" = "CodexGatewayRollback"
     "codex-gateway-rollback" = "CodexGatewayRollback"
-    "codex-mode-sync" = "CodexModeSync"
-    "codex-sync-mode" = "CodexModeSync"
     "codex-mode-old-api" = "CodexApiProjectionRepair"
     "codex-use-old-api" = "CodexApiProjectionRepair"
     "codex-mode-old-oauth" = "CodexOauthProjectionRepair"

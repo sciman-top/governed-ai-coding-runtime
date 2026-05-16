@@ -106,7 +106,7 @@ class CodexCockpitPolicyContractTests(unittest.TestCase):
             "CCHS-005H Operator Mode Switch",
             "direct_projection",
             "gateway_litellm",
-            "CodexModeSync",
+            "Cockpit materializes the matching Codex App/CLI projection directly",
             "A Cockpit-aware adapter is deferred until account-label, group, quota, or routing semantics are required",
             "model alias `cockpit-current`",
             "Preserve history bucket expectations and do not reintroduce `[model_providers.openai]`",
