@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexInteropCheck", "CodexProjectionSmoke", "CodexSwitchRecord", "CodexGuardAbsenceCheck", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
+  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexSwitchRecord", "CodexGuardAbsenceCheck", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
   [string]$Action = "Help",
 
   [ValidateSet("quick", "full", "l1", "l2", "l3")]
@@ -250,8 +250,6 @@ AI 推荐:
   Targets                列出 target catalog 中的 active target repos。
   FastFeedback           执行本仓日常编码快速反馈：build + quick feedback tests；不替代交付前 Readiness。
   Readiness              执行 build -> test -> contract/invariant -> hotspot，然后生成 operator UI。
-  CodexInteropCheck      只读检查历史遗留 Codex/Cockpit 状态；不写入。实际切换由 Cockpit Tools 自用版负责。
-  CodexProjectionSmoke   只读 smoke：quick provider/auth/history 检查 + retired guard 缺席检查；不写入、不重启 Codex。
   CodexSwitchRecord      保存当前 Cockpit/Codex 切换快照到 docs/change-evidence/codex-cockpit-snapshots。
   CodexGuardAbsenceCheck
                          确认本机不存在已退役 Codex/Cockpit 后台 guard、启动项、worker 和 installed wrapper。
@@ -324,30 +322,6 @@ function Invoke-FastFeedback {
     -Name "quick-feedback" `
     -ScriptPath "scripts/verify-repo.ps1" `
     -ScriptArguments @("-Check", "RuntimeQuick")
-}
-
-function Invoke-CodexInteropCheck {
-  Invoke-PythonScript -Name "codex-interop-check" -ScriptPath "scripts/codex-interop-check.py" -ScriptArguments @(
-    "--codex-home",
-    (Join-Path $HOME ".codex"),
-    "--cc-switch-db",
-    (Join-Path $HOME ".cc-switch\cc-switch.db"),
-    "--cockpit-home",
-    (Join-Path $HOME ".antigravity_cockpit")
-  )
-}
-
-function Invoke-CodexProjectionSmoke {
-  Invoke-PythonScript -Name "codex-projection-smoke" -ScriptPath "scripts/codex-interop-check.py" -ScriptArguments @(
-    "--codex-home",
-    (Join-Path $HOME ".codex"),
-    "--cc-switch-db",
-    (Join-Path $HOME ".cc-switch\cc-switch.db"),
-    "--cockpit-home",
-    (Join-Path $HOME ".antigravity_cockpit"),
-    "--quick-launch"
-  )
-  Invoke-CodexGuardAbsenceCheck
 }
 
 function Invoke-CodexSwitchRecord {
@@ -490,8 +464,6 @@ try {
     "Targets" { Invoke-Targets }
     "FastFeedback" { Invoke-FastFeedback }
     "Readiness" { Invoke-Readiness }
-    "CodexInteropCheck" { Invoke-CodexInteropCheck }
-    "CodexProjectionSmoke" { Invoke-CodexProjectionSmoke }
     "CodexSwitchRecord" { Invoke-CodexSwitchRecord }
     "CodexGuardAbsenceCheck" { Invoke-CodexGuardAbsenceCheck }
     "RulesDryRun" { Invoke-RulesDryRun }

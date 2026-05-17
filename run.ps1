@@ -27,7 +27,6 @@ AI 推荐:
   .\run.ps1 fast                 执行 build + quick feedback tests；不替代交付前 readiness。
   .\run.ps1 readiness -OpenUi    执行 build -> test -> contract/invariant -> hotspot，并打开 UI。
   .\run.ps1 ui                   打开本地 operator UI。
-  .\run.ps1 codex-interop        只读检查历史遗留 Codex / Cockpit 状态；切换已移交 Cockpit。
   .\run.ps1 codex-record         保存当前 Codex / Cockpit Tools 切换记录。
   .\run.ps1 targets              列出 active target repos。
   .\run.ps1 rules-check          只检查 Codex/Claude/Gemini 规则漂移，不写入。
@@ -63,9 +62,6 @@ function Resolve-OperatorAction {
     "ready" = "Readiness"
     "ui" = "OperatorUi"
     "operator-ui" = "OperatorUi"
-    "codex-interop" = "CodexInteropCheck"
-    "codex-check" = "CodexInteropCheck"
-    "cc-switch-check" = "CodexInteropCheck"
     "codex-record" = "CodexSwitchRecord"
     "codex-switch-record" = "CodexSwitchRecord"
     "cc-switch-record" = "CodexSwitchRecord"

@@ -58,7 +58,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn(".\\run.ps1 fast", completed.stdout)
         self.assertIn(".\\run.ps1 readiness -OpenUi", completed.stdout)
         self.assertNotIn("codex-optimize", completed.stdout)
-        self.assertIn("codex-interop", completed.stdout)
+        self.assertNotIn("codex-interop", completed.stdout)
         self.assertNotIn("codex-mode-new", completed.stdout)
         self.assertNotIn("codex-mode-old-api", completed.stdout)
         self.assertNotIn("codex-mode-old-oauth", completed.stdout)
@@ -175,7 +175,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("FastFeedback", completed.stdout)
         self.assertIn("Readiness", completed.stdout)
         self.assertNotIn("CodexLocalOptimize", completed.stdout)
-        self.assertIn("CodexInteropCheck", completed.stdout)
+        self.assertNotIn("CodexInteropCheck", completed.stdout)
         self.assertNotIn("CodexGatewayEnable", completed.stdout)
         self.assertNotIn("CodexGatewayRollback", completed.stdout)
         self.assertIn("FeedbackReport", completed.stdout)
@@ -295,7 +295,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertNotEqual(0, completed.returncode)
         self.assertIn("CodexLocalOptimize", completed.stderr)
 
-    def test_operator_codex_interop_check_is_available_as_dry_run(self) -> None:
+    def test_operator_codex_interop_check_is_removed(self) -> None:
         completed = subprocess.run(
             [
                 "pwsh",
@@ -308,7 +308,6 @@ class OperatorEntrypointTests(unittest.TestCase):
                 "CodexInteropCheck",
                 "-DryRun",
             ],
-            check=True,
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -316,11 +315,8 @@ class OperatorEntrypointTests(unittest.TestCase):
             cwd=ROOT,
         )
 
-        self.assertIn("DRY-RUN codex-interop-check", completed.stdout)
-        self.assertIn("scripts/codex-interop-check.py", completed.stdout)
-        self.assertIn("--cc-switch-db", completed.stdout)
-        self.assertIn("--cockpit-home", completed.stdout)
-        self.assertNotIn("--apply", completed.stdout)
+        self.assertNotEqual(0, completed.returncode)
+        self.assertIn("CodexInteropCheck", completed.stderr)
 
     def test_operator_codex_write_repairs_and_gateway_switches_are_retired(self) -> None:
         retired_actions = [
@@ -354,7 +350,7 @@ class OperatorEntrypointTests(unittest.TestCase):
                 self.assertNotEqual(0, completed.returncode)
                 self.assertIn(action, completed.stderr)
 
-    def test_operator_codex_projection_smoke_is_read_only_dry_run(self) -> None:
+    def test_operator_codex_projection_smoke_is_removed(self) -> None:
         completed = subprocess.run(
             [
                 "pwsh",
@@ -367,7 +363,6 @@ class OperatorEntrypointTests(unittest.TestCase):
                 "CodexProjectionSmoke",
                 "-DryRun",
             ],
-            check=True,
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -375,14 +370,8 @@ class OperatorEntrypointTests(unittest.TestCase):
             cwd=ROOT,
         )
 
-        self.assertIn("DRY-RUN codex-projection-smoke", completed.stdout)
-        self.assertIn("scripts/codex-interop-check.py", completed.stdout)
-        self.assertIn("--quick-launch", completed.stdout)
-        self.assertIn("DRY-RUN codex-guard-absence-check", completed.stdout)
-        self.assertNotIn("--repair-current-cockpit-api-projection", completed.stdout)
-        self.assertNotIn("--repair-current-cockpit-oauth-projection", completed.stdout)
-        self.assertNotIn("--apply", completed.stdout)
-        self.assertNotIn("--migrate-provider-bucket", completed.stdout)
+        self.assertNotEqual(0, completed.returncode)
+        self.assertIn("CodexProjectionSmoke", completed.stderr)
 
     def test_operator_codex_readonly_switch_helpers_are_available_as_dry_run(self) -> None:
         cases = [
@@ -415,41 +404,6 @@ class OperatorEntrypointTests(unittest.TestCase):
                 self.assertIn(script_name, completed.stdout)
                 if expected_arg:
                     self.assertIn(expected_arg, completed.stdout)
-
-    def test_operator_preserves_codex_interop_check_failure_exit_code(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            fake_bin = Path(tmp_dir)
-            fake_python = fake_bin / "python.cmd"
-            fake_python.write_text(
-                "@echo off\r\n"
-                "echo {\"\"status\"\":\"\"fail\"\",\"\"after\"\":{\"\"status\"\":\"\"fail\"\"}}\r\n"
-                "exit /b 2\r\n",
-                encoding="ascii",
-            )
-            env = dict(os.environ)
-            env["PATH"] = str(fake_bin) + os.pathsep + env["PATH"]
-
-            completed = subprocess.run(
-                [
-                    "pwsh",
-                    "-NoProfile",
-                    "-ExecutionPolicy",
-                    "Bypass",
-                    "-File",
-                    str(ROOT / "scripts" / "operator.ps1"),
-                    "-Action",
-                    "CodexInteropCheck",
-                ],
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                cwd=ROOT,
-                env=env,
-            )
-
-            self.assertEqual(2, completed.returncode, completed.stdout + completed.stderr)
-            self.assertIn("Operator step failed: codex-interop-check (exit_code=2)", completed.stderr)
 
     def test_operator_apply_all_features_is_available_while_waiting_for_host_recovery(self) -> None:
         env = dict(os.environ)
