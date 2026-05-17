@@ -14,7 +14,7 @@
 ### 总入口速记
 - 操作者聚合入口：`scripts/operator.ps1`
 - 宿主反馈汇总：`scripts/operator.ps1 -Action FeedbackReport`
-- Codex 本机边界：使用官方 `codex` 入口和 Cockpit Tools 原生 controls；本仓只做只读诊断、旧项目 shim 清理，以及显式 API projection repair。
+- Codex 本机边界：使用官方 `codex` 入口和 Cockpit Tools 原生 controls；Direct OAuth、Direct API、Cockpit API service 往返切换完全由 Cockpit Tools 负责，本仓只保留旧项目 shim 清理与缺席验证。
 - 目标仓日常运行/批量一键应用：`scripts/runtime-flow-preset.ps1`
 - 全局/项目级 AI 规则同步：`scripts/sync-agent-rules.ps1`
 - 本仓完整自检：`scripts/verify-repo.ps1 -Check All`

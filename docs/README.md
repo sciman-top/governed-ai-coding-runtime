@@ -128,11 +128,10 @@
   - for audit-only persistence, add `-WriteCorePrincipleDryRunReport` to write only a dry-run report under `docs/change-evidence/core-principle-change-reports/`
   - does not directly change active core-principles policy, specs, verifiers, target repositories, push, or merge
 - Codex local boundary:
-  - use the official `codex` entrypoint and Cockpit Tools native controls for login, provider switching, and app launch state
-  - this repository no longer installs or wraps Codex CLI/App launchers and no longer performs automatic Codex auth, provider profile, SQLite history bucket, or Cockpit launch state writes
-  - use `python scripts/codex-interop-check.py ... --quick-launch` for read-only diagnostics
-  - use explicit `--repair-current-cockpit-api-projection` only when repairing the current Cockpit API account; it must keep active `model_provider`, Cockpit `api_provider_id`, custom no-WebSocket provider metadata, and `threads.model_provider` aligned
+  - use the official `codex` entrypoint and Cockpit Tools native controls for login, provider switching, app launch state, Direct OAuth, Direct API, and Cockpit API service roundtrip switching
+  - this repository no longer provides 8770 actions, interop diagnostics, projection smoke, repair paths, gateway profiles, SQLite/provider/history writes, launcher wrappers, or background guards for Codex/Cockpit switching
   - use `scripts/Disable-CodexProjectInterop.ps1 -Apply -DisableProjectShortcuts` only for reversible cleanup of old project shims
+  - use `scripts/Test-CodexGuardAbsence.ps1` to verify retired project shims, guards, wrappers, and repair entrypoints remain absent
 - Claude local boundary:
   - Claude Code / Claude Desktop account, API, and provider switching is owned by CC Switch only
   - this repository no longer writes `~/.claude/settings.json`, provider profiles, current process env, `CLAUDE_CONFIG_DIR`, or Claude Desktop data roots
