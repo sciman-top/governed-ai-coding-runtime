@@ -226,20 +226,15 @@ def render_style_block() -> str:
     .codex-history-results {{ display: grid; gap: 8px; max-height: 430px; overflow: auto; padding-right: 2px; }}
     .codex-history-row {{ display: grid; gap: 5px; border: 1px solid var(--line); border-radius: 8px; padding: 10px 11px; background: #fff; box-shadow: var(--shadow-tight); }}
     .codex-history-row strong {{ overflow-wrap: anywhere; color: var(--ink-strong); }}
-    .codex-grid {{ display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: start; }}
     .codex-list {{ display: grid; gap: 8px; }}
     .codex-account {{ display: grid; gap: 16px; align-items: start; border: 1px solid var(--line); border-radius: 8px; padding: 13px; background: linear-gradient(180deg, #ffffff, #f8fbfb); box-shadow: var(--shadow-tight); }}
     .codex-account-body {{ min-width: 0; display: grid; gap: 3px; }}
     .codex-account strong, .codex-account small {{ display: block; overflow-wrap: anywhere; }}
     .codex-badge {{ display: inline-flex; align-items: center; align-self: start; border: 1px solid #bde0da; border-radius: 999px; padding: 4px 10px; color: var(--accent-strong); background: var(--accent-soft); font-size: 0.78rem; font-weight: 760; white-space: nowrap; }}
-    .claude-toolbar {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }}
-    .claude-console-grid {{ display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(290px, 0.65fr); gap: 12px; align-items: start; }}
-    .claude-summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }}
-    .claude-summary-card {{ background: linear-gradient(180deg, #ffffff, #f8fbfb); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; box-shadow: var(--shadow-tight); }}
-    .claude-summary-card .meta {{ margin: 0; }}
-    .claude-side-panel {{ display: grid; gap: 12px; min-width: 0; }}
-    .claude-file-actions {{ display: grid; gap: 8px; }}
-    .claude-provider-list {{ display: grid; gap: 10px; }}
+    .panel-toolbar {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }}
+    .summary-grid-compact {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }}
+    .summary-card {{ background: linear-gradient(180deg, #ffffff, #f8fbfb); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; box-shadow: var(--shadow-tight); }}
+    .summary-card .meta {{ margin: 0; }}
     .provider-status-pill {{ display: inline-flex; align-items: center; gap: 6px; width: fit-content; padding: 4px 10px; border-radius: 999px; font-size: 0.76rem; font-weight: 760; border: 1px solid var(--line); background: #fff; color: var(--muted); }}
     .provider-status-pill.ready {{ border-color: #bde0da; color: var(--accent-strong); background: var(--accent-soft); }}
     .provider-status-pill.missing {{ border-color: #f2d2a4; color: #8b5d10; background: #fff7e8; }}
@@ -251,7 +246,7 @@ def render_style_block() -> str:
       main {{ padding: 12px 10px 28px; }}
       header {{ padding: 14px; margin-bottom: 12px; }}
       h1 {{ font-size: 1.2rem; }}
-      .console-layout, .summary-grid, .policy-grid, .feedback-grid, .runtime-shell, .details-grid, .codex-grid, .codex-account, .codex-history-fields, .claude-console-grid, .feedback-shell, .feedback-runs-grid, .surface-grid {{ grid-template-columns: 1fr; }}
+      .console-layout, .summary-grid, .policy-grid, .feedback-grid, .runtime-shell, .details-grid, .feedback-shell, .feedback-runs-grid, .surface-grid {{ grid-template-columns: 1fr; }}
       .dashboard {{ gap: 12px; }}
       .view-tabs {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; }}
       .view-tab {{ text-align: center; padding: 8px 7px; }}

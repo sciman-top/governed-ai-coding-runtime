@@ -29,17 +29,6 @@ def render_interactive_script(
   const dryRun = document.getElementById('ui-dry-run');
   const applyRemoval = document.getElementById('ui-apply-removal');
   const historyList = document.getElementById('ui-history');
-  const codexAccounts = document.getElementById('codex-accounts');
-  const codexCacheState = document.getElementById('codex-cache-state');
-  const codexSwitchHealth = document.getElementById('codex-switch-health');
-  const codexHistoryForm = document.getElementById('codex-history-form');
-  const codexHistorySource = document.getElementById('codex-history-source');
-  const codexHistoryCwd = document.getElementById('codex-history-cwd');
-  const codexHistorySearch = document.getElementById('codex-history-search');
-  const codexHistoryLimit = document.getElementById('codex-history-limit');
-  const codexHistoryState = document.getElementById('codex-history-state');
-  const codexHistoryResults = document.getElementById('codex-history-results');
-  const claudeProviders = document.getElementById('claude-providers');
   const feedbackStatus = document.getElementById('feedback-status');
   const feedbackCacheState = document.getElementById('feedback-cache-state');
   const feedbackGeneratedAt = document.getElementById('feedback-generated-at');
@@ -61,8 +50,6 @@ def render_interactive_script(
   const nextWorkJson = document.getElementById('next-work-json');
   const nextWorkCacheState = document.getElementById('next-work-cache-state');
   const historyKey = 'governed-runtime-operator-history';
-  const codexCacheKey = 'governed-runtime-operator-codex-status';
-  const claudeCacheKey = 'governed-runtime-operator-claude-status';
   const feedbackCacheKey = 'governed-runtime-operator-feedback-summary';
   const nextWorkCacheKey = 'governed-runtime-operator-next-work';
   const surfaceOpenLabel = {text['open_surface']!r};
@@ -70,21 +57,13 @@ def render_interactive_script(
   const runtimeSurfaceSummaryTemplate = {text['surface_runtime_summary']!r};
   const runtimeSurfaceDetailTemplate = {text['surface_runtime_detail']!r};
   const runtimeSurfaceActionText = {text['surface_runtime_action']!r};
-  const codexSurfaceActionText = {text['surface_codex_action']!r};
-  const claudeSurfaceActionText = {text['surface_claude_action']!r};
   const continuitySurfaceActionText = {text['surface_continuity_action']!r};
   const feedbackSurfaceActionText = {text['surface_feedback_action']!r};
   const managedRemovalActions = new Set(['cleanup_targets', 'uninstall_governance']);
   const defaultManagedRemovalActions = new Set(['apply_all_features']);
-  let codexLoaded = false;
-  let claudeLoaded = false;
   let feedbackLoaded = false;
   let continuityLoaded = false;
   let nextWorkLoaded = false;
-  let lastClaudePayload = null;
-  let lastCodexPayload = null;
-  let codexHistoryOffset = 0;
-  let lastCodexHistoryPayload = null;
   let lastNextWorkPayload = null;
 
   function readHistory() {{
@@ -130,17 +109,13 @@ def render_interactive_script(
   }}
 
   function setPanelCacheState(kind, state, cachedAt) {{
-    const target = kind === 'codex'
-      ? codexCacheState
-      : (kind === 'feedback' ? feedbackCacheState : (kind === 'next-work' ? nextWorkCacheState : null));
+    const target = kind === 'feedback' ? feedbackCacheState : (kind === 'next-work' ? nextWorkCacheState : null);
     if (!target) {{
       return;
     }}
-    const label = kind === 'codex'
-      ? (currentUiLanguage() === 'zh-CN' ? 'Codex 状态' : 'Codex state')
-      : (kind === 'feedback'
+    const label = kind === 'feedback'
         ? {text['feedback_status']!r}
-        : (currentUiLanguage() === 'zh-CN' ? 'next-work 状态' : 'next-work state'));
+        : (currentUiLanguage() === 'zh-CN' ? 'next-work 状态' : 'next-work state');
     const stateLabels = {{
       cold: {text['panel_cache_cold']!r},
       cached: {text['panel_cache_cached']!r},
@@ -154,45 +129,13 @@ def render_interactive_script(
       : `${{label}}: ${{stateLabels[state] || state}}`;
   }}
 
-  function isUsageSnapshotStale(snapshot) {{
-    const freshness = snapshot && snapshot.freshness ? snapshot.freshness : null;
-    if (!freshness) {{
-      return true;
-    }}
-    if (freshness.is_stale) {{
-      return true;
-    }}
-    const ageSeconds = Number(freshness.age_seconds);
-    if (!Number.isFinite(ageSeconds)) {{
-      return true;
-    }}
-    return ageSeconds > codexAutoRefreshAgeSeconds;
-  }}
-
-  function shouldHydrateCodexCache(payload) {{
-    if (!payload || typeof payload !== 'object') {{
-      return false;
-    }}
-    return Array.isArray(payload.accounts) || !!payload.active_account || !!payload.auth || !!payload.config;
-  }}
-
   function hydratePanelCache(kind, key) {{
     const cached = readPanelCache(key);
     if (!cached) {{
       setPanelCacheState(kind, 'cold');
       return false;
     }}
-    if (kind === 'codex') {{
-      if (!shouldHydrateCodexCache(cached)) {{
-        setPanelCacheState(kind, 'cold');
-        return false;
-      }}
-      renderCodexStatus(cached);
-      codexLoaded = true;
-    }} else if (kind === 'claude') {{
-      renderClaudeStatus(cached);
-      claudeLoaded = true;
-    }} else if (kind === 'feedback') {{
+    if (kind === 'feedback') {{
       renderFeedbackSummary(cached);
       feedbackLoaded = true;
     }} else {{
@@ -244,78 +187,6 @@ def render_interactive_script(
     setSurfaceSummary('runtime', [summary, detail, runtimeSurfaceActionText]);
   }}
 
-  function updateCodexSurfaceSummary(payload) {{
-    const accounts = Array.isArray(payload && payload.accounts) ? payload.accounts : [];
-    const active = accounts.find((item) => item && item.active) || accounts[0] || null;
-    const officialAppAccount = payload && payload.official_app_account && typeof payload.official_app_account === 'object'
-      ? payload.official_app_account
-      : null;
-    const usage = resolveAccountUsageSnapshot(active, payload);
-    const config = payload && payload.config ? payload.config : {{}};
-    const snapshot = active && active.snapshot_status ? active.snapshot_status : (payload && payload.snapshot_status ? payload.snapshot_status : null);
-    const switchHealthSummary = formatCodexSwitchHealthSummary(payload && payload.switch_health);
-    setSurfaceSummary('codex', [
-      active ? codexAccountLabel(active) : (currentUiLanguage() === 'zh-CN' ? '未识别当前账号' : 'No active account'),
-      officialAppAccount && officialAppAccount.status === 'ok' && officialAppAccount.email
-        ? ((currentUiLanguage() === 'zh-CN' ? '官方 App 持久化: ' : 'Official App persisted: ') + codexAccountLabel(officialAppAccount))
-        : (officialAppAccount && officialAppAccount.status === 'ambiguous'
-          ? [
-              {text['codex_app_ambiguous']!r},
-              officialAppAccount.limitation || officialAppAccount.reason || '',
-            ].filter(Boolean).join(' · ')
-          : ''),
-      formatConfigHealth(config),
-      switchHealthSummary,
-      formatCodexSnapshotStatus(snapshot),
-      usage && usage.source
-        ? [formatUsageSourceLabel(usage.source), formatUsageFreshnessLabel(usage)].filter(Boolean).join(' · ')
-        : codexSurfaceActionText,
-    ]);
-  }}
-
-  function formatCodexSwitchHealthSummary(health) {{
-    if (!health || typeof health !== 'object') {{
-      return {text['codex_switch_health_loading']!r};
-    }}
-    const selected = health.selected_scope || {{}};
-    const recent = health.recent_auth_errors || {{}};
-    const boundary = health.runtime_boundary || {{}};
-    const mode = boundary.codex_app_restart_required_for_account_change
-      ? {text['codex_switch_native_app_restart_required']!r}
-      : {text['codex_switch_native_cli_segmented']!r};
-    const plans = Array.isArray(selected.selected_plan_types) && selected.selected_plan_types.length
-      ? selected.selected_plan_types.join(',')
-      : 'unknown';
-    return [
-      mode,
-      `${{ {text['codex_switch_selected_accounts']!r} }} ${{selected.selected_found_count ?? selected.selected_count ?? 0}}/${{selected.selected_count ?? 0}}`,
-      `${{ {text['codex_switch_selected_plans']!r} }} ${{plans}}`,
-      `${{ {text['codex_switch_recent_401']!r} }} ${{recent.token_invalidated_count ?? 0}}`,
-      {text['codex_switch_no_restart_action']!r},
-    ].filter(Boolean).join(' · ');
-  }}
-
-  function renderCodexSwitchHealth(health) {{
-    if (!codexSwitchHealth) {{
-      return;
-    }}
-    codexSwitchHealth.textContent = formatCodexSwitchHealthSummary(health);
-    codexSwitchHealth.dataset.status = health && health.status ? health.status : 'unknown';
-  }}
-
-  function updateClaudeSurfaceSummary(payload) {{
-    const provider = payload && payload.active_provider ? payload.active_provider : null;
-    const config = payload && payload.config ? payload.config : {{}};
-    setSurfaceSummary('claude', [
-      provider && (provider.label || provider.name)
-        ? (provider.label || provider.name)
-        : (currentUiLanguage() === 'zh-CN' ? '未识别当前 Provider' : 'No active provider'),
-      provider ? (provider.credential_present ? {text['claude_credential_ready']!r} : {text['claude_missing_credential']!r})
-        : (currentUiLanguage() === 'zh-CN' ? '凭据状态未知' : 'Credential status unknown'),
-      formatConfigHealth(config) || claudeSurfaceActionText,
-    ]);
-  }}
-
   function updateFeedbackSurfaceSummary(payload) {{
     const summary = payload && payload.summary ? payload.summary : {{}};
     const firstRecommendation = payload && Array.isArray(payload.recommendations) && payload.recommendations.length
@@ -325,7 +196,7 @@ def render_interactive_script(
       currentUiLanguage() === 'zh-CN'
         ? `总状态 ${{formatFeedbackStatusLabel(payload && payload.status)}}`
         : `Overall ${{formatFeedbackStatusLabel(payload && payload.status)}}`,
-      `Codex ${{formatFeedbackStatusLabel(summary.codex_host_status)}} · Claude ${{formatFeedbackStatusLabel(summary.claude_host_status)}}`,
+      feedbackSurfaceActionText,
       firstRecommendation || feedbackSurfaceActionText,
     ]);
   }}
@@ -361,15 +232,6 @@ def render_interactive_script(
         button.textContent = isSelected ? surfaceCurrentLabel : surfaceOpenLabel;
       }}
     }});
-    if (selected === 'codex') {{
-      if (!codexLoaded) {{
-        hydratePanelCache('codex', codexCacheKey);
-      }}
-      refreshCodexStatus();
-    }}
-    if (selected === 'claude' && !claudeLoaded) {{
-      hydratePanelCache('claude', claudeCacheKey);
-    }}
     if (selected === 'feedback' && !feedbackLoaded) {{
       hydratePanelCache('feedback', feedbackCacheKey);
     }}
@@ -743,96 +605,6 @@ def render_interactive_script(
     }}
   }}
 
-  function codexAccountLabel(account) {{
-    return account.account_label || account.email || account.display_name || account.account_hash || account.name || 'unknown';
-  }}
-
-  function formatCodexSnapshotStatus(snapshot) {{
-    if (!snapshot || typeof snapshot !== 'object') {{
-      return '';
-    }}
-    const name = snapshot.profile_name || snapshot.profile_file || 'auth';
-    const status = String(snapshot.status || '').trim();
-    if (status === 'synced') {{
-      return {text['codex_snapshot_synced']!r}.replace('{{name}}', name);
-    }}
-    if (status === 'drifted') {{
-      return {text['codex_snapshot_drifted']!r}.replace('{{name}}', name);
-    }}
-    if (status === 'missing_named_snapshot') {{
-      return {text['codex_snapshot_missing']!r};
-    }}
-    return '';
-  }}
-
-  function formatPlanLabel(planType) {{
-    const value = String(planType || '').trim().toLowerCase();
-    if (!value) {{
-      return '';
-    }}
-    if (currentUiLanguage() === 'zh-CN') {{
-      const labels = {{
-        team: '团队版',
-        plus: 'Plus',
-        prolite: 'Go',
-        go: 'Go',
-        pro: 'Pro',
-        free: '免费版',
-      }};
-      return labels[value] || planType;
-    }}
-    if (value === 'prolite' || value === 'go') {{
-      return 'Go';
-    }}
-    return planType;
-  }}
-
-  function formatPlanSourceLabel(source) {{
-    const value = String(source || '').trim().toLowerCase();
-    const zh = currentUiLanguage() === 'zh-CN';
-    const labels = zh ? {{
-      account_facts: '本机账号事实',
-      local_operator_asserted: '本机账号事实',
-      usage_snapshot: '账号额度快照',
-      auth_token: 'auth token',
-      stale_or_unbound_usage_snapshot: '过期或未绑定额度快照',
-      unavailable: '不可用',
-    }} : {{
-      account_facts: 'local account facts',
-      local_operator_asserted: 'local account facts',
-      usage_snapshot: 'account usage snapshot',
-      auth_token: 'auth token',
-      stale_or_unbound_usage_snapshot: 'stale or unbound usage snapshot',
-      unavailable: 'unavailable',
-    }};
-    return labels[value] || source || '';
-  }}
-
-  function formatPlanConflicts(account) {{
-    const conflicts = Array.isArray(account.plan_conflicts) ? account.plan_conflicts : [];
-    if (!conflicts.length) {{
-      return '';
-    }}
-    const prefix = currentUiLanguage() === 'zh-CN' ? '冲突证据' : 'conflicting evidence';
-    return conflicts.map((item) => `${{formatPlanSourceLabel(item.source)}}=${{formatPlanLabel(item.plan_type)}}`).join(' · ')
-      ? `${{prefix}}: ${{conflicts.map((item) => `${{formatPlanSourceLabel(item.source)}}=${{formatPlanLabel(item.plan_type)}}`).join(' · ')}}`
-      : '';
-  }}
-
-  function formatAuthModeLabel(authMode) {{
-    const value = String(authMode || '').trim().toLowerCase();
-    if (!value) {{
-      return currentUiLanguage() === 'zh-CN' ? '登录方式未知' : 'unknown sign-in';
-    }}
-    if (value === 'chatgpt') {{
-      return currentUiLanguage() === 'zh-CN' ? 'ChatGPT 登录' : 'ChatGPT sign-in';
-    }}
-    if (value === 'apikey') {{
-      return currentUiLanguage() === 'zh-CN' ? 'API Key' : 'API key';
-    }}
-    return authMode;
-  }}
-
   function formatTimestampLabel(timestamp) {{
     const raw = String(timestamp || '').trim();
     if (!raw) {{
@@ -853,282 +625,9 @@ def render_interactive_script(
     }}).format(date);
   }}
 
-  function formatCompactTimestamp(timestamp) {{
-    const raw = String(timestamp || '').trim();
-    if (!raw) {{
-      return '';
-    }}
-    const date = new Date(raw);
-    if (Number.isNaN(date.getTime())) {{
-      return raw;
-    }}
-    const locale = currentUiLanguage() === 'zh-CN' ? 'zh-CN' : 'en-US';
-    return new Intl.DateTimeFormat(locale, {{
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }}).format(date);
-  }}
-
-  function daysRemainingLabel(timestamp) {{
-    const raw = String(timestamp || '').trim();
-    if (!raw) {{
-      return '';
-    }}
-    const date = new Date(raw);
-    if (Number.isNaN(date.getTime())) {{
-      return '';
-    }}
-    const dayMs = 24 * 60 * 60 * 1000;
-    const days = Math.max(0, Math.ceil((date.getTime() - Date.now()) / dayMs));
-    return currentUiLanguage() === 'zh-CN' ? `剩余${{days}}日` : `${{days}}d left`;
-  }}
-
-  function formatCompactTimestampWithDays(timestamp) {{
-    const compact = formatCompactTimestamp(timestamp);
-    const days = daysRemainingLabel(timestamp);
-    return [compact, days].filter(Boolean).join(currentUiLanguage() === 'zh-CN' ? ' ' : ', ');
-  }}
-
   function currentUiLanguage() {{
     const lang = document.documentElement.lang || '';
     return lang.toLowerCase().startsWith('zh') ? 'zh-CN' : 'en-US';
-  }}
-
-  function formatUsageReset(resetAt) {{
-    const seconds = Number(resetAt);
-    if (!Number.isFinite(seconds) || seconds <= 0) {{
-      return '';
-    }}
-    const date = new Date(seconds * 1000);
-    if (Number.isNaN(date.getTime())) {{
-      return '';
-    }}
-    const now = new Date();
-    const sameDay = date.getFullYear() === now.getFullYear()
-      && date.getMonth() === now.getMonth()
-      && date.getDate() === now.getDate();
-    const locale = currentUiLanguage();
-    const options = sameDay
-      ? {{ hour: '2-digit', minute: '2-digit', hour12: false }}
-      : (locale === 'zh-CN' ? {{ month: 'long', day: 'numeric' }} : {{ month: 'numeric', day: 'numeric' }});
-    return new Intl.DateTimeFormat(locale, options).format(date);
-  }}
-
-  function formatUsageWindowLabel(item) {{
-    const minutes = Number(item.window_minutes);
-    if (currentUiLanguage() === 'zh-CN') {{
-      if (minutes === 300) {{
-        return '5 小时';
-      }}
-      if (minutes === 10080) {{
-        return '1 周';
-      }}
-    }}
-    return item.window || 'unknown';
-  }}
-
-  function formatUsageWindow(item) {{
-    const windowLabel = formatUsageWindowLabel(item);
-    const remaining = item.remaining_percent !== null && item.remaining_percent !== undefined
-      ? `${{item.remaining_percent}}%`
-      : (item.remaining || 'unknown');
-    const reset = formatUsageReset(item.reset_at);
-    const resetLabel = reset ? `${{ {text['codex_usage_reset']!r} }} ${{reset}}` : '';
-    return [windowLabel, remaining, resetLabel].filter(Boolean).join(' ');
-  }}
-
-  function formatAccountUsageSummary(account) {{
-    const snapshot = account && account.usage_snapshot;
-    const windows = snapshot && Array.isArray(snapshot.windows) ? snapshot.windows : [];
-    if (!windows.length) {{
-      return {text['codex_account_usage_unknown']!r};
-    }}
-    return windows.map(formatUsageWindow).join('\\n');
-  }}
-
-  function clampUsagePercent(value) {{
-    const percent = Number(value);
-    if (!Number.isFinite(percent)) {{
-      return null;
-    }}
-    return Math.max(0, Math.min(100, percent));
-  }}
-
-  function createUsageMeter(account) {{
-    const snapshot = account && account.usage_snapshot;
-    const windows = snapshot && Array.isArray(snapshot.windows) ? snapshot.windows : [];
-    if (!windows.length) {{
-      const fallback = document.createElement('span');
-      fallback.textContent = {text['codex_account_usage_unknown']!r};
-      return fallback;
-    }}
-    const list = document.createElement('div');
-    list.className = 'usage-meter-list';
-    if (isUsageSnapshotStale(snapshot)) {{
-      const stale = document.createElement('small');
-      stale.textContent = [
-        {text['codex_usage_freshness_stale']!r},
-        currentUiLanguage() === 'zh-CN' ? '仅作历史参考，不作为当前额度' : 'historical only, not current quota',
-      ].join(' · ');
-      list.appendChild(stale);
-    }}
-    windows.forEach((item) => {{
-      const percent = clampUsagePercent(item.remaining_percent);
-      const row = document.createElement('div');
-      row.className = 'usage-meter-row';
-      const head = document.createElement('div');
-      head.className = 'usage-meter-head';
-      const label = document.createElement('span');
-      label.textContent = formatUsageWindowLabel(item);
-      const detail = document.createElement('small');
-      const reset = formatUsageReset(item.reset_at);
-      const remaining = percent === null ? (item.remaining || 'unknown') : `${{percent}}%`;
-      detail.textContent = [
-        `${{ {text['codex_usage_remaining']!r} }} ${{remaining}}`,
-        reset ? `${{ {text['codex_usage_reset']!r} }} ${{reset}}` : '',
-      ].filter(Boolean).join(' · ');
-      head.append(label, detail);
-      const bar = document.createElement('div');
-      bar.className = 'usage-bar';
-      const fill = document.createElement('span');
-      fill.className = 'usage-fill';
-      if (percent !== null && percent <= 15) {{
-        fill.classList.add('danger');
-      }} else if (percent !== null && percent <= 35) {{
-        fill.classList.add('warn');
-      }}
-      fill.style.width = `${{percent === null ? 0 : percent}}%`;
-      bar.appendChild(fill);
-      row.append(head, bar);
-      list.appendChild(row);
-    }});
-    return list;
-  }}
-
-  function formatUsageSourceLabel(source) {{
-    const value = String(source || '').trim();
-    if (!value) {{
-      return currentUiLanguage() === 'zh-CN' ? '来源未知' : 'unknown source';
-    }}
-    const labels = currentUiLanguage() === 'zh-CN'
-      ? {{
-          codex_logs_2_sqlite: '本机日志快照',
-          codex_sessions_jsonl: '在线刷新后的最新会话',
-          codex_exec_stdout: '在线响应结果',
-          stale_or_unbound_usage_snapshot: '过期或未绑定额度快照',
-          unknown: '来源未知',
-        }}
-      : {{
-          codex_logs_2_sqlite: 'local log snapshot',
-          codex_sessions_jsonl: 'latest refreshed session',
-          codex_exec_stdout: 'online response',
-          stale_or_unbound_usage_snapshot: 'stale or unbound usage snapshot',
-          unknown: 'unknown source',
-    }};
-    return labels[value] || value;
-  }}
-
-  function formatRelativeAgeLabel(ageSeconds) {{
-    const seconds = Number(ageSeconds);
-    if (!Number.isFinite(seconds) || seconds < 0) {{
-      return '';
-    }}
-    if (seconds < 60) {{
-      return currentUiLanguage() === 'zh-CN' ? '刚刚' : 'just now';
-    }}
-    if (seconds < 3600) {{
-      const minutes = Math.max(1, Math.round(seconds / 60));
-      return currentUiLanguage() === 'zh-CN' ? `${{minutes}} 分钟前` : `${{minutes}} min ago`;
-    }}
-    const hours = Math.max(1, Math.round(seconds / 3600));
-    return currentUiLanguage() === 'zh-CN' ? `${{hours}} 小时前` : `${{hours}} h ago`;
-  }}
-
-  function formatUsageFreshnessLabel(usage) {{
-    const freshness = usage && usage.freshness ? usage.freshness : null;
-    if (!freshness) {{
-      return {text['codex_usage_freshness_unknown']!r};
-    }}
-    const age = formatRelativeAgeLabel(freshness.age_seconds);
-    const captured = formatCompactTimestamp(freshness.captured_at);
-    const prefix = freshness.is_stale
-      ? {text['codex_usage_freshness_stale']!r}
-      : {text['codex_usage_freshness_fresh']!r};
-    return [prefix, age || captured].filter(Boolean).join(currentUiLanguage() === 'zh-CN' ? ' · ' : ' - ');
-  }}
-
-  function resolveAccountUsageSnapshot(account, payload) {{
-    if (account && typeof account === 'object' && account.usage_snapshot && typeof account.usage_snapshot === 'object') {{
-      return account.usage_snapshot;
-    }}
-    return {{}};
-  }}
-
-  function formatTokenExpirySummary(account) {{
-    const idExpiry = formatCompactTimestampWithDays(account && account.id_token_expires_at);
-    const accessExpiry = formatCompactTimestampWithDays(account && account.access_token_expires_at);
-    const parts = [];
-    if (idExpiry) {{
-      parts.push(`ID token ${{idExpiry}}`);
-    }}
-    if (accessExpiry) {{
-      parts.push(`Access token ${{accessExpiry}}`);
-    }}
-    if (!parts.length) {{
-      return {text['codex_token_unknown']!r};
-    }}
-    return parts.join('\\n');
-  }}
-
-  function formatSubscriptionExpirySummary(account) {{
-    const expiry = formatCompactTimestampWithDays(account && account.subscription_active_until);
-    if (!expiry) {{
-      return {text['codex_subscription_unknown']!r};
-    }}
-    const checked = formatCompactTimestamp(account && account.subscription_last_checked);
-    if (!checked) {{
-      return expiry;
-    }}
-    return currentUiLanguage() === 'zh-CN'
-      ? `${{expiry}}\n核验 ${{checked}}`
-      : `${{expiry}}\nchecked ${{checked}}`;
-  }}
-
-  function summarizeClaudeMcp(summary) {{
-    const text = String(summary || '').trim();
-    if (!text) {{
-      return currentUiLanguage() === 'zh-CN' ? '状态未知' : 'status unknown';
-    }}
-    const normalized = text.replace(/\\s+/g, ' ').trim();
-    const connected = (normalized.match(/Connected/gi) || []).length;
-    const checking = (normalized.match(/Checking MCP server health/gi) || []).length;
-    const names = Array.from(normalized.matchAll(/\\b([a-z0-9-]+):\\s/gi))
-      .map((match) => match[1])
-      .filter((name, index, items) => items.indexOf(name) === index);
-    const prefix = [];
-    if (connected) {{
-      prefix.push(currentUiLanguage() === 'zh-CN' ? `已连接 ${{connected}} 个` : `${{connected}} connected`);
-    }}
-    if (checking) {{
-      prefix.push(currentUiLanguage() === 'zh-CN' ? `检查中 ${{checking}} 个` : `${{checking}} checking`);
-    }}
-    const visibleNames = names.slice(0, 4).join(currentUiLanguage() === 'zh-CN' ? '、' : ', ');
-    const hiddenCount = Math.max(names.length - 4, 0);
-    if (visibleNames) {{
-      prefix.push(
-        currentUiLanguage() === 'zh-CN'
-          ? hiddenCount
-            ? `${{visibleNames}} 等 ${{names.length}} 个`
-            : visibleNames
-          : hiddenCount
-            ? `${{visibleNames}} and ${{hiddenCount}} more`
-            : visibleNames
-      );
-    }}
-    return prefix.join('\\n') || (currentUiLanguage() === 'zh-CN' ? '状态未知' : 'status unknown');
   }}
 
   function createInfoLine(label, value) {{
@@ -1268,19 +767,9 @@ def render_interactive_script(
           : `ok ${{summary.dimensions_ok || 0}} / attention ${{summary.dimensions_attention || 0}} / fail ${{summary.dimensions_fail || 0}}`,
         detail: ''
       }},
-      {{
-        label: 'Codex',
-        value: formatFeedbackStatusLabel(summary.codex_host_status),
-        detail: ''
-      }},
-      {{
-        label: 'Claude',
-        value: formatFeedbackStatusLabel(summary.claude_host_status),
-        detail: ''
-      }},
     ].forEach((card) => {{
       const section = document.createElement('section');
-      section.className = 'claude-summary-card';
+      section.className = 'summary-card';
       section.appendChild(createInfoLine(card.label, card.value));
       if (card.detail) {{
         const meta = document.createElement('p');
@@ -1400,7 +889,7 @@ def render_interactive_script(
     continuityRecords.innerHTML = '';
     records.forEach((record) => {{
       const section = document.createElement('section');
-      section.className = 'claude-summary-card';
+      section.className = 'summary-card';
       section.appendChild(createInfoLine(record.record_id || 'record', record.task_summary || ''));
       section.appendChild(createInfoLine({text['repo']!r}, record.repo_id || {text['not_recorded']!r}));
       section.appendChild(createInfoLine({text['adapter']!r}, `${{record.tool_family || ''}} · ${{record.provider_alias || ''}}`));
@@ -1433,507 +922,6 @@ def render_interactive_script(
     }}
   }}
 
-  function summarizeClaudeContext(provider) {{
-    const env = provider && provider.env ? provider.env : {{}};
-    const compactWindow = String(env.CLAUDE_CODE_AUTO_COMPACT_WINDOW || '').trim();
-    const compactPct = String(env.CLAUDE_AUTOCOMPACT_PCT_OVERRIDE || '').trim();
-    const parts = [];
-    if (compactWindow) {{
-      parts.push(currentUiLanguage() === 'zh-CN' ? `窗口 ${{compactWindow}}` : `window ${{compactWindow}}`);
-    }}
-    if (compactPct) {{
-      parts.push(currentUiLanguage() === 'zh-CN' ? `触发 ${{compactPct}}%` : `trigger ${{compactPct}}%`);
-    }}
-    return parts.join(' · ') || (currentUiLanguage() === 'zh-CN' ? '未记录' : 'not recorded');
-  }}
-
-  function summarizeClaudeTimeout(provider) {{
-    const env = provider && provider.env ? provider.env : {{}};
-    const timeout = Number(env.API_TIMEOUT_MS || 0);
-    if (!Number.isFinite(timeout) || timeout <= 0) {{
-      return currentUiLanguage() === 'zh-CN' ? '未记录' : 'not recorded';
-    }}
-    const minutes = Math.round(timeout / 60000);
-    return currentUiLanguage() === 'zh-CN' ? `${{minutes}} 分钟` : `${{minutes}} min`;
-  }}
-
-  function summarizeClaudeModels(provider) {{
-    const models = provider && provider.models ? provider.models : {{}};
-    return [
-      models.opus ? `Opus ${{models.opus}}` : '',
-      models.sonnet ? `Sonnet ${{models.sonnet}}` : '',
-      models.haiku ? `Haiku ${{models.haiku}}` : '',
-    ].filter(Boolean).join(' · ');
-  }}
-
-  function configCheckLabel(key) {{
-    const labels = currentUiLanguage() === 'zh-CN'
-      ? {{
-          model: '默认模型',
-          model_reasoning_effort: '推理强度',
-          model_verbosity: '回答详细度',
-          model_context_window: '上下文窗口',
-          model_auto_compact_token_limit: '自动压缩阈值',
-          sandbox_mode: '沙箱模式',
-          approval_policy: '审批策略',
-          web_search: '联网搜索',
-          cli_path: 'CLI 路径',
-          command_status: 'CLI 状态',
-          provider_name: 'Provider',
-          base_url: '服务地址',
-          credential_present: '凭据',
-        }}
-      : {{
-          model: 'default model',
-          model_reasoning_effort: 'reasoning effort',
-          model_verbosity: 'verbosity',
-          model_context_window: 'context window',
-          model_auto_compact_token_limit: 'auto compact threshold',
-          sandbox_mode: 'sandbox mode',
-          approval_policy: 'approval policy',
-          web_search: 'web search',
-          cli_path: 'CLI path',
-          command_status: 'CLI status',
-          provider_name: 'provider',
-          base_url: 'service URL',
-          credential_present: 'credential',
-        }};
-    return labels[key] || key || 'unknown';
-  }}
-
-  function formatConfigHealth(config) {{
-    if (!config || config.status === 'missing') {{
-      return currentUiLanguage() === 'zh-CN' ? '未检测到本机配置文件' : 'Local config file not found';
-    }}
-    const failedChecks = Array.isArray(config.checks) ? config.checks.filter((check) => !check.ok) : [];
-    const secretMarkers = Array.isArray(config.secret_like_markers) ? config.secret_like_markers : [];
-    if (!failedChecks.length && !secretMarkers.length) {{
-      return currentUiLanguage() === 'zh-CN' ? '已符合推荐值' : 'Matches recommended defaults';
-    }}
-    const issues = failedChecks.map((check) => configCheckLabel(check.key));
-    if (secretMarkers.length) {{
-      issues.push(currentUiLanguage() === 'zh-CN' ? '疑似敏感字段' : 'possible secret markers');
-    }}
-    const prefix = currentUiLanguage() === 'zh-CN' ? '建议调整：' : 'Needs attention: ';
-    return prefix + issues.join('、');
-  }}
-
-  function formatClaudeSessionContinuity(continuity) {{
-    if (!continuity) {{
-      return currentUiLanguage() === 'zh-CN' ? '未记录' : 'not recorded';
-    }}
-    const paths = continuity.paths || {{}};
-    const projects = paths.projects || {{}};
-    const history = paths.history || {{}};
-    const commands = Array.isArray(continuity.resume_commands) ? continuity.resume_commands.join(' / ') : '';
-    const state = continuity.status || 'unknown';
-    const configDir = continuity.claude_config_dir_env || (currentUiLanguage() === 'zh-CN' ? '默认 Claude home' : 'default Claude home');
-    return `${{state}} · transcripts ${{projects.jsonl_count ?? 0}} · history ${{history.exists ? 'yes' : 'no'}} · ${{configDir}} · ${{commands}}`;
-  }}
-
-  function renderCodexStatus(payload) {{
-    lastCodexPayload = payload;
-    renderCodexSwitchHealth(payload && payload.switch_health);
-    const accounts = Array.isArray(payload.accounts) ? payload.accounts : [];
-    const officialAppAccount = payload && payload.official_app_account && typeof payload.official_app_account === 'object'
-      ? payload.official_app_account
-      : null;
-    codexAccounts.innerHTML = '';
-    accounts.forEach((account) => {{
-      const label = codexAccountLabel(account);
-      const row = document.createElement('div');
-      row.className = 'codex-account';
-      const body = document.createElement('div');
-      body.className = 'codex-account-body';
-      const name = document.createElement('strong');
-      name.textContent = label;
-      const infoList = document.createElement('div');
-      infoList.className = 'info-list';
-      infoList.append(
-        createInfoLine(currentUiLanguage() === 'zh-CN' ? '类型' : 'type', formatAuthModeLabel(account.auth_mode)),
-        createInfoLine(currentUiLanguage() === 'zh-CN' ? '配置' : 'profile', account.name || account.file || 'auth')
-      );
-      if (account.auth_mode === 'apikey') {{
-        infoList.appendChild(
-          createInfoLine(
-            currentUiLanguage() === 'zh-CN' ? '地址' : 'endpoint',
-            account.api_base_url || (currentUiLanguage() === 'zh-CN' ? '缺少 Base URL' : 'missing Base URL')
-          )
-        );
-      }} else {{
-        infoList.appendChild(
-          createInfoLine(
-            currentUiLanguage() === 'zh-CN' ? '套餐' : 'plan',
-            createMultilineInfoValue(formatSubscriptionExpirySummary(account))
-          )
-        );
-        infoList.appendChild(
-          createInfoLine(
-            currentUiLanguage() === 'zh-CN' ? '额度' : 'usage',
-            createUsageMeter(account)
-          )
-        );
-      }}
-      row.title = [
-        account.file ? `file=${{account.file}}` : '',
-        account.account_hash ? `hash=${{account.account_hash}}` : '',
-        account.last_refresh || '',
-      ].filter(Boolean).join(' · ');
-      body.append(name, infoList);
-      row.appendChild(body);
-      const isCliActive = !!account.active;
-      const isOfficialAppCurrent = !!account.official_app_current;
-      const stateBadge = document.createElement('span');
-      stateBadge.className = (isCliActive || isOfficialAppCurrent) ? 'provider-status-pill ready' : 'provider-status-pill';
-      stateBadge.textContent = isCliActive && isOfficialAppCurrent
-        ? {text['codex_cli_and_app']!r}
-        : (isCliActive
-          ? {text['codex_cli_active']!r}
-          : (isOfficialAppCurrent ? {text['codex_app_persisted']!r} : {text['codex_history_readonly']!r}));
-      infoList.appendChild(createInfoLine(currentUiLanguage() === 'zh-CN' ? '状态' : 'state', stateBadge));
-      if (isCliActive) {{
-        const snapshot = account.snapshot_status || payload.snapshot_status || null;
-        infoList.append(
-          createInfoLine(
-            currentUiLanguage() === 'zh-CN' ? '配置' : 'config',
-            formatConfigHealth(payload.config || {{}})
-          ),
-          createInfoLine(
-            {text['codex_snapshot']!r},
-            formatCodexSnapshotStatus(snapshot)
-          )
-        );
-        if (officialAppAccount && officialAppAccount.status === 'ambiguous') {{
-          infoList.appendChild(
-            createInfoLine(
-              currentUiLanguage() === 'zh-CN' ? '官方 App' : 'official app',
-              {text['codex_app_ambiguous']!r}
-            )
-          );
-        }}
-      }}
-      codexAccounts.appendChild(row);
-    }});
-    if (!accounts.length) {{
-      codexAccounts.innerHTML = `<p class="meta">{text['not_recorded']}</p>`;
-    }}
-    updateCodexSurfaceSummary(payload);
-
-  }}
-
-  function formatCodexHistoryTime(row) {{
-    const ms = Number(row && row.updated_at_ms);
-    if (Number.isFinite(ms) && ms > 0) {{
-      return formatCompactTimestamp(new Date(ms).toISOString());
-    }}
-    const seconds = Number(row && row.updated_at);
-    if (Number.isFinite(seconds) && seconds > 0) {{
-      return formatCompactTimestamp(new Date(seconds * 1000).toISOString());
-    }}
-    return currentUiLanguage() === 'zh-CN' ? '时间未知' : 'unknown time';
-  }}
-
-  function renderCodexHistory(payload) {{
-    lastCodexHistoryPayload = payload;
-    if (!codexHistoryResults || !codexHistoryState) {{
-      return;
-    }}
-    const rows = Array.isArray(payload.rows) ? payload.rows : [];
-    const total = Number(payload.total || 0);
-    const offset = Number(payload.offset || 0);
-    const limit = Number(payload.limit || 50);
-    const readOnlyLabel = payload.read_only ? {text['codex_history_readonly']!r} : '';
-    const rangeLabel = total > 0 ? `${{offset + 1}}-${{Math.min(offset + rows.length, total)}} / ${{total}}` : `0 / 0`;
-    codexHistoryState.textContent = `${{readOnlyLabel}} · ${{rangeLabel}} · ${{payload.state_path || ''}}`;
-    codexHistoryResults.innerHTML = '';
-    if (!rows.length) {{
-      codexHistoryResults.innerHTML = `<p class="meta">{text['codex_history_empty']}</p>`;
-    }} else {{
-      rows.forEach((row) => {{
-        const item = document.createElement('div');
-        item.className = 'codex-history-row';
-        const title = document.createElement('strong');
-        title.textContent = row.title || row.first_user_message || row.id || 'thread';
-        const summary = document.createElement('div');
-        summary.className = 'info-list';
-        summary.append(
-          createInfoLine(currentUiLanguage() === 'zh-CN' ? '项目' : 'project', row.repo || row.cwd || ''),
-          createInfoLine('source', [row.source, row.thread_source].filter(Boolean).join(' / ') || ''),
-          createInfoLine('provider', row.model_provider || row.model || ''),
-          createInfoLine(currentUiLanguage() === 'zh-CN' ? '更新时间' : 'updated', formatCodexHistoryTime(row))
-        );
-        if (row.cwd) {{
-          summary.appendChild(createInfoLine('cwd', row.cwd));
-        }}
-        if (row.rollout_path) {{
-          summary.appendChild(createInfoLine('rollout', row.rollout_path));
-        }}
-        if (row.first_user_message && row.first_user_message !== row.title) {{
-          summary.appendChild(createInfoLine(currentUiLanguage() === 'zh-CN' ? '首条消息' : 'first message', row.first_user_message));
-        }}
-        item.append(title, summary);
-        codexHistoryResults.appendChild(item);
-      }});
-    }}
-    const prevButton = document.querySelector('[data-codex-history-prev]');
-    const nextButton = document.querySelector('[data-codex-history-next]');
-    if (prevButton) {{
-      prevButton.disabled = offset <= 0;
-    }}
-    if (nextButton) {{
-      nextButton.disabled = offset + limit >= total;
-    }}
-  }}
-
-  async function refreshCodexHistory(resetOffset = false) {{
-    if (!codexHistoryResults || !codexHistoryState) {{
-      return;
-    }}
-    if (resetOffset) {{
-      codexHistoryOffset = 0;
-    }}
-    codexHistoryState.textContent = {text['codex_history_loading']!r};
-    const params = new URLSearchParams();
-    params.set('source', codexHistorySource ? codexHistorySource.value || 'vscode,cli' : 'vscode,cli');
-    params.set('limit', codexHistoryLimit ? codexHistoryLimit.value || '50' : '50');
-    params.set('offset', String(codexHistoryOffset));
-    if (codexHistoryCwd && codexHistoryCwd.value.trim()) {{
-      params.set('cwd', codexHistoryCwd.value.trim());
-    }}
-    if (codexHistorySearch && codexHistorySearch.value.trim()) {{
-      params.set('search', codexHistorySearch.value.trim());
-    }}
-    try {{
-      const response = await fetch('/api/codex/history?' + params.toString(), {{ cache: 'no-store' }});
-      const payload = await response.json();
-      if (!response.ok) {{
-        codexHistoryState.textContent = payload.error || response.statusText;
-        codexHistoryResults.innerHTML = '';
-        return;
-      }}
-      renderCodexHistory(payload);
-    }} catch (error) {{
-      codexHistoryState.textContent = String(error);
-      codexHistoryResults.innerHTML = '';
-    }}
-  }}
-
-  async function refreshCodexStatus() {{
-    if (!codexAccounts) {{
-      return;
-    }}
-    setPanelCacheState('codex', codexLoaded ? 'refreshing' : 'cold');
-    try {{
-      const response = await fetch('/api/codex/status', {{ cache: 'no-store' }});
-      const payload = await response.json();
-      if (!response.ok) {{
-        codexAccounts.innerHTML = `<p class="meta">${{payload.error || response.statusText}}</p>`;
-        setPanelCacheState('codex', 'error');
-        return;
-      }}
-      renderCodexStatus(payload);
-      writePanelCache(codexCacheKey, payload);
-      codexLoaded = true;
-      setPanelCacheState('codex', 'ready', payload.cached_at);
-    }} catch (error) {{
-      codexAccounts.innerHTML = `<p class="meta">${{String(error)}}</p>`;
-      setPanelCacheState('codex', 'error');
-    }}
-  }}
-
-  async function refreshCodexStatusOnline() {{
-    if (!codexAccounts) {{
-      return;
-    }}
-    setBusy(true);
-    setPanelCacheState('codex', codexLoaded ? 'refreshing' : 'cold');
-    try {{
-      const response = await fetch('/api/codex/refresh', {{
-        method: 'POST',
-        cache: 'no-store',
-        headers: {{ 'content-type': 'application/json' }},
-        body: JSON.stringify({{}})
-      }});
-      const payload = await response.json();
-      if (!response.ok) {{
-        codexAccounts.innerHTML = `<p class="meta">${{payload.error || response.statusText}}</p>`;
-        setPanelCacheState('codex', 'error');
-        return;
-      }}
-      renderCodexStatus(payload);
-      writePanelCache(codexCacheKey, payload);
-      codexLoaded = true;
-      setPanelCacheState('codex', 'ready', payload.cached_at);
-    }} catch (error) {{
-      codexAccounts.innerHTML = `<p class="meta">${{String(error)}}</p>`;
-      setPanelCacheState('codex', 'error');
-    }} finally {{
-      setBusy(false);
-    }}
-  }}
-
-  async function probeCodexProfiles() {{
-    setBusy(true);
-    try {{
-      const response = await fetch('/api/codex/probe', {{
-        method: 'POST',
-        headers: {{ 'content-type': 'application/json' }},
-        body: JSON.stringify({{ include_oauth: true, include_api: true }})
-      }});
-      const payload = await response.json();
-      setOutput(JSON.stringify(payload, null, 2));
-      if (response.ok) {{
-        await refreshCodexStatus();
-      }}
-    }} catch (error) {{
-      setOutput(String(error));
-    }} finally {{
-      setBusy(false);
-    }}
-  }}
-
-  function renderClaudeStatus(payload) {{
-    lastClaudePayload = payload;
-    const providers = Array.isArray(payload.providers) ? payload.providers : [];
-    claudeProviders.innerHTML = '';
-    const settings = payload.settings || {{}};
-    const permissions = settings.permissions || {{}};
-    const config = payload.config || {{}};
-    const mcp = payload.mcp || {{}};
-    providers.forEach((provider) => {{
-      const row = document.createElement('div');
-      row.className = 'codex-account';
-      const body = document.createElement('div');
-      body.className = 'codex-account-body';
-      const name = document.createElement('strong');
-      name.textContent = provider.label || provider.name;
-      const models = provider.models || {{}};
-      const credential = provider.credential_present
-        ? {text['claude_credential_ready']!r}
-        : `${{currentUiLanguage() === 'zh-CN' ? {text['claude_missing_credential']!r} : {text['claude_missing_credential']!r}}} ${{provider.auth_env || ''}}`;
-      const badge = document.createElement('span');
-      badge.className = provider.credential_present ? 'provider-status-pill ready' : 'provider-status-pill missing';
-      badge.textContent = credential;
-      const infoList = document.createElement('div');
-      infoList.className = 'info-list';
-      if (provider.base_url) {{
-        infoList.appendChild(
-          createInfoLine(
-            {text['claude_service']!r},
-            provider.base_url
-          )
-        );
-      }}
-      const modelSummary = [
-        models.opus ? `Opus ${{models.opus}}` : '',
-        models.sonnet ? `Sonnet ${{models.sonnet}}` : '',
-      ].filter(Boolean).join(' · ');
-      if (modelSummary) {{
-        infoList.appendChild(
-          createInfoLine(
-            {text['claude_models']!r},
-            modelSummary
-          )
-        );
-      }}
-      infoList.appendChild(
-        createInfoLine(
-          {text['claude_credential']!r},
-          credential
-        )
-      );
-      body.append(name, badge, infoList);
-      row.appendChild(body);
-      const actions = document.createElement('div');
-      actions.className = 'provider-card-actions';
-      const switchButton = document.createElement('button');
-      switchButton.type = 'button';
-      switchButton.className = provider.active ? 'codex-account-switch is-current' : 'codex-account-switch';
-      switchButton.textContent = provider.active ? {text['claude_active']!r} : {text['claude_switch']!r};
-      switchButton.disabled = true;
-      actions.appendChild(switchButton);
-      row.appendChild(actions);
-      if (provider.active) {{
-        infoList.append(
-          createInfoLine(
-            {text['claude_settings_summary']!r},
-            currentUiLanguage() === 'zh-CN'
-              ? `默认模型 ${{settings.model || 'unknown'}} · 权限模式 ${{permissions.defaultMode || 'unknown'}} · 清理周期 ${{settings.cleanupPeriodDays || 'unknown'}} 天`
-              : `model ${{settings.model || 'unknown'}} · mode ${{permissions.defaultMode || 'unknown'}} · cleanup ${{settings.cleanupPeriodDays || 'unknown'}}d`
-          ),
-          createInfoLine(
-            currentUiLanguage() === 'zh-CN' ? '配置健康' : 'config',
-            formatConfigHealth(config)
-          ),
-          createInfoLine(
-            {text['claude_session_continuity']!r},
-            formatClaudeSessionContinuity(payload.session_continuity || null)
-          ),
-          createInfoLine(
-            {text['claude_extensions']!r},
-            summarizeClaudeMcp(
-              mcp.summary || (
-                currentUiLanguage() === 'zh-CN'
-                  ? `状态码 ${{mcp.exit_code ?? 'unknown'}}`
-                  : `exit_code=${{mcp.exit_code ?? 'unknown'}}`
-              )
-            )
-          )
-        );
-      }}
-      claudeProviders.appendChild(row);
-    }});
-    if (!providers.length) {{
-      claudeProviders.innerHTML = `<p class="meta">{text['not_recorded']}</p>`;
-    }}
-    updateClaudeSurfaceSummary(payload);
-
-  }}
-
-  async function refreshClaudeStatus() {{
-    if (!claudeProviders) {{
-      return;
-    }}
-    setPanelCacheState('claude', claudeLoaded ? 'refreshing' : 'cold');
-    try {{
-      const response = await fetch('/api/claude/status');
-      const payload = await response.json();
-      if (!response.ok) {{
-        claudeProviders.innerHTML = `<p class="meta">${{payload.error || response.statusText}}</p>`;
-        setPanelCacheState('claude', 'error');
-        return;
-      }}
-      renderClaudeStatus(payload);
-      writePanelCache(claudeCacheKey, payload);
-      claudeLoaded = true;
-      setPanelCacheState('claude', 'ready', payload.cached_at);
-    }} catch (error) {{
-      claudeProviders.innerHTML = `<p class="meta">${{String(error)}}</p>`;
-      setPanelCacheState('claude', 'error');
-    }}
-  }}
-
-  async function viewClaudeLocalFile(kind) {{
-    const targetKind = String(kind || '').trim();
-    if (!targetKind) {{
-      return;
-    }}
-    setBusy(true);
-    try {{
-      const response = await fetch('/api/claude/file?kind=' + encodeURIComponent(targetKind));
-      const payload = await response.json();
-      if (!response.ok) {{
-        setOutput(payload.error || response.statusText);
-      }} else {{
-        setOutput(`path: ${{payload.path}}\\n\\n${{payload.content}}`);
-      }}
-    }} catch (error) {{
-      setOutput(String(error));
-    }} finally {{
-      setBusy(false);
-    }}
-  }}
-
   document.querySelectorAll('button[data-action]').forEach((button) => {{
     button.addEventListener('click', () => runAction(button.getAttribute('data-action'), button));
   }});
@@ -1955,38 +943,14 @@ def render_interactive_script(
     renderHistory();
   }});
   document.querySelector('[data-refresh]').addEventListener('click', () => window.location.reload());
-  document.querySelector('[data-codex-refresh]').addEventListener('click', () => refreshCodexStatus());
-  document.querySelector('[data-codex-refresh-online]').addEventListener('click', () => refreshCodexStatusOnline());
-  document.querySelector('[data-codex-usage]').addEventListener('click', () => window.open('https://chatgpt.com/codex/settings/usage', '_blank', 'noopener'));
-  document.querySelector('[data-codex-probe]').addEventListener('click', () => probeCodexProfiles());
-  if (codexHistoryForm) {{
-    codexHistoryForm.addEventListener('submit', (event) => {{
       event.preventDefault();
-      refreshCodexHistory(true);
     }});
   }}
-  const codexHistoryPrev = document.querySelector('[data-codex-history-prev]');
-  if (codexHistoryPrev) {{
-    codexHistoryPrev.addEventListener('click', () => {{
-      const limit = Number(lastCodexHistoryPayload && lastCodexHistoryPayload.limit) || Number(codexHistoryLimit && codexHistoryLimit.value) || 50;
-      codexHistoryOffset = Math.max(0, codexHistoryOffset - limit);
-      refreshCodexHistory(false);
     }});
   }}
-  const codexHistoryNext = document.querySelector('[data-codex-history-next]');
-  if (codexHistoryNext) {{
-    codexHistoryNext.addEventListener('click', () => {{
-      const limit = Number(lastCodexHistoryPayload && lastCodexHistoryPayload.limit) || Number(codexHistoryLimit && codexHistoryLimit.value) || 50;
-      const total = Number(lastCodexHistoryPayload && lastCodexHistoryPayload.total) || 0;
-      if (codexHistoryOffset + limit < total) {{
-        codexHistoryOffset += limit;
-        refreshCodexHistory(false);
       }}
     }});
   }}
-  document.querySelector('[data-claude-refresh]').addEventListener('click', () => refreshClaudeStatus());
-  document.querySelectorAll('button[data-claude-file]').forEach((button) => {{
-    button.addEventListener('click', () => viewClaudeLocalFile(button.getAttribute('data-claude-file') || ''));
   }});
   document.querySelector('[data-feedback-refresh]').addEventListener('click', () => refreshFeedbackSummaryWithMode(true));
   const continuityRefreshButton = document.querySelector('[data-continuity-refresh]');
@@ -2041,12 +1005,9 @@ def render_interactive_script(
   syncTargetControls();
   renderHistory();
   updateRuntimeSurfaceSummary();
-  hydratePanelCache('codex', codexCacheKey);
-  hydratePanelCache('claude', claudeCacheKey);
   hydratePanelCache('feedback', feedbackCacheKey);
   hydratePanelCache('next-work', nextWorkCacheKey);
   activateView('runtime');
-  // Page load stays side-effect-light; opening Codex refreshes local status only.
-  // Process-backed host probes still run only after the operator clicks an action.
+  // Page load stays side-effect-light; process-backed probes run only after an explicit action.
 }})();
 </script>"""

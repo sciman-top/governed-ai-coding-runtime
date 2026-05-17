@@ -35,8 +35,6 @@ def render_runtime_snapshot_html(
     attachments = _render_attachments(snapshot, text, interactive=interactive)
     actions = _render_actions(text, language=language, interactive=interactive, target_options=target_options or [])
     feedback = _render_feedback(text, interactive=interactive)
-    codex_panel = _render_codex_panel(text, interactive=interactive)
-    claude_panel = _render_claude_panel(text, interactive=interactive)
     continuity_panel = _render_continuity_panel(text, interactive=interactive)
     feedback_panel = _render_host_feedback_panel(text, interactive=interactive)
     script = render_interactive_script(
@@ -90,12 +88,6 @@ def render_runtime_snapshot_html(
           </div>
           {tasks}
         </div>
-        <div data-view-panel="codex" hidden>
-          {codex_panel}
-        </div>
-        <div data-view-panel="claude" hidden>
-          {claude_panel}
-        </div>
         <div data-view-panel="continuity" hidden>
           {continuity_panel}
         </div>
@@ -143,8 +135,6 @@ def _render_view_tabs(text: dict[str, str]) -> str:
         [
             "<div class='view-tabs' role='tablist' aria-label='Operator view'>",
             f"<button type='button' class='view-tab' role='tab' aria-selected='true' data-view-tab='runtime'>{escape(text['runtime_view'])}</button>",
-            f"<button type='button' class='view-tab' role='tab' aria-selected='false' data-view-tab='codex'>{escape(text['codex_view'])}</button>",
-            f"<button type='button' class='view-tab' role='tab' aria-selected='false' data-view-tab='claude'>{escape(text['claude_view'])}</button>",
             f"<button type='button' class='view-tab' role='tab' aria-selected='false' data-view-tab='continuity'>{escape(text['continuity_view'])}</button>",
             f"<button type='button' class='view-tab' role='tab' aria-selected='false' data-view-tab='feedback'>{escape(text['feedback_view'])}</button>",
             "</div>",
@@ -155,8 +145,6 @@ def _render_view_tabs(text: dict[str, str]) -> str:
 def _render_workspace_overview(text: dict[str, str], *, interactive: bool) -> str:
     surfaces = [
         ("runtime", text["runtime_view"], text["runtime_surface_caption"], True),
-        ("codex", text["codex_view"], text["codex_surface_caption"], False),
-        ("claude", text["claude_view"], text["claude_surface_caption"], False),
         ("continuity", text["continuity_view"], text["continuity_surface_caption"], False),
         ("feedback", text["feedback_view"], text["feedback_surface_caption"], False),
     ]
@@ -206,8 +194,6 @@ def _runtime_surface_default_summary(text: dict[str, str]) -> str:
 def _surface_action_text(surface_id: str, text: dict[str, str]) -> str:
     mapping = {
         "runtime": text["surface_runtime_action"],
-        "codex": text["surface_codex_action"],
-        "claude": text["surface_claude_action"],
         "continuity": text["surface_continuity_action"],
         "feedback": text["surface_feedback_action"],
     }
@@ -631,107 +617,6 @@ def _render_feedback(text: dict[str, str], *, interactive: bool) -> str:
     )
 
 
-def _render_codex_panel(text: dict[str, str], *, interactive: bool) -> str:
-    if not interactive:
-        return "\n".join(
-            [
-                "<section class='panel'>",
-                f"<h2>{escape(text['codex_console'])}</h2>",
-                f"<p class='meta'>{escape(text['interactive_required'])}</p>",
-                "</section>",
-            ]
-        )
-    return "\n".join(
-        [
-            "<section class='panel'>",
-            f"<h2>{escape(text['codex_console'])}</h2>",
-            "<div class='codex-toolbar'>",
-            f"<button type='button' data-codex-refresh='1' title='{escape(text['codex_refresh_if_stale'])}'>{escape(text['codex_refresh'])}</button>",
-            f"<button type='button' data-codex-refresh-online='1' title='{escape(text['codex_refresh_online_hint'])}'>{escape(text['codex_refresh_online'])}</button>",
-            f"<button type='button' data-action='codex_projection_smoke'>{escape(text['codex_projection_smoke'])}</button>",
-            f"<button type='button' data-codex-probe='1'>{escape(text['codex_probe_all'])}</button>",
-            f"<button type='button' data-codex-usage='1'>{escape(text['codex_open_usage'])}</button>",
-            "</div>",
-            "<details class='foldout codex-legacy-tools'>",
-            f"<summary>{escape(text['codex_legacy_tools'])}</summary>",
-            f"<p class='meta'>{escape(text['codex_legacy_tools_hint'])}</p>",
-            "<div class='codex-toolbar'>",
-            f"<button type='button' data-action='codex_switch_record'>{escape(text['codex_switch_record'])}</button>",
-            f"<button type='button' data-action='codex_interop_check'>{escape(text['codex_interop_check'])}</button>",
-            f"<button type='button' data-action='codex_api_projection_repair' data-confirm='{escape(text['codex_api_projection_repair_confirm'])}'>{escape(text['codex_api_projection_repair'])}</button>",
-            f"<button type='button' data-action='codex_oauth_projection_repair' data-confirm='{escape(text['codex_oauth_projection_repair_confirm'])}'>{escape(text['codex_oauth_projection_repair'])}</button>",
-            f"<button type='button' data-action='codex_launch_binding_repair' data-confirm='{escape(text['codex_launch_binding_repair_confirm'])}'>{escape(text['codex_launch_binding_repair'])}</button>",
-            f"<button type='button' data-action='codex_guard_absence_check'>{escape(text['codex_guard_absence_check'])}</button>",
-            "</div>",
-            "</details>",
-            "<form id='codex-history-form' class='codex-history-form'>",
-            f"<h3>{escape(text['codex_history_title'])}</h3>",
-            f"<p class='meta'>{escape(text['codex_history_hint'])}</p>",
-            "<div class='codex-history-fields'>",
-            f"<label>{escape(text['codex_history_source'])}<select id='codex-history-source'><option value='vscode,cli'>vscode + cli</option><option value='vscode'>vscode</option><option value='cli'>cli</option><option value='exec'>exec</option><option value='vscode,cli,exec'>vscode + cli + exec</option></select></label>",
-            f"<label>{escape(text['codex_history_project'])}<input type='text' id='codex-history-cwd' autocomplete='off' placeholder='D:\\CODE\\governed-ai-coding-runtime'></label>",
-            f"<label>{escape(text['codex_history_search'])}<input type='text' id='codex-history-search' autocomplete='off' placeholder='{escape(text['codex_history_search_placeholder'])}'></label>",
-            f"<label>{escape(text['codex_history_limit'])}<select id='codex-history-limit'><option value='50'>50</option><option value='100'>100</option><option value='200'>200</option></select></label>",
-            "</div>",
-            "<div class='codex-history-actions'>",
-            f"<button type='submit' class='primary'>{escape(text['codex_history_query'])}</button>",
-            f"<button type='button' data-codex-history-prev='1'>{escape(text['codex_history_prev'])}</button>",
-            f"<button type='button' data-codex-history-next='1'>{escape(text['codex_history_next'])}</button>",
-            "</div>",
-            f"<div class='status-line' id='codex-history-state'>{escape(text['codex_history_idle'])}</div>",
-            "<div id='codex-history-results' class='codex-history-results'></div>",
-            "</form>",
-            "<div class='codex-grid'>",
-            "<div>",
-            f"<div class='status-line' id='codex-cache-state'>{escape(text['panel_cache_state'])}: {escape(text['panel_cache_cold'])}</div>",
-            f"<div class='status-line codex-switch-health' id='codex-switch-health'>{escape(text['codex_switch_health_loading'])}</div>",
-            "<div id='codex-accounts' class='codex-list'></div>",
-            "</div>",
-            "</div>",
-            "</section>",
-        ]
-    )
-
-
-def _render_claude_panel(text: dict[str, str], *, interactive: bool) -> str:
-    if not interactive:
-        return "\n".join(
-            [
-                "<section class='panel'>",
-                f"<h2>{escape(text['claude_console'])}</h2>",
-                f"<p class='meta'>{escape(text['interactive_required'])}</p>",
-                "</section>",
-            ]
-        )
-    return "\n".join(
-        [
-            "<section class='panel'>",
-            f"<h2>{escape(text['claude_console'])}</h2>",
-            f"<p class='meta'>{escape(text['claude_managed_by_cc_switch'])}</p>",
-            "<div class='claude-toolbar'>",
-            f"<button type='button' data-claude-refresh='1'>{escape(text['claude_refresh'])}</button>",
-            "</div>",
-            "<div class='claude-console-grid'>",
-            "<div class='claude-side-panel'>",
-            "<div id='claude-providers' class='claude-provider-list'></div>",
-            "</div>",
-            "<div class='claude-side-panel'>",
-            "<section class='panel'>",
-            f"<h3>{escape(text['claude_local_files'])}</h3>",
-            f"<p class='meta'>{escape(text['claude_file_hint'])}</p>",
-            "<div class='claude-file-actions'>",
-            f"<button type='button' data-claude-file='settings'>{escape(text['claude_view_settings'])}</button>",
-            f"<button type='button' data-claude-file='profiles'>{escape(text['claude_view_profiles'])}</button>",
-            f"<button type='button' data-claude-file='switcher'>{escape(text['claude_view_switcher'])}</button>",
-            "</div>",
-            "</section>",
-            "</div>",
-            "</div>",
-            "</section>",
-        ]
-    )
-
-
 def _render_continuity_panel(text: dict[str, str], *, interactive: bool) -> str:
     if not interactive:
         return "\n".join(
@@ -747,7 +632,7 @@ def _render_continuity_panel(text: dict[str, str], *, interactive: bool) -> str:
             "<section class='panel'>",
             f"<h2>{escape(text['continuity_console'])}</h2>",
             f"<p class='meta'>{escape(text['continuity_caption'])}</p>",
-            "<div class='claude-toolbar'>",
+            "<div class='panel-toolbar'>",
             f"<button type='button' data-continuity-refresh='1'>{escape(text['continuity_refresh'])}</button>",
             "</div>",
             f"<div class='status-line' id='continuity-status'>{escape(text['continuity_status'])}: {escape(text['panel_cache_cold'])}</div>",
@@ -772,7 +657,7 @@ def _render_host_feedback_panel(text: dict[str, str], *, interactive: bool) -> s
         [
             "<section class='panel'>",
             f"<h2>{escape(text['feedback_console'])}</h2>",
-            "<div class='claude-toolbar'>",
+            "<div class='panel-toolbar'>",
             f"<button type='button' data-feedback-refresh='1'>{escape(text['feedback_refresh'])}</button>",
             "</div>",
             f"<div class='status-line' id='feedback-status'>{escape(text['feedback_status'])}: {escape(text['feedback_loading'])}</div>",

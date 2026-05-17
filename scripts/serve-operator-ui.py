@@ -8,7 +8,6 @@ import importlib.util
 import json
 import os
 import shutil
-import sqlite3
 import subprocess
 import sys
 import time
@@ -28,14 +27,6 @@ if str(SCRIPTS_SRC) not in sys.path:
 from governed_ai_coding_runtime_contracts.operator_ui import render_runtime_snapshot_html
 from governed_ai_coding_runtime_contracts.agent_continuity import LocalAgentContinuityIndex
 from governed_ai_coding_runtime_contracts.runtime_status import RuntimeStatusStore, runtime_snapshot_to_dict
-from lib.claude_local import claude_home, claude_status, delete_provider_profile, optimize_claude_local, provider_profiles_path, settings_path, switch_provider
-from lib.codex_local import (
-    codex_status,
-    cockpit_codex_source_status,
-    probe_auth_profiles,
-)
-
-
 def _load_host_feedback_summary_builder():
     path = ROOT / "scripts" / "host-feedback-summary.py"
     module_name = "host_feedback_summary_script"
@@ -49,22 +40,6 @@ def _load_host_feedback_summary_builder():
 
 
 build_host_feedback_summary = _load_host_feedback_summary_builder()
-
-
-def _load_codex_switch_health_builder():
-    path = ROOT / "scripts" / "codex-cockpit-switch-health.py"
-    module_name = "codex_cockpit_switch_health_script"
-    spec = importlib.util.spec_from_file_location(module_name, path)
-    if spec is None or spec.loader is None:
-        raise RuntimeError(f"could not load Codex switch health script: {path}")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[module_name] = module
-    spec.loader.exec_module(module)
-    return module.evaluate, module.default_cockpit_home
-
-
-build_codex_switch_health, default_codex_switch_health_cockpit_home = _load_codex_switch_health_builder()
-
 
 ALLOWED_ACTIONS = {
     "targets": {"operator_action": "Targets", "run_alias": "targets", "timeout_seconds": 300},
@@ -96,13 +71,6 @@ ALLOWED_ACTIONS = {
         "allow_multi_target": True,
         "managed_asset_removal": True,
     },
-    "codex_interop_check": {"operator_action": "CodexInteropCheck", "timeout_seconds": 120},
-    "codex_projection_smoke": {"operator_action": "CodexProjectionSmoke", "timeout_seconds": 180},
-    "codex_api_projection_repair": {"operator_action": "CodexApiProjectionRepair", "timeout_seconds": 120},
-    "codex_oauth_projection_repair": {"operator_action": "CodexOauthProjectionRepair", "timeout_seconds": 120},
-    "codex_launch_binding_repair": {"operator_action": "CodexLaunchBindingRepair", "timeout_seconds": 60},
-    "codex_switch_record": {"operator_action": "CodexSwitchRecord", "timeout_seconds": 120},
-    "codex_guard_absence_check": {"operator_action": "CodexGuardAbsenceCheck", "timeout_seconds": 60},
     "feedback_report": {"operator_action": "FeedbackReport", "run_alias": "feedback", "timeout_seconds": 600},
     "evolution_review": {"operator_action": "EvolutionReview", "run_alias": "evolution-review", "timeout_seconds": 900},
     "experience_review": {"operator_action": "ExperienceReview", "run_alias": "experience-review", "timeout_seconds": 900},
@@ -110,8 +78,6 @@ ALLOWED_ACTIONS = {
     "core_principle_materialize": {"operator_action": "CorePrincipleMaterialize", "run_alias": "core-principle", "timeout_seconds": 900},
 }
 
-CODEX_STATUS_CACHE_TTL_SECONDS = 10.0
-CLAUDE_STATUS_CACHE_TTL_SECONDS = 15.0
 FEEDBACK_SUMMARY_CACHE_TTL_SECONDS = 30.0
 NEXT_WORK_CACHE_TTL_SECONDS = 60.0
 SERVER_STARTED_AT = time.time()
@@ -126,9 +92,6 @@ UI_SOURCE_FILES = (
     ROOT / "packages" / "contracts" / "src" / "governed_ai_coding_runtime_contracts" / "operator_ui_style.py",
     ROOT / "packages" / "contracts" / "src" / "governed_ai_coding_runtime_contracts" / "operator_ui_text.py",
     ROOT / "packages" / "contracts" / "src" / "governed_ai_coding_runtime_contracts" / "runtime_status.py",
-    ROOT / "scripts" / "lib" / "codex_local.py",
-    ROOT / "scripts" / "lib" / "claude_local.py",
-    ROOT / "scripts" / "codex-cockpit-switch-health.py",
 )
 _STATUS_CACHE_LOCK = Lock()
 _STATUS_CACHE: dict[str, dict] = {}
@@ -235,33 +198,6 @@ def _build_handler(*, default_language: str, host: str, port: int):
             if parsed.path == "/api/targets":
                 self._send_json({"targets": load_target_ids()})
                 return
-            if parsed.path == "/api/codex/status":
-                params = parse_qs(parsed.query)
-                result = load_codex_status(refresh_if_stale=_truthy(params.get("refresh_if_stale", [""])[0]))
-                status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.INTERNAL_SERVER_ERROR
-                self._send_json(result, status=status)
-                return
-            if parsed.path == "/api/codex/cockpit":
-                result = cockpit_codex_source_status()
-                status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.NOT_FOUND
-                self._send_json(result, status=status)
-                return
-            if parsed.path == "/api/codex/history":
-                result = load_codex_history(parse_qs(parsed.query))
-                status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
-                self._send_json(result, status=status)
-                return
-            if parsed.path == "/api/claude/status":
-                result = load_claude_status()
-                status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.INTERNAL_SERVER_ERROR
-                self._send_json(result, status=status)
-                return
-            if parsed.path == "/api/claude/file":
-                params = parse_qs(parsed.query)
-                result = read_claude_local_file(params.get("kind", [""])[0])
-                status = HTTPStatus.OK if "content" in result else HTTPStatus.BAD_REQUEST
-                self._send_json(result, status=status)
-                return
             if parsed.path == "/api/feedback/summary":
                 params = parse_qs(parsed.query)
                 if _truthy(params.get("refresh", [""])[0]):
@@ -301,31 +237,6 @@ def _build_handler(*, default_language: str, host: str, port: int):
         def do_POST(self) -> None:
             parsed = urlparse(self.path)
             if parsed.path != "/api/run":
-                if parsed.path == "/api/codex/probe":
-                    result = run_codex_probe(self._read_json_body())
-                    status = HTTPStatus.OK if result.get("status") in {"ok", "attention"} else HTTPStatus.BAD_REQUEST
-                    self._send_json(result, status=status)
-                    return
-                if parsed.path == "/api/codex/refresh":
-                    result = load_codex_status(refresh_online=True)
-                    status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.INTERNAL_SERVER_ERROR
-                    self._send_json(result, status=status)
-                    return
-                if parsed.path == "/api/claude/switch":
-                    result = run_claude_switch(self._read_json_body())
-                    status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
-                    self._send_json(result, status=status)
-                    return
-                if parsed.path == "/api/claude/delete":
-                    result = run_claude_delete(self._read_json_body())
-                    status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.BAD_REQUEST
-                    self._send_json(result, status=status)
-                    return
-                if parsed.path == "/api/claude/optimize":
-                    result = run_claude_optimize(self._read_json_body())
-                    status = HTTPStatus.OK if result.get("status") in {"ok", "dry_run"} else HTTPStatus.BAD_REQUEST
-                    self._send_json(result, status=status)
-                    return
                 if parsed.path == "/api/continuity/write-handoff":
                     result = write_continuity_handoff(self._read_json_body())
                     status = HTTPStatus.OK if result.get("status") == "written" else HTTPStatus.BAD_REQUEST
@@ -470,234 +381,6 @@ def render_stale_service_html(language: str, *, restart_state: dict | None = Non
 </html>"""
 
 
-def load_codex_status(*, refresh_online: bool = False, refresh_if_stale: bool = False) -> dict:
-    if refresh_online or refresh_if_stale:
-        invalidate_status_cache("codex")
-        return _with_codex_switch_health(_load_status_payload(
-            "codex",
-            lambda: codex_status(refresh_online=refresh_online, refresh_if_stale=refresh_if_stale),
-        ))
-    return _with_codex_switch_health(_load_status_cached(
-        "codex",
-        ttl_seconds=CODEX_STATUS_CACHE_TTL_SECONDS,
-        loader=lambda: codex_status(refresh_online=False),
-    ))
-
-
-def _with_codex_switch_health(payload: dict) -> dict:
-    enriched = dict(payload)
-    try:
-        enriched["switch_health"] = build_codex_switch_health(default_codex_switch_health_cockpit_home(), "codex_app")
-    except Exception as exc:
-        enriched["switch_health"] = {
-            "status": "error",
-            "error": f"{type(exc).__name__}: {exc}",
-            "runtime_boundary": {
-                "codex_app_account_change_hot_reload_confirmed": False,
-                "codex_app_restart_required_for_account_change": True,
-                "codex_cli_new_process_reads_projected_auth": False,
-            },
-            "write_actions": [],
-        }
-    return enriched
-
-
-def load_codex_history(params: dict[str, list[str]] | None = None) -> dict:
-    params = params or {}
-    state_path = _codex_state_path()
-    if not state_path.exists():
-        return {
-            "status": "error",
-            "error": "codex state_5.sqlite not found",
-            "read_only": True,
-            "state_path": str(state_path),
-        }
-
-    sources = _query_sources(params)
-    cwd_filter = (_query_string(params, "cwd") or "").strip()
-    search = (_query_string(params, "search") or "").strip()
-    limit = _bounded_int(_query_string(params, "limit") or "", default=50, minimum=1, maximum=200)
-    offset = _bounded_int(_query_string(params, "offset") or "", default=0, minimum=0, maximum=100_000)
-
-    try:
-        connection = sqlite3.connect(f"file:{state_path}?mode=ro", uri=True)
-        connection.row_factory = sqlite3.Row
-        try:
-            columns = {row["name"] for row in connection.execute("pragma table_info(threads)")}
-            if not {"id", "cwd", "source", "updated_at"}.issubset(columns):
-                return {
-                    "status": "error",
-                    "error": "threads table does not expose the expected Codex history columns",
-                    "read_only": True,
-                    "state_path": str(state_path),
-                }
-
-            where_sql, values = _codex_history_where_clause(
-                columns,
-                sources=sources,
-                cwd_filter=cwd_filter,
-                search=search,
-            )
-            updated_expr = _codex_history_updated_expr(columns)
-            total = connection.execute(f"select count(*) from threads {where_sql}", values).fetchone()[0]
-            rows = connection.execute(
-                f"""
-                select {_codex_history_select_columns(columns)}
-                from threads
-                {where_sql}
-                order by {updated_expr} desc, updated_at desc, id desc
-                limit ? offset ?
-                """,
-                [*values, limit, offset],
-            ).fetchall()
-            repo_rows = connection.execute(
-                f"""
-                select cwd, count(*) as count, max({updated_expr}) as latest_updated_at_ms
-                from threads
-                {where_sql}
-                group by cwd
-                order by count desc, latest_updated_at_ms desc
-                limit 30
-                """,
-                values,
-            ).fetchall()
-        finally:
-            connection.close()
-    except sqlite3.Error as exc:
-        return {
-            "status": "error",
-            "error": str(exc),
-            "read_only": True,
-            "state_path": str(state_path),
-        }
-
-    return {
-        "status": "ok",
-        "read_only": True,
-        "state_path": str(state_path),
-        "sources": sources,
-        "cwd": cwd_filter,
-        "search": search,
-        "limit": limit,
-        "offset": offset,
-        "total": total,
-        "returned": len(rows),
-        "rows": [_codex_history_row_to_dict(row) for row in rows],
-        "repo_counts": [_codex_history_repo_count_to_dict(row) for row in repo_rows],
-    }
-
-
-def _codex_state_path() -> Path:
-    codex_home = os.environ.get("CODEX_HOME")
-    if codex_home:
-        return Path(codex_home).expanduser() / "state_5.sqlite"
-    return Path.home() / ".codex" / "state_5.sqlite"
-
-
-def _query_sources(params: dict[str, list[str]]) -> list[str]:
-    raw_values: list[str] = []
-    for value in params.get("source", []):
-        raw_values.extend(str(value).split(","))
-    sources = []
-    for value in raw_values or ["vscode", "cli"]:
-        normalized = value.strip().lower()
-        if normalized and normalized not in sources:
-            sources.append(normalized)
-    return sources[:8] or ["vscode", "cli"]
-
-
-def _bounded_int(value: str, *, default: int, minimum: int, maximum: int) -> int:
-    try:
-        parsed = int(value)
-    except (TypeError, ValueError):
-        parsed = default
-    return max(minimum, min(maximum, parsed))
-
-
-def _codex_history_where_clause(
-    columns: set[str],
-    *,
-    sources: list[str],
-    cwd_filter: str,
-    search: str,
-) -> tuple[str, list[object]]:
-    clauses = ["coalesce(archived, 0) = 0"] if "archived" in columns else []
-    values: list[object] = []
-    if sources:
-        clauses.append(f"source in ({','.join('?' for _ in sources)})")
-        values.extend(sources)
-    if cwd_filter:
-        normalized = _normalize_codex_cwd(cwd_filter)
-        clauses.append("(cwd like ? or replace(cwd, '\\\\?\\', '') like ?)")
-        values.extend([f"%{cwd_filter}%", f"%{normalized}%"])
-    if search:
-        searchable_columns = [name for name in ("title", "first_user_message", "cwd", "id") if name in columns]
-        if searchable_columns:
-            clauses.append("(" + " or ".join(f"{name} like ?" for name in searchable_columns) + ")")
-            values.extend([f"%{search}%"] * len(searchable_columns))
-    if not clauses:
-        return "", values
-    return "where " + " and ".join(clauses), values
-
-
-def _codex_history_select_columns(columns: set[str]) -> str:
-    wanted = [
-        "id",
-        "title",
-        "first_user_message",
-        "cwd",
-        "source",
-        "thread_source",
-        "model_provider",
-        "model",
-        "updated_at",
-        "updated_at_ms",
-        "created_at",
-        "created_at_ms",
-        "rollout_path",
-        "tokens_used",
-        "git_branch",
-        "agent_nickname",
-        "agent_role",
-    ]
-    return ", ".join(name for name in wanted if name in columns)
-
-
-def _codex_history_updated_expr(columns: set[str]) -> str:
-    if "updated_at_ms" in columns:
-        return "coalesce(updated_at_ms, updated_at * 1000)"
-    return "updated_at * 1000"
-
-
-def _codex_history_row_to_dict(row: sqlite3.Row) -> dict:
-    item = {key: row[key] for key in row.keys()}
-    if item.get("updated_at_ms") is None and item.get("updated_at") is not None:
-        item["updated_at_ms"] = int(item["updated_at"]) * 1000
-    if item.get("created_at_ms") is None and item.get("created_at") is not None:
-        item["created_at_ms"] = int(item["created_at"]) * 1000
-    if item.get("cwd"):
-        item["repo"] = Path(_normalize_codex_cwd(str(item["cwd"]))).name
-    return item
-
-
-def _codex_history_repo_count_to_dict(row: sqlite3.Row) -> dict:
-    cwd = str(row["cwd"] or "")
-    return {
-        "cwd": cwd,
-        "repo": Path(_normalize_codex_cwd(cwd)).name if cwd else "",
-        "count": int(row["count"] or 0),
-        "latest_updated_at_ms": int(row["latest_updated_at_ms"] or 0),
-    }
-
-
-def _normalize_codex_cwd(value: str) -> str:
-    return value.replace("\\\\?\\", "").replace("//?/", "")
-
-
-def load_claude_status() -> dict:
-    return _load_status_cached("claude", ttl_seconds=CLAUDE_STATUS_CACHE_TTL_SECONDS, loader=claude_status)
-
-
 def load_feedback_summary() -> dict:
     payload = _load_status_cached("feedback", ttl_seconds=FEEDBACK_SUMMARY_CACHE_TTL_SECONDS, loader=_build_feedback_summary)
     if payload.get("status") == "ok" and "overall_status" in payload:
@@ -814,61 +497,6 @@ def render_next_work_panel(*, language: str) -> str:
             "</section>",
         ]
     )
-
-
-def run_codex_probe(payload: dict) -> dict:
-    if "_json_error" in payload:
-        return {"status": "error", "error": payload["_json_error"]}
-    names = payload.get("names")
-    if not isinstance(names, list):
-        names = None
-    include_oauth = bool(payload.get("include_oauth", True))
-    include_api = bool(payload.get("include_api", True))
-    try:
-        return probe_auth_profiles(names=names, include_oauth=include_oauth, include_api=include_api)
-    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
-        return {"status": "error", "error": str(exc)}
-
-
-def run_claude_switch(payload: dict) -> dict:
-    if "_json_error" in payload:
-        return {"status": "error", "error": payload["_json_error"]}
-    name = _string(payload.get("name"), "")
-    dry_run = bool(payload.get("dry_run", False))
-    try:
-        result = switch_provider(name, dry_run=dry_run)
-    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
-        return {"status": "error", "error": str(exc)}
-    if result.get("status") == "ok" and result.get("changed"):
-        invalidate_status_cache("claude")
-    return result
-
-
-def run_claude_delete(payload: dict) -> dict:
-    if "_json_error" in payload:
-        return {"status": "error", "error": payload["_json_error"]}
-    name = _string(payload.get("name"), "")
-    dry_run = bool(payload.get("dry_run", False))
-    try:
-        result = delete_provider_profile(name, dry_run=dry_run)
-    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
-        return {"status": "error", "error": str(exc)}
-    if result.get("status") == "ok" and result.get("changed"):
-        invalidate_status_cache("claude")
-    return result
-
-
-def run_claude_optimize(payload: dict) -> dict:
-    if "_json_error" in payload:
-        return {"status": "error", "error": payload["_json_error"]}
-    provider = _string(payload.get("provider"), "bigmodel-glm") or "bigmodel-glm"
-    apply = bool(payload.get("apply", False))
-    try:
-        result = optimize_claude_local(provider_name=provider, apply=apply)
-    except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
-        return {"status": "error", "error": str(exc)}
-    invalidate_status_cache("claude")
-    return result
 
 
 def invalidate_status_cache(kind: str | None = None) -> None:
@@ -1187,25 +815,6 @@ def read_repo_file(requested: str) -> dict:
         }
     except OSError as exc:
         return {"path": requested, "error": str(exc)}
-
-
-def read_claude_local_file(kind: str) -> dict:
-    normalized = _string(kind, "")
-    home = claude_home()
-    path_map = {
-        "settings": settings_path(home),
-        "profiles": provider_profiles_path(home),
-        "switcher": home / "scripts" / "Switch-ClaudeProvider.ps1",
-    }
-    path = path_map.get(normalized)
-    if path is None:
-        return {"error": f"unsupported Claude local file kind: {normalized}"}
-    if not path.exists() or not path.is_file():
-        return {"error": f"file not found: {path}"}
-    try:
-        return {"path": str(path), "content": path.read_text(encoding="utf-8", errors="replace")}
-    except OSError as exc:
-        return {"path": str(path), "error": str(exc)}
 
 
 def write_continuity_handoff(payload: dict) -> dict:

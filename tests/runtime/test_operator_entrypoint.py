@@ -59,11 +59,11 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn(".\\run.ps1 readiness -OpenUi", completed.stdout)
         self.assertNotIn("codex-optimize", completed.stdout)
         self.assertIn("codex-interop", completed.stdout)
-        self.assertIn("codex-mode-new", completed.stdout)
-        self.assertIn("codex-mode-old-api", completed.stdout)
-        self.assertIn("codex-mode-old-oauth", completed.stdout)
-        self.assertIn("codex-mode-rollback", completed.stdout)
-        self.assertIn("codex-api-repair", completed.stdout)
+        self.assertNotIn("codex-mode-new", completed.stdout)
+        self.assertNotIn("codex-mode-old-api", completed.stdout)
+        self.assertNotIn("codex-mode-old-oauth", completed.stdout)
+        self.assertNotIn("codex-mode-rollback", completed.stdout)
+        self.assertNotIn("codex-api-repair", completed.stdout)
         self.assertIn("rules-check", completed.stdout)
         self.assertIn("operator-help", completed.stdout)
         self.assertIn("cleanup-targets", completed.stdout)
@@ -129,7 +129,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("scripts/verify-repo.ps1", completed.stdout)
         self.assertIn("-Check RuntimeQuick", completed.stdout)
 
-    def test_root_run_entrypoint_codex_api_repair_alias(self) -> None:
+    def test_root_run_entrypoint_codex_api_repair_alias_is_retired(self) -> None:
         completed = subprocess.run(
             [
                 "pwsh",
@@ -141,7 +141,6 @@ class OperatorEntrypointTests(unittest.TestCase):
                 "codex-api-repair",
                 "-DryRun",
             ],
-            check=True,
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -149,9 +148,8 @@ class OperatorEntrypointTests(unittest.TestCase):
             cwd=ROOT,
         )
 
-        self.assertIn("DRY-RUN codex-api-projection-repair", completed.stdout)
-        self.assertIn("--repair-current-cockpit-api-projection", completed.stdout)
-        self.assertIn("--prefer-cockpit-api-account", completed.stdout)
+        self.assertNotEqual(0, completed.returncode)
+        self.assertIn("does not belong to the set", completed.stderr)
 
     def test_operator_entrypoint_help_succeeds(self) -> None:
         completed = subprocess.run(
@@ -178,8 +176,8 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("Readiness", completed.stdout)
         self.assertNotIn("CodexLocalOptimize", completed.stdout)
         self.assertIn("CodexInteropCheck", completed.stdout)
-        self.assertIn("CodexGatewayEnable", completed.stdout)
-        self.assertIn("CodexGatewayRollback", completed.stdout)
+        self.assertNotIn("CodexGatewayEnable", completed.stdout)
+        self.assertNotIn("CodexGatewayRollback", completed.stdout)
         self.assertIn("FeedbackReport", completed.stdout)
         self.assertIn("CleanupTargets", completed.stdout)
         self.assertIn("UninstallGovernance", completed.stdout)
@@ -324,71 +322,15 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("--cockpit-home", completed.stdout)
         self.assertNotIn("--apply", completed.stdout)
 
-    def test_operator_codex_api_projection_repair_is_available_as_dry_run(self) -> None:
-        completed = subprocess.run(
-            [
-                "pwsh",
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                str(ROOT / "scripts" / "operator.ps1"),
-                "-Action",
-                "CodexApiProjectionRepair",
-                "-DryRun",
-            ],
-            check=True,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            cwd=ROOT,
-        )
-
-        self.assertIn("DRY-RUN codex-api-projection-repair", completed.stdout)
-        self.assertIn("scripts/codex-interop-check.py", completed.stdout)
-        self.assertIn("--quick-launch", completed.stdout)
-        self.assertIn("--repair-current-cockpit-api-projection", completed.stdout)
-        self.assertIn("--prefer-cockpit-api-account", completed.stdout)
-        self.assertNotIn("--repair-current-cockpit-account-projection", completed.stdout)
-        self.assertNotIn("--apply", completed.stdout)
-        self.assertNotIn("--migrate-provider-bucket", completed.stdout)
-
-    def test_operator_codex_oauth_projection_repair_is_available_as_dry_run(self) -> None:
-        completed = subprocess.run(
-            [
-                "pwsh",
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                str(ROOT / "scripts" / "operator.ps1"),
-                "-Action",
-                "CodexOauthProjectionRepair",
-                "-DryRun",
-            ],
-            check=True,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            cwd=ROOT,
-        )
-
-        self.assertIn("DRY-RUN codex-oauth-projection-repair", completed.stdout)
-        self.assertIn("scripts/codex-interop-check.py", completed.stdout)
-        self.assertIn("--quick-launch", completed.stdout)
-        self.assertIn("--repair-current-cockpit-oauth-projection", completed.stdout)
-        self.assertNotIn("--repair-current-cockpit-account-projection", completed.stdout)
-        self.assertNotIn("--apply", completed.stdout)
-        self.assertNotIn("--migrate-provider-bucket", completed.stdout)
-
-    def test_operator_codex_gateway_mode_switches_are_available_as_dry_run(self) -> None:
-        cases = [
-            ("CodexGatewayEnable", "codex-gateway-enable", "All"),
-            ("CodexGatewayRollback", "codex-gateway-rollback", "Rollback"),
+    def test_operator_codex_write_repairs_and_gateway_switches_are_retired(self) -> None:
+        retired_actions = [
+            "CodexApiProjectionRepair",
+            "CodexOauthProjectionRepair",
+            "CodexLaunchBindingRepair",
+            "CodexGatewayEnable",
+            "CodexGatewayRollback",
         ]
-        for action, step_name, manage_action in cases:
+        for action in retired_actions:
             with self.subTest(action=action):
                 completed = subprocess.run(
                     [
@@ -402,7 +344,6 @@ class OperatorEntrypointTests(unittest.TestCase):
                         action,
                         "-DryRun",
                     ],
-                    check=True,
                     capture_output=True,
                     text=True,
                     encoding="utf-8",
@@ -410,12 +351,8 @@ class OperatorEntrypointTests(unittest.TestCase):
                     cwd=ROOT,
                 )
 
-                self.assertIn(f"DRY-RUN {step_name}", completed.stdout)
-                self.assertIn("scripts/Manage-LiteLLMGateway.ps1", completed.stdout)
-                self.assertIn("-Action", completed.stdout)
-                self.assertIn(manage_action, completed.stdout)
-                self.assertNotIn("--apply", completed.stdout)
-                self.assertNotIn("--migrate-provider-bucket", completed.stdout)
+                self.assertNotEqual(0, completed.returncode)
+                self.assertIn(action, completed.stderr)
 
     def test_operator_codex_projection_smoke_is_read_only_dry_run(self) -> None:
         completed = subprocess.run(
@@ -444,35 +381,6 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("DRY-RUN codex-guard-absence-check", completed.stdout)
         self.assertNotIn("--repair-current-cockpit-api-projection", completed.stdout)
         self.assertNotIn("--repair-current-cockpit-oauth-projection", completed.stdout)
-        self.assertNotIn("--apply", completed.stdout)
-        self.assertNotIn("--migrate-provider-bucket", completed.stdout)
-
-    def test_operator_codex_launch_binding_repair_is_available_as_dry_run(self) -> None:
-        completed = subprocess.run(
-            [
-                "pwsh",
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                str(ROOT / "scripts" / "operator.ps1"),
-                "-Action",
-                "CodexLaunchBindingRepair",
-                "-DryRun",
-            ],
-            check=True,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            cwd=ROOT,
-        )
-
-        self.assertIn("DRY-RUN codex-launch-binding-repair", completed.stdout)
-        self.assertIn("scripts/codex-interop-check.py", completed.stdout)
-        self.assertIn("--quick-launch", completed.stdout)
-        self.assertIn("--repair-cockpit-instance-follow-current", completed.stdout)
-        self.assertNotIn("--repair-current-cockpit-account-projection", completed.stdout)
         self.assertNotIn("--apply", completed.stdout)
         self.assertNotIn("--migrate-provider-bucket", completed.stdout)
 
@@ -622,8 +530,8 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("下一步选择", html)
         self.assertIn("id='next-work-action'", html)
         self.assertIn("data-next-work-refresh='1'", html)
-        self.assertIn("Codex 账号与配置", html)
-        self.assertIn("Claude Provider 与配置", html)
+        self.assertNotIn("Codex 账号与配置", html)
+        self.assertNotIn("Claude Provider 与配置", html)
 
     def test_operator_ui_action_generates_english_html(self) -> None:
         completed = subprocess.run(
@@ -658,16 +566,14 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("Runtime Summary", html)
         self.assertIn("Next Work Selector", html)
         self.assertIn("id='next-work-state'", html)
-        self.assertIn("Codex Account and Config", html)
-        self.assertIn("Claude Provider and Config", html)
+        self.assertNotIn("Codex Account and Config", html)
+        self.assertNotIn("Claude Provider and Config", html)
 
     def test_operator_ui_server_helpers_are_bounded_to_repo_actions_and_files(self) -> None:
         module = _load_serve_operator_ui_module()
         module.invalidate_status_cache()
 
         with (
-            mock.patch.object(module, "codex_status", return_value={"sample": "codex"}),
-            mock.patch.object(module, "claude_status", return_value={"sample": "claude"}),
             mock.patch.object(
                 module,
                 "_build_feedback_summary",
@@ -695,33 +601,13 @@ class OperatorEntrypointTests(unittest.TestCase):
             self.assertIn("cleanup_targets", module.ALLOWED_ACTIONS)
             self.assertIn("uninstall_governance", module.ALLOWED_ACTIONS)
             self.assertNotIn("codex_local_optimize", module.ALLOWED_ACTIONS)
-            self.assertIn("codex_interop_check", module.ALLOWED_ACTIONS)
-            self.assertIn("codex_api_projection_repair", module.ALLOWED_ACTIONS)
-            self.assertEqual(
-                "CodexApiProjectionRepair",
-                module.ALLOWED_ACTIONS["codex_api_projection_repair"]["operator_action"],
-            )
-            self.assertIn("codex_projection_smoke", module.ALLOWED_ACTIONS)
-            self.assertEqual(
-                "CodexProjectionSmoke",
-                module.ALLOWED_ACTIONS["codex_projection_smoke"]["operator_action"],
-            )
-            self.assertIn("codex_oauth_projection_repair", module.ALLOWED_ACTIONS)
-            self.assertEqual(
-                "CodexOauthProjectionRepair",
-                module.ALLOWED_ACTIONS["codex_oauth_projection_repair"]["operator_action"],
-            )
-            self.assertIn("codex_launch_binding_repair", module.ALLOWED_ACTIONS)
-            self.assertEqual(
-                "CodexLaunchBindingRepair",
-                module.ALLOWED_ACTIONS["codex_launch_binding_repair"]["operator_action"],
-            )
-            self.assertIn("codex_switch_record", module.ALLOWED_ACTIONS)
-            self.assertIn("codex_guard_absence_check", module.ALLOWED_ACTIONS)
-            self.assertEqual(
-                "CodexGuardAbsenceCheck",
-                module.ALLOWED_ACTIONS["codex_guard_absence_check"]["operator_action"],
-            )
+            self.assertNotIn("codex_interop_check", module.ALLOWED_ACTIONS)
+            self.assertNotIn("codex_api_projection_repair", module.ALLOWED_ACTIONS)
+            self.assertNotIn("codex_projection_smoke", module.ALLOWED_ACTIONS)
+            self.assertNotIn("codex_oauth_projection_repair", module.ALLOWED_ACTIONS)
+            self.assertNotIn("codex_launch_binding_repair", module.ALLOWED_ACTIONS)
+            self.assertNotIn("codex_switch_record", module.ALLOWED_ACTIONS)
+            self.assertNotIn("codex_guard_absence_check", module.ALLOWED_ACTIONS)
             self.assertNotIn("codex_guard_status", module.ALLOWED_ACTIONS)
             self.assertNotIn("codex_interop_repair", module.ALLOWED_ACTIONS)
             self.assertNotIn("codex_guard_start", module.ALLOWED_ACTIONS)
@@ -736,16 +622,16 @@ class OperatorEntrypointTests(unittest.TestCase):
             )
             self.assertIn("Governed AI Coding Runtime", module.read_repo_file("README.md")["content"])
             self.assertIn("escapes repository root", module.read_repo_file("../outside.txt")["error"])
-            self.assertIn(module.load_codex_status()["status"], {"ok", "error"})
+            self.assertFalse(hasattr(module, "load_codex_status"))
             self.assertFalse(hasattr(module, "run_codex_switch"))
             self.assertFalse(hasattr(module, "run_codex_sync_active"))
             self.assertFalse(hasattr(module, "run_codex_save_active"))
             self.assertFalse(hasattr(module, "run_codex_save_api"))
             self.assertFalse(hasattr(module, "run_codex_import_payload"))
             self.assertFalse(hasattr(module, "run_codex_delete"))
-            self.assertIn(module.load_claude_status()["status"], {"ok", "error"})
-            self.assertEqual("error", module.run_claude_switch({"name": ""})["status"])
-            self.assertEqual("error", module.run_claude_delete({"name": ""})["status"])
+            self.assertFalse(hasattr(module, "load_claude_status"))
+            self.assertFalse(hasattr(module, "run_claude_switch"))
+            self.assertFalse(hasattr(module, "run_claude_delete"))
             feedback = module.load_feedback_summary()
             self.assertIn(feedback["status"], {"pass", "attention", "fail"})
             self.assertEqual("docs/product/host-feedback-loop.zh-CN.md", feedback["guide_path"])
@@ -778,22 +664,15 @@ class OperatorEntrypointTests(unittest.TestCase):
             process_status["source_files"],
         )
 
-    def test_operator_ui_codex_panel_keeps_only_read_only_probe(self) -> None:
+    def test_operator_ui_codex_panel_and_probe_are_retired(self) -> None:
         module = _load_serve_operator_ui_module()
         module.invalidate_status_cache()
 
-        with mock.patch.object(
-            module,
-            "probe_auth_profiles",
-            return_value={"status": "ok", "total": 2, "ok": 2, "failed": 0},
-        ) as probe_mock:
-            probe_result = module.run_codex_probe({"include_oauth": True, "include_api": True})
-
+        self.assertFalse(hasattr(module, "probe_auth_profiles"))
+        self.assertFalse(hasattr(module, "run_codex_probe"))
         self.assertFalse(hasattr(module, "run_codex_save_api"))
         self.assertFalse(hasattr(module, "run_codex_import_cockpit"))
         self.assertFalse(hasattr(module, "run_codex_import_payload"))
-        self.assertEqual("ok", probe_result["status"])
-        probe_mock.assert_called_once()
 
     def test_operator_ui_server_refuses_stale_content_and_disables_cache(self) -> None:
         script = (ROOT / "scripts" / "serve-operator-ui.py").read_text(encoding="utf-8")
@@ -810,7 +689,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("cache-control", script)
         self.assertIn("no-store, max-age=0", script)
         self.assertIn("x-governed-runtime-ui-stale", script)
-        self.assertIn("refresh_if_stale", script)
+        self.assertNotIn("refresh_if_stale", script)
 
     def test_operator_ui_stale_handler_returns_conflict_without_dropping_connection(self) -> None:
         module = _load_serve_operator_ui_module()
@@ -893,34 +772,20 @@ class OperatorEntrypointTests(unittest.TestCase):
         module = _load_serve_operator_ui_module()
         module.invalidate_status_cache()
 
-        with (
-            mock.patch.object(module, "codex_status", return_value={"sample": "codex"}) as codex_mock,
-            mock.patch.object(module, "claude_status", return_value={"sample": "claude"}) as claude_mock,
-        ):
-            first_codex = module.load_codex_status()
-            second_codex = module.load_codex_status()
-            first_claude = module.load_claude_status()
-            second_claude = module.load_claude_status()
+        with mock.patch.object(module, "_build_feedback_summary", return_value={"overall_status": "pass"}) as feedback_mock:
+            first_feedback = module.load_feedback_summary()
+            second_feedback = module.load_feedback_summary()
 
-        self.assertEqual("ok", first_codex["status"])
-        self.assertEqual("ok", first_claude["status"])
-        self.assertEqual("codex", first_codex["cache_kind"])
-        self.assertEqual("claude", first_claude["cache_kind"])
-        self.assertEqual(1, codex_mock.call_count)
-        self.assertEqual(1, claude_mock.call_count)
-        codex_mock.assert_called_with(refresh_online=False)
-        self.assertEqual(first_codex["cached_at"], second_codex["cached_at"])
-        self.assertEqual(first_claude["cached_at"], second_claude["cached_at"])
+        self.assertEqual("pass", first_feedback["status"])
+        self.assertEqual("feedback", first_feedback["cache_kind"])
+        self.assertEqual(1, feedback_mock.call_count)
+        self.assertEqual(first_feedback["cached_at"], second_feedback["cached_at"])
 
-    def test_load_codex_status_can_refresh_if_stale(self) -> None:
+    def test_codex_status_refresh_helper_is_retired(self) -> None:
         module = _load_serve_operator_ui_module()
-        module.invalidate_status_cache("codex")
 
-        with mock.patch.object(module, "codex_status", return_value={"sample": "codex"}) as codex_mock:
-            payload = module.load_codex_status(refresh_if_stale=True)
-
-        self.assertEqual("ok", payload["status"])
-        codex_mock.assert_called_once_with(refresh_online=False, refresh_if_stale=True)
+        self.assertFalse(hasattr(module, "codex_status"))
+        self.assertFalse(hasattr(module, "load_codex_status"))
 
     def test_operator_ui_restart_request_is_throttled(self) -> None:
         module = _load_serve_operator_ui_module()
