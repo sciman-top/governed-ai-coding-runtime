@@ -79,7 +79,6 @@
 - [Reviews Index](./reviews/README.md)
 - [Change Evidence Index](./change-evidence/README.md)
 - [Runbooks Index](./runbooks/README.md)
-- [Codex/Cockpit API Provider Repair Runbook](./runbooks/codex-cockpit-api-provider-repair.md)
 
 ## Current Execution Posture
 - `Foundation / GAP-020` through `GAP-023` are complete on the current branch baseline.

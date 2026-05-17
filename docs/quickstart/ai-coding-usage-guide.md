@@ -65,21 +65,16 @@ This UI runs a persistent local `127.0.0.1` interactive service. Later visits ca
 The `Codex` tab treats `efficiency first` as the long-lived rule and renders the current model combo only as the present implementation choice, so future model updates do not replace the underlying principle.
 
 ### Codex Local Boundary
-Use the official `codex` entrypoint and Cockpit Tools native controls for login, provider switching, and app launch state. This repository keeps read-only diagnostics, old shim cleanup, and one explicit API projection repair path.
+Use the official `codex` entrypoint and Cockpit Tools native controls for login, provider switching, app launch state, Direct OAuth, Direct API, and Cockpit API service roundtrip switching. This repository no longer provides interop diagnostics, repair paths, gateway profiles, or launcher wrappers.
 
-Read-only interop check:
-
-```powershell
-python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch
-```
-
-Explicit current Cockpit API account projection repair:
+Old-shim cleanup:
 
 ```powershell
-python scripts\codex-interop-check.py --codex-home "$HOME\.codex" --cc-switch-db "$HOME\.cc-switch\cc-switch.db" --cockpit-home "$HOME\.antigravity_cockpit" --quick-launch --repair-current-cockpit-api-projection --prefer-cockpit-api-account
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Disable-CodexProjectInterop.ps1 -Apply -DisableProjectShortcuts
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Test-CodexGuardAbsence.ps1
 ```
 
-The repair must keep active `model_provider`, Cockpit `api_provider_id`, and `state_5.sqlite.threads.model_provider` aligned. It must use a custom no-WebSocket provider for API relays that need `supports_websockets = false`; do not override `[model_providers.openai]`. Do not use no-op launchers, restart wrappers, no-restart shims, SQLite triggers, background guards, or CLI wrappers to intercept Cockpit Tools native behavior. See [Codex/Cockpit API Provider Repair](../runbooks/codex-cockpit-api-provider-repair.md).
+Cockpit Tools fully owns Codex App/CLI Direct OAuth, Direct API, and Cockpit API service roundtrip switching. CC Switch owns Claude Code / Claude Desktop account and API switching. This repository does not participate in either side's account/API switching, interception, installation, gateway, repair, or restart wrapping; it only keeps old-shim cleanup and absence verification. Do not restore provider/auth/history/API-service writes, SQLite triggers, background guards, no-op launchers, restart wrappers, or CLI wrappers that intercept Cockpit Tools native behavior.
 
 ### Host feedback summary
 If you want one place to judge whether a feature is really working in Codex and Claude, whether a problem is host-local or runtime-local, and what should be optimized next, generate the unified report instead of reading isolated logs:

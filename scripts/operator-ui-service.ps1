@@ -33,8 +33,7 @@ $SourceFiles = @(
   (Join-Path $RepoRoot "packages/contracts/src/governed_ai_coding_runtime_contracts/operator_ui_text.py"),
   (Join-Path $RepoRoot "packages/contracts/src/governed_ai_coding_runtime_contracts/runtime_status.py"),
   (Join-Path $RepoRoot "scripts/lib/codex_local.py"),
-  (Join-Path $RepoRoot "scripts/lib/claude_local.py"),
-  (Join-Path $RepoRoot "scripts/codex-cockpit-switch-health.py")
+  (Join-Path $RepoRoot "scripts/lib/claude_local.py")
 )
 
 function Resolve-PythonCommand {

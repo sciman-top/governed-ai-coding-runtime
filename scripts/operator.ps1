@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexSwitchRecord", "CodexGuardAbsenceCheck", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
+  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexGuardAbsenceCheck", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
   [string]$Action = "Help",
 
   [ValidateSet("quick", "full", "l1", "l2", "l3")]
@@ -250,7 +250,6 @@ AI 推荐:
   Targets                列出 target catalog 中的 active target repos。
   FastFeedback           执行本仓日常编码快速反馈：build + quick feedback tests；不替代交付前 Readiness。
   Readiness              执行 build -> test -> contract/invariant -> hotspot，然后生成 operator UI。
-  CodexSwitchRecord      保存当前 Cockpit/Codex 切换快照到 docs/change-evidence/codex-cockpit-snapshots。
   CodexGuardAbsenceCheck
                          确认本机不存在已退役 Codex/Cockpit 后台 guard、启动项、worker 和 installed wrapper。
   RulesDryRun            只检查全局/项目级规则漂移，不写入。
@@ -322,11 +321,6 @@ function Invoke-FastFeedback {
     -Name "quick-feedback" `
     -ScriptPath "scripts/verify-repo.ps1" `
     -ScriptArguments @("-Check", "RuntimeQuick")
-}
-
-function Invoke-CodexSwitchRecord {
-  $label = "operator-ui-" + (Get-Date -Format "yyyyMMdd-HHmmss")
-  Invoke-PwshScript -Name "codex-switch-record" -ScriptPath "scripts/Save-CodexCockpitSwitchRecord.ps1" -ScriptArguments @("-Label", $label)
 }
 
 function Invoke-CodexGuardAbsenceCheck {
@@ -464,7 +458,6 @@ try {
     "Targets" { Invoke-Targets }
     "FastFeedback" { Invoke-FastFeedback }
     "Readiness" { Invoke-Readiness }
-    "CodexSwitchRecord" { Invoke-CodexSwitchRecord }
     "CodexGuardAbsenceCheck" { Invoke-CodexGuardAbsenceCheck }
     "RulesDryRun" { Invoke-RulesDryRun }
     "RulesApply" { Invoke-RulesApply }

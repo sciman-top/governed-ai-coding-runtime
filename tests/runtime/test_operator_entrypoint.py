@@ -373,37 +373,50 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertNotEqual(0, completed.returncode)
         self.assertIn("CodexProjectionSmoke", completed.stderr)
 
-    def test_operator_codex_readonly_switch_helpers_are_available_as_dry_run(self) -> None:
-        cases = [
-            ("CodexSwitchRecord", "codex-switch-record", "scripts/Save-CodexCockpitSwitchRecord.ps1", "-Label"),
-            ("CodexGuardAbsenceCheck", "codex-guard-absence-check", "scripts/Test-CodexGuardAbsence.ps1", ""),
-        ]
-        for action, step_name, script_name, expected_arg in cases:
-            with self.subTest(action=action):
-                completed = subprocess.run(
-                    [
-                        "pwsh",
-                        "-NoProfile",
-                        "-ExecutionPolicy",
-                        "Bypass",
-                        "-File",
-                        str(ROOT / "scripts" / "operator.ps1"),
-                        "-Action",
-                        action,
-                        "-DryRun",
-                    ],
-                    check=True,
-                    capture_output=True,
-                    text=True,
-                    encoding="utf-8",
-                    errors="replace",
-                    cwd=ROOT,
-                )
+    def test_operator_codex_switch_record_is_removed_but_absence_check_remains(self) -> None:
+        removed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "operator.ps1"),
+                "-Action",
+                "CodexSwitchRecord",
+                "-DryRun",
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+        )
+        self.assertNotEqual(0, removed.returncode)
+        self.assertIn("CodexSwitchRecord", removed.stderr)
 
-                self.assertIn(f"DRY-RUN {step_name}", completed.stdout)
-                self.assertIn(script_name, completed.stdout)
-                if expected_arg:
-                    self.assertIn(expected_arg, completed.stdout)
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "operator.ps1"),
+                "-Action",
+                "CodexGuardAbsenceCheck",
+                "-DryRun",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+        )
+
+        self.assertIn("DRY-RUN codex-guard-absence-check", completed.stdout)
+        self.assertIn("scripts/Test-CodexGuardAbsence.ps1", completed.stdout)
 
     def test_operator_apply_all_features_is_available_while_waiting_for_host_recovery(self) -> None:
         env = dict(os.environ)
