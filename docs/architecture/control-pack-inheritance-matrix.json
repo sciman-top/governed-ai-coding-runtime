@@ -62,6 +62,13 @@
       "reason": "Low-token learning assistance is inherited through typed repo profile fields."
     },
     {
+      "profile_field": "network_research_policy",
+      "baseline_field": "network_research_policy",
+      "control_pack_reference": "repo_profile_requirements.required_gate_names",
+      "schema_path": "network_research_policy",
+      "reason": "Read-only external research defaults are inherited through typed repo profile fields while host tools remain responsible for actual search capability."
+    },
+    {
       "profile_field": "rule_file_coordination_policy",
       "baseline_field": "rule_file_coordination_policy",
       "control_pack_reference": "repo_profile_requirements.required_gate_names",

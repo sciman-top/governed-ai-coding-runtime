@@ -289,15 +289,35 @@ def _source_path(raw_path: str) -> Path:
     return source.resolve(strict=False)
 
 
-def _deep_merge_json(base: Any, overlay: Any) -> Any:
+def _merge_unique_strings(base: list[Any], overlay: list[Any]) -> list[str] | None:
+    if not all(isinstance(item, str) for item in [*base, *overlay]):
+        return None
+    merged: list[str] = []
+    seen: set[str] = set()
+    for item in [*base, *overlay]:
+        if item in seen:
+            continue
+        merged.append(item)
+        seen.add(item)
+    return merged
+
+
+def _deep_merge_json(base: Any, overlay: Any, path: tuple[str, ...] = ()) -> Any:
     if isinstance(base, dict) and isinstance(overlay, dict):
         merged = {key: copy.deepcopy(value) for key, value in base.items()}
         for key, value in overlay.items():
             if key in merged:
-                merged[key] = _deep_merge_json(merged[key], value)
+                merged[key] = _deep_merge_json(merged[key], value, (*path, key))
             else:
                 merged[key] = copy.deepcopy(value)
         return merged
+    if isinstance(base, list) and isinstance(overlay, list) and path in {
+        ("permissions", "allow"),
+        ("permissions", "deny"),
+    }:
+        merged_strings = _merge_unique_strings(base, overlay)
+        if merged_strings is not None:
+            return merged_strings
     return copy.deepcopy(overlay)
 
 

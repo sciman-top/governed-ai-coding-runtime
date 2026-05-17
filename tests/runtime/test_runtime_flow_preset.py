@@ -2302,10 +2302,15 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             self.assertEqual(payload["target_count"], 3)
             self.assertEqual(payload["failure_count"], 0)
             self.assertGreaterEqual(payload["batch_elapsed_seconds"], 1)
-            self.assertLess(elapsed, 8.0)
             self.assertEqual({item["target"] for item in payload["results"]}, set(targets))
             self.assertTrue(all(item["target_duration_ms"] > 0 for item in payload["results"]))
             self.assertTrue(all(item["flow_duration_ms"] > 0 for item in payload["results"]))
+            serial_target_seconds = sum(item["target_duration_ms"] for item in payload["results"]) / 1000.0
+            self.assertLess(
+                elapsed,
+                serial_target_seconds * 0.75,
+                "parallel batch should finish well below the measured serial target duration",
+            )
 
     def test_runtime_flow_preset_all_targets_apply_all_features_logs_stage_progress(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

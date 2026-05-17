@@ -20,6 +20,7 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
         baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
         interaction = baseline["required_profile_overrides"]["interaction_profile"]
         learning = baseline["required_profile_overrides"]["learning_assistance_policy"]
+        network_research = baseline["required_profile_overrides"]["network_research_policy"]
         coordination = baseline["required_profile_overrides"]["rule_file_coordination_policy"]
         policy = baseline["required_profile_overrides"]["windows_process_environment_policy"]
         managed_files = baseline["required_managed_files"]
@@ -52,6 +53,14 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
         self.assertIn("stage_summary", learning["token_budget_policy"]["compression_mode"])
         self.assertIn("observable interaction signals", " ".join(learning["guidance"]))
         self.assertIn("expected/actual/repro/logs", " ".join(learning["guidance"]))
+        self.assertTrue(network_research["enabled"])
+        self.assertEqual(network_research["default_mode"], "autonomous_when_needed")
+        self.assertEqual(network_research["network_posture"], "read_only")
+        self.assertIn("WebSearch", network_research["claude_code_required_permissions"])
+        self.assertIn("WebFetch", network_research["claude_code_required_permissions"])
+        self.assertIn("web_search = cached", network_research["codex_required_config"])
+        self.assertIn("mcp__web-search-prime__*", network_research["claude_code_required_permissions"])
+        self.assertIn("external pages", " ".join(network_research["safety_boundaries"]))
         self.assertTrue(coordination["enabled"])
         self.assertIn("WHAT", coordination["global_rule_scope"])
         self.assertIn("WHERE/HOW", coordination["project_rule_scope"])
@@ -374,7 +383,7 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             _write_json(
                 template_path,
                 {
-                    "permissions": {"deny": ["Read(**/.env)"]},
+                    "permissions": {"allow": ["WebSearch"], "deny": ["Read(**/.env)"]},
                     "hooks": {"PreToolUse": [{"matcher": "Read"}]},
                 },
             )
@@ -419,7 +428,7 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             self.assertTrue(backup_path.exists())
             merged_settings = json.loads(target_settings_path.read_text(encoding="utf-8"))
             self.assertEqual(merged_settings["permissions"]["deny"], ["Read(**/.env)"])
-            self.assertEqual(merged_settings["permissions"]["allow"], ["Read(**/notes.md)"])
+            self.assertEqual(merged_settings["permissions"]["allow"], ["Read(**/notes.md)", "WebSearch"])
             self.assertEqual(merged_settings["local_only"]["keep"], True)
             self.assertIn("PreToolUse", merged_settings["hooks"])
             provenance_path = (
@@ -2060,7 +2069,7 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             _write_json(
                 template_path,
                 {
-                    "permissions": {"deny": ["Read(**/.env)"]},
+                    "permissions": {"allow": ["WebSearch"], "deny": ["Read(**/.env)"]},
                     "hooks": {"PreToolUse": [{"matcher": "Read"}]},
                 },
             )
@@ -2109,7 +2118,7 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
                 {
                     "permissions": {
                         "deny": ["Read(**/.env)"],
-                        "allow": ["Read(**/notes.md)"],
+                        "allow": ["Read(**/notes.md)", "WebSearch"],
                     },
                     "hooks": {"PreToolUse": [{"matcher": "Read"}]},
                     "local_only": {"keep": True},

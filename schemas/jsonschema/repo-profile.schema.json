@@ -983,6 +983,85 @@
         }
       }
     },
+    "network_research_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "default_mode": {
+          "type": "string",
+          "enum": [
+            "autonomous_when_needed",
+            "manual_only",
+            "disabled"
+          ]
+        },
+        "scope": {
+          "type": "string"
+        },
+        "network_posture": {
+          "type": "string",
+          "enum": [
+            "deny",
+            "read_only",
+            "declared_by_tool",
+            "allowlist_required"
+          ]
+        },
+        "side_effect_class": {
+          "type": "string",
+          "enum": [
+            "none",
+            "filesystem_read",
+            "filesystem_write",
+            "process_spawn",
+            "network_read",
+            "network_write",
+            "external_state_change"
+          ]
+        },
+        "risk_class": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "approval_class": {
+          "type": "string",
+          "enum": [
+            "auto_execute",
+            "auto_if_reversible",
+            "explicit_user_approval",
+            "deny"
+          ]
+        },
+        "codex_required_config": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "claude_code_required_permissions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "safety_boundaries": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fallback_behavior": {
+          "type": "string"
+        }
+      }
+    },
     "rule_file_coordination_policy": {
       "type": "object",
       "additionalProperties": false,
