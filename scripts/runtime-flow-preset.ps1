@@ -733,6 +733,68 @@ function ConvertTo-JsonArrayValue {
   return ,$result
 }
 
+function Get-CodingSpeedProfileSummary {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string[]]$SelectedTargets,
+    [Parameter(Mandatory = $true)]
+    [hashtable]$TargetConfigMap
+  )
+
+  $physicalFullGateTargets = @()
+  foreach ($targetName in $SelectedTargets) {
+    $targetConfig = $TargetConfigMap[$targetName]
+    if (-not $targetConfig) {
+      continue
+    }
+
+    $rawOptimization = ""
+    if ($targetConfig.ContainsKey("FullGateOptimizationJson")) {
+      $rawOptimization = [string]$targetConfig.FullGateOptimizationJson
+    }
+    if ([string]::IsNullOrWhiteSpace($rawOptimization)) {
+      continue
+    }
+
+    $optimization = Try-ParseJson -Raw $rawOptimization
+    if ($null -eq $optimization) {
+      $physicalFullGateTargets += [ordered]@{
+        target = $targetName
+        status = "invalid"
+        pending = $true
+        recommended_target_entrypoint = ""
+        fallback_full_gate_command = ""
+        next_action = "Fix invalid full_gate_optimization catalog JSON before claiming full-gate speedup."
+      }
+      continue
+    }
+
+    $status = if ($optimization.PSObject.Properties.Name -contains "status") { [string]$optimization.status } else { "" }
+    $recommended = if ($optimization.PSObject.Properties.Name -contains "recommended_target_entrypoint") { [string]$optimization.recommended_target_entrypoint } else { "" }
+    $fallback = if ($optimization.PSObject.Properties.Name -contains "fallback_full_gate_command") { [string]$optimization.fallback_full_gate_command } else { "" }
+    $nextAction = if ($optimization.PSObject.Properties.Name -contains "control_repo_next_action") { [string]$optimization.control_repo_next_action } else { "" }
+    $pending = $status -in @("needed", "planned", "invalid")
+    $physicalFullGateTargets += [ordered]@{
+      target = $targetName
+      status = $status
+      pending = [bool]$pending
+      recommended_target_entrypoint = $recommended
+      fallback_full_gate_command = $fallback
+      next_action = $nextAction
+    }
+  }
+
+  $pendingTargets = @($physicalFullGateTargets | Where-Object { $_.pending })
+  return [ordered]@{
+    quick_profile_applied_by = "quick_gate_commands/full_gate_commands in target repo-profile"
+    physical_full_gate_declared_count = @($physicalFullGateTargets).Count
+    physical_full_gate_pending_count = @($pendingTargets).Count
+    physical_full_gate_pending_targets = @($pendingTargets | ForEach-Object { $_.target })
+    physical_full_gate_targets = $physicalFullGateTargets
+    interpretation = "One-click speed apply materializes profile-level fast/full gate groups; it does not replace a target full gate with a shorter physical runner until coverage-equivalent target-local grouping is proven."
+  }
+}
+
 function Test-GovernanceSyncHasChanges {
   param([object]$SyncResult)
 
@@ -2373,6 +2435,7 @@ else {
   }
   $selectedTargets = @($Target)
 }
+$codingSpeedProfileSummary = Get-CodingSpeedProfileSummary -SelectedTargets $selectedTargets -TargetConfigMap $targetConfigMap
 $targetRuns = @()
 $targetCount = @($selectedTargets).Count
 $progressEnabled = ($AllTargets -and -not $Json)
@@ -2999,6 +3062,7 @@ if ($Json) {
           trigger            = $single.milestone_commit_result.trigger
           milestone_tag      = $single.milestone_commit_result.milestone_tag
         }
+        $wrapped["coding_speed_profile_summary"] = $codingSpeedProfileSummary
         if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) {
           $wrapped["clean_milestone_gate_skip_enabled"] = [bool]$cleanMilestoneGateSkipEnabled
           $wrapped["clean_milestone_gate_skip_source"] = $cleanMilestoneGateSkipSource
@@ -3048,6 +3112,7 @@ if ($Json) {
             bootstrap    = if ($single.governance_sync_result.PSObject.Properties.Name -contains "bootstrap") { $single.governance_sync_result.bootstrap } else { $null }
           }
           milestone_commit        = $single.milestone_commit_result
+          coding_speed_profile_summary = $codingSpeedProfileSummary
         }
         if ($applyFeatureBaselineAndMilestoneCommit -or $applyAllFeatures) {
           $fallback["clean_milestone_gate_skip_enabled"] = [bool]$cleanMilestoneGateSkipEnabled
@@ -3207,6 +3272,7 @@ if ($Json) {
       exported_target_repo_runs       = $exportedTargetRepoRuns
       target_repo_speed_kpi           = $targetRepoSpeedKpi
       target_repo_effect_reports      = $targetRepoEffectReports
+      coding_speed_profile_summary    = $codingSpeedProfileSummary
       outer_ai_recommendation_action  = if (@($outerAiRecommendationTasks).Count -gt 0) { "read_prompt_and_write_recommendation" } else { "none" }
       outer_ai_recommendation_tasks   = $outerAiRecommendationTasks
       results                         = $results

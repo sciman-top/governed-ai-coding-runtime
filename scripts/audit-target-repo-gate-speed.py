@@ -285,6 +285,10 @@ def audit(
     targets = catalog.get("targets") or {}
     findings: list[dict[str, Any]] = []
     target_reports: list[dict[str, Any]] = []
+    quick_profile_materialized_count = 0
+    quick_profile_missing_decision_count = 0
+    physical_full_gate_pending_targets: list[str] = []
+    physical_full_gate_declared_targets: list[str] = []
 
     for target_name, target_config in sorted(targets.items()):
         attachment_root = _expand_path(str(target_config.get("attachment_root") or ""), repo_root=repo_root)
@@ -339,6 +343,7 @@ def audit(
         target_findings.extend(full_findings)
 
         if report["quick_slice_source"] == "missing_decision":
+            quick_profile_missing_decision_count += 1
             target_findings.append(
                 {
                     "severity": "warn",
@@ -347,6 +352,13 @@ def audit(
                     "message": "Target catalog has neither quick_test_command nor quick_test_skip_reason.",
                 }
             )
+        elif quick_summary["missing_gate_ids"] == []:
+            quick_profile_materialized_count += 1
+
+        if full_gate_optimization is not None:
+            physical_full_gate_declared_targets.append(target_name)
+            if full_gate_optimization["status"] in {"needed", "planned"}:
+                physical_full_gate_pending_targets.append(target_name)
 
         report.update(
             {
@@ -388,6 +400,18 @@ def audit(
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "catalog_path": str(catalog_path),
         "target_count": len(target_reports),
+        "speed_profile_summary": {
+            "quick_profile_materialized_count": quick_profile_materialized_count,
+            "quick_profile_missing_decision_count": quick_profile_missing_decision_count,
+            "physical_full_gate_declared_count": len(physical_full_gate_declared_targets),
+            "physical_full_gate_pending_count": len(physical_full_gate_pending_targets),
+            "physical_full_gate_pending_targets": physical_full_gate_pending_targets,
+            "interpretation": (
+                "Quick gate profile materialization improves daily feedback. "
+                "Physical full-gate speedups remain pending for listed targets until target-local grouping, "
+                "affected-path routing, or equivalent coverage-preserving proof exists."
+            ),
+        },
         "status": "pass" if error_count == 0 else "fail",
         "error_count": error_count,
         "warn_count": warn_count,

@@ -742,6 +742,12 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                             "quick_test_command": "python -m unittest tests.test_fast",
                             "quick_test_reason": "Focused fast regression slice.",
                             "contract_command": "python -m unittest tests.test_contract",
+                            "full_gate_optimization": {
+                                "status": "planned",
+                                "recommended_target_entrypoint": "tools/run-gate-group.ps1",
+                                "fallback_full_gate_command": "python -m unittest discover",
+                                "control_repo_next_action": "Prove coverage equivalence before replacing the full gate.",
+                            },
                         }
                     },
                 },
@@ -800,6 +806,12 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             self.assertTrue(payload["apply_feature_baseline_only"])
             self.assertFalse(payload["apply_governance_baseline_only"])
             self.assertTrue(payload["governance_baseline_sync_active"])
+            self.assertEqual(payload["coding_speed_profile_summary"]["physical_full_gate_pending_count"], 1)
+            self.assertEqual(payload["coding_speed_profile_summary"]["physical_full_gate_pending_targets"], ["repo-a"])
+            self.assertIn(
+                "does not replace a target full gate",
+                payload["coding_speed_profile_summary"]["interpretation"],
+            )
             self.assertEqual(payload["failure_count"], 0)
             self.assertEqual(payload["results"][0]["flow_exit_code"], 0)
             self.assertEqual(payload["results"][0]["governance_sync_status"], "pass")

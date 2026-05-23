@@ -31,6 +31,7 @@
       "milestone_gate_mode",
       "milestone_gate_mode_source",
       "milestone_gate_mode_reason",
+      "coding_speed_profile_summary",
       "milestone_tag",
       "auto_commit_trigger",
       "prune_retired_managed_files_active",
@@ -98,7 +99,8 @@
       "-ApplyCodingSpeedProfile"
     ],
     "required_json_fields": [
-      "apply_coding_speed_profile"
+      "apply_coding_speed_profile",
+      "coding_speed_profile_summary"
     ],
     "required_policy_fields": [
       "enabled",
@@ -162,6 +164,7 @@
       "capability_id": "target-repo-gate-speed-controls",
       "required_json_fields": [
         "apply_coding_speed_profile",
+        "coding_speed_profile_summary",
         "milestone_gate_mode",
         "milestone_gate_mode_source",
         "milestone_gate_mode_reason"

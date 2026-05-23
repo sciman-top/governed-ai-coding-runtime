@@ -96,6 +96,8 @@ class TargetRepoGateSpeedAuditTests(unittest.TestCase):
             self.assertEqual(report["error_count"], 0)
             self.assertEqual(report["effect_summary"]["speedup_ratio"], 2.5)
             self.assertEqual(report["targets"][0]["quick_gate_summary"]["covered_gate_ids"], ["contract", "test"])
+            self.assertEqual(report["speed_profile_summary"]["quick_profile_materialized_count"], 1)
+            self.assertEqual(report["speed_profile_summary"]["physical_full_gate_pending_count"], 0)
 
     def test_audit_fails_when_required_gate_timeout_is_missing(self) -> None:
         module = _load_module()
@@ -198,6 +200,12 @@ class TargetRepoGateSpeedAuditTests(unittest.TestCase):
             codes = {finding["code"] for finding in report["findings"]}
             self.assertIn("full_gate_physical_optimization_pending", codes)
             self.assertEqual(report["targets"][0]["full_gate_optimization"]["profile_synced"], True)
+            self.assertEqual(report["speed_profile_summary"]["physical_full_gate_declared_count"], 1)
+            self.assertEqual(report["speed_profile_summary"]["physical_full_gate_pending_count"], 1)
+            self.assertEqual(
+                report["speed_profile_summary"]["physical_full_gate_pending_targets"],
+                ["repo-a"],
+            )
 
     def test_cli_writes_report(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
