@@ -87,6 +87,33 @@
       "target_path": "GEMINI.md"
     },
     {
+      "id": "cockpit-tools-local-codex-agents",
+      "scope": "project",
+      "target_repo_id": "cockpit-tools-local",
+      "tool": "codex",
+      "version": "9.53",
+      "source": "rules/projects/cockpit-tools-local/codex/AGENTS.md",
+      "target_path": "AGENTS.md"
+    },
+    {
+      "id": "cockpit-tools-local-claude-claude",
+      "scope": "project",
+      "target_repo_id": "cockpit-tools-local",
+      "tool": "claude",
+      "version": "9.53",
+      "source": "rules/projects/cockpit-tools-local/claude/CLAUDE.md",
+      "target_path": "CLAUDE.md"
+    },
+    {
+      "id": "cockpit-tools-local-gemini-gemini",
+      "scope": "project",
+      "target_repo_id": "cockpit-tools-local",
+      "tool": "gemini",
+      "version": "9.53",
+      "source": "rules/projects/cockpit-tools-local/gemini/GEMINI.md",
+      "target_path": "GEMINI.md"
+    },
+    {
       "id": "skills-manager-codex-agents",
       "scope": "project",
       "target_repo_id": "skills-manager",

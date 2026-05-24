@@ -15,6 +15,19 @@
       "quick_test_timeout_seconds": 180,
       "contract_command": "pwsh -NoProfile -ExecutionPolicy Bypass -Command \". .\\scripts\\env\\Initialize-WindowsProcessEnvironment.ps1; dotnet test tests\\ClassroomToolkit.Tests\\ClassroomToolkit.Tests.csproj -c Debug --no-restore --filter 'FullyQualifiedName~ArchitectureDependencyTests|FullyQualifiedName~InteropHookLifecycleContractTests|FullyQualifiedName~InteropHookEventDispatchContractTests|FullyQualifiedName~GlobalHookServiceLifecycleContractTests|FullyQualifiedName~CrossPageDisplayLifecycleContractTests'\""
     },
+    "cockpit-tools-local": {
+      "attachment_root": "${code_root}/external/Cockpit-Tools-Local",
+      "attachment_runtime_state_root": "${runtime_state_base}/cockpit-tools-local",
+      "repo_id": "cockpit-tools-local",
+      "display_name": "Cockpit Tools Local",
+      "primary_language": "typescript-rust",
+      "build_command": "npm run build",
+      "test_command": "cargo test --manifest-path src-tauri/Cargo.toml --lib",
+      "quick_test_command": "npm run typecheck",
+      "quick_test_reason": "Strict TypeScript checking is the finite daily feedback slice for the React/Tauri UI contract; live desktop flows such as npm run dev, npm run tauri dev, and npm run tauri build still require current-task authorization.",
+      "quick_test_timeout_seconds": 180,
+      "contract_command": "node scripts/release/preflight.cjs --skip-typecheck --skip-build --skip-cargo --skip-cargo-test"
+    },
     "github-toolkit": {
       "attachment_root": "${code_root}/github-toolkit",
       "attachment_runtime_state_root": "${runtime_state_base}/github-toolkit",
