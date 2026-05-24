@@ -42,6 +42,7 @@ class TargetRepoRolloutContractTests(unittest.TestCase):
         contract = json.loads(DEFAULT_CONTRACT_PATH.read_text(encoding="utf-8"))
         managed_modes = {item["path"]: item["management_mode"] for item in contract["managed_file_rollout"]["required_managed_files"]}
         self.assertEqual(managed_modes[".claude/hooks/governed-pre-tool-use.py"], "block_on_drift")
+        self.assertEqual(managed_modes[".ignore"], "block_on_drift")
         generated_modes = {
             item["path"]: item["management_mode"]
             for item in contract["managed_file_rollout"]["generated_managed_files"]

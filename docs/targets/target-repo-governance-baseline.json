@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "baseline_id": "active-target-governance-baseline",
-  "sync_revision": "2026-05-17.1",
+  "sync_revision": "2026-05-23.1",
   "required_managed_files": [
     {
       "path": ".governed-ai/verify-powershell-policy.py",
@@ -24,6 +24,12 @@
       "source": "docs/targets/templates/claude-code/governed-pre-tool-use.py",
       "management_mode": "block_on_drift",
       "description": "Claude Code PreToolUse guard that fail-closes direct Windows PowerShell usage and sensitive local file reads with exit code 2, but blocks silent overwrite when a target repo has intentionally extended the hook locally."
+    },
+    {
+      "path": ".ignore",
+      "source": "docs/targets/templates/search-context.ignore",
+      "management_mode": "block_on_drift",
+      "description": "Repo-local ripgrep ignore file that keeps daily coding searches out of archived evidence, long backlog history, screenshots, and generated runtime caches; target-local drift must be reviewed and integrated before sync instead of overwritten."
     }
   ],
   "generated_managed_files": [

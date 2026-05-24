@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "contract_id": "target-repo-rollout-contract",
-  "sync_revision": "2026-05-17.1",
+  "sync_revision": "2026-05-23.1",
   "canonical_one_click_entrypoint": {
     "script": "scripts/runtime-flow-preset.ps1",
     "all_targets_apply_all_features_args": [
@@ -55,6 +55,11 @@
       {
         "path": ".claude/hooks/governed-pre-tool-use.py",
         "source": "docs/targets/templates/claude-code/governed-pre-tool-use.py",
+        "management_mode": "block_on_drift"
+      },
+      {
+        "path": ".ignore",
+        "source": "docs/targets/templates/search-context.ignore",
         "management_mode": "block_on_drift"
       }
     ],

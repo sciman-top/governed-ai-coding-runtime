@@ -372,21 +372,21 @@
               "status": "pass"
             }
           ],
-          "compact_ratio": 0.8915,
+          "compact_ratio": 0.8088,
           "config_path": "C:\\Users\\sciman\\.codex\\config.toml",
-          "configured_auto_compact_token_limit": 460000,
-          "configured_context_window": 516000,
+          "configured_auto_compact_token_limit": 220000,
+          "configured_context_window": 272000,
           "context_settings_decision": {
             "action": "keep_current",
             "basis_status": "config_only",
             "catalog_entries": [],
-            "compact_ratio": 0.8915,
+            "compact_ratio": 0.8088,
             "compact_source": "configured_guard_band",
             "context_source": "configured_fallback",
             "decision_rule": "Prefer matching bundled/refreshed `codex debug models` context_window values; keep configured auto-compact when it is below the context window and inside the guard band; otherwise derive an 81% rounded threshold.",
             "model": "gpt-5.5",
-            "model_auto_compact_token_limit": 460000,
-            "model_context_window": 516000,
+            "model_auto_compact_token_limit": 220000,
+            "model_context_window": 272000,
             "status": "pass"
           },
           "exec_probe": {
