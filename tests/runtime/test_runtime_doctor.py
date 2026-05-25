@@ -49,7 +49,9 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
         self.assertIn("OK gate-command-doctor", completed.stdout)
         self.assertIn("OK dependency-baseline-doc", completed.stdout)
         self.assertIn("OK repo-hook-pre-commit", completed.stdout)
+        self.assertIn("OK repo-hook-commit-msg", completed.stdout)
         self.assertIn("OK repo-hook-script", completed.stdout)
+        self.assertIn("OK repo-hook-commit-msg-script", completed.stdout)
         self.assertIn("OK repo-hook-installer", completed.stdout)
         self.assertIn("OK repo-hooks-path", completed.stdout)
 

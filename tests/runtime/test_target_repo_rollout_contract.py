@@ -43,6 +43,8 @@ class TargetRepoRolloutContractTests(unittest.TestCase):
         managed_modes = {item["path"]: item["management_mode"] for item in contract["managed_file_rollout"]["required_managed_files"]}
         self.assertEqual(managed_modes[".claude/hooks/governed-pre-tool-use.py"], "block_on_drift")
         self.assertEqual(managed_modes[".ignore"], "block_on_drift")
+        self.assertEqual(managed_modes[".githooks/commit-msg"], "block_on_drift")
+        self.assertEqual(managed_modes["scripts/hooks/commit-msg.ps1"], "block_on_drift")
         generated_modes = {
             item["path"]: item["management_mode"]
             for item in contract["managed_file_rollout"]["generated_managed_files"]

@@ -141,11 +141,15 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
         self.assertIn(".claude/settings.json", [item["path"] for item in managed_files])
         self.assertIn(".claude/hooks/governed-pre-tool-use.py", [item["path"] for item in managed_files])
         self.assertIn(".ignore", [item["path"] for item in managed_files])
+        self.assertIn(".githooks/commit-msg", [item["path"] for item in managed_files])
+        self.assertIn("scripts/hooks/commit-msg.ps1", [item["path"] for item in managed_files])
         managed_file_modes = {item["path"]: item.get("management_mode", "replace") for item in managed_files}
         self.assertEqual(managed_file_modes[".governed-ai/verify-powershell-policy.py"], "block_on_drift")
         self.assertEqual(managed_file_modes[".claude/settings.json"], "json_merge")
         self.assertEqual(managed_file_modes[".claude/hooks/governed-pre-tool-use.py"], "block_on_drift")
         self.assertEqual(managed_file_modes[".ignore"], "block_on_drift")
+        self.assertEqual(managed_file_modes[".githooks/commit-msg"], "block_on_drift")
+        self.assertEqual(managed_file_modes["scripts/hooks/commit-msg.ps1"], "block_on_drift")
         self.assertEqual(set(ownership["baseline_override_fields"]), set(baseline["required_profile_overrides"].keys()))
         self.assertEqual(
             set(ownership["derived_runtime_fields"]),

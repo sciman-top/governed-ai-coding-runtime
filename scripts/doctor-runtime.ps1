@@ -195,7 +195,9 @@ function Assert-PathExists {
 
 function Assert-RepoHookEnforcement {
   Assert-PathExists -Path ".githooks/pre-commit" -CheckName "repo-hook-pre-commit"
+  Assert-PathExists -Path ".githooks/commit-msg" -CheckName "repo-hook-commit-msg"
   Assert-PathExists -Path "scripts/hooks/pre-commit.ps1" -CheckName "repo-hook-script"
+  Assert-PathExists -Path "scripts/hooks/commit-msg.ps1" -CheckName "repo-hook-commit-msg-script"
   Assert-PathExists -Path "scripts/install-repo-hooks.ps1" -CheckName "repo-hook-installer"
 
   $git = Get-Command git -ErrorAction SilentlyContinue

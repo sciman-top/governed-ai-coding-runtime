@@ -30,6 +30,18 @@
       "source": "docs/targets/templates/search-context.ignore",
       "management_mode": "block_on_drift",
       "description": "Repo-local ripgrep ignore file that keeps daily coding searches out of archived evidence, long backlog history, screenshots, and generated runtime caches; target-local drift must be reviewed and integrated before sync instead of overwritten."
+    },
+    {
+      "path": ".githooks/commit-msg",
+      "source": "docs/targets/templates/git-hooks/commit-msg",
+      "management_mode": "block_on_drift",
+      "description": "Repo-local Git commit-msg entrypoint that routes commit message validation through the governed PowerShell hook."
+    },
+    {
+      "path": "scripts/hooks/commit-msg.ps1",
+      "source": "docs/targets/templates/git-hooks/commit-msg.ps1",
+      "management_mode": "block_on_drift",
+      "description": "Repo-local Git commit-msg guard that blocks ordinary English-only commit subjects by default while allowing explicit waiver via GOVERNED_ALLOW_NON_CHINESE_COMMIT=1."
     }
   ],
   "generated_managed_files": [

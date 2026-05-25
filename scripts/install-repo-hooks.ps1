@@ -5,12 +5,16 @@ $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $GitDir = Join-Path $RepoRoot ".git"
 $HooksDir = Join-Path $RepoRoot ".githooks"
 $PreCommit = Join-Path $HooksDir "pre-commit"
+$CommitMsg = Join-Path $HooksDir "commit-msg"
 
 if (-not (Test-Path -LiteralPath $GitDir)) {
   throw "Git repository metadata was not found: $GitDir"
 }
 if (-not (Test-Path -LiteralPath $PreCommit)) {
   throw "Repository pre-commit hook was not found: $PreCommit"
+}
+if (-not (Test-Path -LiteralPath $CommitMsg)) {
+  throw "Repository commit-msg hook was not found: $CommitMsg"
 }
 
 & git -C $RepoRoot config core.hooksPath .githooks
