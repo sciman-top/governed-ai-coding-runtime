@@ -26,6 +26,10 @@
 - `python -m unittest tests.runtime.test_run_runtime_tests_runner`: pass, 9 tests.
 - `python scripts/run-runtime-tests.py --suite runtime=tests/runtime --pattern test_runtime_flow_preset.py --workers 1 --summary-json docs/change-evidence/tmp-runtime-flow-preset-check.json`: pass, `timeout=300s`, `79.424s`.
 - `python scripts/run-runtime-tests.py --suite runtime=tests/runtime --pattern test_session_bridge.py --workers 1 --summary-json docs/change-evidence/tmp-session-bridge-check.json`: pass, `timeout=300s`, `30.607s`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`: pass, `111` test files, `failures = 0`, `elapsed = 148.532s`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`: pass, `OK python-bytecode`, `OK python-import`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`: pass, through `OK functional-effectiveness`.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`: pass with non-blocking `WARN codex-capability-degraded`.
 
 ## Rollback
 - Revert this follow-up with git for control-repo files.
