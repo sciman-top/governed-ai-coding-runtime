@@ -14,6 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_TIMING_HISTORY_PATH = ROOT / "docs" / "change-evidence" / "runtime-test-speed-latest.json"
 DEFAULT_AUTO_WORKER_CAP = 8
+DEFAULT_PER_FILE_TIMEOUT_SECONDS = 300
 
 
 @dataclass(frozen=True)
@@ -154,7 +155,7 @@ def _resolve_timeout_seconds(requested: int) -> int:
             raise ValueError("GOVERNED_RUNTIME_TEST_TIMEOUT_SECONDS must be greater than zero")
         return parsed
 
-    return 180
+    return DEFAULT_PER_FILE_TIMEOUT_SECONDS
 
 
 def _run_target(target: TestTarget, timeout_seconds: int) -> TestResult:
@@ -225,7 +226,7 @@ def main() -> int:
         "--timeout-seconds",
         type=int,
         default=0,
-        help="Per-test-file timeout. Defaults to GOVERNED_RUNTIME_TEST_TIMEOUT_SECONDS or 180.",
+        help=f"Per-test-file timeout. Defaults to GOVERNED_RUNTIME_TEST_TIMEOUT_SECONDS or {DEFAULT_PER_FILE_TIMEOUT_SECONDS}.",
     )
     parser.add_argument(
         "--summary-json",

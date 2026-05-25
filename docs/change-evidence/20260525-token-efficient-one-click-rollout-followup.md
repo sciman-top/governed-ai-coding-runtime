@@ -21,6 +21,11 @@
 - `python -m unittest tests.runtime.test_target_repo_rollout_contract`: pass, 13 tests.
 - `python scripts/sync-agent-rules.py --scope All --fail-on-change`: pass, `entry_count = 24`, `changed_count = 0`, `blocked_count = 0`.
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`: pass with non-blocking `WARN codex-capability-degraded`.
+- Runtime timeout root cause: `tests.runtime.test_runtime_flow_preset` and `tests.runtime.test_session_bridge` timed out only under full-suite parallel pressure with the old per-file `180s` budget; both passed when run individually.
+- Runtime gate hardening: `scripts/run-runtime-tests.py` default per-file timeout is now `300s`, while `GOVERNED_RUNTIME_TEST_TIMEOUT_SECONDS` remains the override for stricter or faster environments.
+- `python -m unittest tests.runtime.test_run_runtime_tests_runner`: pass, 9 tests.
+- `python scripts/run-runtime-tests.py --suite runtime=tests/runtime --pattern test_runtime_flow_preset.py --workers 1 --summary-json docs/change-evidence/tmp-runtime-flow-preset-check.json`: pass, `timeout=300s`, `79.424s`.
+- `python scripts/run-runtime-tests.py --suite runtime=tests/runtime --pattern test_session_bridge.py --workers 1 --summary-json docs/change-evidence/tmp-session-bridge-check.json`: pass, `timeout=300s`, `30.607s`.
 
 ## Rollback
 - Revert this follow-up with git for control-repo files.

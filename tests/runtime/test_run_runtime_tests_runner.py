@@ -48,6 +48,18 @@ class RunRuntimeTestsRunnerTests(unittest.TestCase):
         ):
             self.assertEqual(runner._resolve_worker_count(0, 20), 5)
 
+    def test_default_per_file_timeout_allows_loaded_full_gate_variance(self) -> None:
+        runner = _load_runner_module()
+
+        with mock.patch.dict(runner.os.environ, {}, clear=True):
+            self.assertEqual(runner._resolve_timeout_seconds(0), 300)
+
+    def test_timeout_env_overrides_default_per_file_timeout(self) -> None:
+        runner = _load_runner_module()
+
+        with mock.patch.dict(runner.os.environ, {"GOVERNED_RUNTIME_TEST_TIMEOUT_SECONDS": "120"}, clear=True):
+            self.assertEqual(runner._resolve_timeout_seconds(0), 120)
+
     def test_prioritize_targets_starts_known_slow_files_first(self) -> None:
         runner = _load_runner_module()
         fast = runner.TestTarget(
