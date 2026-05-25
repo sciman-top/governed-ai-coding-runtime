@@ -66,6 +66,8 @@ class TargetRepoRolloutContractTests(unittest.TestCase):
         )
         self.assertIn("retired_managed_files", contract["managed_file_rollout"])
         self.assertIn("retired_managed_files", json.loads(DEFAULT_BASELINE_PATH.read_text(encoding="utf-8")))
+        all_feature_args = contract["canonical_one_click_entrypoint"]["all_targets_apply_all_features_args"]
+        self.assertIn("-ExportTargetRepoRuns", all_feature_args)
         runtime_contract_ids = {item["capability_id"] for item in contract["runtime_orchestrated_capability_contracts"]}
         self.assertIn("target-repo-problem-trace-and-kpi", runtime_contract_ids)
         self.assertIn("target-repo-managed-asset-removal", runtime_contract_ids)
@@ -231,6 +233,24 @@ class TargetRepoRolloutContractTests(unittest.TestCase):
             codes = {error["code"] for error in payload["errors"]}
             self.assertIn("missing_coding_speed_profile_arg", codes)
             self.assertIn("missing_target_repo_speed_profile_rollout_arg", codes)
+
+    def test_fails_when_all_features_evidence_export_arg_is_missing_from_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            contract = json.loads(DEFAULT_CONTRACT_PATH.read_text(encoding="utf-8"))
+            contract["canonical_one_click_entrypoint"]["all_targets_apply_all_features_args"] = [
+                "-AllTargets",
+                "-ApplyAllFeatures",
+            ]
+            contract_path = workspace / "contract.json"
+            _write_json(contract_path, contract)
+
+            completed = _run_rollout_contract_check("--contract-path", str(contract_path))
+
+            self.assertNotEqual(completed.returncode, 0)
+            payload = json.loads(completed.stdout)
+            codes = {error["code"] for error in payload["errors"]}
+            self.assertIn("missing_all_features_arg", codes)
 
     def test_fails_when_milestone_commit_template_is_not_chinese(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

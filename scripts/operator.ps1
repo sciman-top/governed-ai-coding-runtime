@@ -256,7 +256,7 @@ AI 推荐:
   RulesApply             应用规则 manifest 同步，然后复查漂移。
   GovernanceBaselineAll  对所有 active targets 下发治理基线，然后验证目标仓治理一致性。
   DailyAll               对所有 active targets 执行 daily flow，并刷新 operator UI。
-  ApplyAllFeatures       执行全部当前目标仓功能，默认删除已证明安全的退役托管文件；可用 -DisableManagedAssetRemoval 仅检测。
+  ApplyAllFeatures       同步规则 manifest 后执行全部当前目标仓功能，并刷新 target-run/KPI/effect 证据；默认删除已证明安全的退役托管文件；可用 -DisableManagedAssetRemoval 仅检测。
   CleanupTargets         预演清理退役治理文件；加 -ApplyManagedAssetRemoval 才实际删除。
   UninstallGovernance    预演卸载目标仓治理资产；加 -ApplyManagedAssetRemoval 才实际删除/修补。
   FeedbackReport         生成 Codex/Claude 功能反馈汇总报告，并写入 runtime artifacts。
@@ -355,6 +355,7 @@ function Invoke-DailyAll {
 
 function Invoke-ApplyAllFeatures {
   Assert-OperatorPreflight -ActionName "ApplyAllFeatures"
+  Invoke-RulesApply
   $arguments = Get-BatchFlowArguments -BaseArguments @(
     "-ApplyAllFeatures",
     "-FlowMode",
@@ -364,6 +365,7 @@ function Invoke-ApplyAllFeatures {
     "-MilestoneTag",
     $MilestoneTag,
     "-Json",
+    "-ExportTargetRepoRuns",
     "-PruneRetiredManagedFiles"
   )
   if (-not $DisableManagedAssetRemoval) {

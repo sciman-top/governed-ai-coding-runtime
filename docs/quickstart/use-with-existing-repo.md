@@ -9,9 +9,15 @@ The main entrypoint for daily and batch target-repo operations is:
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1
 ```
 
-It reads active targets from `docs/targets/target-repos-catalog.json`. Use `-ListTargets` first; use `-Target "<id>" -FlowMode "daily"` for one repo; use `-AllTargets -ApplyGovernanceBaselineOnly` for governance-baseline sync; use `-AllTargets -ApplyAllFeatures -FlowMode "daily"` for all current target-repo features.
+It reads active targets from `docs/targets/target-repos-catalog.json`. Use `-ListTargets` first; use `-Target "<id>" -FlowMode "daily"` for one repo; use `-AllTargets -ApplyGovernanceBaselineOnly` for governance-baseline sync; use `-AllTargets -ApplyAllFeatures -ExportTargetRepoRuns -FlowMode "daily"` for all current runtime-side target-repo features.
 
-The one-command apply entrypoint for rule files is:
+For the unified operator entrypoint, `ApplyAllFeatures` first syncs the rule manifest, then applies all current target-repo features and refreshes target-run/KPI/effect evidence:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action ApplyAllFeatures
+```
+
+The standalone apply entrypoint for rule files is:
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply
@@ -293,12 +299,19 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
   -Json
 ```
 
-If you need one-click apply for all current features (legacy runtime-flow + feature baseline sync + milestone auto-commit), use:
+If you need the unified operator path for all current features (rule manifest sync + legacy runtime-flow + feature baseline sync + milestone auto-commit + target-run/KPI/effect evidence refresh), use:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action ApplyAllFeatures
+```
+
+If you only need the direct target runtime-side one-click chain, use:
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
   -AllTargets `
   -ApplyAllFeatures `
+  -ExportTargetRepoRuns `
   -FlowMode "daily" `
   -MilestoneTag "milestone" `
   -Json
@@ -310,6 +323,7 @@ If you want to automatically prune old target-repo problem traces after the one-
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
   -AllTargets `
   -ApplyAllFeatures `
+  -ExportTargetRepoRuns `
   -FlowMode "daily" `
   -MilestoneTag "milestone" `
   -PruneTargetRepoRuns `

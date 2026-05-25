@@ -1160,6 +1160,132 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
                 self.assertEqual(profile["required_entrypoint_policy"]["current_mode"], "targeted_enforced")
                 self.assertEqual(profile["auto_commit_policy"]["enabled"], True)
 
+    def test_runtime_flow_preset_apply_all_features_repairs_missing_dependency_baseline(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_a = workspace / "repo-a"
+            governed_dir = repo_a / ".governed-ai"
+            governed_dir.mkdir(parents=True)
+            runtime_state_root = workspace / "state" / "repo-a"
+            _write_json(
+                governed_dir / "repo-profile.json",
+                {
+                    "schema_version": "1.0",
+                    "repo_id": "repo-a",
+                    "display_name": "repo-a",
+                    "primary_language": "python",
+                    "repo_root_locator": {"kind": "local_path", "value": "."},
+                    "rollout_posture": {"current_mode": "observe", "target_mode": "advisory"},
+                    "build_commands": [{"id": "build", "command": "python --version", "required": True}],
+                    "test_commands": [{"id": "test", "command": "python --version", "required": True}],
+                    "lint_commands": [],
+                    "typecheck_commands": [],
+                    "contract_commands": [{"id": "contract", "command": "python --version", "required": True}],
+                    "invariant_commands": [],
+                    "risk_defaults": {"default_write_tier": "medium", "blocked_command_patterns": []},
+                    "approval_defaults": {"medium_write_requires_approval": True, "high_requires_explicit_approval": True},
+                    "tool_allowlist": ["shell"],
+                    "path_policies": {"read_allow": ["**/*"], "write_allow": ["src/**", "tests/**"], "blocked": [".git/**"]},
+                    "branch_policy": {"default_branch": "main", "working_branch_prefix": "governed/", "allow_direct_push": False},
+                    "delivery_format": {"summary_template": "default", "include_patch": True, "include_pr_body": True},
+                },
+            )
+            _write_json(
+                governed_dir / "light-pack.json",
+                {
+                    "schema_version": "1.0",
+                    "pack_kind": "repo_attachment_light_pack",
+                    "binding_id": "binding-repo-a",
+                    "repo_profile_ref": ".governed-ai/repo-profile.json",
+                    "adapter_preference": "native_attach",
+                    "gate_profile": "default",
+                    "runtime_contract_refs": {
+                        "repo_attachment_binding_schema": "schemas/jsonschema/repo-attachment-binding.schema.json",
+                        "repo_profile_schema": "schemas/jsonschema/repo-profile.schema.json",
+                    },
+                },
+            )
+            dependency_baseline_path = repo_a / ".governed-ai" / "dependency-baseline.json"
+            self.assertFalse(dependency_baseline_path.exists())
+
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": str(repo_a),
+                            "attachment_runtime_state_root": str(runtime_state_root),
+                            "repo_id": "repo-a",
+                            "display_name": "repo-a",
+                            "primary_language": "python",
+                            "build_command": "python --version",
+                            "test_command": "python --version",
+                            "contract_command": "python --version",
+                        },
+                    },
+                },
+            )
+            baseline_path = workspace / "target-repo-governance-baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-04-23.1",
+                    "required_profile_overrides": {
+                        "required_entrypoint_policy": {"current_mode": "targeted_enforced"},
+                        "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                    },
+                },
+            )
+            fake_runtime_flow_path = workspace / "fake-runtime-flow.ps1"
+            _write_fake_runtime_flow_script(fake_runtime_flow_path)
+            fake_full_check_path = workspace / "fake-full-check.ps1"
+            _write_fake_full_check_script(fake_full_check_path)
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "runtime-flow-preset.ps1"),
+                    "-AllTargets",
+                    "-ApplyAllFeatures",
+                    "-DisableManagedAssetRemoval",
+                    "-Json",
+                    "-CatalogPath",
+                    str(catalog_path),
+                    "-GovernanceBaselinePath",
+                    str(baseline_path),
+                    "-RuntimeFlowPath",
+                    str(fake_runtime_flow_path),
+                    "-GovernanceFullCheckPath",
+                    str(fake_full_check_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr + completed.stdout)
+            payload = json.loads(completed.stdout)
+            result = payload["results"][0]
+            self.assertEqual(result["attachment_repair_status"], "pass")
+            self.assertEqual(result["attachment_repair_reason"], "dependency_baseline_repaired")
+            self.assertTrue(result["attachment_repair_refreshed"])
+            self.assertTrue(dependency_baseline_path.exists())
+            repaired_baseline = json.loads(dependency_baseline_path.read_text(encoding="utf-8"))
+            self.assertEqual(repaired_baseline["baseline_kind"], "target_repo_dependency_baseline")
+            self.assertEqual(repaired_baseline["repo_id"], "repo-a")
+
     def test_runtime_flow_preset_apply_all_features_can_disable_milestone_auto_commit(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)

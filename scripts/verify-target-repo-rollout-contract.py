@@ -169,7 +169,7 @@ def _validate_one_click_entrypoint(
         )
 
     all_feature_args = _as_string_list(entrypoint.get("all_targets_apply_all_features_args"))
-    for required_arg in ("-AllTargets", "-ApplyAllFeatures"):
+    for required_arg in ("-AllTargets", "-ApplyAllFeatures", "-ExportTargetRepoRuns"):
         if required_arg not in all_feature_args:
             _add_error(
                 errors,

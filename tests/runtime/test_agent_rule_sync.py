@@ -23,14 +23,18 @@ class AgentRuleSyncTests(unittest.TestCase):
         ids = [entry["id"] for entry in entries]
         global_entries = [entry for entry in entries if entry["scope"] == "global"]
         project_entries = [entry for entry in entries if entry["scope"] == "project"]
+        project_repo_ids = {entry["target_repo_id"] for entry in project_entries}
 
         self.assertEqual(len(ids), len(set(ids)))
         self.assertEqual(len(global_entries), 3)
-        self.assertEqual(len(project_entries), 18)
+        self.assertEqual(len(project_entries), len(project_repo_ids) * 3)
+        for repo_id in project_repo_ids:
+            repo_entries = [entry for entry in project_entries if entry["target_repo_id"] == repo_id]
+            self.assertEqual({entry["tool"] for entry in repo_entries}, {"codex", "claude", "gemini"})
         self.assertEqual({entry["tool"] for entry in global_entries}, {"codex", "claude", "gemini"})
-        self.assertIn("self-runtime", {entry["target_repo_id"] for entry in project_entries})
-        self.assertIn("k12-question-graph", {entry["target_repo_id"] for entry in project_entries})
-        self.assertIn("vps-ssh-launcher", {entry["target_repo_id"] for entry in project_entries})
+        self.assertIn("self-runtime", project_repo_ids)
+        self.assertIn("k12-question-graph", project_repo_ids)
+        self.assertIn("vps-ssh-launcher", project_repo_ids)
         global_version = manifest["default_version"]
         for entry in entries:
             self.assertEqual(entry["version"], global_version)
@@ -40,7 +44,8 @@ class AgentRuleSyncTests(unittest.TestCase):
         manifest = json.loads((ROOT / "rules" / "manifest.json").read_text(encoding="utf-8"))
         project_entries = [entry for entry in manifest["entries"] if entry["scope"] == "project"]
         wrapper_entries = [entry for entry in project_entries if entry["tool"] in {"claude", "gemini"}]
-        self.assertEqual(len(wrapper_entries), 12)
+        project_repo_ids = {entry["target_repo_id"] for entry in project_entries}
+        self.assertEqual(len(wrapper_entries), len(project_repo_ids) * 2)
 
         for entry in wrapper_entries:
             text = (ROOT / entry["source"]).read_text(encoding="utf-8")

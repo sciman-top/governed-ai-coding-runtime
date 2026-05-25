@@ -9,9 +9,15 @@
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1
 ```
 
-它从 `docs/targets/target-repos-catalog.json` 读取 active targets。先用 `-ListTargets` 看清单；单仓用 `-Target "<id>" -FlowMode "daily"`；多仓一键治理基线用 `-AllTargets -ApplyGovernanceBaselineOnly`；多仓全部当前功能用 `-AllTargets -ApplyAllFeatures -FlowMode "daily"`。
+它从 `docs/targets/target-repos-catalog.json` 读取 active targets。先用 `-ListTargets` 看清单；单仓用 `-Target "<id>" -FlowMode "daily"`；多仓一键治理基线用 `-AllTargets -ApplyGovernanceBaselineOnly`；多仓全部当前 runtime 功能用 `-AllTargets -ApplyAllFeatures -ExportTargetRepoRuns -FlowMode "daily"`。
 
-规则文件的一键应用入口是：
+如果要走统一 operator 一键入口，`ApplyAllFeatures` 会先同步规则 manifest，再执行目标仓全部当前功能并刷新 target-run/KPI/effect 证据：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action ApplyAllFeatures
+```
+
+规则文件的单独应用入口是：
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply
@@ -293,12 +299,19 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
   -Json
 ```
 
-如果你要一键执行“全部现有功能”（旧流程 runtime-flow + 特性基线同步 + 里程碑自动提交），可用：
+如果你要走统一 operator 入口一键执行“全部现有功能”（规则 manifest 同步 + 旧流程 runtime-flow + 特性基线同步 + 里程碑自动提交 + target-run/KPI/effect 证据刷新），可用：
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action ApplyAllFeatures
+```
+
+如果你只需要直接执行 target runtime 侧的一键链，可用：
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
   -AllTargets `
   -ApplyAllFeatures `
+  -ExportTargetRepoRuns `
   -FlowMode "daily" `
   -MilestoneTag "milestone" `
   -Json
@@ -310,6 +323,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
   -AllTargets `
   -ApplyAllFeatures `
+  -ExportTargetRepoRuns `
   -FlowMode "daily" `
   -MilestoneTag "milestone" `
   -PruneTargetRepoRuns `

@@ -6,7 +6,8 @@
     "script": "scripts/runtime-flow-preset.ps1",
     "all_targets_apply_all_features_args": [
       "-AllTargets",
-      "-ApplyAllFeatures"
+      "-ApplyAllFeatures",
+      "-ExportTargetRepoRuns"
     ],
     "coding_speed_profile_args": [
       "-AllTargets",
@@ -36,7 +37,10 @@
       "auto_commit_trigger",
       "prune_retired_managed_files_active",
       "uninstall_governance_active",
-      "apply_managed_asset_removal"
+      "apply_managed_asset_removal",
+      "exported_target_repo_runs",
+      "target_repo_speed_kpi",
+      "target_repo_effect_reports"
     ]
   },
   "managed_file_rollout": {
@@ -141,7 +145,12 @@
     {
       "capability_id": "target-repo-problem-trace-and-kpi",
       "required_json_fields": [
-        "exported_target_repo_runs"
+        "exported_target_repo_runs",
+        "target_repo_speed_kpi",
+        "target_repo_effect_reports"
+      ],
+      "required_script_tokens": [
+        "$ExportTargetRepoRuns"
       ]
     },
     {
@@ -283,7 +292,7 @@
     {
       "capability_id": "target-repo-dependency-baseline-enforcement",
       "distribution_scope": "repo_local_artifact",
-      "reason": "依赖基线是目标仓本地受管文件和门禁事实，按目标仓已有 .governed-ai/dependency-baseline.json 管理，不属于 profile override 下发字段。"
+      "reason": "依赖基线是目标仓本地受管文件和门禁事实，由 attach/ApplyAllFeatures 的 attachment repair 在缺失时物化，已存在差异必须阻断整合，不属于 profile override 下发字段。"
     },
     {
       "capability_id": "native-attach-runtime-flow",

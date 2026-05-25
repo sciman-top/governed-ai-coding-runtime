@@ -226,8 +226,15 @@ class OperatorEntrypointTests(unittest.TestCase):
             env=env,
         )
 
+        self.assertIn("DRY-RUN rules-apply", completed.stdout)
+        self.assertIn("DRY-RUN rules-drift-check", completed.stdout)
         self.assertIn("DRY-RUN apply-all-features", completed.stdout)
+        self.assertLess(
+            completed.stdout.index("DRY-RUN rules-apply"),
+            completed.stdout.index("DRY-RUN apply-all-features"),
+        )
         self.assertIn("-ApplyAllFeatures", completed.stdout)
+        self.assertIn("-ExportTargetRepoRuns", completed.stdout)
         self.assertIn("-PruneRetiredManagedFiles", completed.stdout)
         self.assertIn("-ApplyManagedAssetRemoval", completed.stdout)
 
@@ -270,6 +277,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         )
 
         self.assertIn("-PruneRetiredManagedFiles", completed.stdout)
+        self.assertIn("-ExportTargetRepoRuns", completed.stdout)
         self.assertIn("-DisableManagedAssetRemoval", completed.stdout)
 
     def test_operator_codex_local_optimize_action_is_removed(self) -> None:
@@ -462,6 +470,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         )
         self.assertIn("DRY-RUN apply-all-features", completed.stdout)
         self.assertIn("-ApplyAllFeatures", completed.stdout)
+        self.assertIn("-ExportTargetRepoRuns", completed.stdout)
         self.assertIn("-DisableManagedAssetRemoval", completed.stdout)
 
     def test_operator_ui_action_generates_html(self) -> None:

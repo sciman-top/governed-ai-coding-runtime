@@ -42,9 +42,12 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
   -AllTargets `
   -ApplyAllFeatures `
+  -ExportTargetRepoRuns `
   -FlowMode "daily" `
   -MilestoneTag "milestone" `
   -Json
+
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action ApplyAllFeatures
 
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply
 ```

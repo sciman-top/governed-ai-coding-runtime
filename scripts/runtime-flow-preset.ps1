@@ -91,6 +91,7 @@ Governance apply options:
   -ApplyGovernanceBaselineOnly  Apply target governance baseline without runtime flow.
   -ApplyCodingSpeedProfile      Refresh derived coding speed profile fields.
   -ApplyAllFeatures             Apply the full target governance feature bundle.
+  -ExportTargetRepoRuns         Export target-run evidence and refresh target KPI/effect reports.
   -DisableMilestoneAutoCommit   Run milestone gates but suppress post-gate auto-commit.
   -AllowCatalogFieldOverwrite   Reviewed catalog field drift that may be overwritten intentionally.
 '@
@@ -464,6 +465,33 @@ function Invoke-AttachmentRepairIfNeeded {
 
   $bindingState = [string]$inspectResult.payload.binding_state
   if ($bindingState -eq "healthy") {
+    $dependencyBaselinePath = Join-Path $TargetConfig.AttachmentRoot ".governed-ai\dependency-baseline.json"
+    if (-not (Test-Path -LiteralPath $dependencyBaselinePath)) {
+      Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "attachment_repair" -Status "start" -Detail "state=missing_dependency_baseline"
+      $attachArgs = New-AttachTargetRepoArguments `
+        -TargetConfig $TargetConfig `
+        -RepoRoot $RepoRoot `
+        -AdapterPreferenceValue $AdapterPreferenceValue `
+        -OverwriteAttachment $false
+      $refreshResult = Invoke-CommandCapture `
+        -Executable $PythonCommand `
+        -Arguments $attachArgs `
+        -TimeoutSeconds $CommandTimeoutSeconds `
+        -WorkingDirectory $RepoRoot
+      $refreshPayload = Try-ParseJson -Raw $refreshResult.output
+      $status = if ($refreshResult.exit_code -eq 0) { "pass" } else { "fail" }
+      Write-BatchProgressLine -Enabled $EmitProgress -TargetName $TargetName -Stage "attachment_repair" -Status $status -Detail ("reason=missing_dependency_baseline exit_code={0}" -f $refreshResult.exit_code)
+      return [pscustomobject]@{
+        target      = $TargetName
+        status      = $status
+        reason      = if ($status -eq "pass") { "dependency_baseline_repaired" } else { "dependency_baseline_repair_failed" }
+        exit_code   = $refreshResult.exit_code
+        before      = $inspectResult.payload
+        payload     = $refreshPayload
+        output      = $refreshResult.output
+        refreshed   = ($status -eq "pass")
+      }
+    }
     return [pscustomobject]@{
       target      = $TargetName
       status      = "skipped"
