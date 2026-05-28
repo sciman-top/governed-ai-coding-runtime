@@ -13,6 +13,7 @@ from urllib.request import Request, urlopen
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_POLICY = ROOT / "docs" / "architecture" / "runtime-evolution-policy.json"
 DEFAULT_ARTIFACT_ROOT = ROOT / ".runtime" / "artifacts" / "runtime-evolution"
+DEFAULT_EVIDENCE_ROOT = ROOT / "docs" / "change-evidence"
 VALID_STATUS = {"draft", "observe", "enforced", "waived"}
 VALID_ACTIONS = {"add", "modify", "delete", "defer", "no_action"}
 VALID_RISKS = {"low", "medium", "high"}
@@ -43,6 +44,11 @@ def main() -> int:
     parser.add_argument("--write-artifacts", action="store_true", help="Write JSON and Markdown dry-run artifacts.")
     parser.add_argument("--artifact-root", default=str(DEFAULT_ARTIFACT_ROOT))
     parser.add_argument(
+        "--evidence-root",
+        default=str(DEFAULT_EVIDENCE_ROOT),
+        help="Root for reviewable source and candidate evidence artifacts.",
+    )
+    parser.add_argument(
         "--online-source-check",
         action="store_true",
         help="Attempt lightweight online source checks; failures are recorded in dry-run output.",
@@ -62,6 +68,7 @@ def main() -> int:
             as_of=as_of,
             write_artifacts=args.write_artifacts,
             artifact_root=Path(args.artifact_root),
+            evidence_root=Path(args.evidence_root),
             online_source_check=args.online_source_check,
         )
     except ValueError as exc:
@@ -79,6 +86,7 @@ def assert_runtime_evolution_policy(
     as_of: dt.date | None = None,
     write_artifacts: bool = False,
     artifact_root: Path | None = None,
+    evidence_root: Path | None = None,
     online_source_check: bool = False,
 ) -> dict:
     result = inspect_runtime_evolution_policy(
@@ -87,6 +95,7 @@ def assert_runtime_evolution_policy(
         as_of=as_of,
         write_artifacts=write_artifacts,
         artifact_root=artifact_root,
+        evidence_root=evidence_root,
         online_source_check=online_source_check,
     )
     failures: list[str] = []
@@ -113,6 +122,7 @@ def inspect_runtime_evolution_policy(
     as_of: dt.date | None = None,
     write_artifacts: bool = False,
     artifact_root: Path | None = None,
+    evidence_root: Path | None = None,
     online_source_check: bool = False,
 ) -> dict:
     resolved_root = repo_root.resolve(strict=False)
@@ -169,7 +179,13 @@ def inspect_runtime_evolution_policy(
 
     if write_artifacts:
         root = artifact_root or DEFAULT_ARTIFACT_ROOT
-        result["artifact_refs"] = _write_artifacts(root=root, result=result, as_of=today)
+        evidence = evidence_root or DEFAULT_EVIDENCE_ROOT
+        result["artifact_refs"] = _write_artifacts(
+            root=root,
+            evidence_root=evidence,
+            result=result,
+            as_of=today,
+        )
 
     return result
 
@@ -746,15 +762,61 @@ def _collect_missing_required_refs(repo_root: Path, policy: dict) -> list[str]:
     return sorted(set(missing))
 
 
-def _write_artifacts(*, root: Path, result: dict, as_of: dt.date) -> dict[str, str]:
+def _write_artifacts(*, root: Path, evidence_root: Path, result: dict, as_of: dt.date) -> dict[str, str]:
     root.mkdir(parents=True, exist_ok=True)
     json_path = root / f"{as_of.strftime('%Y%m%d')}-runtime-evolution-review.json"
     md_path = root / f"{as_of.strftime('%Y%m%d')}-runtime-evolution-review.md"
+
+    source_root = evidence_root / "evolution-sources"
+    candidate_root = evidence_root / "runtime-evolution-candidates"
+    source_root.mkdir(parents=True, exist_ok=True)
+    candidate_root.mkdir(parents=True, exist_ok=True)
+    source_path = source_root / f"{as_of.strftime('%Y%m%d')}-runtime-evolution-sources.json"
+    candidate_path = candidate_root / f"{as_of.strftime('%Y%m%d')}-runtime-evolution-candidates.json"
+
     json_path.write_text(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     md_path.write_text(_render_markdown(result), encoding="utf-8")
+    source_path.write_text(
+        json.dumps(_build_source_artifact(result), ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    candidate_path.write_text(
+        json.dumps(_build_candidate_artifact(result), ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     return {
         "json": json_path.resolve(strict=False).as_posix(),
         "markdown": md_path.resolve(strict=False).as_posix(),
+        "sources": source_path.resolve(strict=False).as_posix(),
+        "candidates": candidate_path.resolve(strict=False).as_posix(),
+    }
+
+
+def _build_source_artifact(result: dict) -> dict:
+    return {
+        "schema_version": "0.1-draft",
+        "artifact_type": "runtime_evolution_sources",
+        "policy_id": result["policy_id"],
+        "as_of": result["as_of"],
+        "online_source_check": result["online_source_check"],
+        "mutation_allowed": False,
+        "source_count": result["source_count"],
+        "source_records": result["source_records"],
+        "rollback": "Remove this generated source artifact; it is evidence only and does not mutate policy.",
+    }
+
+
+def _build_candidate_artifact(result: dict) -> dict:
+    return {
+        "schema_version": "0.1-draft",
+        "artifact_type": "runtime_evolution_candidates",
+        "policy_id": result["policy_id"],
+        "as_of": result["as_of"],
+        "mutation_allowed": False,
+        "candidate_count": result["candidate_count"],
+        "candidates": result["candidates"],
+        "evidence_snapshot": result["evidence_snapshot"],
+        "rollback": "Remove this generated candidate artifact; applying any candidate still requires its own gates.",
     }
 
 

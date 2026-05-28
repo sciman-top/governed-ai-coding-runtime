@@ -154,6 +154,8 @@ class RuntimeEvolutionTests(unittest.TestCase):
 
     def test_evolve_runtime_wrapper_writes_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
+            artifact_root = Path(tmp_dir) / "runtime-artifacts"
+            evidence_root = Path(tmp_dir) / "change-evidence"
             completed = subprocess.run(
                 [
                     "pwsh",
@@ -164,6 +166,10 @@ class RuntimeEvolutionTests(unittest.TestCase):
                     "scripts/evolve-runtime.ps1",
                     "-AsOf",
                     "2026-05-01",
+                    "-ArtifactRoot",
+                    str(artifact_root),
+                    "-EvidenceRoot",
+                    str(evidence_root),
                     "-WriteArtifacts",
                 ],
                 check=False,
@@ -172,10 +178,53 @@ class RuntimeEvolutionTests(unittest.TestCase):
                 cwd=ROOT,
             )
 
-        self.assertEqual(completed.returncode, 0, completed.stderr)
-        payload = json.loads(completed.stdout)
-        self.assertIn("json", payload["artifact_refs"])
-        self.assertTrue(Path(payload["artifact_refs"]["json"]).exists())
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertIn("json", payload["artifact_refs"])
+            self.assertIn("sources", payload["artifact_refs"])
+            self.assertIn("candidates", payload["artifact_refs"])
+            self.assertTrue(Path(payload["artifact_refs"]["json"]).exists())
+            self.assertTrue(Path(payload["artifact_refs"]["sources"]).exists())
+            self.assertTrue(Path(payload["artifact_refs"]["candidates"]).exists())
+
+    def test_write_artifacts_emits_reviewable_source_and_candidate_snapshots(self) -> None:
+        module = _load_runtime_evolution_script()
+        original_probe = module._probe_online_source
+        module._probe_online_source = lambda source_ref: {
+            "status": "ok",
+            "http_status": 200,
+            "content_type": "stubbed",
+        }
+        self.addCleanup(setattr, module, "_probe_online_source", original_probe)
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            artifact_root = Path(tmp_dir) / "runtime-artifacts"
+            evidence_root = Path(tmp_dir) / "change-evidence"
+            payload = module.assert_runtime_evolution_policy(
+                repo_root=ROOT,
+                policy_path=ROOT / "docs" / "architecture" / "runtime-evolution-policy.json",
+                as_of=dt.date(2026, 5, 1),
+                write_artifacts=True,
+                artifact_root=artifact_root,
+                evidence_root=evidence_root,
+                online_source_check=True,
+            )
+
+            source_artifact = json.loads(Path(payload["artifact_refs"]["sources"]).read_text(encoding="utf-8"))
+            candidate_artifact = json.loads(Path(payload["artifact_refs"]["candidates"]).read_text(encoding="utf-8"))
+
+        self.assertEqual(source_artifact["artifact_type"], "runtime_evolution_sources")
+        self.assertTrue(source_artifact["online_source_check"])
+        self.assertEqual(source_artifact["source_count"], payload["source_count"])
+        self.assertTrue(
+            any(
+                record.get("online_probe", {}).get("status") == "ok"
+                for record in source_artifact["source_records"]
+            )
+        )
+        self.assertEqual(candidate_artifact["artifact_type"], "runtime_evolution_candidates")
+        self.assertEqual(candidate_artifact["candidate_count"], payload["candidate_count"])
+        self.assertIn("evidence_snapshot", candidate_artifact)
 
     def test_operator_evolution_review_supports_online_source_check_flag(self) -> None:
         operator = (ROOT / "scripts" / "operator.ps1").read_text(encoding="utf-8")

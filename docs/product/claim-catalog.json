@@ -5,7 +5,7 @@
       "claim_id": "CLM-001",
       "claim_text": "The runtime is a governance/runtime layer and not a universal host replacement.",
       "proof_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs",
-      "evidence_link": "docs/change-evidence/20260420-gap-069-host-neutral-governance-boundary-hardening-closeout.md",
+      "evidence_link": "docs/change-evidence/20260528-clm-001-host-neutral-boundary-refresh.md",
       "source_refs": [
         {
           "path": "README.en.md",
@@ -21,7 +21,7 @@
       "claim_id": "CLM-002",
       "claim_text": "Onboarding can infer missing gate commands by default from the declared primary language.",
       "proof_command": "python -m unittest tests.runtime.test_repo_attachment",
-      "evidence_link": "docs/change-evidence/20260420-gap-070-default-on-onboarding-and-auto-apply-guardrails-closeout.md",
+      "evidence_link": "docs/change-evidence/20260528-claim-catalog-freshness-refresh.md",
       "source_refs": [
         {
           "path": "docs/quickstart/use-with-existing-repo.md",
@@ -37,7 +37,7 @@
       "claim_id": "CLM-003",
       "claim_text": "Medium/high-risk writes remain approval-bound in governed write flows.",
       "proof_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime",
-      "evidence_link": "docs/change-evidence/20260420-gap-070-default-on-onboarding-and-auto-apply-guardrails-closeout.md",
+      "evidence_link": "docs/change-evidence/20260528-claim-catalog-freshness-refresh.md",
       "source_refs": [
         {
           "path": "README.en.md",
@@ -53,7 +53,7 @@
       "claim_id": "CLM-004",
       "claim_text": "The canonical acceptance chain remains build -> test -> contract/invariant -> hotspot.",
       "proof_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All",
-      "evidence_link": "docs/change-evidence/20260420-readme-and-usage-guides-refresh.md",
+      "evidence_link": "docs/change-evidence/20260528-claim-catalog-freshness-refresh.md",
       "source_refs": [
         {
           "path": "README.en.md",
@@ -69,7 +69,7 @@
       "claim_id": "CLM-005",
       "claim_text": "Speed posture claims are evidence-window based and cite KPI snapshots (`latest` or `rolling`) instead of anecdotal impressions.",
       "proof_command": "python scripts/export-target-repo-speed-kpi.py --runs-root docs/change-evidence/target-repo-runs --window-kind rolling --window-size 5",
-      "evidence_link": "docs/change-evidence/20260421-gap-088-089-context-pack-and-speed-kpi-baseline.md",
+      "evidence_link": "docs/change-evidence/20260528-claim-catalog-freshness-refresh.md",
       "source_refs": [
         {
           "path": "docs/product/multi-repo-trial-loop.md",
@@ -85,7 +85,7 @@
       "claim_id": "CLM-006",
       "claim_text": "Complete hybrid final-state closure is certified on the current branch baseline by GAP-111 evidence and remains subject to claim-drift gates.",
       "proof_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All",
-      "evidence_link": "docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md",
+      "evidence_link": "docs/change-evidence/20260528-claim-catalog-freshness-refresh.md",
       "source_refs": [
         {
           "path": "README.md",
@@ -101,7 +101,7 @@
       "claim_id": "CLM-007",
       "claim_text": "Post-GAP-111 external source assumptions are machine-checked before they can strengthen final-state claims.",
       "proof_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs",
-      "evidence_link": "docs/change-evidence/20260427-gap-112-current-source-compatibility-guard.md",
+      "evidence_link": "docs/change-evidence/20260528-claim-catalog-freshness-refresh.md",
       "source_refs": [
         {
           "path": "docs/architecture/hybrid-final-state-master-outline.md",
@@ -117,7 +117,7 @@
       "claim_id": "CLM-008",
       "claim_text": "LTP heavy-stack promotion is autonomous only when the promotion policy selects exactly one evidence-triggered package; otherwise it defers all packages or requires owner-directed labeling.",
       "proof_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs",
-      "evidence_link": "docs/change-evidence/20260427-gap-113-autonomous-ltp-promotion-scope-fence.md",
+      "evidence_link": "docs/change-evidence/20260528-claim-catalog-freshness-refresh.md",
       "source_refs": [
         {
           "path": "docs/adrs/0008-autonomous-ltp-promotion-scope-fence.md",
@@ -133,7 +133,7 @@
       "claim_id": "CLM-009",
       "claim_text": "Autonomous continuation after the LTP promotion fence is selected by a next-work policy that prioritizes gate repair and evidence freshness before any LTP implementation.",
       "proof_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs",
-      "evidence_link": "docs/change-evidence/20260427-gap-114-autonomous-next-work-selector.md",
+      "evidence_link": "docs/change-evidence/20260528-claim-catalog-freshness-refresh.md",
       "source_refs": [
         {
           "path": "docs/architecture/autonomous-next-work-selection-policy.json",
@@ -149,7 +149,7 @@
       "claim_id": "CLM-010",
       "claim_text": "Claude Code is an owner-directed first-class supported host alongside Codex in governance outcome, and current live evidence certifies both at native_attach tier while host APIs remain distinct and evidence-bound.",
       "proof_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs",
-      "evidence_link": "docs/change-evidence/20260427-claude-code-native-attach-tier-parity.md",
+      "evidence_link": "docs/change-evidence/20260528-claim-catalog-freshness-refresh.md",
       "source_refs": [
         {
           "path": "docs/plans/claude-code-first-class-entrypoint-plan.md",

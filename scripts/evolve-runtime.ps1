@@ -3,6 +3,8 @@ param(
   [string]$Mode = "dry-run",
 
   [string]$AsOf = "",
+  [string]$ArtifactRoot = "",
+  [string]$EvidenceRoot = "",
   [switch]$WriteArtifacts,
   [switch]$OnlineSourceCheck
 )
@@ -28,6 +30,12 @@ if (-not [string]::IsNullOrWhiteSpace($AsOf)) {
 }
 if ($WriteArtifacts) {
   $arguments += "--write-artifacts"
+}
+if (-not [string]::IsNullOrWhiteSpace($ArtifactRoot)) {
+  $arguments += @("--artifact-root", $ArtifactRoot)
+}
+if (-not [string]::IsNullOrWhiteSpace($EvidenceRoot)) {
+  $arguments += @("--evidence-root", $EvidenceRoot)
 }
 if ($OnlineSourceCheck) {
   $arguments += "--online-source-check"

@@ -4,7 +4,7 @@
 - Created on 2026-05-01 as the planning queue for governed self-evolution.
 - Queue: `GAP-120..124`.
 - Materialization queue: `GAP-125..129`.
-- Current status: dry-run implementation exists through policy, evaluator, operator action, Docs gate, and scheduled workflow; low-risk materialization can write proposal and disabled skill candidate files.
+- Current status: dry-run implementation exists through policy, evaluator, operator action, Docs gate, scheduled workflow, source collection artifacts, and candidate evaluation artifacts; low-risk materialization can write proposal and disabled skill candidate files.
 - This plan does not authorize direct policy auto-apply, skill enablement, target repo sync, push, or merge. The only automatic apply currently allowed is candidate file materialization.
 
 ## Goal
@@ -56,6 +56,7 @@ Design and implement the dry-run source collection contract for official docs, p
 Acceptance criteria:
 - [x] source categories and priorities are machine-readable
 - [x] collected sources record URL/path, checked date, source type, summary, and confidence in dry-run mode
+- [x] `--write-artifacts` emits reviewable source and candidate JSON snapshots so online probes are not trapped in console output
 - [x] external content remains candidate evidence only and cannot override repo policy or code facts
 - [x] AI coding experience is represented as local, reviewable evidence rather than hidden memory authority
 - [x] minimum source catalog covers current official host docs for OpenAI, Claude Code, Gemini CLI, and MCP security, plus primary reference signals for sandboxed agents, repository context shaping, and agent-computer-interface workflows
