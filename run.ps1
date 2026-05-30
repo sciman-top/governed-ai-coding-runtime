@@ -36,6 +36,8 @@ AI 推荐:
   .\run.ps1 uninstall-governance 预演卸载目标仓治理资产；加 -ApplyManagedAssetRemoval 才实际删除/修补。
   .\run.ps1 feedback             生成 Codex/Claude 功能反馈汇总。
   .\run.ps1 self-evolution       主动刷新自演化 readiness/eval/variant/recommendation 报告。
+  .\run.ps1 self-evolution-promotion
+                                 生成自演化晋升控制器报告；不改 policy、不启用 skill、不同步/推送。
 
 示例:
   .\run.ps1 daily -Mode quick -Target skills-manager -OpenUi
@@ -82,6 +84,9 @@ function Resolve-OperatorAction {
     "self-evolution" = "SelfEvolutionRecommend"
     "self-evolution-recommend" = "SelfEvolutionRecommend"
     "evolve-self" = "SelfEvolutionRecommend"
+    "self-evolution-promotion" = "SelfEvolutionPromotionPlan"
+    "self-evolution-promotion-plan" = "SelfEvolutionPromotionPlan"
+    "evolve-promotion" = "SelfEvolutionPromotionPlan"
     "evolution-review" = "EvolutionReview"
     "experience-review" = "ExperienceReview"
     "evolution-materialize" = "EvolutionMaterialize"

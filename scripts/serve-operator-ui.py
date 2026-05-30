@@ -41,6 +41,21 @@ def _load_host_feedback_summary_builder():
 
 build_host_feedback_summary = _load_host_feedback_summary_builder()
 
+
+def _load_self_evolution_promotion_verifier():
+    path = ROOT / "scripts" / "verify-self-evolution-promotion.py"
+    module_name = "verify_self_evolution_promotion_script"
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"could not load self-evolution promotion verifier: {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+verify_self_evolution_promotion_script = _load_self_evolution_promotion_verifier()
+
 ALLOWED_ACTIONS = {
     "targets": {"operator_action": "Targets", "run_alias": "targets", "timeout_seconds": 300},
     "fast_feedback": {"operator_action": "FastFeedback", "run_alias": "fast", "timeout_seconds": 900},
@@ -73,6 +88,7 @@ ALLOWED_ACTIONS = {
     },
     "feedback_report": {"operator_action": "FeedbackReport", "run_alias": "feedback", "timeout_seconds": 600},
     "self_evolution_recommend": {"operator_action": "SelfEvolutionRecommend", "run_alias": "self-evolution-recommend", "timeout_seconds": 900},
+    "self_evolution_promotion_plan": {"operator_action": "SelfEvolutionPromotionPlan", "run_alias": "self-evolution-promotion", "timeout_seconds": 600},
     "evolution_review": {"operator_action": "EvolutionReview", "run_alias": "evolution-review", "timeout_seconds": 900},
     "experience_review": {"operator_action": "ExperienceReview", "run_alias": "experience-review", "timeout_seconds": 900},
     "evolution_materialize": {"operator_action": "EvolutionMaterialize", "run_alias": "evolution-materialize", "timeout_seconds": 900},
@@ -81,6 +97,7 @@ ALLOWED_ACTIONS = {
 
 FEEDBACK_SUMMARY_CACHE_TTL_SECONDS = 30.0
 SELF_EVOLUTION_RECOMMENDATION_CACHE_TTL_SECONDS = 30.0
+SELF_EVOLUTION_PROMOTION_CACHE_TTL_SECONDS = 30.0
 NEXT_WORK_CACHE_TTL_SECONDS = 60.0
 SERVER_STARTED_AT = time.time()
 UI_RUNTIME_DIR = ROOT / ".runtime" / "operator-ui"
@@ -213,6 +230,14 @@ def _build_handler(*, default_language: str, host: str, port: int):
                 if _truthy(params.get("refresh", [""])[0]):
                     invalidate_status_cache("self_evolution")
                 result = load_self_evolution_recommendations()
+                status = HTTPStatus.OK if result.get("status") != "error" else HTTPStatus.INTERNAL_SERVER_ERROR
+                self._send_json(result, status=status)
+                return
+            if parsed.path == "/api/self-evolution/promotion":
+                params = parse_qs(parsed.query)
+                if _truthy(params.get("refresh", [""])[0]):
+                    invalidate_status_cache("self_evolution_promotion")
+                result = load_self_evolution_promotion()
                 status = HTTPStatus.OK if result.get("status") != "error" else HTTPStatus.INTERNAL_SERVER_ERROR
                 self._send_json(result, status=status)
                 return
@@ -474,6 +499,93 @@ def _build_self_evolution_recommendations() -> dict:
 def _latest_self_evolution_recommendation_path() -> Path | None:
     root = ROOT / "docs" / "change-evidence" / "self-evolution-recommendations"
     candidates = sorted(root.glob("*-self-evolution-recommendations.json"))
+    return candidates[-1] if candidates else None
+
+
+def load_self_evolution_promotion() -> dict:
+    payload = _load_status_cached(
+        "self_evolution_promotion",
+        ttl_seconds=SELF_EVOLUTION_PROMOTION_CACHE_TTL_SECONDS,
+        loader=_build_self_evolution_promotion,
+    )
+    if payload.get("status") == "ok" and "report_status" in payload:
+        payload["status"] = payload.get("report_status") or "pass"
+    return payload
+
+
+def _build_self_evolution_promotion() -> dict:
+    path = _latest_self_evolution_promotion_path()
+    if path is None:
+        return {
+            "report_status": "missing",
+            "report_path": None,
+            "as_of": None,
+            "promotion_stage": "missing_recommendation",
+            "recommended_next_action": "run_self_evolution_promotion_plan",
+            "selector_next_action": None,
+            "selector_why": None,
+            "effective_change_allowed": False,
+            "control_lanes": [],
+            "trigger_model": {
+                "recommended_operator_action": "SelfEvolutionPromotionPlan",
+                "proactive_operator_triggers": ["SelfEvolutionRecommend", "FeedbackReport", "DailyAll"],
+                "automatic_effective_change": False,
+            },
+            "guards": {
+                "automatic_policy_mutation": False,
+                "automatic_skill_enablement": False,
+                "automatic_target_repo_sync": False,
+                "automatic_push_or_merge": False,
+                "requires_human_review_before_effective_change": True,
+            },
+            "contract_validation": {
+                "status": "missing",
+                "reason": "no_promotion_artifact",
+                "schema_path": "schemas/jsonschema/self-evolution-promotion-controller.schema.json",
+            },
+        }
+
+    report = json.loads(path.read_text(encoding="utf-8"))
+    if report.get("artifact_type") != "self_evolution_promotion_controller_report":
+        raise ValueError(f"unexpected self-evolution promotion artifact_type: {path}")
+    return {
+        "report_status": report.get("status") or "pass",
+        "report_path": path.relative_to(ROOT).as_posix(),
+        "as_of": report.get("as_of"),
+        "promotion_stage": report.get("promotion_stage"),
+        "recommended_next_action": report.get("recommended_next_action"),
+        "selector_next_action": report.get("selector_next_action"),
+        "selector_why": report.get("selector_why"),
+        "effective_change_allowed": bool(report.get("effective_change_allowed")),
+        "control_lanes": report.get("control_lanes") or [],
+        "trigger_model": report.get("trigger_model") or {},
+        "guards": report.get("guards") or {},
+        "rollback": report.get("rollback"),
+        "contract_validation": _self_evolution_promotion_contract_validation(path),
+    }
+
+
+def _self_evolution_promotion_contract_validation(path: Path) -> dict:
+    schema_path = "schemas/jsonschema/self-evolution-promotion-controller.schema.json"
+    try:
+        verify_self_evolution_promotion_script.verify_self_evolution_promotion_artifact(artifact_path=path)
+    except Exception as exc:
+        return {
+            "status": "fail",
+            "error": str(exc),
+            "artifact_path": path.relative_to(ROOT).as_posix(),
+            "schema_path": schema_path,
+        }
+    return {
+        "status": "pass",
+        "artifact_path": path.relative_to(ROOT).as_posix(),
+        "schema_path": schema_path,
+    }
+
+
+def _latest_self_evolution_promotion_path() -> Path | None:
+    root = ROOT / "docs" / "change-evidence" / "self-evolution-promotions"
+    candidates = sorted(root.glob("*-self-evolution-promotion-controller.json"))
     return candidates[-1] if candidates else None
 
 

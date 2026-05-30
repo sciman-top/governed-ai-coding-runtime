@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://governed-ai-coding-runtime.local/schemas/self-evolution-promotion-controller.schema.json",
+  "title": "Self-Evolution Promotion Controller",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_type",
+    "status",
+    "as_of",
+    "promotion_stage",
+    "recommended_next_action",
+    "selector_next_action",
+    "selector_why",
+    "source_recommendation_path",
+    "effective_change_allowed",
+    "control_lanes",
+    "trigger_model",
+    "guards",
+    "rollback",
+    "artifact_refs"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "enum": ["0.1-draft"] },
+    "artifact_type": {
+      "type": "string",
+      "enum": ["self_evolution_promotion_controller_report"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["missing_recommendation", "blocked", "ready_for_review", "pass"]
+    },
+    "as_of": { "type": "string", "format": "date" },
+    "promotion_stage": {
+      "type": "string",
+      "enum": ["missing_recommendation", "blocked_by_selector", "review_required", "proposal_only"]
+    },
+    "recommended_next_action": { "type": "string" },
+    "selector_next_action": { "type": ["string", "null"] },
+    "selector_why": { "type": "string" },
+    "source_recommendation_path": { "type": ["string", "null"] },
+    "effective_change_allowed": { "type": "boolean" },
+    "control_lanes": {
+      "type": "array",
+      "minItems": 4,
+      "items": { "$ref": "#/$defs/control_lane" }
+    },
+    "trigger_model": { "$ref": "#/$defs/trigger_model" },
+    "guards": { "$ref": "#/$defs/guards" },
+    "commands": { "$ref": "#/$defs/commands" },
+    "rollback": { "type": "string" },
+    "artifact_refs": { "$ref": "#/$defs/artifact_refs" }
+  },
+  "$defs": {
+    "artifact_refs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "json": { "type": "string" }
+      }
+    },
+    "commands": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "refresh_recommendation",
+        "plan_promotion",
+        "materialize_candidate",
+        "target_sync",
+        "push_or_merge"
+      ],
+      "properties": {
+        "refresh_recommendation": { "type": "string" },
+        "plan_promotion": { "type": "string" },
+        "materialize_candidate": { "type": "string" },
+        "target_sync": { "type": "string" },
+        "push_or_merge": { "type": "string" }
+      }
+    },
+    "control_lane": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lane",
+        "status",
+        "automatic_enabled",
+        "guard_key",
+        "reason",
+        "next_action"
+      ],
+      "properties": {
+        "lane": {
+          "type": "string",
+          "enum": ["policy_mutation", "skill_enablement", "target_repo_sync", "push_or_merge"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["blocked", "review_required"]
+        },
+        "automatic_enabled": { "type": "boolean" },
+        "guard_key": {
+          "type": "string",
+          "enum": [
+            "automatic_policy_mutation",
+            "automatic_skill_enablement",
+            "automatic_target_repo_sync",
+            "automatic_push_or_merge"
+          ]
+        },
+        "reason": { "type": "string" },
+        "next_action": { "type": "string" }
+      }
+    },
+    "guards": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "automatic_policy_mutation",
+        "automatic_skill_enablement",
+        "automatic_target_repo_sync",
+        "automatic_push_or_merge",
+        "requires_human_review_before_effective_change"
+      ],
+      "properties": {
+        "automatic_policy_mutation": { "type": "boolean" },
+        "automatic_skill_enablement": { "type": "boolean" },
+        "automatic_target_repo_sync": { "type": "boolean" },
+        "automatic_push_or_merge": { "type": "boolean" },
+        "requires_human_review_before_effective_change": { "type": "boolean" }
+      }
+    },
+    "trigger_model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recommended_operator_action",
+        "recommended_operator_action_command",
+        "prerequisite_operator_action",
+        "proactive_operator_triggers",
+        "automatic_effective_change"
+      ],
+      "properties": {
+        "recommended_operator_action": { "type": "string", "enum": ["SelfEvolutionPromotionPlan"] },
+        "recommended_operator_action_command": { "type": "string" },
+        "prerequisite_operator_action": { "type": "string", "enum": ["SelfEvolutionRecommend"] },
+        "proactive_operator_triggers": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "automatic_effective_change": { "type": "boolean" }
+      }
+    }
+  }
+}

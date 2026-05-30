@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexGuardAbsenceCheck", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "SelfEvolutionReadiness", "SelfEvolutionEvalDataset", "SelfEvolutionOptimize", "SelfEvolutionVariantEvaluate", "SelfEvolutionRecommend", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
+  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexGuardAbsenceCheck", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "SelfEvolutionReadiness", "SelfEvolutionEvalDataset", "SelfEvolutionOptimize", "SelfEvolutionVariantEvaluate", "SelfEvolutionRecommend", "SelfEvolutionPromotionPlan", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
   [string]$Action = "Help",
 
   [ValidateSet("quick", "full", "l1", "l2", "l3")]
@@ -267,6 +267,8 @@ AI 推荐:
   SelfEvolutionVariantEvaluate
                          评估 self-evolution variants，输出 review_candidate/improve/defer，不自动改代码。
   SelfEvolutionRecommend 触发一次非变异自演化建议周期：刷新 readiness/eval/variants/evaluation，并报告新增/优化/退休建议。
+  SelfEvolutionPromotionPlan
+                         生成自演化晋升控制器报告，判定 policy/skill/target-sync/push-merge 是否可晋升；不执行有效变更。
   EvolutionReview        执行 runtime 自我演进 dry-run，只生成候选和证据，不自动改代码。
   ExperienceReview       从 AI 编码证据/指标中生成 dry-run knowledge/memory 记录、改进提案和 skill manifest 候选。
   EvolutionMaterialize   将低风险候选物化为 proposal 文件和禁用态 skill candidate 文件，不启用技能。
@@ -452,6 +454,11 @@ function Invoke-SelfEvolutionRecommend {
   Invoke-SelfEvolutionOptimize
   Invoke-SelfEvolutionVariantEvaluate
   Invoke-PwshScript -Name "self-evolution-recommend" -ScriptPath "scripts/recommend-self-evolution.ps1" -ScriptArguments @("-WriteArtifacts")
+  Invoke-SelfEvolutionPromotionPlan
+}
+
+function Invoke-SelfEvolutionPromotionPlan {
+  Invoke-PwshScript -Name "self-evolution-promotion-plan" -ScriptPath "scripts/plan-self-evolution-promotion.ps1" -ScriptArguments @("-WriteArtifacts")
 }
 
 function Invoke-EvolutionReview {
@@ -507,6 +514,7 @@ try {
     "SelfEvolutionOptimize" { Invoke-SelfEvolutionOptimize }
     "SelfEvolutionVariantEvaluate" { Invoke-SelfEvolutionVariantEvaluate }
     "SelfEvolutionRecommend" { Invoke-SelfEvolutionRecommend }
+    "SelfEvolutionPromotionPlan" { Invoke-SelfEvolutionPromotionPlan }
     "EvolutionReview" { Invoke-EvolutionReview }
     "ExperienceReview" { Invoke-ExperienceReview }
     "EvolutionMaterialize" { Invoke-EvolutionMaterialize }

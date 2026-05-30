@@ -119,6 +119,31 @@ function Invoke-CorePrincipleChangeArtifactSchemaCheck {
   }
 }
 
+function Invoke-SelfEvolutionPromotionArtifactSchemaCheck {
+  $schemaPath = "schemas/jsonschema/self-evolution-promotion-controller.schema.json"
+  $artifactDirectory = "docs/change-evidence/self-evolution-promotions"
+  if (-not (Test-Path $schemaPath)) {
+    throw "Self-evolution promotion controller schema missing: $schemaPath"
+  }
+  if (-not (Test-Path $artifactDirectory)) {
+    throw "Self-evolution promotion artifact directory missing: $artifactDirectory"
+  }
+
+  $artifacts = @(Get-ChildItem -Path $artifactDirectory -File -Filter "*-self-evolution-promotion-controller.json" | Sort-Object FullName)
+  if ($artifacts.Count -lt 1) {
+    throw "Self-evolution promotion artifact missing in: $artifactDirectory"
+  }
+
+  foreach ($artifact in $artifacts) {
+    $ok = Test-Json -Json (Get-Content -Raw $artifact.FullName) -SchemaFile $schemaPath
+    if (-not $ok) {
+      throw "Self-evolution promotion artifact failed schema validation: $($artifact.FullName)"
+    }
+  }
+
+  Write-CheckOk "self-evolution-promotion-artifact-schema"
+}
+
 function Invoke-PowerShellParse {
   Get-ChildItem scripts -Recurse -File -Filter *.ps1 | Sort-Object FullName | ForEach-Object {
     $tokens = $null
@@ -723,6 +748,20 @@ function Invoke-RuntimeEvolutionRetirementChecks {
   Write-CheckOk "runtime-evolution-retirement"
 }
 
+function Invoke-SelfEvolutionPromotionChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-self-evolution-promotion.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Self-evolution promotion controller checks failed"
+    }
+    throw "Self-evolution promotion controller checks failed`n$detail"
+  }
+
+  Write-CheckOk "self-evolution-promotion-controller"
+}
+
 function Invoke-ContractChecks {
   Invoke-SchemaJsonParse
   Invoke-SchemaExampleValidation
@@ -730,6 +769,7 @@ function Invoke-ContractChecks {
   Invoke-ControlPackInheritanceChecks
   Invoke-ControlPackExecutionChecks
   Invoke-CorePrincipleChangeArtifactSchemaCheck
+  Invoke-SelfEvolutionPromotionArtifactSchemaCheck
   Invoke-DependencyBaselineChecks
   Invoke-TransitionStackConvergenceChecks
   Invoke-TargetRepoRolloutContractChecks
@@ -1036,6 +1076,7 @@ function Invoke-DocsChecks {
   Invoke-CorePrincipleChangeMaterializationChecks
   Invoke-RuntimeEvolutionPrPreparationChecks
   Invoke-RuntimeEvolutionRetirementChecks
+  Invoke-SelfEvolutionPromotionChecks
   Invoke-GapEvidenceSloCheck
   Invoke-ClaimDriftSentinelCheck
   Invoke-ClaimExceptionPathCheck

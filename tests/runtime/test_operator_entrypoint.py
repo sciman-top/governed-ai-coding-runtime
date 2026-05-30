@@ -58,6 +58,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn(".\\run.ps1 fast", completed.stdout)
         self.assertIn(".\\run.ps1 readiness -OpenUi", completed.stdout)
         self.assertIn(".\\run.ps1 self-evolution", completed.stdout)
+        self.assertIn(".\\run.ps1 self-evolution-promotion", completed.stdout)
         self.assertNotIn("codex-optimize", completed.stdout)
         self.assertNotIn("codex-interop", completed.stdout)
         self.assertNotIn("codex-mode-new", completed.stdout)
@@ -181,6 +182,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertNotIn("CodexGatewayRollback", completed.stdout)
         self.assertIn("FeedbackReport", completed.stdout)
         self.assertIn("SelfEvolutionRecommend", completed.stdout)
+        self.assertIn("SelfEvolutionPromotionPlan", completed.stdout)
         self.assertIn("CleanupTargets", completed.stdout)
         self.assertIn("UninstallGovernance", completed.stdout)
         self.assertIn("CorePrincipleMaterialize", completed.stdout)
@@ -513,6 +515,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("operator-preflight: action=DailyAll next_action=wait_for_host_capability_recovery", completed.stdout)
         self.assertIn("DRY-RUN daily-all-targets", completed.stdout)
         self.assertIn("DRY-RUN self-evolution-recommend", completed.stdout)
+        self.assertIn("DRY-RUN self-evolution-promotion-plan", completed.stdout)
 
     def test_operator_ui_action_generates_html(self) -> None:
         completed = subprocess.run(
@@ -654,6 +657,7 @@ class OperatorEntrypointTests(unittest.TestCase):
             self.assertEqual("docs/product/host-feedback-loop.zh-CN.md", feedback["guide_path"])
             self.assertEqual("docs/product/host-feedback-loop.md", feedback["guide_path_en"])
             self.assertIn("self_evolution_recommend", module.ALLOWED_ACTIONS)
+            self.assertIn("self_evolution_promotion_plan", module.ALLOWED_ACTIONS)
             next_work = module.load_next_work_summary()
             self.assertIn(next_work["status"], {"pass", "error"})
             if next_work["status"] != "error":
@@ -862,6 +866,110 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertEqual("run_self_evolution_recommend", payload["recommended_next_action"])
         self.assertIn("SelfEvolutionRecommend", payload["trigger_model"]["recommended_operator_action"])
         self.assertIn("FeedbackReport", payload["trigger_model"]["proactive_operator_triggers"])
+
+    def test_operator_ui_self_evolution_promotion_reads_latest_artifact(self) -> None:
+        module = _load_serve_operator_ui_module()
+
+        with tempfile.TemporaryDirectory(dir=ROOT) as temp_dir:
+            artifact = Path(temp_dir) / "20260530-self-evolution-promotion-controller.json"
+            artifact.write_text(
+                json.dumps(
+                    {
+                        "schema_version": "0.1-draft",
+                        "artifact_type": "self_evolution_promotion_controller_report",
+                        "status": "blocked",
+                        "as_of": "2026-05-30",
+                        "promotion_stage": "blocked_by_selector",
+                        "recommended_next_action": "report_only_until_wait_for_host_capability_recovery",
+                        "selector_next_action": "wait_for_host_capability_recovery",
+                        "selector_why": "bounded host defer",
+                        "source_recommendation_path": "docs/change-evidence/self-evolution-recommendations/20260530-self-evolution-recommendations.json",
+                        "effective_change_allowed": False,
+                        "control_lanes": [
+                            {
+                                "lane": "policy_mutation",
+                                "status": "blocked",
+                                "automatic_enabled": False,
+                                "guard_key": "automatic_policy_mutation",
+                                "reason": "selector blocks effective changes",
+                                "next_action": "wait_for_host_capability_recovery",
+                            },
+                            {
+                                "lane": "skill_enablement",
+                                "status": "blocked",
+                                "automatic_enabled": False,
+                                "guard_key": "automatic_skill_enablement",
+                                "reason": "selector blocks effective changes",
+                                "next_action": "wait_for_host_capability_recovery",
+                            },
+                            {
+                                "lane": "target_repo_sync",
+                                "status": "blocked",
+                                "automatic_enabled": False,
+                                "guard_key": "automatic_target_repo_sync",
+                                "reason": "selector blocks effective changes",
+                                "next_action": "wait_for_host_capability_recovery",
+                            },
+                            {
+                                "lane": "push_or_merge",
+                                "status": "blocked",
+                                "automatic_enabled": False,
+                                "guard_key": "automatic_push_or_merge",
+                                "reason": "selector blocks effective changes",
+                                "next_action": "wait_for_host_capability_recovery",
+                            },
+                        ],
+                        "trigger_model": {
+                            "recommended_operator_action": "SelfEvolutionPromotionPlan",
+                            "recommended_operator_action_command": (
+                                "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 "
+                                "-Action SelfEvolutionPromotionPlan"
+                            ),
+                            "prerequisite_operator_action": "SelfEvolutionRecommend",
+                            "proactive_operator_triggers": [
+                                "SelfEvolutionRecommend",
+                                "FeedbackReport",
+                                "DailyAll",
+                            ],
+                            "automatic_effective_change": False,
+                        },
+                        "guards": {
+                            "automatic_policy_mutation": False,
+                            "automatic_skill_enablement": False,
+                            "automatic_target_repo_sync": False,
+                            "automatic_push_or_merge": False,
+                            "requires_human_review_before_effective_change": True,
+                        },
+                        "rollback": "Delete the generated promotion controller artifact.",
+                        "artifact_refs": {},
+                    },
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
+
+            with mock.patch.object(module, "_latest_self_evolution_promotion_path", return_value=artifact):
+                payload = module._build_self_evolution_promotion()
+
+        self.assertEqual("blocked", payload["report_status"])
+        self.assertEqual("blocked_by_selector", payload["promotion_stage"])
+        self.assertFalse(payload["effective_change_allowed"])
+        self.assertEqual("policy_mutation", payload["control_lanes"][0]["lane"])
+        self.assertEqual("pass", payload["contract_validation"]["status"])
+        self.assertTrue(payload["contract_validation"]["schema_path"].endswith("self-evolution-promotion-controller.schema.json"))
+        self.assertTrue(payload["report_path"].endswith("20260530-self-evolution-promotion-controller.json"))
+
+    def test_operator_ui_self_evolution_promotion_missing_state(self) -> None:
+        module = _load_serve_operator_ui_module()
+
+        with mock.patch.object(module, "_latest_self_evolution_promotion_path", return_value=None):
+            payload = module._build_self_evolution_promotion()
+
+        self.assertEqual("missing", payload["report_status"])
+        self.assertFalse(payload["effective_change_allowed"])
+        self.assertEqual("run_self_evolution_promotion_plan", payload["recommended_next_action"])
+        self.assertIn("SelfEvolutionPromotionPlan", payload["trigger_model"]["recommended_operator_action"])
+        self.assertEqual("missing", payload["contract_validation"]["status"])
 
     def test_codex_status_refresh_helper_is_retired(self) -> None:
         module = _load_serve_operator_ui_module()

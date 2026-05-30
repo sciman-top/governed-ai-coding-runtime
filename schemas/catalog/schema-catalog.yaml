@@ -1,4 +1,4 @@
-schema_catalog_version: "1.13"
+schema_catalog_version: "1.14"
 items:
   - name: core-principles
     path: schemas/jsonschema/core-principles.schema.json
@@ -60,6 +60,9 @@ items:
   - name: promotion-lifecycle
     path: schemas/jsonschema/promotion-lifecycle.schema.json
     source_spec: docs/specs/promotion-lifecycle-spec.md
+  - name: self-evolution-promotion-controller
+    path: schemas/jsonschema/self-evolution-promotion-controller.schema.json
+    source_spec: docs/specs/self-evolution-promotion-controller-spec.md
   - name: policy-tool-credential-audit
     path: schemas/jsonschema/policy-tool-credential-audit.schema.json
     source_spec: docs/specs/policy-tool-credential-audit-spec.md

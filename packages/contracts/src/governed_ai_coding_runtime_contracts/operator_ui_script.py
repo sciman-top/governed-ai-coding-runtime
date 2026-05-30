@@ -47,6 +47,13 @@ def render_interactive_script(
   const selfEvolutionLanes = document.getElementById('self-evolution-lanes');
   const selfEvolutionReportLink = document.getElementById('self-evolution-report-link');
   const selfEvolutionJson = document.getElementById('self-evolution-json');
+  const selfEvolutionPromotionStatus = document.getElementById('self-evolution-promotion-status');
+  const selfEvolutionPromotionCacheState = document.getElementById('self-evolution-promotion-cache-state');
+  const selfEvolutionPromotionGeneratedAt = document.getElementById('self-evolution-promotion-generated-at');
+  const selfEvolutionPromotionSummary = document.getElementById('self-evolution-promotion-summary');
+  const selfEvolutionPromotionLanes = document.getElementById('self-evolution-promotion-lanes');
+  const selfEvolutionPromotionReportLink = document.getElementById('self-evolution-promotion-report-link');
+  const selfEvolutionPromotionJson = document.getElementById('self-evolution-promotion-json');
   const continuityStatus = document.getElementById('continuity-status');
   const continuityRecords = document.getElementById('continuity-records');
   const continuityJson = document.getElementById('continuity-json');
@@ -59,6 +66,7 @@ def render_interactive_script(
   const historyKey = 'governed-runtime-operator-history';
   const feedbackCacheKey = 'governed-runtime-operator-feedback-summary';
   const selfEvolutionCacheKey = 'governed-runtime-operator-self-evolution-recommendations';
+  const selfEvolutionPromotionCacheKey = 'governed-runtime-operator-self-evolution-promotion';
   const nextWorkCacheKey = 'governed-runtime-operator-next-work';
   const surfaceOpenLabel = {text['open_surface']!r};
   const surfaceCurrentLabel = {text['surface_current']!r};
@@ -71,6 +79,7 @@ def render_interactive_script(
   const defaultManagedRemovalActions = new Set(['apply_all_features']);
   let feedbackLoaded = false;
   let selfEvolutionLoaded = false;
+  let selfEvolutionPromotionLoaded = false;
   let continuityLoaded = false;
   let nextWorkLoaded = false;
   let lastNextWorkPayload = null;
@@ -120,7 +129,11 @@ def render_interactive_script(
   function setPanelCacheState(kind, state, cachedAt) {{
     const target = kind === 'feedback'
       ? feedbackCacheState
-      : (kind === 'self-evolution' ? selfEvolutionCacheState : (kind === 'next-work' ? nextWorkCacheState : null));
+      : (kind === 'self-evolution'
+        ? selfEvolutionCacheState
+        : (kind === 'self-evolution-promotion'
+          ? selfEvolutionPromotionCacheState
+          : (kind === 'next-work' ? nextWorkCacheState : null)));
     if (!target) {{
       return;
     }}
@@ -128,7 +141,9 @@ def render_interactive_script(
         ? {text['feedback_status']!r}
         : (kind === 'self-evolution'
           ? {text['self_evolution_status']!r}
-          : (currentUiLanguage() === 'zh-CN' ? 'next-work 状态' : 'next-work state'));
+          : (kind === 'self-evolution-promotion'
+            ? {text['self_evolution_promotion_status']!r}
+            : (currentUiLanguage() === 'zh-CN' ? 'next-work 状态' : 'next-work state')));
     const stateLabels = {{
       cold: {text['panel_cache_cold']!r},
       cached: {text['panel_cache_cached']!r},
@@ -154,6 +169,9 @@ def render_interactive_script(
     }} else if (kind === 'self-evolution') {{
       renderSelfEvolutionRecommendations(cached);
       selfEvolutionLoaded = true;
+    }} else if (kind === 'self-evolution-promotion') {{
+      renderSelfEvolutionPromotion(cached);
+      selfEvolutionPromotionLoaded = true;
     }} else {{
       renderNextWorkSummary(cached);
       nextWorkLoaded = true;
@@ -253,6 +271,9 @@ def render_interactive_script(
     }}
     if (selected === 'feedback' && !selfEvolutionLoaded) {{
       hydratePanelCache('self-evolution', selfEvolutionCacheKey);
+    }}
+    if (selected === 'feedback' && !selfEvolutionPromotionLoaded) {{
+      hydratePanelCache('self-evolution-promotion', selfEvolutionPromotionCacheKey);
     }}
     if (selected === 'continuity' && !continuityLoaded) {{
       refreshContinuityRecords();
@@ -370,6 +391,7 @@ def render_interactive_script(
       uninstall_governance: {text['uninstall_governance_action']!r},
       feedback_report: {text['feedback_report_action']!r},
       self_evolution_recommend: {text['self_evolution_recommend_action']!r},
+      self_evolution_promotion_plan: {text['self_evolution_promotion_action']!r},
       evolution_review: {text['evolution_review_action']!r},
       experience_review: {text['experience_review_action']!r},
       evolution_materialize: {text['evolution_materialize_action']!r},
@@ -587,7 +609,10 @@ def render_interactive_script(
         await refreshNextWorkSummary();
       }}
       if (selfEvolutionSummary) {{
-        await refreshSelfEvolutionRecommendations();
+        await refreshSelfEvolutionRecommendationsWithMode(true);
+      }}
+      if (selfEvolutionPromotionSummary) {{
+        await refreshSelfEvolutionPromotionWithMode(true);
       }}
     }} catch (error) {{
       setOutput(String(error));
@@ -908,6 +933,131 @@ def render_interactive_script(
     }}
   }}
 
+  function formatSelfEvolutionPromotionStage(value) {{
+    const normalized = String(value || '').trim();
+    if (currentUiLanguage() !== 'zh-CN') {{
+      return normalized || 'unknown';
+    }}
+    const labels = {{
+      blocked_by_selector: 'selector 阻断',
+      review_required: '需要评审',
+      proposal_only: '仅候选',
+      missing_recommendation: '缺少建议报告',
+    }};
+    return labels[normalized] || normalized || '未知';
+  }}
+
+  function formatSelfEvolutionPromotionLane(value) {{
+    const normalized = String(value || '').trim();
+    if (currentUiLanguage() !== 'zh-CN') {{
+      return normalized || 'lane';
+    }}
+    const labels = {{
+      policy_mutation: 'Policy 改写',
+      skill_enablement: 'Skill 启用',
+      target_repo_sync: '目标仓同步',
+      push_or_merge: 'Push / Merge',
+    }};
+    return labels[normalized] || normalized || 'lane';
+  }}
+
+  function renderSelfEvolutionPromotion(payload) {{
+    if (!selfEvolutionPromotionSummary || !selfEvolutionPromotionLanes || !selfEvolutionPromotionStatus) {{
+      return;
+    }}
+    const lanes = Array.isArray(payload && payload.control_lanes) ? payload.control_lanes : [];
+    const generatedAt = payload && payload.as_of ? String(payload.as_of) : {text['not_recorded']!r};
+    const statusLabel = formatSelfEvolutionStatusLabel(payload && payload.status);
+    const promotionStage = formatSelfEvolutionPromotionStage(payload && payload.promotion_stage);
+    const nextAction = String((payload && payload.recommended_next_action) || 'unknown');
+    const selectorAction = String((payload && payload.selector_next_action) || 'unknown');
+    const contractValidation = payload && payload.contract_validation ? payload.contract_validation : {{}};
+    const contractStatus = String(contractValidation.status || 'unknown');
+    const contractDetail = String(contractValidation.error || contractValidation.schema_path || '');
+
+    selfEvolutionPromotionStatus.textContent = `{text['self_evolution_promotion_status']}: ${{statusLabel}}`;
+    selfEvolutionPromotionGeneratedAt.textContent = `{text['self_evolution_generated_at']}: ${{generatedAt}}`;
+
+    selfEvolutionPromotionSummary.innerHTML = '';
+    [
+      {{
+        label: {text['self_evolution_promotion_stage']!r},
+        value: promotionStage,
+        detail: payload && payload.selector_why ? String(payload.selector_why) : ''
+      }},
+      {{
+        label: {text['self_evolution_next_action']!r},
+        value: nextAction,
+        detail: ''
+      }},
+      {{
+        label: {text['self_evolution_selector']!r},
+        value: selectorAction,
+        detail: ''
+      }},
+      {{
+        label: {text['self_evolution_promotion_contract']!r},
+        value: contractStatus,
+        detail: contractDetail
+      }},
+      {{
+        label: {text['self_evolution_promotion_effective']!r},
+        value: formatBooleanState(payload && payload.effective_change_allowed),
+        detail: 'automatic_effective_change=false'
+      }},
+    ].forEach((card) => {{
+      const section = document.createElement('section');
+      section.className = 'summary-card';
+      section.appendChild(createInfoLine(card.label, card.value));
+      if (card.detail) {{
+        const meta = document.createElement('p');
+        meta.className = 'meta';
+        meta.textContent = card.detail;
+        section.appendChild(meta);
+      }}
+      selfEvolutionPromotionSummary.appendChild(section);
+    }});
+
+    selfEvolutionPromotionLanes.innerHTML = '';
+    lanes.forEach((item) => {{
+      const lane = document.createElement('div');
+      lane.className = 'self-evolution-lane';
+      const head = document.createElement('div');
+      head.className = 'self-evolution-lane-head';
+      const title = document.createElement('span');
+      title.className = 'self-evolution-lane-title';
+      title.textContent = formatSelfEvolutionPromotionLane(item.lane);
+      const meta = document.createElement('span');
+      meta.className = 'self-evolution-lane-meta';
+      meta.textContent = [item.status, `auto=${{formatBooleanState(item.automatic_enabled)}}`].filter(Boolean).join(' · ');
+      head.append(title, meta);
+      lane.appendChild(head);
+      lane.appendChild(createInfoLine(currentUiLanguage() === 'zh-CN' ? '下一步' : 'Next action', item.next_action || 'unknown'));
+      if (item.reason) {{
+        const reason = document.createElement('p');
+        reason.className = 'meta';
+        reason.textContent = item.reason;
+        lane.appendChild(reason);
+      }}
+      selfEvolutionPromotionLanes.appendChild(lane);
+    }});
+    if (!lanes.length) {{
+      selfEvolutionPromotionLanes.innerHTML = `<p class="meta">{text['self_evolution_promotion_empty']}</p>`;
+    }}
+
+    if (selfEvolutionPromotionReportLink) {{
+      selfEvolutionPromotionReportLink.innerHTML = '';
+      if (payload && payload.report_path) {{
+        selfEvolutionPromotionReportLink.appendChild(createRefButton(payload.report_path, {text['self_evolution_promotion_open_report']!r}, 'feedback'));
+      }} else {{
+        selfEvolutionPromotionReportLink.innerHTML = `<p class="meta">{text['self_evolution_promotion_report_missing']}</p>`;
+      }}
+    }}
+    if (selfEvolutionPromotionJson) {{
+      selfEvolutionPromotionJson.textContent = JSON.stringify(payload || {{}}, null, 2);
+    }}
+  }}
+
   function renderFeedbackSummary(payload) {{
     if (!feedbackSummary || !feedbackDimensions || !feedbackRecommendations || !feedbackLatestRuns) {{
       return;
@@ -1077,6 +1227,36 @@ def render_interactive_script(
     }}
   }}
 
+  async function refreshSelfEvolutionPromotion() {{
+    return refreshSelfEvolutionPromotionWithMode(false);
+  }}
+
+  async function refreshSelfEvolutionPromotionWithMode(forceRefresh) {{
+    if (!selfEvolutionPromotionSummary) {{
+      return;
+    }}
+    setPanelCacheState('self-evolution-promotion', selfEvolutionPromotionLoaded ? 'refreshing' : 'cold');
+    try {{
+      const response = forceRefresh
+        ? await fetch('/api/self-evolution/promotion?refresh=1')
+        : await fetch('/api/self-evolution/promotion');
+      const payload = await response.json();
+      if (!response.ok) {{
+        selfEvolutionPromotionStatus.textContent = `{text['self_evolution_promotion_status']}: ${{payload.error || response.statusText}}`;
+        setPanelCacheState('self-evolution-promotion', 'error');
+        return;
+      }}
+      payload.cached_at = payload.as_of || payload.cached_at;
+      renderSelfEvolutionPromotion(payload);
+      writePanelCache(selfEvolutionPromotionCacheKey, payload);
+      selfEvolutionPromotionLoaded = true;
+      setPanelCacheState('self-evolution-promotion', 'ready', payload.cached_at);
+    }} catch (error) {{
+      selfEvolutionPromotionStatus.textContent = `{text['self_evolution_promotion_status']}: ${{String(error)}}`;
+      setPanelCacheState('self-evolution-promotion', 'error');
+    }}
+  }}
+
   function renderContinuitySummary(payload) {{
     if (!continuityRecords || !continuityJson || !continuityStatus) {{
       return;
@@ -1145,6 +1325,10 @@ def render_interactive_script(
   if (selfEvolutionRefreshButton) {{
     selfEvolutionRefreshButton.addEventListener('click', () => refreshSelfEvolutionRecommendationsWithMode(true));
   }}
+  const selfEvolutionPromotionRefreshButton = document.querySelector('[data-self-evolution-promotion-refresh]');
+  if (selfEvolutionPromotionRefreshButton) {{
+    selfEvolutionPromotionRefreshButton.addEventListener('click', () => refreshSelfEvolutionPromotionWithMode(true));
+  }}
   const continuityRefreshButton = document.querySelector('[data-continuity-refresh]');
   if (continuityRefreshButton) {{
     continuityRefreshButton.addEventListener('click', () => refreshContinuityRecords());
@@ -1199,6 +1383,7 @@ def render_interactive_script(
   updateRuntimeSurfaceSummary();
   hydratePanelCache('feedback', feedbackCacheKey);
   hydratePanelCache('self-evolution', selfEvolutionCacheKey);
+  hydratePanelCache('self-evolution-promotion', selfEvolutionPromotionCacheKey);
   hydratePanelCache('next-work', nextWorkCacheKey);
   activateView('runtime');
   // Page load stays side-effect-light; process-backed probes run only after an explicit action.

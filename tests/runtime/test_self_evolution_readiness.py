@@ -33,10 +33,34 @@ def _load_recommend_script():
     return module
 
 
+def _load_promotion_plan_script():
+    script_path = ROOT / "scripts" / "plan-self-evolution-promotion.py"
+    spec = importlib.util.spec_from_file_location("plan_self_evolution_promotion_script", script_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"unable to load module: {script_path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["plan_self_evolution_promotion_script"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _load_promotion_verify_script():
+    script_path = ROOT / "scripts" / "verify-self-evolution-promotion.py"
+    spec = importlib.util.spec_from_file_location("verify_self_evolution_promotion_script", script_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"unable to load module: {script_path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["verify_self_evolution_promotion_script"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
 class SelfEvolutionReadinessTests(unittest.TestCase):
     def tearDown(self) -> None:
         sys.modules.pop("evaluate_self_evolution_readiness_script", None)
         sys.modules.pop("recommend_self_evolution_script", None)
+        sys.modules.pop("plan_self_evolution_promotion_script", None)
+        sys.modules.pop("verify_self_evolution_promotion_script", None)
 
     def test_readiness_reports_truthful_complete_state_without_unattended_mutation(self) -> None:
         module = _load_script()
@@ -327,6 +351,245 @@ class SelfEvolutionReadinessTests(unittest.TestCase):
             {item["recommendation_id"] for item in artifact["recommendations"]},
         )
         self.assertTrue(all(item["mutation_allowed"] is False for item in artifact["recommendations"]))
+
+    def test_promotion_controller_blocks_effective_change_when_selector_waits_for_host_recovery(self) -> None:
+        module = _load_promotion_plan_script()
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            recommendation_path = Path(tmp_dir) / "20260530-self-evolution-recommendations.json"
+            recommendation_path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": "0.1-draft",
+                        "artifact_type": "self_evolution_recommendation_report",
+                        "status": "pass",
+                        "as_of": "2026-05-30",
+                        "recommended_next_action": "report_only_until_wait_for_host_capability_recovery",
+                        "selector_next_action": "wait_for_host_capability_recovery",
+                        "selector_why": "fixture bounded host capability defer",
+                        "materialization_blocked": True,
+                        "guards": {
+                            "automatic_policy_mutation": False,
+                            "automatic_skill_enablement": False,
+                            "automatic_target_repo_sync": False,
+                            "automatic_push_or_merge": False,
+                            "requires_human_review_before_effective_change": True,
+                        },
+                    },
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
+            artifact_root = Path(tmp_dir) / "promotion"
+
+            report = module.plan_self_evolution_promotion(
+                repo_root=ROOT,
+                recommendation_path=recommendation_path,
+                as_of=dt.date(2026, 5, 30),
+                write_artifacts=True,
+                artifact_root=artifact_root,
+            )
+
+            artifact_path = Path(report["artifact_refs"]["json"])
+            self.assertTrue(artifact_path.exists())
+            artifact = json.loads(artifact_path.read_text(encoding="utf-8"))
+
+        self.assertEqual("self_evolution_promotion_controller_report", artifact["artifact_type"])
+        self.assertEqual("blocked", artifact["status"])
+        self.assertEqual("blocked_by_selector", artifact["promotion_stage"])
+        self.assertFalse(artifact["effective_change_allowed"])
+        self.assertEqual("wait_for_host_capability_recovery", artifact["selector_next_action"])
+        self.assertEqual(
+            {"policy_mutation", "skill_enablement", "target_repo_sync", "push_or_merge"},
+            {lane["lane"] for lane in artifact["control_lanes"]},
+        )
+        self.assertTrue(all(lane["status"] == "blocked" for lane in artifact["control_lanes"]))
+        self.assertTrue(all(lane["automatic_enabled"] is False for lane in artifact["control_lanes"]))
+        self.assertEqual(
+            "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action SelfEvolutionPromotionPlan",
+            artifact["trigger_model"]["recommended_operator_action_command"],
+        )
+
+    def test_promotion_controller_missing_recommendation_reports_non_mutating_trigger(self) -> None:
+        module = _load_promotion_plan_script()
+
+        report = module.plan_self_evolution_promotion(
+            repo_root=ROOT,
+            recommendation_path=None,
+            as_of=dt.date(2026, 5, 30),
+            recommendation_override=None,
+        )
+
+        self.assertEqual("missing_recommendation", report["status"])
+        self.assertEqual("run_self_evolution_recommend", report["recommended_next_action"])
+        self.assertFalse(report["effective_change_allowed"])
+        self.assertEqual("SelfEvolutionRecommend", report["trigger_model"]["prerequisite_operator_action"])
+        self.assertTrue(all(lane["automatic_enabled"] is False for lane in report["control_lanes"]))
+
+    def test_promotion_controller_verifier_rejects_automatic_effective_changes(self) -> None:
+        module = _load_promotion_verify_script()
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            artifact = Path(tmp_dir) / "bad-self-evolution-promotion-controller.json"
+            artifact.write_text(
+                json.dumps(
+                    {
+                        "artifact_type": "self_evolution_promotion_controller_report",
+                        "status": "ready_for_review",
+                        "promotion_stage": "review_required",
+                        "effective_change_allowed": True,
+                        "control_lanes": [
+                            {
+                                "lane": "policy_mutation",
+                                "status": "review_required",
+                                "automatic_enabled": True,
+                                "guard_key": "automatic_policy_mutation",
+                                "reason": "bad fixture",
+                                "next_action": "auto_apply",
+                            }
+                        ],
+                        "guards": {
+                            "automatic_policy_mutation": True,
+                            "automatic_skill_enablement": False,
+                            "automatic_target_repo_sync": False,
+                            "automatic_push_or_merge": False,
+                            "requires_human_review_before_effective_change": False,
+                        },
+                    },
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "effective_change_allowed_must_be_false"):
+                module.verify_self_evolution_promotion_artifact(artifact_path=artifact)
+
+    def test_promotion_controller_schema_is_catalogued(self) -> None:
+        schema_path = ROOT / "schemas" / "jsonschema" / "self-evolution-promotion-controller.schema.json"
+        spec_path = ROOT / "docs" / "specs" / "self-evolution-promotion-controller-spec.md"
+        catalog = (ROOT / "schemas" / "catalog" / "schema-catalog.yaml").read_text(encoding="utf-8")
+
+        self.assertTrue(schema_path.exists())
+        self.assertTrue(spec_path.exists())
+        self.assertIn("name: self-evolution-promotion-controller", catalog)
+        self.assertIn("path: schemas/jsonschema/self-evolution-promotion-controller.schema.json", catalog)
+        self.assertIn("source_spec: docs/specs/self-evolution-promotion-controller-spec.md", catalog)
+
+    def test_promotion_controller_example_is_documented(self) -> None:
+        example_path = (
+            ROOT
+            / "schemas"
+            / "examples"
+            / "self-evolution-promotion-controller"
+            / "blocked-by-selector.example.json"
+        )
+        examples_readme = (ROOT / "schemas" / "examples" / "README.md").read_text(encoding="utf-8")
+
+        self.assertTrue(example_path.exists())
+        self.assertIn("self-evolution-promotion-controller/", examples_readme)
+        self.assertIn("self-evolution-promotion-controller/blocked-by-selector.example.json", examples_readme)
+
+    def test_promotion_controller_verifier_rejects_schema_invalid_artifact(self) -> None:
+        module = _load_promotion_verify_script()
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            artifact = Path(tmp_dir) / "schema-invalid-self-evolution-promotion-controller.json"
+            artifact.write_text(
+                json.dumps(
+                    {
+                        "artifact_type": "self_evolution_promotion_controller_report",
+                        "status": "blocked",
+                        "as_of": "2026-05-30",
+                        "promotion_stage": "blocked_by_selector",
+                        "effective_change_allowed": False,
+                        "selector_next_action": "wait_for_host_capability_recovery",
+                        "selector_why": "fixture bounded host capability defer",
+                        "recommended_next_action": "report_only_until_wait_for_host_capability_recovery",
+                        "rollback": "Delete the generated promotion controller artifact.",
+                        "guards": {
+                            "automatic_policy_mutation": False,
+                            "automatic_skill_enablement": False,
+                            "automatic_target_repo_sync": False,
+                            "automatic_push_or_merge": False,
+                            "requires_human_review_before_effective_change": True,
+                        },
+                        "control_lanes": [
+                            {
+                                "lane": "policy_mutation",
+                                "status": "blocked",
+                                "automatic_enabled": False,
+                                "guard_key": "automatic_policy_mutation",
+                                "reason": "fixture",
+                                "next_action": "wait_for_host_capability_recovery",
+                            },
+                            {
+                                "lane": "skill_enablement",
+                                "status": "blocked",
+                                "automatic_enabled": False,
+                                "guard_key": "automatic_skill_enablement",
+                                "reason": "fixture",
+                                "next_action": "wait_for_host_capability_recovery",
+                            },
+                            {
+                                "lane": "target_repo_sync",
+                                "status": "blocked",
+                                "automatic_enabled": False,
+                                "guard_key": "automatic_target_repo_sync",
+                                "reason": "fixture",
+                                "next_action": "wait_for_host_capability_recovery",
+                            },
+                            {
+                                "lane": "push_or_merge",
+                                "status": "blocked",
+                                "automatic_enabled": False,
+                                "guard_key": "automatic_push_or_merge",
+                                "reason": "fixture",
+                                "next_action": "wait_for_host_capability_recovery",
+                            },
+                        ],
+                        "trigger_model": {
+                            "automatic_effective_change": False,
+                            "prerequisite_operator_action": "SelfEvolutionRecommend",
+                            "proactive_operator_triggers": [
+                                "SelfEvolutionRecommend",
+                                "FeedbackReport",
+                                "DailyAll",
+                            ],
+                            "recommended_operator_action": "SelfEvolutionPromotionPlan",
+                            "recommended_operator_action_command": (
+                                "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 "
+                                "-Action SelfEvolutionPromotionPlan"
+                            ),
+                        },
+                    },
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "schema_validation_failed"):
+                module.verify_self_evolution_promotion_artifact(artifact_path=artifact)
+
+    def test_promotion_controller_verifier_passes_current_generated_artifact(self) -> None:
+        module = _load_promotion_verify_script()
+
+        result = module.verify_self_evolution_promotion(repo_root=ROOT)
+
+        self.assertEqual("pass", result["status"])
+        self.assertFalse(result["effective_change_allowed"])
+        self.assertEqual("blocked_by_selector", result["promotion_stage"])
+        self.assertEqual(
+            {"policy_mutation", "skill_enablement", "target_repo_sync", "push_or_merge"},
+            set(result["lane_status"].keys()),
+        )
+
+    def test_verify_repo_docs_runs_self_evolution_promotion_gate(self) -> None:
+        verifier = (ROOT / "scripts" / "verify-repo.ps1").read_text(encoding="utf-8")
+
+        self.assertIn("Invoke-SelfEvolutionPromotionArtifactSchemaCheck", verifier)
+        self.assertIn("Invoke-SelfEvolutionPromotionChecks", verifier)
+        self.assertIn('Write-CheckOk "self-evolution-promotion-artifact-schema"', verifier)
+        self.assertIn('Write-CheckOk "self-evolution-promotion-controller"', verifier)
 
 
 if __name__ == "__main__":
