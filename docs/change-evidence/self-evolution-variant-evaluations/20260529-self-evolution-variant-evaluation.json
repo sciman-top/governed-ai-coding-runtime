@@ -1,0 +1,95 @@
+{
+  "artifact_refs": {},
+  "artifact_type": "self_evolution_variant_evaluation",
+  "as_of": "2026-05-29",
+  "evaluations": [
+    {
+      "decision": "review_candidate",
+      "mutation_allowed": false,
+      "reasons": [
+        "expected_properties=4",
+        "constraints=4",
+        "verification_refs=0",
+        "mutation_allowed=false"
+      ],
+      "required_next_step": "human_review_and_full_gates",
+      "risk_level": "low",
+      "score": 8,
+      "source_case_id": "candidate.evol-host-feedback",
+      "variant_id": "variant.candidate.evol-host-feedback"
+    },
+    {
+      "decision": "review_candidate",
+      "mutation_allowed": false,
+      "reasons": [
+        "expected_properties=4",
+        "constraints=4",
+        "verification_refs=0",
+        "mutation_allowed=false"
+      ],
+      "required_next_step": "human_review_and_full_gates",
+      "risk_level": "medium",
+      "score": 8,
+      "source_case_id": "candidate.evol-effect-feedback",
+      "variant_id": "variant.candidate.evol-effect-feedback"
+    },
+    {
+      "decision": "review_candidate",
+      "mutation_allowed": false,
+      "reasons": [
+        "expected_properties=4",
+        "constraints=4",
+        "verification_refs=0",
+        "mutation_allowed=false"
+      ],
+      "required_next_step": "human_review_and_full_gates",
+      "risk_level": "low",
+      "score": 8,
+      "source_case_id": "candidate.evol-ai-experience",
+      "variant_id": "variant.candidate.evol-ai-experience"
+    },
+    {
+      "decision": "review_candidate",
+      "mutation_allowed": false,
+      "reasons": [
+        "expected_properties=4",
+        "constraints=4",
+        "verification_refs=2",
+        "mutation_allowed=false"
+      ],
+      "required_next_step": "human_review_and_full_gates",
+      "risk_level": "low",
+      "score": 10,
+      "source_case_id": "proposal.checklist-first-bugfix",
+      "variant_id": "variant.proposal.checklist-first-bugfix"
+    },
+    {
+      "decision": "review_candidate",
+      "mutation_allowed": false,
+      "reasons": [
+        "expected_properties=4",
+        "constraints=4",
+        "verification_refs=3",
+        "mutation_allowed=false"
+      ],
+      "required_next_step": "human_review_and_full_gates",
+      "risk_level": "low",
+      "score": 11,
+      "source_case_id": "skill.checklist-first-bugfix",
+      "variant_id": "variant.skill.checklist-first-bugfix"
+    }
+  ],
+  "guards": {
+    "auto_push_or_pr": false,
+    "direct_policy_update": false,
+    "requires_human_review_before_effective_change": true,
+    "skill_auto_enable": false,
+    "target_repo_sync": false
+  },
+  "mutation_allowed": false,
+  "review_candidate_count": 5,
+  "rollback": "Delete the generated variant-evaluation artifact. No active runtime behavior is changed.",
+  "schema_version": "0.1-draft",
+  "source_variants": "docs/change-evidence/self-evolution-variants/20260529-self-evolution-variants.json",
+  "variant_count": 5
+}

@@ -57,6 +57,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("AI 推荐", completed.stdout)
         self.assertIn(".\\run.ps1 fast", completed.stdout)
         self.assertIn(".\\run.ps1 readiness -OpenUi", completed.stdout)
+        self.assertIn(".\\run.ps1 self-evolution", completed.stdout)
         self.assertNotIn("codex-optimize", completed.stdout)
         self.assertNotIn("codex-interop", completed.stdout)
         self.assertNotIn("codex-mode-new", completed.stdout)
@@ -179,6 +180,7 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertNotIn("CodexGatewayEnable", completed.stdout)
         self.assertNotIn("CodexGatewayRollback", completed.stdout)
         self.assertIn("FeedbackReport", completed.stdout)
+        self.assertIn("SelfEvolutionRecommend", completed.stdout)
         self.assertIn("CleanupTargets", completed.stdout)
         self.assertIn("UninstallGovernance", completed.stdout)
         self.assertIn("CorePrincipleMaterialize", completed.stdout)
@@ -473,6 +475,45 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertIn("-ExportTargetRepoRuns", completed.stdout)
         self.assertIn("-DisableManagedAssetRemoval", completed.stdout)
 
+    def test_operator_daily_all_dry_run_includes_self_evolution_recommendation(self) -> None:
+        env = dict(os.environ)
+        env["GOVERNED_RUNTIME_OPERATOR_PREFLIGHT_JSON"] = json.dumps(
+            {
+                "next_action": "wait_for_host_capability_recovery",
+                "why": "Host native attach is still degraded.",
+                "gate_state": "pass",
+                "source_state": "fresh",
+                "evidence_state": "stale",
+            }
+        )
+
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "operator.ps1"),
+                "-Action",
+                "DailyAll",
+                "-Mode",
+                "quick",
+                "-DryRun",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            cwd=ROOT,
+            env=env,
+        )
+
+        self.assertIn("operator-preflight: action=DailyAll next_action=wait_for_host_capability_recovery", completed.stdout)
+        self.assertIn("DRY-RUN daily-all-targets", completed.stdout)
+        self.assertIn("DRY-RUN self-evolution-recommend", completed.stdout)
+
     def test_operator_ui_action_generates_html(self) -> None:
         completed = subprocess.run(
             [
@@ -612,6 +653,7 @@ class OperatorEntrypointTests(unittest.TestCase):
             self.assertIn(feedback["status"], {"pass", "attention", "fail"})
             self.assertEqual("docs/product/host-feedback-loop.zh-CN.md", feedback["guide_path"])
             self.assertEqual("docs/product/host-feedback-loop.md", feedback["guide_path_en"])
+            self.assertIn("self_evolution_recommend", module.ALLOWED_ACTIONS)
             next_work = module.load_next_work_summary()
             self.assertIn(next_work["status"], {"pass", "error"})
             if next_work["status"] != "error":
@@ -756,6 +798,70 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertEqual("feedback", first_feedback["cache_kind"])
         self.assertEqual(1, feedback_mock.call_count)
         self.assertEqual(first_feedback["cached_at"], second_feedback["cached_at"])
+
+    def test_operator_ui_self_evolution_recommendations_read_latest_artifact(self) -> None:
+        module = _load_serve_operator_ui_module()
+
+        with tempfile.TemporaryDirectory(dir=ROOT) as temp_dir:
+            artifact = Path(temp_dir) / "20260530-self-evolution-recommendations.json"
+            artifact.write_text(
+                json.dumps(
+                    {
+                        "artifact_type": "self_evolution_recommendation_report",
+                        "status": "pass",
+                        "as_of": "2026-05-30",
+                        "recommended_next_action": "report_only_until_wait_for_host_capability_recovery",
+                        "materialization_blocked": True,
+                        "selector_next_action": "wait_for_host_capability_recovery",
+                        "selector_why": "bounded host defer",
+                        "readiness_overall_state": "complete",
+                        "ready_for_unattended_self_update": False,
+                        "variant_review_candidate_count": 5,
+                        "retire_proposal_count": 0,
+                        "trigger_model": {
+                            "proactive_operator_triggers": ["FeedbackReport", "DailyAll"],
+                            "automatic_effective_change": False,
+                        },
+                        "guards": {"requires_human_review_before_effective_change": True},
+                        "recommendations": [
+                            {
+                                "lane": "optimize",
+                                "decision": "review_candidate_variants",
+                                "priority": "P1",
+                                "risk_level": "medium",
+                                "title": "Review variants",
+                                "reason": "5 candidate variants",
+                            }
+                        ],
+                    },
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
+
+            with mock.patch.object(module, "_latest_self_evolution_recommendation_path", return_value=artifact):
+                payload = module._build_self_evolution_recommendations()
+
+        self.assertEqual("pass", payload["report_status"])
+        self.assertEqual("2026-05-30", payload["as_of"])
+        self.assertEqual("report_only_until_wait_for_host_capability_recovery", payload["recommended_next_action"])
+        self.assertTrue(payload["materialization_blocked"])
+        self.assertEqual("wait_for_host_capability_recovery", payload["selector_next_action"])
+        self.assertEqual(5, payload["variant_review_candidate_count"])
+        self.assertEqual(["FeedbackReport", "DailyAll"], payload["trigger_model"]["proactive_operator_triggers"])
+        self.assertEqual("optimize", payload["recommendations"][0]["lane"])
+        self.assertTrue(payload["report_path"].endswith("20260530-self-evolution-recommendations.json"))
+
+    def test_operator_ui_self_evolution_recommendations_surface_missing_state(self) -> None:
+        module = _load_serve_operator_ui_module()
+
+        with mock.patch.object(module, "_latest_self_evolution_recommendation_path", return_value=None):
+            payload = module._build_self_evolution_recommendations()
+
+        self.assertEqual("missing", payload["report_status"])
+        self.assertEqual("run_self_evolution_recommend", payload["recommended_next_action"])
+        self.assertIn("SelfEvolutionRecommend", payload["trigger_model"]["recommended_operator_action"])
+        self.assertIn("FeedbackReport", payload["trigger_model"]["proactive_operator_triggers"])
 
     def test_codex_status_refresh_helper_is_retired(self) -> None:
         module = _load_serve_operator_ui_module()
@@ -1046,6 +1152,8 @@ class OperatorEntrypointTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         self.assertIn("host-feedback-summary", completed.stdout)
         self.assertIn(".runtime/artifacts/host-feedback-summary/latest.md", completed.stdout)
+        self.assertIn("self-evolution-recommend", completed.stdout)
+        self.assertIn("self-evolution-recommendations", completed.stdout)
 
     def test_operator_ui_service_status_succeeds(self) -> None:
         completed = subprocess.run(

@@ -1,38 +1,11 @@
 {
-  "elapsed_seconds": 227.5312673999997,
+  "elapsed_seconds": 344.513755400003,
   "failure_count": 0,
   "failures": [],
   "prioritized_target_count": 10,
   "slowest": [
     {
-      "duration_seconds": 165.47551379999823,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_runtime_flow_preset",
-        "path": "tests\\runtime\\test_runtime_flow_preset.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 136.2532865000012,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_functional_effectiveness",
-        "path": "tests\\runtime\\test_functional_effectiveness.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 135.2579870999998,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_dependency_baseline",
-        "path": "tests\\runtime\\test_dependency_baseline.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 134.4343004000002,
+      "duration_seconds": 284.3156605999975,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_transition_stack_convergence",
@@ -41,16 +14,61 @@
       }
     },
     {
-      "duration_seconds": 111.18602749999991,
+      "duration_seconds": 270.37009119999857,
       "exit_code": 0,
       "target": {
-        "module": "tests.runtime.test_repo_slimming_surface",
-        "path": "tests\\runtime\\test_repo_slimming_surface.py",
+        "module": "tests.runtime.test_operator_entrypoint",
+        "path": "tests\\runtime\\test_operator_entrypoint.py",
         "suite": "runtime"
       }
     },
     {
-      "duration_seconds": 96.59121239999877,
+      "duration_seconds": 269.45214110000234,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_functional_effectiveness",
+        "path": "tests\\runtime\\test_functional_effectiveness.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 256.1662795000011,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_runtime_flow_preset",
+        "path": "tests\\runtime\\test_runtime_flow_preset.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 249.36210279999796,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_dependency_baseline",
+        "path": "tests\\runtime\\test_dependency_baseline.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 228.07297430000472,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_self_evolution_readiness",
+        "path": "tests\\runtime\\test_self_evolution_readiness.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 186.48339129999658,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_target_repo_powershell_policy",
+        "path": "tests\\runtime\\test_target_repo_powershell_policy.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 175.10656260000542,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_evolution",
@@ -59,16 +77,7 @@
       }
     },
     {
-      "duration_seconds": 85.47105929999998,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_session_bridge",
-        "path": "tests\\runtime\\test_session_bridge.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 68.33974320000016,
+      "duration_seconds": 124.58753719999368,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_attached_repo_e2e",
@@ -77,25 +86,16 @@
       }
     },
     {
-      "duration_seconds": 63.69871150000108,
+      "duration_seconds": 90.57770629999868,
       "exit_code": 0,
       "target": {
-        "module": "tests.runtime.test_autonomous_next_work_selection",
-        "path": "tests\\runtime\\test_autonomous_next_work_selection.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 61.82687719999922,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_operator_entrypoint",
-        "path": "tests\\runtime\\test_operator_entrypoint.py",
+        "module": "tests.runtime.test_governance_hub_certification",
+        "path": "tests\\runtime\\test_governance_hub_certification.py",
         "suite": "runtime"
       }
     }
   ],
-  "target_count": 111,
+  "target_count": 112,
   "timeout_seconds": 300,
   "timing_history_path": "docs\\change-evidence\\runtime-test-speed-latest.json",
   "worker_count": 8

@@ -1,5 +1,5 @@
 param(
-  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexGuardAbsenceCheck", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
+  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexGuardAbsenceCheck", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "SelfEvolutionReadiness", "SelfEvolutionEvalDataset", "SelfEvolutionOptimize", "SelfEvolutionVariantEvaluate", "SelfEvolutionRecommend", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
   [string]$Action = "Help",
 
   [ValidateSet("quick", "full", "l1", "l2", "l3")]
@@ -255,11 +255,18 @@ AI 推荐:
   RulesDryRun            只检查全局/项目级规则漂移，不写入。
   RulesApply             应用规则 manifest 同步，然后复查漂移。
   GovernanceBaselineAll  对所有 active targets 下发治理基线，然后验证目标仓治理一致性。
-  DailyAll               对所有 active targets 执行 daily flow，并刷新 operator UI。
+  DailyAll               对所有 active targets 执行 daily flow，主动生成自演化建议报告，并刷新 operator UI。
   ApplyAllFeatures       同步规则 manifest 后执行全部当前目标仓功能，并刷新 target-run/KPI/effect 证据；默认删除已证明安全的退役托管文件；可用 -DisableManagedAssetRemoval 仅检测。
   CleanupTargets         预演清理退役治理文件；加 -ApplyManagedAssetRemoval 才实际删除。
   UninstallGovernance    预演卸载目标仓治理资产；加 -ApplyManagedAssetRemoval 才实际删除/修补。
-  FeedbackReport         生成 Codex/Claude 功能反馈汇总报告，并写入 runtime artifacts。
+  FeedbackReport         生成 Codex/Claude 功能反馈汇总报告，并主动附带自演化建议报告。
+  SelfEvolutionReadiness 评估 Hermes-style 自我进化终态能力账本，报告 implemented/partial/missing，不自动改代码。
+  SelfEvolutionEvalDataset
+                         从 runtime evolution candidates 与 AI coding experience 生成自进化 eval dataset，不自动改代码。
+  SelfEvolutionOptimize  从 eval dataset 生成轨迹/案例驱动的候选 variants，不自动改代码。
+  SelfEvolutionVariantEvaluate
+                         评估 self-evolution variants，输出 review_candidate/improve/defer，不自动改代码。
+  SelfEvolutionRecommend 触发一次非变异自演化建议周期：刷新 readiness/eval/variants/evaluation，并报告新增/优化/退休建议。
   EvolutionReview        执行 runtime 自我演进 dry-run，只生成候选和证据，不自动改代码。
   ExperienceReview       从 AI 编码证据/指标中生成 dry-run knowledge/memory 记录、改进提案和 skill manifest 候选。
   EvolutionMaterialize   将低风险候选物化为 proposal 文件和禁用态 skill candidate 文件，不启用技能。
@@ -350,6 +357,7 @@ function Invoke-DailyAll {
   Assert-OperatorPreflight -ActionName "DailyAll"
   $arguments = Get-BatchFlowArguments -BaseArguments @("-FlowMode", "daily", "-Mode", $Mode, "-Json", "-ExportTargetRepoRuns")
   Invoke-PwshScript -Name "daily-all-targets" -ScriptPath "scripts/runtime-flow-preset.ps1" -ScriptArguments $arguments
+  Invoke-SelfEvolutionRecommend
   Invoke-OperatorUi
 }
 
@@ -419,6 +427,31 @@ function Invoke-FeedbackReport {
     "--write-markdown",
     ".runtime/artifacts/host-feedback-summary/latest.md"
   )
+  Invoke-SelfEvolutionRecommend
+}
+
+function Invoke-SelfEvolutionReadiness {
+  Invoke-PwshScript -Name "self-evolution-readiness" -ScriptPath "scripts/evaluate-self-evolution-readiness.ps1" -ScriptArguments @("-WriteArtifacts")
+}
+
+function Invoke-SelfEvolutionEvalDataset {
+  Invoke-PwshScript -Name "self-evolution-eval-dataset" -ScriptPath "scripts/generate-self-evolution-eval-dataset.ps1" -ScriptArguments @("-WriteArtifacts")
+}
+
+function Invoke-SelfEvolutionOptimize {
+  Invoke-PwshScript -Name "self-evolution-optimize" -ScriptPath "scripts/optimize-runtime-evolution-trajectory.ps1" -ScriptArguments @("-WriteArtifacts")
+}
+
+function Invoke-SelfEvolutionVariantEvaluate {
+  Invoke-PwshScript -Name "self-evolution-variant-evaluate" -ScriptPath "scripts/evaluate-runtime-evolution-variant.ps1" -ScriptArguments @("-WriteArtifacts")
+}
+
+function Invoke-SelfEvolutionRecommend {
+  Invoke-SelfEvolutionReadiness
+  Invoke-SelfEvolutionEvalDataset
+  Invoke-SelfEvolutionOptimize
+  Invoke-SelfEvolutionVariantEvaluate
+  Invoke-PwshScript -Name "self-evolution-recommend" -ScriptPath "scripts/recommend-self-evolution.ps1" -ScriptArguments @("-WriteArtifacts")
 }
 
 function Invoke-EvolutionReview {
@@ -469,6 +502,11 @@ try {
     "CleanupTargets" { Invoke-CleanupTargets }
     "UninstallGovernance" { Invoke-UninstallGovernance }
     "FeedbackReport" { Invoke-FeedbackReport }
+    "SelfEvolutionReadiness" { Invoke-SelfEvolutionReadiness }
+    "SelfEvolutionEvalDataset" { Invoke-SelfEvolutionEvalDataset }
+    "SelfEvolutionOptimize" { Invoke-SelfEvolutionOptimize }
+    "SelfEvolutionVariantEvaluate" { Invoke-SelfEvolutionVariantEvaluate }
+    "SelfEvolutionRecommend" { Invoke-SelfEvolutionRecommend }
     "EvolutionReview" { Invoke-EvolutionReview }
     "ExperienceReview" { Invoke-ExperienceReview }
     "EvolutionMaterialize" { Invoke-EvolutionMaterialize }

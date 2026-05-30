@@ -23,6 +23,10 @@ class GovernanceHubCertificationTests(unittest.TestCase):
         self.assertEqual(payload["status"], "pass")
         self.assertEqual(payload["effect_feedback"]["target"], "classroomtoolkit")
         self.assertTrue(all(payload["loop_status"].values()))
+        self.assertTrue(payload["loop_status"]["self_evolution_readiness_loop"])
+        self.assertTrue(payload["final_answers"]["self_evolution_readiness_loop_executable"])
+        self.assertEqual(payload["verifier_results"]["self_evolution_readiness"]["overall_state"], "complete")
+        self.assertFalse(payload["verifier_results"]["self_evolution_readiness"]["ready_for_unattended_self_update"])
 
     def test_verifier_passes(self) -> None:
         completed = subprocess.run(

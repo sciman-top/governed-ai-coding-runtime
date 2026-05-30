@@ -59,6 +59,29 @@ Governance Kernel
   + Controlled Evolution Queue
 ```
 
+## Self-Evolution Readiness Ledger
+Hermes-style self-evolution is a target capability family, not a completed claim. The current implementation must be described as a governed partial loop until a machine check proves otherwise.
+
+Current executable ledger:
+
+- Policy: `docs/architecture/self-evolution-readiness-policy.json`
+- CLI: `python scripts/evaluate-self-evolution-readiness.py --as-of <date>`
+- Operator wrapper: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/evaluate-self-evolution-readiness.ps1 -WriteArtifacts`
+- Operator action: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action SelfEvolutionReadiness`
+- First eval layer: `python scripts/generate-self-evolution-eval-dataset.py --as-of <date> --write-artifacts`
+- Eval operator action: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action SelfEvolutionEvalDataset`
+- Variant generation: `python scripts/optimize-runtime-evolution-trajectory.py --as-of <date> --write-artifacts`
+- Variant evaluation: `python scripts/evaluate-runtime-evolution-variant.py --as-of <date> --write-artifacts`
+- Optimizer/evaluator operator actions: `SelfEvolutionOptimize` and `SelfEvolutionVariantEvaluate`
+- Proactive recommendation trigger: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action SelfEvolutionRecommend`
+- Feedback trigger: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action FeedbackReport`
+- Daily trigger: `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action DailyAll`
+- Recommendation artifact: `docs/change-evidence/self-evolution-recommendations/<yyyymmdd>-self-evolution-recommendations.json`
+
+The ledger reports each terminal self-evolution capability as `implemented`, `partial`, or `missing`. Missing capabilities are not hidden behind the broader `controlled evolution` wording; they are the next governed GAP source.
+
+`SelfEvolutionRecommend` is the standard trigger for a non-mutating advisory evolution cycle. It refreshes readiness, eval dataset, candidate variants, variant evaluation, and then emits add / optimize / delete-or-retire recommendation lanes. `FeedbackReport` and `DailyAll` also invoke the same recommendation cycle so normal feedback and daily evidence refreshes proactively report whether to add, optimize, delete, retire, or hold. The recommendation may say `report_only_until_<selector_action>` when `scripts/select-next-work.py` reports a blocking selector state such as `wait_for_host_capability_recovery`; that is still a useful proactive report, not permission to bypass the selector.
+
 ## Core Principle Crosswalk
 The 2026-05-01 core-principle update does not open a new standalone roadmap queue. The added principles are already covered by completed `GAP-130..143` work and should be treated as strengthened acceptance criteria for future gates:
 

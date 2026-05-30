@@ -40,6 +40,13 @@ def render_interactive_script(
   const feedbackGuideLink = document.getElementById('feedback-guide-link');
   const feedbackGuideLinkEn = document.getElementById('feedback-guide-link-en');
   const feedbackPreview = document.getElementById('feedback-preview');
+  const selfEvolutionStatus = document.getElementById('self-evolution-status');
+  const selfEvolutionCacheState = document.getElementById('self-evolution-cache-state');
+  const selfEvolutionGeneratedAt = document.getElementById('self-evolution-generated-at');
+  const selfEvolutionSummary = document.getElementById('self-evolution-summary');
+  const selfEvolutionLanes = document.getElementById('self-evolution-lanes');
+  const selfEvolutionReportLink = document.getElementById('self-evolution-report-link');
+  const selfEvolutionJson = document.getElementById('self-evolution-json');
   const continuityStatus = document.getElementById('continuity-status');
   const continuityRecords = document.getElementById('continuity-records');
   const continuityJson = document.getElementById('continuity-json');
@@ -51,6 +58,7 @@ def render_interactive_script(
   const nextWorkCacheState = document.getElementById('next-work-cache-state');
   const historyKey = 'governed-runtime-operator-history';
   const feedbackCacheKey = 'governed-runtime-operator-feedback-summary';
+  const selfEvolutionCacheKey = 'governed-runtime-operator-self-evolution-recommendations';
   const nextWorkCacheKey = 'governed-runtime-operator-next-work';
   const surfaceOpenLabel = {text['open_surface']!r};
   const surfaceCurrentLabel = {text['surface_current']!r};
@@ -62,6 +70,7 @@ def render_interactive_script(
   const managedRemovalActions = new Set(['cleanup_targets', 'uninstall_governance']);
   const defaultManagedRemovalActions = new Set(['apply_all_features']);
   let feedbackLoaded = false;
+  let selfEvolutionLoaded = false;
   let continuityLoaded = false;
   let nextWorkLoaded = false;
   let lastNextWorkPayload = null;
@@ -109,13 +118,17 @@ def render_interactive_script(
   }}
 
   function setPanelCacheState(kind, state, cachedAt) {{
-    const target = kind === 'feedback' ? feedbackCacheState : (kind === 'next-work' ? nextWorkCacheState : null);
+    const target = kind === 'feedback'
+      ? feedbackCacheState
+      : (kind === 'self-evolution' ? selfEvolutionCacheState : (kind === 'next-work' ? nextWorkCacheState : null));
     if (!target) {{
       return;
     }}
     const label = kind === 'feedback'
         ? {text['feedback_status']!r}
-        : (currentUiLanguage() === 'zh-CN' ? 'next-work 状态' : 'next-work state');
+        : (kind === 'self-evolution'
+          ? {text['self_evolution_status']!r}
+          : (currentUiLanguage() === 'zh-CN' ? 'next-work 状态' : 'next-work state'));
     const stateLabels = {{
       cold: {text['panel_cache_cold']!r},
       cached: {text['panel_cache_cached']!r},
@@ -138,6 +151,9 @@ def render_interactive_script(
     if (kind === 'feedback') {{
       renderFeedbackSummary(cached);
       feedbackLoaded = true;
+    }} else if (kind === 'self-evolution') {{
+      renderSelfEvolutionRecommendations(cached);
+      selfEvolutionLoaded = true;
     }} else {{
       renderNextWorkSummary(cached);
       nextWorkLoaded = true;
@@ -234,6 +250,9 @@ def render_interactive_script(
     }});
     if (selected === 'feedback' && !feedbackLoaded) {{
       hydratePanelCache('feedback', feedbackCacheKey);
+    }}
+    if (selected === 'feedback' && !selfEvolutionLoaded) {{
+      hydratePanelCache('self-evolution', selfEvolutionCacheKey);
     }}
     if (selected === 'continuity' && !continuityLoaded) {{
       refreshContinuityRecords();
@@ -350,6 +369,7 @@ def render_interactive_script(
       cleanup_targets: {text['cleanup_targets_action']!r},
       uninstall_governance: {text['uninstall_governance_action']!r},
       feedback_report: {text['feedback_report_action']!r},
+      self_evolution_recommend: {text['self_evolution_recommend_action']!r},
       evolution_review: {text['evolution_review_action']!r},
       experience_review: {text['experience_review_action']!r},
       evolution_materialize: {text['evolution_materialize_action']!r},
@@ -566,6 +586,9 @@ def render_interactive_script(
       if (nextWorkAction) {{
         await refreshNextWorkSummary();
       }}
+      if (selfEvolutionSummary) {{
+        await refreshSelfEvolutionRecommendations();
+      }}
     }} catch (error) {{
       setOutput(String(error));
     }} finally {{
@@ -741,6 +764,150 @@ def render_interactive_script(
     return button;
   }}
 
+  function formatBooleanState(value) {{
+    if (value === true) {{
+      return currentUiLanguage() === 'zh-CN' ? '是' : 'yes';
+    }}
+    if (value === false) {{
+      return currentUiLanguage() === 'zh-CN' ? '否' : 'no';
+    }}
+    return currentUiLanguage() === 'zh-CN' ? '未知' : 'unknown';
+  }}
+
+  function formatSelfEvolutionStatusLabel(value) {{
+    const normalized = String(value || '').trim().toLowerCase();
+    if (currentUiLanguage() === 'zh-CN') {{
+      const labels = {{
+        pass: '通过',
+        ok: '正常',
+        missing: '未生成',
+        attention: '需关注',
+        fail: '失败',
+        error: '错误',
+      }};
+      return labels[normalized] || (value || '未知');
+    }}
+    return value || 'unknown';
+  }}
+
+  function formatSelfEvolutionLane(value) {{
+    const normalized = String(value || '').trim();
+    if (currentUiLanguage() !== 'zh-CN') {{
+      return normalized || 'lane';
+    }}
+    const labels = {{
+      add: '新增',
+      optimize: '优化',
+      delete_or_retire: '删减/退役',
+    }};
+    return labels[normalized] || normalized || 'lane';
+  }}
+
+  function renderSelfEvolutionRecommendations(payload) {{
+    if (!selfEvolutionSummary || !selfEvolutionLanes || !selfEvolutionStatus) {{
+      return;
+    }}
+    const recommendations = Array.isArray(payload && payload.recommendations) ? payload.recommendations : [];
+    const triggerModel = payload && payload.trigger_model ? payload.trigger_model : {{}};
+    const triggers = Array.isArray(triggerModel.proactive_operator_triggers)
+      ? triggerModel.proactive_operator_triggers.join(', ')
+      : '';
+    const generatedAt = payload && payload.as_of ? String(payload.as_of) : {text['not_recorded']!r};
+    const nextAction = String((payload && payload.recommended_next_action) || 'unknown');
+    const selectorAction = String((payload && payload.selector_next_action) || 'unknown');
+    const selectorWhy = String((payload && payload.selector_why) || '');
+    const guard = payload && payload.guards ? payload.guards : {{}};
+    const statusLabel = formatSelfEvolutionStatusLabel(payload && payload.status);
+
+    selfEvolutionStatus.textContent = `{text['self_evolution_status']}: ${{statusLabel}}`;
+    selfEvolutionGeneratedAt.textContent = `{text['self_evolution_generated_at']}: ${{generatedAt}}`;
+
+    selfEvolutionSummary.innerHTML = '';
+    [
+      {{
+        label: {text['self_evolution_next_action']!r},
+        value: nextAction,
+        detail: selectorWhy
+      }},
+      {{
+        label: {text['self_evolution_selector']!r},
+        value: selectorAction,
+        detail: payload && payload.materialization_blocked
+          ? {text['self_evolution_blocked']!r}
+          : ''
+      }},
+      {{
+        label: {text['self_evolution_readiness']!r},
+        value: formatBooleanState(payload && payload.ready_for_unattended_self_update),
+        detail: payload && payload.readiness_overall_state ? String(payload.readiness_overall_state) : ''
+      }},
+      {{
+        label: {text['self_evolution_variant_count']!r},
+        value: String((payload && payload.variant_review_candidate_count) || 0),
+        detail: triggers ? {text['self_evolution_trigger']!r} + ': ' + triggers : ''
+      }},
+      {{
+        label: {text['self_evolution_guard']!r},
+        value: formatBooleanState(guard.requires_human_review_before_effective_change),
+        detail: triggerModel.automatic_effective_change === false
+          ? 'automatic_effective_change=false'
+          : ''
+      }},
+    ].forEach((card) => {{
+      const section = document.createElement('section');
+      section.className = 'summary-card';
+      section.appendChild(createInfoLine(card.label, card.value));
+      if (card.detail) {{
+        const meta = document.createElement('p');
+        meta.className = 'meta';
+        meta.textContent = card.detail;
+        section.appendChild(meta);
+      }}
+      selfEvolutionSummary.appendChild(section);
+    }});
+
+    selfEvolutionLanes.innerHTML = '';
+    recommendations.forEach((item) => {{
+      const lane = document.createElement('div');
+      lane.className = 'self-evolution-lane';
+      const head = document.createElement('div');
+      head.className = 'self-evolution-lane-head';
+      const title = document.createElement('span');
+      title.className = 'self-evolution-lane-title';
+      title.textContent = item.title || item.recommendation_id || item.decision || 'recommendation';
+      const meta = document.createElement('span');
+      meta.className = 'self-evolution-lane-meta';
+      meta.textContent = [formatSelfEvolutionLane(item.lane), item.priority, item.risk_level]
+        .filter(Boolean)
+        .join(' · ');
+      head.append(title, meta);
+      lane.appendChild(head);
+      lane.appendChild(createInfoLine(currentUiLanguage() === 'zh-CN' ? '决策' : 'Decision', item.decision || 'unknown'));
+      if (item.reason) {{
+        const reason = document.createElement('p');
+        reason.className = 'meta';
+        reason.textContent = item.reason;
+        lane.appendChild(reason);
+      }}
+      selfEvolutionLanes.appendChild(lane);
+    }});
+    if (!recommendations.length) {{
+      selfEvolutionLanes.innerHTML = `<p class="meta">{text['self_evolution_empty']}</p>`;
+    }}
+
+    if (selfEvolutionReportLink) {{
+      selfEvolutionReportLink.innerHTML = '';
+      if (payload && payload.report_path) {{
+        selfEvolutionReportLink.appendChild(createRefButton(payload.report_path, {text['self_evolution_open_report']!r}, 'feedback'));
+      }} else {{
+        selfEvolutionReportLink.innerHTML = `<p class="meta">{text['self_evolution_report_missing']}</p>`;
+      }}
+    }}
+    if (selfEvolutionJson) {{
+      selfEvolutionJson.textContent = JSON.stringify(payload || {{}}, null, 2);
+    }}
+  }}
+
   function renderFeedbackSummary(payload) {{
     if (!feedbackSummary || !feedbackDimensions || !feedbackRecommendations || !feedbackLatestRuns) {{
       return;
@@ -880,6 +1047,36 @@ def render_interactive_script(
     }}
   }}
 
+  async function refreshSelfEvolutionRecommendations() {{
+    return refreshSelfEvolutionRecommendationsWithMode(false);
+  }}
+
+  async function refreshSelfEvolutionRecommendationsWithMode(forceRefresh) {{
+    if (!selfEvolutionSummary) {{
+      return;
+    }}
+    setPanelCacheState('self-evolution', selfEvolutionLoaded ? 'refreshing' : 'cold');
+    try {{
+      const response = forceRefresh
+        ? await fetch('/api/self-evolution/recommendations?refresh=1')
+        : await fetch('/api/self-evolution/recommendations');
+      const payload = await response.json();
+      if (!response.ok) {{
+        selfEvolutionStatus.textContent = `{text['self_evolution_status']}: ${{payload.error || response.statusText}}`;
+        setPanelCacheState('self-evolution', 'error');
+        return;
+      }}
+      payload.cached_at = payload.as_of || payload.cached_at;
+      renderSelfEvolutionRecommendations(payload);
+      writePanelCache(selfEvolutionCacheKey, payload);
+      selfEvolutionLoaded = true;
+      setPanelCacheState('self-evolution', 'ready', payload.cached_at);
+    }} catch (error) {{
+      selfEvolutionStatus.textContent = `{text['self_evolution_status']}: ${{String(error)}}`;
+      setPanelCacheState('self-evolution', 'error');
+    }}
+  }}
+
   function renderContinuitySummary(payload) {{
     if (!continuityRecords || !continuityJson || !continuityStatus) {{
       return;
@@ -943,16 +1140,11 @@ def render_interactive_script(
     renderHistory();
   }});
   document.querySelector('[data-refresh]').addEventListener('click', () => window.location.reload());
-      event.preventDefault();
-    }});
-  }}
-    }});
-  }}
-      }}
-    }});
-  }}
-  }});
   document.querySelector('[data-feedback-refresh]').addEventListener('click', () => refreshFeedbackSummaryWithMode(true));
+  const selfEvolutionRefreshButton = document.querySelector('[data-self-evolution-refresh]');
+  if (selfEvolutionRefreshButton) {{
+    selfEvolutionRefreshButton.addEventListener('click', () => refreshSelfEvolutionRecommendationsWithMode(true));
+  }}
   const continuityRefreshButton = document.querySelector('[data-continuity-refresh]');
   if (continuityRefreshButton) {{
     continuityRefreshButton.addEventListener('click', () => refreshContinuityRecords());
@@ -1006,6 +1198,7 @@ def render_interactive_script(
   renderHistory();
   updateRuntimeSurfaceSummary();
   hydratePanelCache('feedback', feedbackCacheKey);
+  hydratePanelCache('self-evolution', selfEvolutionCacheKey);
   hydratePanelCache('next-work', nextWorkCacheKey);
   activateView('runtime');
   // Page load stays side-effect-light; process-backed probes run only after an explicit action.

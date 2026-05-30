@@ -1,0 +1,26 @@
+# Self-Evolution Recommendation Trigger Pre-Change Review
+
+- review_id: `pre_change_review.self_evolution_recommendation_trigger.20260530`
+- pre_change_review: required because the working tree includes a sensitive managed rule source under `rules/projects/cockpit-tools-local/codex/AGENTS.md`.
+- risk_level: medium
+- scope:
+  - add a non-mutating self-evolution recommendation trigger and report artifact.
+  - preserve the Cockpit continuity hardening already present in the managed rule source instead of silently reverting it.
+- control_repo_manifest_and_rule_sources: checked `rules/projects/cockpit-tools-local/codex/AGENTS.md` diff; the change tightens the existing continuity guard for Codex and Cockpit live processes.
+- user_level_deployed_rule_files: no user-level rule file is modified by this change set; synchronization remains through managed rule-sync entrypoints only.
+- target_repo_deployed_rule_files: no target repository file is modified by this change set; any later distribution must go through `scripts/sync-agent-rules.py` / `.ps1`.
+- target_repo_gate_scripts_and_ci: no target repo gate script or CI file is changed.
+- target_repo_repo_profile: no target repo profile is changed.
+- target_repo_readme_and_operator_docs: operator-facing docs are updated only in `docs/plans/governance-hub-reuse-and-controlled-evolution-plan.md` to expose `SelfEvolutionRecommend`.
+- current_official_tool_loading_docs: no Codex/Claude/Gemini loading model is changed; this review only accounts for a managed project-rule source that is already loaded through the repository rule family.
+- drift-integration decision: keep the stricter continuity wording as an integrated safety guard, but do not deploy it to user-level or target-level rule copies in this slice.
+- commands:
+  - `python -m unittest tests.runtime.test_self_evolution_readiness -v`
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action SelfEvolutionRecommend`
+  - `python scripts/verify-pre-change-review.py`
+- expected_evidence:
+  - self-evolution recommendation report under `docs/change-evidence/self-evolution-recommendations/`.
+  - pre-change review passes when sensitive rule-source paths are present.
+- rollback:
+  - remove `scripts/recommend-self-evolution.py`, `scripts/recommend-self-evolution.ps1`, the `SelfEvolutionRecommend` operator wiring, generated recommendation artifacts, and this review note.
+  - if the Cockpit rule-source hardening is later rejected, revert `rules/projects/cockpit-tools-local/codex/AGENTS.md` through git review and then rerun pre-change review.

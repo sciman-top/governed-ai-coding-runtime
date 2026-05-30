@@ -94,6 +94,12 @@ def render_style_block() -> str:
     .feedback-preview-card {{ display: grid; gap: 10px; }}
     .feedback-preview {{ height: 420px; overflow: auto; white-space: pre-wrap; background: linear-gradient(180deg, #ffffff, #fbfdfc); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 14px; box-shadow: var(--shadow-tight); }}
     .feedback-runs-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }}
+    .self-evolution-panel {{ border-top-color: #9fc9c2; }}
+    .self-evolution-lanes {{ display: grid; gap: 8px; margin-bottom: 12px; }}
+    .self-evolution-lane {{ display: grid; gap: 6px; border: 1px solid var(--line); border-radius: 8px; padding: 10px 11px; background: linear-gradient(180deg, #ffffff, #f8fbfb); box-shadow: var(--shadow-tight); }}
+    .self-evolution-lane-head {{ display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; justify-content: space-between; }}
+    .self-evolution-lane-title {{ font-weight: 760; color: var(--ink-strong); overflow-wrap: anywhere; }}
+    .self-evolution-lane-meta {{ color: var(--muted); font-size: 0.8rem; overflow-wrap: anywhere; }}
     .metric {{
       position: relative;
       overflow: hidden;

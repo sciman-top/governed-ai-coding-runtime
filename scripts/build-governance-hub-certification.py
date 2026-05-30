@@ -56,6 +56,10 @@ def build_governance_hub_certification(*, repo_root: Path, config_path: Path) ->
     )
     evolution = _load_script(repo_root / "scripts" / "evaluate-runtime-evolution.py", "evaluate_runtime_evolution_gap139")
     experience = _load_script(repo_root / "scripts" / "extract-ai-coding-experience.py", "extract_ai_coding_experience_gap139")
+    self_evolution = _load_script(
+        repo_root / "scripts" / "evaluate-self-evolution-readiness.py",
+        "evaluate_self_evolution_readiness_gap139",
+    )
     effect = _load_script(
         repo_root / "scripts" / "verify-target-repo-reuse-effect-report.py",
         "verify_target_repo_reuse_effect_gap139",
@@ -82,6 +86,12 @@ def build_governance_hub_certification(*, repo_root: Path, config_path: Path) ->
         online_source_check=False,
     )
     experience_result = experience.inspect_ai_coding_experience(repo_root=repo_root, as_of=date.today(), write_artifacts=False)
+    self_evolution_result = self_evolution.inspect_self_evolution_readiness(
+        repo_root=repo_root,
+        policy_path=repo_root / "docs" / "architecture" / "self-evolution-readiness-policy.json",
+        as_of=date.today(),
+        write_artifacts=False,
+    )
     effect_result = effect.inspect_effect_report(
         report_path=repo_root / config["effect_feedback_ref"],
         runs_root=repo_root / "docs" / "change-evidence" / "target-repo-runs",
@@ -117,6 +127,11 @@ def build_governance_hub_certification(*, repo_root: Path, config_path: Path) ->
             {"deprecate", "retire", "delete_candidate"} & set(outcome_counter)
         ),
         "controlled_evolution_loop": evolution_result["status"] == "pass" and evolution_result["candidate_count"] >= 1,
+        "self_evolution_readiness_loop": self_evolution_result["status"] == "pass"
+        and self_evolution_result["overall_state"] == "complete"
+        and self_evolution_result["capability_counts"]["missing"] == 0
+        and self_evolution_result["capability_counts"]["partial"] == 0
+        and self_evolution_result["ready_for_unattended_self_update"] is False,
         "self_improvement_loop": experience_result["status"] == "pass"
         and experience_result["proposal_count"] >= 1
         and experience_result["knowledge_candidate_count"] >= 1
@@ -136,6 +151,7 @@ def build_governance_hub_certification(*, repo_root: Path, config_path: Path) ->
         "capability_upgrade_loop_executable": loop_status["capability_upgrade_loop"],
         "capability_cleanup_loop_executable": loop_status["capability_cleanup_loop"],
         "controlled_evolution_loop_executable": loop_status["controlled_evolution_loop"],
+        "self_evolution_readiness_loop_executable": loop_status["self_evolution_readiness_loop"],
         "self_improvement_loop_executable": loop_status["self_improvement_loop"],
     }
 
@@ -195,6 +211,14 @@ def build_governance_hub_certification(*, repo_root: Path, config_path: Path) ->
             "knowledge_memory_lifecycle": knowledge_result,
             "promotion_lifecycle": promotion_result,
             "runtime_evolution": evolution_result,
+            "self_evolution_readiness": {
+                "status": self_evolution_result["status"],
+                "overall_state": self_evolution_result["overall_state"],
+                "capability_counts": self_evolution_result["capability_counts"],
+                "ready_for_unattended_self_update": self_evolution_result["ready_for_unattended_self_update"],
+                "next_gap": self_evolution_result["next_gap"],
+                "guards": self_evolution_result["guards"],
+            },
             "ai_coding_experience": {
                 "status": experience_result["status"],
                 "proposal_count": experience_result["proposal_count"],
