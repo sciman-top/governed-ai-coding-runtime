@@ -196,9 +196,24 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scop
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -FailOnChange
 ```
 
+一键生成绿色发布包：
+
+```powershell
+.\release.ps1 -Version 0.1.0 -Channel portable
+```
+
+`-Version` 必须是文件名安全的本地版本字符串（字母、数字、点、下划线、连字符），不能包含路径片段。
+
+新电脑解压后绿色初始化（默认只写包内 `.runtime`，不迁移账号、provider 或历史 evidence）：
+
+```powershell
+.\install.ps1 -Mode Portable
+```
+
 ## 统一入口建议
 - 如果你要“一键日常使用”或“批量应用到目标仓”，优先走 `runtime-flow-preset.ps1`
 - 如果你只操作一个临时外部仓、还不想写入 target catalog，可走 `runtime-flow.ps1`
+- 如果你要迁移到新电脑，优先用 `release.ps1` 生成 portable zip，再在新机器运行 `install.ps1 -Mode Portable`；目标仓、全局规则和账号/provider 状态在新机器重新适配。
 - 如果你要先观察绕过统一入口的情况，把 `required_entrypoint_policy.current_mode` 设为 `advisory`
 - 如果你要拦截 direct gate/write 入口、但保留只读状态查询，把它设为 `targeted_enforced`
 - 如果你要在仓级范围强制 canonical entrypoint，把它设为 `repo_wide_enforced`

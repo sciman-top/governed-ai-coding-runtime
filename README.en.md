@@ -196,6 +196,25 @@ Check rule drift without writing:
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -FailOnChange
 ```
 
+Build a one-command portable release package:
+
+```powershell
+.\release.ps1 -Version 0.1.0 -Channel portable
+```
+
+`-Version` must be a filename-safe local version string: letters, digits, dots, underscores, and hyphens only, with no path segments.
+
+After extracting the zip on a new machine, initialize it in portable mode. This writes only package-local `.runtime` state and does not migrate accounts, provider settings, or historical evidence:
+
+```powershell
+.\install.ps1 -Mode Portable
+```
+
+Entrypoint recommendation:
+- For one-command daily use or batch target-repo apply, prefer `runtime-flow-preset.ps1`.
+- For one temporary external repo that should not be written to the target catalog yet, use `runtime-flow.ps1`.
+- For migration to a new machine, create the portable zip with `release.ps1`, run `install.ps1 -Mode Portable` on the new host, and then adapt target repos, global rules, and host-owned account/provider state there.
+
 ## Concrete AI-Coding Assistance
 - Capability visibility before execution: see `adapter_tier`, `flow_kind`, and degrade reasons early.
 - Canonical acceptance chain: runtime-managed `build -> test -> contract/invariant -> hotspot`.

@@ -99,7 +99,14 @@ ALLOWLIST = (
     {
         "kind": "powershell_remove_item",
         "path": "scripts/package-runtime.ps1",
-        "line_contains": "Remove-Item -Recurse -Force $distRoot",
+        "line_contains": "Remove-Item -Force -LiteralPath $DestinationPath",
+        "expected_count": 1,
+        "reason": "package refresh deletes only the existing archive file after Assert-ReleaseOutputPath proves it stays under .runtime/dist/releases",
+    },
+    {
+        "kind": "powershell_remove_item",
+        "path": "scripts/package-runtime.ps1",
+        "line_contains": "Remove-Item -Recurse -Force -LiteralPath $distRoot",
         "expected_count": 1,
         "reason": "package refresh deletes only the resolved .runtime/dist/public-usable-release output tree before rebuilding it",
     },

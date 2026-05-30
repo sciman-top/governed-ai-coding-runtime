@@ -1,47 +1,12 @@
 {
-  "elapsed_seconds": 249.43235029999778,
+  "elapsed_seconds": 903.7328255000002,
   "failure_count": 0,
   "failures": [],
   "prioritized_target_count": 10,
+  "serial_target_count": 3,
   "slowest": [
     {
-      "duration_seconds": 209.76028119999683,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_dependency_baseline",
-        "path": "tests\\runtime\\test_dependency_baseline.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 209.71481470000435,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_transition_stack_convergence",
-        "path": "tests\\runtime\\test_transition_stack_convergence.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 209.70084759999736,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_functional_effectiveness",
-        "path": "tests\\runtime\\test_functional_effectiveness.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 153.37913209999533,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_target_repo_powershell_policy",
-        "path": "tests\\runtime\\test_target_repo_powershell_policy.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 147.94933490000403,
+      "duration_seconds": 275.3845672999996,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_operator_entrypoint",
@@ -50,7 +15,25 @@
       }
     },
     {
-      "duration_seconds": 137.89612320000015,
+      "duration_seconds": 246.6549133999997,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_target_repo_powershell_policy",
+        "path": "tests\\runtime\\test_target_repo_powershell_policy.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 232.7527025999998,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_functional_effectiveness",
+        "path": "tests\\runtime\\test_functional_effectiveness.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 223.7807656,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_flow_preset",
@@ -59,7 +42,7 @@
       }
     },
     {
-      "duration_seconds": 120.90407509999932,
+      "duration_seconds": 220.30097769999975,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_evolution",
@@ -68,7 +51,25 @@
       }
     },
     {
-      "duration_seconds": 107.58781119999912,
+      "duration_seconds": 187.21641309999995,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_transition_stack_convergence",
+        "path": "tests\\runtime\\test_transition_stack_convergence.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 177.38347569999996,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_dependency_baseline",
+        "path": "tests\\runtime\\test_dependency_baseline.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 170.08280709999963,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_self_evolution_readiness",
@@ -77,20 +78,20 @@
       }
     },
     {
-      "duration_seconds": 56.41231749999861,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_attached_repo_e2e",
-        "path": "tests\\runtime\\test_attached_repo_e2e.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 54.79730769999878,
+      "duration_seconds": 130.2300678000006,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_governance_hub_certification",
         "path": "tests\\runtime\\test_governance_hub_certification.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 121.12240979999979,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_attached_repo_e2e",
+        "path": "tests\\runtime\\test_attached_repo_e2e.py",
         "suite": "runtime"
       }
     }

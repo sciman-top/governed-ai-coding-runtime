@@ -10,6 +10,8 @@ Define the minimum bar for calling the local governed runtime publicly usable on
 - runtime artifacts, evidence, verification, and handoff outputs are inspectable from local paths
 - the richer local operator surface can be generated through `scripts/serve-operator-ui.py`
 - a package bundle can be assembled through `scripts/package-runtime.ps1`
+- a portable release zip can be built with `release.ps1` and initialized on a new machine with `install.ps1 -Mode Portable`
+- release versions are validated as filename-safe strings before archive paths are created
 - at least one sample repo profile can follow the documented runtime path
 
 ## Required Commands
@@ -31,6 +33,14 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/package-runtime.ps1
 ```
 
 ```powershell
+.\release.ps1 -Version 0.1.0 -Channel portable
+```
+
+```powershell
+.\install.ps1 -Mode Portable -DryRun
+```
+
+```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All
 ```
 
@@ -39,3 +49,5 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All
 
 ## Boundary Note
 The `scripts/run-governed-task.py` command proves the local governed runtime path. It should not be interpreted as proof that Codex CLI/App is already directly invoked through a managed runtime adapter.
+
+The portable release carries generic source files, contracts, rules, scripts, schemas, docs, tests, and hooks. It excludes `.runtime` state, historical evidence, credentials, provider settings, and target-repo working trees. Target repos and global rules must be attached or synced again on the new host.

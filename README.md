@@ -175,10 +175,21 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply
 ```
 
+```powershell
+.\release.ps1 -Version 0.1.0 -Channel portable
+```
+
+`-Version` 必须是文件名安全的本地版本字符串，不能包含路径片段。
+
+```powershell
+.\install.ps1 -Mode Portable
+```
+
 如何快速使用（推荐三条路径）：
 - 路径 A（治理侧车，阻力最低）：继续在 Codex/Claude Code 编码，同时运行 `bootstrap + doctor + verify-repo -Check All + status` 做 readiness、门禁和证据检查。
 - 路径 B（外部仓 attach-first，推荐）：先 `attach-target-repo`，再运行 `runtime-flow.ps1 -FlowMode daily`，让目标仓按统一治理链执行。
 - 路径 C（中高风险写入）：通过 `govern-attachment-write -> decide-attachment-write -> execute-attachment-write` 走审批与回滚引用闭环。
+- 发布/迁移：用 `release.ps1` 生成 portable zip；新电脑解压后先运行 `install.ps1 -Mode Portable`，再按新机器路径重新适配 target repos、全局规则和宿主账号/provider 状态。
 
 对 AI 编码的具体辅助作用：
 - 会话前能力探测：在执行前显示 adapter tier、flow kind、degrade reason，减少“以为可执行、实际降级”的误判。
@@ -394,9 +405,20 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply
 ```
 
+```powershell
+.\release.ps1 -Version 0.1.0 -Channel portable
+```
+
+`-Version` must be filename-safe and cannot contain path traversal or path separators.
+
+```powershell
+.\install.ps1 -Mode Portable
+```
+
 Canonical entrypoint recommendation:
 - if you want one-command daily use or batch apply to target repos, prefer `runtime-flow-preset.ps1`
 - if you are working with one temporary external repo that is not in the target catalog, use `runtime-flow.ps1`
+- for migration to a new machine, create the portable zip with `release.ps1`, run `install.ps1 -Mode Portable` after extraction, then adapt target repos, global rules, and host-owned account/provider state on that host
 - if you want to observe drift first, set `required_entrypoint_policy.current_mode` to `advisory`
 - if you want to block direct gate/write entrypoints but keep read-only inspection open, set it to `targeted_enforced`
 - if you want repo-wide canonical-entrypoint enforcement, set it to `repo_wide_enforced`

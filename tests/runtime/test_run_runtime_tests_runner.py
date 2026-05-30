@@ -80,6 +80,29 @@ class RunRuntimeTestsRunnerTests(unittest.TestCase):
 
         self.assertEqual([target.module for target in ordered], ["tests.runtime.test_slow", "tests.runtime.test_fast"])
 
+    def test_contract_nested_targets_are_split_for_serial_execution(self) -> None:
+        runner = _load_runner_module()
+        dependency = runner.TestTarget(
+            suite="runtime",
+            module="tests.runtime.test_dependency_baseline",
+            path=ROOT / "tests" / "runtime" / "test_dependency_baseline.py",
+        )
+        functional = runner.TestTarget(
+            suite="runtime",
+            module="tests.runtime.test_functional_effectiveness",
+            path=ROOT / "tests" / "runtime" / "test_functional_effectiveness.py",
+        )
+        fast = runner.TestTarget(
+            suite="runtime",
+            module="tests.runtime.test_fast",
+            path=ROOT / "tests" / "runtime" / "test_fast.py",
+        )
+
+        serial_targets, parallel_targets = runner._split_serial_targets([dependency, fast, functional])
+
+        self.assertEqual([target.module for target in serial_targets], [dependency.module, functional.module])
+        self.assertEqual([target.module for target in parallel_targets], [fast.module])
+
     def test_load_timing_history_accepts_windows_paths(self) -> None:
         runner = _load_runner_module()
         with tempfile.TemporaryDirectory(prefix="tmp_runtime_runner_", dir=ROOT) as tmp_dir:

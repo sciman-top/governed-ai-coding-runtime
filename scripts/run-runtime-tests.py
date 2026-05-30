@@ -15,6 +15,13 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_TIMING_HISTORY_PATH = ROOT / "docs" / "change-evidence" / "runtime-test-speed-latest.json"
 DEFAULT_AUTO_WORKER_CAP = 8
 DEFAULT_PER_FILE_TIMEOUT_SECONDS = 300
+SERIAL_TEST_MODULES = frozenset(
+    {
+        "tests.runtime.test_dependency_baseline",
+        "tests.runtime.test_functional_effectiveness",
+        "tests.runtime.test_transition_stack_convergence",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -110,6 +117,17 @@ def _prioritize_targets(targets: list[TestTarget], timing_history: dict[str, flo
             target.path.relative_to(ROOT).as_posix(),
         ),
     )
+
+
+def _split_serial_targets(targets: list[TestTarget]) -> tuple[list[TestTarget], list[TestTarget]]:
+    serial_targets: list[TestTarget] = []
+    parallel_targets: list[TestTarget] = []
+    for target in targets:
+        if target.module in SERIAL_TEST_MODULES:
+            serial_targets.append(target)
+        else:
+            parallel_targets.append(target)
+    return serial_targets, parallel_targets
 
 
 def _resolve_worker_count(requested: int, target_count: int) -> int:
@@ -268,12 +286,24 @@ def main() -> int:
             print(f"No prior timing matches from {history_path.relative_to(ROOT)}")
     started = time.perf_counter()
     results: list[TestResult] = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-        future_to_target = {executor.submit(_run_target, target, timeout_seconds): target for target in targets}
-        for future in concurrent.futures.as_completed(future_to_target):
-            result = future.result()
-            results.append(result)
-            _print_result(result)
+    serial_targets, parallel_targets = _split_serial_targets(targets)
+    if serial_targets:
+        print(f"Serializing {len(serial_targets)} resource-sensitive test files before the parallel pool")
+    for target in serial_targets:
+        result = _run_target(target, timeout_seconds)
+        results.append(result)
+        _print_result(result)
+
+    if parallel_targets:
+        parallel_workers = min(workers, len(parallel_targets))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=parallel_workers) as executor:
+            future_to_target = {
+                executor.submit(_run_target, target, timeout_seconds): target for target in parallel_targets
+            }
+            for future in concurrent.futures.as_completed(future_to_target):
+                result = future.result()
+                results.append(result)
+                _print_result(result)
 
     results.sort(key=lambda item: item.duration_seconds, reverse=True)
     failed = [result for result in results if result.exit_code != 0]
@@ -292,6 +322,7 @@ def main() -> int:
         payload = {
             "target_count": len(results),
             "worker_count": workers,
+            "serial_target_count": len(serial_targets),
             "timeout_seconds": timeout_seconds,
             "timing_history_path": str(history_path.relative_to(ROOT)) if history_path else None,
             "prioritized_target_count": prioritized_target_count,

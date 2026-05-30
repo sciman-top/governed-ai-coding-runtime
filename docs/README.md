@@ -261,6 +261,20 @@ The interactive UI supports all-target or single-target execution, dry-run, brow
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/package-runtime.ps1
 ```
 
+Portable release packaging and first-run initialization:
+
+```powershell
+.\release.ps1 -Version 0.1.0 -Channel portable
+```
+
+`-Version` must be filename-safe and cannot contain path traversal or path separators.
+
+```powershell
+.\install.ps1 -Mode Portable
+```
+
+The portable package intentionally carries source, contracts, rules, scripts, schemas, docs, tests, and hooks. It excludes machine-local `.runtime` state, historical change evidence, credentials, provider settings, and target-repo working trees; recreate those on the new host through attachment and rule-sync flows.
+
 Primary reading entrypoints:
 - [Single-Machine Runtime Quickstart](./quickstart/single-machine-runtime-quickstart.md)
 - [单机 Runtime 快速开始](./quickstart/single-machine-runtime-quickstart.zh-CN.md)
