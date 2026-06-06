@@ -17,6 +17,8 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260606 External Reference Repo Index](./20260606-external-reference-repo-index.md)
+  - evidence companion for landing a project-owned pointer surface to the locally cloned official and community reference repos, plus root/docs entrypoint links
 - [20260530 Self-Evolution Promotion Controller](./20260530-self-evolution-promotion-controller.md)
   - evidence companion for adding a non-mutating promotion controller and Operator UI panel for policy, skill, target-sync, and push/merge lanes
 - [20260504 ApplyAllFeatures No-Auto-Commit Safety](./20260504-applyallfeatures-no-autocommit-safety.md)

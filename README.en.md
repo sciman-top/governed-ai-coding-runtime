@@ -39,6 +39,7 @@ Positioning and non-goals:
 - not a generation-guardrail product
 - strategy doc: [Positioning And Competitive Layering](docs/strategy/positioning-and-competitive-layering.md)
 - borrowing matrix: [Runtime Governance Borrowing Matrix](docs/research/runtime-governance-borrowing-matrix.md)
+- external reference index: [External Reference Repo Index](docs/research/external-reference-repos-index.md)
 - boundary ADR: [ADR-0007 Source-Of-Truth And Runtime Contract Bundle](docs/adrs/0007-source-of-truth-and-runtime-contract-bundle.md)
 
 Available now:

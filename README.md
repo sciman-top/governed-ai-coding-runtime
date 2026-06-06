@@ -44,6 +44,7 @@ AI 推荐的交付前 readiness：
 - 非目标：不做另一个宿主壳层、不做 wrapper-first 编排产品、不做 generation guardrail 产品
 - 策略入口：[Positioning And Competitive Layering](docs/strategy/positioning-and-competitive-layering.md)
 - 借鉴矩阵：[Runtime Governance Borrowing Matrix](docs/research/runtime-governance-borrowing-matrix.md)
+- 外部参考索引：[External Reference Repo Index](docs/research/external-reference-repos-index.md)
 - 边界 ADR：[ADR-0007 Source-Of-Truth And Runtime Contract Bundle](docs/adrs/0007-source-of-truth-and-runtime-contract-bundle.md)
 
 当前可用能力：
