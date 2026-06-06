@@ -2,8 +2,8 @@
   "schema_version": "0.1-draft",
   "policy_id": "default-runtime-evolution-review",
   "status": "enforced",
-  "reviewed_on": "2026-05-01",
-  "review_expires_at": "2026-05-31",
+  "reviewed_on": "2026-06-06",
+  "review_expires_at": "2026-07-06",
   "stale_after_days": 30,
   "decision_claim": "Runtime self-evolution must be evidence-triggered, source-prioritized, default dry-run, and bounded by the existing build -> test -> contract/invariant -> hotspot verification floor.",
   "manual_trigger": {
@@ -85,6 +85,24 @@
       "summary": "OpenAI Codex sandbox and approval-mode semantics for local execution boundaries."
     },
     {
+      "source_id": "openai-codex-app-features",
+      "source_type": "official_doc_or_changelog",
+      "source_ref": "https://developers.openai.com/codex/app/features",
+      "summary": "Official Codex App feature surface covering desktop app projects, worktrees, automations, in-app browser, Computer Use, IDE sync, and artifact workflows."
+    },
+    {
+      "source_id": "openai-codex-app-computer-use",
+      "source_type": "official_doc_or_changelog",
+      "source_ref": "https://developers.openai.com/codex/app/computer-use",
+      "summary": "Official Codex App desktop-computer-use surface for macOS and Windows GUI interaction with approval and sandbox boundaries."
+    },
+    {
+      "source_id": "openai-codex-remote-connections",
+      "source_type": "official_doc_or_changelog",
+      "source_ref": "https://developers.openai.com/codex/remote-connections",
+      "summary": "Official Codex remote-control surface spanning Codex App hosts, ChatGPT mobile control, SSH-host connection, and cross-device continuation."
+    },
+    {
       "source_id": "anthropic-claude-code-settings",
       "source_type": "official_doc_or_changelog",
       "source_ref": "https://docs.anthropic.com/en/docs/claude-code/settings",
@@ -97,22 +115,22 @@
       "summary": "Claude Code hook lifecycle for deterministic shell-command controls around agent tool use."
     },
     {
-      "source_id": "google-gemini-cli-settings",
+      "source_id": "google-antigravity-transition-announcement",
       "source_type": "official_doc_or_changelog",
-      "source_ref": "https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/settings.md",
-      "summary": "Gemini CLI settings precedence, project configuration, and host-level operator controls."
+      "source_ref": "https://developers.googleblog.com/an-important-update-transitioning-gemini-cli-to-antigravity-cli/",
+      "summary": "Google official transition announcement moving the long-term terminal host direction from Gemini CLI to Antigravity CLI / Antigravity 2.0."
     },
     {
-      "source_id": "google-gemini-cli-plan-mode",
+      "source_id": "google-antigravity-cli-repository",
       "source_type": "official_doc_or_changelog",
-      "source_ref": "https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/plan-mode.md",
-      "summary": "Gemini CLI plan-mode semantics for read-only planning before implementation."
+      "source_ref": "https://github.com/google-antigravity/antigravity-cli",
+      "summary": "Official Antigravity CLI repository documenting shared engine, shared settings, and session-export continuity with Antigravity 2.0."
     },
     {
-      "source_id": "google-gemini-cli-mcp-server",
+      "source_id": "google-antigravity-cli-overview",
       "source_type": "official_doc_or_changelog",
-      "source_ref": "https://google-gemini.github.io/gemini-cli/docs/tools/mcp-server.html",
-      "summary": "Gemini CLI MCP server support across stdio, SSE, and streamable HTTP transports."
+      "source_ref": "https://antigravity.google/docs/cli-overview",
+      "summary": "Official Antigravity CLI product/docs entrypoint for current Google host-family CLI semantics."
     },
     {
       "source_id": "mcp-security-best-practices",

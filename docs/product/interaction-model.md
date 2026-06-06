@@ -19,6 +19,18 @@ The product's job is to wrap agent execution in deterministic control-plane rule
 
 Final-state best practice means risk-proportional governance, not maximum friction. Low-risk exploration and local iteration should stay fast. Medium and high-risk actions should receive the approval, verification, evidence, and rollback controls that real engineering work requires.
 
+## Best-End-State Blueprint
+The product-level north star is:
+
+`Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`
+
+In practice that means:
+- a governance hub owns task, policy, approval, evidence, verification, rollback, and handoff semantics
+- reusable repo-local and machine-local contracts remain stable while host products change
+- adapters map host capabilities into one runtime contract instead of forking kernel behavior per product name
+- official docs, first-party repos, runtime evidence, and reviewable proposals drive controlled evolution
+- completion claims stay tied to live posture, verification refs, and evidence refs
+
 ## Current Baseline
 The repository has already landed a local runtime baseline through `GAP-034`:
 
@@ -28,7 +40,7 @@ The repository has already landed a local runtime baseline through `GAP-034`:
 - local packaging and quickstart
 - explicit compatibility, maintenance, and degrade policy
 
-That baseline is a prerequisite, not the final product boundary. The next active product queue is generic, interactive, attach-first session productization.
+That baseline is a prerequisite, not the final product boundary. `Interactive Session Productization / GAP-035..039` is historical productization closure, not the current active queue. The current active queue is `GAP-159..164` per `docs/architecture/planning-status.json`, and the current decision gate remains `wait_for_host_capability_recovery`.
 
 ## Primary Users
 
@@ -124,23 +136,41 @@ The higher-priority interactive surface is the session bridge inside the active 
 - API-first for integration
 - console-backed for human approval and inspection
 - agent-agnostic at the execution boundary
-- Codex CLI/App as the first direct adapter priority
+- Codex family as the first direct adapter priority
 - repo-aware at task startup and verification time
 
 ## Agent Compatibility Position
-The runtime should treat AI coding products as replaceable execution frontends. The kernel should not know whether the active frontend is Codex CLI/App, Claude Code, an IDE plugin, a cloud coding worker, browser automation, or a future agent product.
+The runtime should treat AI coding products as replaceable execution frontends. The kernel should not know whether the active frontend is from the Codex host family, the Claude host family, the Antigravity host family, an IDE plugin, a cloud coding worker, browser automation, or a future agent product.
 
 Adapters should declare capabilities:
+- surface class
 - invocation mode
+- attach mode
 - authentication ownership
 - workspace control
-- tool and event visibility
+- tool visibility
+- event-stream visibility
 - mutation model
+- approval delegateability
+- sandbox delegateability
 - continuation or resume model
-- evidence export model
+- evidence exportability
+- execution locality
 - attach strength or compatibility tier
 
 If an agent product exposes enough structure, the runtime can enforce policy before or during execution. If it exposes limited structure, the runtime should degrade to observe-only, advisory, or manual-handoff mode while still running repository gates and capturing delivery evidence.
+
+Current host-family interpretation:
+- `Codex` remains the first direct adapter priority, but it should now be modeled as a host family spanning CLI, Codex App desktop surfaces, remote/mobile continuation, and computer/browser-assisted surfaces rather than as a CLI-only path.
+- `Claude` must now be modeled as a host family spanning terminal, IDE extension, and desktop/Cowork surfaces rather than a CLI-only path.
+- `Antigravity` is the long-term Google host-family target. Legacy `Gemini CLI` support should be treated as a migration bridge, not as the future primary Google execution surface.
+
+Completion claims and operator reads should expose:
+- host family
+- adapter tier
+- degrade reason
+- verification refs
+- evidence refs
 
 ## Product Boundaries
 

@@ -11,10 +11,11 @@ This directory holds the architectural views that explain product boundaries, ta
 5. [Local Baseline To Hybrid Final-State Migration Matrix](./local-baseline-to-hybrid-final-state-migration-matrix.md)
 6. [MVP Stack Vs Target Stack](./mvp-stack-vs-target-stack.md)
 7. [Compatibility Matrix](./compatibility-matrix.md)
-8. [Governed AI Coding Runtime Target Architecture](./governed-ai-coding-runtime-target-architecture.md)
-9. [Runtime Evolution Policy](./runtime-evolution-policy.json)
-10. [Policy Tool Credential Audit Boundary](./policy-tool-credential-audit-boundary.json)
-11. [Governance Hub Certification](./governance-hub-certification.json)
+8. [Host Family Capability Surface Blueprint](./host-family-capability-surface-blueprint.md)
+9. [Governed AI Coding Runtime Target Architecture](./governed-ai-coding-runtime-target-architecture.md)
+10. [Runtime Evolution Policy](./runtime-evolution-policy.json)
+11. [Policy Tool Credential Audit Boundary](./policy-tool-credential-audit-boundary.json)
+12. [Governance Hub Certification](./governance-hub-certification.json)
 
 ## Document Roles
 - [Minimum Viable Governance Loop](./minimum-viable-governance-loop.md)
@@ -31,6 +32,8 @@ This directory holds the architectural views that explain product boundaries, ta
   - tracer-bullet implementation posture versus long-term platform direction
 - [Compatibility Matrix](./compatibility-matrix.md)
   - support levels for OS, shell, repo host, CI model, and agent product shapes
+- [Host Family Capability Surface Blueprint](./host-family-capability-surface-blueprint.md)
+  - canonical host-family model, capability dimensions, and current-vs-target interpretation for Codex, Claude, Antigravity, and legacy Gemini compatibility
 - [Governed AI Coding Runtime Target Architecture](./governed-ai-coding-runtime-target-architecture.md)
   - full target-state architecture and plane decomposition
 - [Runtime Evolution Policy](./runtime-evolution-policy.json)

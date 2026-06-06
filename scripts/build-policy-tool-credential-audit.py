@@ -303,7 +303,7 @@ def _inspect_local_agent_config(*, home_path: Path) -> dict[str, Any]:
                 antigravity_settings=gemini_antigravity_settings,
                 ignore_path=gemini_dir / ".geminiignore",
             ),
-            reason="Gemini Antigravity settings, when present, should carry the same secure mode, secret redaction, file filtering, and GitHub MCP exclusion posture as the main Gemini CLI settings.",
+            reason="Gemini Antigravity settings, when present, should carry the same secure mode, secret redaction, file filtering, and GitHub MCP exclusion posture as the current Google local settings baseline.",
             evidence_ref="~/.gemini/antigravity/settings.json + ~/.gemini/settings.json",
             remediation="Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/Optimize-GeminiLocal.ps1 -Apply` to mirror the bounded security posture.",
         ),

@@ -30,6 +30,12 @@ AI recommended pre-delivery readiness:
 
 That means the first landed hybrid productization boundary is now present. It does not mean every upstream host already has a full runtime-owned real-write execution path.
 
+Single source of planning truth: `docs/architecture/planning-status.json`.
+- `certified baseline`: `GAP-104..111`
+- `current active queue`: `GAP-159..164`
+- `current decision gate`: `wait_for_host_capability_recovery`
+- `current live posture`: target-run freshness is `fresh`; Codex target runs remain `process_bridge` / degraded; Claude workload probe is `native_attach` / ready
+
 This repository is usable today as a local governed runtime with the first attach-first productization slice landed; `Strategy Alignment Gates / GAP-040..044` are complete on the current branch baseline and remain encoded as satisfied hardening dependencies around that result.
 
 Positioning and non-goals:
@@ -38,8 +44,12 @@ Positioning and non-goals:
 - not a wrapper-first orchestration product
 - not a generation-guardrail product
 - strategy doc: [Positioning And Competitive Layering](docs/strategy/positioning-and-competitive-layering.md)
+- one-page target blueprint: [Current Best-End-State Blueprint](docs/strategy/current-best-end-state-blueprint.md)
+- host-family blueprint: [Host Family Capability Surface Blueprint](docs/architecture/host-family-capability-surface-blueprint.md)
 - borrowing matrix: [Runtime Governance Borrowing Matrix](docs/research/runtime-governance-borrowing-matrix.md)
 - external reference index: [External Reference Repo Index](docs/research/external-reference-repos-index.md)
+- external reference overview: [External Reference Repo One-Page Overview](docs/research/external-reference-repo-one-page-overview.md)
+- external reference tiering: [External Reference Repo Tiering](docs/research/external-reference-repo-tiering.md)
 - boundary ADR: [ADR-0007 Source-Of-Truth And Runtime Contract Bundle](docs/adrs/0007-source-of-truth-and-runtime-contract-bundle.md)
 
 Available now:
@@ -60,13 +70,16 @@ Complete hybrid final-state certification posture:
 - `GAP-104..111` are complete on the current branch baseline; primary evidence is [20260427 GAP-111 Complete Hybrid Final-State Certification](docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md).
 - The root guide keeps only the certification boundary: the repo-local contract bundle, machine-local durable governance kernel, attach-first host adapters, and same-contract verification/delivery plane are proven, but this still does not claim upstream host UI ownership or unconditional takeover of every future external repo or high-risk workflow.
 - Detailed completion history and the `GAP-130..143` snapshot moved to [Completed GAP History](docs/archive/completed-gap-history.md).
+- Historical certification does not override the current live posture. Even when target-run evidence is fresh, if it is still degraded at `process_bridge`, wait for host capability recovery before making stronger live-host claims.
 
 ## Current Controlled-Evolution Posture
 `GAP-120..129` put 30-day evolution review, AI coding experience capture, and low-risk proposal/disabled-skill materialization under governance. They still do not auto-apply policy, auto-enable skills, sync target repos, push, or merge.
 
-`GAP-130..143` now represent the completed governance-hub, reusable-contract, controlled-evolution, repo-map shaping, tool/credential audit, and evidence-recovery baseline; the detailed list lives in [Completed GAP History](docs/archive/completed-gap-history.md). Codex and Claude Code remain cooperation hosts rather than competitors. Completion still requires real target-repo effect feedback, and fresh target-run evidence that remains degraded/process_bridge must first refresh or repair evidence posture.
+`GAP-130..143` now represent the completed governance-hub, reusable-contract, controlled-evolution, repo-map shaping, tool/credential audit, and evidence-recovery baseline; the detailed list lives in [Completed GAP History](docs/archive/completed-gap-history.md). Codex and Claude Code remain cooperation hosts rather than competitors. Completion still requires real target-repo effect feedback, and fresh target-run evidence that remains degraded/process_bridge must wait for host capability recovery before stronger live-host claims resume.
 
-The best engineering final state is now fixed as `Governance Hub + Reusable Contract + Controlled Evolution loop + outer AI intelligent review/generation capability`: a governance center, reusable control contract, controlled evolution loop, and outer-AI review/generation capability, not a new host product.
+The best engineering final state is now fixed as `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`: a governance center, reusable control contract, capability-first multi-host adapters, a controlled evolution loop, and evidence-first delivery discipline, not a new host product.
+
+The most accurate current target definition is a capability-first, host-family-aware governance runtime for AI coding: `Codex family` and `Claude family` are the required cooperation hosts, `Antigravity family` is the long-term Google direction, and `Gemini CLI` remains a migration bridge rather than the preferred Google host surface.
 
 The human-readable core principle is now converged into five statements, while the machine details remain in the enforced principles in `docs/architecture/core-principles-policy.json`:
 

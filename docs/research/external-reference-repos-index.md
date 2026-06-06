@@ -15,28 +15,37 @@
 - Clone results: `D:\CODE\external\ai-coding-runtime-references\clone-results.json`
 
 ## Recommended Reading Order / 推荐查阅顺序
-1. `openai-codex`, `mcp-specification`, `mcp-typescript-sdk`, `mcp-python-sdk`
-   Host semantics, AGENTS/config/sandbox/approval, and MCP protocol/SDK boundaries.
-2. `github-mcp-server`, `mcp-servers`, `google-gemini-cli`, `anthropic-claude-code-action`
-   Official or near-official implementation surfaces for tools, adapters, and multi-host compatibility.
+1. `openai-codex`, `openai-agents-python`, `openai-agents-js`, `mcp-specification`, `mcp-typescript-sdk`, `mcp-python-sdk`, `a2aproject-A2A`
+   Host semantics, AGENTS/config/sandbox/approval, official agent-runtime patterns, MCP boundaries, and A2A protocol boundaries.
+2. `github-mcp-server`, `mcp-servers`, `microsoft-playwright-cli`, `microsoft-playwright-mcp`, `google-antigravity-cli`, `google-gemini-cli`, `anthropic-claude-code`, `anthropic-claude-code-action`, `github-copilot-cli`
+   Official or near-official implementation surfaces for tools, adapters, browser automation, host-family transitions, main host products, and multi-host compatibility.
 3. `aider`, `swe-agent`, `continue`, `openhands`, `opencode`, `goose`
    Community coding-agent execution loops, repo grounding, permission posture, and UX.
-4. `hermes-agent`
-   Skills, memory, gateway, multi-backend runtime, scheduling, and trajectory-compression ideas.
-5. `langgraph`, `semantic-kernel`, `microsoft-ai-agents-for-beginners`
-   Orchestration, durable state, enterprise SDK patterns, and teaching-grade agent practices.
+4. `hermes-agent`, `langgraph`, `semantic-kernel`
+   Skills, memory, gateway, multi-backend runtime, scheduling, durable state, and enterprise orchestration ideas.
+5. `anthropic-claude-code-monitoring-guide`, `microsoft-ai-agents-for-beginners`
+   ROI/telemetry/onboarding material and teaching-grade agent practices.
 
 ## Official And Primary Reference Set / 官方与主要参考集
 | Local Repo | Source | Why It Matters |
 | --- | --- | --- |
 | `openai-codex` | <https://github.com/openai/codex> | Codex CLI host semantics, AGENTS loading, config, sandbox, approval, and tool/plugin behavior. |
+| `openai-agents-python` | <https://github.com/openai/openai-agents-python> | OpenAI official Python agent-runtime framework for handoffs, guardrails, sessions, tracing, and sandbox-agent execution patterns. |
+| `openai-agents-js` | <https://github.com/openai/openai-agents-js> | OpenAI official JS/TS agent-runtime framework for multi-agent workflows, tool orchestration, and realtime/voice-capable agent surfaces. |
 | `mcp-specification` | <https://github.com/modelcontextprotocol/modelcontextprotocol> | MCP protocol vocabulary, transport, authorization, tools/resources/prompts boundaries. |
 | `mcp-typescript-sdk` | <https://github.com/modelcontextprotocol/typescript-sdk> | TypeScript MCP server/client API shapes and schema patterns. |
 | `mcp-python-sdk` | <https://github.com/modelcontextprotocol/python-sdk> | Python MCP server/client patterns and typing/test organization. |
 | `mcp-servers` | <https://github.com/modelcontextprotocol/servers> | Official MCP server examples and packaging patterns. |
 | `github-mcp-server` | <https://github.com/github/github-mcp-server> | Real external-service MCP server boundary in production-oriented form. |
-| `google-gemini-cli` | <https://github.com/google-gemini/gemini-cli> | Gemini CLI host behavior, config layering, and MCP-facing posture. |
+| `a2aproject-A2A` | <https://github.com/a2aproject/A2A> | Linux Foundation-hosted A2A protocol source for agent discovery, long-running collaboration, modality negotiation, and A2A-vs-MCP boundary clarity. |
+| `microsoft-playwright-cli` | <https://github.com/microsoft/playwright-cli> | Official browser CLI+skills path optimized for coding agents that need token-efficient browser automation. |
+| `microsoft-playwright-mcp` | <https://github.com/microsoft/playwright-mcp> | Official browser MCP path optimized for persistent browser context, rich introspection, and MCP-based automation. |
+| `google-antigravity-cli` | <https://github.com/google-antigravity/antigravity-cli> | Google's current host-family primary terminal surface, shared-engine direction with Antigravity 2.0, and migration anchor away from Gemini CLI. |
+| `google-gemini-cli` | <https://github.com/google-gemini/gemini-cli> | Legacy Google CLI host behavior and migration/enterprise compatibility reference; no longer the preferred long-term Google host surface. |
+| `anthropic-claude-code` | <https://github.com/anthropics/claude-code> | Claude Code official main host repository; useful for the terminal/IDE/GitHub product surface and plugin/runtime boundary itself, not only CI/action packaging. |
 | `anthropic-claude-code-action` | <https://github.com/anthropics/claude-code-action> | Claude Code automation boundary in CI/action form. |
+| `anthropic-claude-code-monitoring-guide` | <https://github.com/anthropics/claude-code-monitoring-guide> | Official measurement/ROI guide for telemetry, spend, productivity metrics, and rollout framing; useful as an operational guide, not a host-semantics source. |
+| `github-copilot-cli` | <https://github.com/github/copilot-cli> | GitHub official terminal entry for Copilot coding agent; useful for cross-host comparison of approvals, MCP default posture, and GitHub-native context integration. |
 
 ## Community Mechanism Sources / 社区机制参考源
 | Local Repo | Source | Why It Matters |
@@ -55,6 +64,8 @@
 ## How This Repo Uses Them / 本项目如何使用这些参考源
 - Positioning and boundary shaping: see [Positioning And Competitive Layering](../strategy/positioning-and-competitive-layering.md).
 - Borrow/do-not-borrow decisions: see [Runtime Governance Borrowing Matrix](./runtime-governance-borrowing-matrix.md).
+- One-page entry and reading priority: see [External Reference Repo One-Page Overview](./external-reference-repo-one-page-overview.md).
+- Maintenance tiering and archive candidates: see [External Reference Repo Tiering](./external-reference-repo-tiering.md).
 - External benchmark interpretation: see [Hybrid Final-State External Benchmark Review](./2026-04-27-hybrid-final-state-external-benchmark-review.md).
 
 ## Update Note / 更新说明

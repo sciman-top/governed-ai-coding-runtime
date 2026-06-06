@@ -59,7 +59,7 @@ Acceptance criteria:
 - [x] `--write-artifacts` emits reviewable source and candidate JSON snapshots so online probes are not trapped in console output
 - [x] external content remains candidate evidence only and cannot override repo policy or code facts
 - [x] AI coding experience is represented as local, reviewable evidence rather than hidden memory authority
-- [x] minimum source catalog covers current official host docs for OpenAI, Claude Code, Gemini CLI, and MCP security, plus primary reference signals for sandboxed agents, repository context shaping, and agent-computer-interface workflows
+- [x] minimum source catalog covers current official host docs for OpenAI, Claude host-family controls, Google Antigravity migration/current host direction, and MCP security, plus primary reference signals for sandboxed agents, repository context shaping, and agent-computer-interface workflows
 
 Verification:
 - [x] source artifact example validates against the policy fields

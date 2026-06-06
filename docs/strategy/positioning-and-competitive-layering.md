@@ -6,7 +6,9 @@
 ## Current Phase
 - Local single-machine baseline is complete through `Maintenance Baseline / GAP-034`.
 - `Strategy Alignment Gates / GAP-040` through `GAP-044` are complete on the current branch baseline.
-- The active next-step implementation queue remains `Interactive Session Productization / GAP-035` through `GAP-039`.
+- `Interactive Session Productization / GAP-035` through `GAP-039` is historical productization closure, not the current active queue.
+- The current active queue is `GAP-159..164`, as recorded in `docs/architecture/planning-status.json`.
+- The current live posture is `fresh` but still degraded, and Codex target-run recovery remains `process_bridge` / degraded until fresh `ready` plus `native_attach` evidence proves otherwise.
 
 ## Final-State Shorthand
 The target product shape remains:
@@ -26,6 +28,17 @@ In practice that means:
 - local and CI consume the same contract inputs
 - evidence, handoff, replay, and rollback stay first-class
 
+## Current Target Definition
+The most accurate current target definition is:
+
+`a capability-first, host-family-aware governance runtime for AI coding`
+
+That means:
+- `Codex family` and `Claude family` are the required cooperation hosts
+- `Antigravity family` is the long-term Google direction
+- `Gemini CLI` remains a migration bridge and compatibility reference, not the preferred long-term Google host surface
+- kernel semantics should follow capability boundaries and evidence, not vendor product-name branches
+
 ## Non-Goals
 - another AI coding host, IDE shell, or terminal shell
 - another multi-agent orchestration wrapper as the product center
@@ -36,9 +49,9 @@ In practice that means:
 ## Competitive Layering
 
 ### 1. Execution Hosts
-Examples: Codex, Claude Code, Cursor, Windsurf, OpenHands, SWE-agent, Hermes.
+Examples: Codex, Claude host-family surfaces (`Claude Code`, IDE extensions, Desktop/Cowork), Antigravity host-family surfaces (`Antigravity CLI`, `Antigravity 2.0`), Cursor, Windsurf, OpenHands, SWE-agent, Hermes.
 
-These products execute work, own the main interaction loop, and increasingly absorb UX, tooling, and automation features. This repository should integrate with them, not compete with them on host experience.
+These products execute work, own the main interaction loop, and increasingly absorb UX, tooling, and automation features. This repository should integrate with them, not compete with them on host experience. The practical implication is that this project should reason about host families and capability surfaces, not just one terminal binary per vendor.
 
 ### 2. Wrapper And Orchestration Tools
 Examples: oh-my-codex, oh-my-claudecode, GAAI-style repo packs.

@@ -33,18 +33,28 @@ AI 推荐的交付前 readiness：
 ## 中文快速结论
 本项目已经完成 `Foundation / GAP-020` 到 `GAP-023`、`Full Runtime / GAP-024` 到 `GAP-028`、`Public Usable Release / GAP-029` 到 `GAP-032`、`Maintenance Baseline / GAP-033` 到 `GAP-034`，以及 `Interactive Session Productization / GAP-035` 到 `GAP-039`。这表示“混合最终形态的第一版产品化边界”已经落地，但仍不等于“已经拥有完整 runtime-owned 的所有宿主真实执行能力”。
 
+当前唯一状态真源：`docs/architecture/planning-status.json`。
+- `certified baseline`：`GAP-104..111`
+- `current active queue`：`GAP-159..164`
+- `current decision gate`：`wait_for_host_capability_recovery`
+- `current live posture`：target-run freshness 为 `fresh`，Codex target runs 仍是 `process_bridge` / degraded；Claude workload probe 为 `native_attach` / ready
+
 当前仓库的正确理解是：
 - 已完成一个可运行、可验证、可留痕的本地治理运行时基线
 - 已完成 repo-local light pack、session bridge、Codex smoke-trial、generic adapter tiers、multi-repo trial runner 这些产品化切片
 - `Strategy Alignment Gates / GAP-040..044` 已在当前分支基线上完成，并作为 `GAP-035..039` 的已满足硬化依赖保留下来
-- 终态目标是“通用、可迁移、交互式会话优先、attach-first”的 governed AI coding runtime
+- 终态目标是“通用、可迁移、交互式会话优先、attach-first、capability-first、host-family-aware”的 governed AI coding runtime
 
 定位与非目标：
 - 定位：AI coding agents 的治理/运行时层，而不是新的执行宿主
 - 非目标：不做另一个宿主壳层、不做 wrapper-first 编排产品、不做 generation guardrail 产品
 - 策略入口：[Positioning And Competitive Layering](docs/strategy/positioning-and-competitive-layering.md)
+- 一页终态蓝图：[Current Best-End-State Blueprint](docs/strategy/current-best-end-state-blueprint.md)
+- 宿主能力蓝图：[Host Family Capability Surface Blueprint](docs/architecture/host-family-capability-surface-blueprint.md)
 - 借鉴矩阵：[Runtime Governance Borrowing Matrix](docs/research/runtime-governance-borrowing-matrix.md)
 - 外部参考索引：[External Reference Repo Index](docs/research/external-reference-repos-index.md)
+- 外部参考一页概览：[External Reference Repo One-Page Overview](docs/research/external-reference-repo-one-page-overview.md)
+- 外部参考分级：[External Reference Repo Tiering](docs/research/external-reference-repo-tiering.md)
 - 边界 ADR：[ADR-0007 Source-Of-Truth And Runtime Contract Bundle](docs/adrs/0007-source-of-truth-and-runtime-contract-bundle.md)
 
 当前可用能力：
@@ -65,12 +75,14 @@ AI 推荐的交付前 readiness：
 - `GAP-104..111` 已在当前分支基线上完成；认证主证据见 [20260427 GAP-111 完整混合终态认证](docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md)。
 - 当前入口只保留认证边界：本项目已证明 repo-local contract bundle、machine-local durable governance kernel、attach-first host adapters 和 same-contract verification/delivery plane，但不宣称接管上游宿主 UI，也不宣称对所有未来外部仓和高风险流程无条件接管。
 - 详细完成历史与后续 `GAP-130..143` 快照见 [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md) / [Completed GAP History](docs/archive/completed-gap-history.md)。
+- 历史认证不覆盖当前 live posture；即使最新 target-run evidence 已是 `fresh`，只要仍停留在 `process_bridge` / degraded，下一步也必须等待宿主能力恢复，而不是沿用历史认证措辞替代当前状态。
 
 当前受控演进口径：
 - `GAP-120..129` 已把 30 天自我演进 review、AI 编码经验沉淀和低风险 proposal/disabled skill materialization 纳入受控流程；但仍不自动改 policy、不自动启用 skill、不自动同步目标仓、不自动 push/merge。
 - `GAP-130..143` 已形成 governance hub、reusable contract、controlled evolution、repo-map shaping、tool/credential audit 和 evidence recovery 这一组完成基线；详细条目转入 [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md) / [Completed GAP History](docs/archive/completed-gap-history.md)。
-- Codex 和 Claude Code 是合作宿主而不是竞争对象；完成标准仍必须包含真实 target-repo effect feedback，fresh target-run evidence 若仍是 degraded/process_bridge，下一步必须先刷新或修复 evidence posture。
-- 最佳工程终态已固化为 `Governance Hub + Reusable Contract + Controlled Evolution loop + outer AI intelligent review/generation capability`，即治理中枢、可复用控制契约、受控演进闭环和外层 AI 智能评审/生成能力，而不是新的宿主产品。
+- Codex 和 Claude Code 是合作宿主而不是竞争对象；完成标准仍必须包含真实 target-repo effect feedback，fresh target-run evidence 若仍是 degraded/process_bridge，下一步必须等待宿主能力恢复，而不是重新启动实现或夸大恢复结论。
+- 最佳工程终态已固化为 `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`，即治理中枢、可复用控制契约、能力优先的多宿主适配、受控演进闭环和证据优先交付纪律，而不是新的宿主产品。
+- 当前最合适目标定义：一个 capability-first、host-family-aware 的 AI coding governance runtime。`Codex family` 与 `Claude family` 是第一类合作宿主，`Antigravity family` 是 Google 的长期方向，`Gemini CLI` 仍是迁移桥而不是首选主宿主。
 - 核心原则已收敛为 5 条人类可读口径，机器细则仍以 `docs/architecture/core-principles-policy.json` 的 enforced principles 为准：
   - `Efficiency first, safety bounded`：综合效率优先，安全边界约束；少打扰、自动连续执行、节省 token / 成本、保留必要解释、高效率；模型、provider、推理档位、context window、compact 阈值和交互入口只是阶段性实现；效率优化不得绕过既有安全、证据、回滚、review 和门禁约束。
   - `Automation-first, outer-AI-assisted, gate-controlled evolution`：确定性治理工作应自动化；外层 AI 可自动生成 review、知识、候选和建议，但有效变更必须先成为结构化候选并通过风险分级、机器门禁、证据、回滚和必要 review。
@@ -294,6 +306,12 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -T
 ## English Quick Answer
 `Foundation / GAP-020` through `GAP-023`, `Full Runtime / GAP-024` through `GAP-028`, `Public Usable Release / GAP-029` through `GAP-032`, `Maintenance Baseline / GAP-033` through `GAP-034`, and `Interactive Session Productization / GAP-035` through `GAP-039` are complete. That means the first landed hybrid productization boundary is present. It does not mean every upstream host already has a full runtime-owned real-write execution path.
 
+Single source of planning truth: `docs/architecture/planning-status.json`.
+- `certified baseline`: `GAP-104..111`
+- `current active queue`: `GAP-159..164`
+- `current decision gate`: `wait_for_host_capability_recovery`
+- `current live posture`: target-run freshness is `fresh`; Codex target runs remain `process_bridge` / degraded; Claude workload probe is `native_attach` / ready
+
 `Strategy Alignment Gates / GAP-040..044` are complete on the current branch baseline and remain encoded as satisfied dependencies around that landed slice.
 
 Positioning and non-goals:
@@ -301,7 +319,11 @@ Positioning and non-goals:
 - not a wrapper-first orchestration product
 - not a generation-guardrail product
 - strategy doc: [Positioning And Competitive Layering](docs/strategy/positioning-and-competitive-layering.md)
+- one-page target blueprint: [Current Best-End-State Blueprint](docs/strategy/current-best-end-state-blueprint.md)
+- host-family blueprint: [Host Family Capability Surface Blueprint](docs/architecture/host-family-capability-surface-blueprint.md)
 - borrowing matrix: [Runtime Governance Borrowing Matrix](docs/research/runtime-governance-borrowing-matrix.md)
+- external reference overview: [External Reference Repo One-Page Overview](docs/research/external-reference-repo-one-page-overview.md)
+- external reference tiering: [External Reference Repo Tiering](docs/research/external-reference-repo-tiering.md)
 - boundary ADR: [ADR-0007 Source-Of-Truth And Runtime Contract Bundle](docs/adrs/0007-source-of-truth-and-runtime-contract-bundle.md)
 
 Available now:
@@ -319,12 +341,15 @@ Current complete hybrid final-state certification posture:
 - `GAP-104..111` are complete on the current branch baseline; primary evidence is [20260427 GAP-111 Complete Hybrid Final-State Certification](docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md).
 - The root entrypoint keeps only the certification boundary: the repo-local contract bundle, machine-local durable governance kernel, attach-first host adapters, and same-contract verification/delivery plane are proven, but this still does not claim upstream host UI ownership or unconditional takeover of every future external repo or high-risk workflow.
 - Detailed completion history and the `GAP-130..143` snapshot moved to [Completed GAP History](docs/archive/completed-gap-history.md) / [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md).
+- Historical certification does not override the current live posture. Even when target-run evidence is fresh, if it is still degraded at `process_bridge`, wait for host capability recovery before making stronger live-host claims.
 
 Current controlled-evolution posture:
 - `GAP-120..129` put 30-day evolution review, AI coding experience capture, and low-risk proposal or disabled-skill materialization under governance, but they still do not auto-apply policy, auto-enable skills, sync target repos, push, or merge.
 - `GAP-130..143` now represent the completed governance-hub, reusable-contract, controlled-evolution, repo-map shaping, tool or credential audit, and evidence-recovery baseline; the detailed list lives in [Completed GAP History](docs/archive/completed-gap-history.md) / [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md).
 - Codex and Claude Code are cooperation hosts, not competitors.
-- Codex and Claude Code remain cooperation hosts rather than competitors; completion still requires real target-repo effect feedback, and fresh target-run evidence that remains degraded or `process_bridge` must be refreshed or repaired before the next claim.
+- Codex and Claude Code remain cooperation hosts rather than competitors; completion still requires real target-repo effect feedback, and fresh target-run evidence that remains degraded or `process_bridge` must wait for host capability recovery before the next stronger claim.
+- The best engineering final state is now fixed as `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`: a governance center, reusable control contract, capability-first multi-host adapters, a controlled evolution loop, and evidence-first delivery discipline, not a new host product.
+- The most accurate current target definition is a capability-first, host-family-aware governance runtime for AI coding: `Codex family` and `Claude family` are the required cooperation hosts, `Antigravity family` is the long-term Google direction, and `Gemini CLI` remains a migration bridge rather than the preferred Google host surface.
 
 Primary docs:
 - [Single-Machine Runtime Quickstart](docs/quickstart/single-machine-runtime-quickstart.md)
@@ -332,8 +357,10 @@ Primary docs:
 - [AI Coding Usage Guide](docs/quickstart/ai-coding-usage-guide.md)
 - [AI 编码使用指南](docs/quickstart/ai-coding-usage-guide.zh-CN.md)
 - [Codex CLI/App Integration Guide](docs/product/codex-cli-app-integration-guide.md)
+- [Current Best-End-State Blueprint](docs/strategy/current-best-end-state-blueprint.md)
 - [Positioning And Competitive Layering](docs/strategy/positioning-and-competitive-layering.md)
 - [Generic Target-Repo Attachment Blueprint](docs/architecture/generic-target-repo-attachment-blueprint.md)
+- [Host Family Capability Surface Blueprint](docs/architecture/host-family-capability-surface-blueprint.md)
 - [Repo-Native Contract Bundle](docs/architecture/repo-native-contract-bundle.md)
 - [Hybrid Final-State Master Outline](docs/architecture/hybrid-final-state-master-outline.md)
 - [Direct-To-Hybrid Final-State Roadmap](docs/roadmap/direct-to-hybrid-final-state-roadmap.md)

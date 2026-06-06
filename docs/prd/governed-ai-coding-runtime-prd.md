@@ -4,10 +4,13 @@
 
 - Product:
   - `docs/product/interaction-model.md`
+  - `docs/product/acceptance-metrics-contract.md`
 - Architecture:
   - `docs/architecture/governed-ai-coding-runtime-target-architecture.md`
   - `docs/architecture/minimum-viable-governance-loop.md`
   - `docs/architecture/governance-boundary-matrix.md`
+  - `docs/architecture/host-family-capability-surface-blueprint.md`
+  - `docs/architecture/planning-status.json`
 - Roadmap:
   - `docs/roadmap/governed-ai-coding-runtime-90-day-plan.md`
   - `docs/backlog/mvp-backlog-seeds.md`
@@ -38,6 +41,8 @@
 - Research:
   - `docs/research/benchmark-and-borrowing-notes.md`
   - `docs/research/repo-governance-hub-borrowing-review.md`
+  - `docs/research/external-reference-repo-one-page-overview.md`
+  - `docs/research/external-reference-repo-tiering.md`
 
 ## Problem Statement
 
@@ -71,7 +76,7 @@ From the user's perspective, the platform works like this:
 - The platform converts that request into a governed task with scope, acceptance criteria, risk level, and execution budget.
 - The platform loads or generates a lightweight repo-local attachment pack for that repository.
 - The platform binds the repository to machine-local runtime state for tasks, approvals, evidence, replay, and verification.
-- The developer continues working in a supported AI coding tool such as Codex CLI/App, and the runtime attaches to that live session when possible.
+- The developer continues working in a supported AI coding host family such as Codex, Claude, or a future capability-compatible host, and the runtime attaches to that live session when possible.
 - If attach is unavailable, the runtime can launch or bridge the upstream tool as a fallback.
 - The AI can inspect code, draft a plan, edit files, and run safe commands inside a governed execution environment.
 - Before any high-risk action, the platform pauses execution and requires explicit approval.
@@ -102,6 +107,7 @@ Its core user value is:
 - Preserve upstream agent effectiveness by applying governance only where risk and delivery confidence justify it.
 - Make the preferred user flow interactive and attach-first inside real AI coding sessions.
 - Make repository onboarding lightweight, portable, and reusable across many target repos.
+- Model supported hosts as host families with explicit capability declarations rather than product-name-specific kernel logic.
 
 ### Secondary Goals
 - Allow the same governed runtime model to work across multiple repositories through repository profiles.
@@ -130,6 +136,35 @@ The repository has already landed the local baseline through `GAP-034`:
 
 This baseline is intentionally retained as product history and implementation substrate. It is not the final product boundary by itself.
 
+## Current Authoritative Posture (2026-06)
+
+- The single source of current planning and live-posture truth is `docs/architecture/planning-status.json`.
+- `GAP-104..111` remain the certified historical baseline for complete hybrid final-state closure.
+- The current active queue remains `GAP-159..164`, and the current decision gate remains `wait_for_host_capability_recovery`.
+- The current live posture is intentionally host-specific: Codex target runs remain `process_bridge / degraded`, while the latest Claude workload probe is `native_attach / ready`.
+- Historical certification must not be used to overstate current live-host recovery.
+
+## Best-End-State Blueprint (2026-06 Refresh)
+
+The best engineering end state is:
+
+`Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`
+
+This means:
+
+- runtime-owned governance semantics for task, policy, approval, evidence, verification, rollback, and handoff
+- reusable repo-local plus machine-local contract boundaries instead of per-host kernel forks
+- capability-first adapters that map real host surfaces into one stable runtime contract
+- controlled evolution driven by official docs, first-party repos, target-run evidence, and reviewable change proposals
+- delivery claims that stay tied to host family, adapter tier, degrade reason, verification refs, and evidence refs
+
+The authoritative host-family interpretation for this PRD is:
+
+- `Codex family` is the first direct adapter priority and spans CLI, App, IDE, cloud/web, app-server, automation, worktree, and related control surfaces.
+- `Claude family` is a co-equal required host family spanning terminal, IDE, desktop/Cowork, and collaboration surfaces.
+- `Antigravity family` is the long-term Google host-family direction.
+- `Gemini CLI` remains a migration and enterprise compatibility bridge. It should not be treated as the preferred long-term Google host surface, but it also should not be described as removed unless stronger official evidence justifies that claim.
+
 ## Final Product Capability Boundary
 
 The final product must support the following end-to-end coding loop:
@@ -152,13 +187,16 @@ The final product must support the following end-to-end coding loop:
 - The platform must classify actions into at least three governance buckets: safe, approval-required, and blocked, normalized at runtime through `PolicyDecision` `allow`, `escalate`, and `deny`.
 - The platform must support risk-proportional governance modes, starting with observe-only/advisory behavior where enforcement would create unnecessary friction.
 - The platform must define an agent adapter contract that can describe native attach, process bridge, CLI, MCP, app-server, IDE, browser-automation, cloud-agent, and manual-handoff execution shapes.
+- The platform must require adapters to declare capability fields including `surface_class`, `attach_mode`, `tool_visibility`, `event_stream_visibility`, `approval_delegateability`, `sandbox_delegateability`, `continuation_model`, `evidence_exportability`, and `execution_locality`.
 - The first direct adapter priority should be compatible with the user's current Codex CLI/App workflow without taking ownership of upstream Codex authentication.
+- The runtime must treat Codex family and Claude family as first-class required host families, support Antigravity family as the long-term Google direction, and keep Gemini CLI only as a legacy bridge where compatibility debt still exists.
 - The preferred product flow must be interactive and attach-first inside a live AI coding session.
 - The platform must support explicit pause and resume across long-running tasks.
 - The platform must persist validation outcomes as task-level evidence.
 - The platform must support isolated execution workspaces or worktrees.
 - The platform must emit a structured handoff package at task completion.
 - The platform must capture onboarding friction, unsupported capability posture, and multi-repo trial outcomes as structured evidence.
+- Completion claims and operator read surfaces must report host family, adapter tier, degrade reason, verification refs, and evidence refs instead of generic supported/unsupported labels.
 
 ### Explicitly Deferred From MVP And Baseline Stages
 - Full A2A federation
@@ -208,12 +246,14 @@ Reference:
 
 The product should explicitly borrow mechanisms, not whole product identities.
 
+- Borrow from official host and protocol docs first: host-family surfaces, permissions, approvals, plugins/MCP, cloud/local boundaries, and recovery semantics should come from official docs and first-party repos before community interpretation.
 - Borrow from `LangGraph`: durable execution, interrupt-based human review, resumable state.
 - Borrow from `OpenHands`: runtime isolation and sandbox-centered coding execution.
 - Borrow from `SWE-agent`: issue-to-task execution loop and repository-grounded repair flow.
 - Borrow from `Aider repo map`: compact repository context shaping rather than naive full-repo stuffing.
 - Borrow from `Cline`: fine-grained tool approval ergonomics and explicit permission surfaces.
 - Borrow from `OpenAI Cookbook` and official docs: structured outputs, tool use patterns, evals, safety, conversation state concepts.
+- Borrow from official MCP/connectors guidance: approval-required defaults, trusted-server discipline, allowed-tool narrowing, and deferred tool loading for large external tool surfaces.
 - Borrow selectively from `Mem0` and `Letta`: memory layering concepts, but not a memory-first product architecture in MVP.
 
 The product should not:

@@ -147,25 +147,25 @@
     },
     {
       "claim_id": "CLM-010",
-      "claim_text": "Claude Code is an owner-directed first-class supported host alongside Codex in governance outcome, and current live evidence certifies both at native_attach tier while host APIs remain distinct and evidence-bound.",
+      "claim_text": "Claude Code is an owner-directed first-class supported host alongside Codex in governance outcome, while adapter-tier recovery remains host-specific and evidence-bound.",
       "proof_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs",
       "evidence_link": "docs/change-evidence/20260528-claim-catalog-freshness-refresh.md",
       "source_refs": [
         {
           "path": "docs/plans/claude-code-first-class-entrypoint-plan.md",
-          "contains": "equal `native_attach` adapter tier when live host evidence proves session/resume identity, structured output, hook events, and managed settings/hooks"
+          "contains": "equal governance requirements for rules, gates, evidence, rollback, risk classification, and claim drift"
         },
         {
           "path": "docs/backlog/issue-ready-backlog.md",
-          "contains": "current `native_attach` tier are equal while host APIs remain distinct and evidence-bound"
+          "contains": "host-specific limitations remain visible through adapter tier, `degrade_reason`, and `platform_na` where needed"
         }
       ]
     },
     {
       "claim_id": "CLM-011",
       "claim_text": "Fresh target-run evidence is not sufficient when the latest host capability posture is degraded; degraded fresh evidence must surface as attention and block implementation work, using wait_for_host_capability_recovery when bounded host-capability defer evidence is present.",
-      "proof_command": "python scripts/select-next-work.py --as-of 2026-05-01",
-      "evidence_link": "docs/change-evidence/20260501-gap-142-degraded-fresh-evidence-next-work-guard.md",
+      "proof_command": "python scripts/select-next-work.py --as-of 2026-06-06",
+      "evidence_link": "docs/change-evidence/20260606-live-posture-refresh.md",
       "source_refs": [
         {
           "path": "scripts/host-feedback-summary.py",
@@ -184,8 +184,8 @@
     {
       "claim_id": "CLM-012",
       "claim_text": "Evidence recovery posture is machine-checked across autonomous next-work selection, host-feedback target-run posture, and target-repo reuse effect feedback before new implementation or LTP work can proceed.",
-      "proof_command": "python scripts/verify-evidence-recovery-posture.py --as-of 2026-05-01",
-      "evidence_link": "docs/change-evidence/20260501-gap-143-evidence-recovery-posture-contract.md",
+      "proof_command": "python scripts/verify-evidence-recovery-posture.py --as-of 2026-06-06",
+      "evidence_link": "docs/change-evidence/20260606-live-posture-refresh.md",
       "source_refs": [
         {
           "path": "scripts/verify-evidence-recovery-posture.py",

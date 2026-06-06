@@ -32,7 +32,7 @@ class RuntimeEvolutionTests(unittest.TestCase):
         payload = module.assert_runtime_evolution_policy(
             repo_root=ROOT,
             policy_path=ROOT / "docs" / "architecture" / "runtime-evolution-policy.json",
-            as_of=dt.date(2026, 5, 1),
+            as_of=dt.date(2026, 6, 6),
         )
 
         self.assertEqual(payload["status"], "pass")
@@ -60,7 +60,9 @@ class RuntimeEvolutionTests(unittest.TestCase):
             "openai.com",
             "developers.openai.com",
             "docs.anthropic.com",
-            "github.com/google-gemini",
+            "developers.googleblog.com",
+            "github.com/google-antigravity",
+            "antigravity.google",
             "modelcontextprotocol.io",
             "docs.openhands.dev",
             "aider.chat",
@@ -84,7 +86,7 @@ class RuntimeEvolutionTests(unittest.TestCase):
         result = module.inspect_runtime_evolution_policy(
             repo_root=ROOT,
             policy_path=ROOT / "docs" / "architecture" / "runtime-evolution-policy.json",
-            as_of=dt.date(2026, 5, 1),
+            as_of=dt.date(2026, 6, 6),
             online_source_check=True,
         )
 
@@ -105,7 +107,7 @@ class RuntimeEvolutionTests(unittest.TestCase):
         result = module.inspect_runtime_evolution_policy(
             repo_root=ROOT,
             policy_path=ROOT / "docs" / "architecture" / "runtime-evolution-policy.json",
-            as_of=dt.date(2026, 6, 2),
+            as_of=dt.date(2026, 7, 7),
         )
 
         self.assertTrue(result["stale"])
@@ -128,7 +130,7 @@ class RuntimeEvolutionTests(unittest.TestCase):
                 module.assert_runtime_evolution_policy(
                     repo_root=repo_root,
                     policy_path=policy_path,
-                    as_of=dt.date(2026, 5, 1),
+                    as_of=dt.date(2026, 6, 6),
                 )
 
     def test_runtime_evolution_rejects_missing_required_source_catalog_id(self) -> None:
@@ -149,7 +151,7 @@ class RuntimeEvolutionTests(unittest.TestCase):
                 module.assert_runtime_evolution_policy(
                     repo_root=repo_root,
                     policy_path=policy_path,
-                    as_of=dt.date(2026, 5, 1),
+                    as_of=dt.date(2026, 6, 6),
                 )
 
     def test_evolve_runtime_wrapper_writes_artifacts(self) -> None:
@@ -165,7 +167,7 @@ class RuntimeEvolutionTests(unittest.TestCase):
                     "-File",
                     "scripts/evolve-runtime.ps1",
                     "-AsOf",
-                    "2026-05-01",
+                    "2026-06-06",
                     "-ArtifactRoot",
                     str(artifact_root),
                     "-EvidenceRoot",
@@ -203,7 +205,7 @@ class RuntimeEvolutionTests(unittest.TestCase):
             payload = module.assert_runtime_evolution_policy(
                 repo_root=ROOT,
                 policy_path=ROOT / "docs" / "architecture" / "runtime-evolution-policy.json",
-                as_of=dt.date(2026, 5, 1),
+                as_of=dt.date(2026, 6, 6),
                 write_artifacts=True,
                 artifact_root=artifact_root,
                 evidence_root=evidence_root,
@@ -243,7 +245,7 @@ class RuntimeEvolutionTests(unittest.TestCase):
         payload = module.assert_runtime_evolution_policy(
             repo_root=ROOT,
             policy_path=ROOT / "docs" / "architecture" / "runtime-evolution-policy.json",
-            as_of=dt.date(2026, 5, 1),
+            as_of=dt.date(2026, 6, 6),
             online_source_check=True,
         )
         self.assertTrue(payload["online_source_check"])

@@ -34,7 +34,7 @@ class AutonomousNextWorkSelectionTests(unittest.TestCase):
             repo_root=ROOT,
             policy_path=ROOT / "docs" / "architecture" / "autonomous-next-work-selection-policy.json",
             ltp_policy_path=ROOT / "docs" / "architecture" / "ltp-autonomous-promotion-policy.json",
-            as_of=dt.date(2026, 5, 28),
+            as_of=dt.date(2026, 6, 6),
         )
 
         self.assertEqual(payload["status"], "pass")

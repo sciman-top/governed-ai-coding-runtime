@@ -37,7 +37,7 @@ class EvidenceRecoveryPostureTests(unittest.TestCase):
             module = _load_script()
             cls._live_payload = module.assert_evidence_recovery_posture(
                 repo_root=ROOT,
-                as_of=dt.date(2026, 5, 28),
+                as_of=dt.date(2026, 6, 6),
             )
         return dict(cls._live_payload)
 

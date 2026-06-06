@@ -56,7 +56,7 @@
 - 权限：默认最小权限，高风险写操作必须审批。
 - 约束：成本预算、时延预算、上下文窗口、人工审批频率都有限。
 - 目标：优先得到可治理、可验证、可审计、可回滚的系统，不追求无限自治。
-- 兼容：上游 AI coding 产品会持续变化，内核必须通过能力契约适配产品形态，而不是依赖某一个 agent 的 UI 或会话模型。
+- 兼容：上游 AI coding 产品会持续变化，内核必须通过能力契约适配宿主族与产品形态，而不是依赖某一个 agent 的 UI、CLI 名称或会话模型。
 - 交付：默认优先挂接到现有 AI 编码会话，不优先发明一个替代上游工具的新聊天壳。
 
 ## Core Position
@@ -68,6 +68,7 @@
 - `single-agent + tools` 作为 baseline 必须先存在，但不能承担最终治理职责。
 - 真正的“终态最佳实践”不是让 Agent 更自由，也不是让治理更重，而是让治理、审批、回滚、验证更确定，并且只在风险需要时增加摩擦。
 - Agent 产品是可替换的 execution frontend；task、policy、approval、evidence、verification、rollback 是稳定的治理内核。
+- 宿主适配应按 `host family + capability surface` 建模：`Codex family`、`Claude family`、`Antigravity family`，而不是把每个 CLI 名称直接写进 kernel 语义。
 - 默认产品模式应是 `repo-local light pack + machine-wide runtime sidecar + attach-first session bridge`。
 
 ## Stack Staging Rule (2026-04-27)
@@ -92,7 +93,7 @@ The staged recommendation is mechanically guarded by:
 - local filesystem with object-store abstraction for evidence and artifacts
 - `OpenTelemetry` hooks and structured runtime evidence
 - sandbox/process-guard abstraction for shell, git, package-manager, browser, and MCP tool containment
-- Codex CLI/App first adapter plus generic capability-based adapter contract
+- `Codex` host-family first adapter, `Claude` host-family first-class adapter parity, and generic capability-based adapter contract that can absorb `Antigravity` without kernel rewrites
 
 ### Trigger-based final-state candidates
 - `Temporal`: start when local state-machine code cannot safely handle pause/resume/timeout/retry/compensation complexity.
@@ -245,7 +246,7 @@ target repo
 - 必须 deterministic，不能交给 LLM 自由决定。
 
 ### Agent Adapter Contract
-- 用途：把 Codex CLI/App、Claude Code、IDE 插件、云端 coding agent、浏览器自动化 agent、未来未知产品形态映射到统一运行时能力。
+- 用途：把 `Codex family`、`Claude family`、`Antigravity family`、IDE 插件、云端 coding agent、浏览器自动化 agent、未来未知产品形态映射到统一运行时能力。
 - 必须描述：调用方式、认证归属、workspace 控制、事件可见性、变更模型、续跑模型、证据导出模型。
 - 不负责：改变 task lifecycle、审批语义、证据 schema、验证顺序或 rollback 规则。
 
@@ -269,7 +270,7 @@ target repo
 - Policy: deterministic local policy decisions and structured inputs.
 - Observability: structured evidence plus `OpenTelemetry` hooks.
 - Execution: sandbox/process guard around executable tool families.
-- Adapter: Codex CLI/App first, generic capability contract for non-Codex hosts.
+- Adapter: `Codex` first, `Claude` co-equal day-to-day host family, and `Antigravity` as the long-term Google host-family target; legacy `Gemini CLI` remains migration-only where still needed.
 
 ### Final-State Candidates
 - Workflow: `Temporal`-class durable execution.

@@ -1712,6 +1712,62 @@ The entries below record the executed queue for complete hybrid final-state and 
   - [x] unsupported native history claims are explicit and do not appear as failures or hidden assumptions
   - [x] build, Runtime, Contract, and doctor gates pass or carry structured N/A evidence
 
+### GAP-165 Host-Family Operationalization Scope Fence
+- Type: HITL
+- Blocked by: GAP-164
+- User stories: 13, 18, 21, 23, 29, 31, 37, 44
+- Status: conditional owner-directed follow-up; do not promote while `planning-status.json` still reports `wait_for_host_capability_recovery`
+- What to build:
+  - define the bounded post-`GAP-164` queue for host-family and capability-first operationalization
+  - keep current active queue and current live posture authoritative through `planning-status.json`
+  - require explicit promotion evidence and rollback before any future queue activation
+- Acceptance criteria:
+  - [ ] the queue is described as conditional follow-up rather than current active work
+  - [ ] activation requires explicit promotion evidence and rollback
+  - [ ] historical certification alone cannot activate the queue
+
+### GAP-166 Capability Declaration And Claim Surface Contract
+- Type: AFK
+- Blocked by: GAP-165
+- User stories: 11, 13, 18, 21, 23, 29, 31, 44
+- Status: planned; starts only after `GAP-165` promotion
+- What to build:
+  - define canonical host-capability fields for operator, claim, adapter, and verification surfaces
+  - distinguish host family from adapter tier and degrade posture
+  - document fail-closed expectations for missing required host-capability fields
+- Acceptance criteria:
+  - [ ] canonical fields include `host_family`, `surface_class`, `attach_mode`, `adapter_tier`, `degrade_reason`, `verification_refs`, and `evidence_refs`
+  - [ ] host family and adapter tier are not conflated in product or claim surfaces
+  - [ ] missing required host-capability fields fail closed in the documented contract
+
+### GAP-167 Post-Recovery Activation Trigger And Claim Upgrade Gate
+- Type: AFK
+- Blocked by: GAP-166
+- User stories: 11, 13, 18, 21, 23, 29, 31, 37, 44
+- Status: planned; starts only after `GAP-166` promotion
+- What to build:
+  - define the minimum fresh evidence required to upgrade degraded host claims after recovery
+  - define the decision rule that separates wording refreshes from new queue-worthy changes
+  - require explicit promotion evidence before stronger live-host claims are allowed
+- Acceptance criteria:
+  - [ ] historical certification cannot satisfy the recovery trigger by itself
+  - [ ] the minimum evidence needed for Codex claim upgrade is explicitly named
+  - [ ] wording-only refreshes are distinguishable from backlog-triggering changes
+
+### GAP-168 Conditional Queue Closeout And Promotion Handoff
+- Type: HITL
+- Blocked by: GAP-167
+- User stories: 13, 18, 21, 23, 29, 31, 37, 44, 45
+- Status: planned; starts only after `GAP-167` promotion
+- What to build:
+  - keep plan, backlog, issue seeds, and renderability aligned for the conditional queue
+  - prove the queue can be promoted later without changing current live posture today
+  - close with evidence and rollback while leaving `planning-status.json` unchanged unless separately promoted
+- Acceptance criteria:
+  - [ ] plan, backlog, issue seeds, and script rendering agree on `GAP-165..168`
+  - [ ] the queue does not become active without a separate planning-status promotion step
+  - [ ] closeout references evidence, verification, and rollback
+
 ## Vision
 
 ### GAP-018 Final Product Lifecycle Alignment

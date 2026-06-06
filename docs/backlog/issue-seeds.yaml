@@ -1,4 +1,4 @@
-issue_seed_version: "5.4"
+issue_seed_version: "5.5"
 issues:
   - id: GAP-018
     title: Final Product Lifecycle Alignment
@@ -710,3 +710,23 @@ issues:
     type: HITL
     blocked_by: [GAP-163]
     user_stories: [13, 18, 20, 21, 23, 31, 37, 44, 45]
+  - id: GAP-165
+    title: Host-Family Operationalization Scope Fence
+    type: HITL
+    blocked_by: [GAP-164]
+    user_stories: [13, 18, 21, 23, 29, 31, 37, 44]
+  - id: GAP-166
+    title: Capability Declaration And Claim Surface Contract
+    type: AFK
+    blocked_by: [GAP-165]
+    user_stories: [11, 13, 18, 21, 23, 29, 31, 44]
+  - id: GAP-167
+    title: Post-Recovery Activation Trigger And Claim Upgrade Gate
+    type: AFK
+    blocked_by: [GAP-166]
+    user_stories: [11, 13, 18, 21, 23, 29, 31, 37, 44]
+  - id: GAP-168
+    title: Conditional Queue Closeout And Promotion Handoff
+    type: HITL
+    blocked_by: [GAP-167]
+    user_stories: [13, 18, 21, 23, 29, 31, 37, 44, 45]

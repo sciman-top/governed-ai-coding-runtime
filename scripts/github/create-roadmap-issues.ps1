@@ -227,6 +227,16 @@ function Test-BacklogTaskComplete {
   return $BacklogTask.status -match '^complete\b'
 }
 
+function Test-BacklogTaskConditionallyInactive {
+  param([object]$BacklogTask)
+
+  if ($null -eq $BacklogTask) {
+    return $false
+  }
+
+  return $BacklogTask.status -match '^(conditional\b|planned; starts only after\b)'
+}
+
 function Get-LifecyclePlanData {
   $path = Join-Path (Get-Location) "docs/roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md"
   if (-not (Test-Path $path)) {
@@ -830,6 +840,7 @@ function Get-TaskLabels {
     '^GAP-14[4-9]$|^GAP-15[0-1]$' { return @("task", "phase:managed-asset-removal", "platform", "docs", "product", "contracts", "security") }
     '^GAP-15[2-8]$' { return @("task", "phase:repo-slimming-speed", "platform", "docs", "product", "devops") }
     '^GAP-15[9]$|^GAP-16[0-4]$' { return @("task", "phase:agent-continuity", "platform", "docs", "product", "contracts", "security") }
+    '^GAP-16[5-8]$' { return @("task", "phase:host-family-operationalization", "platform", "docs", "product", "contracts") }
     default { throw "No task label mapping defined for $IssueId" }
   }
 }
@@ -843,6 +854,10 @@ function Get-TaskDefinitions {
   return @(
     foreach ($issue in $IssueSeeds) {
       if (Test-BacklogTaskComplete -BacklogTask $BacklogTaskMap[$issue.id]) {
+        continue
+      }
+
+      if (Test-BacklogTaskConditionallyInactive -BacklogTask $BacklogTaskMap[$issue.id]) {
         continue
       }
 
@@ -938,7 +953,13 @@ $epicDefinitionMap = Get-EpicDefinitionMap -EpicDefinitions $epicDefinitions
 
 if ($ValidateOnly) {
   $completedTaskCount = @($seedData.issues | Where-Object { Test-BacklogTaskComplete -BacklogTask $backlogTaskMap[$_.id] }).Count
-  $activeTaskCount = $seedData.issues.Count - $completedTaskCount
+  $activeTaskCount = @(
+    $seedData.issues |
+      Where-Object {
+        (-not (Test-BacklogTaskComplete -BacklogTask $backlogTaskMap[$_.id])) -and
+        (-not (Test-BacklogTaskConditionallyInactive -BacklogTask $backlogTaskMap[$_.id]))
+      }
+  ).Count
   if ($RenderAll) {
     $renderedTasks = 0
     foreach ($issue in $seedData.issues) {
@@ -1057,6 +1078,7 @@ $labels = @(
   @{ Name = "phase:governance-hub-reuse"; Color = "BFD4F2"; Description = "Governance hub reuse and controlled evolution queue" }
   @{ Name = "phase:managed-asset-removal"; Color = "B60205"; Description = "Target repo managed asset retirement and uninstall queue" }
   @{ Name = "phase:repo-slimming-speed"; Color = "C2E0C6"; Description = "Repo slimming and coding speed optimization queue" }
+  @{ Name = "phase:host-family-operationalization"; Color = "F9D0C4"; Description = "Conditional host-family capability operationalization queue" }
   @{ Name = "backend"; Color = "0052CC"; Description = "Backend work" }
   @{ Name = "platform"; Color = "6F42C1"; Description = "Platform work" }
   @{ Name = "security"; Color = "B60205"; Description = "Security and policy" }

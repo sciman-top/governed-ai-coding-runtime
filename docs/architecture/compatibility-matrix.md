@@ -17,7 +17,7 @@ Define what `governed-ai-coding-runtime` should treat as required support, suppo
 | Developer host OS | - | Windows, macOS, Linux | - | - |
 | Isolated execution target | Linux container or Linux-like sandbox | repo-local isolated workspace | Windows-native execution sandboxes | broad native multi-OS sandbox parity |
 | Version control | Git | GitHub-hosted repos | GitLab, Bitbucket via later adapters | non-Git SCM |
-| Agent frontend | Codex CLI/App compatible adapter plus governed API/runtime integration | CLI-driven integrations, MCP adapters, app-server style adapters | IDE adapters, browser/UI automation, cloud-agent adapters | one-off chat wrappers as the main model |
+| Agent frontend | `Codex` host family and `Claude` host family adapters plus governed API/runtime integration | `Antigravity` host family adapters, MCP adapters, and app-server style adapters | IDE-only adapters, browser/UI automation, cloud-agent adapters, and legacy `Gemini CLI` bridges | one-off chat wrappers as the main model |
 | Shell model | POSIX shell in sandbox | PowerShell for local operator/admin flows | repo-specific shell variants through profiles | ad hoc shell guessing |
 | Artifact storage | local dev storage, S3-compatible runtime storage | any S3-compatible provider | custom object backends | vendor-specific lock-in as a hard requirement |
 | Verification execution | repo profile command runner | GitHub Actions-aligned workflows | other CI via adapter layer | CI-specific product logic hardcoded into kernel |
@@ -49,7 +49,7 @@ The kernel should not hardcode one agent product's session model, auth model, ev
 - continuation model
 - evidence export model
 
-Codex CLI/App is the first compatibility target because it matches the primary user workflow, not because the kernel is Codex-specific.
+Codex is the first compatibility target because it matches the primary user workflow, not because the kernel is Codex-specific. Claude is now a co-equal day-to-day host family. Google's long-term host direction is Antigravity rather than Gemini CLI, so the kernel should model Google support as an Antigravity-family adapter with a temporary Gemini CLI migration bridge.
 
 ### 5. Linux-first production is acceptable
 For this product category, Linux-first runtime support is pragmatic. Cross-platform developer support matters more than promising all OSes as first-class production targets.
@@ -58,7 +58,10 @@ For this product category, Linux-first runtime support is pragmatic. Cross-platf
 
 | Product shape | Early target | Compatibility approach |
 |---|---|---|
-| Codex CLI/App with user auth | required | Use existing user-owned auth, managed workspace/worktree, CLI/app-server/MCP entrypoints where available, and external evidence/gate collection. |
+| Codex host family with user auth | required | Use existing user-owned auth, managed workspace/worktree, CLI and Codex App entrypoints, remote/mobile continuation where available, Computer Use/browser surfaces when officially exposed, and external evidence/gate collection. |
+| Claude host family (terminal, IDE, desktop/Cowork) | required | Map terminal, IDE, and desktop surfaces into one host-family adapter contract; keep user-owned auth and host-owned desktop/runtime state outside kernel ownership. |
+| Antigravity host family (CLI + 2.0 GUI) | supported | Treat Google support as one host family with shared engine/settings/session-export semantics; prefer Antigravity CLI/GUI capability mapping over Gemini CLI-specific assumptions. |
+| Gemini CLI legacy bridge | best_effort | Keep only as a migration or enterprise-compatibility bridge where still available; do not treat it as Google's long-term primary host surface. |
 | Non-interactive CLI agent | supported | Invoke through process adapter, collect JSONL/log output, diff, commands, and final handoff. |
 | MCP-capable agent or tool host | supported | Map tools/resources through MCP while keeping policy and evidence semantics in the governance kernel. |
 | IDE plugin agent | best_effort | Integrate through repo profile, generated context, diff/gate capture, and optional bridge APIs. Do not require full IDE replacement. |
@@ -84,7 +87,8 @@ The runtime should reuse upstream sandbox, approval, and permission capabilities
 - GitHub repositories
 - local repositories with Git
 - Python and Node-heavy repos
-- Codex CLI/App driven local coding sessions
+- Codex-driven local coding sessions
+- Claude terminal, IDE, and desktop/Cowork surfaces
 - command-line verification flows
 - worktree or isolated workspace based execution
 
@@ -93,6 +97,7 @@ The runtime should reuse upstream sandbox, approval, and permission capabilities
 - broader package manager coverage
 - stronger Windows-native repo execution support
 - richer CI adapters
+- Antigravity CLI plus Antigravity 2.0 GUI adapters after the Google host-family surface stabilizes
 - MCP and app-server style agent integrations
 - IDE and cloud-agent adapters where product APIs are stable
 
@@ -119,10 +124,11 @@ It should not mean:
 1. Linux-first execution runtime
 2. Windows/macOS/Linux operator compatibility
 3. GitHub-first repository support
-4. Codex CLI/App compatible first adapter
-5. repo-profile abstraction for additional ecosystems
-6. generic agent adapter contract
-7. adapter-driven expansion to MCP, app-server, IDE, cloud, and future agent products
+4. Codex host-family first adapter
+5. Claude host-family first-class adapter parity
+6. repo-profile abstraction for additional ecosystems
+7. generic host-family and agent adapter contract
+8. adapter-driven expansion to Antigravity, MCP, app-server, IDE, cloud, and future agent products
 
 ## Acceptance Test Questions
 - Can a repository declare its command model without patching kernel code?

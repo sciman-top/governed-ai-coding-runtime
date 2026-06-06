@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0",
+  "status_id": "default-planning-status",
+  "updated_on": "2026-06-06",
+  "current_active_queue": {
+    "queue_id": "GAP-159..164",
+    "label": "Agent Continuity And Shared Context",
+    "status": "implemented_with_followup_attention",
+    "source_plan": "docs/plans/agent-continuity-and-shared-context-plan.md",
+    "source_backlog": "docs/backlog/issue-ready-backlog.md",
+    "why_now": "This is the newest implemented owner-directed queue after GAP-152..158. New implementation should not resume until Codex target-run recovery moves from fresh-but-degraded process_bridge evidence to native_attach-ready proof."
+  },
+  "current_decision_gate": {
+    "selector": "wait_for_host_capability_recovery",
+    "selector_source": "scripts/select-next-work.py",
+    "as_of": "2026-06-06",
+    "proof_ref": "docs/change-evidence/20260606-live-posture-refresh.md",
+    "blocking_reasons": [
+      "host_capability_degraded_bounded_defer"
+    ]
+  },
+  "certified_baseline": {
+    "queue_id": "GAP-104..111",
+    "label": "Complete Hybrid Final-State Realization",
+    "status": "certified_historical_baseline",
+    "evidence_ref": "docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md",
+    "claim_boundary": "Certified closure remains historical proof of capability closure. It does not override current degraded or stale live posture."
+  },
+  "current_live_posture": {
+    "status": "attention",
+    "host_feedback_source": "scripts/host-feedback-summary.py --assert-minimum",
+    "target_run_freshness": "fresh",
+    "codex_target_run_adapter_tier": "process_bridge",
+    "codex_target_run_capability_status": "degraded",
+    "claude_workload_adapter_tier": "native_attach",
+    "claude_workload_status": "ready",
+    "summary": "Claude workload probe is ready, and latest Codex target-run evidence is fresh, but Codex target runs still remain degraded/process_bridge. Do not claim native_attach recovery for Codex target runs until fresh evidence proves ready/native_attach."
+  },
+  "authoritative_docs": [
+    "docs/README.md",
+    "docs/plans/README.md",
+    "docs/backlog/issue-ready-backlog.md",
+    "README.md",
+    "README.en.md",
+    "README.zh-CN.md"
+  ],
+  "required_consistency_tokens": [
+    "single source of planning truth",
+    "certified baseline",
+    "current live posture",
+    "wait_for_host_capability_recovery",
+    "fresh",
+    "process_bridge"
+  ],
+  "rollback_ref": "git revert docs/architecture/planning-status.json and dependent doc/gate updates"
+}
