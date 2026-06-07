@@ -5,6 +5,20 @@
       "adapter_id": "generic-process-bridge",
       "display_name": "Generic Process Bridge",
       "product_family": "generic",
+      "capability_surface": {
+        "host_family": "generic_family",
+        "surface_class": "terminal",
+        "attach_mode": "process_bridge",
+        "adapter_tier": "process_bridge",
+        "degrade_reason": "native attach unavailable; process bridge fallback is active",
+        "verification_refs": [
+          "docs/product/adapter-degrade-policy.md",
+          "docs/architecture/host-family-capability-surface-blueprint.md"
+        ],
+        "evidence_refs": [
+          "schemas/examples/agent-adapter-contract/process-bridge.example.json"
+        ]
+      },
       "lifecycle_status": "experimental",
       "adapter_tier": "process_bridge",
       "rollout_posture": {

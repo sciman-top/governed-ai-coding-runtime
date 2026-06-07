@@ -46,6 +46,30 @@
 | `evidence_exportability` | diff/log/transcript/artifacts 是否可导出 | 决定 completion claim 是否可验证 |
 | `execution_locality` | local / remote / hybrid | 决定凭据、路径、网络和 rollback 模型 |
 
+## Claim-Surface Minimum Fields
+当 runtime、operator、claim catalog、adapter status、verification output 对外描述“当前宿主能力姿态”时，最小 canonical 字段必须显式出现：
+
+- `host_family`
+- `surface_class`
+- `attach_mode`
+- `adapter_tier`
+- `degrade_reason`
+- `verification_refs`
+- `evidence_refs`
+
+约束：
+- `product_family`、`invocation_mode`、`flow_kind` 等旧字段可以继续保留，但不能替代上面这组 canonical claim-surface 字段。
+- 缺少任一必需字段时，强 live-host claim 必须 fail closed，而不是靠历史认证或口头解释补齐。
+- `verification_refs` 与 `evidence_refs` 必须指向 reviewable 文档、artifact、trial、gate 输出或等价证据，而不是只引用“我们以前做过类似验证”。
+
+## Claim Upgrade Requires Fresh Evidence
+更强的 live-host claim 只能建立在 fresh recovery evidence 上，而不能建立在历史认证或 wording refresh 上。
+
+最低边界：
+- `fresh but degraded` 仍然只能维持 attention/degraded 口径，不能升级成 `ready/native_attach` claim。
+- 对 `Codex family`，若要从 `process_bridge / degraded` 升级到更强 live-host claim，必须有 fresh evidence 明确证明 `attach_mode=native_attach`、`adapter_tier=native_attach`，并且最新 capability posture 为 `ready`。
+- 只要 canonical claim-surface 字段缺失、`verification_refs` 为空、或 `evidence_refs` 为空，就必须 fail closed。
+
 ## Engineering Boundary
 以下边界在最佳终态中不应被打破：
 - runtime 不是新的 primary host product。

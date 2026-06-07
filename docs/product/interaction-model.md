@@ -143,6 +143,7 @@ The higher-priority interactive surface is the session bridge inside the active 
 The runtime should treat AI coding products as replaceable execution frontends. The kernel should not know whether the active frontend is from the Codex host family, the Claude host family, the Antigravity host family, an IDE plugin, a cloud coding worker, browser automation, or a future agent product.
 
 Adapters should declare capabilities:
+- host family
 - surface class
 - invocation mode
 - attach mode
@@ -167,10 +168,14 @@ Current host-family interpretation:
 
 Completion claims and operator reads should expose:
 - host family
+- surface class
+- attach mode
 - adapter tier
 - degrade reason
 - verification refs
 - evidence refs
+
+If any of those canonical fields are missing, the runtime should fail closed for stronger live-host claims instead of silently upgrading posture from historical certification or wording-only refreshes.
 
 ## Product Boundaries
 

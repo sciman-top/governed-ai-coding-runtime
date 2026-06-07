@@ -1063,6 +1063,20 @@ function Invoke-EvidenceRecoveryPostureChecks {
   Write-CheckOk "evidence-recovery-posture"
 }
 
+function Invoke-HostCapabilityClaimUpgradePolicyChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-host-capability-claim-upgrade-policy.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Host capability claim-upgrade policy checks failed"
+    }
+    throw "Host capability claim-upgrade policy checks failed`n$detail"
+  }
+
+  Write-CheckOk "host-capability-claim-upgrade-policy"
+}
+
 function Invoke-BuildChecks {
   & pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
   if ($LASTEXITCODE -ne 0) {
@@ -1080,6 +1094,7 @@ function Invoke-DocsChecks {
   Invoke-PlanningStatusChecks
   Invoke-HostFeedbackSurfaceChecks
   Invoke-EvidenceRecoveryPostureChecks
+  Invoke-HostCapabilityClaimUpgradePolicyChecks
   Invoke-CurrentSourceCompatibilityChecks
   Invoke-CorePrinciplesChecks
   Invoke-CapabilityPortfolioChecks

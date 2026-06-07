@@ -148,6 +148,8 @@ They should not redefine the project's identity.
 - a reference repo reinforces an already-adopted mechanism
 - a host direction becomes clearer, but current compatibility posture remains the same
 
+Claim upgrade requires fresh evidence. A wording-only refresh must not strengthen the current live-host posture when the latest posture is still degraded, missing canonical surface fields, or supported only by historical certification.
+
 ### Usually backlog or queue candidate
 - a new host family requires a new capability field or adapter invariant
 - official docs materially change approval, sandbox, MCP, or continuity assumptions

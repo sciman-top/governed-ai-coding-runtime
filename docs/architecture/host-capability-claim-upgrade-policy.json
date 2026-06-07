@@ -1,0 +1,97 @@
+{
+  "schema_version": "1.0",
+  "policy_id": "default-host-capability-claim-upgrade-policy",
+  "status": "enforced",
+  "reviewed_on": "2026-06-07",
+  "review_expires_at": "2026-09-05",
+  "decision_claim": "Stronger live host-capability claims require fresh recovery evidence plus canonical capability-surface fields. Historical certification and wording refreshes alone must not upgrade the current live-host posture.",
+  "canonical_surface_fields": [
+    "host_family",
+    "surface_class",
+    "attach_mode",
+    "adapter_tier",
+    "degrade_reason",
+    "verification_refs",
+    "evidence_refs"
+  ],
+  "fail_closed_defaults": {
+    "missing_surface_field": "fail_closed",
+    "missing_verification_refs": "fail_closed",
+    "missing_evidence_refs": "fail_closed",
+    "historical_certification_without_fresh_recovery": "fail_closed",
+    "fresh_but_degraded_posture": "fail_closed"
+  },
+  "upgrade_rules": [
+    {
+      "claim_scope": "codex_live_native_attach_upgrade",
+      "host_family": "codex_family",
+      "upgrade_kind": "stronger_live_host_claim",
+      "required_signals": [
+        "planning_status.current_live_posture.target_run_freshness=fresh",
+        "latest_target_run.host_family=codex_family",
+        "latest_target_run.surface_class=terminal|desktop|ide|web|browser_automation",
+        "latest_target_run.attach_mode=native_attach",
+        "latest_target_run.adapter_tier=native_attach",
+        "latest_target_run.codex_capability_status=ready",
+        "latest_target_run.degrade_reason=null_or_empty",
+        "latest_target_run.verification_refs non-empty",
+        "latest_target_run.evidence_refs non-empty",
+        "host_feedback_summary and claim surfaces agree on the same stronger posture"
+      ],
+      "blocked_when": [
+        "latest posture is still process_bridge",
+        "capability status is degraded",
+        "evidence is only historical certification",
+        "canonical surface fields are absent"
+      ]
+    },
+    {
+      "claim_scope": "wording_refresh_only",
+      "upgrade_kind": "docs_refresh",
+      "allowed_when": [
+        "product naming, examples, or host-family wording becomes clearer",
+        "no new canonical surface field is introduced",
+        "no new recovery threshold is required",
+        "no current live-host claim becomes stronger"
+      ],
+      "must_not_do": [
+        "change planning-status current active queue",
+        "change the current decision gate",
+        "promote degraded host posture to ready/native_attach"
+      ]
+    },
+    {
+      "claim_scope": "backlog_candidate_trigger",
+      "upgrade_kind": "queue_or_backlog_followup",
+      "open_followup_when": [
+        "a new host family needs an additional canonical surface field or invariant",
+        "official docs materially change approval, sandbox, MCP, continuity, or export assumptions",
+        "repeated target-run evidence shows the current capability declaration is insufficient",
+        "a stronger claim would require new machine checks beyond the current policy"
+      ]
+    }
+  ],
+  "required_doc_refs": [
+    {
+      "path": "docs/architecture/host-family-capability-surface-blueprint.md",
+      "contains": "Claim-Surface Minimum Fields"
+    },
+    {
+      "path": "docs/strategy/current-best-end-state-blueprint.md",
+      "contains": "Claim upgrade requires fresh evidence"
+    },
+    {
+      "path": "docs/product/interaction-model.md",
+      "contains": "surface class"
+    },
+    {
+      "path": "docs/backlog/issue-ready-backlog.md",
+      "contains": "GAP-167 Post-Recovery Activation Trigger And Claim Upgrade Gate"
+    }
+  ],
+  "evidence_refs": [
+    "docs/change-evidence/20260607-live-posture-refresh.md",
+    "docs/change-evidence/20260607-gap-166-168-host-capability-claim-contract-closeout.md"
+  ],
+  "rollback_ref": "git revert the host capability claim-upgrade policy, its verifier, related tests, host-capability docs alignment, backlog status updates, and closeout evidence"
+}

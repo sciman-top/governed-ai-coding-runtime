@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "status_id": "default-planning-status",
-  "updated_on": "2026-06-06",
+  "updated_on": "2026-06-07",
   "current_active_queue": {
     "queue_id": "GAP-159..164",
     "label": "Agent Continuity And Shared Context",
@@ -13,8 +13,8 @@
   "current_decision_gate": {
     "selector": "wait_for_host_capability_recovery",
     "selector_source": "scripts/select-next-work.py",
-    "as_of": "2026-06-06",
-    "proof_ref": "docs/change-evidence/20260606-live-posture-refresh.md",
+    "as_of": "2026-06-07",
+    "proof_ref": "docs/change-evidence/20260607-live-posture-refresh.md",
     "blocking_reasons": [
       "host_capability_degraded_bounded_defer"
     ]

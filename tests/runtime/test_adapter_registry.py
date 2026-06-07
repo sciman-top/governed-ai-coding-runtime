@@ -114,6 +114,10 @@ class AdapterRegistryTests(unittest.TestCase):
 
         self.assertEqual(manual_payload["adapters"][0]["adapter_tier"], "manual_handoff")
         self.assertEqual(process_payload["adapters"][0]["adapter_tier"], "process_bridge")
+        self.assertEqual(manual_payload["adapters"][0]["capability_surface"]["attach_mode"], "manual_handoff")
+        self.assertEqual(process_payload["adapters"][0]["capability_surface"]["attach_mode"], "process_bridge")
+        self.assertIn("verification_refs", manual_payload["adapters"][0]["capability_surface"])
+        self.assertIn("evidence_refs", process_payload["adapters"][0]["capability_surface"])
 
     def test_executable_registry_can_register_probe_select_and_delegate(self) -> None:
         adapter_registry = importlib.import_module("governed_ai_coding_runtime_contracts.adapter_registry")
