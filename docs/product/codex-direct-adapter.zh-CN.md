@@ -45,7 +45,7 @@ runtime 现在支持对 Codex surface 的真实探测与握手：
 - `codex --help`：识别当前可用命令面。
 - `codex exec --help`：推断 JSONL 结构化事件可见性与证据导出能力线索。
 - `codex status`：仅在当前 Codex 版本暴露该命令时，才作为 live attach 握手信号。
-- 当缺少 `status` 但存在 `resume` 命令面时，native attach capability 会通过 resume 能力推断可用。
+- 当缺少 `status` 但存在 `resume` 命令面时，`resume` 只能作为 supporting evidence，不能仅凭 resume/help surface 就把 Codex 升格为 `native_attach`。
 
 当 `codex status` 无法完成（例如非交互环境出现 `stdin is not a terminal`）时，姿态会显式降级到 `process_bridge`，并保留降级原因。
 当当前 Codex 版本未暴露 `status` 且 `resume` 也不可用时，会显式标记 native attach 不可用，同时保留 process bridge 可用。

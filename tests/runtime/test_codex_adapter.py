@@ -13,6 +13,15 @@ if str(CONTRACTS_SRC) not in sys.path:
 
 
 class CodexAdapterTests(unittest.TestCase):
+    def test_codex_direct_adapter_docs_keep_resume_surface_as_supporting_evidence_only(self) -> None:
+        english = (ROOT / "docs" / "product" / "codex-direct-adapter.md").read_text(encoding="utf-8")
+        chinese = (ROOT / "docs" / "product" / "codex-direct-adapter.zh-CN.md").read_text(encoding="utf-8")
+
+        self.assertIn("supporting evidence only", english)
+        self.assertIn("不能仅凭 resume/help surface 就把 Codex 升格为 `native_attach`", chinese)
+        self.assertNotIn("native attach capability is inferred from the resume command surface", english)
+        self.assertNotIn("native attach capability 会通过 resume 能力推断可用", chinese)
+
     def test_codex_adapter_api_exists(self) -> None:
         module = self._module()
         if not hasattr(module, "CodexAdapterProfile"):

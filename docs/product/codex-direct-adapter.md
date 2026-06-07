@@ -45,7 +45,7 @@ The runtime now supports a real Codex surface probe and handshake path:
 - `codex --help` is used to discover the available command surface.
 - `codex exec --help` is used to infer JSONL event visibility and evidence export hints.
 - `codex status` is treated as the live attach handshake signal only when that command exists in the current Codex build.
-- if `status` is absent but `resume` is present, native attach capability is inferred from the resume command surface.
+- if `status` is absent but `resume` is present, keep the resume command surface as supporting evidence only; do not upgrade Codex to `native_attach` from resume/help surface alone.
 
 When `codex status` cannot complete (for example non-interactive `stdin is not a terminal`), posture degrades to `process_bridge` while keeping the failure reason explicit.
 When `status` is not exposed by the installed Codex build and `resume` is also unavailable, native attach is marked unavailable explicitly while process bridge remains available.
