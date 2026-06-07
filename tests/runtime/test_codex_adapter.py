@@ -294,6 +294,100 @@ class CodexAdapterTests(unittest.TestCase):
         self.assertEqual(probe.stability_state, "degraded_after_retry")
         self.assertEqual(probe.probe_attempts, 2)
 
+    def test_codex_live_probe_promotes_native_attach_from_app_server_thread_boundary_signal(self) -> None:
+        module = self._module()
+
+        def app_server_boundary_runner(argv, _cwd):
+            if argv == ["codex", "--version"]:
+                return 0, "codex-cli 0.137.0\n", ""
+            if argv == ["codex", "--help"]:
+                return 0, (
+                    "Commands:\n"
+                    "  exec            Run Codex non-interactively\n"
+                    "  app-server      Run the app server\n"
+                    "  remote-control  Manage remote control\n"
+                    "  doctor          Diagnose runtime health\n"
+                    "  resume          Resume a previous session\n"
+                ), ""
+            if argv == ["codex", "exec", "--help"]:
+                return 0, "Options:\n  --json  Print events to stdout as JSONL\n  -o, --output-last-message <FILE>\n", ""
+            if argv == ["codex", "app-server", "--help"]:
+                return 0, (
+                    "Commands:\n"
+                    "  daemon                Manage the local app-server daemon\n"
+                    "  proxy                 Proxy stdio bytes to the running app-server control socket\n"
+                    "  generate-json-schema  Generate JSON Schema for the app server protocol\n"
+                ), ""
+            if len(argv) >= 5 and argv[:4] == ["codex", "app-server", "generate-json-schema", "--out"]:
+                out_dir = Path(argv[4])
+                out_dir.mkdir(parents=True, exist_ok=True)
+                schema = (
+                    '{'
+                    '"threadStart":{"properties":{"thread":{"properties":{"sessionId":{"type":"string"}}}}},'
+                    '"threadResume":{"description":"If thread_id identifies a running thread, app-server rejoins that thread."},'
+                    '"threadRead":{"description":"Only populated on thread/resume responses."}'
+                    '}'
+                )
+                (out_dir / "mock-app-server-schema.json").write_text(schema, encoding="utf-8")
+                return 0, "", ""
+            return 1, "", "unsupported"
+
+        probe = module.probe_codex_surface(command_runner=app_server_boundary_runner)
+        profile = module.build_codex_adapter_profile_from_probe(probe)
+        capability = module.classify_codex_adapter(profile)
+
+        self.assertTrue(probe.codex_cli_available)
+        self.assertTrue(probe.native_attach_available)
+        self.assertTrue(probe.process_bridge_available)
+        self.assertTrue(probe.structured_events_available)
+        self.assertTrue(probe.evidence_export_available)
+        self.assertTrue(probe.resume_available)
+        self.assertEqual(capability.tier, "native_attach")
+        self.assertIn("app-server", probe.reason)
+        self.assertIsNone(probe.failure_stage)
+
+    def test_codex_live_probe_does_not_upgrade_from_doctor_and_remote_control_without_thread_boundary(self) -> None:
+        module = self._module()
+
+        def doctor_only_runner(argv, _cwd):
+            if argv == ["codex", "--version"]:
+                return 0, "codex-cli 0.137.0\n", ""
+            if argv == ["codex", "--help"]:
+                return 0, (
+                    "Commands:\n"
+                    "  exec            Run Codex non-interactively\n"
+                    "  app-server      Run the app server\n"
+                    "  remote-control  Manage remote control\n"
+                    "  doctor          Diagnose runtime health\n"
+                    "  resume          Resume a previous session\n"
+                ), ""
+            if argv == ["codex", "exec", "--help"]:
+                return 0, "Options:\n  --json  Print events to stdout as JSONL\n  -o, --output-last-message <FILE>\n", ""
+            if argv == ["codex", "app-server", "--help"]:
+                return 0, (
+                    "Commands:\n"
+                    "  daemon                Manage the local app-server daemon\n"
+                    "  proxy                 Proxy stdio bytes to the running app-server control socket\n"
+                    "  generate-json-schema  Generate JSON Schema for the app server protocol\n"
+                ), ""
+            if len(argv) >= 5 and argv[:4] == ["codex", "app-server", "generate-json-schema", "--out"]:
+                out_dir = Path(argv[4])
+                out_dir.mkdir(parents=True, exist_ok=True)
+                schema = '{"checks":["app-server.status","thread.inventory"],"summary":"background server is not running"}'
+                (out_dir / "mock-app-server-schema.json").write_text(schema, encoding="utf-8")
+                return 0, "", ""
+            return 1, "", "unsupported"
+
+        probe = module.probe_codex_surface(command_runner=doctor_only_runner)
+        profile = module.build_codex_adapter_profile_from_probe(probe)
+        capability = module.classify_codex_adapter(profile)
+
+        self.assertTrue(probe.codex_cli_available)
+        self.assertFalse(probe.native_attach_available)
+        self.assertTrue(probe.process_bridge_available)
+        self.assertEqual(capability.tier, "process_bridge")
+        self.assertEqual(probe.failure_stage, "live_attach_probe_unsupported_status_command_missing")
+
     def test_codex_capability_readiness_marks_ready_and_blocked_states(self) -> None:
         module = self._module()
         ready_probe = module.CodexSurfaceProbe(

@@ -6,6 +6,7 @@ import hashlib
 import os
 import re
 import subprocess
+import tempfile
 from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime
 from functools import lru_cache
@@ -648,8 +649,16 @@ def _probe_codex_surface(
         )
         status_lower = status_output.lower()
 
+    app_server_thread_boundary_available = _detect_app_server_thread_boundary(
+        help_commands=help_commands,
+        command_runner=command_runner,
+        cwd=cwd,
+        effective_executable=effective_executable,
+        commands=commands,
+    )
+
     resume_surface_available = "resume" in help_commands or "resume" in exec_help_lower
-    native_attach_available = status_command_available and status_exit == 0
+    native_attach_available = (status_command_available and status_exit == 0) or app_server_thread_boundary_available
     process_bridge_available = True
     structured_events_available = _detect_structured_events(
         help_lower=help_lower,
@@ -671,7 +680,12 @@ def _probe_codex_surface(
     live_resume_id = _extract_identity_token(status_output, "resume")
     failure_stage: str | None = None
     remediation_hint: str | None = None
-    if not status_command_available:
+    if app_server_thread_boundary_available:
+        if status_command_available and status_exit != 0:
+            reason = "codex app-server thread boundary signal succeeded even though status handshake was unavailable"
+        else:
+            reason = "codex app-server thread boundary signal succeeded"
+    elif not status_command_available:
         if resume_surface_available:
             reason = "codex status command is unavailable; keep process bridge and treat resume command surface as supporting evidence only"
             remediation_hint = (
@@ -856,6 +870,52 @@ def _detect_resume_available(
         or "resume" in exec_help_lower
         or "resume" in status_lower
     )
+
+
+def _detect_app_server_thread_boundary(
+    *,
+    help_commands: set[str],
+    command_runner: Callable[[list[str], Path | None], tuple[int, str, str]],
+    cwd: Path | None,
+    effective_executable: str,
+    commands: list[CodexProbeCommand],
+) -> bool:
+    if "app-server" not in help_commands:
+        return False
+    _, app_server_help = _run_probe_command(
+        command_runner=command_runner,
+        cwd=cwd,
+        argv=[effective_executable, "app-server", "--help"],
+        commands=commands,
+    )
+    if "generate-json-schema" not in app_server_help.lower():
+        return False
+    with tempfile.TemporaryDirectory(prefix="codex-app-server-schema-") as temp_dir:
+        exit_code, _ = _run_probe_command(
+            command_runner=command_runner,
+            cwd=cwd,
+            argv=[effective_executable, "app-server", "generate-json-schema", "--out", temp_dir],
+            commands=commands,
+        )
+        if exit_code != 0:
+            return False
+        return _schema_directory_has_thread_boundary(Path(temp_dir))
+
+
+def _schema_directory_has_thread_boundary(schema_dir: Path) -> bool:
+    combined = []
+    for path in schema_dir.rglob("*.json"):
+        try:
+            combined.append(path.read_text(encoding="utf-8"))
+        except OSError:
+            continue
+    if not combined:
+        return False
+    content = "\n".join(combined).lower()
+    has_session_id = "sessionid" in content
+    has_thread_resume = "thread/resume" in content or "threadresume" in content
+    has_tree_or_rejoin = "session tree" in content or "rejoin" in content or "rejoins that thread" in content
+    return has_session_id and has_thread_resume and has_tree_or_rejoin
 
 
 def _extract_identity_token(output: str, token_name: str) -> str | None:
