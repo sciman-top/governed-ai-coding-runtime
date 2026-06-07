@@ -52,7 +52,7 @@ class RunRuntimeTestsRunnerTests(unittest.TestCase):
         runner = _load_runner_module()
 
         with mock.patch.dict(runner.os.environ, {}, clear=True):
-            self.assertEqual(runner._resolve_timeout_seconds(0), 300)
+            self.assertEqual(runner._resolve_timeout_seconds(0), 600)
 
     def test_timeout_env_overrides_default_per_file_timeout(self) -> None:
         runner = _load_runner_module()

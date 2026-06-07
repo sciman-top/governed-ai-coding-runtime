@@ -30,6 +30,17 @@ class IssueSeedingScriptTests(unittest.TestCase):
         content = BACKLOG_PATH.read_text(encoding="utf-8")
         return len(re.findall(r"^- Status: complete\b", content, re.MULTILINE))
 
+    @staticmethod
+    def _conditionally_inactive_backlog_issue_count() -> int:
+        content = BACKLOG_PATH.read_text(encoding="utf-8")
+        return len(
+            re.findall(
+                r"^- Status: (?:conditional\b|planned; starts only after\b)",
+                content,
+                re.MULTILINE,
+            )
+        )
+
     def test_validate_only_reports_seed_summary_from_yaml(self) -> None:
         script = ROOT / "scripts" / "github" / "create-roadmap-issues.ps1"
 
@@ -234,6 +245,32 @@ class IssueSeedingScriptTests(unittest.TestCase):
         self.assertIn("## Success Criteria", rendered["body"])
         self.assertIn("a new target repo can be attached through a repo-local light pack", rendered["body"])
 
+    def test_validate_only_can_render_conditional_host_family_followup_task(self) -> None:
+        script = ROOT / "scripts" / "github" / "create-roadmap-issues.ps1"
+
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(script),
+                "-ValidateOnly",
+                "-IssueId",
+                "GAP-165",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            cwd=ROOT,
+        )
+
+        rendered = json.loads(completed.stdout)
+        self.assertEqual(rendered["issue_id"], "GAP-165")
+        self.assertIn("conditional follow-up rather than current active work", rendered["body"])
+        self.assertIn("historical certification alone cannot activate the queue", rendered["body"])
+
     def test_verify_repo_scripts_runs_issue_seeding_render_check(self) -> None:
         script = ROOT / "scripts" / "verify-repo.ps1"
 
@@ -283,8 +320,14 @@ class IssueSeedingScriptTests(unittest.TestCase):
         self.assertEqual(summary["rendered_epics"], self.EXPECTED_RENDERED_EPICS)
         self.assertTrue(summary["rendered_initiative"])
         self.assertEqual(
+            summary["conditionally_inactive_task_count"],
+            self._conditionally_inactive_backlog_issue_count(),
+        )
+        self.assertEqual(
             summary["rendered_issue_creation_tasks"],
-            self._seed_count() - self._completed_backlog_issue_count(),
+            self._seed_count()
+            - self._completed_backlog_issue_count()
+            - self._conditionally_inactive_backlog_issue_count(),
         )
 
 

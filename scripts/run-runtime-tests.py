@@ -14,7 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_TIMING_HISTORY_PATH = ROOT / "docs" / "change-evidence" / "runtime-test-speed-latest.json"
 DEFAULT_AUTO_WORKER_CAP = 8
-DEFAULT_PER_FILE_TIMEOUT_SECONDS = 300
+DEFAULT_PER_FILE_TIMEOUT_SECONDS = 600
 SERIAL_TEST_MODULES = frozenset(
     {
         "tests.runtime.test_dependency_baseline",
