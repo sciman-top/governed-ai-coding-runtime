@@ -46,9 +46,12 @@ The runtime now supports a real Codex surface probe and handshake path:
 - `codex exec --help` is used to infer JSONL event visibility and evidence export hints.
 - `codex status` is treated as the live attach handshake signal only when that command exists in the current Codex build.
 - if `status` is absent but `resume` is present, keep the resume command surface as supporting evidence only; do not upgrade Codex to `native_attach` from resume/help surface alone.
+- when `status` is unavailable, `codex app-server` may still provide a stronger attached-session boundary if the generated app-server schema proves `thread.sessionId`, `thread/resume`, and running-thread rejoin or session-tree semantics together.
+- `remote-control` and `doctor` are supporting surfaces only for this decision: they can prove daemon posture, health, or inventory, but they do not by themselves prove an attached session boundary.
 
 When `codex status` cannot complete (for example non-interactive `stdin is not a terminal`), posture degrades to `process_bridge` while keeping the failure reason explicit.
 When `status` is not exposed by the installed Codex build and `resume` is also unavailable, native attach is marked unavailable explicitly while process bridge remains available.
+When `status` is unavailable but the `app-server` thread-boundary signal is present, the runtime can still classify Codex as `native_attach` without pretending that `doctor` or `remote-control` are equivalent to a thread handshake.
 
 Live probe command resolution supports:
 - explicit CLI flag: `--codex-bin "<path-or-command>"`

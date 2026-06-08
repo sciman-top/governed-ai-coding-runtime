@@ -46,9 +46,12 @@ runtime 现在支持对 Codex surface 的真实探测与握手：
 - `codex exec --help`：推断 JSONL 结构化事件可见性与证据导出能力线索。
 - `codex status`：仅在当前 Codex 版本暴露该命令时，才作为 live attach 握手信号。
 - 当缺少 `status` 但存在 `resume` 命令面时，`resume` 只能作为 supporting evidence，不能仅凭 resume/help surface 就把 Codex 升格为 `native_attach`。
+- 当 `status` 不可用时，如果 `codex app-server` 生成的协议 schema 能同时证明 `thread.sessionId`、`thread/resume`，以及 running-thread rejoin 或 session tree 语义，则它可以构成更强的 attached-session boundary 信号。
+- `remote-control` 与 `doctor` 在这个判定里都只是 supporting surfaces：它们可以证明 daemon posture、健康状态或 thread inventory，但单独并不能证明 attached session boundary。
 
 当 `codex status` 无法完成（例如非交互环境出现 `stdin is not a terminal`）时，姿态会显式降级到 `process_bridge`，并保留降级原因。
 当当前 Codex 版本未暴露 `status` 且 `resume` 也不可用时，会显式标记 native attach 不可用，同时保留 process bridge 可用。
+当 `status` 不可用、但 `app-server` thread-boundary 信号成立时，runtime 仍可把 Codex 归类为 `native_attach`；但这不意味着 `doctor` 或 `remote-control` 已经等价于 thread handshake。
 
 live probe 的命令解析支持：
 - 显式参数：`--codex-bin "<path-or-command>"`

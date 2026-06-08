@@ -18,6 +18,11 @@
 - unsupported capabilities 与降级原因
 - remediation 提示与 probe 稳定性信息
 
+对 Codex 而言，当前被承认的强 attached-session boundary 已经分成两条：
+- `codex status` 成功时，仍然是强 live handshake。
+- 如果 `status` 不可用，但 `codex app-server` 的协议 schema 同时暴露 `thread.sessionId`、`thread/resume`，以及 running-thread rejoin 或 session tree 语义，它也可以构成强 thread boundary。
+- `remote-control` 和 `doctor` 仍然只是健康或 daemon supporting surfaces；它们单独不会把 Codex 升格为 `native_attach`。
+
 ### 2. Runtime 托管的 Session Bridge 命令面
 本地 session bridge 已可执行受治理 gate/write 闭环，并附带 Codex 身份元数据：
 - `run_quick_gate` / `run_full_gate` 默认执行验证（仍支持 `plan_only`）

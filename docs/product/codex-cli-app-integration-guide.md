@@ -18,6 +18,11 @@ The runtime can probe Codex capability and expose readiness posture from runtime
 - unsupported capabilities with explicit degrade behavior
 - remediation hints and probe stability metadata
 
+For Codex specifically, the strongest currently recognized attached-session boundary is now split:
+- `codex status` remains a strong live handshake when it succeeds.
+- if `status` is unavailable, `codex app-server` can still provide a strong thread boundary when its schema exposes `thread.sessionId`, `thread/resume`, and running-thread rejoin or session-tree semantics together.
+- `remote-control` and `doctor` remain supporting health or daemon surfaces; they do not upgrade Codex to `native_attach` by themselves.
+
 ### 2. Runtime-Managed Session Bridge Surface
 The local session bridge can execute governed gate and write flows with Codex identity metadata attached:
 - `run_quick_gate` / `run_full_gate` execute verification by default (`plan_only` remains available)

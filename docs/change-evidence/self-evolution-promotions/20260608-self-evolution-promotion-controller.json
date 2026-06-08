@@ -1,0 +1,75 @@
+{
+  "artifact_refs": {
+    "json": "D:/CODE/governed-ai-coding-runtime/docs/change-evidence/self-evolution-promotions/20260608-self-evolution-promotion-controller.json"
+  },
+  "artifact_type": "self_evolution_promotion_controller_report",
+  "as_of": "2026-06-08",
+  "commands": {
+    "materialize_candidate": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action EvolutionMaterialize",
+    "plan_promotion": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action SelfEvolutionPromotionPlan",
+    "push_or_merge": "manual review/PR only",
+    "refresh_recommendation": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action SelfEvolutionRecommend",
+    "target_sync": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action ApplyAllFeatures"
+  },
+  "control_lanes": [
+    {
+      "automatic_enabled": false,
+      "guard_key": "automatic_policy_mutation",
+      "lane": "policy_mutation",
+      "next_action": "wait_for_host_capability_recovery",
+      "reason": "selector_next_action=wait_for_host_capability_recovery blocks effective changes. Fresh target-run evidence already proves a bounded host capability defer; do not repeat implementation or evidence-refresh loops until native_attach recovery is proven.",
+      "status": "blocked"
+    },
+    {
+      "automatic_enabled": false,
+      "guard_key": "automatic_skill_enablement",
+      "lane": "skill_enablement",
+      "next_action": "wait_for_host_capability_recovery",
+      "reason": "selector_next_action=wait_for_host_capability_recovery blocks effective changes. Fresh target-run evidence already proves a bounded host capability defer; do not repeat implementation or evidence-refresh loops until native_attach recovery is proven.",
+      "status": "blocked"
+    },
+    {
+      "automatic_enabled": false,
+      "guard_key": "automatic_target_repo_sync",
+      "lane": "target_repo_sync",
+      "next_action": "wait_for_host_capability_recovery",
+      "reason": "selector_next_action=wait_for_host_capability_recovery blocks effective changes. Fresh target-run evidence already proves a bounded host capability defer; do not repeat implementation or evidence-refresh loops until native_attach recovery is proven.",
+      "status": "blocked"
+    },
+    {
+      "automatic_enabled": false,
+      "guard_key": "automatic_push_or_merge",
+      "lane": "push_or_merge",
+      "next_action": "wait_for_host_capability_recovery",
+      "reason": "selector_next_action=wait_for_host_capability_recovery blocks effective changes. Fresh target-run evidence already proves a bounded host capability defer; do not repeat implementation or evidence-refresh loops until native_attach recovery is proven.",
+      "status": "blocked"
+    }
+  ],
+  "effective_change_allowed": false,
+  "guards": {
+    "automatic_policy_mutation": false,
+    "automatic_push_or_merge": false,
+    "automatic_skill_enablement": false,
+    "automatic_target_repo_sync": false,
+    "requires_human_review_before_effective_change": true
+  },
+  "promotion_stage": "blocked_by_selector",
+  "recommended_next_action": "report_only_until_wait_for_host_capability_recovery",
+  "rollback": "Delete the generated promotion controller artifact. No policy, skill, target repo, push, or merge state is changed.",
+  "schema_version": "0.1-draft",
+  "selector_next_action": "wait_for_host_capability_recovery",
+  "selector_why": "Fresh target-run evidence already proves a bounded host capability defer; do not repeat implementation or evidence-refresh loops until native_attach recovery is proven.",
+  "source_recommendation_path": "docs/change-evidence/self-evolution-recommendations/20260608-self-evolution-recommendations.json",
+  "status": "blocked",
+  "trigger_model": {
+    "automatic_effective_change": false,
+    "prerequisite_operator_action": "SelfEvolutionRecommend",
+    "proactive_operator_triggers": [
+      "SelfEvolutionRecommend",
+      "FeedbackReport",
+      "DailyAll"
+    ],
+    "recommended_operator_action": "SelfEvolutionPromotionPlan",
+    "recommended_operator_action_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action SelfEvolutionPromotionPlan"
+  }
+}

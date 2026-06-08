@@ -18,7 +18,13 @@ class CodexAdapterTests(unittest.TestCase):
         chinese = (ROOT / "docs" / "product" / "codex-direct-adapter.zh-CN.md").read_text(encoding="utf-8")
 
         self.assertIn("supporting evidence only", english)
+        self.assertIn("app-server", english)
+        self.assertIn("thread.sessionId", english)
+        self.assertIn("remote-control", english)
         self.assertIn("不能仅凭 resume/help surface 就把 Codex 升格为 `native_attach`", chinese)
+        self.assertIn("app-server", chinese)
+        self.assertIn("thread.sessionId", chinese)
+        self.assertIn("remote-control", chinese)
         self.assertNotIn("native attach capability is inferred from the resume command surface", english)
         self.assertNotIn("native attach capability 会通过 resume 能力推断可用", chinese)
 
