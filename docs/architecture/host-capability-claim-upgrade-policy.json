@@ -2,8 +2,8 @@
   "schema_version": "1.0",
   "policy_id": "default-host-capability-claim-upgrade-policy",
   "status": "enforced",
-  "reviewed_on": "2026-06-07",
-  "review_expires_at": "2026-09-05",
+  "reviewed_on": "2026-06-09",
+  "review_expires_at": "2026-09-07",
   "decision_claim": "Stronger live host-capability claims require fresh recovery evidence plus canonical capability-surface fields. Historical certification and wording refreshes alone must not upgrade the current live-host posture.",
   "canonical_surface_fields": [
     "host_family",
@@ -90,7 +90,7 @@
     }
   ],
   "evidence_refs": [
-    "docs/change-evidence/20260607-live-posture-refresh.md",
+    "docs/change-evidence/20260609-live-posture-recovery.md",
     "docs/change-evidence/20260607-gap-166-168-host-capability-claim-contract-closeout.md"
   ],
   "rollback_ref": "git revert the host capability claim-upgrade policy, its verifier, related tests, host-capability docs alignment, backlog status updates, and closeout evidence"

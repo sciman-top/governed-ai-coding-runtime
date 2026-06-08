@@ -33,7 +33,7 @@ This directory holds executable implementation plans that translate strategy and
   - Scope: `GAP-159` through `GAP-164` for cross-host continuity scope fencing, continuity record schema, read-only continuity auditing, portable handoff and memory index, MCP/operator exposure, and closeout evidence across Codex App, Codex CLI, Claude Code, and Claude Desktop boundaries
   - Safety boundary: share classified metadata, refs, summaries, handoff packages, and evidence; do not merge vendor-owned native history stores or copy credentials.
 - [Host-Family Capability Operationalization Plan](./host-family-capability-operationalization-plan.md)
-  - Status: `GAP-165..168` are complete as an owner-directed conditional planning package; the queue still must not be treated as the current active queue while `planning-status.json` reports `wait_for_host_capability_recovery`
+  - Status: `GAP-165..168` are complete as an owner-directed conditional planning package; the queue still must not be treated as the current active queue while `planning-status.json` keeps `GAP-159..164` active and the selector at `defer_ltp_and_refresh_evidence`
   - Scope: `GAP-165` through `GAP-168` for the conditional follow-on queue that operationalizes host-family capability declarations, post-recovery claim-upgrade triggers, and queue-promotion rules without overriding current live posture
 - [Long-Term Gap Trigger Audit Plan](./long-term-gap-trigger-audit-plan.md)
   - Status: completed trigger-audit queue for `GAP-090` through `GAP-092`; all `LTP-01..05` packages remain deferred pending future trigger evidence

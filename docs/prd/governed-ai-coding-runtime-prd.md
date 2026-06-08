@@ -140,8 +140,8 @@ This baseline is intentionally retained as product history and implementation su
 
 - The single source of current planning and live-posture truth is `docs/architecture/planning-status.json`.
 - `GAP-104..111` remain the certified historical baseline for complete hybrid final-state closure.
-- The current active queue remains `GAP-159..164`, and the current decision gate remains `wait_for_host_capability_recovery`.
-- The current live posture is intentionally host-specific: Codex target runs remain `process_bridge / degraded`, while the latest Claude workload probe is `native_attach / ready`.
+- The current active queue remains `GAP-159..164`, and the current decision gate remains `defer_ltp_and_refresh_evidence`.
+- The current live posture is intentionally host-specific but currently aligned: the latest Codex target-run batch and the latest Claude workload probe are both `native_attach / ready`.
 - Historical certification must not be used to overstate current live-host recovery.
 
 ## Best-End-State Blueprint (2026-06 Refresh)

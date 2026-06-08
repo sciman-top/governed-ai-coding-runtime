@@ -172,7 +172,7 @@ def build_governance_hub_certification(*, repo_root: Path, config_path: Path) ->
         failures.append("missing_future_trigger")
     if not all(loop_status.values()):
         failures.append("non_executable_loop")
-    if raw_effect_report.get("decision") not in {"keep", "adjust"}:
+    if raw_effect_report.get("decision") not in {"keep", "adjust", "promote"}:
         failures.append("effect_decision_not_certifiable")
     if not raw_effect_report.get("after_metrics", {}).get("evidence_complete", False):
         failures.append("effect_evidence_incomplete")

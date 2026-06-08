@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import os
 from pathlib import Path
 import json
+import time
 from uuid import uuid4
 
 
@@ -77,9 +78,21 @@ def _atomic_write_text(path: Path, content: str, *, encoding: str = "utf-8") -> 
     temporary = path.with_name(f".{path.name}.{uuid4().hex}.tmp")
     try:
         temporary.write_text(content, encoding=encoding)
-        os.replace(temporary, path)
+        _replace_file_with_retry(temporary, path)
     finally:
         try:
             temporary.unlink()
         except FileNotFoundError:
             pass
+
+
+def _replace_file_with_retry(source: Path, target: Path) -> None:
+    for delay in (0.0, 0.02, 0.05, 0.1, 0.2, 0.3):
+        if delay > 0:
+            time.sleep(delay)
+        try:
+            os.replace(source, target)
+            return
+        except PermissionError:
+            continue
+    os.replace(source, target)

@@ -1,40 +1,38 @@
 {
   "schema_version": "1.0",
   "status_id": "default-planning-status",
-  "updated_on": "2026-06-07",
+  "updated_on": "2026-06-09",
   "current_active_queue": {
     "queue_id": "GAP-159..164",
     "label": "Agent Continuity And Shared Context",
     "status": "implemented_with_followup_attention",
     "source_plan": "docs/plans/agent-continuity-and-shared-context-plan.md",
     "source_backlog": "docs/backlog/issue-ready-backlog.md",
-    "why_now": "This is the newest implemented owner-directed queue after GAP-152..158. New implementation should not resume until Codex target-run recovery moves from fresh-but-degraded process_bridge evidence to native_attach-ready proof."
+    "why_now": "This is the newest implemented owner-directed queue after GAP-152..158. Fresh 2026-06-09 target-run evidence has recovered Codex to native_attach/ready, so the repo is back to bounded evidence upkeep and LTP defer rather than a host-recovery wait gate."
   },
   "current_decision_gate": {
-    "selector": "wait_for_host_capability_recovery",
+    "selector": "defer_ltp_and_refresh_evidence",
     "selector_source": "scripts/select-next-work.py",
-    "as_of": "2026-06-07",
-    "proof_ref": "docs/change-evidence/20260607-live-posture-refresh.md",
-    "blocking_reasons": [
-      "host_capability_degraded_bounded_defer"
-    ]
+    "as_of": "2026-06-09",
+    "proof_ref": "docs/change-evidence/20260609-live-posture-recovery.md",
+    "blocking_reasons": []
   },
   "certified_baseline": {
     "queue_id": "GAP-104..111",
     "label": "Complete Hybrid Final-State Realization",
     "status": "certified_historical_baseline",
     "evidence_ref": "docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md",
-    "claim_boundary": "Certified closure remains historical proof of capability closure. It does not override current degraded or stale live posture."
+    "claim_boundary": "Certified closure remains historical proof of capability closure. It does not override current stale, degraded, or recovered live posture."
   },
   "current_live_posture": {
-    "status": "attention",
+    "status": "ready",
     "host_feedback_source": "scripts/host-feedback-summary.py --assert-minimum",
     "target_run_freshness": "fresh",
-    "codex_target_run_adapter_tier": "process_bridge",
-    "codex_target_run_capability_status": "degraded",
+    "codex_target_run_adapter_tier": "native_attach",
+    "codex_target_run_capability_status": "ready",
     "claude_workload_adapter_tier": "native_attach",
     "claude_workload_status": "ready",
-    "summary": "Claude workload probe is ready, and latest Codex target-run evidence is fresh, but Codex target runs still remain degraded/process_bridge. Do not claim native_attach recovery for Codex target runs until fresh evidence proves ready/native_attach."
+    "summary": "Fresh 2026-06-09 target-run evidence now shows both Codex target runs and the Claude workload probe at native_attach/ready. Keep stronger live-host claims tied to fresh evidence, and keep separate host snapshot attention from this recovered live target-run posture."
   },
   "authoritative_docs": [
     "docs/README.md",
@@ -48,9 +46,9 @@
     "single source of planning truth",
     "certified baseline",
     "current live posture",
-    "wait_for_host_capability_recovery",
+    "defer_ltp_and_refresh_evidence",
     "fresh",
-    "process_bridge"
+    "native_attach"
   ],
   "rollback_ref": "git revert docs/architecture/planning-status.json and dependent doc/gate updates"
 }

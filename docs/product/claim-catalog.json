@@ -163,17 +163,17 @@
     },
     {
       "claim_id": "CLM-011",
-      "claim_text": "Fresh target-run evidence is not sufficient when the latest host capability posture is degraded; degraded fresh evidence must surface as attention and block implementation work, using wait_for_host_capability_recovery when bounded host-capability defer evidence is present.",
-      "proof_command": "python scripts/select-next-work.py --as-of 2026-06-07",
-      "evidence_link": "docs/change-evidence/20260607-live-posture-refresh.md",
+      "claim_text": "Fresh target-run recovery evidence closes the bounded host-capability defer: once latest target runs return `codex_capability_status=ready` and `adapter_tier=native_attach`, autonomous next-work selection falls back to `defer_ltp_and_refresh_evidence` instead of `wait_for_host_capability_recovery`.",
+      "proof_command": "python scripts/select-next-work.py --as-of 2026-06-09",
+      "evidence_link": "docs/change-evidence/20260609-live-posture-recovery.md",
       "source_refs": [
         {
           "path": "scripts/host-feedback-summary.py",
-          "contains": "fresh target-run evidence is degraded"
+          "contains": "fresh target-run evidence summarized for"
         },
         {
           "path": "scripts/select-next-work.py",
-          "contains": "degraded_latest_run_count"
+          "contains": "defer_ltp_and_refresh_evidence"
         },
         {
           "path": "docs/backlog/issue-ready-backlog.md",
@@ -183,9 +183,9 @@
     },
     {
       "claim_id": "CLM-012",
-      "claim_text": "Evidence recovery posture is machine-checked across autonomous next-work selection, host-feedback target-run posture, and target-repo reuse effect feedback before new implementation or LTP work can proceed.",
-      "proof_command": "python scripts/verify-evidence-recovery-posture.py --as-of 2026-06-07",
-      "evidence_link": "docs/change-evidence/20260607-live-posture-refresh.md",
+      "claim_text": "Evidence recovery posture is machine-checked across autonomous next-work selection, host-feedback target-run posture, and target-repo reuse effect feedback; the recovered state now requires selector `defer_ltp_and_refresh_evidence`, fresh target runs at `ready/native_attach`, and an effect report that closes the host-capability backlog candidate with `decision=promote`.",
+      "proof_command": "python scripts/verify-evidence-recovery-posture.py --as-of 2026-06-09",
+      "evidence_link": "docs/change-evidence/20260609-live-posture-recovery.md",
       "source_refs": [
         {
           "path": "scripts/verify-evidence-recovery-posture.py",

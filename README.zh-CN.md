@@ -33,8 +33,8 @@ AI 推荐的交付前 readiness：
 唯一状态真源：`docs/architecture/planning-status.json`。
 - `certified baseline`：`GAP-104..111`
 - `current active queue`：`GAP-159..164`
-- `current decision gate`：`wait_for_host_capability_recovery`
-- `current live posture`：target-run freshness 为 `fresh`；Codex target runs 仍是 `process_bridge` / degraded；Claude workload probe 为 `native_attach` / ready
+- `current decision gate`：`defer_ltp_and_refresh_evidence`
+- `current live posture`：target-run freshness 为 `fresh`；Codex target runs 现已恢复为 `native_attach` / ready；Claude workload probe 为 `native_attach` / ready
 
 当前仓库现在应该理解为一个已经完成产品化第一版落地的本地 governed runtime；`Strategy Alignment Gates / GAP-040..044` 已在当前分支基线上完成，并作为这条产品化结果的硬化依赖保留下来。
 
@@ -70,12 +70,12 @@ AI 推荐的交付前 readiness：
 - `GAP-104..111` 已在当前分支基线上完成；认证主证据见 [20260427 GAP-111 完整混合终态认证](docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md)。
 - 根说明只保留认证边界：本项目已证明 repo-local contract bundle、machine-local durable governance kernel、attach-first host adapters 和 same-contract verification/delivery plane，但不宣称接管上游 Codex 宿主 UI，也不宣称对所有未来外部仓和高风险流程无条件接管。
 - 详细完成历史与 `GAP-130..143` 快照已转入 [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md)。
-- 历史认证不覆盖当前 live posture；即使最新 target-run evidence 已是 `fresh`，只要仍停留在 `process_bridge` / degraded，下一步也必须等待宿主能力恢复，而不是沿用历史认证措辞替代当前状态。
+- 历史认证不覆盖当前 live posture；更强的 live-host claim 只有在 fresh target-run evidence 维持 `ready` / `native_attach` 时才成立，一旦姿态再次退化，口径也必须立即随之回退。
 
 ## 当前受控演进口径
 `GAP-120..129` 已把 30 天自我演进 review、AI 编码经验沉淀、低风险 proposal/disabled skill materialization 纳入受控流程；但仍不自动改 policy、不自动启用 skill、不自动同步目标仓、不自动 push/merge。
 
-`GAP-130..143` 已形成 governance hub、reusable contract、controlled evolution、repo-map shaping、tool/credential audit 和 evidence recovery 这一组完成基线；详细条目见 [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md)。Codex 和 Claude Code 仍是合作宿主而不是竞争对象；完成标准仍必须包含真实 target-repo effect feedback，fresh target-run evidence 若仍是 degraded/process_bridge，下一步必须等待宿主能力恢复，而不是重启实现或夸大恢复结论。
+`GAP-130..143` 已形成 governance hub、reusable contract、controlled evolution、repo-map shaping、tool/credential audit 和 evidence recovery 这一组完成基线；详细条目见 [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md)。Codex 和 Claude Code 仍是合作宿主而不是竞争对象；完成标准仍必须包含真实 target-repo effect feedback，而更强的 live-host claim 也必须始终绑定 fresh target-run evidence，而不能只沿用历史认证措辞。
 
 最佳工程终态已固化为 `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`，即治理中枢、可复用控制契约、能力优先的多宿主适配、受控演进闭环和证据优先交付纪律，而不是新的宿主产品。
 

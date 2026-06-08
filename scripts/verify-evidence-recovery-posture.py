@@ -14,7 +14,7 @@ HOST_CLAIM_GUARD = "do not claim native_attach recovery until a fresh target rep
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Verify evidence recovery posture after degraded target runs.")
+    parser = argparse.ArgumentParser(description="Verify evidence recovery posture after host capability recovery.")
     parser.add_argument("--repo-root", default=str(ROOT))
     parser.add_argument("--as-of", default=None, help="ISO date used for selector expiry checks; defaults to today.")
     args = parser.parse_args()
@@ -40,24 +40,26 @@ def main() -> int:
 def assert_evidence_recovery_posture(*, repo_root: Path, as_of: dt.date | None = None) -> dict:
     result = inspect_evidence_recovery_posture(repo_root=repo_root, as_of=as_of)
     failures: list[str] = []
-    if result["selector"]["next_action"] != "wait_for_host_capability_recovery":
-        failures.append("selector must wait for host capability recovery while fresh target runs remain degraded under bounded defer")
-    if result["selector"]["evidence_state"] != "stale":
-        failures.append("selector evidence_state must remain stale while latest target runs are degraded")
-    if result["target_runs"]["status"] != "attention":
-        failures.append("target_runs status must be attention for fresh degraded target runs")
+    if result["selector"]["next_action"] != "defer_ltp_and_refresh_evidence":
+        failures.append("selector must return defer_ltp_and_refresh_evidence once fresh host capability recovery is proven and no LTP package is selected")
+    if result["selector"]["evidence_state"] != "fresh":
+        failures.append("selector evidence_state must be fresh after latest target runs recover")
     if result["target_runs"]["freshness_status"] != "fresh":
         failures.append("target run evidence must be fresh before this recovery posture can close")
-    if result["target_runs"]["degraded_latest_run_count"] < 1:
-        failures.append("expected at least one degraded latest target run")
-    if result["effect_report"]["decision"] != "adjust":
-        failures.append("effect report must keep decision=adjust while host capability recovery is incomplete")
-    if not result["effect_report"]["host_capability_candidate_present"]:
-        failures.append("effect report must include target-repo-reuse-host-capability-gap candidate")
-    if result["effect_report"]["required_recovery_evidence"] != HOST_RECOVERY_RULE:
-        failures.append("effect report recovery evidence rule drifted")
-    if result["effect_report"]["claim_guard"] != HOST_CLAIM_GUARD:
-        failures.append("effect report claim guard drifted")
+    if result["target_runs"]["status"] != "ok":
+        failures.append("target_runs status must be ok after recovered latest target runs return ready/native_attach")
+    if result["target_runs"]["degraded_latest_run_count"] != 0:
+        failures.append("expected zero degraded latest target runs after recovery")
+    if result["effect_report"]["decision"] != "promote":
+        failures.append("effect report must keep decision=promote after host capability recovery closes the reusable gap")
+    if result["effect_report"]["host_capability_candidate_present"]:
+        failures.append("effect report must close target-repo-reuse-host-capability-gap after recovery")
+    if result["effect_report"]["latest_codex_capability_status"] != "ready":
+        failures.append("effect report after_metrics must report codex_capability_status=ready after recovery")
+    if result["effect_report"]["latest_adapter_tier"] != "native_attach":
+        failures.append("effect report after_metrics must report adapter_tier=native_attach after recovery")
+    if result["effect_report"]["latest_flow_kind"] != "live_attach":
+        failures.append("effect report after_metrics must report flow_kind=live_attach after recovery")
 
     if failures:
         raise ValueError("; ".join(failures))
@@ -110,6 +112,9 @@ def inspect_evidence_recovery_posture(*, repo_root: Path, as_of: dt.date | None 
             "host_capability_candidate_present": bool(host_candidate),
             "required_recovery_evidence": remediation_boundary.get("required_recovery_evidence"),
             "claim_guard": remediation_boundary.get("claim_guard"),
+            "latest_codex_capability_status": effect_report.get("after_metrics", {}).get("codex_capability_status"),
+            "latest_adapter_tier": effect_report.get("after_metrics", {}).get("adapter_tier"),
+            "latest_flow_kind": effect_report.get("after_metrics", {}).get("flow_kind"),
         },
         "recovery_rule": HOST_RECOVERY_RULE,
         "claim_guard": HOST_CLAIM_GUARD,

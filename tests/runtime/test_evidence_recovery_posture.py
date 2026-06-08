@@ -37,31 +37,34 @@ class EvidenceRecoveryPostureTests(unittest.TestCase):
             module = _load_script()
             cls._live_payload = module.assert_evidence_recovery_posture(
                 repo_root=ROOT,
-                as_of=dt.date(2026, 6, 6),
+                as_of=dt.date(2026, 6, 9),
             )
         return dict(cls._live_payload)
 
-    def test_live_recovery_posture_requires_host_recovery_wait_before_implementation(self) -> None:
+    def test_live_recovery_posture_requires_fresh_ready_native_attach_evidence(self) -> None:
         payload = self._live_recovery_payload()
         self.assertEqual(payload["status"], "pass")
-        self.assertEqual(payload["selector"]["next_action"], "wait_for_host_capability_recovery")
-        self.assertEqual(payload["selector"]["evidence_state"], "stale")
-        self.assertEqual(payload["selector"]["evidence_blocker"], "host_capability_degraded_bounded_defer")
-        self.assertEqual(payload["target_runs"]["status"], "attention")
-        self.assertGreater(payload["target_runs"]["degraded_latest_run_count"], 0)
-        self.assertTrue(payload["effect_report"]["host_capability_candidate_present"])
+        self.assertEqual(payload["selector"]["next_action"], "defer_ltp_and_refresh_evidence")
+        self.assertEqual(payload["selector"]["evidence_state"], "fresh")
+        self.assertIsNone(payload["selector"]["evidence_blocker"])
+        self.assertEqual(payload["target_runs"]["status"], "ok")
+        self.assertEqual(payload["target_runs"]["degraded_latest_run_count"], 0)
+        self.assertFalse(payload["effect_report"]["host_capability_candidate_present"])
+        self.assertEqual(payload["effect_report"]["decision"], "promote")
+        self.assertEqual(payload["effect_report"]["latest_codex_capability_status"], "ready")
+        self.assertEqual(payload["effect_report"]["latest_adapter_tier"], "native_attach")
 
-    def test_recovery_posture_fails_closed_when_selector_is_not_waiting_for_host_recovery(self) -> None:
+    def test_recovery_posture_fails_closed_when_selector_is_not_in_recovered_defer_state(self) -> None:
         result = self._live_recovery_payload()
         result["selector"]["next_action"] = "promote_ltp"
 
         failures = []
-        if result["selector"]["next_action"] != "wait_for_host_capability_recovery":
+        if result["selector"]["next_action"] != "defer_ltp_and_refresh_evidence":
             failures.append(
-                "selector must wait for host capability recovery while fresh target runs remain degraded under bounded defer"
+                "selector must return defer_ltp_and_refresh_evidence once fresh host capability recovery is proven and no LTP package is selected"
             )
 
-        self.assertIn("selector must wait for host capability recovery", failures[0])
+        self.assertIn("selector must return defer_ltp_and_refresh_evidence", failures[0])
 
 
 if __name__ == "__main__":

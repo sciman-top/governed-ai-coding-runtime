@@ -36,8 +36,8 @@ AI 推荐的交付前 readiness：
 当前唯一状态真源：`docs/architecture/planning-status.json`。
 - `certified baseline`：`GAP-104..111`
 - `current active queue`：`GAP-159..164`
-- `current decision gate`：`wait_for_host_capability_recovery`
-- `current live posture`：target-run freshness 为 `fresh`，Codex target runs 仍是 `process_bridge` / degraded；Claude workload probe 为 `native_attach` / ready
+- `current decision gate`：`defer_ltp_and_refresh_evidence`
+- `current live posture`：target-run freshness 为 `fresh`，Codex target runs 现已恢复为 `native_attach` / ready；Claude workload probe 为 `native_attach` / ready
 
 当前仓库的正确理解是：
 - 已完成一个可运行、可验证、可留痕的本地治理运行时基线
@@ -75,12 +75,12 @@ AI 推荐的交付前 readiness：
 - `GAP-104..111` 已在当前分支基线上完成；认证主证据见 [20260427 GAP-111 完整混合终态认证](docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md)。
 - 当前入口只保留认证边界：本项目已证明 repo-local contract bundle、machine-local durable governance kernel、attach-first host adapters 和 same-contract verification/delivery plane，但不宣称接管上游宿主 UI，也不宣称对所有未来外部仓和高风险流程无条件接管。
 - 详细完成历史与后续 `GAP-130..143` 快照见 [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md) / [Completed GAP History](docs/archive/completed-gap-history.md)。
-- 历史认证不覆盖当前 live posture；即使最新 target-run evidence 已是 `fresh`，只要仍停留在 `process_bridge` / degraded，下一步也必须等待宿主能力恢复，而不是沿用历史认证措辞替代当前状态。
+- 历史认证不覆盖当前 live posture；更强的 live-host claim 只有在 fresh target-run evidence 维持 `ready` / `native_attach` 时才成立，一旦姿态再次退化，口径也必须立即随之回退。
 
 当前受控演进口径：
 - `GAP-120..129` 已把 30 天自我演进 review、AI 编码经验沉淀和低风险 proposal/disabled skill materialization 纳入受控流程；但仍不自动改 policy、不自动启用 skill、不自动同步目标仓、不自动 push/merge。
 - `GAP-130..143` 已形成 governance hub、reusable contract、controlled evolution、repo-map shaping、tool/credential audit 和 evidence recovery 这一组完成基线；详细条目转入 [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md) / [Completed GAP History](docs/archive/completed-gap-history.md)。
-- Codex 和 Claude Code 是合作宿主而不是竞争对象；完成标准仍必须包含真实 target-repo effect feedback，fresh target-run evidence 若仍是 degraded/process_bridge，下一步必须等待宿主能力恢复，而不是重新启动实现或夸大恢复结论。
+- Codex 和 Claude Code 是合作宿主而不是竞争对象；完成标准仍必须包含真实 target-repo effect feedback，而更强的 live-host claim 也必须始终绑定 fresh target-run evidence，而不能只沿用历史认证措辞。
 - 最佳工程终态已固化为 `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`，即治理中枢、可复用控制契约、能力优先的多宿主适配、受控演进闭环和证据优先交付纪律，而不是新的宿主产品。
 - 当前最合适目标定义：一个 capability-first、host-family-aware 的 AI coding governance runtime。`Codex family` 与 `Claude family` 是第一类合作宿主，`Antigravity family` 是 Google 的长期方向，`Gemini CLI` 仍是迁移桥而不是首选主宿主。
 - 核心原则已收敛为 5 条人类可读口径，机器细则仍以 `docs/architecture/core-principles-policy.json` 的 enforced principles 为准：
@@ -309,8 +309,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -T
 Single source of planning truth: `docs/architecture/planning-status.json`.
 - `certified baseline`: `GAP-104..111`
 - `current active queue`: `GAP-159..164`
-- `current decision gate`: `wait_for_host_capability_recovery`
-- `current live posture`: target-run freshness is `fresh`; Codex target runs remain `process_bridge` / degraded; Claude workload probe is `native_attach` / ready
+- `current decision gate`: `defer_ltp_and_refresh_evidence`
+- `current live posture`: target-run freshness is `fresh`; Codex target runs are now `native_attach` / ready; Claude workload probe is `native_attach` / ready
 
 `Strategy Alignment Gates / GAP-040..044` are complete on the current branch baseline and remain encoded as satisfied dependencies around that landed slice.
 
@@ -341,13 +341,13 @@ Current complete hybrid final-state certification posture:
 - `GAP-104..111` are complete on the current branch baseline; primary evidence is [20260427 GAP-111 Complete Hybrid Final-State Certification](docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md).
 - The root entrypoint keeps only the certification boundary: the repo-local contract bundle, machine-local durable governance kernel, attach-first host adapters, and same-contract verification/delivery plane are proven, but this still does not claim upstream host UI ownership or unconditional takeover of every future external repo or high-risk workflow.
 - Detailed completion history and the `GAP-130..143` snapshot moved to [Completed GAP History](docs/archive/completed-gap-history.md) / [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md).
-- Historical certification does not override the current live posture. Even when target-run evidence is fresh, if it is still degraded at `process_bridge`, wait for host capability recovery before making stronger live-host claims.
+- Historical certification does not override the current live posture. Stronger live-host claims are valid only while fresh target-run evidence stays at `ready` / `native_attach`; if posture degrades again, the claim must immediately fall back with it.
 
 Current controlled-evolution posture:
 - `GAP-120..129` put 30-day evolution review, AI coding experience capture, and low-risk proposal or disabled-skill materialization under governance, but they still do not auto-apply policy, auto-enable skills, sync target repos, push, or merge.
 - `GAP-130..143` now represent the completed governance-hub, reusable-contract, controlled-evolution, repo-map shaping, tool or credential audit, and evidence-recovery baseline; the detailed list lives in [Completed GAP History](docs/archive/completed-gap-history.md) / [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md).
 - Codex and Claude Code are cooperation hosts, not competitors.
-- Codex and Claude Code remain cooperation hosts rather than competitors; completion still requires real target-repo effect feedback, and fresh target-run evidence that remains degraded or `process_bridge` must wait for host capability recovery before the next stronger claim.
+- Codex and Claude Code remain cooperation hosts rather than competitors; completion still requires real target-repo effect feedback, and stronger live-host claims stay tied to fresh target-run evidence instead of historical certification language alone.
 - The best engineering final state is now fixed as `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`: a governance center, reusable control contract, capability-first multi-host adapters, a controlled evolution loop, and evidence-first delivery discipline, not a new host product.
 - The most accurate current target definition is a capability-first, host-family-aware governance runtime for AI coding: `Codex family` and `Claude family` are the required cooperation hosts, `Antigravity family` is the long-term Google direction, and `Gemini CLI` remains a migration bridge rather than the preferred Google host surface.
 

@@ -99,4 +99,4 @@ Promote this plan only when all of the following are true:
 **Estimated scope:** S
 
 ## Immediate Rule
-Use this plan as a prepared follow-on queue, not as permission to start new implementation work while the current decision gate still waits for host capability recovery.
+Use this plan as a prepared follow-on queue, not as permission to start new implementation work while `planning-status.json` still keeps `GAP-159..164` as the active queue and this follow-on package inactive.

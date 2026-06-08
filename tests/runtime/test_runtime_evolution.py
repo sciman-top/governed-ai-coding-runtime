@@ -46,7 +46,10 @@ class RuntimeEvolutionTests(unittest.TestCase):
         self.assertTrue(any(item["retrieval_mode"] == "dry_run_catalog" for item in payload["source_records"]))
         self.assertTrue(any(item["source_type"] == "internal_ai_coding_experience" for item in payload["source_records"]))
         self.assertTrue(any(item["candidate_id"] == "EVOL-AI-EXPERIENCE" for item in payload["candidates"]))
-        self.assertTrue(any(item["candidate_id"] == "EVOL-EFFECT-FEEDBACK" for item in payload["candidates"]))
+        self.assertFalse(any(item["candidate_id"] == "EVOL-EFFECT-FEEDBACK" for item in payload["candidates"]))
+        self.assertEqual(payload["evidence_snapshot"]["effect_feedback"]["status"], "pass")
+        self.assertEqual(payload["evidence_snapshot"]["effect_feedback"]["decision"], "promote")
+        self.assertEqual(payload["evidence_snapshot"]["effect_feedback"]["backlog_candidate_count"], 0)
         self.assertTrue(all(item["patch_plan"] for item in payload["candidates"]))
 
     def test_source_catalog_covers_required_ai_feature_sources(self) -> None:

@@ -37,7 +37,8 @@ class PlanningStatusTests(unittest.TestCase):
         payload = json.loads(completed.stdout)
         self.assertEqual(payload["status"], "pass")
         self.assertEqual(payload["current_active_queue"], "GAP-159..164")
-        self.assertEqual(payload["current_decision_gate"], "wait_for_host_capability_recovery")
+        self.assertEqual(payload["current_decision_gate"], "defer_ltp_and_refresh_evidence")
+        self.assertEqual(payload["current_live_posture"], "ready")
 
     def test_planning_status_fails_when_required_token_missing(self) -> None:
         module = _load_planning_status_script()

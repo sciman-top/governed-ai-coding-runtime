@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import re
+import time
 from uuid import uuid4
 
 
@@ -35,6 +36,7 @@ _WINDOWS_RESERVED_BASENAMES = {
     "LPT8",
     "LPT9",
 }
+_ATOMIC_REPLACE_RETRY_DELAYS_SECONDS = (0.02, 0.05, 0.1, 0.2, 0.3)
 
 
 def validate_file_component(value: object, field_name: str) -> str:
@@ -73,12 +75,24 @@ def atomic_write_text(path: Path, content: str, *, encoding: str = "utf-8") -> N
     temporary = target.with_name(f".{target.name}.{uuid4().hex}.tmp")
     try:
         temporary.write_text(content, encoding=encoding)
-        os.replace(temporary, target)
+        _replace_file_with_retry(temporary, target)
     finally:
         try:
             temporary.unlink()
         except FileNotFoundError:
             pass
+
+
+def _replace_file_with_retry(source: Path, target: Path) -> None:
+    for delay in (0.0, *_ATOMIC_REPLACE_RETRY_DELAYS_SECONDS):
+        if delay > 0:
+            time.sleep(delay)
+        try:
+            os.replace(source, target)
+            return
+        except PermissionError:
+            continue
+    os.replace(source, target)
 
 
 def is_resolved_under(path: Path, parent: Path) -> bool:

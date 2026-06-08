@@ -22,6 +22,7 @@ class GovernanceHubCertificationTests(unittest.TestCase):
         payload = json.loads(completed.stdout)
         self.assertEqual(payload["status"], "pass")
         self.assertEqual(payload["effect_feedback"]["target"], "classroomtoolkit")
+        self.assertEqual(payload["effect_feedback"]["decision"], "promote")
         self.assertTrue(all(payload["loop_status"].values()))
         self.assertTrue(payload["loop_status"]["self_evolution_readiness_loop"])
         self.assertTrue(payload["final_answers"]["self_evolution_readiness_loop_executable"])

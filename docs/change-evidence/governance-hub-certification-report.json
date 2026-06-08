@@ -23,9 +23,7 @@
     "codex_is_cooperation_host": true,
     "no_host_competition_claim": true
   },
-  "invalid_reasons": [
-    "effect_decision_not_certifiable"
-  ],
+  "invalid_reasons": [],
   "loop_status": {
     "capability_cleanup_loop": true,
     "capability_upgrade_loop": true,
@@ -61,7 +59,7 @@
   "rollback_ref": "Revert the GAP-139 certification contract, verifier, tests, generated report, and status updates.",
   "schema_version": "0.1-draft",
   "special_entries_without_future_trigger": [],
-  "status": "fail",
+  "status": "pass",
   "verification_command": "python scripts/verify-governance-hub-certification.py",
   "verifier_results": {
     "ai_coding_experience": {

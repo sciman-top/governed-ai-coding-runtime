@@ -33,8 +33,8 @@ That means the first landed hybrid productization boundary is now present. It do
 Single source of planning truth: `docs/architecture/planning-status.json`.
 - `certified baseline`: `GAP-104..111`
 - `current active queue`: `GAP-159..164`
-- `current decision gate`: `wait_for_host_capability_recovery`
-- `current live posture`: target-run freshness is `fresh`; Codex target runs remain `process_bridge` / degraded; Claude workload probe is `native_attach` / ready
+- `current decision gate`: `defer_ltp_and_refresh_evidence`
+- `current live posture`: target-run freshness is `fresh`; Codex target runs are now `native_attach` / ready; Claude workload probe is `native_attach` / ready
 
 This repository is usable today as a local governed runtime with the first attach-first productization slice landed; `Strategy Alignment Gates / GAP-040..044` are complete on the current branch baseline and remain encoded as satisfied hardening dependencies around that result.
 
@@ -70,12 +70,12 @@ Complete hybrid final-state certification posture:
 - `GAP-104..111` are complete on the current branch baseline; primary evidence is [20260427 GAP-111 Complete Hybrid Final-State Certification](docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md).
 - The root guide keeps only the certification boundary: the repo-local contract bundle, machine-local durable governance kernel, attach-first host adapters, and same-contract verification/delivery plane are proven, but this still does not claim upstream host UI ownership or unconditional takeover of every future external repo or high-risk workflow.
 - Detailed completion history and the `GAP-130..143` snapshot moved to [Completed GAP History](docs/archive/completed-gap-history.md).
-- Historical certification does not override the current live posture. Even when target-run evidence is fresh, if it is still degraded at `process_bridge`, wait for host capability recovery before making stronger live-host claims.
+- Historical certification does not override the current live posture. Stronger live-host claims are valid only while fresh target-run evidence stays at `ready` / `native_attach`; if posture degrades again, the claim must immediately fall back with it.
 
 ## Current Controlled-Evolution Posture
 `GAP-120..129` put 30-day evolution review, AI coding experience capture, and low-risk proposal/disabled-skill materialization under governance. They still do not auto-apply policy, auto-enable skills, sync target repos, push, or merge.
 
-`GAP-130..143` now represent the completed governance-hub, reusable-contract, controlled-evolution, repo-map shaping, tool/credential audit, and evidence-recovery baseline; the detailed list lives in [Completed GAP History](docs/archive/completed-gap-history.md). Codex and Claude Code remain cooperation hosts rather than competitors. Completion still requires real target-repo effect feedback, and fresh target-run evidence that remains degraded/process_bridge must wait for host capability recovery before stronger live-host claims resume.
+`GAP-130..143` now represent the completed governance-hub, reusable-contract, controlled-evolution, repo-map shaping, tool/credential audit, and evidence-recovery baseline; the detailed list lives in [Completed GAP History](docs/archive/completed-gap-history.md). Codex and Claude Code remain cooperation hosts rather than competitors. Completion still requires real target-repo effect feedback, and stronger live-host claims stay tied to fresh target-run evidence instead of historical certification language alone.
 
 The best engineering final state is now fixed as `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`: a governance center, reusable control contract, capability-first multi-host adapters, a controlled evolution loop, and evidence-first delivery discipline, not a new host product.
 

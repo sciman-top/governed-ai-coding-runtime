@@ -27,26 +27,27 @@ class AutonomousNextWorkSelectionTests(unittest.TestCase):
         sys.modules.pop("select_next_work_script", None)
         sys.modules.pop("evaluate_ltp_promotion_script", None)
 
-    def test_repo_selector_waits_for_host_recovery_when_target_runs_are_degraded_under_bounded_defer(self) -> None:
+    def test_repo_selector_defers_ltp_after_fresh_host_recovery_evidence(self) -> None:
         module = _load_selector_script()
 
         payload = module.assert_next_work_selection(
             repo_root=ROOT,
             policy_path=ROOT / "docs" / "architecture" / "autonomous-next-work-selection-policy.json",
             ltp_policy_path=ROOT / "docs" / "architecture" / "ltp-autonomous-promotion-policy.json",
-            as_of=dt.date(2026, 6, 6),
+            as_of=dt.date(2026, 6, 9),
         )
 
         self.assertEqual(payload["status"], "pass")
         self.assertEqual(payload["policy_id"], "default-autonomous-next-work-selection")
         self.assertEqual(payload["ltp_decision"], "defer_all")
-        self.assertEqual(payload["next_action"], "wait_for_host_capability_recovery")
+        self.assertEqual(payload["next_action"], "defer_ltp_and_refresh_evidence")
         self.assertIsNone(payload["selected_package"])
         self.assertEqual(payload["gate_state"], "pass")
         self.assertEqual(payload["source_state"], "fresh")
-        self.assertEqual(payload["evidence_state"], "stale")
-        self.assertEqual(payload["evidence_blocker"], "host_capability_degraded_bounded_defer")
-        self.assertGreater(payload["auto_detected_inputs"]["details"]["host_feedback"]["degraded_latest_run_count"], 0)
+        self.assertEqual(payload["evidence_state"], "fresh")
+        self.assertIsNone(payload["evidence_blocker"])
+        self.assertEqual(payload["auto_detected_inputs"]["details"]["host_feedback"]["target_runs_status"], "ok")
+        self.assertEqual(payload["auto_detected_inputs"]["details"]["host_feedback"]["degraded_latest_run_count"], 0)
         self.assertIn("auto_detected_inputs", payload)
 
     def test_selector_promotes_one_auto_selected_ltp_package(self) -> None:

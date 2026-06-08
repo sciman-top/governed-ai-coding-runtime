@@ -116,12 +116,12 @@ The single source of current posture is:
 Current practical reading:
 - historical certification: `GAP-104..111`
 - current active queue: `GAP-159..164`
-- current decision gate: `wait_for_host_capability_recovery`
-- current live posture: Codex target runs are still `process_bridge / degraded`; latest Claude workload probe is `native_attach / ready`
+- current decision gate: `defer_ltp_and_refresh_evidence`
+- current live posture: Codex target runs are now `native_attach / ready`; latest Claude workload probe is `native_attach / ready`
 
 Implication:
 - do not reopen implementation queues just because historical closure exists
-- do not claim recovered Codex native attach until fresh evidence says so
+- keep stronger live-host claims tied to fresh evidence instead of historical certification alone
 
 ## Mechanism Intake Rule
 Borrow mechanisms, not product identities.
