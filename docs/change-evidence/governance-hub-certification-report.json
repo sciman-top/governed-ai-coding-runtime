@@ -3,8 +3,8 @@
   "effect_feedback": {
     "after_evidence_complete": true,
     "after_overall_status": "pass",
-    "backlog_candidate_count": 1,
-    "decision": "adjust",
+    "backlog_candidate_count": 0,
+    "decision": "promote",
     "target": "classroomtoolkit",
     "verifier_status": "pass"
   },
@@ -23,7 +23,9 @@
     "codex_is_cooperation_host": true,
     "no_host_competition_claim": true
   },
-  "invalid_reasons": [],
+  "invalid_reasons": [
+    "effect_decision_not_certifiable"
+  ],
   "loop_status": {
     "capability_cleanup_loop": true,
     "capability_upgrade_loop": true,
@@ -59,7 +61,7 @@
   "rollback_ref": "Revert the GAP-139 certification contract, verifier, tests, generated report, and status updates.",
   "schema_version": "0.1-draft",
   "special_entries_without_future_trigger": [],
-  "status": "pass",
+  "status": "fail",
   "verification_command": "python scripts/verify-governance-hub-certification.py",
   "verifier_results": {
     "ai_coding_experience": {
@@ -75,7 +77,7 @@
       "status": "pass"
     },
     "current_source_compatibility": {
-      "as_of": "2026-06-08",
+      "as_of": "2026-06-09",
       "expired": false,
       "forbidden_pattern_hits": [],
       "kernel_owned_semantics": [
@@ -122,7 +124,7 @@
       "status": "pass"
     },
     "knowledge_memory_lifecycle": {
-      "as_of": "2026-06-08",
+      "as_of": "2026-06-09",
       "entrypoint": "scripts/operator.ps1 -Action ExperienceReview",
       "knowledge_candidate_count": 1,
       "memory_record_count": 1,
@@ -481,7 +483,7 @@
       "verification_command": "python scripts/verify-policy-tool-credential-audit.py"
     },
     "promotion_lifecycle": {
-      "as_of": "2026-06-08",
+      "as_of": "2026-06-09",
       "entrypoint": "python scripts/materialize-runtime-evolution.py --apply",
       "lifecycle_entry_count": 2,
       "retire_proposal_count": 2,
@@ -491,8 +493,8 @@
     },
     "runtime_evolution": {
       "artifact_refs": {},
-      "as_of": "2026-06-08",
-      "candidate_count": 4,
+      "as_of": "2026-06-09",
+      "candidate_count": 3,
       "candidates": [
         {
           "acceptance_gates": [
@@ -518,38 +520,8 @@
           "repo_impact": "Keeps self-evolution prompts aligned with real host degradation and stale target workload evidence.",
           "risk_level": "low",
           "rollback_plan": "remove host-feedback-driven candidate wiring if it misclassifies freshness or host posture",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_ref": ".runtime/artifacts/host-feedback-summary/latest.md",
-          "source_type": "internal_runtime_evidence"
-        },
-        {
-          "acceptance_gates": [
-            "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1",
-            "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime",
-            "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract",
-            "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1"
-          ],
-          "candidate_id": "EVOL-EFFECT-FEEDBACK",
-          "decision": "improve_target_effect_loop",
-          "evidence_required": [
-            "target repo reuse effect report",
-            "backlog candidates with reason and disposition",
-            "fresh daily target-run evidence"
-          ],
-          "observed_change": "Target repo effect feedback still carries unresolved backlog candidates or verifier errors.",
-          "patch_plan": [
-            {
-              "apply_mode": "manual_or_future_low_risk_only",
-              "operation": "refresh effect report and translate remaining candidates into bounded follow-up work",
-              "path": "docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json"
-            }
-          ],
-          "proposed_action": "modify",
-          "repo_impact": "Turns real target repo effect gaps into explicit evolution work instead of leaving them in report-only form.",
-          "risk_level": "medium",
-          "rollback_plan": "revert any follow-up change that was justified only by stale or misread target effect feedback",
-          "source_checked_on": "2026-06-08",
-          "source_ref": "docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json",
           "source_type": "internal_runtime_evidence"
         },
         {
@@ -576,7 +548,7 @@
           "repo_impact": "Lets repeated AI coding patterns become governed proposals or cleanup candidates instead of hidden session-only know-how.",
           "risk_level": "low",
           "rollback_plan": "remove generated AI-coding-experience candidates if their reuse value or verification posture regresses",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_ref": ".runtime/artifacts/ai-coding-experience/20260501-ai-coding-experience-review.json",
           "source_type": "internal_ai_coding_experience"
         },
@@ -603,7 +575,7 @@
           "repo_impact": "Prevents community or stale assumptions from becoming execution rules without reviewable source evidence.",
           "risk_level": "medium",
           "rollback_plan": "remove the source collection candidate from the evolution dry-run output",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_ref": "dry-run source inventory",
           "source_type": "official_doc_or_changelog"
         }
@@ -628,8 +600,8 @@
           "status": "pass"
         },
         "effect_feedback": {
-          "backlog_candidate_count": 1,
-          "decision": "adjust",
+          "backlog_candidate_count": 0,
+          "decision": "promote",
           "error_count": 0,
           "errors": [],
           "status": "pass",
@@ -654,7 +626,7 @@
       "policy_id": "default-runtime-evolution-review",
       "policy_path": "D:/CODE/governed-ai-coding-runtime/docs/architecture/runtime-evolution-policy.json",
       "policy_status": "enforced",
-      "review_age_days": 2,
+      "review_age_days": 3,
       "review_expires_at": "2026-07-06",
       "reviewed_on": "2026-06-06",
       "source_count": 33,
@@ -662,7 +634,7 @@
         {
           "confidence": "high",
           "retrieval_mode": "dry_run_no_network",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "policy-source-1",
           "source_ref": "official_doc_or_changelog",
           "source_type": "official_doc_or_changelog",
@@ -671,7 +643,7 @@
         {
           "confidence": "high",
           "retrieval_mode": "dry_run_no_network",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "policy-source-2",
           "source_ref": "primary_project_or_reference_implementation",
           "source_type": "primary_project_or_reference_implementation",
@@ -680,7 +652,7 @@
         {
           "confidence": "medium",
           "retrieval_mode": "dry_run_no_network",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "policy-source-3",
           "source_ref": "internal_runtime_evidence",
           "source_type": "internal_runtime_evidence",
@@ -689,7 +661,7 @@
         {
           "confidence": "medium",
           "retrieval_mode": "dry_run_no_network",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "policy-source-4",
           "source_ref": "internal_ai_coding_experience",
           "source_type": "internal_ai_coding_experience",
@@ -698,7 +670,7 @@
         {
           "confidence": "medium",
           "retrieval_mode": "dry_run_no_network",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "policy-source-5",
           "source_ref": "community_best_practice",
           "source_type": "community_best_practice",
@@ -709,7 +681,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "openai-codex-agents-md",
           "source_ref": "https://developers.openai.com/codex/guides/agents-md",
           "source_type": "official_doc_or_changelog",
@@ -720,7 +692,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "openai-agents-sdk-evolution",
           "source_ref": "https://openai.com/index/the-next-evolution-of-the-agents-sdk/",
           "source_type": "official_doc_or_changelog",
@@ -731,7 +703,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "openai-agents-sdk-sandboxes",
           "source_ref": "https://developers.openai.com/api/docs/guides/agents/sandboxes",
           "source_type": "official_doc_or_changelog",
@@ -742,7 +714,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "openai-agents-sdk-guardrails-human-review",
           "source_ref": "https://developers.openai.com/api/docs/guides/agents/guardrails-approvals",
           "source_type": "official_doc_or_changelog",
@@ -753,7 +725,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "openai-codex-subagents",
           "source_ref": "https://developers.openai.com/codex/concepts/subagents",
           "source_type": "official_doc_or_changelog",
@@ -764,7 +736,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "openai-codex-sandboxing",
           "source_ref": "https://developers.openai.com/codex/concepts/sandboxing",
           "source_type": "official_doc_or_changelog",
@@ -775,7 +747,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "openai-codex-app-features",
           "source_ref": "https://developers.openai.com/codex/app/features",
           "source_type": "official_doc_or_changelog",
@@ -786,7 +758,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "openai-codex-app-computer-use",
           "source_ref": "https://developers.openai.com/codex/app/computer-use",
           "source_type": "official_doc_or_changelog",
@@ -797,7 +769,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "openai-codex-remote-connections",
           "source_ref": "https://developers.openai.com/codex/remote-connections",
           "source_type": "official_doc_or_changelog",
@@ -808,7 +780,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "anthropic-claude-code-settings",
           "source_ref": "https://docs.anthropic.com/en/docs/claude-code/settings",
           "source_type": "official_doc_or_changelog",
@@ -819,7 +791,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "anthropic-claude-code-hooks",
           "source_ref": "https://docs.anthropic.com/en/docs/claude-code/hooks",
           "source_type": "official_doc_or_changelog",
@@ -830,7 +802,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "google-antigravity-transition-announcement",
           "source_ref": "https://developers.googleblog.com/an-important-update-transitioning-gemini-cli-to-antigravity-cli/",
           "source_type": "official_doc_or_changelog",
@@ -841,7 +813,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "google-antigravity-cli-repository",
           "source_ref": "https://github.com/google-antigravity/antigravity-cli",
           "source_type": "official_doc_or_changelog",
@@ -852,7 +824,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "google-antigravity-cli-overview",
           "source_ref": "https://antigravity.google/docs/cli-overview",
           "source_type": "official_doc_or_changelog",
@@ -863,7 +835,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "mcp-security-best-practices",
           "source_ref": "https://modelcontextprotocol.io/specification/2025-11-25/basic/security_best_practices",
           "source_type": "official_doc_or_changelog",
@@ -874,7 +846,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "github-actions-schedule",
           "source_ref": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule",
           "source_type": "official_doc_or_changelog",
@@ -885,7 +857,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "openai-codex-repository",
           "source_ref": "https://github.com/openai/codex",
           "source_type": "primary_project_or_reference_implementation",
@@ -896,7 +868,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "openhands-sandbox-runtimes",
           "source_ref": "https://docs.openhands.dev/openhands/usage/runtimes/overview",
           "source_type": "primary_project_or_reference_implementation",
@@ -907,7 +879,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "aider-repo-map",
           "source_ref": "https://aider.chat/docs/repomap.html",
           "source_type": "primary_project_or_reference_implementation",
@@ -918,7 +890,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "swe-agent-aci",
           "source_ref": "https://swe-agent.com/latest/",
           "source_type": "primary_project_or_reference_implementation",
@@ -929,7 +901,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "google-sre-eliminating-toil",
           "source_ref": "https://sre.google/workbook/eliminating-toil/",
           "source_type": "community_best_practice",
@@ -940,7 +912,7 @@
           "local_ref_exists": true,
           "online_probe": null,
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "runtime-learning-efficiency-metrics",
           "source_ref": "docs/specs/learning-efficiency-metrics-spec.md",
           "source_type": "internal_ai_coding_experience",
@@ -951,7 +923,7 @@
           "local_ref_exists": true,
           "online_probe": null,
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "controlled-improvement-proposals",
           "source_ref": "docs/specs/controlled-improvement-proposal-spec.md",
           "source_type": "internal_ai_coding_experience",
@@ -962,7 +934,7 @@
           "local_ref_exists": true,
           "online_probe": null,
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "skill-manifest-contract",
           "source_ref": "docs/specs/skill-manifest-spec.md",
           "source_type": "internal_ai_coding_experience",
@@ -971,7 +943,7 @@
         {
           "confidence": "high",
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "internal-current-source-compatibility-policy",
           "source_ref": "docs/architecture/current-source-compatibility-policy.json",
           "source_type": "internal_runtime_evidence",
@@ -980,7 +952,7 @@
         {
           "confidence": "high",
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "internal-ltp-autonomous-promotion-policy",
           "source_ref": "docs/architecture/ltp-autonomous-promotion-policy.json",
           "source_type": "internal_runtime_evidence",
@@ -989,7 +961,7 @@
         {
           "confidence": "high",
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "internal-autonomous-next-work-selection-policy",
           "source_ref": "docs/architecture/autonomous-next-work-selection-policy.json",
           "source_type": "internal_runtime_evidence",
@@ -998,7 +970,7 @@
         {
           "confidence": "high",
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-06-08",
+          "source_checked_on": "2026-06-09",
           "source_id": "internal-20260501-runtime-evolution-planning",
           "source_ref": "docs/change-evidence/20260501-runtime-evolution-planning.md",
           "source_type": "internal_runtime_evidence",
@@ -1029,8 +1001,8 @@
       "status": "pass"
     },
     "target_repo_effect_feedback": {
-      "backlog_candidate_count": 1,
-      "decision": "adjust",
+      "backlog_candidate_count": 0,
+      "decision": "promote",
       "errors": [],
       "report_path": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\target-repo-runs\\effect-report-classroomtoolkit.json",
       "status": "pass",

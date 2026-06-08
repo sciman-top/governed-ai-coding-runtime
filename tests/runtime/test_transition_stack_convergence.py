@@ -67,26 +67,11 @@ class TransitionStackConvergenceTests(unittest.TestCase):
             self.assertEqual(result["observed_modules"], ["fastapi"])
             self.assertEqual(result["inactive_observed_modules"], [])
 
-    def test_verify_repo_contract_runs_transition_stack_policy(self) -> None:
-        completed = subprocess.run(
-            [
-                "pwsh",
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                "scripts/verify-repo.ps1",
-                "-Check",
-                "Contract",
-            ],
-            check=False,
-            capture_output=True,
-            text=True,
-            cwd=ROOT,
-        )
+    def test_verify_repo_contract_wires_transition_stack_policy(self) -> None:
+        verifier = (ROOT / "scripts" / "verify-repo.ps1").read_text(encoding="utf-8")
 
-        self.assertEqual(completed.returncode, 0, completed.stderr)
-        self.assertIn("OK transition-stack-convergence", completed.stdout)
+        self.assertIn("Invoke-TransitionStackConvergenceChecks", verifier)
+        self.assertIn('Write-CheckOk "transition-stack-convergence"', verifier)
 
     def _write_policy(self, repo_root: Path, *, adoption_status: str) -> Path:
         for path in [

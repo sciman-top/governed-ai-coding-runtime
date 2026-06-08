@@ -91,26 +91,11 @@ class FunctionalEffectivenessTests(unittest.TestCase):
                     as_of=dt.date(2026, 4, 27),
                 )
 
-    def test_verify_repo_contract_runs_functional_effectiveness_gate(self) -> None:
-        completed = subprocess.run(
-            [
-                "pwsh",
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                "scripts/verify-repo.ps1",
-                "-Check",
-                "Contract",
-            ],
-            check=False,
-            capture_output=True,
-            text=True,
-            cwd=ROOT,
-        )
+    def test_verify_repo_contract_wires_functional_effectiveness_gate(self) -> None:
+        verifier = (ROOT / "scripts" / "verify-repo.ps1").read_text(encoding="utf-8")
 
-        self.assertEqual(completed.returncode, 0, completed.stderr)
-        self.assertIn("OK functional-effectiveness", completed.stdout)
+        self.assertIn("Invoke-FunctionalEffectivenessChecks", verifier)
+        self.assertIn('Write-CheckOk "functional-effectiveness"', verifier)
 
     def _write_complete_evidence(
         self,

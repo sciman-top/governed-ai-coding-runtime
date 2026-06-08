@@ -52,15 +52,14 @@ def _resolve_template_path(raw: str, repo_root: Path, code_root: Path, runtime_s
 
 def _iter_policy_files(repo_root: Path) -> list[Path]:
     files: list[Path] = []
-    for path in repo_root.rglob("*"):
-        if not path.is_file():
-            continue
-        relative = path.relative_to(repo_root)
-        if any(part in SKIP_PARTS for part in relative.parts):
-            continue
-        if path.suffix.lower() not in TEXT_SUFFIXES:
-            continue
-        files.append(path)
+    for current_root, dirnames, filenames in repo_root.walk():
+        dirnames[:] = [name for name in dirnames if name not in SKIP_PARTS]
+        current_root_path = Path(current_root)
+        for filename in filenames:
+            path = current_root_path / filename
+            if path.suffix.lower() not in TEXT_SUFFIXES:
+                continue
+            files.append(path)
     return files
 
 

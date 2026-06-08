@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0",
   "report_kind": "target_repo_reuse_effect_feedback",
-  "generated_at": "2026-06-07T15:13:09.345557+00:00",
+  "generated_at": "2026-06-08T16:02:24.877694+00:00",
   "target": "classroomtoolkit",
   "runs_root": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\target-repo-runs",
   "baseline_run_ref": "classroomtoolkit-daily-20260420225453.json",
-  "after_run_ref": "classroomtoolkit-daily-20260607231307.json",
+  "after_run_ref": "classroomtoolkit-daily-20260609000223.json",
   "baseline_metrics": {
     "run_ref": "classroomtoolkit-daily-20260420225453.json",
     "flow": "daily",
@@ -39,17 +39,17 @@
     ]
   },
   "after_metrics": {
-    "run_ref": "classroomtoolkit-daily-20260607231307.json",
+    "run_ref": "classroomtoolkit-daily-20260609000223.json",
     "flow": "daily",
-    "timestamp_utc": "2026-06-07T23:13:07+00:00",
+    "timestamp_utc": "2026-06-09T00:02:23+00:00",
     "overall_status": "pass",
     "attachment_health": "healthy",
     "binding_state": "healthy",
     "required_entrypoint_policy_present": true,
     "entrypoint_policy_mode": "targeted_enforced",
-    "codex_capability_status": "degraded",
-    "adapter_tier": "process_bridge",
-    "flow_kind": "process_bridge",
+    "codex_capability_status": "ready",
+    "adapter_tier": "native_attach",
+    "flow_kind": "live_attach",
     "gate_order": [
       "test",
       "contract"
@@ -64,21 +64,21 @@
     "evidence_complete": true,
     "evidence_completeness_ratio": 1.0,
     "evidence_refs": [
-      "artifacts/task-20260607225420-classroomtoolkit/run-20260607225420-classroomtoolkit/verification-output/contract.txt",
-      "artifacts/task-20260607225420-classroomtoolkit/session-bridge-request/verification-output/contract.txt",
-      "artifacts/task-20260607225420-classroomtoolkit/policy/session-bridge-allow.json",
-      "artifacts/task-20260607225420-classroomtoolkit/task-20260607225420-classroomtoolkit-session-bridge-request/evidence/adapter-events.json",
-      "artifacts/task-20260607225420-classroomtoolkit/session-bridge-request/verification-output/test.txt",
-      "artifacts/task-20260607225420-classroomtoolkit/run-20260607225420-classroomtoolkit/verification-output/test.txt"
+      "artifacts/task-20260608232752-classroomtoolkit/run-20260608232752-classroomtoolkit/verification-output/contract.txt",
+      "artifacts/task-20260608232752-classroomtoolkit/session-bridge-request/verification-output/contract.txt",
+      "artifacts/task-20260608232752-classroomtoolkit/policy/session-bridge-allow.json",
+      "artifacts/task-20260608232752-classroomtoolkit/task-20260608232752-classroomtoolkit-session-bridge-request/evidence/adapter-events.json",
+      "artifacts/task-20260608232752-classroomtoolkit/session-bridge-request/verification-output/test.txt",
+      "artifacts/task-20260608232752-classroomtoolkit/run-20260608232752-classroomtoolkit/verification-output/test.txt"
     ]
   },
   "rolling_kpi": {
     "target": "classroomtoolkit",
     "total_daily_runs": 5,
-    "onboarding_latency_seconds": 3988680,
-    "first_pass_latency_seconds": 3988680,
+    "onboarding_latency_seconds": 4078036,
+    "first_pass_latency_seconds": 4078036,
     "deny_to_success_retries": 0,
-    "fallback_rate": 1.0,
+    "fallback_rate": 0.8,
     "medium_risk_loop_success_ratio": null,
     "problem_run_rate": 0.0,
     "problem_recovery_retries": 0,
@@ -86,39 +86,12 @@
     "latest_problem_signature": null,
     "latest_problem_run_ref": null,
     "latest_problem_evidence_ref": null,
-    "window_start_utc": "2026-05-07T23:51:26+00:00",
-    "window_end_utc": "2026-06-07T23:13:07+00:00",
-    "latest_evidence_ref": "artifacts/task-20260607225420-classroomtoolkit/run-20260607225420-classroomtoolkit/verification-output/contract.txt"
+    "window_start_utc": "2026-05-15T21:54:47+00:00",
+    "window_end_utc": "2026-06-09T00:02:23+00:00",
+    "latest_evidence_ref": "artifacts/task-20260608232752-classroomtoolkit/run-20260608232752-classroomtoolkit/verification-output/contract.txt"
   },
-  "decision": "adjust",
-  "backlog_candidates": [
-    {
-      "candidate_id": "target-repo-reuse-host-capability-gap",
-      "disposition": "adjust",
-      "reason": "Latest target run still depends on degraded host capability posture.",
-      "current_posture": {
-        "codex_capability_status": "degraded",
-        "adapter_tier": "process_bridge",
-        "flow_kind": "process_bridge"
-      },
-      "remediation_boundary": {
-        "allowed_interim_tiers": [
-          "process_bridge",
-          "manual_handoff"
-        ],
-        "required_recovery_evidence": "fresh target run with codex_capability_status=ready and adapter_tier=native_attach",
-        "claim_guard": "do not claim native_attach recovery until a fresh target repo run proves it"
-      },
-      "evidence_refs": [
-        "artifacts/task-20260607225420-classroomtoolkit/run-20260607225420-classroomtoolkit/verification-output/contract.txt",
-        "artifacts/task-20260607225420-classroomtoolkit/session-bridge-request/verification-output/contract.txt",
-        "artifacts/task-20260607225420-classroomtoolkit/policy/session-bridge-allow.json",
-        "artifacts/task-20260607225420-classroomtoolkit/task-20260607225420-classroomtoolkit-session-bridge-request/evidence/adapter-events.json",
-        "artifacts/task-20260607225420-classroomtoolkit/session-bridge-request/verification-output/test.txt",
-        "artifacts/task-20260607225420-classroomtoolkit/run-20260607225420-classroomtoolkit/verification-output/test.txt"
-      ]
-    }
-  ],
+  "decision": "promote",
+  "backlog_candidates": [],
   "historical_problem_trace_policy": {
     "window_kind": "rolling",
     "window_size": 5,
@@ -128,7 +101,7 @@
   },
   "comparison": {
     "overall_status_changed": true,
-    "adapter_tier_changed": true,
+    "adapter_tier_changed": false,
     "entrypoint_policy_added": true,
     "evidence_completeness_delta": 0.0
   },

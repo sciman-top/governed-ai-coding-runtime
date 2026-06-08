@@ -103,6 +103,42 @@ class RunRuntimeTestsRunnerTests(unittest.TestCase):
         self.assertEqual([target.module for target in serial_targets], [dependency.module, functional.module])
         self.assertEqual([target.module for target in parallel_targets], [fast.module])
 
+    def test_all_contract_nested_runtime_targets_are_serialized(self) -> None:
+        runner = _load_runner_module()
+        dependency = runner.TestTarget(
+            suite="runtime",
+            module="tests.runtime.test_dependency_baseline",
+            path=ROOT / "tests" / "runtime" / "test_dependency_baseline.py",
+        )
+        transition = runner.TestTarget(
+            suite="runtime",
+            module="tests.runtime.test_transition_stack_convergence",
+            path=ROOT / "tests" / "runtime" / "test_transition_stack_convergence.py",
+        )
+        functional = runner.TestTarget(
+            suite="runtime",
+            module="tests.runtime.test_functional_effectiveness",
+            path=ROOT / "tests" / "runtime" / "test_functional_effectiveness.py",
+        )
+
+        serial_targets, parallel_targets = runner._split_serial_targets([dependency, transition, functional])
+
+        self.assertEqual(
+            [target.module for target in serial_targets],
+            [dependency.module, transition.module, functional.module],
+        )
+        self.assertEqual(parallel_targets, [])
+
+    def test_runtime_contract_guard_tests_do_not_reinvoke_full_contract_gate(self) -> None:
+        for relative_path in [
+            "tests/runtime/test_dependency_baseline.py",
+            "tests/runtime/test_transition_stack_convergence.py",
+            "tests/runtime/test_functional_effectiveness.py",
+        ]:
+            text = (ROOT / relative_path).read_text(encoding="utf-8")
+            self.assertNotIn('"scripts/verify-repo.ps1"', text, relative_path)
+            self.assertNotIn('"Contract"', text, relative_path)
+
     def test_load_timing_history_accepts_windows_paths(self) -> None:
         runner = _load_runner_module()
         with tempfile.TemporaryDirectory(prefix="tmp_runtime_runner_", dir=ROOT) as tmp_dir:

@@ -64,27 +64,11 @@ class DependencyBaselineTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "requests"):
                 module.assert_dependency_baseline(repo_root=repo_root, baseline_path=baseline_path)
 
-    def test_verify_repo_contract_runs_dependency_baseline(self) -> None:
-        completed = subprocess.run(
-            [
-                "pwsh",
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                "scripts/verify-repo.ps1",
-                "-Check",
-                "Contract",
-            ],
-            check=False,
-            capture_output=True,
-            text=True,
-            cwd=ROOT,
-        )
+    def test_verify_repo_contract_wires_dependency_baseline_check(self) -> None:
+        verifier = (ROOT / "scripts" / "verify-repo.ps1").read_text(encoding="utf-8")
 
-        self.assertEqual(completed.returncode, 0, completed.stderr)
-        self.assertIn("OK dependency-baseline", completed.stdout)
-        self.assertIn("OK target-repo-governance-consistency", completed.stdout)
+        self.assertIn("Invoke-DependencyBaselineChecks", verifier)
+        self.assertIn('Write-CheckOk "dependency-baseline"', verifier)
 
     def test_dependency_baseline_detects_missing_required_host_tool(self) -> None:
         module = _load_dependency_script()
