@@ -2,8 +2,8 @@
   "schema_version": "0.1-draft",
   "policy_id": "default-runtime-evolution-review",
   "status": "enforced",
-  "reviewed_on": "2026-06-06",
-  "review_expires_at": "2026-07-06",
+  "reviewed_on": "2026-06-09",
+  "review_expires_at": "2026-07-09",
   "stale_after_days": 30,
   "decision_claim": "Runtime self-evolution must be evidence-triggered, source-prioritized, default dry-run, and bounded by the existing build -> test -> contract/invariant -> hotspot verification floor.",
   "manual_trigger": {
@@ -149,6 +149,18 @@
       "source_type": "primary_project_or_reference_implementation",
       "source_ref": "https://github.com/openai/codex",
       "summary": "Primary Codex project surface for release and instruction-loading drift signals."
+    },
+    {
+      "source_id": "mcp-inspector",
+      "source_type": "primary_project_or_reference_implementation",
+      "source_ref": "https://github.com/modelcontextprotocol/inspector",
+      "summary": "Official MCP inspector repository as a concrete debugging and surface-validation reference for MCP server and tool behavior."
+    },
+    {
+      "source_id": "anthropic-claude-plugins-official",
+      "source_type": "primary_project_or_reference_implementation",
+      "source_ref": "https://github.com/anthropics/claude-plugins-official",
+      "summary": "Anthropic-managed plugin directory as a packaging and governed plugin-distribution reference for MCP/skills composition."
     },
     {
       "source_id": "openhands-sandbox-runtimes",

@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.0",
+  "policy_id": "default-reference-required-change-policy",
+  "status": "enforced",
+  "reviewed_on": "2026-06-09",
+  "review_expires_at": "2026-07-09",
+  "decision_claim": "Changes touching high-drift host, protocol, reference-shelf, or runtime-evolution source surfaces must carry fresh same-diff official-source, primary-reference, and local-runtime evidence before Contract gates pass.",
+  "evidence_directory": "docs/change-evidence/",
+  "evidence_excluded_prefixes": [
+    "docs/change-evidence/rule-sync-backups/",
+    "docs/change-evidence/snapshots/"
+  ],
+  "required_source_categories": [
+    "official_doc_or_changelog",
+    "primary_project_or_reference_implementation",
+    "local_runtime_evidence"
+  ],
+  "required_evidence_tokens": [
+    "reference_required_review",
+    "changed_surface_paths",
+    "official_sources_reviewed",
+    "primary_references_reviewed",
+    "local_runtime_evidence_reviewed",
+    "source_decision"
+  ],
+  "change_surfaces": [
+    {
+      "surface_id": "runtime-evolution-and-source-policies",
+      "path_exact": [
+        "docs/architecture/current-source-compatibility-policy.json",
+        "docs/architecture/reference-required-change-policy.json",
+        "docs/architecture/runtime-evolution-policy.json"
+      ],
+      "rationale": "These policy files define what official and reference sources are required and how host/protocol drift is interpreted."
+    },
+    {
+      "surface_id": "reference-shelf-and-borrowing-docs",
+      "path_exact": [
+        "docs/research/external-reference-repo-one-page-overview.md",
+        "docs/research/external-reference-repo-tiering.md",
+        "docs/research/external-reference-repos-index.md",
+        "docs/research/runtime-governance-borrowing-matrix.md",
+        "docs/strategy/current-best-end-state-blueprint.md",
+        "docs/strategy/positioning-and-competitive-layering.md"
+      ],
+      "rationale": "These docs steer which outside repos and best-practice signals the runtime may borrow from and how they are interpreted."
+    },
+    {
+      "surface_id": "host-and-adapter-boundary-docs",
+      "path_exact": [
+        "docs/architecture/host-family-capability-surface-blueprint.md",
+        "docs/architecture/hybrid-final-state-master-outline.md",
+        "docs/product/adapter-capability-tiers.md",
+        "docs/product/adapter-capability-tiers.zh-CN.md",
+        "docs/product/adapter-conformance-parity-matrix.md",
+        "docs/product/codex-cli-app-integration-guide.md",
+        "docs/product/codex-cli-app-integration-guide.zh-CN.md",
+        "docs/product/codex-direct-adapter.md",
+        "docs/product/codex-direct-adapter.zh-CN.md",
+        "docs/product/host-feedback-loop.md",
+        "docs/product/host-feedback-loop.zh-CN.md",
+        "docs/product/runtime-compatibility-and-upgrade-policy.md"
+      ],
+      "rationale": "These docs define live host-family boundaries where stale host or protocol assumptions can silently drift into product claims."
+    },
+    {
+      "surface_id": "source-and-host-verifiers",
+      "path_exact": [
+        "scripts/build-policy-tool-credential-audit.py",
+        "scripts/evaluate-runtime-evolution.py",
+        "scripts/verify-current-source-compatibility.py",
+        "scripts/verify-reference-required-changes.py",
+        "scripts/verify-repo.ps1"
+      ],
+      "rationale": "These scripts determine whether reference-source posture is enforced or silently bypassed in normal repo verification."
+    }
+  ],
+  "rollback_ref": "git revert docs/architecture/reference-required-change-policy.json, scripts/verify-reference-required-changes.py, scripts/verify-repo.ps1, related tests, docs index links, and the matching change-evidence file"
+}

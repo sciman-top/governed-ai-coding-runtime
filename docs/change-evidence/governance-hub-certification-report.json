@@ -624,10 +624,10 @@
       "policy_id": "default-runtime-evolution-review",
       "policy_path": "D:/CODE/governed-ai-coding-runtime/docs/architecture/runtime-evolution-policy.json",
       "policy_status": "enforced",
-      "review_age_days": 3,
-      "review_expires_at": "2026-07-06",
-      "reviewed_on": "2026-06-06",
-      "source_count": 33,
+      "review_age_days": 0,
+      "review_expires_at": "2026-07-09",
+      "reviewed_on": "2026-06-09",
+      "source_count": 35,
       "source_records": [
         {
           "confidence": "high",
@@ -860,6 +860,28 @@
           "source_ref": "https://github.com/openai/codex",
           "source_type": "primary_project_or_reference_implementation",
           "summary": "Primary Codex project surface for release and instruction-loading drift signals."
+        },
+        {
+          "confidence": "medium",
+          "local_ref_exists": null,
+          "online_probe": null,
+          "retrieval_mode": "dry_run_catalog",
+          "source_checked_on": "2026-06-09",
+          "source_id": "mcp-inspector",
+          "source_ref": "https://github.com/modelcontextprotocol/inspector",
+          "source_type": "primary_project_or_reference_implementation",
+          "summary": "Official MCP inspector repository as a concrete debugging and surface-validation reference for MCP server and tool behavior."
+        },
+        {
+          "confidence": "medium",
+          "local_ref_exists": null,
+          "online_probe": null,
+          "retrieval_mode": "dry_run_catalog",
+          "source_checked_on": "2026-06-09",
+          "source_id": "anthropic-claude-plugins-official",
+          "source_ref": "https://github.com/anthropics/claude-plugins-official",
+          "source_type": "primary_project_or_reference_implementation",
+          "summary": "Anthropic-managed plugin directory as a packaging and governed plugin-distribution reference for MCP/skills composition."
         },
         {
           "confidence": "medium",

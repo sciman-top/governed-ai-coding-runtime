@@ -21,10 +21,12 @@ LOCAL_SOURCE_TYPES = {"internal_runtime_evidence", "internal_ai_coding_experienc
 REQUIRED_SOURCE_CATALOG_IDS = {
     "aider-repo-map",
     "anthropic-claude-code-hooks",
+    "anthropic-claude-plugins-official",
     "anthropic-claude-code-settings",
     "google-antigravity-cli-overview",
     "google-antigravity-cli-repository",
     "google-antigravity-transition-announcement",
+    "mcp-inspector",
     "mcp-security-best-practices",
     "openai-agents-sdk-evolution",
     "openai-agents-sdk-guardrails-human-review",

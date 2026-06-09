@@ -3,10 +3,26 @@
 ## Purpose
 This directory holds executable implementation plans that translate strategy and backlog into ordered work.
 
-## Current Authoritative Plan
+## Current Navigation
 - Single source of planning truth: [planning-status.json](../architecture/planning-status.json)
 - Use this index for navigation, not as the only source of active queue state.
 - `certified baseline` and `current live posture` must stay aligned with the status file.
+- If a plan edit changes host/protocol/reference-source assumptions on guarded surfaces, planning prose alone is not enough; the same diff must satisfy the reference-required Contract gate and carry structured source-review evidence.
+- `Now`
+  - [Agent Continuity And Shared Context Plan](./agent-continuity-and-shared-context-plan.md)
+  - current active queue reference for `GAP-159..164`
+- `Next`
+  - [Host-Family Capability Operationalization Plan](./host-family-capability-operationalization-plan.md)
+  - completed conditional package for `GAP-165..168`; do not treat it as active work unless `planning-status.json` is promoted
+- `Later`
+  - [Long-Term Gap Trigger Audit Plan](./long-term-gap-trigger-audit-plan.md)
+  - [Continuous Execution Readiness And Rollout Plan](./continuous-execution-readiness-and-rollout-plan.md)
+  - future heavy `LTP` work still requires fresh trigger evidence or an owner-directed promotion
+- `History`
+  - [Completed GAP History](../archive/completed-gap-history.md)
+  - the completed direct, optimization, productization, and maintenance plans below remain execution history, rationale, and rollback context
+
+## Plan Catalog
 - [Optimized Hybrid Final-State Long-Term Implementation Plan](./optimized-hybrid-final-state-long-term-implementation-plan.md)
   - Status: completed through `GAP-111`; retained as the hybrid final-state certification and long-term trigger reference after the 2026-04-27 optimized final-state and stack-staging review
   - Scope: `GAP-093` through `GAP-111`; `GAP-111` is the current hybrid final-state certification point. Detailed completion history is archived in [Completed GAP History](../archive/completed-gap-history.md).

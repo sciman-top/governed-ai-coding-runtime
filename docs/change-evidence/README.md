@@ -17,6 +17,12 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260609 Reference-Required Change Enforcement](./20260609-reference-required-change-enforcement.md)
+  - evidence companion for the new Contract gate that fail-closes high-drift host/protocol/reference changes without same-diff official-source, primary-reference, and local-runtime evidence
+- [20260609 Reference Shelf Official Additions](./20260609-reference-shelf-official-additions.md)
+  - evidence companion for adding `mcp-inspector` and `anthropic-claude-plugins-official` to the local reference shelf and syncing the project-internal reference docs
+- [20260609 Documentation Entrypoint And Planning Navigation Consolidation](./20260609-documentation-entrypoint-and-planning-navigation-consolidation.md)
+  - evidence companion for clarifying `Now / Next / Later / History` across root/docs/plans/backlog entrypoints while preserving backlog rendering and `planning-status.json` authority
 - [20260606 External Reference Repo Index](./20260606-external-reference-repo-index.md)
   - evidence companion for landing a project-owned pointer surface to the locally cloned official and community reference repos, plus root/docs entrypoint links
 - [20260530 Self-Evolution Promotion Controller](./20260530-self-evolution-promotion-controller.md)

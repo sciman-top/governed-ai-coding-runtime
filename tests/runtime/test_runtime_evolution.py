@@ -57,14 +57,18 @@ class RuntimeEvolutionTests(unittest.TestCase):
         policy = json.loads((ROOT / "docs/architecture/runtime-evolution-policy.json").read_text(encoding="utf-8"))
         catalog_by_id = {item["source_id"]: item for item in policy["source_catalog"]}
 
+        self.assertIn("mcp-inspector", catalog_by_id)
+        self.assertIn("anthropic-claude-plugins-official", catalog_by_id)
         self.assertLessEqual(module.REQUIRED_SOURCE_CATALOG_IDS, set(catalog_by_id))
         required_refs = [catalog_by_id[source_id]["source_ref"] for source_id in module.REQUIRED_SOURCE_CATALOG_IDS]
         for expected_host in (
             "openai.com",
             "developers.openai.com",
             "docs.anthropic.com",
+            "github.com/anthropics/claude-plugins-official",
             "developers.googleblog.com",
             "github.com/google-antigravity",
+            "github.com/modelcontextprotocol/inspector",
             "antigravity.google",
             "modelcontextprotocol.io",
             "docs.openhands.dev",
@@ -110,7 +114,7 @@ class RuntimeEvolutionTests(unittest.TestCase):
         result = module.inspect_runtime_evolution_policy(
             repo_root=ROOT,
             policy_path=ROOT / "docs" / "architecture" / "runtime-evolution-policy.json",
-            as_of=dt.date(2026, 7, 7),
+            as_of=dt.date(2026, 7, 10),
         )
 
         self.assertTrue(result["stale"])

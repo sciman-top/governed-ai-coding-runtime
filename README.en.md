@@ -25,6 +25,27 @@ AI recommended pre-delivery readiness:
 .\run.ps1 operator-help
 ```
 
+## Current Truth
+If you only need to know the current project posture and which entrypoint to trust first, start here:
+
+- single source of truth: `docs/architecture/planning-status.json`
+- current active queue: `GAP-159..164` (`Agent Continuity And Shared Context`)
+- current decision gate: `defer_ltp_and_refresh_evidence`
+- current live posture: `fresh`, with both `Codex` and `Claude` currently recorded at `native_attach / ready`
+- stronger claims still require fresh target-run evidence; historical completion does not automatically equal current claim scope
+
+## Hard Source Gate
+- This is no longer only a recommendation. It is now enforced in the `Contract` gate.
+- If a change touches host boundaries, protocol boundaries, the external reference shelf, or runtime-evolution source policy, `scripts/verify-repo.ps1 -Check Contract` now runs `scripts/verify-reference-required-changes.py`.
+- The same diff must include a `docs/change-evidence/*.md` record that explicitly documents `official_sources_reviewed`, `primary_references_reviewed`, `local_runtime_evidence_reviewed`, `source_decision`, and the changed guarded paths.
+- The policy entrypoint is `docs/architecture/reference-required-change-policy.json`; the intent is to prevent high-drift semantics from being rewritten from memory or chat-only reasoning.
+
+## Work Horizon
+- `Now`: use `planning-status.json`, `docs/README.md`, `docs/plans/README.md`, and `docs/backlog/README.md` as the current navigation surface and keep them aligned with live evidence
+- `Next`: `GAP-165..168` is only a conditional follow-on queue and should activate only when later promotion evidence explicitly justifies it
+- `Later`: `LTP-01..06` and heavier host/protocol/runtime expansion remain trigger-based work, not default near-term execution
+- `History`: completed `GAP-020..158` slices, the `GAP-104..111` certification baseline, and older implementation plans remain historical evidence rather than competing active work
+
 ## Current Status
 `Foundation / GAP-020` through `GAP-023`, `Full Runtime / GAP-024` through `GAP-028`, `Public Usable Release / GAP-029` through `GAP-032`, `Maintenance Baseline / GAP-033` through `GAP-034`, and `Interactive Session Productization / GAP-035` through `GAP-039` are complete.
 

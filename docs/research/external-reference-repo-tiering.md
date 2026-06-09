@@ -42,7 +42,9 @@
 | Repo | Why it stays local |
 | --- | --- |
 | `mcp-servers` | Official example server bundle; useful but secondary to spec + SDKs. |
+| `mcp-inspector` | Official MCP testing/inspection tool; very useful for server/tool-surface debugging, but still secondary to spec + SDKs for protocol truth. |
 | `anthropic-claude-code-action` | First-party CI/action surface; important, but narrower than the main `claude-code` host repo. |
+| `anthropic-claude-plugins-official` | Official plugin directory with real packaging/MCP/skills combinations; useful for governed plugin-distribution boundaries, but narrower than the main host repo. |
 | `openhands` | Strong execution-host and sandbox vocabulary reference. |
 | `aider` | Best-in-class repo map and edit-loop ergonomics reference. |
 | `swe-agent` | Useful repair-loop and benchmark-aware closure reference. |

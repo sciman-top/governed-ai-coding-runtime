@@ -27,7 +27,9 @@
 | `microsoft-playwright-cli` | Must Read | first-party browser cli | Token-efficient browser CLI + skills | 很适合 coding agent 的低 token 浏览器路径 |
 | `microsoft-playwright-mcp` | Must Read | first-party browser mcp | Persistent browser context, rich introspection | 和 CLI 路径形成直接取舍对照 |
 | `mcp-servers` | Keep | official examples | Example MCP servers and packaging | 对比 spec/sdk 后再看更有价值 |
+| `mcp-inspector` | Keep | official mcp tool | MCP server/tool surface inspection and debugging | 对 MCP 联调和 server/tool 验证非常实用，但不是协议真源 |
 | `anthropic-claude-code-action` | Keep | official ci | Claude CI/action surface | 重要但窄于主宿主本体 |
+| `anthropic-claude-plugins-official` | Keep | official plugin directory | Claude plugin packaging, MCP/skills composition, quality boundary | 对插件分发与受管插件边界更直接 |
 | `openhands` | Keep | community runtime | Sandbox/execution host vocabulary | 执行环境与宿主隔离参考强 |
 | `aider` | Keep | community cli | Repo map, patch/edit loop | repo grounding 和 edit ergonomics 仍然非常强 |
 | `swe-agent` | Keep | community repair | issue-to-fix / benchmark-aware closure | 任务闭环和验证心智参考强 |
@@ -44,6 +46,7 @@
 ## Quick Decision
 - 现在要研究“宿主怎么建模”：先看 `Codex / Claude / Antigravity / Copilot`
 - 现在要研究“协议边界怎么定”：先看 `MCP + A2A`
+- 现在要研究“MCP server/tool 面怎么联调与验收”：先看 `mcp-inspector`、`github-mcp-server`
 - 现在要研究“浏览器自动化怎么选”：先看 `playwright-cli` 与 `playwright-mcp`
 - 现在要研究“编辑循环/修复闭环怎么借”：先看 `aider`、`swe-agent`、`openhands`
 

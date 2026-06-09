@@ -17,8 +17,8 @@
 ## Recommended Reading Order / 推荐查阅顺序
 1. `openai-codex`, `openai-agents-python`, `openai-agents-js`, `mcp-specification`, `mcp-typescript-sdk`, `mcp-python-sdk`, `a2aproject-A2A`
    Host semantics, AGENTS/config/sandbox/approval, official agent-runtime patterns, MCP boundaries, and A2A protocol boundaries.
-2. `github-mcp-server`, `mcp-servers`, `microsoft-playwright-cli`, `microsoft-playwright-mcp`, `google-antigravity-cli`, `google-gemini-cli`, `anthropic-claude-code`, `anthropic-claude-code-action`, `github-copilot-cli`
-   Official or near-official implementation surfaces for tools, adapters, browser automation, host-family transitions, main host products, and multi-host compatibility.
+2. `github-mcp-server`, `mcp-servers`, `mcp-inspector`, `microsoft-playwright-cli`, `microsoft-playwright-mcp`, `google-antigravity-cli`, `google-gemini-cli`, `anthropic-claude-code`, `anthropic-claude-code-action`, `anthropic-claude-plugins-official`, `github-copilot-cli`
+   Official or near-official implementation surfaces for tools, adapters, MCP inspection/debugging, browser automation, host-family transitions, main host products, plugin distribution, and multi-host compatibility.
 3. `aider`, `swe-agent`, `continue`, `openhands`, `opencode`, `goose`
    Community coding-agent execution loops, repo grounding, permission posture, and UX.
 4. `hermes-agent`, `langgraph`, `semantic-kernel`
@@ -36,6 +36,7 @@
 | `mcp-typescript-sdk` | <https://github.com/modelcontextprotocol/typescript-sdk> | TypeScript MCP server/client API shapes and schema patterns. |
 | `mcp-python-sdk` | <https://github.com/modelcontextprotocol/python-sdk> | Python MCP server/client patterns and typing/test organization. |
 | `mcp-servers` | <https://github.com/modelcontextprotocol/servers> | Official MCP server examples and packaging patterns. |
+| `mcp-inspector` | <https://github.com/modelcontextprotocol/inspector> | Official MCP inspection/debugging tool for validating server/tool surfaces and integration posture. |
 | `github-mcp-server` | <https://github.com/github/github-mcp-server> | Real external-service MCP server boundary in production-oriented form. |
 | `a2aproject-A2A` | <https://github.com/a2aproject/A2A> | Linux Foundation-hosted A2A protocol source for agent discovery, long-running collaboration, modality negotiation, and A2A-vs-MCP boundary clarity. |
 | `microsoft-playwright-cli` | <https://github.com/microsoft/playwright-cli> | Official browser CLI+skills path optimized for coding agents that need token-efficient browser automation. |
@@ -44,6 +45,7 @@
 | `google-gemini-cli` | <https://github.com/google-gemini/gemini-cli> | Legacy Google CLI host behavior and migration/enterprise compatibility reference; no longer the preferred long-term Google host surface. |
 | `anthropic-claude-code` | <https://github.com/anthropics/claude-code> | Claude Code official main host repository; useful for the terminal/IDE/GitHub product surface and plugin/runtime boundary itself, not only CI/action packaging. |
 | `anthropic-claude-code-action` | <https://github.com/anthropics/claude-code-action> | Claude Code automation boundary in CI/action form. |
+| `anthropic-claude-plugins-official` | <https://github.com/anthropics/claude-plugins-official> | Anthropic-managed official plugin directory; useful for plugin packaging, MCP/skills composition, and plugin quality/distribution boundaries. |
 | `anthropic-claude-code-monitoring-guide` | <https://github.com/anthropics/claude-code-monitoring-guide> | Official measurement/ROI guide for telemetry, spend, productivity metrics, and rollout framing; useful as an operational guide, not a host-semantics source. |
 | `github-copilot-cli` | <https://github.com/github/copilot-cli> | GitHub official terminal entry for Copilot coding agent; useful for cross-host comparison of approvals, MCP default posture, and GitHub-native context integration. |
 

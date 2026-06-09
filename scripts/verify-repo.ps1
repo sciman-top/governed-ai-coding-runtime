@@ -798,6 +798,7 @@ function Invoke-ContractChecks {
   Invoke-ShellRiskContractChecks
   Invoke-AgentRuleSyncChecks
   Invoke-PreChangeReviewChecks
+  Invoke-ReferenceRequiredChangeChecks
   Invoke-FunctionalEffectivenessChecks
 }
 
@@ -1019,6 +1020,20 @@ function Invoke-PreChangeReviewChecks {
   }
 
   Write-CheckOk "pre-change-review"
+}
+
+function Invoke-ReferenceRequiredChangeChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-reference-required-changes.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Reference-required change checks failed"
+    }
+    throw "Reference-required change checks failed`n$detail"
+  }
+
+  Write-CheckOk "reference-required-changes"
 }
 
 function Invoke-FunctionalEffectivenessChecks {

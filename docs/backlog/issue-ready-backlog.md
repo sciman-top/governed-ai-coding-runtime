@@ -3,6 +3,18 @@
 ## Parent Initiative
 Governed AI Coding Runtime Full Functional Lifecycle
 
+## Current Navigation
+- `Now`
+  - active queue reference: `GAP-159..164`
+  - current authority for live posture and decision gate: `docs/architecture/planning-status.json`
+- `Next`
+  - conditional follow-on package: `GAP-165..168`
+  - activation still requires explicit promotion evidence and a status-file update
+- `Later`
+  - heavy `LTP-01..06` work and any future post-`GAP-168` queue remain trigger-based
+- `History`
+  - older completed `GAP` slices remain below for dependency context, issue rendering, historical auditability, and rollback traceability
+
 ## Assumptions
 - `Phase 0` through `Phase 4` remain complete through `GAP-017`
 - this is a personal free open-source project, so the plan stays function-first and intentionally light on non-functional operations

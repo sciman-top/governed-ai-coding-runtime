@@ -6,6 +6,21 @@ This directory holds the human and machine planning artifacts that bridge strate
 ## Planning Truth
 - Single source of planning truth: [planning-status.json](../architecture/planning-status.json)
 - Use the backlog for dependency order and execution detail, not as the only source for current live posture or current decision gate.
+- If backlog edits change guarded host/protocol/reference-source assumptions, they must land with same-diff source-review evidence and pass the reference-required Contract gate rather than relying on backlog wording alone.
+
+## Current Navigation
+- `Now`
+  - [Issue-Ready Backlog](./issue-ready-backlog.md)
+  - active queue reference is `GAP-159..164`
+- `Next`
+  - `GAP-165..168` are the bounded conditional follow-on package
+  - they stay inactive until `planning-status.json` explicitly promotes them
+- `Later`
+  - `LTP-01..06` and any later heavy implementation queue remain trigger-based after the current selector
+- `History`
+  - [MVP Backlog Seeds](./mvp-backlog-seeds.md)
+  - [Full Lifecycle Backlog Seeds](./full-lifecycle-backlog-seeds.md)
+  - completed `GAP-018..158` and `GAP-104..111` slices remain execution history, certification context, and rollback trace rather than current active work
 
 ## Artifact Roles
 - [MVP Backlog Seeds](./mvp-backlog-seeds.md)

@@ -30,6 +30,27 @@ AI 推荐的交付前 readiness：
 .\run.ps1 operator-help
 ```
 
+## Current Truth / 当前真相
+如果只想知道“现在项目处于什么状态、当前该信哪个入口”，先看这里：
+
+- 唯一状态真源：`docs/architecture/planning-status.json`
+- 当前 active queue：`GAP-159..164`（`Agent Continuity And Shared Context`）
+- 当前 decision gate：`defer_ltp_and_refresh_evidence`
+- 当前 live posture：`fresh`，`Codex` 与 `Claude` 当前都以 `native_attach / ready` 记录
+- 更强 claim 的前提：始终要有 fresh target-run evidence；历史完成不自动等于当前可宣称能力
+
+## Hard Source Gate / 来源硬门禁
+- 现在不仅是“建议参考”，而是已经接进 `Contract` gate 的硬约束。
+- 只要改动宿主边界、协议边界、外部参考架、或 runtime-evolution source policy 这些高漂移面，`scripts/verify-repo.ps1 -Check Contract` 就会执行 `scripts/verify-reference-required-changes.py`。
+- 同一次改动里必须带 `docs/change-evidence/*.md` 证据，并明确写出 `official_sources_reviewed`、`primary_references_reviewed`、`local_runtime_evidence_reviewed`、`source_decision` 等结构化来源审查字段。
+- 规则入口见 `docs/architecture/reference-required-change-policy.json`；这条门禁是为了防止高漂移语义只靠记忆或聊天结论被改写。
+
+## Work Horizon / 工作地平线
+- `Now`：以 `planning-status.json`、`docs/README.md`、`docs/plans/README.md`、`docs/backlog/README.md` 为当前导航面，保持口径与 live evidence 一致
+- `Next`：`GAP-165..168` 只是条件 follow-on queue，只有在后续 promotion evidence 明确满足时才应激活
+- `Later`：`LTP-01..06` 和更重的 host/protocol/runtime 扩展仍是 trigger-based work，不是默认近期待办
+- `History`：`GAP-020..158` 的完成切片、`GAP-104..111` 的认证基线，以及旧 implementation plans 都保留为历史证据，不再和当前 active queue 竞争
+
 ## 中文快速结论
 本项目已经完成 `Foundation / GAP-020` 到 `GAP-023`、`Full Runtime / GAP-024` 到 `GAP-028`、`Public Usable Release / GAP-029` 到 `GAP-032`、`Maintenance Baseline / GAP-033` 到 `GAP-034`，以及 `Interactive Session Productization / GAP-035` 到 `GAP-039`。这表示“混合最终形态的第一版产品化边界”已经落地，但仍不等于“已经拥有完整 runtime-owned 的所有宿主真实执行能力”。
 

@@ -13,9 +13,10 @@ This directory holds the architectural views that explain product boundaries, ta
 7. [Compatibility Matrix](./compatibility-matrix.md)
 8. [Host Family Capability Surface Blueprint](./host-family-capability-surface-blueprint.md)
 9. [Governed AI Coding Runtime Target Architecture](./governed-ai-coding-runtime-target-architecture.md)
-10. [Runtime Evolution Policy](./runtime-evolution-policy.json)
-11. [Policy Tool Credential Audit Boundary](./policy-tool-credential-audit-boundary.json)
-12. [Governance Hub Certification](./governance-hub-certification.json)
+10. [Reference-Required Change Policy](./reference-required-change-policy.json)
+11. [Runtime Evolution Policy](./runtime-evolution-policy.json)
+12. [Policy Tool Credential Audit Boundary](./policy-tool-credential-audit-boundary.json)
+13. [Governance Hub Certification](./governance-hub-certification.json)
 
 ## Document Roles
 - [Minimum Viable Governance Loop](./minimum-viable-governance-loop.md)
@@ -36,6 +37,8 @@ This directory holds the architectural views that explain product boundaries, ta
   - canonical host-family model, capability dimensions, and current-vs-target interpretation for Codex, Claude, Antigravity, and legacy Gemini compatibility
 - [Governed AI Coding Runtime Target Architecture](./governed-ai-coding-runtime-target-architecture.md)
   - full target-state architecture and plane decomposition
+- [Reference-Required Change Policy](./reference-required-change-policy.json)
+  - enforced same-diff evidence contract for high-drift host/protocol/reference changes that must cite official docs, primary references, and local runtime evidence
 - [Runtime Evolution Policy](./runtime-evolution-policy.json)
   - enforced dry-run policy for 30-day source-grounded self-evolution review, candidate decisions, AI coding experience/skillization signals, risk boundaries, and verification floor
 - [Policy Tool Credential Audit Boundary](./policy-tool-credential-audit-boundary.json)

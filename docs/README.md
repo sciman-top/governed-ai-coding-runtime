@@ -11,6 +11,29 @@
 - Read it first for `current_active_queue`, `current_decision_gate`, `certified_baseline`, and `current_live_posture`.
 - `certified baseline` and `current live posture` are intentionally separate; historical certification does not override a stale or degraded current live posture.
 
+## Hard Source Gate
+- High-drift host, protocol, reference-shelf, and runtime-evolution source changes are now fail-closed in the `Contract` gate.
+- The enforced policy lives at [Reference-Required Change Policy](./architecture/reference-required-change-policy.json).
+- The verifier is `scripts/verify-reference-required-changes.py`, executed by `scripts/verify-repo.ps1 -Check Contract`.
+- Required same-diff evidence must live under `docs/change-evidence/` and explicitly record `official_sources_reviewed`, `primary_references_reviewed`, `local_runtime_evidence_reviewed`, and `source_decision`.
+
+## Quick Navigation
+- `Now`
+  - [planning-status.json](./architecture/planning-status.json)
+  - [Root README](../README.md)
+  - [Plans Index](./plans/README.md)
+  - [Backlog Index](./backlog/README.md)
+- `Next`
+  - [Host-Family Capability Operationalization Plan](./plans/host-family-capability-operationalization-plan.md)
+  - this queue is conditional only; it is not active work unless `planning-status.json` is explicitly promoted
+- `Later`
+  - [Long-Term Gap Trigger Audit Plan](./plans/long-term-gap-trigger-audit-plan.md)
+  - [Optimized Hybrid Final-State Long-Term Roadmap](./roadmap/optimized-hybrid-final-state-long-term-roadmap.md)
+- `History`
+  - [Completed GAP History](./archive/completed-gap-history.md)
+  - completed implementation plans under [Plans Index](./plans/README.md)
+  - historical proof and rollback records under [Change Evidence Index](./change-evidence/README.md)
+
 ## Core Operating Principle
 - Human-readable summary: `Automation-first, gate-controlled, evidence-measured governance`.
 - This repository is a governance sidecar / control plane, not a replacement host product for Codex or Claude Code.
@@ -35,6 +58,7 @@
 - [Host-Family Capability Operationalization Plan](./plans/host-family-capability-operationalization-plan.md)
 - [Target Repo Managed Asset Retirement And Uninstall Plan](./plans/target-repo-managed-asset-retirement-and-uninstall-plan.md)
 - [Capability Portfolio Classifier](./architecture/capability-portfolio-classifier.json)
+- [Reference-Required Change Policy](./architecture/reference-required-change-policy.json)
 - [Runtime Evolution Policy](./architecture/runtime-evolution-policy.json)
 - [Long-Term Gap Trigger Audit Plan](./plans/long-term-gap-trigger-audit-plan.md)
 - [Governance Optimization Lane Roadmap](./roadmap/governance-optimization-lane-roadmap.md)
