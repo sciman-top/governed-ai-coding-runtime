@@ -76,6 +76,7 @@
       "test_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime",
       "quick_test_command": "python -m unittest tests.runtime.test_governance_gate_runner tests.runtime.test_target_repo_governance_consistency tests.runtime.test_runtime_flow_preset.RuntimeFlowPresetScriptTests.test_runtime_flow_preset_apply_governance_baseline_only_bootstraps_blank_target tests.runtime.test_target_repo_rollout_contract tests.runtime.test_target_repo_speed_kpi",
       "quick_test_reason": "Focused daily Runtime slice for target governance speed-profile changes; full Runtime remains the full gate test command.",
+      "hotspot_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1",
       "contract_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract"
     },
     "skills-manager": {

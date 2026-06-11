@@ -730,3 +730,23 @@ issues:
     type: HITL
     blocked_by: [GAP-167]
     user_stories: [13, 18, 21, 23, 29, 31, 37, 44, 45]
+  - id: GAP-169
+    title: Reference Basis Matrix And Retention Rule
+    type: AFK
+    blocked_by: [GAP-168]
+    user_stories: [11, 13, 18, 21, 29, 31, 44]
+  - id: GAP-170
+    title: Reference Basis Guard And Same-Diff Evidence Contract
+    type: AFK
+    blocked_by: [GAP-169]
+    user_stories: [11, 13, 18, 21, 23, 29, 31, 44]
+  - id: GAP-171
+    title: Release Preflight Entrypoint And Hotspot Coverage
+    type: AFK
+    blocked_by: [GAP-170]
+    user_stories: [11, 13, 18, 21, 31, 44]
+  - id: GAP-172
+    title: Local Plus CI Preflight Alignment Closeout
+    type: HITL
+    blocked_by: [GAP-171]
+    user_stories: [11, 13, 18, 21, 31, 37, 44, 45]

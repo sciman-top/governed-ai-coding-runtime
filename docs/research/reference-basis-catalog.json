@@ -1,0 +1,120 @@
+{
+  "schema_version": "1.0",
+  "updated_on": "2026-06-09",
+  "reference_root": "D:/CODE/external/ai-coding-runtime-references",
+  "manifest_path": "D:/CODE/external/ai-coding-runtime-references/references.manifest.json",
+  "references": [
+    {
+      "reference_id": "openai-codex",
+      "relative_path": "repos/openai-codex",
+      "tier": "Tier 1 / Must Read",
+      "category": "official-or-protocol",
+      "why": "Codex host semantics, AGENTS/config/sandbox/approval"
+    },
+    {
+      "reference_id": "openai-agents-python",
+      "relative_path": "repos/openai-agents-python",
+      "tier": "Tier 1 / Must Read",
+      "category": "official-or-protocol",
+      "why": "Python agent runtime, handoffs, guardrails, sessions"
+    },
+    {
+      "reference_id": "openai-agents-js",
+      "relative_path": "repos/openai-agents-js",
+      "tier": "Tier 1 / Must Read",
+      "category": "official-or-protocol",
+      "why": "JS/TS agent runtime and multi-agent tool orchestration"
+    },
+    {
+      "reference_id": "anthropic-claude-code",
+      "relative_path": "repos/anthropic-claude-code",
+      "tier": "Tier 1 / Must Read",
+      "category": "official-or-protocol",
+      "why": "Claude host semantics, plugins, runtime boundary"
+    },
+    {
+      "reference_id": "anthropic-claude-code-action",
+      "relative_path": "repos/anthropic-claude-code-action",
+      "tier": "Tier 2 / Keep",
+      "category": "official-or-protocol",
+      "why": "Claude CI/action boundary"
+    },
+    {
+      "reference_id": "anthropic-claude-plugins-official",
+      "relative_path": "repos/anthropic-claude-plugins-official",
+      "tier": "Tier 2 / Keep",
+      "category": "official-or-protocol",
+      "why": "Governed plugin packaging and MCP/skills composition boundary"
+    },
+    {
+      "reference_id": "github-copilot-cli",
+      "relative_path": "repos/github-copilot-cli",
+      "tier": "Tier 1 / Must Read",
+      "category": "official-or-protocol",
+      "why": "Cross-host CLI, approvals, GitHub-native context"
+    },
+    {
+      "reference_id": "google-antigravity-cli",
+      "relative_path": "repos/google-antigravity-cli",
+      "tier": "Tier 1 / Must Read",
+      "category": "official-or-protocol",
+      "why": "Current Google host-family direction"
+    },
+    {
+      "reference_id": "mcp-specification",
+      "relative_path": "repos/mcp-specification",
+      "tier": "Tier 1 / Must Read",
+      "category": "official-or-protocol",
+      "why": "MCP protocol semantics and security vocabulary"
+    },
+    {
+      "reference_id": "mcp-typescript-sdk",
+      "relative_path": "repos/mcp-typescript-sdk",
+      "tier": "Tier 1 / Must Read",
+      "category": "official-or-protocol",
+      "why": "TypeScript MCP implementation boundary"
+    },
+    {
+      "reference_id": "mcp-python-sdk",
+      "relative_path": "repos/mcp-python-sdk",
+      "tier": "Tier 1 / Must Read",
+      "category": "official-or-protocol",
+      "why": "Python MCP implementation boundary"
+    },
+    {
+      "reference_id": "github-mcp-server",
+      "relative_path": "repos/github-mcp-server",
+      "tier": "Tier 1 / Must Read",
+      "category": "official-or-protocol",
+      "why": "Production MCP server boundary against external service"
+    },
+    {
+      "reference_id": "mcp-inspector",
+      "relative_path": "repos/mcp-inspector",
+      "tier": "Tier 2 / Keep",
+      "category": "official-or-protocol",
+      "why": "MCP tool-surface inspection and debugging"
+    },
+    {
+      "reference_id": "a2aproject-A2A",
+      "relative_path": "repos/a2aproject-A2A",
+      "tier": "Tier 1 / Must Read",
+      "category": "official-or-protocol",
+      "why": "Agent-to-agent interoperability boundary"
+    },
+    {
+      "reference_id": "microsoft-playwright-cli",
+      "relative_path": "repos/microsoft-playwright-cli",
+      "tier": "Tier 1 / Must Read",
+      "category": "official-or-protocol",
+      "why": "Token-efficient browser CLI path for coding agents"
+    },
+    {
+      "reference_id": "microsoft-playwright-mcp",
+      "relative_path": "repos/microsoft-playwright-mcp",
+      "tier": "Tier 1 / Must Read",
+      "category": "official-or-protocol",
+      "why": "Persistent browser MCP path with rich introspection"
+    }
+  ]
+}

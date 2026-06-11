@@ -322,6 +322,15 @@
       "satisfies_gate_ids": [
         "contract"
       ]
+    },
+    {
+      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1",
+      "id": "doctor",
+      "required": true,
+      "timeout_seconds": 600,
+      "satisfies_gate_ids": [
+        "doctor"
+      ]
     }
   ],
   "gate_timeout_seconds": 300,

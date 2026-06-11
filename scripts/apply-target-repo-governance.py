@@ -18,6 +18,7 @@ from lib.target_repo_quick_test_prompt import build_quick_test_slice_prompt
 from lib.target_repo_speed_profile import (
     apply_speed_profile_policy,
     as_command_list,
+    normalize_target_hotspot_slice,
     normalize_speed_profile_policy,
     normalize_target_test_slice,
 )
@@ -43,6 +44,7 @@ CATALOG_PROFILE_FIELDS = {
     "build_commands",
     "test_commands",
     "contract_commands",
+    "hotspot_command",
     "full_gate_optimization",
 }
 
@@ -420,6 +422,7 @@ def _apply_catalog_profile_facts(
     test_command: str | None = None,
     contract_command: str | None = None,
     contract_commands_json: str | None = None,
+    hotspot_command: str | None = None,
     full_gate_optimization_json: str | None = None,
     allow_catalog_field_overwrite: set[str] | None = None,
 ) -> tuple[dict[str, Any], list[str], list[dict[str, Any]]]:
@@ -740,6 +743,7 @@ def main() -> int:
     parser.add_argument("--test-command", help="Catalog test gate command to sync into test_commands.")
     parser.add_argument("--contract-command", help="Catalog contract gate command to sync into contract_commands.")
     parser.add_argument("--contract-commands-json", help="Catalog contract gate command array to sync into contract_commands.")
+    parser.add_argument("--hotspot-command", help="Catalog hotspot gate command to materialize as doctor in full_gate_commands.")
     parser.add_argument(
         "--full-gate-optimization-json",
         help="Catalog full-gate physical optimization plan object to sync into full_gate_optimization.",
@@ -796,6 +800,9 @@ def main() -> int:
         reason=args.quick_test_reason,
         timeout_seconds=args.quick_test_timeout_seconds,
     )
+    target_hotspot_slice = normalize_target_hotspot_slice(
+        command=args.hotspot_command,
+    )
     quick_test_skip_reason = str(args.quick_test_skip_reason or "").strip()
     if target_test_slice is not None and quick_test_skip_reason:
         parser.error("--quick-test-command and --quick-test-skip-reason are mutually exclusive")
@@ -821,6 +828,7 @@ def main() -> int:
         test_command=args.test_command,
         contract_command=args.contract_command,
         contract_commands_json=args.contract_commands_json,
+        hotspot_command=args.hotspot_command,
         full_gate_optimization_json=args.full_gate_optimization_json,
         allow_catalog_field_overwrite=allow_catalog_field_overwrite,
     )
@@ -858,6 +866,7 @@ def main() -> int:
             profile=updated_profile,
             policy=baseline.get("target_repo_speed_profile_policy"),
             target_test_slice=target_test_slice,
+            target_hotspot_slice=target_hotspot_slice,
         )
         provenance_policy = baseline["managed_file_provenance_policy"]
         changed_managed_files, blocked_managed_files, changed_managed_file_provenance = _sync_managed_files(

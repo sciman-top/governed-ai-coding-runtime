@@ -31,3 +31,20 @@ jobs:
       - name: Run repository verification
         shell: pwsh
         run: ./scripts/verify-repo.ps1 -Check All
+
+  release-preflight:
+    name: Release preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Run release preflight
+        shell: pwsh
+        run: ./scripts/governance/preflight.ps1 -DisableAutoCommit

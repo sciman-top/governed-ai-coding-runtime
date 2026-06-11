@@ -17,6 +17,8 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260609 Reference Basis And Preflight Hardening](./20260609-reference-basis-and-preflight-hardening.md)
+  - evidence companion for adding repo-owned `reference-basis` mapping, fail-closed local-reference evidence, formal release `preflight`, repo-profile hotspot coverage, and CI `release-preflight`
 - [20260609 Reference-Required Change Enforcement](./20260609-reference-required-change-enforcement.md)
   - evidence companion for the new Contract gate that fail-closes high-drift host/protocol/reference changes without same-diff official-source, primary-reference, and local-runtime evidence
 - [20260609 Reference Shelf Official Additions](./20260609-reference-shelf-official-additions.md)

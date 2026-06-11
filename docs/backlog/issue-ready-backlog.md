@@ -1780,6 +1780,64 @@ The entries below record the executed queue for complete hybrid final-state and 
   - [x] the queue does not become active without a separate planning-status promotion step
   - [x] closeout references evidence, verification, and rollback
 
+## Reference Governance And Release Preflight
+
+### GAP-169 Reference Basis Matrix And Retention Rule
+- Type: AFK
+- Blocked by: GAP-168
+- User stories: 11, 13, 18, 21, 29, 31, 44
+- Status: complete by `docs/change-evidence/20260609-reference-basis-and-preflight-hardening.md`; current active queue remains governed by `planning-status.json`
+- What to build:
+  - a repo-owned `reference-basis` catalog snapshot derived from the current local external shelf
+  - a human-readable matrix that maps repo surfaces to named local reference ids
+  - an explicit `keep / add later / no immediate delete` answer for the current reference shelf
+- Acceptance criteria:
+  - [x] no immediate delete is recommended for the current shelf
+  - [x] guarded repo surfaces map to named local reference ids rather than generic "read references" wording
+  - [x] the reference basis is discoverable in repo docs and machine-readable in repo data
+
+### GAP-170 Reference Basis Guard And Same-Diff Evidence Contract
+- Type: AFK
+- Blocked by: GAP-169
+- User stories: 11, 13, 18, 21, 23, 29, 31, 44
+- Status: complete by `docs/change-evidence/20260609-reference-basis-and-preflight-hardening.md`; Contract gate now fail-closes guarded surfaces without same-diff `reference_basis_review`
+- What to build:
+  - a machine-readable `reference-basis` policy
+  - a verifier that inspects the current diff and requires named local references in evidence
+  - Contract gate wiring that complements the existing broader `reference-required` rule
+- Acceptance criteria:
+  - [x] guarded surfaces fail if no same-diff `reference_basis_review` evidence exists
+  - [x] evidence must mention guarded paths, matched surface ids, and required local reference ids
+  - [x] the new verifier is wired into the self-repo `Contract` gate
+
+### GAP-171 Release Preflight Entrypoint And Hotspot Coverage
+- Type: AFK
+- Blocked by: GAP-170
+- User stories: 11, 13, 18, 21, 31, 44
+- Status: complete by `docs/change-evidence/20260609-reference-basis-and-preflight-hardening.md`; self-repo full gate now includes `doctor`, and formal `preflight` exists
+- What to build:
+  - explicit hotspot coverage in repo-profile full gate
+  - a formal `scripts/governance/preflight.ps1`
+  - release-ready extras over the base full gate: docs, scripts, and `git diff --check`
+- Acceptance criteria:
+  - [x] full repo-profile gate order includes `doctor`
+  - [x] `scripts/governance/preflight.ps1` exists and is repo-local
+  - [x] release-ready extras are explicit instead of chat-only
+
+### GAP-172 Local Plus CI Preflight Alignment Closeout
+- Type: HITL
+- Blocked by: GAP-171
+- User stories: 11, 13, 18, 21, 31, 37, 44, 45
+- Status: complete by `docs/change-evidence/20260609-reference-basis-and-preflight-hardening.md`; CI now runs the same release-style preflight path while current active queue remains unchanged
+- What to build:
+  - CI wiring for the repo-local `preflight` entrypoint
+  - aligned roadmap, plan, backlog, seeds, and change evidence for the new queue
+  - explicit closeout and rollback references for the new hardening slice
+- Acceptance criteria:
+  - [x] `verify.yml` still runs `verify-repo.ps1 -Check All`
+  - [x] `verify.yml` also runs `scripts/governance/preflight.ps1`
+  - [x] roadmap, plan, backlog, issue seeds, and evidence agree on `GAP-169..172`
+
 ## Vision
 
 ### GAP-018 Final Product Lifecycle Alignment

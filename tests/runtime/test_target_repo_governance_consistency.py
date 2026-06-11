@@ -164,6 +164,7 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
                 "build_commands",
                 "test_commands",
                 "contract_commands",
+                "hotspot_command",
                 "full_gate_optimization",
             },
         )
@@ -369,6 +370,88 @@ class TargetRepoGovernanceConsistencyTests(unittest.TestCase):
             self.assertEqual([gate["id"] for gate in updated_profile["full_gate_commands"]], ["build", "test", "contract"])
             self.assertEqual(updated_profile["quick_gate_commands"][0]["timeout_seconds"], 30)
             self.assertEqual(updated_profile["full_gate_commands"][0]["timeout_seconds"], 60)
+
+    def test_apply_target_repo_governance_materializes_hotspot_into_full_gate(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            target_repo = workspace / "repo-a"
+            profile_path = target_repo / ".governed-ai" / "repo-profile.json"
+            _write_json(
+                profile_path,
+                {
+                    "repo_id": "repo-a",
+                    "build_commands": [{"id": "build", "command": "python -m compileall src", "required": True}],
+                    "test_commands": [{"id": "test", "command": "python -m unittest discover", "required": True}],
+                    "contract_commands": [
+                        {"id": "contract", "command": "python -m unittest tests.test_contracts", "required": True}
+                    ],
+                },
+            )
+            baseline_path = workspace / "baseline.json"
+            _write_json(
+                baseline_path,
+                {
+                    "schema_version": "1.0",
+                    "baseline_id": "test",
+                    "sync_revision": "2026-06-09.1",
+                    "repo_profile_field_ownership": {
+                        "baseline_override_fields": ["auto_commit_policy"],
+                        "derived_runtime_fields": ["quick_gate_commands", "full_gate_commands", "gate_timeout_seconds"],
+                        "catalog_input_fields": [
+                            "repo_id",
+                            "display_name",
+                            "primary_language",
+                            "build_commands",
+                            "test_commands",
+                            "contract_commands",
+                            "hotspot_command",
+                            "full_gate_optimization",
+                        ],
+                    },
+                    "target_repo_speed_profile_policy": {
+                        "enabled": True,
+                        "materialize_quick_gate_commands": True,
+                        "materialize_full_gate_commands": True,
+                        "preserve_existing_gate_commands": True,
+                        "refresh_existing_derived_gate_commands": True,
+                        "default_gate_timeout_seconds": 90,
+                        "quick_gate_timeout_seconds": 30,
+                        "full_gate_timeout_seconds": 60,
+                    },
+                    "required_profile_overrides": {
+                        "auto_commit_policy": {"enabled": True, "on": ["milestone"]},
+                    },
+                },
+            )
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/apply-target-repo-governance.py",
+                    "--target-repo",
+                    str(target_repo),
+                    "--baseline-path",
+                    str(baseline_path),
+                    "--repo-id",
+                    "repo-a",
+                    "--build-command",
+                    "python -m compileall src",
+                    "--test-command",
+                    "python -m unittest discover",
+                    "--contract-command",
+                    "python -m unittest tests.test_contracts",
+                    "--hotspot-command",
+                    "python -m unittest tests.test_doctor",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            updated_profile = json.loads(profile_path.read_text(encoding="utf-8"))
+            self.assertEqual([gate["id"] for gate in updated_profile["full_gate_commands"]], ["build", "test", "contract", "doctor"])
+            self.assertEqual(updated_profile["full_gate_commands"][3]["command"], "python -m unittest tests.test_doctor")
             self.assertEqual(updated_profile["gate_timeout_seconds"], 90)
 
     def test_apply_target_repo_governance_json_merge_managed_file_preserves_local_keys(self) -> None:

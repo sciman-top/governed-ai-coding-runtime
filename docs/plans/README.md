@@ -15,6 +15,7 @@ This directory holds executable implementation plans that translate strategy and
   - [Host-Family Capability Operationalization Plan](./host-family-capability-operationalization-plan.md)
   - completed conditional package for `GAP-165..168`; do not treat it as active work unless `planning-status.json` is promoted
 - `Later`
+  - [Reference Governance And Release Preflight Plan](./reference-governance-and-preflight-plan.md)
   - [Long-Term Gap Trigger Audit Plan](./long-term-gap-trigger-audit-plan.md)
   - [Continuous Execution Readiness And Rollout Plan](./continuous-execution-readiness-and-rollout-plan.md)
   - future heavy `LTP` work still requires fresh trigger evidence or an owner-directed promotion
@@ -51,6 +52,9 @@ This directory holds executable implementation plans that translate strategy and
 - [Host-Family Capability Operationalization Plan](./host-family-capability-operationalization-plan.md)
   - Status: `GAP-165..168` are complete as an owner-directed conditional planning package; the queue still must not be treated as the current active queue while `planning-status.json` keeps `GAP-159..164` active and the selector at `defer_ltp_and_refresh_evidence`
   - Scope: `GAP-165` through `GAP-168` for the conditional follow-on queue that operationalizes host-family capability declarations, post-recovery claim-upgrade triggers, and queue-promotion rules without overriding current live posture
+- [Reference Governance And Release Preflight Plan](./reference-governance-and-preflight-plan.md)
+  - Status: completed owner-directed bounded hardening queue on `2026-06-09`; current active queue remains unchanged in `planning-status.json`
+  - Scope: `GAP-169` through `GAP-172` for repo-owned reference-basis mapping, fail-closed local-reference evidence, formal release-preflight, and CI alignment over the same repo contracts
 - [Long-Term Gap Trigger Audit Plan](./long-term-gap-trigger-audit-plan.md)
   - Status: completed trigger-audit queue for `GAP-090` through `GAP-092`; all `LTP-01..05` packages remain deferred pending future trigger evidence
   - Scope: final-state claim refresh, sustained real-workload evidence window, and gated decision for whether exactly one `LTP-01..05` package should start
@@ -110,6 +114,7 @@ This directory holds executable implementation plans that translate strategy and
    - use [Target Repo Managed Asset Retirement And Uninstall Plan](./target-repo-managed-asset-retirement-and-uninstall-plan.md) as the completed `GAP-144..151` managed-asset queue record
    - use [Repo Slimming And Coding Speed Plan](./repo-slimming-and-speed-plan.md) as the completed `GAP-152..158` optimization lane for reducing active work-surface weight, default context cost, evidence/archive noise, hotspot script maintenance cost, and gate timing noise without weakening evidence or hard-gate semantics
    - use [Agent Continuity And Shared Context Plan](./agent-continuity-and-shared-context-plan.md) as the current active queue reference for `GAP-159..164`
+   - use [Reference Governance And Release Preflight Plan](./reference-governance-and-preflight-plan.md) as the completed `GAP-169..172` governance hardening package for local reference discipline plus release-preflight/CI convergence
    - use [Long-Term Gap Trigger Audit Plan](./long-term-gap-trigger-audit-plan.md) as the completed `GAP-090..092` trigger-audit record before opening any future long-term package implementation
    - use [Continuous Execution Readiness And Rollout Plan](./continuous-execution-readiness-and-rollout-plan.md) as a follow-up execution plan that still depends on readiness-trigger satisfaction
    - the local runtime baseline through `Maintenance Baseline / GAP-034` is complete on the current branch baseline

@@ -14,8 +14,10 @@
 ## Hard Source Gate
 - High-drift host, protocol, reference-shelf, and runtime-evolution source changes are now fail-closed in the `Contract` gate.
 - The enforced policy lives at [Reference-Required Change Policy](./architecture/reference-required-change-policy.json).
-- The verifier is `scripts/verify-reference-required-changes.py`, executed by `scripts/verify-repo.ps1 -Check Contract`.
+- The repo-owned local-reference mapping lives at [Reference Basis Policy](./architecture/reference-basis-policy.json), [Reference Basis Catalog](./research/reference-basis-catalog.json), and [Reference Basis Matrix](./research/reference-basis-matrix.md).
+- The verifiers are `scripts/verify-reference-required-changes.py` and `scripts/verify-reference-basis.py`, executed by `scripts/verify-repo.ps1 -Check Contract`.
 - Required same-diff evidence must live under `docs/change-evidence/` and explicitly record `official_sources_reviewed`, `primary_references_reviewed`, `local_runtime_evidence_reviewed`, and `source_decision`.
+- When a change hits a guarded `reference-basis` surface, the same diff must also record `reference_basis_surface_ids`, `required_local_reference_ids_reviewed`, and `reference_adoption_decision`.
 
 ## Quick Navigation
 - `Now`
@@ -58,8 +60,12 @@
 - [Host-Family Capability Operationalization Plan](./plans/host-family-capability-operationalization-plan.md)
 - [Target Repo Managed Asset Retirement And Uninstall Plan](./plans/target-repo-managed-asset-retirement-and-uninstall-plan.md)
 - [Capability Portfolio Classifier](./architecture/capability-portfolio-classifier.json)
+- [Reference Basis Policy](./architecture/reference-basis-policy.json)
 - [Reference-Required Change Policy](./architecture/reference-required-change-policy.json)
+- [Reference Basis Matrix](./research/reference-basis-matrix.md)
 - [Runtime Evolution Policy](./architecture/runtime-evolution-policy.json)
+- [Reference Governance And Release Preflight Roadmap](./roadmap/reference-governance-and-preflight-roadmap.md)
+- [Reference Governance And Release Preflight Plan](./plans/reference-governance-and-preflight-plan.md)
 - [Long-Term Gap Trigger Audit Plan](./plans/long-term-gap-trigger-audit-plan.md)
 - [Governance Optimization Lane Roadmap](./roadmap/governance-optimization-lane-roadmap.md)
 - [Governance Optimization Lane Implementation Plan](./plans/governance-optimization-lane-implementation-plan.md)
@@ -243,6 +249,10 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -DisableAutoCommit
 ```
 
 ```powershell

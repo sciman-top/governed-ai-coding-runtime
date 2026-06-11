@@ -20,6 +20,7 @@ CATALOG_PROFILE_FIELDS = {
     "build_commands",
     "test_commands",
     "contract_commands",
+    "hotspot_command",
     "full_gate_optimization",
 }
 

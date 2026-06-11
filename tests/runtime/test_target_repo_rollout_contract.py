@@ -63,6 +63,7 @@ class TargetRepoRolloutContractTests(unittest.TestCase):
                 "build_commands",
                 "test_commands",
                 "contract_commands",
+                "hotspot_command",
                 "full_gate_optimization",
             },
         )

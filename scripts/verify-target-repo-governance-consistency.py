@@ -18,6 +18,7 @@ from lib.target_repo_speed_profile import (
     apply_speed_profile_policy,
     as_command_list,
     normalize_command_text,
+    normalize_target_config_hotspot_slice,
     normalize_speed_profile_policy,
     normalize_target_config_test_slice,
     select_preferred_command,
@@ -38,6 +39,7 @@ CATALOG_PROFILE_FIELDS = {
     "build_commands",
     "test_commands",
     "contract_commands",
+    "hotspot_command",
     "full_gate_optimization",
 }
 
@@ -445,6 +447,7 @@ def main() -> int:
             )
 
         target_test_slice = normalize_target_config_test_slice(target)
+        target_hotspot_slice = normalize_target_config_hotspot_slice(target)
         target_test_skip_reason = _target_quick_test_skip_reason(target)
         if target_test_slice is not None and target_test_skip_reason:
             raise ValueError(f"target cannot define both quick_test_command and quick_test_skip_reason: {target_name}")
@@ -455,6 +458,7 @@ def main() -> int:
             profile,
             speed_policy,
             target_test_slice=target_test_slice,
+            target_hotspot_slice=target_hotspot_slice,
         )
         if mismatched_speed_profile_fields:
             drift.append(

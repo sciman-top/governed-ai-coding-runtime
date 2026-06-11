@@ -73,6 +73,31 @@ def normalize_target_config_test_slice(target_config: dict[str, Any]) -> dict[st
     )
 
 
+def normalize_target_hotspot_slice(
+    *,
+    command: Any,
+    timeout_seconds: Any = None,
+    timeout_field_name: str = "hotspot_timeout_seconds",
+) -> dict[str, Any] | None:
+    normalized_command = str(command or "").strip()
+    if not normalized_command:
+        return None
+    slice_config: dict[str, Any] = {"command": normalized_command}
+    if timeout_seconds is not None:
+        slice_config["timeout_seconds"] = normalize_non_negative_int(timeout_seconds, timeout_field_name)
+    return slice_config
+
+
+def normalize_target_config_hotspot_slice(target_config: dict[str, Any]) -> dict[str, Any] | None:
+    return normalize_target_hotspot_slice(
+        command=target_config.get("hotspot_command"),
+        timeout_seconds=target_config.get("hotspot_timeout_seconds")
+        if "hotspot_timeout_seconds" in target_config
+        else None,
+        timeout_field_name="target.hotspot_timeout_seconds",
+    )
+
+
 def normalize_command_text(value: Any) -> str:
     return " ".join(str(value or "").strip().split())
 
@@ -169,6 +194,7 @@ def _build_legacy_speed_groups(
     profile: dict[str, Any],
     policy: dict[str, Any],
     target_test_slice: dict[str, Any] | None = None,
+    target_hotspot_slice: dict[str, Any] | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     test_entry = _derived_gate_entry(profile, "test_commands", "test", int(policy["quick_gate_timeout_seconds"]))
     if target_test_slice is not None:
@@ -222,6 +248,17 @@ def _build_legacy_speed_groups(
         ],
         *full_contract_entries,
     ]
+    if target_hotspot_slice is not None:
+        full_commands.append(
+            {
+                "id": "doctor",
+                "command": str(target_hotspot_slice["command"]),
+                "required": True,
+                "timeout_seconds": int(
+                    target_hotspot_slice.get("timeout_seconds", policy["full_gate_timeout_seconds"])
+                ),
+            }
+        )
     return quick_commands, full_commands
 
 
@@ -270,6 +307,7 @@ def apply_speed_profile_policy(
     profile: dict[str, Any],
     policy: dict[str, Any] | None,
     target_test_slice: dict[str, Any] | None = None,
+    target_hotspot_slice: dict[str, Any] | None = None,
 ) -> tuple[dict[str, Any], list[str]]:
     if policy is None:
         return profile, []
@@ -283,9 +321,13 @@ def apply_speed_profile_policy(
     preserve_existing = bool(normalized_policy["preserve_existing_gate_commands"])
     refresh_existing_derived = bool(normalized_policy["refresh_existing_derived_gate_commands"])
     legacy_quick_commands, legacy_full_commands = _build_legacy_speed_groups(
-        updated, normalized_policy, target_test_slice
+        updated, normalized_policy, target_test_slice, target_hotspot_slice
     )
-    fallback_quick_commands, fallback_full_commands = _build_legacy_speed_groups(updated, normalized_policy)
+    fallback_quick_commands, fallback_full_commands = _build_legacy_speed_groups(
+        updated,
+        normalized_policy,
+        target_hotspot_slice=target_hotspot_slice,
+    )
 
     if bool(normalized_policy["materialize_quick_gate_commands"]):
         if _should_replace_gate_group(

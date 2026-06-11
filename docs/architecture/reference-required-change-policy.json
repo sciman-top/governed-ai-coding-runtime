@@ -68,11 +68,24 @@
       "path_exact": [
         "scripts/build-policy-tool-credential-audit.py",
         "scripts/evaluate-runtime-evolution.py",
+        "scripts/verify-reference-basis.py",
         "scripts/verify-current-source-compatibility.py",
         "scripts/verify-reference-required-changes.py",
         "scripts/verify-repo.ps1"
       ],
       "rationale": "These scripts determine whether reference-source posture is enforced or silently bypassed in normal repo verification."
+    },
+    {
+      "surface_id": "reference-basis-and-release-preflight",
+      "path_exact": [
+        "docs/architecture/reference-basis-policy.json",
+        "docs/research/reference-basis-catalog.json",
+        "docs/research/reference-basis-matrix.md",
+        "scripts/governance/preflight.ps1",
+        ".github/workflows/verify.yml",
+        ".governed-ai/repo-profile.json"
+      ],
+      "rationale": "These files decide which local references are mandatory for guarded changes and how release-style preflight reaches local plus CI enforcement."
     }
   ],
   "rollback_ref": "git revert docs/architecture/reference-required-change-policy.json, scripts/verify-reference-required-changes.py, scripts/verify-repo.ps1, related tests, docs index links, and the matching change-evidence file"

@@ -799,6 +799,7 @@ function Invoke-ContractChecks {
   Invoke-AgentRuleSyncChecks
   Invoke-PreChangeReviewChecks
   Invoke-ReferenceRequiredChangeChecks
+  Invoke-ReferenceBasisChecks
   Invoke-FunctionalEffectivenessChecks
 }
 
@@ -1034,6 +1035,20 @@ function Invoke-ReferenceRequiredChangeChecks {
   }
 
   Write-CheckOk "reference-required-changes"
+}
+
+function Invoke-ReferenceBasisChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-reference-basis.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+    if ([string]::IsNullOrWhiteSpace($detail)) {
+      throw "Reference-basis checks failed"
+    }
+    throw "Reference-basis checks failed`n$detail"
+  }
+
+  Write-CheckOk "reference-basis"
 }
 
 function Invoke-FunctionalEffectivenessChecks {

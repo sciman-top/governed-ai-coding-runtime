@@ -14,7 +14,8 @@ This directory holds the human and machine planning artifacts that bridge strate
   - active queue reference is `GAP-159..164`
 - `Next`
   - `GAP-165..168` are the bounded conditional follow-on package
-  - they stay inactive until `planning-status.json` explicitly promotes them
+  - `GAP-169..172` are the completed bounded reference/preflight hardening package
+  - both packages stay outside the current active queue until `planning-status.json` explicitly promotes a later follow-on
 - `Later`
   - `LTP-01..06` and any later heavy implementation queue remain trigger-based after the current selector
 - `History`
@@ -79,6 +80,7 @@ This directory holds the human and machine planning artifacts that bridge strate
 - `Agent Continuity And Shared Context Queue / GAP-159` through `GAP-164` is implemented and is the current active queue reference.
 - The current decision gate remains `defer_ltp_and_refresh_evidence`, and the current live posture is `fresh`, with both Codex target runs and the Claude workload probe currently at `native_attach` / ready.
 - `GAP-165..168` are complete as an owner-directed conditional planning package for the host-family operationalization follow-on queue. The package stays inactive as current active work until a later promotion explicitly updates `planning-status.json`.
+- `GAP-169..172` are complete as an owner-directed bounded hardening queue for repo-owned reference-basis discipline and release-preflight/CI convergence. The queue is complete and auditable, but it does not replace the current active queue in `planning-status.json`.
 - The 2026-05-01 core-principle update is covered by the completed `GAP-130..143` governance queue: `context_budget_and_instruction_minimalism` maps to `GAP-137`; `least_privilege_tool_credential_boundary` maps to `GAP-138`; and `measured_effect_feedback_over_claims` maps to `GAP-134`, `GAP-139`, `GAP-142`, and `GAP-143`. Later `GAP-144+` work is justified by managed-asset removal evidence, repo-slimming evidence, target-run evidence, drift, or an explicit owner-directed scope fence, not by the principle wording alone.
 - Any heavy LTP implementation package after this selector must use ids beyond the bounded host-support queue and must pass the autonomous or owner-directed scope fence.
 - Historical `GAP-018` through `GAP-044` remain completion history and dependency context.
@@ -93,6 +95,8 @@ This directory holds the human and machine planning artifacts that bridge strate
   - [Governance Hub Reuse And Controlled Evolution Plan](../plans/governance-hub-reuse-and-controlled-evolution-plan.md)
   - [Governance Optimization Lane Roadmap](../roadmap/governance-optimization-lane-roadmap.md)
   - [Governance Optimization Lane Implementation Plan](../plans/governance-optimization-lane-implementation-plan.md)
+  - [Reference Governance And Release Preflight Roadmap](../roadmap/reference-governance-and-preflight-roadmap.md)
+  - [Reference Governance And Release Preflight Plan](../plans/reference-governance-and-preflight-plan.md)
   - [Long-Term Gap Trigger Audit Plan](../plans/long-term-gap-trigger-audit-plan.md)
   - [Full Lifecycle Plan](../roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
   - [Full Lifecycle Backlog Seeds](./full-lifecycle-backlog-seeds.md)
