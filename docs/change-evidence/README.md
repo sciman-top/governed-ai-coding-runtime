@@ -17,6 +17,8 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260614 Active Queue Evidence-Upkeep Refresh](./20260614-active-queue-evidence-upkeep-refresh.md)
+  - evidence companion for rerunning the 2026-06-14 selector and release-style preflight, then refreshing `planning-status.json` to keep bounded-evidence-upkeep truth current without promoting a later implementation queue
 - [20260613 Active Queue Evidence-Upkeep Refresh](./20260613-active-queue-evidence-upkeep-refresh.md)
   - evidence companion for refreshing `planning-status.json` to today's bounded-evidence-upkeep truth while keeping `GAP-159..164` as the active queue reference and leaving `GAP-165..168` in completed conditional follow-on posture
 - [20260613 Agent Continuity Guide](./20260613-agent-continuity-guide.md)
