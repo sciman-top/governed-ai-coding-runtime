@@ -1,30 +1,39 @@
 # Contracts
 
-Hand-maintained runtime contracts and domain models live here.
+Repo-owned runtime contracts and domain models live here.
 
-## Current Status
-The current repository baseline exposes pure Python runtime contracts and domain models for:
-- task intake validation
-- lifecycle transition validation
-- repo profile loading and resolution
-- read-only governed tool request validation
-- evidence timeline and task output primitives
-- scripted read-only trial entrypoint
-- isolated workspace allocation and write-path policy validation
-- write policy default resolution
-- approval request state handling, interruption state, and audit trail primitives
-- write-side tool governance decisions with rollback references
-- quick and full verification runner plans with live build/test/contract/doctor commands and evidence artifacts
-- delivery handoff packages with validation status and replay references
-- eval baseline records and trace grading primitives
-- second-repo reuse pilot checks and generic process adapter compatibility gaps
-- local operator HTML rendering from the runtime read model
-- maintenance policy visibility in the runtime status surface
-- minimal approval and evidence control console facade
+## Source Root
+```text
+packages/contracts/src/governed_ai_coding_runtime_contracts/
+```
 
-These models are intentionally runtime-only and do not imply API, database, or workflow runtime selection yet.
+## Current Surface
+The current package exposes pure-Python contract primitives for:
+- task intake, task storage, workflow, and worker coordination
+- repo profiles, repo attachment, runtime roots, and entrypoint-policy enforcement
+- tool governance, subprocess guardrails, write policy, approval, and attached-write execution
+- evidence, replay, delivery handoff, eval traces, and learning-efficiency metrics
+- session bridge, runtime status, operator queries, operator UI models, and control-console read models
+- host and adapter surfaces for Codex, Claude Code, adapter registry, compatibility, and continuity
+- target-repo reuse, multi-repo trial, target-repo speed KPI, and clarification governance
 
-Not landed yet:
-- execution worker or managed runtime loop
-- artifact store and replay pipeline
-- stable runtime status surface beyond scripts and the minimal facade
+## Current Consumers
+- `scripts/run-governed-task.py`
+- `scripts/runtime-flow*.ps1`
+- `scripts/session-bridge.py`
+- `scripts/host-feedback-summary.py`
+- runtime and service tests under `tests/`
+
+## Boundaries
+- These models are runtime-only contracts and helper primitives.
+- They do not imply ownership of host login, provider switching, or upstream UI state.
+- They are kept repo-local first; promotion to a separately versioned package needs explicit dependency, rollout, and compatibility evidence.
+
+## Verification
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime
+```
+
+```powershell
+python -m unittest discover -s tests/runtime -p "test_*.py"
+```

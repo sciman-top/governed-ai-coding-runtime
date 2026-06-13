@@ -1,64 +1,42 @@
 # Governed AI Coding Runtime Schemas
 
 ## Purpose
-Machine-readable schema drafts and example instances for the platform's core governance contracts.
+This directory stores the machine-readable contract surface for the runtime:
+- JSON Schemas under `schemas/jsonschema/`
+- example instances under `schemas/examples/`
+- runtime-consumable metadata under `schemas/control-packs/`
+- the authoritative pairing catalog at `schemas/catalog/schema-catalog.yaml`
 
-## JSON Schema Drafts
-- `jsonschema/control-registry.schema.json`
-- `jsonschema/control-pack.schema.json`
-- `jsonschema/control-pack-inheritance-matrix.schema.json`
-- `jsonschema/capability-portfolio-classifier.schema.json`
-- `jsonschema/repo-profile.schema.json`
-- `jsonschema/repo-admission-minimums.schema.json`
-- `jsonschema/tool-contract.schema.json`
-- `jsonschema/agent-adapter-contract.schema.json`
-- `jsonschema/hook-contract.schema.json`
-- `jsonschema/skill-manifest.schema.json`
-- `jsonschema/knowledge-source.schema.json`
-- `jsonschema/knowledge-memory-lifecycle.schema.json`
-- `jsonschema/agent-continuity-record.schema.json`
-- `jsonschema/promotion-lifecycle.schema.json`
-- `jsonschema/self-evolution-promotion-controller.schema.json`
-- `jsonschema/policy-tool-credential-audit.schema.json`
-- `jsonschema/governance-hub-certification.schema.json`
-- `jsonschema/waiver-and-exception.schema.json`
-- `jsonschema/provenance-and-attestation.schema.json`
-- `jsonschema/repo-map-context-shaping.schema.json`
-- `jsonschema/risk-tier-approval-policy.schema.json`
-- `jsonschema/task-lifecycle.schema.json`
-- `jsonschema/evidence-bundle.schema.json`
-- `jsonschema/verification-gates.schema.json`
-- `jsonschema/eval-trace-policy.schema.json`
+## Sync Rule
+- `docs/specs/*` defines the human-readable contract meaning.
+- `schemas/jsonschema/*` defines the machine-readable contract shape.
+- `schemas/catalog/schema-catalog.yaml` is the authoritative pairing list.
+- If you change one side, verify the other two in the same diff.
 
-## Catalog
-- `catalog/schema-catalog.yaml`
+## Current Schema Families
+- Governance and control packs:
+  - `control-registry`, `control-pack`, `control-pack-inheritance-matrix`, `capability-portfolio-classifier`
+- Repo, host, and attachment surfaces:
+  - `repo-profile`, `repo-admission-minimums`, `repo-attachment-binding`, `agent-adapter-contract`, `runtime-operator-surface`, `target-repo-speed-kpi`
+- Policy, interaction, and evidence:
+  - `tool-contract`, `hook-contract`, `policy-decision`, `response-policy`, `risk-tier-approval-policy`, `verification-gates`, `evidence-bundle`, `provenance-and-attestation`, `waiver-and-exception`, `interaction-signal`, `interaction-evidence`
+- Runtime flow and task semantics:
+  - `task-lifecycle`, `session-bridge-command`, `teaching-budget`, `clarification-protocol`, `transition-stack-convergence`
+- Knowledge, continuity, and controlled evolution:
+  - `knowledge-source`, `knowledge-memory-lifecycle`, `agent-continuity-record`, `promotion-lifecycle`, `self-evolution-promotion-controller`, `learning-efficiency-metrics`, `controlled-improvement-proposal`, `core-principles`, `core-principle-change-proposal`, `core-principle-change-manifest`, `core-principle-change-report`
+- Skill and governed rollout support:
+  - `skill-manifest`
 
-## Runtime-Consumable Metadata
-- `control-packs/README.md`
-- `control-packs/minimum-governance-kernel.control-pack.json`
+## Examples And Runtime Metadata
+- `examples/README.md` describes the example-instance layout.
+- `control-packs/minimum-governance-kernel.control-pack.json` is the current checked-in runtime-consumable pack surface.
+- Example instances should stay intentionally minimal while remaining valid against their matching schemas.
 
-## Example Instances
-- `examples/README.md`
-- `examples/control-pack/minimum-governance-kernel.example.json`
-- `examples/control-pack-inheritance-matrix/minimum-governance-kernel.example.json`
-- `examples/capability-portfolio-classifier/default-governance-hub.example.json`
-- `examples/hook-contract/pre-write-path-guard.example.json`
-- `examples/skill-manifest/repo-map-audit.example.json`
-- `examples/knowledge-source/docs-index-authoritative.example.json`
-- `examples/knowledge-memory-lifecycle/default-governed-lifecycle.example.json`
-- `examples/promotion-lifecycle/default-runtime-evolution.example.json`
-- `examples/policy-tool-credential-audit/default-runtime.example.json`
-- `examples/governance-hub-certification/default-runtime.example.json`
-- `examples/waiver-and-exception/temporary-gate-waiver.example.json`
-- `examples/provenance-and-attestation/schema-bundle-release.example.json`
-- `examples/repo-map-context-shaping/hybrid-default.example.json`
-- `examples/repo-profile/python-service.example.json`
-- `examples/repo-profile/typescript-webapp.example.json`
+## Verification
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract
+```
 
-## Notes
-- These are initial drafts aligned with `docs/specs/*`.
-- They define contract shape, not storage or transport implementation.
-- Example instances are intentionally minimal and should validate against their matching schema.
-- The control-pack example is now also the source template for an executable and verifiable runtime-consumable pack.
-- `schemas/control-packs/` is the stable location for runtime-consumable metadata references derived from the validated examples.
-- They should be revised once the first runtime package exists.
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All
+```

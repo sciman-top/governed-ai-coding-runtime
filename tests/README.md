@@ -1,62 +1,77 @@
 # Tests
 
-Runtime and service boundary tests live here. Use the repo verifier for the
-canonical test entrypoint so Windows process-environment normalization runs
-before Python imports modules that may touch `asyncio` or subprocess APIs.
+Runtime, governance, and service-boundary tests live here.
 
-## Phase 0 Verification
-The repository integrity checks are:
-- schema JSON parsing
-- schema example validation
-- schema catalog pairing
-- PowerShell script parsing
-- active markdown link checks
-- roadmap/backlog/script drift checks
-
-These checks are executed by `scripts/verify-repo.ps1`.
-
-## Phase 1 Runtime Tests
-Runtime contract unit tests live under `tests/runtime/`. Service boundary tests
-live under `tests/service/` and are included in the Runtime gate.
-
-Run them through the repository verifier:
+## Canonical Entrypoints
+Use the repository verifier first so Windows process-environment normalization happens before Python imports modules that may touch `asyncio`, subprocess APIs, or host-local state.
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime
 ```
 
-For inner-loop work on target-governance speed-profile behavior, use the
-bounded quick slice first, then run the full Runtime gate before delivery:
-
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check RuntimeQuick
 ```
 
-Direct test commands when the host process environment is already healthy:
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract
+```
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All
+```
+
+## What The Gates Cover
+- `Runtime`
+  - runtime contract tests under `tests/runtime/`
+  - service-boundary tests under `tests/service/`
+- `RuntimeQuick`
+  - bounded inner-loop slice for target-governance speed-profile work
+- `Contract`
+  - reference-required changes, reference-basis enforcement, target-governance consistency, rollout contracts, dependency baseline, and other fail-closed invariants
+- `All`
+  - build, runtime, contract, doctor-adjacent integrity, docs, links, and script checks
+
+## Notable Current Test Clusters
+- host and adapter posture:
+  - `test_codex_adapter.py`
+  - `test_claude_code_adapter.py`
+  - `test_codex_cockpit_policy_contract.py`
+  - `test_agent_continuity.py`
+- reference discipline and release hardening:
+  - `test_reference_required_changes.py`
+  - `test_reference_basis.py`
+  - `test_preflight_ci_wiring.py`
+- target-repo governance and speed:
+  - `test_target_repo_governance_consistency.py`
+  - `test_target_repo_rollout_contract.py`
+  - `test_target_repo_speed_kpi.py`
+  - `test_governance_gate_runner.py`
+- operator and runtime read models:
+  - `test_operator_ui.py`
+  - `test_runtime_status.py`
+  - `test_session_bridge.py`
+
+## Direct Commands
+Use direct unittest commands only when the current shell environment is already known-good:
 
 ```powershell
 python -m unittest discover -s tests/runtime -p "test_*.py"
+```
+
+```powershell
 python -m unittest discover -s tests/service -p "test_*.py"
 ```
 
-Foundation build and doctor checks are available through:
+For targeted current hardening checks:
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Build
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Doctor
+python -m unittest tests.runtime.test_reference_basis tests.runtime.test_preflight_ci_wiring -v
 ```
 
-Public usable release smoke paths are available through:
+## Release-Style Closeout
+When you need the same release-style closeout path that CI uses:
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap-runtime.ps1
-python scripts/serve-operator-ui.py
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/package-runtime.ps1
-```
-
-Maintenance visibility is also covered by runtime tests and doctor:
-
-```powershell
-python scripts/run-governed-task.py status --json
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -DisableAutoCommit
 ```

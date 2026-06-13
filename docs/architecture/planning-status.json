@@ -1,20 +1,20 @@
 {
   "schema_version": "1.0",
   "status_id": "default-planning-status",
-  "updated_on": "2026-06-09",
+  "updated_on": "2026-06-13",
   "current_active_queue": {
     "queue_id": "GAP-159..164",
     "label": "Agent Continuity And Shared Context",
     "status": "implemented_with_followup_attention",
     "source_plan": "docs/plans/agent-continuity-and-shared-context-plan.md",
     "source_backlog": "docs/backlog/issue-ready-backlog.md",
-    "why_now": "This is the newest implemented owner-directed queue after GAP-152..158. Fresh 2026-06-09 target-run evidence has recovered Codex to native_attach/ready, so the repo is back to bounded evidence upkeep and LTP defer rather than a host-recovery wait gate."
+    "why_now": "This remains the newest implemented owner-directed queue after GAP-152..158. The 2026-06-13 continuity checkpoint closeout, continuity guide landing, selector reruns, and fresh release-style preflight keep the repo in bounded evidence upkeep while no later implementation queue has been promoted."
   },
   "current_decision_gate": {
     "selector": "defer_ltp_and_refresh_evidence",
     "selector_source": "scripts/select-next-work.py",
-    "as_of": "2026-06-09",
-    "proof_ref": "docs/change-evidence/20260609-live-posture-recovery.md",
+    "as_of": "2026-06-13",
+    "proof_ref": "docs/change-evidence/20260613-active-queue-evidence-upkeep-refresh.md",
     "blocking_reasons": []
   },
   "certified_baseline": {

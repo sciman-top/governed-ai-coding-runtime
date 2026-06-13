@@ -3,246 +3,141 @@
 ## Language / 语言
 - 中文说明: [README.zh-CN.md](README.zh-CN.md)
 - English guide: [README.en.md](README.en.md)
-- Documentation index / 文档索引: [docs/README.md](docs/README.md)
+- 文档索引 / Docs index: [docs/README.md](docs/README.md)
 
-## Fastest Path / 最短使用路径
-如果只想知道“现在该执行什么”，先从根目录短入口开始：
+## Current Snapshot / 当前快照
+- 当前唯一状态真源：`docs/architecture/planning-status.json`
+- Single source of planning truth: `docs/architecture/planning-status.json`
+- 当前 active queue / current active queue: `GAP-159..164` (`Agent Continuity And Shared Context`)
+- `current decision gate`：`defer_ltp_and_refresh_evidence`
+- `current live posture`：target-run freshness 为 `fresh`；Codex target runs 为 `native_attach` / ready；Claude workload probe 为 `native_attach` / ready
+- `current decision gate`: `defer_ltp_and_refresh_evidence`
+- `current live posture`: target-run freshness is `fresh`; Codex target runs are `native_attach` / ready; Claude workload probe is `native_attach` / ready
+- 认证基线 / certified baseline: `GAP-104..111`
+- `GAP-104..111` 已在当前分支基线上完成，完整混合终态闭环由 `docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md` 记录。
+- 最新完成的治理硬化切片 / latest completed hardening slice: `GAP-169..172`
+  - 已新增 repo-owned `reference-basis`、`scripts/governance/preflight.ps1`、以及 CI `release-preflight`
+
+## Fastest Path / 最快路径
+如果只想知道“现在先跑什么”，用下面 4 个入口：
 
 ```powershell
 .\run.ps1
 ```
-
-AI 推荐的日常入口：
 
 ```powershell
 .\run.ps1 fast
 ```
 
-AI 推荐的交付前 readiness：
-
-```powershell
-.\run.ps1 readiness -OpenUi
-```
-
-`fast` 执行 `build + quick feedback tests`，用于日常编码快速反馈；`readiness` 会按本仓硬门禁顺序执行 `build -> test -> contract/invariant -> hotspot`，然后打开默认中文 operator UI。`run.ps1` 只是便捷层，真实实现仍在 `scripts/operator.ps1`；需要完整动作说明时运行：
-
-```powershell
-.\run.ps1 operator-help
-```
-
-## Current Truth / 当前真相
-如果只想知道“现在项目处于什么状态、当前该信哪个入口”，先看这里：
-
-- 唯一状态真源：`docs/architecture/planning-status.json`
-- 当前 active queue：`GAP-159..164`（`Agent Continuity And Shared Context`）
-- 当前 decision gate：`defer_ltp_and_refresh_evidence`
-- 当前 live posture：`fresh`，`Codex` 与 `Claude` 当前都以 `native_attach / ready` 记录
-- 更强 claim 的前提：始终要有 fresh target-run evidence；历史完成不自动等于当前可宣称能力
-
-## Hard Source Gate / 来源硬门禁
-- 现在不仅是“建议参考”，而是已经接进 `Contract` gate 的硬约束。
-- 只要改动宿主边界、协议边界、外部参考架、或 runtime-evolution source policy 这些高漂移面，`scripts/verify-repo.ps1 -Check Contract` 就会执行 `scripts/verify-reference-required-changes.py`。
-- 同一次改动里必须带 `docs/change-evidence/*.md` 证据，并明确写出 `official_sources_reviewed`、`primary_references_reviewed`、`local_runtime_evidence_reviewed`、`source_decision` 等结构化来源审查字段。
-- 规则入口见 `docs/architecture/reference-required-change-policy.json`；这条门禁是为了防止高漂移语义只靠记忆或聊天结论被改写。
-
-## Work Horizon / 工作地平线
-- `Now`：以 `planning-status.json`、`docs/README.md`、`docs/plans/README.md`、`docs/backlog/README.md` 为当前导航面，保持口径与 live evidence 一致
-- `Next`：`GAP-165..168` 只是条件 follow-on queue，只有在后续 promotion evidence 明确满足时才应激活
-- `Later`：`LTP-01..06` 和更重的 host/protocol/runtime 扩展仍是 trigger-based work，不是默认近期待办
-- `History`：`GAP-020..158` 的完成切片、`GAP-104..111` 的认证基线，以及旧 implementation plans 都保留为历史证据，不再和当前 active queue 竞争
-
-## 中文快速结论
-本项目已经完成 `Foundation / GAP-020` 到 `GAP-023`、`Full Runtime / GAP-024` 到 `GAP-028`、`Public Usable Release / GAP-029` 到 `GAP-032`、`Maintenance Baseline / GAP-033` 到 `GAP-034`，以及 `Interactive Session Productization / GAP-035` 到 `GAP-039`。这表示“混合最终形态的第一版产品化边界”已经落地，但仍不等于“已经拥有完整 runtime-owned 的所有宿主真实执行能力”。
-
-当前唯一状态真源：`docs/architecture/planning-status.json`。
-- `certified baseline`：`GAP-104..111`
-- `current active queue`：`GAP-159..164`
-- `current decision gate`：`defer_ltp_and_refresh_evidence`
-- `current live posture`：target-run freshness 为 `fresh`，Codex target runs 现已恢复为 `native_attach` / ready；Claude workload probe 为 `native_attach` / ready
-
-当前仓库的正确理解是：
-- 已完成一个可运行、可验证、可留痕的本地治理运行时基线
-- 已完成 repo-local light pack、session bridge、Codex smoke-trial、generic adapter tiers、multi-repo trial runner 这些产品化切片
-- `Strategy Alignment Gates / GAP-040..044` 已在当前分支基线上完成，并作为 `GAP-035..039` 的已满足硬化依赖保留下来
-- 终态目标是“通用、可迁移、交互式会话优先、attach-first、capability-first、host-family-aware”的 governed AI coding runtime
-
-定位与非目标：
-- 定位：AI coding agents 的治理/运行时层，而不是新的执行宿主
-- 非目标：不做另一个宿主壳层、不做 wrapper-first 编排产品、不做 generation guardrail 产品
-- 策略入口：[Positioning And Competitive Layering](docs/strategy/positioning-and-competitive-layering.md)
-- 一页终态蓝图：[Current Best-End-State Blueprint](docs/strategy/current-best-end-state-blueprint.md)
-- 宿主能力蓝图：[Host Family Capability Surface Blueprint](docs/architecture/host-family-capability-surface-blueprint.md)
-- 借鉴矩阵：[Runtime Governance Borrowing Matrix](docs/research/runtime-governance-borrowing-matrix.md)
-- 外部参考索引：[External Reference Repo Index](docs/research/external-reference-repos-index.md)
-- 外部参考一页概览：[External Reference Repo One-Page Overview](docs/research/external-reference-repo-one-page-overview.md)
-- 外部参考分级：[External Reference Repo Tiering](docs/research/external-reference-repo-tiering.md)
-- 边界 ADR：[ADR-0007 Source-Of-Truth And Runtime Contract Bundle](docs/adrs/0007-source-of-truth-and-runtime-contract-bundle.md)
-
-当前可用能力：
-- 运行仓库完整验证：文档、Schema、Catalog、脚本、runtime contract tests
-- 运行本地 baseline 的 `build` 与 `doctor` 门禁
-- 运行第一个只读 trial 脚本（read-only 基线）
-- 运行 Codex capability live probe/readiness，并在 `status`/`doctor` 暴露 adapter tier、flow kind、degrade 原因与 remediation hint
-- 通过 session bridge 运行 runtime-managed gate 执行（`run_quick_gate` / `run_full_gate`，支持 `plan_only`）
-- 通过 session bridge 运行 attached write 治理闭环（`write_request` / `write_approve` / `write_execute` / `write_status`），并产出 approval/evidence/handoff/replay refs
-- 运行 safe-mode Codex adapter smoke trial，并输出 task/binding/evidence/verification wiring
-- 运行一个基于 repo-profile 的 multi-repo trial runner，并输出每个 repo 的 posture、adapter tier、verification/evidence refs 和 follow-ups
-- 把外部仓库（例如 `..\ClassroomToolkit`）attach 到本运行时，生成 `.governed-ai/` 轻量接入包，并通过 status/doctor/session-bridge 查看 posture
-- 运行 CLI-first runtime smoke path：创建任务、执行本地 worker、跑 `build -> test -> contract -> doctor`、写 evidence/handoff/replay、查询 runtime status
-- 在 Python 中复用 `packages/contracts` 下的任务、repo profile、审批、执行运行时、artifact/replay、验证、handoff、eval/trace 等契约原语
-
-当前完整混合终态认证口径：
-- `GAP-104..111` 已在当前分支基线上完成，完整混合终态闭环由 `docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md` 记录。
-- `GAP-104..111` 已在当前分支基线上完成；认证主证据见 [20260427 GAP-111 完整混合终态认证](docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md)。
-- 当前入口只保留认证边界：本项目已证明 repo-local contract bundle、machine-local durable governance kernel、attach-first host adapters 和 same-contract verification/delivery plane，但不宣称接管上游宿主 UI，也不宣称对所有未来外部仓和高风险流程无条件接管。
-- 详细完成历史与后续 `GAP-130..143` 快照见 [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md) / [Completed GAP History](docs/archive/completed-gap-history.md)。
-- 历史认证不覆盖当前 live posture；更强的 live-host claim 只有在 fresh target-run evidence 维持 `ready` / `native_attach` 时才成立，一旦姿态再次退化，口径也必须立即随之回退。
-
-当前受控演进口径：
-- `GAP-120..129` 已把 30 天自我演进 review、AI 编码经验沉淀和低风险 proposal/disabled skill materialization 纳入受控流程；但仍不自动改 policy、不自动启用 skill、不自动同步目标仓、不自动 push/merge。
-- `GAP-130..143` 已形成 governance hub、reusable contract、controlled evolution、repo-map shaping、tool/credential audit 和 evidence recovery 这一组完成基线；详细条目转入 [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md) / [Completed GAP History](docs/archive/completed-gap-history.md)。
-- Codex 和 Claude Code 是合作宿主而不是竞争对象；完成标准仍必须包含真实 target-repo effect feedback，而更强的 live-host claim 也必须始终绑定 fresh target-run evidence，而不能只沿用历史认证措辞。
-- 最佳工程终态已固化为 `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`，即治理中枢、可复用控制契约、能力优先的多宿主适配、受控演进闭环和证据优先交付纪律，而不是新的宿主产品。
-- 当前最合适目标定义：一个 capability-first、host-family-aware 的 AI coding governance runtime。`Codex family` 与 `Claude family` 是第一类合作宿主，`Antigravity family` 是 Google 的长期方向，`Gemini CLI` 仍是迁移桥而不是首选主宿主。
-- 核心原则已收敛为 5 条人类可读口径，机器细则仍以 `docs/architecture/core-principles-policy.json` 的 enforced principles 为准：
-  - `Efficiency first, safety bounded`：综合效率优先，安全边界约束；少打扰、自动连续执行、节省 token / 成本、保留必要解释、高效率；模型、provider、推理档位、context window、compact 阈值和交互入口只是阶段性实现；效率优化不得绕过既有安全、证据、回滚、review 和门禁约束。
-  - `Automation-first, outer-AI-assisted, gate-controlled evolution`：确定性治理工作应自动化；外层 AI 可自动生成 review、知识、候选和建议，但有效变更必须先成为结构化候选并通过风险分级、机器门禁、证据、回滚和必要 review。
-  - `Governance hub, reusable contract, host-compatible execution`：本项目是治理中枢和可复用契约，不竞争或替代 Codex / Claude Code 等宿主；外部 agent 项目只作为机制来源。
-  - `Context budget, instruction minimalism, least privilege`：`context_budget_and_instruction_minimalism` 与 `least_privilege_tool_credential_boundary` 是同一执行边界；根规则保持短而硬，工具输出必须保持高信号、可裁剪、可复用；工具权限、凭据、sandbox、mount、network、provider secret 和 MCP/tool identity 必须可审计并尽量由确定性控制执行。
-  - `Measured effect over claims`：`measured_effect_feedback_over_claims` 要求完成声明必须有 fresh target-run evidence、eval trace、trace/replay/trajectory refs、effect feedback、verification command 与 rollback；文档、代码存在或候选文件本身不等于完成。
-
-现在能否用于其他项目？
-- 可以，**但边界是“治理 sidecar / attach-first metadata + runtime-managed gate/write flows + explicit degrade semantics”**。
-- 对 `..\ClassroomToolkit` 这类仓库，已经可以生成或校验 `.governed-ai`、挂到 machine-local runtime state、跑 status/doctor、执行 gate 流、执行受治理写流并保留证据链。
-- 仍不能宣称“Codex CLI 在所有外部仓、所有环境下已经被本项目完整接管用于真实高风险编码写入”。
-
-当前总入口与一键应用：
-- 根目录短入口：`run.ps1`。它把常用动作压成场景化短命令，例如 `.\run.ps1 fast`、`.\run.ps1 readiness -OpenUi`、`.\run.ps1 daily -Mode quick`、`.\run.ps1 rules-check`、`.\run.ps1 feedback`；底层仍转交 `scripts/operator.ps1`。
-- 操作者聚合入口：`scripts/operator.ps1`。它把 readiness、自检、规则漂移/同步、目标仓批量流和 operator UI 生成收成同一个入口；默认 `-Action Help`，适合日常少记长命令。
-- 宿主反馈汇总入口：`scripts/operator.ps1 -Action FeedbackReport`。它统一汇总 `Codex/Claude` 本机状态、规则同步面、parity 文档面和最新 target-run evidence。
-- Codex/Cockpit 本机边界：Direct OAuth、Direct API 和 Cockpit API service 往返切换由 Cockpit Tools 完全负责。本仓不再提供 8770 页面动作、operator action、repair/smoke/checker、LiteLLM gateway 管理、auth/provider/profile/history bucket 写入、launcher/no-op 包装或后台切换守护；只保留 `scripts/Disable-CodexProjectInterop.ps1` 和 `scripts/Test-CodexGuardAbsence.ps1` 用于清理/验证旧 shim 缺席。
-- Claude 本机配置边界：Claude Code / Claude Desktop 的账号、API 和 provider 切换只由 `CC Switch` 负责。本仓不再写入 `~/.claude/settings.json`、`provider-profiles.json`，不安装 `claude-provider` 切换入口，也不删除/优化 provider profile；旧 `scripts/Optimize-ClaudeLocal.ps1`、`claude-provider switch|install|optimize|delete` 只返回边界错误。`claude-provider status|continuity` 仅做只读检查，核对 `~/.claude/projects`、`~/.claude/sessions`、`history.jsonl` 和 `CLAUDE_CONFIG_DIR`，用于确认 CC Switch 切换仍锚定同一个 Claude home；只有明确需要隔离时才应使用独立 Claude config/context 目录。
-- 核心原则变更候选入口：`scripts/operator.ps1 -Action CorePrincipleMaterialize`。默认只 dry-run 报告候选；得到明确允许后加 `-ConfirmCorePrincipleProposalWrite` 才写 reviewable proposal/manifest；如只需审计留痕，加 `-WriteCorePrincipleDryRunReport` 只写 dry-run report。以上路径仍不直接改 active core-principles policy、spec、verifier 或目标仓。
-- 目标仓日常运行/批量下发总入口：`scripts/runtime-flow-preset.ps1`。它读取 `docs/targets/target-repos-catalog.json`，可以对单个 target 或所有 active targets 执行 attach、daily gate、治理基线同步、特性基线同步和里程碑提交。
-- AI 规则文件同步入口：`scripts/sync-agent-rules.ps1`。它读取 `rules/manifest.json`，把全局与项目级 `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` 同步到用户目录和目标仓；默认同 hash 跳过，内容漂移按脚本策略阻断或要求 `-Force`。
-- 本仓自检入口：`scripts/verify-repo.ps1 -Check All`。它用于验证当前 runtime、文档、schema、catalog、脚本和目标仓一致性门禁。
-
-常用一键命令：
-
-```powershell
-.\run.ps1
-```
-
 ```powershell
 .\run.ps1 readiness -OpenUi
 ```
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Help
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -DisableAutoCommit
 ```
 
-AI 推荐的本仓日常 readiness：
+区别如下：
+- `run.ps1`：仓库根短入口，转发到 `scripts/operator.ps1`
+- `run.ps1 fast`：日常内环反馈，执行 `build + RuntimeQuick`
+- `run.ps1 readiness -OpenUi`：按本仓硬门禁执行 `build -> test -> contract/invariant -> hotspot`，然后打开默认中文 operator UI
+- `scripts/governance/preflight.ps1 -DisableAutoCommit`：release-style closeout，在完整 gate 之上追加 `Docs`、`Scripts` 和 `git diff --check`
 
+## What This Repo Is / 项目定位
+- 这是一个 AI coding governance runtime / control plane，不是新的执行宿主。
+- 它把治理契约、门禁、evidence、rollout、target-repo attach 和 host feedback 收敛成同一套 repo-owned 规则与脚本。
+- 当前最佳工程终态仍是 `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`。
+- Codex and Claude Code are cooperation hosts, not competitors；本仓治理它们的 attach、gate、evidence、handoff 和 degrade posture，不复制或替代宿主 UI、账号、provider 或模型循环。
+- 它不负责本机账号、provider、gateway 或宿主启动切换：
+  - Codex/Cockpit 的 Direct OAuth、Direct API、API service 往返切换由 `Cockpit Tools` 负责。
+  - Claude Code / Claude Desktop 的账号与 provider 切换由 `CC Switch` 负责。
+
+## Retired Codex/Cockpit Shims / 已退休边界
+- 当前只保留 `Disable-CodexProjectInterop.ps1` 与 `Test-CodexGuardAbsence.ps1`，用于旧项目互操作 shim 的清理与缺席验证。
+- 禁止恢复或推荐旧路径：`CodexProjectionSmoke`、`CodexApiProjectionRepair`、`CodexOauthProjectionRepair`、`CodexLaunchBindingRepair`、`Manage-LiteLLMGateway.ps1`、`codex-mode-*`、`--migrate-provider-bucket`、`SQLite provider trigger`、`no-op launcher`、`restart wrapper`。
+
+## Hard Gates And Reference Discipline / 硬门禁与参考纪律
+- 交付底线：`build -> test -> contract/invariant -> hotspot`
+- Canonical acceptance chain: runtime-managed `build -> test -> contract/invariant -> hotspot`.
+- 验收链统一执行：`build -> test -> contract/invariant -> hotspot` 由 runtime-managed gate 流统一执行，降低漏检。
+- Canonical verifier: `scripts/verify-repo.ps1`
+  - `Build`: `scripts/build-runtime.ps1`
+  - `Runtime`: runtime/service tests
+  - `Contract`: source/repo/target governance invariants
+  - `Doctor`: `scripts/doctor-runtime.ps1`
+  - `Docs` / `DocsLinks` / `Scripts`: 文档链接、规划一致性、PowerShell 解析等
+- 高漂移改动现在是 fail-closed：
+  - `scripts/verify-reference-required-changes.py` 约束官方来源、主参考和本地 evidence 的 same-diff 审查
+  - `scripts/verify-reference-basis.py` 约束命名本地 reference ids 的 same-diff 审查
+- 相关策略入口：
+  - `docs/architecture/reference-required-change-policy.json`
+  - `docs/architecture/reference-basis-policy.json`
+  - `docs/research/reference-basis-matrix.md`
+  - `docs/research/reference-basis-catalog.json`
+- 同一次 diff 的 evidence 必须写到 `docs/change-evidence/*.md`
+  - 常见字段：`official_sources_reviewed`、`primary_references_reviewed`、`local_runtime_evidence_reviewed`、`source_decision`
+  - 若命中 `reference-basis` surface，还要补 `reference_basis_surface_ids`、`required_local_reference_ids_reviewed`、`reference_adoption_decision`
+- GitHub Actions 当前会同时执行：
+  - `.github/workflows/verify.yml` -> `scripts/verify-repo.ps1 -Check All`
+  - `.github/workflows/verify.yml` -> `scripts/governance/preflight.ps1 -DisableAutoCommit`
+
+## Main Entrypoints / 主要入口
+- `run.ps1`
+  - 面向少记命令的仓库根短入口
+- `scripts/operator.ps1`
+  - 聚合 `Readiness`、`FeedbackReport`、`RulesDryRun`、`RulesApply`、`DailyAll`、`ApplyAllFeatures`、`SelfEvolutionPromotionPlan`、`CorePrincipleMaterialize`、`OperatorUi`
+- `scripts/verify-repo.ps1`
+  - 本仓 canonical verification surface
+- `scripts/governance/preflight.ps1`
+  - release-style closeout surface
+- `scripts/runtime-flow-preset.ps1`
+  - 面向 target catalog 的 attach/daily/baseline/apply-all
+- `scripts/sync-agent-rules.ps1`
+  - 从 `rules/manifest.json` 同步 `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`
+- `claude-provider continuity`
+  - Claude 连续性只读检查
+- `scripts/Disable-CodexProjectInterop.ps1` 与 `scripts/Test-CodexGuardAbsence.ps1`
+  - 仅用于旧 Codex shim 的清理与缺席验证
+- 绿色打包 / portable packaging:
+  - `.\release.ps1 -Version <version> -Channel portable`
+  - `.\install.ps1 -Mode Portable`
+
+## External Repo Boundary / 外部仓边界
+对外部仓（例如 `..\ClassroomToolkit`）当前支持的是 attach-first governance：
+- attach target repo，并生成/校验 `.governed-ai` 轻量接入资产
+- 执行 target-repo daily gate、governance baseline sync、rules sync 和 governed write flow
+- 记录 approval / evidence / handoff / replay refs
+
+当前不应宣称：
+- “本项目已经在所有环境里完整接管 Codex/Claude 的真实执行”
+- “所有外部仓和所有高风险流程都已实现统一 runtime-owned 闭环”
+
+## Read Next / 继续阅读
+- 当前导航入口：
+  - [docs/README.md](docs/README.md)
+  - [planning-status.json](docs/architecture/planning-status.json)
+- 快速上手：
+  - [Single-Machine Runtime Quickstart](docs/quickstart/single-machine-runtime-quickstart.md)
+  - [单机 Runtime 快速开始](docs/quickstart/single-machine-runtime-quickstart.zh-CN.md)
+  - [Use With An Existing Repo](docs/quickstart/use-with-existing-repo.md)
+  - [在现有仓库中使用](docs/quickstart/use-with-existing-repo.zh-CN.md)
+  - [Agent Continuity Guide](docs/product/agent-continuity.md)
+  - [共享上下文连续性指南](docs/product/agent-continuity.zh-CN.md)
+- 近期治理硬化：
+  - [20260609 Live Posture Recovery](docs/change-evidence/20260609-live-posture-recovery.md)
+  - [20260609 Reference Basis And Preflight Hardening](docs/change-evidence/20260609-reference-basis-and-preflight-hardening.md)
+- reference governance：
+  - [Reference Basis Matrix](docs/research/reference-basis-matrix.md)
+  - [Reference Governance And Release Preflight Roadmap](docs/roadmap/reference-governance-and-preflight-roadmap.md)
+  - [Reference Governance And Release Preflight Plan](docs/plans/reference-governance-and-preflight-plan.md)
+- 历史与证据：
+  - [Completed GAP History](docs/archive/completed-gap-history.md)
+  - [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md)
+  - [Change Evidence Index](docs/change-evidence/README.md)
+
+## Verification Shortcuts / 验证捷径
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Readiness
-```
-
-一键生成 `Codex/Claude` 功能反馈汇总：
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action FeedbackReport
-```
-
-打开本地交互 operator UI（默认中文，会启动 localhost 服务）：
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi
-```
-
-打开英文版交互 UI：
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en
-```
-
-UI 使用方式：`-OpenUi` 会启动 `127.0.0.1` 本地常驻交互控制台并打开浏览器；后续可直接访问 `http://127.0.0.1:8770/?lang=zh-CN`。状态/停止/重启使用 `scripts/operator-ui-service.ps1 -Action Status|Stop|Restart`；登录自动启动可用 `-Action EnableAutoStart|DisableAutoStart|AutoStartStatus` 管理。页面可执行 allowlist 内的本仓 readiness、目标仓列表、规则漂移检查、规则同步、治理基线下发、daily、全部功能应用（默认删除已证明安全的退役托管文件）、一键清理退役治理文件和一键卸载治理；可选择全部目标仓、单个目标仓或勾选多个目标仓进行批量卸载，可调整语言、验证模式、并发、fail-fast、只预演、真实删除开关与里程碑标签；执行结果会写入输出区和本地浏览器执行历史；可点击 evidence/artifact/verification refs 查看文件内容。若不加 `-OpenUi`，脚本只生成只读快照 `.runtime/artifacts/operator-ui/index.html` 并在 JSON 输出里给出 `file_url`。
-本地 operator UI 不再显示 Codex/Cockpit 切换、repair、gateway 或 guard 操作。Claude Code / Claude Desktop 的账号、API 和 provider 切换统一回到 `CC Switch`。
-
-Claude provider 切换连续性只读检查：
-
-```powershell
-claude-provider continuity
-```
-
-Codex CLI/App 直接使用官方 `codex` 入口和 Cockpit Tools 原生 controls。本仓只保留旧 shim 清理/缺席验证：
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Disable-CodexProjectInterop.ps1 -Apply -DisableProjectShortcuts
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Test-CodexGuardAbsence.ps1
-```
-
-`codex-interop-repair`、`codex-switch-guard*`、`codex-cockpit-install-noop-launcher`、`CodexProjectionSmoke`、`CodexApiProjectionRepair`、`CodexOauthProjectionRepair`、`CodexLaunchBindingRepair`、`Manage-LiteLLMGateway.ps1` 和 `codex-mode-*` 已彻底退役。本仓不得再自动修写 Cockpit/Codex provider、auth、history bucket、API service、launcher state 或 gateway profile；不得恢复 generic `--apply`、`--migrate-provider-bucket`、SQLite provider trigger、后台 guard、no-op launcher、restart wrapper 或自动重启 Codex。
-
-与本机 `Cockpit Tools` / `CC Switch` 的衔接边界：`Cockpit Tools` 只负责 Codex App/CLI 的账号与 API 切换；`CC Switch` 只负责 Claude Code / Claude Desktop 的账号与 API 切换；本项目不参与两侧账号/API 切换、拦截、安装、gateway、repair 或重启包装。
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
-  -AllTargets `
-  -ApplyGovernanceBaselineOnly `
-  -Json
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
-  -AllTargets `
-  -ApplyAllFeatures `
-  -FlowMode "daily" `
-  -MilestoneTag "milestone" `
-  -Json
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply
-```
-
-```powershell
-.\release.ps1 -Version 0.1.0 -Channel portable
-```
-
-`-Version` 必须是文件名安全的本地版本字符串，不能包含路径片段。
-
-```powershell
-.\install.ps1 -Mode Portable
-```
-
-如何快速使用（推荐三条路径）：
-- 路径 A（治理侧车，阻力最低）：继续在 Codex/Claude Code 编码，同时运行 `bootstrap + doctor + verify-repo -Check All + status` 做 readiness、门禁和证据检查。
-- 路径 B（外部仓 attach-first，推荐）：先 `attach-target-repo`，再运行 `runtime-flow.ps1 -FlowMode daily`，让目标仓按统一治理链执行。
-- 路径 C（中高风险写入）：通过 `govern-attachment-write -> decide-attachment-write -> execute-attachment-write` 走审批与回滚引用闭环。
-- 发布/迁移：用 `release.ps1` 生成 portable zip；新电脑解压后先运行 `install.ps1 -Mode Portable`，再按新机器路径重新适配 target repos、全局规则和宿主账号/provider 状态。
-
-对 AI 编码的具体辅助作用：
-- 会话前能力探测：在执行前显示 adapter tier、flow kind、degrade reason，减少“以为可执行、实际降级”的误判。
-- 统一验收链：把 `build -> test -> contract/invariant -> hotspot` 固化到 runtime-managed gate 流，降低“只跑了部分检查”的漏检风险。
-- 规则与提示词稳定下发：把全局/项目级 agent 规则作为 manifest 管理，减少 Codex、Claude、Gemini 在不同仓里读到不一致规则的概率。
-- 目标仓防反复问题：把 PowerShell 环境、统一入口、低 token 交互、里程碑提交、fast/full gate 等策略同步进目标仓 profile 和受管文件，不靠聊天提醒。
-- 高风险写入拦截：对 medium/high 请求触发审批或 fail-closed，避免无审批直写。
-- 证据与交付留痕：每次治理执行可关联 approval/evidence/handoff/replay refs，便于交接、审计和回滚。
-- 多仓复用：通过 `.governed-ai` light-pack 和 preset flow，在不同仓库复用同一治理协议。
-- 与宿主解耦演进：保持 user-owned 上游认证，不锁死在单一宿主或单一接入方式。
-
-最常用命令：
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap-runtime.ps1
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/install-repo-hooks.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check RuntimeQuick
 ```
 
 ```powershell
@@ -250,236 +145,5 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All
 ```
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -DisableAutoCommit
 ```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1
-```
-
-```powershell
-python scripts/run-governed-task.py status --json
-```
-
-```powershell
-python scripts/run-governed-task.py run --json
-```
-
-```powershell
-python scripts/run-codex-adapter-trial.py --repo-id "python-service" --task-id "task-codex-trial" --binding-id "binding-python-service"
-```
-
-```powershell
-python scripts/run-multi-repo-trial.py
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-check.ps1 `
-  -AttachmentRoot "..\ClassroomToolkit" `
-  -AttachmentRuntimeStateRoot ".runtime\attachments\classroomtoolkit" `
-  -Mode "quick"
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow.ps1 `
-  -FlowMode "daily" `
-  -AttachmentRoot "..\ClassroomToolkit" `
-  -AttachmentRuntimeStateRoot ".runtime\attachments\classroomtoolkit" `
-  -Mode "quick"
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-classroomtoolkit.ps1 -FlowMode "daily"
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -Target "self-runtime" -FlowMode "daily" -SkipVerifyAttachment
-```
-
-快速上手文档：
-- [Single-Machine Runtime Quickstart](docs/quickstart/single-machine-runtime-quickstart.md)
-- [单机 Runtime 快速开始](docs/quickstart/single-machine-runtime-quickstart.zh-CN.md)
-- [AI Coding Usage Guide](docs/quickstart/ai-coding-usage-guide.md)
-- [AI 编码使用指南](docs/quickstart/ai-coding-usage-guide.zh-CN.md)
-- [Use With An Existing Repo](docs/quickstart/use-with-existing-repo.md)
-- [在现有仓库中使用](docs/quickstart/use-with-existing-repo.zh-CN.md)
-- [Multi-Repo Trial Quickstart](docs/quickstart/multi-repo-trial-quickstart.md)
-- [多仓试运行快速开始](docs/quickstart/multi-repo-trial-quickstart.zh-CN.md)
-- [Codex CLI/App Integration Guide](docs/product/codex-cli-app-integration-guide.md)
-- [Codex CLI/App 集成指南](docs/product/codex-cli-app-integration-guide.zh-CN.md)
-- [Codex / Claude Host Feedback Loop](docs/product/host-feedback-loop.md)
-- [Codex / Claude 功能反馈闭环](docs/product/host-feedback-loop.zh-CN.md)
-- [Codex Direct Adapter](docs/product/codex-direct-adapter.md)
-- [Multi-Repo Trial Loop](docs/product/multi-repo-trial-loop.md)
-- [Positioning And Competitive Layering](docs/strategy/positioning-and-competitive-layering.md)
-- [Generic Target-Repo Attachment Blueprint](docs/architecture/generic-target-repo-attachment-blueprint.md)
-- [Repo-Native Contract Bundle](docs/architecture/repo-native-contract-bundle.md)
-- [Hybrid Final-State Master Outline](docs/architecture/hybrid-final-state-master-outline.md)
-- [Direct-To-Hybrid Final-State Roadmap](docs/roadmap/direct-to-hybrid-final-state-roadmap.md)
-- [Direct-To-Hybrid Final-State Implementation Plan](docs/plans/direct-to-hybrid-final-state-implementation-plan.md)
-- [Governance Optimization Lane Roadmap](docs/roadmap/governance-optimization-lane-roadmap.md)
-- [Governance Optimization Lane Implementation Plan](docs/plans/governance-optimization-lane-implementation-plan.md)
-- [Local Baseline To Hybrid Final-State Migration Matrix](docs/architecture/local-baseline-to-hybrid-final-state-migration-matrix.md)
-- [Interactive Session Productization Implementation Plan](docs/plans/interactive-session-productization-implementation-plan.md)
-- [Interactive Session Productization Plan](docs/plans/interactive-session-productization-plan.md)
-- [Governance Runtime Strategy Alignment Plan](docs/plans/governance-runtime-strategy-alignment-plan.md)
-
-## English Quick Answer
-`Foundation / GAP-020` through `GAP-023`, `Full Runtime / GAP-024` through `GAP-028`, `Public Usable Release / GAP-029` through `GAP-032`, `Maintenance Baseline / GAP-033` through `GAP-034`, and `Interactive Session Productization / GAP-035` through `GAP-039` are complete. That means the first landed hybrid productization boundary is present. It does not mean every upstream host already has a full runtime-owned real-write execution path.
-
-Single source of planning truth: `docs/architecture/planning-status.json`.
-- `certified baseline`: `GAP-104..111`
-- `current active queue`: `GAP-159..164`
-- `current decision gate`: `defer_ltp_and_refresh_evidence`
-- `current live posture`: target-run freshness is `fresh`; Codex target runs are now `native_attach` / ready; Claude workload probe is `native_attach` / ready
-
-`Strategy Alignment Gates / GAP-040..044` are complete on the current branch baseline and remain encoded as satisfied dependencies around that landed slice.
-
-Positioning and non-goals:
-- governance/runtime layer for AI coding agents, not another execution host
-- not a wrapper-first orchestration product
-- not a generation-guardrail product
-- strategy doc: [Positioning And Competitive Layering](docs/strategy/positioning-and-competitive-layering.md)
-- one-page target blueprint: [Current Best-End-State Blueprint](docs/strategy/current-best-end-state-blueprint.md)
-- host-family blueprint: [Host Family Capability Surface Blueprint](docs/architecture/host-family-capability-surface-blueprint.md)
-- borrowing matrix: [Runtime Governance Borrowing Matrix](docs/research/runtime-governance-borrowing-matrix.md)
-- external reference overview: [External Reference Repo One-Page Overview](docs/research/external-reference-repo-one-page-overview.md)
-- external reference tiering: [External Reference Repo Tiering](docs/research/external-reference-repo-tiering.md)
-- boundary ADR: [ADR-0007 Source-Of-Truth And Runtime Contract Bundle](docs/adrs/0007-source-of-truth-and-runtime-contract-bundle.md)
-
-Available now:
-- Full repository verification over docs, schemas, catalog, scripts, and runtime contract tests
-- Local baseline `build` and `doctor` gates
-- The first read-only scripted trial baseline
-- Codex capability readiness surfaced in runtime status/doctor, including tier/flow/degrade metadata
-- Runtime-managed gate execution through session bridge (`run_quick_gate` / `run_full_gate`, with optional `plan_only`)
-- Runtime-managed attached write governance flow through session bridge (`write_request` / `write_approve` / `write_execute` / `write_status`) with approval/evidence/handoff/replay refs
-- External target-repo attachment for repos such as `..\ClassroomToolkit`
-- A CLI-first governed runtime smoke path with persisted evidence, handoff, replay, and runtime status
-- Python contract primitives under `packages/contracts`
-
-Current complete hybrid final-state certification posture:
-- `GAP-104..111` are complete on the current branch baseline; primary evidence is [20260427 GAP-111 Complete Hybrid Final-State Certification](docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md).
-- The root entrypoint keeps only the certification boundary: the repo-local contract bundle, machine-local durable governance kernel, attach-first host adapters, and same-contract verification/delivery plane are proven, but this still does not claim upstream host UI ownership or unconditional takeover of every future external repo or high-risk workflow.
-- Detailed completion history and the `GAP-130..143` snapshot moved to [Completed GAP History](docs/archive/completed-gap-history.md) / [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md).
-- Historical certification does not override the current live posture. Stronger live-host claims are valid only while fresh target-run evidence stays at `ready` / `native_attach`; if posture degrades again, the claim must immediately fall back with it.
-
-Current controlled-evolution posture:
-- `GAP-120..129` put 30-day evolution review, AI coding experience capture, and low-risk proposal or disabled-skill materialization under governance, but they still do not auto-apply policy, auto-enable skills, sync target repos, push, or merge.
-- `GAP-130..143` now represent the completed governance-hub, reusable-contract, controlled-evolution, repo-map shaping, tool or credential audit, and evidence-recovery baseline; the detailed list lives in [Completed GAP History](docs/archive/completed-gap-history.md) / [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md).
-- Codex and Claude Code are cooperation hosts, not competitors.
-- Codex and Claude Code remain cooperation hosts rather than competitors; completion still requires real target-repo effect feedback, and stronger live-host claims stay tied to fresh target-run evidence instead of historical certification language alone.
-- The best engineering final state is now fixed as `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`: a governance center, reusable control contract, capability-first multi-host adapters, a controlled evolution loop, and evidence-first delivery discipline, not a new host product.
-- The most accurate current target definition is a capability-first, host-family-aware governance runtime for AI coding: `Codex family` and `Claude family` are the required cooperation hosts, `Antigravity family` is the long-term Google direction, and `Gemini CLI` remains a migration bridge rather than the preferred Google host surface.
-
-Primary docs:
-- [Single-Machine Runtime Quickstart](docs/quickstart/single-machine-runtime-quickstart.md)
-- [单机 Runtime 快速开始](docs/quickstart/single-machine-runtime-quickstart.zh-CN.md)
-- [AI Coding Usage Guide](docs/quickstart/ai-coding-usage-guide.md)
-- [AI 编码使用指南](docs/quickstart/ai-coding-usage-guide.zh-CN.md)
-- [Codex CLI/App Integration Guide](docs/product/codex-cli-app-integration-guide.md)
-- [Current Best-End-State Blueprint](docs/strategy/current-best-end-state-blueprint.md)
-- [Positioning And Competitive Layering](docs/strategy/positioning-and-competitive-layering.md)
-- [Generic Target-Repo Attachment Blueprint](docs/architecture/generic-target-repo-attachment-blueprint.md)
-- [Host Family Capability Surface Blueprint](docs/architecture/host-family-capability-surface-blueprint.md)
-- [Repo-Native Contract Bundle](docs/architecture/repo-native-contract-bundle.md)
-- [Hybrid Final-State Master Outline](docs/architecture/hybrid-final-state-master-outline.md)
-- [Direct-To-Hybrid Final-State Roadmap](docs/roadmap/direct-to-hybrid-final-state-roadmap.md)
-- [Direct-To-Hybrid Final-State Implementation Plan](docs/plans/direct-to-hybrid-final-state-implementation-plan.md)
-- [Governance Optimization Lane Roadmap](docs/roadmap/governance-optimization-lane-roadmap.md)
-- [Governance Optimization Lane Implementation Plan](docs/plans/governance-optimization-lane-implementation-plan.md)
-- [Local Baseline To Hybrid Final-State Migration Matrix](docs/architecture/local-baseline-to-hybrid-final-state-migration-matrix.md)
-- [Interactive Session Productization Implementation Plan](docs/plans/interactive-session-productization-implementation-plan.md)
-- [Interactive Session Productization Plan](docs/plans/interactive-session-productization-plan.md)
-- [Governance Runtime Strategy Alignment Plan](docs/plans/governance-runtime-strategy-alignment-plan.md)
-
-How to use quickly (recommended paths):
-- Path A (governance sidecar, least friction): keep coding in your host tool and run `bootstrap + doctor + verify-repo -Check All + status`.
-- Path B (attach-first for external repos): run `attach-target-repo` once, then use `runtime-flow.ps1 -FlowMode daily` as the daily governance chain.
-- Path C (risky writes): run `govern-attachment-write -> decide-attachment-write -> execute-attachment-write` for medium/high-risk mutations.
-
-Current main entrypoints and one-command apply:
-- Operator aggregate entrypoint: `scripts/operator.ps1`. It collects readiness checks, rule drift/sync, target-repo batch flows, and operator UI rendering behind one action-oriented entrypoint; default `-Action Help`.
-- Target-repo daily/batch entrypoint: `scripts/runtime-flow-preset.ps1`. It reads `docs/targets/target-repos-catalog.json` and can run attach, daily gates, governance baseline sync, feature baseline sync, and milestone commits for one target or all active targets.
-- Agent-rule sync entrypoint: `scripts/sync-agent-rules.ps1`. It reads `rules/manifest.json` and syncs global/project `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` files to user directories and target repos.
-- Self-repo verification entrypoint: `scripts/verify-repo.ps1 -Check All`.
-
-Common one-command flows:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Help
-```
-
-AI recommended local readiness:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Readiness
-```
-
-Open the interactive local operator UI. It defaults to Chinese and starts a localhost service:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi
-```
-
-Open the English interactive UI:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en
-```
-
-How to use the UI: `-OpenUi` starts a persistent local `127.0.0.1` interactive control console and opens the browser; later visits can use `http://127.0.0.1:8770/?lang=en` directly. Use `scripts/operator-ui-service.ps1 -Action Status|Stop|Restart` to inspect or control the service, and `-Action EnableAutoStart|DisableAutoStart|AutoStartStatus` to manage logon autostart. The page can run allowlisted actions for repo readiness, target listing, rule drift checks, rule sync, governance baseline rollout, daily, all-feature apply that deletes proven-safe retired managed files by default, one-click retired-file cleanup, and one-click governance uninstall. It can target all repos, one selected target repo, or multiple checked target repos for batch uninstall, exposes settings for language, mode, parallelism, fail-fast, dry-run, managed-removal apply, and milestone tag, records results in the output panel and local browser history, and refs can be clicked to preview evidence/artifact/verification files. Without `-OpenUi`, the script only writes a read-only `.runtime/artifacts/operator-ui/index.html` snapshot and prints a JSON `file_url`.
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
-  -AllTargets `
-  -ApplyGovernanceBaselineOnly `
-  -Json
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
-  -AllTargets `
-  -ApplyAllFeatures `
-  -FlowMode "daily" `
-  -MilestoneTag "milestone" `
-  -Json
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply
-```
-
-```powershell
-.\release.ps1 -Version 0.1.0 -Channel portable
-```
-
-`-Version` must be filename-safe and cannot contain path traversal or path separators.
-
-```powershell
-.\install.ps1 -Mode Portable
-```
-
-Canonical entrypoint recommendation:
-- if you want one-command daily use or batch apply to target repos, prefer `runtime-flow-preset.ps1`
-- if you are working with one temporary external repo that is not in the target catalog, use `runtime-flow.ps1`
-- for migration to a new machine, create the portable zip with `release.ps1`, run `install.ps1 -Mode Portable` after extraction, then adapt target repos, global rules, and host-owned account/provider state on that host
-- if you want to observe drift first, set `required_entrypoint_policy.current_mode` to `advisory`
-- if you want to block direct gate/write entrypoints but keep read-only inspection open, set it to `targeted_enforced`
-- if you want repo-wide canonical-entrypoint enforcement, set it to `repo_wide_enforced`
-- operator-facing copy/paste examples: [Use With An Existing Repo](docs/quickstart/use-with-existing-repo.md) / [在现有仓库中使用](docs/quickstart/use-with-existing-repo.zh-CN.md)
-
-Concrete assistance for AI coding:
-- pre-execution capability visibility (tier/flow/degrade) to avoid hidden posture mismatch
-- canonical gate chain execution to reduce partial-check drift
-- manifest-backed agent rule distribution across Codex, Claude, and Gemini contexts
-- target-repo prevention for repeated Windows process environment, canonical-entrypoint, low-token interaction, milestone commit, and fast/full gate drift
-- policy and approval enforcement for risky writes
-- evidence/handoff/replay linkage for traceable delivery and rollback
-- reusable multi-repo governance via light packs and preset flows
-- host-decoupled governance layer without replacing upstream auth ownership
-

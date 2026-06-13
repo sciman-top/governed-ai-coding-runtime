@@ -1,218 +1,33 @@
 # Governed AI Coding Runtime Docs Index
 
-## Current Baseline
-- This repository is currently `docs-first / contracts-first`.
-- `docs/`, `schemas/`, top-level skeleton directories, `scripts/verify-repo.ps1`, `scripts/build-runtime.ps1`, `scripts/doctor-runtime.ps1`, `.github/workflows/verify.yml`, and tested runtime contract primitives are present.
-- MVP contract slices, the `Foundation / GAP-020` through `GAP-023` substrate, `Full Runtime / GAP-024` through `GAP-028`, `Public Usable Release / GAP-029` through `GAP-032`, and `Maintenance Baseline / GAP-033` through `GAP-034` are complete.
-- `Strategy Alignment Gates / GAP-040` through `GAP-044` are complete on the current branch baseline and remain encoded as satisfied hardening dependencies around the landed `Interactive Session Productization / GAP-035` through `GAP-039` productization slice.
-
-## Planning Truth
+## Current Snapshot
 - Single source of planning truth: [planning-status.json](./architecture/planning-status.json)
-- Read it first for `current_active_queue`, `current_decision_gate`, `certified_baseline`, and `current_live_posture`.
-- `certified baseline` and `current live posture` are intentionally separate; historical certification does not override a stale or degraded current live posture.
-
-## Hard Source Gate
-- High-drift host, protocol, reference-shelf, and runtime-evolution source changes are now fail-closed in the `Contract` gate.
-- The enforced policy lives at [Reference-Required Change Policy](./architecture/reference-required-change-policy.json).
-- The repo-owned local-reference mapping lives at [Reference Basis Policy](./architecture/reference-basis-policy.json), [Reference Basis Catalog](./research/reference-basis-catalog.json), and [Reference Basis Matrix](./research/reference-basis-matrix.md).
-- The verifiers are `scripts/verify-reference-required-changes.py` and `scripts/verify-reference-basis.py`, executed by `scripts/verify-repo.ps1 -Check Contract`.
-- Required same-diff evidence must live under `docs/change-evidence/` and explicitly record `official_sources_reviewed`, `primary_references_reviewed`, `local_runtime_evidence_reviewed`, and `source_decision`.
-- When a change hits a guarded `reference-basis` surface, the same diff must also record `reference_basis_surface_ids`, `required_local_reference_ids_reviewed`, and `reference_adoption_decision`.
-
-## Quick Navigation
-- `Now`
-  - [planning-status.json](./architecture/planning-status.json)
-  - [Root README](../README.md)
-  - [Plans Index](./plans/README.md)
-  - [Backlog Index](./backlog/README.md)
-- `Next`
-  - [Host-Family Capability Operationalization Plan](./plans/host-family-capability-operationalization-plan.md)
-  - this queue is conditional only; it is not active work unless `planning-status.json` is explicitly promoted
-- `Later`
-  - [Long-Term Gap Trigger Audit Plan](./plans/long-term-gap-trigger-audit-plan.md)
-  - [Optimized Hybrid Final-State Long-Term Roadmap](./roadmap/optimized-hybrid-final-state-long-term-roadmap.md)
-- `History`
-  - [Completed GAP History](./archive/completed-gap-history.md)
-  - completed implementation plans under [Plans Index](./plans/README.md)
-  - historical proof and rollback records under [Change Evidence Index](./change-evidence/README.md)
+- current active queue: `GAP-159..164` (`Agent Continuity And Shared Context`)
+- `current decision gate`: `defer_ltp_and_refresh_evidence`
+- `current live posture`: target-run freshness is `fresh`; Codex target runs are `native_attach` / ready; Claude workload probe is `native_attach` / ready
+- certified baseline: `GAP-104..111`
+- latest completed governance hardening slice: `GAP-169..172`
+  - adds repo-owned `reference-basis`, release-style `preflight`, and CI `release-preflight`
 
 ## Core Operating Principle
 - Human-readable summary: `Automation-first, gate-controlled, evidence-measured governance`.
-- This repository is a governance sidecar / control plane, not a replacement host product for Codex or Claude Code.
-- `Efficiency first, safety bounded`: low interruption, continuous execution, lower token and cost burn, necessary explanatory density, and high throughput are long-lived targets, while concrete defaults such as model, reasoning level, context window, compact threshold, provider mapping, or auth storage remain replaceable implementation details. Efficiency never overrides safety, permissions, evidence, rollback, review, or gate constraints for effective changes.
-- `Automation-first, outer-AI-assisted, gate-controlled evolution`: the repository should automate deterministic governance work and may automatically trigger outer AI for intelligent review, knowledge extraction, candidate generation, and evolution proposals, while effective changes remain blocked by structured candidates, risk gates, machine gates, evidence, rollback, and required review boundaries.
-- `Governance hub, reusable contract, host-compatible execution`: the best engineering final state is `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`, implemented as governed controls rather than a competing AI coding host.
-- Compatibility note: the historical core-principle wording `Governance Hub + Reusable Contract + Controlled Evolution loop + outer AI intelligent review/generation` remains valid as the narrower compatibility token that the current expanded blueprint now makes more explicit.
-- Current target definition: a capability-first, host-family-aware governance runtime for AI coding. `Codex family` and `Claude family` are required cooperation hosts; `Antigravity family` is the long-term Google direction; `Gemini CLI` remains a legacy bridge rather than the preferred Google host surface.
-- `Context budget and instruction minimalism` plus `Least-privilege tool and credential boundary`: core rules, instruction files, repo maps, memory artifacts, and bounded tool outputs must stay concise, high-signal, and verifiable; permissions, sandbox scope, provider secrets, mounted paths, network access, and MCP/tool identities must stay auditable and deterministic where possible.
-- `Measured effect feedback over claims`: completion claims require fresh target-run evidence, eval traces, trace/replay/trajectory references where available, effect feedback, verification commands, and rollback paths; documentation, code existence, or candidate files alone do not prove completion.
-- Minimum comparable evidence fields are `freshness_status`, `target_run_id`, `gate_result`, `effect_metric_delta`, `verification_command`, and `rollback_ref` when the task surface can provide them.
+- Compatibility token: `Governance Hub + Reusable Contract + Controlled Evolution loop + outer AI intelligent review/generation`.
+- Current end-state wording: `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`.
+- `Automation-first, outer-AI-assisted, gate-controlled evolution` remains the active operating posture.
+- The repo is a governance sidecar and does not authorize automatic host replacement, policy mutation, skill enablement, push, or merge.
+- `Context budget and instruction minimalism` and `Least-privilege tool and credential boundary` both require concise, reviewable, bounded tool outputs with auditable permissions, provider secrets, and MCP/tool identities.
+- `Measured effect feedback over claims` means completion claims must keep fresh evidence, effect feedback, and trace/replay/trajectory references attached to the verified outcome.
+- Efficiency never overrides safety, permissions, evidence, rollback, review, or gate constraints.
+- The minimum comparable evidence surface still includes fields such as `freshness_status`, verification commands, effect metrics, and rollback references where the surface supports them.
 
-## Current Working Set
-- [Hybrid Final-State Master Outline](./architecture/hybrid-final-state-master-outline.md)
-- [Direct-To-Hybrid Final-State Roadmap](./roadmap/direct-to-hybrid-final-state-roadmap.md)
-- [Direct-To-Hybrid Final-State Implementation Plan](./plans/direct-to-hybrid-final-state-implementation-plan.md)
-- [Optimized Hybrid Final-State Long-Term Roadmap](./roadmap/optimized-hybrid-final-state-long-term-roadmap.md)
-- [Optimized Hybrid Final-State Long-Term Implementation Plan](./plans/optimized-hybrid-final-state-long-term-implementation-plan.md)
-- [Claude Code First-Class Entrypoint Plan](./plans/claude-code-first-class-entrypoint-plan.md)
-- [Runtime Evolution Review Plan](./plans/runtime-evolution-review-plan.md)
-- [Governance Hub Reuse And Controlled Evolution Plan](./plans/governance-hub-reuse-and-controlled-evolution-plan.md)
-- [Host-Family Capability Operationalization Plan](./plans/host-family-capability-operationalization-plan.md)
-- [Target Repo Managed Asset Retirement And Uninstall Plan](./plans/target-repo-managed-asset-retirement-and-uninstall-plan.md)
-- [Capability Portfolio Classifier](./architecture/capability-portfolio-classifier.json)
-- [Reference Basis Policy](./architecture/reference-basis-policy.json)
-- [Reference-Required Change Policy](./architecture/reference-required-change-policy.json)
-- [Reference Basis Matrix](./research/reference-basis-matrix.md)
-- [Runtime Evolution Policy](./architecture/runtime-evolution-policy.json)
-- [Reference Governance And Release Preflight Roadmap](./roadmap/reference-governance-and-preflight-roadmap.md)
-- [Reference Governance And Release Preflight Plan](./plans/reference-governance-and-preflight-plan.md)
-- [Long-Term Gap Trigger Audit Plan](./plans/long-term-gap-trigger-audit-plan.md)
-- [Governance Optimization Lane Roadmap](./roadmap/governance-optimization-lane-roadmap.md)
-- [Governance Optimization Lane Implementation Plan](./plans/governance-optimization-lane-implementation-plan.md)
-- [Full Lifecycle Plan](./roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md) (history/current posture)
-- [Issue-Ready Backlog](./backlog/issue-ready-backlog.md)
-- [Issue Seeds YAML](./backlog/issue-seeds.yaml)
-- [Interactive Session Productization Implementation Plan](./plans/interactive-session-productization-implementation-plan.md) (history)
-- [Interactive Session Productization Plan](./plans/interactive-session-productization-plan.md) (history)
-- [Governance Runtime Strategy Alignment Plan](./plans/governance-runtime-strategy-alignment-plan.md) (history)
-- [Strategy Index](./strategy/README.md)
-- [Current Best-End-State Blueprint](./strategy/current-best-end-state-blueprint.md)
-- [Positioning And Competitive Layering](./strategy/positioning-and-competitive-layering.md)
-- [Runtime Governance Borrowing Matrix](./research/runtime-governance-borrowing-matrix.md)
-- [External Reference Repo Index](./research/external-reference-repos-index.md)
-- [External Reference Repo One-Page Overview](./research/external-reference-repo-one-page-overview.md)
-- [External Reference Repo Tiering](./research/external-reference-repo-tiering.md)
-- [Hybrid Final-State External Benchmark Review](./research/2026-04-27-hybrid-final-state-external-benchmark-review.md)
-- [ADR-0007 Source-Of-Truth And Runtime Contract Bundle](./adrs/0007-source-of-truth-and-runtime-contract-bundle.md)
-- [ADR-0008 Autonomous LTP Promotion Scope Fence](./adrs/0008-autonomous-ltp-promotion-scope-fence.md)
-- [Generic Target-Repo Attachment Blueprint](./architecture/generic-target-repo-attachment-blueprint.md)
-- [Host Family Capability Surface Blueprint](./architecture/host-family-capability-surface-blueprint.md)
-- [Repo-Native Contract Bundle](./architecture/repo-native-contract-bundle.md)
-- [Local Baseline To Hybrid Final-State Migration Matrix](./architecture/local-baseline-to-hybrid-final-state-migration-matrix.md)
-- [Interaction Model](./product/interaction-model.md)
-- [Acceptance Metrics Contract](./product/acceptance-metrics-contract.md)
-- [AI Coding PRD](./prd/governed-ai-coding-runtime-prd.md)
-- [20260418 Maintenance Execution Plan](./change-evidence/20260418-maintenance-execution-plan.md)
-
-## Current Planning Chain
-- Strategy and boundary inputs: [AI Coding PRD](./prd/governed-ai-coding-runtime-prd.md), [Current Best-End-State Blueprint](./strategy/current-best-end-state-blueprint.md), [Interaction Model](./product/interaction-model.md), [Positioning And Competitive Layering](./strategy/positioning-and-competitive-layering.md), [Runtime Governance Borrowing Matrix](./research/runtime-governance-borrowing-matrix.md), [External Reference Repo Index](./research/external-reference-repos-index.md), [External Reference Repo One-Page Overview](./research/external-reference-repo-one-page-overview.md), [External Reference Repo Tiering](./research/external-reference-repo-tiering.md), [Hybrid Final-State External Benchmark Review](./research/2026-04-27-hybrid-final-state-external-benchmark-review.md), [ADR-0007 Source-Of-Truth And Runtime Contract Bundle](./adrs/0007-source-of-truth-and-runtime-contract-bundle.md), [ADR-0008 Autonomous LTP Promotion Scope Fence](./adrs/0008-autonomous-ltp-promotion-scope-fence.md), [Generic Target-Repo Attachment Blueprint](./architecture/generic-target-repo-attachment-blueprint.md), [Host Family Capability Surface Blueprint](./architecture/host-family-capability-surface-blueprint.md), [Repo-Native Contract Bundle](./architecture/repo-native-contract-bundle.md), [Local Baseline To Hybrid Final-State Migration Matrix](./architecture/local-baseline-to-hybrid-final-state-migration-matrix.md), [Target Architecture](./architecture/governed-ai-coding-runtime-target-architecture.md), [Minimum Viable Governance Loop](./architecture/minimum-viable-governance-loop.md), and [Governance Runtime Strategy Alignment Plan](./plans/governance-runtime-strategy-alignment-plan.md)
-- Execution ordering: [Hybrid Final-State Master Outline](./architecture/hybrid-final-state-master-outline.md), [Direct-To-Hybrid Final-State Roadmap](./roadmap/direct-to-hybrid-final-state-roadmap.md), [Direct-To-Hybrid Final-State Implementation Plan](./plans/direct-to-hybrid-final-state-implementation-plan.md), [Optimized Hybrid Final-State Long-Term Roadmap](./roadmap/optimized-hybrid-final-state-long-term-roadmap.md), [Optimized Hybrid Final-State Long-Term Implementation Plan](./plans/optimized-hybrid-final-state-long-term-implementation-plan.md), [Claude Code First-Class Entrypoint Plan](./plans/claude-code-first-class-entrypoint-plan.md), [Runtime Evolution Review Plan](./plans/runtime-evolution-review-plan.md), [Governance Hub Reuse And Controlled Evolution Plan](./plans/governance-hub-reuse-and-controlled-evolution-plan.md), [Backlog Index](./backlog/README.md), [Issue-Ready Backlog](./backlog/issue-ready-backlog.md), [Issue Seeds YAML](./backlog/issue-seeds.yaml), and [Plans Index](./plans/README.md)
-- Follow-on optimization ordering: [Governance Optimization Lane Roadmap](./roadmap/governance-optimization-lane-roadmap.md), [Governance Optimization Lane Implementation Plan](./plans/governance-optimization-lane-implementation-plan.md), [Backlog Index](./backlog/README.md), [Issue-Ready Backlog](./backlog/issue-ready-backlog.md), and [Issue Seeds YAML](./backlog/issue-seeds.yaml); this lane was the governance-only follow-on after `GAP-060` and is complete on the current branch baseline (verified on 2026-04-20)
-- Current implementation history: [Foundation Runtime Substrate Implementation Plan](./plans/foundation-runtime-substrate-implementation-plan.md), [Full Runtime Implementation Plan](./plans/full-runtime-implementation-plan.md), [Public Usable Release Implementation Plan](./plans/public-usable-release-implementation-plan.md), and [Maintenance Implementation Plan](./plans/maintenance-implementation-plan.md); use the migration matrix when comparing those completed slices with the active hybrid final-state queue.
-
-## Planning Completeness
-- For direct hybrid final-state closure, the canonical planning package now exists end-to-end: master outline, direct roadmap, direct implementation plan, issue-ready backlog, issue seeds, and executable gap audit.
-- For post-closeout governance optimization, the canonical lane package is now execution-closed with evidence: governance lane roadmap, governance lane implementation plan, `GAP-061` through `GAP-068` backlog/seeds, the shared acceptance/rollback template, dedicated epic-rendering support, and closeout evidence linkage.
-- For long-term gap work, `GAP-090` through `GAP-092` define a completed trigger-audit queue that refreshes evidence and selects at most one LTP before implementation starts; all `LTP-01..05` packages remain deferred on the current branch baseline.
-- For optimized long-term implementation, `GAP-093` through `GAP-103` define the completed queue for containment/provenance, transition-stack convergence, trigger reviews, selected `LTP` scope fence, first selected-package implementation, sustained release-readiness closeout, and fresh all-target workload evidence.
-- For complete hybrid final-state realization, `GAP-104` through `GAP-111` are complete on the current branch baseline. `GAP-111` certifies complete hybrid final-state closure with fresh evidence across service boundary, live Codex continuity, non-Codex parity, governed executable coverage, data/provenance release paths, operations recovery, all-target workload, and claim-drift gates.
-- For post-certification guard work, `GAP-112` is complete on the current branch baseline. It adds a machine-readable current-source compatibility guard for A2A/MCP/Codex sandbox, host guardrails, and provenance assumptions.
-- For post-certification promotion work, `GAP-113` is complete on the current branch baseline. It adds a machine-readable autonomous `LTP-01..06` promotion fence that currently returns `defer_all` unless exactly one package has fresh trigger evidence and scope.
-- For post-certification next-work selection, `GAP-114` is complete on the current branch baseline. It turns `GAP-113` output into a deterministic autonomous next action.
-- For dual first-class host support, `GAP-115` through `GAP-119` are complete as a bounded governance-result parity queue. The current live posture is now proven by fresh host-specific evidence: Claude workload probe is `native_attach` / ready, and the 2026-06-09 Codex target-run batch is also `native_attach` / ready.
-- For runtime self-evolution, `GAP-120` through `GAP-124` are dry-run only. They define a 30-day evolution review policy, source collection, candidate evaluation, operator entrypoint, and freshness gate without enabling automatic mutation; source collection includes official docs, primary projects, community practice, runtime evidence, and reviewable AI coding experience/skillization signals.
-- For governance hub reuse and controlled evolution, `GAP-130` is complete as the scope rebaseline, `GAP-131` is complete as the capability portfolio classifier baseline, `GAP-132` is complete as the control-pack execution contract baseline, `GAP-133` is complete as the inheritance override baseline, `GAP-134` is complete as the target-repo reuse effect feedback baseline, `GAP-135` is complete as the knowledge-memory lifecycle baseline, `GAP-136` is complete as the promotion lifecycle baseline, `GAP-137` is complete as the repo-map context artifact baseline, `GAP-138` is complete as the policy/tool/credential audit boundary baseline, `GAP-139` is complete as the governance hub certification baseline, `GAP-140` is complete as the bounded host-capability defer baseline, `GAP-141` is complete as the historical problem-trace closure policy baseline, `GAP-142` is complete as the degraded fresh-evidence next-work guard, and `GAP-143` is complete as the evidence recovery posture contract. They clarify that Codex and Claude Code are primary cooperation hosts, that Claude Code is used locally through third-party Anthropic-compatible providers such as GLM or DeepSeek rather than assumed official subscription state, and that Hermes/OpenHands/SWE-agent/Letta/Mem0/Aider-style mechanisms can be selectively absorbed only when they become executable controls with evidence, rollback, and effect metrics.
-- `GAP-144..151` are the target-repo managed asset retirement/uninstall queue. They are complete on the current branch baseline with managed-asset classification, inventory, observe-mode managed-file provenance sidecars, retired-file contract, prune, uninstall, all-target/operator integration, fresh target-repo dry-run evidence, and hard-gate closeout.
-- `GAP-152..158` are the repo-slimming and coding-speed queue. They are complete on the current branch baseline as bounded optimization work: inventory, archive index, repo-map routing, README/plan-index slimming, runtime-flow split, gate timing, screenshot retention, and honest closeout metrics. This queue improved active work-surface control and feedback speed without claiming physical repository shrinkage before archive apply.
-- For post-`GAP-164` host-family operationalization, `GAP-165..168` are complete as an owner-directed conditional planning package. The queue remains inactive as current active work until later promotion evidence and host recovery justify stronger operationalization work.
-- Historical lifecycle and productization plans remain execution history and rationale, not competing active mainlines.
-
-## Current Status Summary
-- `certified baseline`: `GAP-104..111`
-- `current active queue`: `GAP-159..164`
-- `current decision gate`: `defer_ltp_and_refresh_evidence`
-- `current live posture`: target-run freshness is `fresh`; Codex target runs are now `native_attach` / ready; Claude workload probe is `native_attach` / ready
-
-## Navigation Aids
-- [Plans Index](./plans/README.md)
-- [Backlog Index](./backlog/README.md)
-- [Architecture Index](./architecture/README.md)
-- [Reviews Index](./reviews/README.md)
-- [Change Evidence Index](./change-evidence/README.md)
-- [Runbooks Index](./runbooks/README.md)
-
-## Current Execution Posture
-- `Foundation / GAP-020` through `GAP-023` are complete on the current branch baseline.
-- `Full Runtime / GAP-024` through `GAP-028` are complete on the current branch baseline.
-- `Public Usable Release / GAP-029` through `GAP-032` are complete on the current branch baseline.
-- `Maintenance Baseline / GAP-033` through `GAP-034` are complete on the current branch baseline.
-- `Strategy Alignment Gates / GAP-040` through `GAP-044` are complete on the current branch baseline.
-- `Interactive Session Productization / GAP-035` through `GAP-039` are complete on the current branch baseline.
-- `Direct-To-Hybrid-Final-State Mainline / GAP-045` is complete on the current branch baseline as planning rebaseline closeout.
-- `Direct-To-Hybrid-Final-State Mainline / GAP-046` through `GAP-060` are complete on the current branch baseline (verified on 2026-04-20).
-- `Governance Optimization Lane / GAP-061` through `GAP-068` are complete on the current branch baseline (verified on 2026-04-20).
-- `Post-Closeout Optimization Queue / GAP-069` through `GAP-074` is complete on the current branch baseline (verified on 2026-04-20).
-- `Near-Term Gap Horizon Queue / GAP-080` through `GAP-089` are complete on the current branch baseline (`GAP-080` through `GAP-084` verified on 2026-04-21; `GAP-085` through `GAP-089` verified on 2026-04-22).
-- `Long-Term Gap Trigger Audit Queue / GAP-090` through `GAP-092` is complete; all `LTP-01..05` packages remain deferred pending future trigger evidence.
-- `Optimized Hybrid Long-Term Implementation Queue / GAP-093` through `GAP-103` is complete on the current branch baseline. No `LTP-01..06` package was selected or implemented; each remains trigger-based until fresh scope-fence evidence exists.
-- `Complete Hybrid Final-State Realization Queue / GAP-104` through `GAP-111` is complete and remains evidence-certified by the `GAP-111` evidence batch.
-- `Post-Certification Guard Queue / GAP-112` is complete and enforced through `verify-repo.ps1 -Check Docs`.
-- `Post-Certification Promotion Queue / GAP-113` is complete and enforced through `verify-repo.ps1 -Check Docs`.
-- `Post-Certification Selection Queue / GAP-114` is complete and enforced through `verify-repo.ps1 -Check Docs`.
-- `Dual First-Class Host Entrypoint Queue / GAP-115` through `GAP-119` is complete as owner-directed bounded scope for Codex plus Claude Code; latest native tier parity evidence is in `docs/change-evidence/20260427-claude-code-native-attach-tier-parity.md`.
-- `Runtime Evolution Review Queue / GAP-120` through `GAP-129` has dry-run `EvolutionReview` and `ExperienceReview` operator actions plus controlled `EvolutionMaterialize` file output. `ExperienceReview` now writes knowledge candidates, memory records, controlled proposals, and disabled skill candidates; `EvolutionMaterialize` now also writes a promotion lifecycle manifest that keeps gate evidence, effect metrics, and rollback refs attached before any enablement. `SelfEvolutionPromotionPlan` reports whether policy mutation, skill enablement, target repo sync, or push/merge may advance; it is a non-mutating controller and automatic policy apply, skill enablement, target repo sync, push, and merge remain disabled.
-- `Governance Hub Reuse And Controlled Evolution Queue / GAP-130` is complete as the scope rebaseline, `GAP-131` is complete as the capability portfolio classifier baseline, `GAP-132` is complete as the control-pack execution contract baseline, `GAP-133` is complete as the inheritance override baseline, `GAP-134` is complete as the target-repo reuse effect feedback baseline, `GAP-135` is complete as the knowledge-memory lifecycle baseline, `GAP-136` is complete as the promotion lifecycle baseline, `GAP-137` is complete as the repo-map context artifact baseline, `GAP-138` is complete as the policy/tool/credential audit boundary baseline, `GAP-139` is complete as the governance hub certification baseline, `GAP-140` is complete as the bounded host-capability defer baseline, `GAP-141` is complete as the historical problem-trace closure policy baseline, `GAP-142` is complete as the degraded fresh-evidence next-work guard, and `GAP-143` is complete as the evidence recovery posture contract. Their completion standard requires real target-repo effect feedback, not only plan files, and does not authorize automatic host replacement, policy mutation, skill enablement, push, or merge. Self-evolution must evaluate the existing capability portfolio too: add, keep, improve, merge, deprecate, retire, or delete only rollbackable candidates based on evidence.
-- `Target Repo Managed Asset Retirement And Uninstall Queue / GAP-144..151` is complete on the current branch baseline. `Repo Slimming And Coding Speed Queue / GAP-152..158` is complete as the current bounded optimization lane.
-- `GAP-165..168` are complete as the conditional planning package for the host-family operationalization follow-on queue. They do not by themselves open a new active execution queue.
-- New LTP implementation queue items beyond this bounded host-support queue must use later ids and must pass the autonomous or owner-directed promotion scope fence.
-- Active verification for this repo remains `build -> test -> contract/invariant -> doctor`, with docs and script checks still included in `verify-repo -Check All`.
-- `docs/change-evidence/` remains historical evidence and planning trace, not the primary user-facing product surface.
-
-## Project Entry
+## Start Here
 - [Root README](../README.md)
-- [中文 README](../README.zh-CN.md)
-- [English README](../README.en.md)
+- [Chinese Guide](../README.zh-CN.md)
+- [English Guide](../README.en.md)
 - [Project AGENTS](../AGENTS.md)
+- [planning-status.json](./architecture/planning-status.json)
 
-## Main Entrypoints
-- Repository-root shortcut: `run.ps1`
-  - source of truth: delegates to `scripts/operator.ps1`
-  - typical uses: `.\run.ps1`, `.\run.ps1 readiness -OpenUi`, `.\run.ps1 ui`, `.\run.ps1 daily -Mode quick`, `.\run.ps1 rules-check`, `.\run.ps1 feedback`
-  - purpose: first-use and daily-use convenience so operators do not need to remember long PowerShell invocations
-- Operator aggregate entrypoint: `scripts/operator.ps1`
-  - source of truth: existing runtime, rule-sync, target-flow, and operator UI scripts
-  - typical uses: `-Action Help`, `-Action Readiness`, `-Action RulesDryRun`, `-Action DailyAll`, `-Action OperatorUi -OpenUi`
-  - UI default language: `zh-CN`; use `-UiLanguage en` for English
-  - UI purpose: localhost interactive control console for allowlisted operator actions, runtime summary, maintenance policy refs, attachment posture, task/run evidence refs, evidence file preview, and local Codex/Claude config status
-- Core-principle change candidate entrypoint: `scripts/operator.ps1 -Action CorePrincipleMaterialize`
-  - default behavior is dry-run reporting only
-  - after explicit permission, add `-ConfirmCorePrincipleProposalWrite` to write reviewable proposal/manifest files under `docs/change-evidence/core-principle-change-*`
-  - for audit-only persistence, add `-WriteCorePrincipleDryRunReport` to write only a dry-run report under `docs/change-evidence/core-principle-change-reports/`
-  - does not directly change active core-principles policy, specs, verifiers, target repositories, push, or merge
-- Codex local boundary:
-  - use the official `codex` entrypoint and Cockpit Tools native controls for login, provider switching, app launch state, Direct OAuth, Direct API, and Cockpit API service roundtrip switching
-  - this repository no longer provides 8770 actions, interop diagnostics, projection smoke, repair paths, gateway profiles, SQLite/provider/history writes, launcher wrappers, or background guards for Codex/Cockpit switching
-  - use `scripts/Disable-CodexProjectInterop.ps1 -Apply -DisableProjectShortcuts` only for reversible cleanup of old project shims
-  - use `scripts/Test-CodexGuardAbsence.ps1` to verify retired project shims, guards, wrappers, and repair entrypoints remain absent
-- Claude local boundary:
-  - Claude Code / Claude Desktop account, API, and provider switching is owned by CC Switch only
-  - this repository no longer writes `~/.claude/settings.json`, provider profiles, current process env, `CLAUDE_CONFIG_DIR`, or Claude Desktop data roots
-  - old `scripts/Optimize-ClaudeLocal.ps1` and `claude-provider switch|install|optimize|delete` return a boundary error instead of changing local state
-  - session continuity is checked read-only with `claude-provider continuity`; the expected shared-history posture is one Claude home with `projects/`, `sessions/`, and `history.jsonl` preserved while CC Switch changes providers
-- Target-repo daily/batch entrypoint: `scripts/runtime-flow-preset.ps1`
-  - source of truth: `docs/targets/target-repos-catalog.json`
-  - typical uses: `-ListTargets`, `-Target <id> -FlowMode daily`, `-AllTargets -ApplyGovernanceBaselineOnly`, `-AllTargets -ApplyAllFeatures`
-- Agent-rule sync entrypoint: `scripts/sync-agent-rules.ps1`
-  - source of truth: `rules/manifest.json`
-  - typical uses: `-Scope All -FailOnChange` for drift check, `-Scope All -Apply` for one-command sync
-- Self-repo verification entrypoint: `scripts/verify-repo.ps1 -Check All`
-  - validates runtime code, docs, schemas, catalog, scripts, and target-repo consistency gates
-
-## Bilingual Coverage
-- Mandatory bilingual coverage applies to operator-facing usage docs.
-- At minimum, the following document classes must be available in both Chinese and English:
-  - root entry guides: `README.md`, `README.zh-CN.md`, `README.en.md`
-  - quickstarts under `docs/quickstart/`
-  - product docs that directly explain operator actions or runnable flows, including `*guide*`, `*flow*`, `*commands*`, `*trial*`, `*pilot*`, `*console*`, and `*criteria*`
-- Policy, research, architecture, ADR, planning, and spec/schema companion docs are not automatically required to be bilingual when they are not direct operator entrypoints.
-- When a document becomes the primary operator path, it must either:
-  - provide a Chinese and an English version, or
-  - link clearly to an equivalent bilingual entrypoint that covers the same workflow
-
-Current operator-facing bilingual set includes:
-- [Root README](../README.md)
-- [中文 README](../README.zh-CN.md)
-- [English README](../README.en.md)
+## Operator And Daily Use
 - [Single-Machine Runtime Quickstart](./quickstart/single-machine-runtime-quickstart.md)
 - [单机 Runtime 快速开始](./quickstart/single-machine-runtime-quickstart.zh-CN.md)
 - [AI Coding Usage Guide](./quickstart/ai-coding-usage-guide.md)
@@ -221,215 +36,118 @@ Current operator-facing bilingual set includes:
 - [在现有仓库中使用](./quickstart/use-with-existing-repo.zh-CN.md)
 - [Multi-Repo Trial Quickstart](./quickstart/multi-repo-trial-quickstart.md)
 - [多仓试运行快速开始](./quickstart/multi-repo-trial-quickstart.zh-CN.md)
-- [Codex CLI/App Integration Guide](./product/codex-cli-app-integration-guide.md)
-- [Codex CLI/App 集成指南](./product/codex-cli-app-integration-guide.zh-CN.md)
 - [Target Repo Attachment Flow](./product/target-repo-attachment-flow.md)
 - [Target Repo 接入流程](./product/target-repo-attachment-flow.zh-CN.md)
 - [Session Bridge Commands](./product/session-bridge-commands.md)
 - [Session Bridge 命令](./product/session-bridge-commands.zh-CN.md)
+- [Codex CLI/App Integration Guide](./product/codex-cli-app-integration-guide.md)
+- [Codex CLI/App 集成指南](./product/codex-cli-app-integration-guide.zh-CN.md)
+- [Agent Continuity Guide](./product/agent-continuity.md)
+- [共享上下文连续性指南](./product/agent-continuity.zh-CN.md)
+- [Codex / Claude Host Feedback Loop](./product/host-feedback-loop.md)
+- [Codex / Claude 功能反馈闭环](./product/host-feedback-loop.zh-CN.md)
+
+## Verification And Release Gates
+- Canonical repo verifier: `scripts/verify-repo.ps1`
+  - `Build`, `Runtime`, `RuntimeQuick`, `Contract`, `Doctor`, `Docs`, `DocsLinks`, `Scripts`, `All`
+- Release-style closeout: `scripts/governance/preflight.ps1`
+  - wraps the hard-gate floor `build -> test -> contract/invariant -> hotspot`
+  - adds `Docs`, `Scripts`, and `git diff --check`
+- Current release CI: [verify.yml](../.github/workflows/verify.yml)
+- Related docs:
+  - [Change Evidence Index](./change-evidence/README.md)
+  - [Runbooks](./runbooks/README.md)
+  - [Target Repo Test Slicing Policy](./targets/target-repo-test-slicing-policy.md)
+  - [Acceptance Metrics Contract](./product/acceptance-metrics-contract.md)
+
+## Reference Governance
+- High-drift changes are now fail-closed in the `Contract` gate.
+- Policy entrypoints:
+  - [Reference-Required Change Policy](./architecture/reference-required-change-policy.json)
+  - [Reference Basis Policy](./architecture/reference-basis-policy.json)
+  - [Reference Basis Catalog](./research/reference-basis-catalog.json)
+  - [Reference Basis Matrix](./research/reference-basis-matrix.md)
+- Verifiers:
+  - `scripts/verify-reference-required-changes.py`
+  - `scripts/verify-reference-basis.py`
+- Current hardening docs:
+  - [Reference Governance And Release Preflight Roadmap](./roadmap/reference-governance-and-preflight-roadmap.md)
+  - [Reference Governance And Release Preflight Plan](./plans/reference-governance-and-preflight-plan.md)
+  - [20260609 Reference Basis And Preflight Hardening](./change-evidence/20260609-reference-basis-and-preflight-hardening.md)
+  - [20260609 Reference-Required Change Enforcement](./change-evidence/20260609-reference-required-change-enforcement.md)
+
+## Planning, Strategy, And Architecture
+- Planning truth:
+  - [Plans Index](./plans/README.md)
+  - [Backlog Index](./backlog/README.md)
+  - [Issue-Ready Backlog](./backlog/issue-ready-backlog.md)
+- Strategy:
+  - [Strategy Index](./strategy/README.md)
+  - [Current Best-End-State Blueprint](./strategy/current-best-end-state-blueprint.md)
+  - [Positioning And Competitive Layering](./strategy/positioning-and-competitive-layering.md)
+- Architecture:
+  - [Architecture Index](./architecture/README.md)
+  - [Hybrid Final-State Master Outline](./architecture/hybrid-final-state-master-outline.md)
+  - [Generic Target-Repo Attachment Blueprint](./architecture/generic-target-repo-attachment-blueprint.md)
+  - [Repo-Native Contract Bundle](./architecture/repo-native-contract-bundle.md)
+  - [Host Family Capability Surface Blueprint](./architecture/host-family-capability-surface-blueprint.md)
+- Product and PRD:
+  - [AI Coding PRD](./prd/governed-ai-coding-runtime-prd.md)
+  - [Interaction Model](./product/interaction-model.md)
+  - [Adapter Capability Tiers](./product/adapter-capability-tiers.md)
+
+## Targets, Rules, And Managed Assets
+- Managed target-repo metadata:
+  - [target-repos-catalog.json](./targets/target-repos-catalog.json)
+  - [target-repo-governance-baseline.json](./targets/target-repo-governance-baseline.json)
+  - [target-repo-rollout-contract.json](./targets/target-repo-rollout-contract.json)
+- Managed templates:
+  - `docs/targets/templates/claude-code/`
+  - `docs/targets/templates/git-hooks/`
+  - `docs/targets/templates/verify-powershell-policy.py`
+  - `docs/targets/templates/search-context.ignore`
+- Rule sync source of truth:
+  - [rules/manifest.json](../rules/manifest.json)
+
+## Evidence, History, And Rollback
+- Current evidence index: [Change Evidence Index](./change-evidence/README.md)
+- Latest posture proof:
+  - [20260613 Active Queue Evidence-Upkeep Refresh](./change-evidence/20260613-active-queue-evidence-upkeep-refresh.md)
+  - [20260609 Live Posture Recovery](./change-evidence/20260609-live-posture-recovery.md)
+  - [20260613 README And Index Refresh](./change-evidence/20260613-readme-and-index-refresh.md)
+- Completed history:
+  - [Completed GAP History](./archive/completed-gap-history.md)
+  - [已完成 GAP 历史归档](./archive/completed-gap-history.zh-CN.md)
+- Recovery docs:
+  - [Runbooks](./runbooks/README.md)
+  - [Control Rollback](./runbooks/control-rollback.md)
+  - [Failed Rollout Recovery](./runbooks/failed-rollout-recovery.md)
+
+## Bilingual Coverage
+Operator-facing docs that are expected to stay bilingual include:
+- `README.md`, `README.zh-CN.md`, `README.en.md`
+- `docs/quickstart/*`
+- `docs/product/codex-cli-app-integration-guide*`
+- `docs/product/agent-continuity*`
+- `docs/product/target-repo-attachment-flow*`
+- `docs/product/session-bridge-commands*`
+- `docs/product/host-feedback-loop*`
+
+Policy, research, architecture, ADR, planning, and schema/spec companions are not automatically required to be bilingual unless they become the primary operator path.
 
 ## Verification Quickstart
+```powershell
+.\run.ps1 fast
+```
+
 ```powershell
 .\run.ps1 readiness -OpenUi
 ```
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File ../scripts/verify-repo.ps1 -Check All
-```
-
-From the repository root, install the repo-local hooks before running full verification:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/install-repo-hooks.ps1
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All
 ```
 
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -DisableAutoCommit
 ```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime
-```
-
-Local baseline runtime commands:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap-runtime.ps1
-```
-
-```powershell
-python scripts/run-governed-task.py status --json
-```
-
-```powershell
-python scripts/run-governed-task.py run --json
-```
-
-```powershell
-python scripts/run-multi-repo-trial.py
-```
-
-Operator and packaging helpers:
-
-```powershell
-.\run.ps1
-```
-
-```powershell
-.\run.ps1 ui
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Help
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator-ui-service.ps1 -Action Status
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en
-```
-
-```powershell
-python scripts/serve-operator-ui.py
-```
-
-```powershell
-python scripts/serve-operator-ui.py --serve --open
-```
-
-The interactive UI supports all-target or single-target execution, dry-run, browser-local execution history, and bounded repo-local evidence/artifact/verification file preview.
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/package-runtime.ps1
-```
-
-Portable release packaging and first-run initialization:
-
-```powershell
-.\release.ps1 -Version 0.1.0 -Channel portable
-```
-
-`-Version` must be filename-safe and cannot contain path traversal or path separators.
-
-```powershell
-.\install.ps1 -Mode Portable
-```
-
-The portable package intentionally carries source, contracts, rules, scripts, schemas, docs, tests, and hooks. It excludes machine-local `.runtime` state, historical change evidence, credentials, provider settings, and target-repo working trees; recreate those on the new host through attachment and rule-sync flows.
-
-Primary reading entrypoints:
-- [Single-Machine Runtime Quickstart](./quickstart/single-machine-runtime-quickstart.md)
-- [单机 Runtime 快速开始](./quickstart/single-machine-runtime-quickstart.zh-CN.md)
-- [AI Coding Usage Guide](./quickstart/ai-coding-usage-guide.md)
-- [AI 编码使用指南](./quickstart/ai-coding-usage-guide.zh-CN.md)
-- [Use With An Existing Repo](./quickstart/use-with-existing-repo.md)
-- [在现有仓库中使用](./quickstart/use-with-existing-repo.zh-CN.md)
-- [Multi-Repo Trial Quickstart](./quickstart/multi-repo-trial-quickstart.md)
-- [多仓试运行快速开始](./quickstart/multi-repo-trial-quickstart.zh-CN.md)
-- [Codex CLI/App Integration Guide](./product/codex-cli-app-integration-guide.md)
-- [Codex CLI/App 集成指南](./product/codex-cli-app-integration-guide.zh-CN.md)
-- [Codex Direct Adapter](./product/codex-direct-adapter.md)
-- [Positioning And Competitive Layering](./strategy/positioning-and-competitive-layering.md)
-- [Runtime Governance Borrowing Matrix](./research/runtime-governance-borrowing-matrix.md)
-- [ADR-0007 Source-Of-Truth And Runtime Contract Bundle](./adrs/0007-source-of-truth-and-runtime-contract-bundle.md)
-- [Generic Target-Repo Attachment Blueprint](./architecture/generic-target-repo-attachment-blueprint.md)
-- [Repo-Native Contract Bundle](./architecture/repo-native-contract-bundle.md)
-- [Local Baseline To Hybrid Final-State Migration Matrix](./architecture/local-baseline-to-hybrid-final-state-migration-matrix.md)
-- [Interactive Session Productization Implementation Plan](./plans/interactive-session-productization-implementation-plan.md)
-- [Interactive Session Productization Plan](./plans/interactive-session-productization-plan.md)
-- [Governance Runtime Strategy Alignment Plan](./plans/governance-runtime-strategy-alignment-plan.md)
-
-## Product
-- [中文使用说明](../README.zh-CN.md)
-- [English Usage Guide](../README.en.md)
-- [Use With An Existing Repo](./quickstart/use-with-existing-repo.md)
-- [在现有仓库中使用](./quickstart/use-with-existing-repo.zh-CN.md)
-- [AI Coding Usage Guide](./quickstart/ai-coding-usage-guide.md)
-- [AI 编码使用指南](./quickstart/ai-coding-usage-guide.zh-CN.md)
-- [Strategy Index](./strategy/README.md)
-- [Positioning And Competitive Layering](./strategy/positioning-and-competitive-layering.md)
-- [Interaction Model](./product/interaction-model.md)
-- [Target Repo Attachment Flow](./product/target-repo-attachment-flow.md)
-- [Session Bridge Commands](./product/session-bridge-commands.md)
-- [Target Repo 接入流程](./product/target-repo-attachment-flow.zh-CN.md)
-- [Session Bridge 命令](./product/session-bridge-commands.zh-CN.md)
-- [定位、路线图与竞品分层说明](./product/positioning-roadmap-competitive-layers.zh-CN.md)
-- [First Read-Only Trial](./product/first-readonly-trial.md)
-- [Write Policy Defaults](./product/write-policy-defaults.md)
-- [Approval Flow](./product/approval-flow.md)
-- [Write-Side Tool Governance](./product/write-side-tool-governance.md)
-- [Verification Runner](./product/verification-runner.md)
-- [Delivery Handoff](./product/delivery-handoff.md)
-- [Eval And Trace Baseline](./product/eval-and-trace-baseline.md)
-- [Second-Repo Reuse Pilot](./product/second-repo-reuse-pilot.md)
-- [Minimal Approval And Evidence Console](./product/minimal-approval-evidence-console.md)
-- [Public Usable Release Criteria](./product/public-usable-release-criteria.md)
-- [Adapter Degrade Policy](./product/adapter-degrade-policy.md)
-- [Adapter Capability Tiers](./product/adapter-capability-tiers.md)
-- [Adapter Conformance Parity Matrix](./product/adapter-conformance-parity-matrix.md)
-- [Codex / Claude Host Feedback Loop](./product/host-feedback-loop.md)
-- [Codex / Claude 功能反馈闭环](./product/host-feedback-loop.zh-CN.md)
-- [Codex CLI/App Integration Guide](./product/codex-cli-app-integration-guide.md)
-- [Codex CLI/App 集成指南](./product/codex-cli-app-integration-guide.zh-CN.md)
-- [Codex Direct Adapter](./product/codex-direct-adapter.md)
-- [Multi-Repo Trial Loop](./product/multi-repo-trial-loop.md)
-- [Runtime Compatibility And Upgrade Policy](./product/runtime-compatibility-and-upgrade-policy.md)
-- [Maintenance, Deprecation, And Retirement Policy](./product/maintenance-deprecation-and-retirement-policy.md)
-- [AI Coding PRD](./prd/governed-ai-coding-runtime-prd.md)
-
-## Architecture
-- [Architecture Index](./architecture/README.md)
-- [ADR-0007 Source-Of-Truth And Runtime Contract Bundle](./adrs/0007-source-of-truth-and-runtime-contract-bundle.md)
-- [Generic Target-Repo Attachment Blueprint](./architecture/generic-target-repo-attachment-blueprint.md)
-- [Repo-Native Contract Bundle](./architecture/repo-native-contract-bundle.md)
-- [Local Baseline To Hybrid Final-State Migration Matrix](./architecture/local-baseline-to-hybrid-final-state-migration-matrix.md)
-- [Target Architecture](./architecture/governed-ai-coding-runtime-target-architecture.md)
-- [Minimum Viable Governance Loop](./architecture/minimum-viable-governance-loop.md)
-- [Governance Boundary Matrix](./architecture/governance-boundary-matrix.md)
-- [MVP Stack Vs Target Stack](./architecture/mvp-stack-vs-target-stack.md)
-- [Compatibility Matrix](./architecture/compatibility-matrix.md)
-
-## Roadmap And Execution
-- [Plans Index](./plans/README.md)
-- [Backlog Index](./backlog/README.md)
-- [Hybrid Final-State Master Outline](./architecture/hybrid-final-state-master-outline.md)
-- [Direct-To-Hybrid Final-State Roadmap](./roadmap/direct-to-hybrid-final-state-roadmap.md)
-- [Direct-To-Hybrid Final-State Implementation Plan](./plans/direct-to-hybrid-final-state-implementation-plan.md)
-- [Optimized Hybrid Final-State Long-Term Roadmap](./roadmap/optimized-hybrid-final-state-long-term-roadmap.md)
-- [Optimized Hybrid Final-State Long-Term Implementation Plan](./plans/optimized-hybrid-final-state-long-term-implementation-plan.md)
-- [Claude Code First-Class Entrypoint Plan](./plans/claude-code-first-class-entrypoint-plan.md)
-- [90-Day Plan](./roadmap/governed-ai-coding-runtime-90-day-plan.md)
-- [Full Lifecycle Plan](./roadmap/governed-ai-coding-runtime-full-lifecycle-plan.md)
-- [Interactive Session Productization Implementation Plan](./plans/interactive-session-productization-implementation-plan.md)
-- [Interactive Session Productization Plan](./plans/interactive-session-productization-plan.md)
-- [Governance Runtime Strategy Alignment Plan](./plans/governance-runtime-strategy-alignment-plan.md)
-- [Maintenance Implementation Plan](./plans/maintenance-implementation-plan.md)
-- [Public Usable Release Implementation Plan](./plans/public-usable-release-implementation-plan.md)
-- [Full Runtime Implementation Plan](./plans/full-runtime-implementation-plan.md)
-- [Foundation Runtime Substrate Implementation Plan](./plans/foundation-runtime-substrate-implementation-plan.md)
-- [Phase 0 Runnable Baseline Implementation Plan](./plans/phase-0-runnable-baseline-implementation-plan.md)
-- [MVP Backlog Seeds](./backlog/mvp-backlog-seeds.md)
-- [Full Lifecycle Backlog Seeds](./backlog/full-lifecycle-backlog-seeds.md)
-- [Issue-Ready Backlog](./backlog/issue-ready-backlog.md)
-- [Issue Seeds YAML](./backlog/issue-seeds.yaml)
-
-## Strategy And Research
-- [Strategy Index](./strategy/README.md)
-- [Positioning And Competitive Layering](./strategy/positioning-and-competitive-layering.md)
-- [Runtime Governance Borrowing Matrix](./research/runtime-governance-borrowing-matrix.md)
-- [ADR-0007 Source-Of-Truth And Runtime Contract Bundle](./adrs/0007-source-of-truth-and-runtime-contract-bundle.md)
-- [Local Baseline To Hybrid Final-State Migration Matrix](./architecture/local-baseline-to-hybrid-final-state-migration-matrix.md)

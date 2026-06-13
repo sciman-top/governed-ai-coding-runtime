@@ -1,276 +1,148 @@
 # Governed AI Coding Runtime English Guide
 
-## Shortest Path
-If you only need to know what to run next, start with the repository-root shortcut:
+## Current Snapshot
+- Single source of planning truth: `docs/architecture/planning-status.json`
+- current active queue: `GAP-159..164` (`Agent Continuity And Shared Context`)
+- `current decision gate`: `defer_ltp_and_refresh_evidence`
+- `current live posture`: target-run freshness is `fresh`; Codex target runs are `native_attach` / ready; Claude workload probe is `native_attach` / ready
+- certified baseline: `GAP-104..111`
+- latest completed governance hardening slice: `GAP-169..172`
+  - the repo now carries a repo-owned `reference-basis`, a release-style `preflight`, and CI `release-preflight`
+
+## Fastest Path
+If you only need to know what to run next, start with these four entrypoints:
 
 ```powershell
 .\run.ps1
 ```
 
-AI recommended daily entrypoint:
-
 ```powershell
 .\run.ps1 fast
 ```
-
-AI recommended pre-delivery readiness:
 
 ```powershell
 .\run.ps1 readiness -OpenUi
 ```
 
-`fast` runs `build + quick feedback tests` for daily coding feedback; `readiness` runs the repository hard-gate order `build -> test -> contract/invariant -> hotspot`, then opens the default Chinese operator UI. `run.ps1` is only a convenience layer; the real implementation remains `scripts/operator.ps1`. For the full action list, run:
-
 ```powershell
-.\run.ps1 operator-help
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -DisableAutoCommit
 ```
 
-## Current Truth
-If you only need to know the current project posture and which entrypoint to trust first, start here:
+Recommended interpretation:
+- `run.ps1`: repository-root shortcut that forwards to `scripts/operator.ps1`
+- `run.ps1 fast`: inner-loop feedback, running `build + RuntimeQuick`
+- `run.ps1 readiness -OpenUi`: runs the hard-gate order `build -> test -> contract/invariant -> hotspot`, then opens the default Chinese operator UI
+- `scripts/governance/preflight.ps1 -DisableAutoCommit`: release-style closeout that adds `Docs`, `Scripts`, and `git diff --check` on top of the full gate
 
-- single source of truth: `docs/architecture/planning-status.json`
-- current active queue: `GAP-159..164` (`Agent Continuity And Shared Context`)
-- current decision gate: `defer_ltp_and_refresh_evidence`
-- current live posture: `fresh`, with both `Codex` and `Claude` currently recorded at `native_attach / ready`
-- stronger claims still require fresh target-run evidence; historical completion does not automatically equal current claim scope
+## What This Repo Is
+- This repository is an AI coding governance runtime / control plane, not another execution host.
+- It centralizes governance contracts, gates, evidence, rollout flows, target-repo attachment, and host feedback into one repo-owned rules-and-scripts baseline.
+- The best engineering end state remains `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`.
+- Codex and Claude Code are cooperation hosts, not competitors; this repo governs their attach, gate, evidence, handoff, and degrade posture without copying or replacing host UI, accounts, providers, or model loops.
+- It does not own local account, provider, gateway, or host switching:
+  - Codex/Cockpit Direct OAuth, Direct API, and API service roundtrips stay in `Cockpit Tools`.
+  - Claude Code / Claude Desktop account and provider switching stay in `CC Switch`.
 
-## Hard Source Gate
-- This is no longer only a recommendation. It is now enforced in the `Contract` gate.
-- If a change touches host boundaries, protocol boundaries, the external reference shelf, or runtime-evolution source policy, `scripts/verify-repo.ps1 -Check Contract` now runs `scripts/verify-reference-required-changes.py`.
-- The same diff must include a `docs/change-evidence/*.md` record that explicitly documents `official_sources_reviewed`, `primary_references_reviewed`, `local_runtime_evidence_reviewed`, `source_decision`, and the changed guarded paths.
-- The policy entrypoint is `docs/architecture/reference-required-change-policy.json`; the intent is to prevent high-drift semantics from being rewritten from memory or chat-only reasoning.
+## Retired Codex/Cockpit Shims
+- The only retained paths are `Disable-CodexProjectInterop.ps1` and `Test-CodexGuardAbsence.ps1`, which clean up and verify absence of old project interop shims.
+- Do not restore or recommend old paths: `CodexProjectionSmoke`, `CodexApiProjectionRepair`, `CodexOauthProjectionRepair`, `CodexLaunchBindingRepair`, `Manage-LiteLLMGateway.ps1`, `codex-mode-*`, `--migrate-provider-bucket`, `SQLite provider trigger`, `no-op launcher`, `restart wrapper`.
 
-## Work Horizon
-- `Now`: use `planning-status.json`, `docs/README.md`, `docs/plans/README.md`, and `docs/backlog/README.md` as the current navigation surface and keep them aligned with live evidence
-- `Next`: `GAP-165..168` is only a conditional follow-on queue and should activate only when later promotion evidence explicitly justifies it
-- `Later`: `LTP-01..06` and heavier host/protocol/runtime expansion remain trigger-based work, not default near-term execution
-- `History`: completed `GAP-020..158` slices, the `GAP-104..111` certification baseline, and older implementation plans remain historical evidence rather than competing active work
+## What It Can Do Today
+- run canonical repository verification through `scripts/verify-repo.ps1`
+- run release-style closeout through `scripts/governance/preflight.ps1`
+- aggregate readiness, feedback, rule sync, target flows, and operator UI behind `scripts/operator.ps1`
+- attach external target repos and run attach-first governance flows
+- sync `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` from `rules/manifest.json`
+- create and initialize portable packages with:
+  - `.\release.ps1 -Version <version> -Channel portable`
+  - `.\install.ps1 -Mode Portable`
 
-## Current Status
-`Foundation / GAP-020` through `GAP-023`, `Full Runtime / GAP-024` through `GAP-028`, `Public Usable Release / GAP-029` through `GAP-032`, `Maintenance Baseline / GAP-033` through `GAP-034`, and `Interactive Session Productization / GAP-035` through `GAP-039` are complete.
+## What It Does Not Own
+- Codex/Cockpit account, provider, gateway, history-bucket, or launcher state
+- Claude Code / Claude Desktop account, provider, config-root, or history migration
+- universal runtime-owned takeover claims for every external repo and every high-risk workflow
 
-That means the first landed hybrid productization boundary is now present. It does not mean every upstream host already has a full runtime-owned real-write execution path.
+## Hard Gates And Reference Discipline
+- delivery floor: `build -> test -> contract/invariant -> hotspot`
+- Canonical acceptance chain: runtime-managed `build -> test -> contract/invariant -> hotspot`.
+- canonical verifier: `scripts/verify-repo.ps1`
+  - `Build`: `scripts/build-runtime.ps1`
+  - `Runtime`: runtime and service tests
+  - `Contract`: source, repo, and target-governance invariants
+  - `Doctor`: `scripts/doctor-runtime.ps1`
+  - `Docs` / `DocsLinks` / `Scripts`: markdown links, planning consistency, PowerShell parsing, and similar integrity checks
+- high-drift changes are now fail-closed:
+  - `scripts/verify-reference-required-changes.py` enforces same-diff official-source, primary-reference, and local-runtime-evidence review
+  - `scripts/verify-reference-basis.py` enforces same-diff named local reference-id review
+- key policy entrypoints:
+  - `docs/architecture/reference-required-change-policy.json`
+  - `docs/architecture/reference-basis-policy.json`
+  - `docs/research/reference-basis-matrix.md`
+  - `docs/research/reference-basis-catalog.json`
+- same-diff evidence must be written under `docs/change-evidence/*.md`
+  - common fields: `official_sources_reviewed`, `primary_references_reviewed`, `local_runtime_evidence_reviewed`, `source_decision`
+  - when a guarded `reference-basis` surface changes, also add `reference_basis_surface_ids`, `required_local_reference_ids_reviewed`, and `reference_adoption_decision`
+- GitHub Actions currently runs both:
+  - `scripts/verify-repo.ps1 -Check All`
+  - `scripts/governance/preflight.ps1 -DisableAutoCommit`
 
-Single source of planning truth: `docs/architecture/planning-status.json`.
-- `certified baseline`: `GAP-104..111`
-- `current active queue`: `GAP-159..164`
-- `current decision gate`: `defer_ltp_and_refresh_evidence`
-- `current live posture`: target-run freshness is `fresh`; Codex target runs are now `native_attach` / ready; Claude workload probe is `native_attach` / ready
-
-This repository is usable today as a local governed runtime with the first attach-first productization slice landed; `Strategy Alignment Gates / GAP-040..044` are complete on the current branch baseline and remain encoded as satisfied hardening dependencies around that result.
-
-Positioning and non-goals:
-
-- governance/runtime layer for AI coding agents, not another execution host
-- not a wrapper-first orchestration product
-- not a generation-guardrail product
-- strategy doc: [Positioning And Competitive Layering](docs/strategy/positioning-and-competitive-layering.md)
-- one-page target blueprint: [Current Best-End-State Blueprint](docs/strategy/current-best-end-state-blueprint.md)
-- host-family blueprint: [Host Family Capability Surface Blueprint](docs/architecture/host-family-capability-surface-blueprint.md)
-- borrowing matrix: [Runtime Governance Borrowing Matrix](docs/research/runtime-governance-borrowing-matrix.md)
-- external reference index: [External Reference Repo Index](docs/research/external-reference-repos-index.md)
-- external reference overview: [External Reference Repo One-Page Overview](docs/research/external-reference-repo-one-page-overview.md)
-- external reference tiering: [External Reference Repo Tiering](docs/research/external-reference-repo-tiering.md)
-- boundary ADR: [ADR-0007 Source-Of-Truth And Runtime Contract Bundle](docs/adrs/0007-source-of-truth-and-runtime-contract-bundle.md)
-
-Available now:
-
-- Repository verification over docs, schemas, catalog, scripts, and runtime contract tests.
-- Foundation-grade build and doctor gates.
-- A first scripted read-only trial baseline.
-- Codex capability readiness surfaced from runtime status/doctor (adapter tier, flow kind, degrade reasons, remediation hints).
-- Runtime-managed gate execution through session bridge (`run_quick_gate` / `run_full_gate`, with optional `plan_only`).
-- Runtime-managed attached write governance flow through session bridge (`write_request` / `write_approve` / `write_execute` / `write_status`) with approval/evidence/handoff/replay refs.
-- A safe-mode Codex adapter smoke trial that reports task, binding, evidence, and verification wiring.
-- A profile-based multi-repo trial runner that reports per-repo posture, adapter tier, verification refs, evidence refs, and follow-ups.
-- Attachment of an external target repo such as `..\ClassroomToolkit`, including `.governed-ai` light-pack generation or validation plus status/doctor/session-bridge posture checks.
-- A CLI-first governed runtime smoke path with persisted artifacts, verification outputs, evidence bundles, handoff packages, replay references, and runtime status.
-- Python contract primitives for task intake, repo profiles, approvals, write governance, execution runtime, artifact/replay persistence, verification, delivery handoff, eval/trace, second-repo pilot checks, and a minimal control-console facade.
-
-Complete hybrid final-state certification posture:
-- `GAP-104..111` are complete on the current branch baseline; primary evidence is [20260427 GAP-111 Complete Hybrid Final-State Certification](docs/change-evidence/20260427-gap-111-complete-hybrid-final-state-certification.md).
-- The root guide keeps only the certification boundary: the repo-local contract bundle, machine-local durable governance kernel, attach-first host adapters, and same-contract verification/delivery plane are proven, but this still does not claim upstream host UI ownership or unconditional takeover of every future external repo or high-risk workflow.
-- Detailed completion history and the `GAP-130..143` snapshot moved to [Completed GAP History](docs/archive/completed-gap-history.md).
-- Historical certification does not override the current live posture. Stronger live-host claims are valid only while fresh target-run evidence stays at `ready` / `native_attach`; if posture degrades again, the claim must immediately fall back with it.
-
-## Current Controlled-Evolution Posture
-`GAP-120..129` put 30-day evolution review, AI coding experience capture, and low-risk proposal/disabled-skill materialization under governance. They still do not auto-apply policy, auto-enable skills, sync target repos, push, or merge.
-
-`GAP-130..143` now represent the completed governance-hub, reusable-contract, controlled-evolution, repo-map shaping, tool/credential audit, and evidence-recovery baseline; the detailed list lives in [Completed GAP History](docs/archive/completed-gap-history.md). Codex and Claude Code remain cooperation hosts rather than competitors. Completion still requires real target-repo effect feedback, and stronger live-host claims stay tied to fresh target-run evidence instead of historical certification language alone.
-
-The best engineering final state is now fixed as `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`: a governance center, reusable control contract, capability-first multi-host adapters, a controlled evolution loop, and evidence-first delivery discipline, not a new host product.
-
-The most accurate current target definition is a capability-first, host-family-aware governance runtime for AI coding: `Codex family` and `Claude family` are the required cooperation hosts, `Antigravity family` is the long-term Google direction, and `Gemini CLI` remains a migration bridge rather than the preferred Google host surface.
-
-The human-readable core principle is now converged into five statements, while the machine details remain in the enforced principles in `docs/architecture/core-principles-policy.json`:
-
-- `Efficiency first, safety bounded`: optimize for low interruption, continuous execution, lower token/cost burn, necessary explanatory density, and high throughput; model, provider, reasoning level, context window, compact threshold, and host tooling are replaceable implementation details; efficiency optimization must not bypass existing safety, evidence, rollback, review, or gate constraints.
-- `Automation-first, outer-AI-assisted, gate-controlled evolution`: deterministic governance work should be automated, and outer AI may generate reviews, knowledge, candidates, and proposals; effective changes must first become structured candidates and pass risk classification, machine gates, evidence, rollback, and required review.
-- `Governance hub, reusable contract, host-compatible execution`: this project is a governance hub and reusable contract layer, not a competing replacement for Codex, Claude Code, or other AI coding hosts; external agent projects are mechanism sources only.
-- `Context budget, instruction minimalism, least privilege`: `context_budget_and_instruction_minimalism` and `least_privilege_tool_credential_boundary` keep root rules short and hard, keep tool outputs high-signal, trim-friendly, and reusable, and keep tool permissions, credentials, sandbox, mounts, network, provider secrets, and MCP/tool identity auditable and deterministic where possible.
-- `Measured effect over claims`: `measured_effect_feedback_over_claims` means completion claims require fresh target-run evidence, eval traces, trace/replay/trajectory refs, effect feedback, verification commands, and rollback; docs, code presence, or candidate files alone do not prove completion.
-
-## Can I Use This With Another Repo?
-Yes, with the current boundary.
-
-For a repo such as `..\ClassroomToolkit`, you can already:
-
-- generate or validate `.governed-ai/repo-profile.json` and `.governed-ai/light-pack.json`
-- bind repo-local declarations to machine-local runtime state
-- inspect attachment posture through `status` and `doctor`
-- execute runtime-managed gate flows through `session-bridge`
-- execute governed write flows with explicit approval/evidence/handoff/replay linkage
-- run Codex smoke-trial and multi-repo trial surfaces against that attached posture
-
-What you should **not** claim yet:
-
-- not that this runtime fully replaces Codex host execution in every environment
-- that all external repos and all high-risk workflows are universally runtime-owned end-to-end
+## Main Entrypoints
+- `run.ps1`
+  - root shortcut for daily use
+- `scripts/operator.ps1`
+  - aggregates `Readiness`, `FeedbackReport`, `RulesDryRun`, `RulesApply`, `DailyAll`, `ApplyAllFeatures`, `SelfEvolutionPromotionPlan`, `CorePrincipleMaterialize`, and `OperatorUi`
+- `scripts/verify-repo.ps1`
+  - canonical self-repo verification surface
+- `scripts/governance/preflight.ps1`
+  - release-style closeout surface
+- `scripts/runtime-flow-preset.ps1`
+  - attach, daily, baseline, and apply-all flows for the managed target catalog
+- `scripts/sync-agent-rules.ps1`
+  - sync surface for `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md`
+- `claude-provider continuity`
+  - read-only Claude continuity check
+- `scripts/Disable-CodexProjectInterop.ps1` and `scripts/Test-CodexGuardAbsence.ps1`
+  - cleanup and absence verification for retired Codex shims only
 
 ## Quick Usage Paths (Recommended)
 - Path A (governance sidecar, least friction): keep coding in Codex/Claude Code and run `bootstrap + doctor + verify-repo -Check All + status`.
 - Path B (attach-first for external repos): run `attach-target-repo`, then use `runtime-flow.ps1 -FlowMode daily` as your daily governance chain.
 - Path C (risky writes): run `govern-attachment-write -> decide-attachment-write -> execute-attachment-write` for medium/high-risk mutations.
 
-## Current Main Entrypoints And One-Command Apply
-- Repository-root shortcut: `run.ps1`. It compresses common actions into scenario commands such as `.\run.ps1 fast`, `.\run.ps1 readiness -OpenUi`, `.\run.ps1 daily -Mode quick`, `.\run.ps1 rules-check`, and `.\run.ps1 feedback`; it still delegates to `scripts/operator.ps1`.
-- Operator aggregate entrypoint: `scripts/operator.ps1`. It collects readiness checks, rule drift/sync, target-repo batch flows, and operator UI rendering behind one action-oriented entrypoint; default `-Action Help`.
-- Codex/Cockpit local boundary: Direct OAuth, Direct API, and Cockpit API service roundtrip switching are fully owned by Cockpit Tools. This repository no longer provides 8770 UI actions, operator actions, repair/smoke/checker entrypoints, LiteLLM gateway management, auth/provider/profile/history bucket writes, launcher/no-op wrappers, or background switch guards. It only keeps `scripts/Disable-CodexProjectInterop.ps1` and `scripts/Test-CodexGuardAbsence.ps1` to clean up and verify absence of old shims.
-- Claude local boundary: Claude Code / Claude Desktop account, API, and provider switching is owned by `CC Switch` only. This repository no longer writes `~/.claude/settings.json`, `provider-profiles.json`, current process env, `CLAUDE_CONFIG_DIR`, or Claude Desktop data roots. Old `scripts/Optimize-ClaudeLocal.ps1` and `claude-provider switch|install|optimize|delete` return a boundary error instead of changing local state. Session continuity is checked read-only with `claude-provider continuity`; the expected shared-history posture is one Claude home with `projects/`, `sessions/`, and `history.jsonl` preserved while CC Switch changes providers.
-- Core-principle change candidate entrypoint: `scripts/operator.ps1 -Action CorePrincipleMaterialize`. By default it only reports a dry-run candidate; after explicit permission, add `-ConfirmCorePrincipleProposalWrite` to write reviewable proposal/manifest files; for audit-only evidence, add `-WriteCorePrincipleDryRunReport` to write only the dry-run report. These paths still do not directly change active core-principles policy, specs, verifiers, or target repositories.
-- Target-repo daily/batch entrypoint: `scripts/runtime-flow-preset.ps1`. It reads `docs/targets/target-repos-catalog.json` and supports one target or all active targets.
-- Agent-rule sync entrypoint: `scripts/sync-agent-rules.ps1`. It reads `rules/manifest.json` and syncs global/project `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md`.
-- Self-repo verification entrypoint: `scripts/verify-repo.ps1 -Check All`.
+## External Repo Boundary
+For external repos such as `..\ClassroomToolkit`, the supported posture is attach-first governance:
+- attach the target repo and generate or validate `.governed-ai` assets
+- run daily gates, governance baseline sync, rule sync, and governed write flows
+- keep approval, evidence, handoff, and replay refs
 
-Inspect the operator entrypoint and recommended paths:
+Do not claim:
+- not that this runtime fully replaces Codex host execution in every environment
+- that every external repo and every high-risk workflow is already runtime-owned end to end
 
+## Read Next
+- current navigation:
+  - [docs/README.md](docs/README.md)
+  - [planning-status.json](docs/architecture/planning-status.json)
+- quickstarts:
+  - [Single-Machine Runtime Quickstart](docs/quickstart/single-machine-runtime-quickstart.md)
+  - [Use With An Existing Repo](docs/quickstart/use-with-existing-repo.md)
+  - [Multi-Repo Trial Quickstart](docs/quickstart/multi-repo-trial-quickstart.md)
+  - [Agent Continuity Guide](docs/product/agent-continuity.md)
+  - [Shared Context Continuity Guide (Chinese)](docs/product/agent-continuity.zh-CN.md)
+- recent hardening:
+  - [20260609 Live Posture Recovery](docs/change-evidence/20260609-live-posture-recovery.md)
+  - [20260609 Reference Basis And Preflight Hardening](docs/change-evidence/20260609-reference-basis-and-preflight-hardening.md)
+- reference governance:
+  - [Reference Basis Matrix](docs/research/reference-basis-matrix.md)
+  - [Reference Governance And Release Preflight Roadmap](docs/roadmap/reference-governance-and-preflight-roadmap.md)
+  - [Reference Governance And Release Preflight Plan](docs/plans/reference-governance-and-preflight-plan.md)
+- history and evidence:
+  - [Completed GAP History](docs/archive/completed-gap-history.md)
+  - [Change Evidence Index](docs/change-evidence/README.md)
+
+## Verification Shortcuts
 ```powershell
-.\run.ps1
-```
-
-```powershell
-.\run.ps1 readiness -OpenUi
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Help
-```
-
-AI recommended local readiness:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Readiness
-```
-
-Open the interactive local operator UI. It defaults to Chinese and starts a localhost service:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi
-```
-
-Open the English interactive UI:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action OperatorUi -OpenUi -UiLanguage en
-```
-
-How to use the UI: `-OpenUi` starts a persistent local `127.0.0.1` interactive control console and opens the browser; later visits can use `http://127.0.0.1:8770/?lang=en` directly. Use `scripts/operator-ui-service.ps1 -Action Status|Stop|Restart` to inspect or control the service, and `-Action EnableAutoStart|DisableAutoStart|AutoStartStatus` to manage logon autostart. The page can run allowlisted actions for repo readiness, target listing, rule drift checks, rule sync, governance baseline rollout, daily, all-feature apply that deletes proven-safe retired managed files by default, one-click retired-file cleanup, and one-click governance uninstall. It can target all repos, one selected target repo, or multiple checked target repos for batch uninstall, exposes settings for language, mode, parallelism, fail-fast, dry-run, managed-removal apply, and milestone tag, records results in the output panel and local browser history, and refs can be clicked to preview evidence/artifact/verification files. The local operator UI no longer shows Codex/Cockpit switching, repair, gateway, or guard actions. Claude Code / Claude Desktop account, API, and provider switching stays in `CC Switch`. Without `-OpenUi`, the script only writes a read-only `.runtime/artifacts/operator-ui/index.html` snapshot and prints a JSON `file_url`.
-
-Read-only Claude provider-switch continuity check:
-
-```powershell
-claude-provider continuity
-```
-
-Codex CLI/App uses the official `codex` entrypoint and Cockpit Tools native controls directly. This repository only keeps old-shim cleanup and absence verification:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Disable-CodexProjectInterop.ps1 -Apply -DisableProjectShortcuts
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\Test-CodexGuardAbsence.ps1
-```
-
-`codex-interop-repair`, `codex-switch-guard*`, `codex-cockpit-install-noop-launcher`, `CodexProjectionSmoke`, `CodexApiProjectionRepair`, `CodexOauthProjectionRepair`, `CodexLaunchBindingRepair`, `Manage-LiteLLMGateway.ps1`, and `codex-mode-*` are fully retired. This repository must not automatically rewrite Cockpit/Codex provider, auth, history bucket, API service, launcher state, or gateway profiles. Do not restore generic `--apply`, `--migrate-provider-bucket`, SQLite provider triggers, background guards, no-op launchers, restart wrappers, or automatic Codex restarts.
-
-Local `Cockpit Tools` / `CC Switch` boundary: `Cockpit Tools` owns Codex App/CLI account and API switching; `CC Switch` owns Claude Code / Claude Desktop account and API switching. This project does not participate in either side's account/API switching, interception, installation, gateway, repair, or restart wrapping.
-
-List available targets first:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -ListTargets
-```
-
-Force-sync governance baseline only:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
-  -AllTargets `
-  -ApplyGovernanceBaselineOnly `
-  -Json
-```
-
-Apply all current target-repo features:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 `
-  -AllTargets `
-  -ApplyAllFeatures `
-  -FlowMode "daily" `
-  -MilestoneTag "milestone" `
-  -Json
-```
-
-Sync Codex/Claude/Gemini global and project rules:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply
-```
-
-Check rule drift without writing:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -FailOnChange
-```
-
-Build a one-command portable release package:
-
-```powershell
-.\release.ps1 -Version 0.1.0 -Channel portable
-```
-
-`-Version` must be a filename-safe local version string: letters, digits, dots, underscores, and hyphens only, with no path segments.
-
-After extracting the zip on a new machine, initialize it in portable mode. This writes only package-local `.runtime` state and does not migrate accounts, provider settings, or historical evidence:
-
-```powershell
-.\install.ps1 -Mode Portable
-```
-
-Entrypoint recommendation:
-- For one-command daily use or batch target-repo apply, prefer `runtime-flow-preset.ps1`.
-- For one temporary external repo that should not be written to the target catalog yet, use `runtime-flow.ps1`.
-- For migration to a new machine, create the portable zip with `release.ps1`, run `install.ps1 -Mode Portable` on the new host, and then adapt target repos, global rules, and host-owned account/provider state there.
-
-## Concrete AI-Coding Assistance
-- Capability visibility before execution: see `adapter_tier`, `flow_kind`, and degrade reasons early.
-- Canonical acceptance chain: runtime-managed `build -> test -> contract/invariant -> hotspot`.
-- Stable rule distribution: manage global/project agent rules through `rules/manifest.json` so Codex, Claude, and Gemini read consistent repo rules.
-- Repeated-issue prevention: sync Windows process environment, canonical entrypoint, low-token interaction, milestone commit, and fast/full gate policies into target repos instead of relying on chat reminders.
-- Risky write safeguards: policy + approval + fail-closed behavior for medium/high tiers.
-- Traceable delivery: approval/evidence/handoff/replay refs are linked to task/run identity.
-- Multi-repo reuse: apply the same governance contract via `.governed-ai` light packs and preset flows.
-- Host-decoupled governance: preserves user-owned upstream auth and avoids host lock-in.
-
-## How To Use
-
-### 1. Verify The Repository
-Run from the repository root:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap-runtime.ps1
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/install-repo-hooks.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check RuntimeQuick
 ```
 
 ```powershell
@@ -278,256 +150,5 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All
 ```
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -DisableAutoCommit
 ```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1
-```
-
-This checks:
-
-- runtime contract tests
-- JSON Schema parsing
-- schema example validation
-- schema catalog pairing
-- active Markdown links
-- backlog / YAML ID drift
-- PowerShell script parsing
-
-Quickstart:
-- [Single-Machine Runtime Quickstart](docs/quickstart/single-machine-runtime-quickstart.md)
-- [Single-Machine Runtime Quickstart (Chinese)](docs/quickstart/single-machine-runtime-quickstart.zh-CN.md)
-- [AI Coding Usage Guide](docs/quickstart/ai-coding-usage-guide.md)
-- [AI 编码使用指南](docs/quickstart/ai-coding-usage-guide.zh-CN.md)
-- [Codex CLI/App Integration Guide](docs/product/codex-cli-app-integration-guide.md)
-- [Codex CLI/App 集成指南](docs/product/codex-cli-app-integration-guide.zh-CN.md)
-
-Runtime contract tests only:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime
-```
-
-Direct Python unittest command:
-
-```powershell
-python -m unittest discover -s tests/runtime -p "test_*.py" -v
-```
-
-### 2. Run The First Read-Only Trial
-The current trial is scripted and read-only. It does not invoke Codex directly and does not write to a target repository.
-
-```powershell
-python scripts/run-readonly-trial.py `
-  --goal "inspect repository" `
-  --scope "readonly trial" `
-  --acceptance "readonly request accepted" `
-  --repo-profile "schemas/examples/repo-profile/python-service.example.json" `
-  --target-path "src/service.py" `
-  --max-steps 1 `
-  --max-minutes 5
-```
-
-Expected output is JSON with:
-
-- `repo_id`
-- `accepted_count`
-- `summary`
-- `auth_ownership`
-- `unsupported_capability_behavior`
-
-### 3. Run The Codex Adapter Smoke Trial
-This trial defaults to safe mode. It proves the direct-adapter contract surface, not a real high-risk write path.
-
-```powershell
-python scripts/run-codex-adapter-trial.py `
-  --repo-id "python-service" `
-  --task-id "task-codex-trial" `
-  --binding-id "binding-python-service"
-```
-
-Expected output includes:
-
-- `adapter_tier`
-- `task_id`
-- `binding_id`
-- `evidence_refs`
-- `verification_refs`
-- `unsupported_capability_behavior`
-
-### 4. Run One Governed Task End To End
-The `run-governed-task.py` path below should currently be read as a runtime smoke path, not as direct Codex-driven coding execution.
-
-```powershell
-python scripts/run-governed-task.py status --json
-```
-
-```powershell
-python scripts/run-governed-task.py run --json
-```
-
-Expected output includes:
-
-- `task_id`
-- `state`
-- `active_run_id`
-- `verification_refs`
-- `evidence_refs`
-- `artifact_refs`
-
-### 5. Run The Multi-Repo Trial Runner
-The runner defaults to the two sample repo profiles already present in the repository.
-
-```powershell
-python scripts/run-multi-repo-trial.py
-```
-
-Expected per-repo output includes:
-
-- `attachment_posture`
-- `adapter_tier`
-- `verification_refs`
-- `evidence_refs`
-- `handoff_refs`
-- `follow_ups`
-
-### 6. Use It With An Existing Repo
-For an external repo such as `..\ClassroomToolkit`, start here:
-
-- [Use With An Existing Repo](docs/quickstart/use-with-existing-repo.md)
-- [Use With An Existing Repo (Chinese)](docs/quickstart/use-with-existing-repo.zh-CN.md)
-- [Target Repo Attachment Flow](docs/product/target-repo-attachment-flow.md)
-- [Target Repo Attachment Flow (Chinese)](docs/product/target-repo-attachment-flow.zh-CN.md)
-
-That guide includes a concrete `ClassroomToolkit` attachment command.
-
-Daily one-command check:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-check.ps1 `
-  -AttachmentRoot "..\ClassroomToolkit" `
-  -AttachmentRuntimeStateRoot ".runtime\attachments\classroomtoolkit" `
-  -Mode "quick"
-```
-
-Two-mode one-command flow:
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow.ps1 `
-  -FlowMode "daily" `
-  -AttachmentRoot "..\ClassroomToolkit" `
-  -AttachmentRuntimeStateRoot ".runtime\attachments\classroomtoolkit" `
-  -Mode "quick"
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-classroomtoolkit.ps1 -FlowMode "daily"
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -Target "skills-manager" -FlowMode "daily" -SkipVerifyAttachment
-```
-
-### 7. Use Runtime Contract Primitives
-Core code lives in:
-
-```text
-packages/contracts/src/governed_ai_coding_runtime_contracts/
-```
-
-Planning entrypoints:
-- [Hybrid Final-State Master Outline](docs/architecture/hybrid-final-state-master-outline.md)
-- [Direct-To-Hybrid Final-State Roadmap](docs/roadmap/direct-to-hybrid-final-state-roadmap.md)
-- [Direct-To-Hybrid Final-State Implementation Plan](docs/plans/direct-to-hybrid-final-state-implementation-plan.md)
-- [Governance Optimization Lane Roadmap](docs/roadmap/governance-optimization-lane-roadmap.md)
-- [Governance Optimization Lane Implementation Plan](docs/plans/governance-optimization-lane-implementation-plan.md)
-
-Important modules:
-
-- `task_intake.py`: task input and lifecycle transition validation
-- `repo_profile.py`: repo profile loading and admission minimums
-- `tool_runner.py`: read-only tool request governance
-- `workspace.py`: isolated workspace allocation and write path validation
-- `write_policy.py`: medium/high write policy defaults
-- `approval.py`: approval request state and audit trail
-- `write_tool_runner.py`: write-side governance and rollback references
-- `execution_runtime.py`: local task-to-run orchestration
-- `worker.py`: synchronous single-machine worker interface
-- `artifact_store.py`: local artifact persistence and risk classification
-- `replay.py`: failure signatures and replay references
-- `verification_runner.py`: quick/full verification plans and artifacts
-- `delivery_handoff.py`: delivery handoff packages
-- `eval_trace.py`: eval baseline and trace grading
-- `second_repo_pilot.py`: second repo profile reuse pilot
-- `runtime_status.py`: CLI-first operator read model
-- `control_console.py`: minimal approval/evidence console facade
-
-Example:
-
-```powershell
-$env:PYTHONPATH="packages/contracts/src"
-python - <<'PY'
-from governed_ai_coding_runtime_contracts.repo_profile import load_repo_profile
-from governed_ai_coding_runtime_contracts.write_policy import resolve_write_policy
-
-profile = load_repo_profile("schemas/examples/repo-profile/python-service.example.json")
-policy = resolve_write_policy(profile)
-print(profile.repo_id)
-print(policy.approval_mode("high"))
-PY
-```
-
-## Reading Order
-For tool usage:
-
-1. [This guide](README.en.md)
-2. [Docs Index](docs/README.md)
-3. [AI Coding Usage Guide](docs/quickstart/ai-coding-usage-guide.md)
-4. [First Read-Only Trial](docs/product/first-readonly-trial.md)
-5. [Use With An Existing Repo](docs/quickstart/use-with-existing-repo.md)
-6. [Use With An Existing Repo (Chinese)](docs/quickstart/use-with-existing-repo.zh-CN.md)
-7. [Codex Direct Adapter](docs/product/codex-direct-adapter.md)
-8. [Multi-Repo Trial Loop](docs/product/multi-repo-trial-loop.md)
-9. [Write Policy Defaults](docs/product/write-policy-defaults.md)
-10. [Approval Flow](docs/product/approval-flow.md)
-11. [Write-Side Tool Governance](docs/product/write-side-tool-governance.md)
-12. [Verification Runner](docs/product/verification-runner.md)
-13. [Delivery Handoff](docs/product/delivery-handoff.md)
-14. [Runbooks](docs/runbooks/README.md)
-
-For product planning:
-
-1. [90-Day Plan](docs/roadmap/governed-ai-coding-runtime-90-day-plan.md)
-2. [Issue-Ready Backlog](docs/backlog/issue-ready-backlog.md)
-3. [PRD](docs/prd/governed-ai-coding-runtime-prd.md)
-4. [Target Architecture](docs/architecture/governed-ai-coding-runtime-target-architecture.md)
-5. [Positioning And Competitive Layering](docs/strategy/positioning-and-competitive-layering.md)
-6. [Generic Target-Repo Attachment Blueprint](docs/architecture/generic-target-repo-attachment-blueprint.md)
-7. [Interactive Session Productization Implementation Plan](docs/plans/interactive-session-productization-implementation-plan.md)
-8. [Governance Runtime Strategy Alignment Plan](docs/plans/governance-runtime-strategy-alignment-plan.md)
-
-## Completion Level
-Completed:
-
-- MVP contract and verification slices through `Phase 4`
-- `Full Runtime / GAP-024` through `GAP-028`
-- `Public Usable Release / GAP-029` through `GAP-032`
-- `Maintenance Baseline / GAP-033` through `GAP-034`
-
-Current productization slice:
-
-- `Interactive Session Productization / GAP-035` through `GAP-039` are complete on the current branch baseline
-- `Strategy Alignment Gates / GAP-040` through `GAP-044` are complete on the current branch baseline
-
-Current verification baseline:
-
-- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`
-- `python -m unittest discover -s tests/runtime -p "test_*.py" -v`
-
-## Maintenance Policy
-- [Codex CLI/App Integration Guide](docs/product/codex-cli-app-integration-guide.md)
-- [Codex CLI/App 集成指南](docs/product/codex-cli-app-integration-guide.zh-CN.md)
-- [Runtime Compatibility And Upgrade Policy](docs/product/runtime-compatibility-and-upgrade-policy.md)
-- [Maintenance, Deprecation, And Retirement Policy](docs/product/maintenance-deprecation-and-retirement-policy.md)
-

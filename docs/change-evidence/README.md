@@ -17,6 +17,16 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260613 Active Queue Evidence-Upkeep Refresh](./20260613-active-queue-evidence-upkeep-refresh.md)
+  - evidence companion for refreshing `planning-status.json` to today's bounded-evidence-upkeep truth while keeping `GAP-159..164` as the active queue reference and leaving `GAP-165..168` in completed conditional follow-on posture
+- [20260613 Agent Continuity Guide](./20260613-agent-continuity-guide.md)
+  - evidence companion for adding a bilingual operator-facing continuity guide and exposing it from the docs index without expanding continuity claims beyond the implemented contract and UI surfaces
+- [20260613 Agent Continuity Checkpoint Closeout](./20260613-agent-continuity-checkpoint-closeout.md)
+  - evidence companion for closing the remaining shared-runtime checkpoint drift in the implemented `GAP-159..164` plan without changing the selector or enabling any new effective mutation path
+- [20260613 Self-Evolution Variant Review And Defer](./20260613-self-evolution-variant-review-and-defer.md)
+  - evidence companion for ranking the current six `review_candidate` self-evolution variants, preserving the defer boundary, and keeping effective-change lanes review-only
+- [20260613 README And Index Refresh](./20260613-readme-and-index-refresh.md)
+  - evidence companion for refreshing the root guides, docs index, and subdirectory READMEs to match the current `planning-status`, `reference-basis`, `preflight`, package, schema, and test surfaces
 - [20260609 Reference Basis And Preflight Hardening](./20260609-reference-basis-and-preflight-hardening.md)
   - evidence companion for adding repo-owned `reference-basis` mapping, fail-closed local-reference evidence, formal release `preflight`, repo-profile hotspot coverage, and CI `release-preflight`
 - [20260609 Reference-Required Change Enforcement](./20260609-reference-required-change-enforcement.md)

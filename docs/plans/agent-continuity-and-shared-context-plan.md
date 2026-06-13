@@ -184,8 +184,8 @@ native host history where safe
 ### Checkpoint: Shared Runtime Surface
 - [x] `GAP-163` is complete.
 - [x] `GAP-162` is complete.
-- [ ] Operator and MCP surfaces expose classified continuity records.
-- [ ] Write paths fail closed on secrets.
+- [x] Operator and MCP surfaces expose classified continuity records.
+- [x] Write paths fail closed on secrets.
 
 ### Checkpoint: Closeout
 - [x] `GAP-164` is complete.
