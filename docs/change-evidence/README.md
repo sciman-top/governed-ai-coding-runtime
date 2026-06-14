@@ -17,6 +17,8 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260614 Continuous Execution Output Envelope](./20260614-continuous-execution-output-envelope.md)
+  - evidence companion for defining the bounded continuous-execution response envelope with explicit question/checklist/term and budget-degrade limits
 - [20260614 Continuous Execution Task Board Template](./20260614-continuous-execution-task-board-template.md)
   - evidence companion for adding the minimum continuous-execution loop task template with goal, scope, acceptance, verification, evidence, rollback, and interaction-control fields
 - [20260614 Continuous Execution Promotion](./20260614-continuous-execution-promotion.md)

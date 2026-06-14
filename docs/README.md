@@ -94,6 +94,7 @@
 - Product and PRD:
   - [AI Coding PRD](./prd/governed-ai-coding-runtime-prd.md)
   - [Interaction Model](./product/interaction-model.md)
+  - [Continuous Execution Output Envelope](./product/continuous-execution-output-envelope.md)
   - [Adapter Capability Tiers](./product/adapter-capability-tiers.md)
 
 ## Targets, Rules, And Managed Assets

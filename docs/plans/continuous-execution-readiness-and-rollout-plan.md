@@ -68,13 +68,13 @@ Continuous rollout starts only when all conditions are met:
 **Description:** Make response-shape limits explicit so teaching remains short, actionable, and bounded.
 
 **Acceptance criteria:**
-- [ ] Envelope includes: one-line task anchor, `1..3` questions, `3..5` observation checklist items, at most one term explanation.
-- [ ] Envelope includes downgrade rules for `near_limit` and `exhausted`.
-- [ ] Envelope references existing response-policy and teaching-budget invariants.
+- [x] Envelope includes: one-line task anchor, `1..3` questions, `3..5` observation checklist items, at most one term explanation.
+- [x] Envelope includes downgrade rules for `near_limit` and `exhausted`.
+- [x] Envelope references existing response-policy and teaching-budget invariants.
 
 **Verification:**
-- [ ] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`
-- [ ] Manual check: no rule exceeds clarification cap or hard budget stop semantics.
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`
+- [x] Manual check: no rule exceeds clarification cap or hard budget stop semantics.
 
 **Dependencies:** Task 1  
 **Files likely touched:** `docs/specs/*`, `docs/product/*`  
@@ -83,7 +83,7 @@ Continuous rollout starts only when all conditions are met:
 ### Checkpoint: Phase 1
 - [x] docs checks pass
 - [x] readiness trigger is explicit and reviewable
-- [ ] output-envelope limits are bounded and compatible with current contracts
+- [x] output-envelope limits are bounded and compatible with current contracts
 
 ### Phase 2: Runtime Enforcement And Metrics
 
