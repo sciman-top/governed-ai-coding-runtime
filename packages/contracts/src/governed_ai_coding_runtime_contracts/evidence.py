@@ -29,6 +29,7 @@ _INTERACTION_TRACE_LIST_FIELDS = [
     "terms_explained",
     "compression_actions",
     "budget_snapshots",
+    "misalignment_reviews",
 ]
 
 

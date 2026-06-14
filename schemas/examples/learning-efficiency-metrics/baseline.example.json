@@ -11,6 +11,8 @@
   "token_spend_clarification": 120,
   "repeated_misunderstanding_count": 0,
   "rework_after_misalignment_count": 0,
+  "misalignment_false_positive_count": 0,
+  "misalignment_false_negative_count": 0,
   "user_confirmed_alignment_count": 0,
   "issue_resolution_without_repeated_question": 0,
   "recorded_at": "2026-04-22T08:10:00Z",

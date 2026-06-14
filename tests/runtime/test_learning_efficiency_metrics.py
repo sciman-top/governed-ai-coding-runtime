@@ -40,6 +40,20 @@ class LearningEfficiencyMetricsTests(unittest.TestCase):
                             "used_compaction_tokens": 2,
                         }
                     ],
+                    "misalignment_reviews": [
+                        {
+                            "review_id": "review-fp-1",
+                            "review_outcome": "false_positive",
+                            "summary": "The runtime escalated a misalignment that the evidence already resolved.",
+                            "evidence_refs": ["artifacts/task-1/reviews/fp.json"],
+                        },
+                        {
+                            "review_id": "review-fn-1",
+                            "review_outcome": "false_negative",
+                            "summary": "The runtime missed an alignment gap until rework began.",
+                            "evidence_refs": ["artifacts/task-1/reviews/fn.json"],
+                        },
+                    ],
                     "alignment_outcome": "user confirmed scope",
                 },
             },
@@ -55,6 +69,8 @@ class LearningEfficiencyMetricsTests(unittest.TestCase):
         self.assertEqual(record.token_spend_total, 17)
         self.assertEqual(record.repeated_misunderstanding_count, 1)
         self.assertEqual(record.rework_after_misalignment_count, 1)
+        self.assertEqual(record.misalignment_false_positive_count, 1)
+        self.assertEqual(record.misalignment_false_negative_count, 1)
         self.assertEqual(record.user_confirmed_alignment_count, 1)
         self.assertEqual(record.issue_resolution_without_repeated_question, 1)
 
@@ -136,6 +152,14 @@ class LearningEfficiencyMetricsTests(unittest.TestCase):
                     "alignment_outcome": "user confirmed target",
                     "observation_checklists": [{"items": ["logs"]}],
                     "budget_snapshots": [{"used_explanation_tokens": 4, "used_clarification_tokens": 6}],
+                    "misalignment_reviews": [
+                        {
+                            "review_id": "review-fp-1",
+                            "review_outcome": "false_positive",
+                            "summary": "A false misalignment escalation was recorded after the target was already clear.",
+                            "evidence_refs": ["artifacts/task-1/reviews/fp.json"],
+                        }
+                    ],
                 },
             },
         )
@@ -148,6 +172,14 @@ class LearningEfficiencyMetricsTests(unittest.TestCase):
                     "clarification_rounds": [{"scenario": "bugfix"}],
                     "terms_explained": [{"term": "symptom"}],
                     "budget_snapshots": [{"used_explanation_tokens": 6, "used_clarification_tokens": 4}],
+                    "misalignment_reviews": [
+                        {
+                            "review_id": "review-fn-1",
+                            "review_outcome": "false_negative",
+                            "summary": "The alignment miss was only recorded after a failed outcome.",
+                            "evidence_refs": ["artifacts/task-2/reviews/fn.json"],
+                        }
+                    ],
                 },
             },
         )
@@ -158,6 +190,8 @@ class LearningEfficiencyMetricsTests(unittest.TestCase):
         self.assertEqual(snapshot.baseline_metrics["alignment_confirm_rate"], 0.5)
         self.assertEqual(snapshot.baseline_metrics["observation_gap_prompt_rate"], 0.5)
         self.assertEqual(snapshot.baseline_metrics["term_explanation_trigger_rate"], 0.5)
+        self.assertEqual(snapshot.baseline_metrics["misalignment_false_positive_rate"], 0.5)
+        self.assertEqual(snapshot.baseline_metrics["misalignment_false_negative_rate"], 0.5)
         self.assertEqual(snapshot.baseline_metrics["repeated_failure_before_clarify"], 0.5)
         self.assertEqual(snapshot.baseline_metrics["explanation_token_share"], 0.5)
 

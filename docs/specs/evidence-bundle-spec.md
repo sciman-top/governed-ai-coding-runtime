@@ -69,6 +69,7 @@ Define the minimum evidence bundle persisted for every governed task.
 - terms_explained
 - compression_actions
 - budget_snapshots
+- misalignment_reviews
 - alignment_outcome
 - stop_or_degrade_reason
 
@@ -114,6 +115,16 @@ Define the minimum evidence bundle persisted for every governed task.
 - used_compaction_tokens
 - total_token_budget
 
+### interaction_trace.misalignment_reviews
+- review_id
+- review_outcome
+- summary
+- evidence_refs
+
+`review_outcome` values:
+- false_positive
+- false_negative
+
 ## Invariants
 - evidence must be append-only at the event level
 - final delivery must reference verification results
@@ -125,6 +136,7 @@ Define the minimum evidence bundle persisted for every governed task.
 - `interaction_trace` is optional and must not block older evidence readers when absent
 - `interaction_trace` extends the task-level evidence bundle and must not create a parallel system of record
 - `interaction_trace` entries should point back to evidence refs or task facts when they claim a signal, clarification turn, compression action, or degrade reason
+- `misalignment_reviews` must remain explicit and evidence-backed; they may not be inferred from free-form transcript text alone
 
 ## Storage Note
 The storage backend is implementation-specific. In the first Full Runtime stage, evidence should resolve to local artifact paths under the governed runtime artifact store rather than transcript-only output.

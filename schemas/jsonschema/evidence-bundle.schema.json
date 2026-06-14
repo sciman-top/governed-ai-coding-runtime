@@ -506,6 +506,41 @@
             ]
           }
         },
+        "misalignment_reviews": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "review_id": {
+                "type": "string"
+              },
+              "review_outcome": {
+                "type": "string",
+                "enum": [
+                  "false_positive",
+                  "false_negative"
+                ]
+              },
+              "summary": {
+                "type": "string"
+              },
+              "evidence_refs": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "review_id",
+              "review_outcome",
+              "summary",
+              "evidence_refs"
+            ]
+          }
+        },
         "alignment_outcome": {
           "type": "string"
         },

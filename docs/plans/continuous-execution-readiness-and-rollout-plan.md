@@ -5,6 +5,12 @@
 - execution mode: small closed loops (`implement -> verify -> evidence -> rollback`)
 - `Task 1` is complete by `docs/change-evidence/20260614-continuous-execution-readiness-reassessment.md`
 - `Task 2` is complete by `docs/change-evidence/20260614-continuous-execution-task-board-template.md`
+- `Task 3` is complete by `docs/change-evidence/20260614-continuous-execution-output-envelope.md`
+- `Task 4` is complete by the already-landed runtime/evidence path anchored in:
+  - `docs/change-evidence/20260422-interaction-profile-runtime-enforcement.md`
+  - `docs/change-evidence/20260422-interaction-evidence-trace-and-runtime-projection.md`
+  - revalidated by `docs/change-evidence/20260614-continuous-execution-phase2-misalignment-metrics.md`
+- `Task 5` is complete by `docs/change-evidence/20260614-continuous-execution-phase2-misalignment-metrics.md`
 
 ## Goal
 Turn the approved interaction-governance direction into continuously executable work across target repos, while keeping hard governance boundaries unchanged and token usage bounded.
@@ -91,13 +97,13 @@ Continuous rollout starts only when all conditions are met:
 **Description:** Ensure runtime execution consistently consumes repo-profile interaction defaults and preserves hard caps.
 
 **Acceptance criteria:**
-- [ ] runtime applies interaction defaults on task creation/run paths
-- [ ] invalid overrides fail closed
-- [ ] operator surface projection reflects active interaction posture fields when available
+- [x] runtime applies interaction defaults on task creation/run paths
+- [x] invalid overrides fail closed
+- [x] operator surface projection reflects active interaction posture fields when available
 
 **Verification:**
-- [ ] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`
-- [ ] `python -m unittest discover -s tests/runtime -p "test_*.py"`
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`
+- [x] `python -m unittest discover -s tests/runtime -p "test_*.py"`
 
 **Dependencies:** Phase 1 checkpoint  
 **Files likely touched:** `packages/contracts/src/*`, `scripts/run-governed-task.py`, `tests/runtime/*`  
@@ -107,13 +113,13 @@ Continuous rollout starts only when all conditions are met:
 **Description:** Add bounded quality signals so clarification and teaching triggers can be tuned with evidence, not intuition.
 
 **Acceptance criteria:**
-- [ ] metric definitions are task-scoped and reviewable
-- [ ] metrics do not auto-mutate runtime behavior
-- [ ] metrics persist with source evidence links
+- [x] metric definitions are task-scoped and reviewable
+- [x] metrics do not auto-mutate runtime behavior
+- [x] metrics persist with source evidence links
 
 **Verification:**
-- [ ] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`
-- [ ] `python -m unittest tests.runtime.test_learning_efficiency_metrics -v`
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`
+- [x] `python -m unittest tests.runtime.test_learning_efficiency_metrics -v`
 
 **Dependencies:** Task 4  
 **Files likely touched:** `docs/specs/*`, `schemas/jsonschema/*`, `packages/contracts/src/*`, `tests/runtime/*`  
@@ -136,8 +142,8 @@ Continuous rollout starts only when all conditions are met:
 **Estimated scope:** M
 
 ### Checkpoint: Phase 2
-- [ ] runtime and contract gates pass
-- [ ] learning-efficiency metrics remain persisted and evidence-linked
+- [x] runtime and contract gates pass
+- [x] learning-efficiency metrics remain persisted and evidence-linked
 - [ ] downgrade behavior is deterministic under budget pressure
 
 ### Phase 3: Cross-Repo Rollout
@@ -190,6 +196,6 @@ Continuous rollout starts only when all conditions are met:
 | Evidence drift across loops | High | require per-loop evidence entry with rollback refs and gate outputs |
 
 ## Immediate Next Slice
-1. Land this plan and kickoff evidence.
-2. Run one full gate chain and persist outputs in new evidence file.
-3. Start Task 1 and Task 2 as the first execution loop.
+1. Implement `Task 6` as the next bounded runtime slice.
+2. Keep the current queue in `Continuous-Execution` while preserving the selector outcome `defer_ltp_and_refresh_evidence`.
+3. Re-run the full gate chain and publish one new evidence entry for the Task 6 closure attempt.

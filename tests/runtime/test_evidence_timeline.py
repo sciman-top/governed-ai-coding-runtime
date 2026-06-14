@@ -277,6 +277,14 @@ class EvidenceTimelineTests(unittest.TestCase):
                         "total_token_budget": 4000,
                     }
                 ],
+                "misalignment_reviews": [
+                    {
+                        "review_id": "review-1",
+                        "review_outcome": "false_negative",
+                        "summary": "The session moved ahead before the alignment gap was surfaced.",
+                        "evidence_refs": ["artifacts/task-interaction/evidence/review.json"],
+                    }
+                ],
                 "alignment_outcome": "user confirmed the clarified target state",
                 "stop_or_degrade_reason": "none",
             },
@@ -285,6 +293,7 @@ class EvidenceTimelineTests(unittest.TestCase):
         self.assertEqual(bundle["interaction_trace"]["signals"][0]["signal_kind"], "observation_gap")
         self.assertEqual(bundle["interaction_trace"]["applied_policies"][0]["posture"], "guiding")
         self.assertEqual(bundle["interaction_trace"]["budget_snapshots"][0]["budget_status"], "warning")
+        self.assertEqual(bundle["interaction_trace"]["misalignment_reviews"][0]["review_outcome"], "false_negative")
 
     def test_evidence_bundle_rejects_invalid_interaction_trace_shape(self) -> None:
         module = importlib.import_module("governed_ai_coding_runtime_contracts.evidence")
@@ -308,6 +317,30 @@ class EvidenceTimelineTests(unittest.TestCase):
                 final_summary="invalid interaction evidence rejected",
                 artifact_refs=["artifacts/task-invalid/evidence/bundle.json"],
                 interaction_trace={"signals": "not-a-list"},
+            )
+
+    def test_evidence_bundle_rejects_invalid_misalignment_reviews_shape(self) -> None:
+        module = importlib.import_module("governed_ai_coding_runtime_contracts.evidence")
+        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+        plan = verification_runner.build_verification_plan("quick")
+        artifact = verification_runner.build_verification_artifact(
+            plan,
+            "docs/change-evidence/trial.md",
+            {"test": "pass", "contract": "pass"},
+        )
+
+        with self.assertRaises(ValueError):
+            module.build_evidence_bundle(
+                task_id="task-invalid-misalignment-review",
+                repo_id="python-service",
+                goal="exercise invalid misalignment review evidence",
+                acceptance_criteria=["misalignment reviews must validate"],
+                verification_artifact=artifact,
+                rollback_ref="git:HEAD~1",
+                final_status="completed",
+                final_summary="invalid interaction evidence rejected",
+                artifact_refs=["artifacts/task-invalid/evidence/bundle.json"],
+                interaction_trace={"misalignment_reviews": "not-a-list"},
             )
 
 

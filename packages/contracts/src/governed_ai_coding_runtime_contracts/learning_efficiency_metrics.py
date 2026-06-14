@@ -28,6 +28,8 @@ class LearningEfficiencyMetricsRecord:
     token_spend_clarification: int
     repeated_misunderstanding_count: int
     rework_after_misalignment_count: int
+    misalignment_false_positive_count: int
+    misalignment_false_negative_count: int
     user_confirmed_alignment_count: int
     issue_resolution_without_repeated_question: int
     recorded_at: str
@@ -75,6 +77,9 @@ def build_learning_efficiency_metrics(
         raise ValueError(msg)
 
     budget_snapshots = _list(interaction_trace.get("budget_snapshots"))
+    misalignment_reviews = [
+        item for item in _list(interaction_trace.get("misalignment_reviews")) if isinstance(item, dict)
+    ]
     token_spend_explanation = _sum_int(budget_snapshots, "used_explanation_tokens")
     token_spend_clarification = _sum_int(budget_snapshots, "used_clarification_tokens")
     token_spend_compaction = _sum_int(budget_snapshots, "used_compaction_tokens")
@@ -103,6 +108,14 @@ def build_learning_efficiency_metrics(
         ),
         rework_after_misalignment_count=sum(
             1 for kind in signal_kinds if kind in {"intent_drift", "goal_scope_mismatch"}
+        ),
+        misalignment_false_positive_count=_count_misalignment_reviews(
+            misalignment_reviews,
+            review_outcome="false_positive",
+        ),
+        misalignment_false_negative_count=_count_misalignment_reviews(
+            misalignment_reviews,
+            review_outcome="false_negative",
         ),
         user_confirmed_alignment_count=1 if _alignment_confirmed(interaction_trace) else 0,
         issue_resolution_without_repeated_question=_issue_resolved_without_repeated_question(
@@ -151,6 +164,14 @@ def summarize_learning_efficiency_metrics(
             sum(1 for item in records if item.rework_after_misalignment_count > 0),
             record_count,
         ),
+        "misalignment_false_positive_rate": _rate(
+            sum(1 for item in records if item.misalignment_false_positive_count > 0),
+            record_count,
+        ),
+        "misalignment_false_negative_rate": _rate(
+            sum(1 for item in records if item.misalignment_false_negative_count > 0),
+            record_count,
+        ),
         "repeated_failure_before_clarify": _rate(
             sum(1 for item in records if item.repeated_misunderstanding_count > 0 and item.clarification_rounds > 0),
             record_count,
@@ -192,6 +213,14 @@ def _budget_downgrade_count(interaction_trace: dict) -> int:
 def _alignment_confirmed(interaction_trace: dict) -> bool:
     value = interaction_trace.get("alignment_outcome")
     return isinstance(value, str) and "confirm" in value.lower()
+
+
+def _count_misalignment_reviews(
+    reviews: list[dict[str, object]],
+    *,
+    review_outcome: str,
+) -> int:
+    return sum(1 for item in reviews if item.get("review_outcome") == review_outcome)
 
 
 def _issue_resolved_without_repeated_question(evidence_bundle: dict, signal_kinds: list[object]) -> int:

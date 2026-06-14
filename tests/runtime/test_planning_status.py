@@ -36,7 +36,7 @@ class PlanningStatusTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         payload = json.loads(completed.stdout)
         self.assertEqual(payload["status"], "pass")
-        self.assertEqual(payload["current_active_queue"], "GAP-159..164")
+        self.assertEqual(payload["current_active_queue"], "Continuous-Execution")
         self.assertEqual(payload["current_decision_gate"], "defer_ltp_and_refresh_evidence")
         self.assertEqual(payload["current_live_posture"], "ready")
 

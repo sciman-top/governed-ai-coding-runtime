@@ -19,6 +19,8 @@ Define the bounded metric set used to assess whether governed interaction behavi
 - token_spend_clarification
 - repeated_misunderstanding_count
 - rework_after_misalignment_count
+- misalignment_false_positive_count
+- misalignment_false_negative_count
 - user_confirmed_alignment_count
 - issue_resolution_without_repeated_question
 - recorded_at
@@ -32,6 +34,7 @@ Define the bounded metric set used to assess whether governed interaction behavi
 - metrics must remain bounded and task-scoped; they may not become an unreviewable personalization score
 - token-spend metrics must remain distinguishable between explanation and clarification activity
 - repeated misunderstanding and rework metrics must resolve to reviewable task, evidence, or postmortem references
+- false-positive and false-negative misalignment metrics must derive from explicit structured review inputs or failure classifications, not free-form transcript inference
 - efficiency metrics may inform controlled improvement proposals, but they may not autonomously mutate response policy or runtime behavior
 - low token spend is not sufficient evidence of success unless alignment and outcome metrics remain reviewable
 - runtime-generated metrics should be persisted as task/run artifacts that point back to their source evidence bundle
@@ -39,6 +42,8 @@ Define the bounded metric set used to assess whether governed interaction behavi
 ## Minimal Baseline Metrics
 - alignment_confirm_rate
 - misalignment_detect_rate
+- misalignment_false_positive_rate
+- misalignment_false_negative_rate
 - repeated_failure_before_clarify
 - observation_gap_prompt_rate
 - term_explanation_trigger_rate

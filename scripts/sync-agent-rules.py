@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -39,6 +40,25 @@ def _load_targets(catalog_path: Path) -> dict[str, dict[str, Any]]:
     if not isinstance(targets, dict) or not targets:
         raise ValueError("target catalog must define a non-empty targets object")
     return targets
+
+
+def _resolve_code_root(repo_root: Path) -> Path:
+    completed = subprocess.run(
+        ["git", "rev-parse", "--git-common-dir"],
+        cwd=repo_root,
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    if completed.returncode != 0:
+        return repo_root.parent
+    common_dir = completed.stdout.strip()
+    if not common_dir:
+        return repo_root.parent
+    resolved_common_dir = (repo_root / common_dir).resolve(strict=False)
+    canonical_repo_root = resolved_common_dir.parent if resolved_common_dir.is_dir() else resolved_common_dir.parent
+    return canonical_repo_root.parent
 
 
 def _validate_manifest(manifest: dict[str, Any]) -> list[dict[str, Any]]:
@@ -401,7 +421,7 @@ def main() -> int:
     manifest_path = Path(args.manifest_path).resolve(strict=False)
     catalog_path = Path(args.catalog_path).resolve(strict=False)
     repo_root = Path(args.repo_root).resolve(strict=False)
-    code_root = Path(args.code_root).resolve(strict=False) if args.code_root else repo_root.parent
+    code_root = Path(args.code_root).resolve(strict=False) if args.code_root else _resolve_code_root(repo_root)
     runtime_state_base = (
         Path(args.runtime_state_base).resolve(strict=False)
         if args.runtime_state_base

@@ -51,6 +51,7 @@ def main() -> int:
 
 def audit_repo_slimming_surface(*, repo_root: Path, output_path: Path) -> dict[str, Any]:
     root = repo_root.resolve(strict=False)
+    canonical_repo_root = _resolve_canonical_repo_root(root)
     visible_files = _collect_visible_files(root)
     transient_inventory = _collect_transient_inventory(root)
     worktree_status = _git_status(root)
@@ -75,8 +76,9 @@ def audit_repo_slimming_surface(*, repo_root: Path, output_path: Path) -> dict[s
         "schema_version": "1.0",
         "report_kind": "repo_slimming_surface_audit",
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "repo_id": root.name,
+        "repo_id": canonical_repo_root.name,
         "repo_root": str(root),
+        "canonical_repo_root": str(canonical_repo_root),
         "safety_fence": {
             "delete_mode": "forbidden_by_default",
             "archive_move_mode": "forbidden_by_default",
@@ -198,6 +200,26 @@ def _git_status(root: Path) -> list[str]:
     if completed.returncode != 0:
         return [f"git-status-unavailable: {completed.stderr.strip() or completed.returncode}"]
     return [line.rstrip() for line in completed.stdout.splitlines() if line.strip()]
+
+
+def _resolve_canonical_repo_root(root: Path) -> Path:
+    completed = subprocess.run(
+        ["git", "rev-parse", "--git-common-dir"],
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        cwd=root,
+    )
+    if completed.returncode != 0:
+        return root
+    common_dir = completed.stdout.strip()
+    if not common_dir:
+        return root
+    resolved_common_dir = (root / common_dir).resolve(strict=False)
+    if resolved_common_dir.is_file():
+        return resolved_common_dir.parent
+    return resolved_common_dir.parent
 
 
 def _line_count(path: Path) -> int:
