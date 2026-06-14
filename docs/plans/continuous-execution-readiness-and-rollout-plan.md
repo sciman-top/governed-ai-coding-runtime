@@ -3,6 +3,8 @@
 ## Status
 - active kickoff plan on `2026-04-23`
 - execution mode: small closed loops (`implement -> verify -> evidence -> rollback`)
+- `Task 1` is complete by `docs/change-evidence/20260614-continuous-execution-readiness-reassessment.md`
+- `Task 2` is complete by `docs/change-evidence/20260614-continuous-execution-task-board-template.md`
 
 ## Goal
 Turn the approved interaction-governance direction into continuously executable work across target repos, while keeping hard governance boundaries unchanged and token usage bounded.
@@ -34,13 +36,13 @@ Continuous rollout starts only when all conditions are met:
 **Description:** Codify the startup trigger as an execution checklist to prevent drift between plan, runtime decisions, and operator expectations.
 
 **Acceptance criteria:**
-- [ ] Trigger conditions are documented in one plan source and one evidence source.
-- [ ] Trigger wording is aligned with existing clarification/budget hard boundaries.
-- [ ] Trigger can be verified from local artifacts and gate outputs.
+- [x] Trigger conditions are documented in one plan source and one evidence source.
+- [x] Trigger wording is aligned with existing clarification/budget hard boundaries.
+- [x] Trigger can be verified from local artifacts and gate outputs.
 
 **Verification:**
-- [ ] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`
-- [ ] Manual check: trigger terms are consistent with `docs/specs/clarification-protocol-spec.md` and `docs/specs/teaching-budget-spec.md`.
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`
+- [x] Manual check: trigger terms are consistent with `docs/specs/clarification-protocol-spec.md` and `docs/specs/teaching-budget-spec.md`.
 
 **Dependencies:** None  
 **Files likely touched:** `docs/plans/*`, `docs/change-evidence/*`  
@@ -50,13 +52,13 @@ Continuous rollout starts only when all conditions are met:
 **Description:** Define the minimum fields for every loop item so each run is auditable and rollback-ready.
 
 **Acceptance criteria:**
-- [ ] Each task template includes `goal/scope/acceptance/verification/evidence/rollback`.
-- [ ] Each task template includes interaction fields (`signal`, `policy`, `budget snapshot`).
-- [ ] Template is compatible with existing evidence bundle semantics.
+- [x] Each task template includes `goal/scope/acceptance/verification/evidence/rollback`.
+- [x] Each task template includes interaction fields (`signal`, `policy`, `budget snapshot`).
+- [x] Template is compatible with existing evidence bundle semantics.
 
 **Verification:**
-- [ ] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`
-- [ ] Manual check: template does not conflict with `docs/specs/evidence-bundle-spec.md`.
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`
+- [x] Manual check: template does not conflict with `docs/specs/evidence-bundle-spec.md`.
 
 **Dependencies:** Task 1  
 **Files likely touched:** `docs/plans/*`, `docs/templates/*`  
@@ -79,8 +81,8 @@ Continuous rollout starts only when all conditions are met:
 **Estimated scope:** M
 
 ### Checkpoint: Phase 1
-- [ ] docs checks pass
-- [ ] readiness trigger is explicit and reviewable
+- [x] docs checks pass
+- [x] readiness trigger is explicit and reviewable
 - [ ] output-envelope limits are bounded and compatible with current contracts
 
 ### Phase 2: Runtime Enforcement And Metrics
