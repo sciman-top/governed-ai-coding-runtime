@@ -386,7 +386,7 @@
             "compact_source": "configured_guard_band",
             "context_source": "configured_fallback",
             "decision_rule": "Prefer matching bundled/refreshed `codex debug models` context_window values; keep configured auto-compact when it is below the context window and inside the guard band; otherwise derive an 81% rounded threshold.",
-            "model": "gpt-5.4",
+            "model": "gpt-5.5",
             "model_auto_compact_token_limit": 460000,
             "model_context_window": 516000,
             "status": "pass"
@@ -398,7 +398,7 @@
             "status": "not_run"
           },
           "external_reference": null,
-          "model": "gpt-5.4",
+          "model": "gpt-5.5",
           "recommendation": "keep_current",
           "recommended_defaults": {
             "model_auto_compact_token_limit": 220000,
@@ -609,7 +609,7 @@
           "claude_host_status": "ok",
           "claude_workload_status": "ready",
           "codex_host_status": "ok",
-          "recommendation_count": 2,
+          "recommendation_count": 3,
           "stale_latest_runs": [],
           "status": "attention",
           "target_run_freshness": "fresh"

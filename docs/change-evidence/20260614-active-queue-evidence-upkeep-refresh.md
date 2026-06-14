@@ -3,6 +3,9 @@
 ## Goal
 - current landing: `D:\CODE\governed-ai-coding-runtime`
 - target home:
+  - `README.md`
+  - `README.en.md`
+  - `README.zh-CN.md`
   - `docs/architecture/planning-status.json`
   - `docs/README.md`
   - `docs/change-evidence/20260614-active-queue-evidence-upkeep-refresh.md`
@@ -19,6 +22,7 @@
 - Updated the decision-gate proof pointer to this evidence file while keeping `selector=defer_ltp_and_refresh_evidence`.
 - Kept `GAP-159..164` as the active queue reference and clarified that today's work is a fresh selector plus preflight upkeep pass, not a queue promotion.
 - Added this refresh evidence to the docs evidence index and latest posture proof list.
+- Refreshed the three root README navigation sections so operator-facing entrypoints now expose the newest `20260614` bounded-upkeep proof instead of stopping at the older `20260609` hardening batch.
 - Recorded the fresh machine-readable side effects produced by the passing gate chain:
   - refreshed `docs/change-evidence/runtime-test-speed-latest.json`
   - refreshed `docs/change-evidence/policy-tool-credential-audit-report.json`
@@ -55,6 +59,9 @@
 ## Rollback
 - revert:
   - `docs/architecture/planning-status.json`
+  - `README.md`
+  - `README.en.md`
+  - `README.zh-CN.md`
   - `docs/README.md`
   - `docs/change-evidence/20260614-active-queue-evidence-upkeep-refresh.md`
   - the matching entry in `docs/change-evidence/README.md`
