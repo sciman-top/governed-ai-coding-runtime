@@ -17,6 +17,8 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260614 Continuous Execution Teaching Yield Guardrail](./20260614-continuous-execution-teaching-yield-guardrail.md)
+  - evidence companion for adding the deterministic teaching-yield downgrade guardrail that uses explicit soft-threshold keys and alignment-confirmation counts to downshift `teaching -> guided -> terse`
 - [20260614 Continuous Execution Phase 2 Runtime Enforcement And Misalignment Metrics](./20260614-continuous-execution-phase2-misalignment-metrics.md)
   - evidence companion for revalidating already-landed Task 4 runtime enforcement/projection truth and adding explicit false-positive/false-negative misalignment metrics for Task 5
 - [20260614 Continuous Execution Output Envelope](./20260614-continuous-execution-output-envelope.md)

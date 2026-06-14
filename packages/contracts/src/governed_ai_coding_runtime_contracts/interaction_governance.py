@@ -9,6 +9,7 @@ from governed_ai_coding_runtime_contracts.clarification import (
     ClarificationScenario,
     evaluate_clarification,
 )
+from governed_ai_coding_runtime_contracts.learning_efficiency_metrics import LearningEfficiencyMetricsRecord
 
 
 SignalKind = Literal[
@@ -101,6 +102,9 @@ _VALID_BUDGET_STATUSES = {"healthy", "warning", "near_limit", "exhausted"}
 _DEFAULT_MAX_QUESTIONS = 3
 _DEFAULT_MAX_OBSERVATION_ITEMS = 4
 _DEFAULT_TERM_EXPLAIN_LIMIT = 1
+_GUIDED_DOWNGRADE_EXPLANATION_TOKENS = "guided_downgrade_explanation_tokens"
+_TERSE_DOWNGRADE_EXPLANATION_TOKENS = "terse_downgrade_explanation_tokens"
+_MINIMUM_ALIGNMENT_CONFIRMATIONS = "minimum_alignment_confirmations"
 
 
 @dataclass(frozen=True, slots=True)
@@ -343,6 +347,7 @@ def derive_response_policy(
     task_id: str,
     signals: list[InteractionSignal],
     budget: TeachingBudget | None = None,
+    metrics: LearningEfficiencyMetricsRecord | None = None,
     clarification_policy: ClarificationPolicy | None = None,
     attempt_count: int = 0,
     clarification_current_mode: ClarificationMode = "direct_fix",
@@ -352,40 +357,48 @@ def derive_response_policy(
     normalized_signals = _required_signal_list(signals)
 
     if budget is not None and budget.budget_status == "exhausted":
-        return build_response_policy(
-            policy_id=f"{normalized_task_id}:budget-stop",
-            task_id=normalized_task_id,
-            mode="terse",
-            teaching_level="none",
-            clarification_mode="none",
-            compression_mode="ref_only",
-            max_questions=0,
-            max_observation_items=0,
-            term_explain_limit=0,
-            restatement_required=False,
-            stop_or_escalate="stop_on_budget",
-            rationale_signal_ids=[signal.signal_id for signal in normalized_signals],
-            posture="stopped_on_budget",
+        return apply_teaching_yield_guardrail(
+            policy=build_response_policy(
+                policy_id=f"{normalized_task_id}:budget-stop",
+                task_id=normalized_task_id,
+                mode="terse",
+                teaching_level="none",
+                clarification_mode="none",
+                compression_mode="ref_only",
+                max_questions=0,
+                max_observation_items=0,
+                term_explain_limit=0,
+                restatement_required=False,
+                stop_or_escalate="stop_on_budget",
+                rationale_signal_ids=[signal.signal_id for signal in normalized_signals],
+                posture="stopped_on_budget",
+            ),
+            budget=budget,
+            metrics=metrics,
         )
 
     signal_map = {signal.signal_kind: signal for signal in normalized_signals}
 
     if "goal_scope_mismatch" in signal_map or "intent_drift" in signal_map:
         prioritized = signal_map.get("goal_scope_mismatch") or signal_map["intent_drift"]
-        return build_response_policy(
-            policy_id=f"{normalized_task_id}:{prioritized.signal_kind}",
-            task_id=normalized_task_id,
-            mode="guided",
-            teaching_level="none",
-            clarification_mode="light",
-            compression_mode="none",
-            max_questions=1,
-            max_observation_items=0,
-            term_explain_limit=0,
-            restatement_required=True,
-            stop_or_escalate="pause_for_user_input",
-            rationale_signal_ids=[prioritized.signal_id],
-            posture="aligned",
+        return apply_teaching_yield_guardrail(
+            policy=build_response_policy(
+                policy_id=f"{normalized_task_id}:{prioritized.signal_kind}",
+                task_id=normalized_task_id,
+                mode="guided",
+                teaching_level="none",
+                clarification_mode="light",
+                compression_mode="none",
+                max_questions=1,
+                max_observation_items=0,
+                term_explain_limit=0,
+                restatement_required=True,
+                stop_or_escalate="pause_for_user_input",
+                rationale_signal_ids=[prioritized.signal_id],
+                posture="aligned",
+            ),
+            budget=budget,
+            metrics=metrics,
         )
 
     if "repeated_failure" in signal_map:
@@ -397,58 +410,70 @@ def derive_response_policy(
             current_mode=clarification_current_mode,
             scenario=clarification_scenario,
         )
-        return build_response_policy(
-            policy_id=f"{normalized_task_id}:repeated-failure",
-            task_id=normalized_task_id,
-            mode="guided",
-            teaching_level="none",
-            clarification_mode="required" if clarification.clarification_required else "light",
-            compression_mode="none",
-            max_questions=clarification.question_cap if clarification.clarification_required else 1,
-            max_observation_items=0,
-            term_explain_limit=0,
-            restatement_required=True,
-            stop_or_escalate="pause_for_user_input",
-            rationale_signal_ids=[signal_map["repeated_failure"].signal_id],
-            posture="clarifying",
+        return apply_teaching_yield_guardrail(
+            policy=build_response_policy(
+                policy_id=f"{normalized_task_id}:repeated-failure",
+                task_id=normalized_task_id,
+                mode="guided",
+                teaching_level="none",
+                clarification_mode="required" if clarification.clarification_required else "light",
+                compression_mode="none",
+                max_questions=clarification.question_cap if clarification.clarification_required else 1,
+                max_observation_items=0,
+                term_explain_limit=0,
+                restatement_required=True,
+                stop_or_escalate="pause_for_user_input",
+                rationale_signal_ids=[signal_map["repeated_failure"].signal_id],
+                posture="clarifying",
+            ),
+            budget=budget,
+            metrics=metrics,
         )
 
     if "observation_gap" in signal_map or "expected_actual_missing" in signal_map:
         prioritized = signal_map.get("observation_gap") or signal_map["expected_actual_missing"]
-        return build_response_policy(
-            policy_id=f"{normalized_task_id}:{prioritized.signal_kind}",
-            task_id=normalized_task_id,
-            mode="guided",
-            teaching_level="none",
-            clarification_mode="light",
-            compression_mode="none",
-            max_questions=1,
-            max_observation_items=_DEFAULT_MAX_OBSERVATION_ITEMS,
-            term_explain_limit=0,
-            restatement_required=False,
-            stop_or_escalate="switch_to_checklist",
-            rationale_signal_ids=[prioritized.signal_id],
-            posture="guiding",
-            checklist_kind="bugfix-observation",
+        return apply_teaching_yield_guardrail(
+            policy=build_response_policy(
+                policy_id=f"{normalized_task_id}:{prioritized.signal_kind}",
+                task_id=normalized_task_id,
+                mode="guided",
+                teaching_level="none",
+                clarification_mode="light",
+                compression_mode="none",
+                max_questions=1,
+                max_observation_items=_DEFAULT_MAX_OBSERVATION_ITEMS,
+                term_explain_limit=0,
+                restatement_required=False,
+                stop_or_escalate="switch_to_checklist",
+                rationale_signal_ids=[prioritized.signal_id],
+                posture="guiding",
+                checklist_kind="bugfix-observation",
+            ),
+            budget=budget,
+            metrics=metrics,
         )
 
     if "term_confusion" in signal_map or "symptom_root_cause_confusion" in signal_map:
         prioritized = signal_map.get("term_confusion") or signal_map["symptom_root_cause_confusion"]
         teaching_level: TeachingLevel = "term_only" if prioritized.signal_kind == "term_confusion" else "concept_only"
-        return build_response_policy(
-            policy_id=f"{normalized_task_id}:{prioritized.signal_kind}",
-            task_id=normalized_task_id,
-            mode="teaching",
-            teaching_level=teaching_level,
-            clarification_mode="light",
-            compression_mode="none",
-            max_questions=1,
-            max_observation_items=0,
-            term_explain_limit=_DEFAULT_TERM_EXPLAIN_LIMIT,
-            restatement_required=False,
-            stop_or_escalate="continue",
-            rationale_signal_ids=[prioritized.signal_id],
-            posture="teaching",
+        return apply_teaching_yield_guardrail(
+            policy=build_response_policy(
+                policy_id=f"{normalized_task_id}:{prioritized.signal_kind}",
+                task_id=normalized_task_id,
+                mode="teaching",
+                teaching_level=teaching_level,
+                clarification_mode="light",
+                compression_mode="none",
+                max_questions=1,
+                max_observation_items=0,
+                term_explain_limit=_DEFAULT_TERM_EXPLAIN_LIMIT,
+                restatement_required=False,
+                stop_or_escalate="continue",
+                rationale_signal_ids=[prioritized.signal_id],
+                posture="teaching",
+            ),
+            budget=budget,
+            metrics=metrics,
         )
 
     if "budget_pressure" in signal_map or "verbosity_overrun" in signal_map:
@@ -456,38 +481,154 @@ def derive_response_policy(
         compression_mode: CompressionMode = "aggressive_compaction" if budget and budget.budget_status == "near_limit" else "stage_summary"
         stop_behavior: StopOrEscalate = "handoff_only" if budget and budget.budget_status == "near_limit" else "continue"
         posture: InteractionPosture = "handoff_only" if stop_behavior == "handoff_only" else "compressing"
-        return build_response_policy(
-            policy_id=f"{normalized_task_id}:{prioritized.signal_kind}",
+        return apply_teaching_yield_guardrail(
+            policy=build_response_policy(
+                policy_id=f"{normalized_task_id}:{prioritized.signal_kind}",
+                task_id=normalized_task_id,
+                mode="terse",
+                teaching_level="none",
+                clarification_mode="none",
+                compression_mode=compression_mode,
+                max_questions=0,
+                max_observation_items=0,
+                term_explain_limit=0,
+                restatement_required=False,
+                stop_or_escalate=stop_behavior,
+                rationale_signal_ids=[prioritized.signal_id],
+                posture=posture,
+            ),
+            budget=budget,
+            metrics=metrics,
+        )
+
+    first_signal = normalized_signals[0]
+    return apply_teaching_yield_guardrail(
+        policy=build_response_policy(
+            policy_id=f"{normalized_task_id}:{first_signal.signal_kind}",
             task_id=normalized_task_id,
-            mode="terse",
+            mode="guided",
             teaching_level="none",
             clarification_mode="none",
-            compression_mode=compression_mode,
+            compression_mode="none",
             max_questions=0,
             max_observation_items=0,
             term_explain_limit=0,
             restatement_required=False,
-            stop_or_escalate=stop_behavior,
-            rationale_signal_ids=[prioritized.signal_id],
-            posture=posture,
+            stop_or_escalate="continue",
+            rationale_signal_ids=[first_signal.signal_id],
+            posture="aligned",
+        ),
+        budget=budget,
+        metrics=metrics,
+    )
+
+
+def apply_teaching_yield_guardrail(
+    *,
+    policy: ResponsePolicy,
+    budget: TeachingBudget | None,
+    metrics: LearningEfficiencyMetricsRecord | None,
+) -> ResponsePolicy:
+    if budget is None or metrics is None:
+        return policy
+    if budget.budget_status == "exhausted":
+        if policy.stop_or_escalate in {"handoff_only", "stop_on_budget"}:
+            return policy
+        return build_response_policy(
+            policy_id=f"{normalized_task_id}:budget-stop",
+            task_id=policy.task_id,
+            mode="terse",
+            teaching_level="none",
+            clarification_mode="none",
+            compression_mode="ref_only",
+            max_questions=0,
+            max_observation_items=0,
+            term_explain_limit=0,
+            restatement_required=False,
+            stop_or_escalate="stop_on_budget",
+            rationale_signal_ids=policy.rationale_signal_ids,
+            posture="stopped_on_budget",
+            run_id=policy.run_id,
+            summary_template=policy.summary_template,
+            notes="yield_guardrail: exhausted budget requires explicit stop or handoff behavior",
         )
 
-    first_signal = normalized_signals[0]
-    return build_response_policy(
-        policy_id=f"{normalized_task_id}:{first_signal.signal_kind}",
-        task_id=normalized_task_id,
-        mode="guided",
-        teaching_level="none",
-        clarification_mode="none",
-        compression_mode="none",
-        max_questions=0,
-        max_observation_items=0,
-        term_explain_limit=0,
-        restatement_required=False,
-        stop_or_escalate="continue",
-        rationale_signal_ids=[first_signal.signal_id],
-        posture="aligned",
+    thresholds = _resolve_teaching_yield_thresholds(budget)
+    if metrics.user_confirmed_alignment_count >= thresholds[_MINIMUM_ALIGNMENT_CONFIRMATIONS]:
+        return policy
+    if metrics.token_spend_explanation < thresholds[_GUIDED_DOWNGRADE_EXPLANATION_TOKENS]:
+        return policy
+
+    if policy.mode == "teaching":
+        return build_response_policy(
+            policy_id=f"{policy.policy_id}:yield-guardrail-guided",
+            task_id=policy.task_id,
+            mode="guided",
+            teaching_level="none",
+            clarification_mode="light",
+            compression_mode="none",
+            max_questions=1,
+            max_observation_items=max(policy.max_observation_items, _DEFAULT_MAX_OBSERVATION_ITEMS),
+            term_explain_limit=0,
+            restatement_required=policy.restatement_required,
+            stop_or_escalate="switch_to_checklist",
+            rationale_signal_ids=policy.rationale_signal_ids,
+            run_id=policy.run_id,
+            posture="guiding",
+            checklist_kind=policy.checklist_kind or "yield-guardrail-observation",
+            summary_template=policy.summary_template,
+            notes=(
+                "yield_guardrail: explanation spend reached guided downgrade threshold "
+                "without alignment improvement"
+            ),
+        )
+
+    if (
+        policy.mode == "guided"
+        and metrics.token_spend_explanation >= thresholds[_TERSE_DOWNGRADE_EXPLANATION_TOKENS]
+    ):
+        return build_response_policy(
+            policy_id=f"{policy.policy_id}:yield-guardrail-terse",
+            task_id=policy.task_id,
+            mode="terse",
+            teaching_level="none",
+            clarification_mode="none",
+            compression_mode="stage_summary",
+            max_questions=0,
+            max_observation_items=0,
+            term_explain_limit=0,
+            restatement_required=False,
+            stop_or_escalate="continue",
+            rationale_signal_ids=policy.rationale_signal_ids,
+            run_id=policy.run_id,
+            posture="compressing",
+            summary_template=policy.summary_template,
+            notes=(
+                "yield_guardrail: explanation spend reached terse downgrade threshold "
+                "without alignment improvement"
+            ),
+        )
+
+    return policy
+
+
+def _resolve_teaching_yield_thresholds(budget: TeachingBudget) -> dict[str, int]:
+    required_keys = (
+        _GUIDED_DOWNGRADE_EXPLANATION_TOKENS,
+        _TERSE_DOWNGRADE_EXPLANATION_TOKENS,
+        _MINIMUM_ALIGNMENT_CONFIRMATIONS,
     )
+    thresholds: dict[str, int] = {}
+    for key in required_keys:
+        raw_value = budget.soft_thresholds.get(key)
+        if not isinstance(raw_value, int) or raw_value < 0:
+            msg = f"soft_thresholds.{key} must be an integer >= 0"
+            raise ValueError(msg)
+        thresholds[key] = raw_value
+    if thresholds[_TERSE_DOWNGRADE_EXPLANATION_TOKENS] < thresholds[_GUIDED_DOWNGRADE_EXPLANATION_TOKENS]:
+        msg = "terse downgrade explanation threshold must be greater than or equal to guided downgrade threshold"
+        raise ValueError(msg)
+    return thresholds
 
 
 def _required_signal_list(signals: list[InteractionSignal]) -> list[InteractionSignal]:

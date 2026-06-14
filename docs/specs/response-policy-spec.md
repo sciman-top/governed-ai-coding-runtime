@@ -74,6 +74,8 @@ Define the bounded response policy that selects how a governed session should re
 - `compression_mode=ref_only` or `stop_or_escalate=handoff_only` must preserve enough evidence references for replay or operator takeover
 - response policy may reduce verbosity or switch to checklist-first guidance, but it may not weaken approval requirements, canonical gate order, or explicit degrade semantics
 - `restatement_required=true` is allowed only when the task scope being restated is reviewable from task or evidence state
+- when the teaching-yield guardrail is active, downgrade must be deterministic and one-step-per-evaluation in the order `teaching -> guided -> terse`
+- `budget_status=exhausted` must keep stop or handoff behavior explicit even when a yield guardrail is also active
 
 ## Notes
 - This contract governs the shape of the next response, not the full transcript history.

@@ -11,6 +11,7 @@
   - `docs/change-evidence/20260422-interaction-evidence-trace-and-runtime-projection.md`
   - revalidated by `docs/change-evidence/20260614-continuous-execution-phase2-misalignment-metrics.md`
 - `Task 5` is complete by `docs/change-evidence/20260614-continuous-execution-phase2-misalignment-metrics.md`
+- `Task 6` is complete by `docs/change-evidence/20260614-continuous-execution-teaching-yield-guardrail.md`
 
 ## Goal
 Turn the approved interaction-governance direction into continuously executable work across target repos, while keeping hard governance boundaries unchanged and token usage bounded.
@@ -129,13 +130,13 @@ Continuous rollout starts only when all conditions are met:
 **Description:** Introduce a bounded rule that downshifts response mode when explanation spend rises without alignment improvement.
 
 **Acceptance criteria:**
-- [ ] guardrail thresholds are explicit and machine-reviewable
-- [ ] downgrade path is deterministic (`teaching -> guided -> terse`)
-- [ ] stop/handoff behavior remains explicit at exhaustion
+- [x] guardrail thresholds are explicit and machine-reviewable
+- [x] downgrade path is deterministic (`teaching -> guided -> terse`)
+- [x] stop/handoff behavior remains explicit at exhaustion
 
 **Verification:**
-- [ ] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`
-- [ ] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`
 
 **Dependencies:** Task 5  
 **Files likely touched:** `packages/contracts/src/*`, `docs/specs/*`, `tests/runtime/*`  
@@ -144,7 +145,7 @@ Continuous rollout starts only when all conditions are met:
 ### Checkpoint: Phase 2
 - [x] runtime and contract gates pass
 - [x] learning-efficiency metrics remain persisted and evidence-linked
-- [ ] downgrade behavior is deterministic under budget pressure
+- [x] downgrade behavior is deterministic under budget pressure
 
 ### Phase 3: Cross-Repo Rollout
 
@@ -196,6 +197,6 @@ Continuous rollout starts only when all conditions are met:
 | Evidence drift across loops | High | require per-loop evidence entry with rollback refs and gate outputs |
 
 ## Immediate Next Slice
-1. Implement `Task 6` as the next bounded runtime slice.
+1. Start `Task 7` with one low-risk attached trial on the first target repo.
 2. Keep the current queue in `Continuous-Execution` while preserving the selector outcome `defer_ltp_and_refresh_evidence`.
-3. Re-run the full gate chain and publish one new evidence entry for the Task 6 closure attempt.
+3. Publish one new gate-backed evidence entry for the first attached trial closure attempt before widening to the second repo.

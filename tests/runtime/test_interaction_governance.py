@@ -16,6 +16,7 @@ class InteractionGovernanceTests(unittest.TestCase):
             "InteractionSignal",
             "ResponsePolicy",
             "TeachingBudget",
+            "apply_teaching_yield_guardrail",
             "build_interaction_signal",
             "build_response_policy",
             "build_teaching_budget",
@@ -181,12 +182,231 @@ class InteractionGovernanceTests(unittest.TestCase):
         self.assertEqual(policy.stop_or_escalate, "stop_on_budget")
         self.assertEqual(policy.compression_mode, "ref_only")
 
+    def test_teaching_yield_guardrail_downgrades_teaching_to_guided(self) -> None:
+        interaction = importlib.import_module("governed_ai_coding_runtime_contracts.interaction_governance")
+        metrics_module = importlib.import_module("governed_ai_coding_runtime_contracts.learning_efficiency_metrics")
+
+        policy = interaction.build_response_policy(
+            policy_id="policy-001",
+            task_id="task-001",
+            mode="teaching",
+            teaching_level="concept_only",
+            clarification_mode="light",
+            compression_mode="none",
+            max_questions=1,
+            max_observation_items=0,
+            term_explain_limit=1,
+            restatement_required=False,
+            stop_or_escalate="continue",
+            rationale_signal_ids=["sig-001"],
+            posture="teaching",
+        )
+        budget = interaction.build_teaching_budget(
+            task_id="task-001",
+            total_token_budget=2000,
+            execution_budget=1000,
+            clarification_budget=300,
+            explanation_budget=400,
+            compaction_budget=300,
+            used_execution_tokens=600,
+            used_clarification_tokens=100,
+            used_explanation_tokens=220,
+            used_compaction_tokens=0,
+            soft_thresholds={
+                "warning_tokens": 1400,
+                "near_limit_tokens": 1800,
+                "guided_downgrade_explanation_tokens": 200,
+                "terse_downgrade_explanation_tokens": 320,
+                "minimum_alignment_confirmations": 1,
+            },
+            hard_thresholds={"stop_tokens": 2000},
+            budget_status="warning",
+        )
+        metrics = metrics_module.build_learning_efficiency_metrics(
+            task_id="task-001",
+            evidence_bundle={
+                "final_outcome": {"status": "failed"},
+                "interaction_trace": {
+                    "budget_snapshots": [{"used_explanation_tokens": 220}],
+                },
+            },
+        )
+
+        updated = interaction.apply_teaching_yield_guardrail(policy=policy, budget=budget, metrics=metrics)
+
+        self.assertEqual(updated.mode, "guided")
+        self.assertEqual(updated.posture, "guiding")
+        self.assertEqual(updated.stop_or_escalate, "switch_to_checklist")
+        self.assertEqual(updated.max_observation_items, 4)
+
+    def test_teaching_yield_guardrail_downgrades_guided_to_terse(self) -> None:
+        interaction = importlib.import_module("governed_ai_coding_runtime_contracts.interaction_governance")
+        metrics_module = importlib.import_module("governed_ai_coding_runtime_contracts.learning_efficiency_metrics")
+
+        policy = interaction.build_response_policy(
+            policy_id="policy-001",
+            task_id="task-001",
+            mode="guided",
+            teaching_level="none",
+            clarification_mode="light",
+            compression_mode="none",
+            max_questions=1,
+            max_observation_items=4,
+            term_explain_limit=0,
+            restatement_required=False,
+            stop_or_escalate="switch_to_checklist",
+            rationale_signal_ids=["sig-001"],
+            posture="guiding",
+        )
+        budget = interaction.build_teaching_budget(
+            task_id="task-001",
+            total_token_budget=2000,
+            execution_budget=1000,
+            clarification_budget=300,
+            explanation_budget=400,
+            compaction_budget=300,
+            used_execution_tokens=700,
+            used_clarification_tokens=100,
+            used_explanation_tokens=360,
+            used_compaction_tokens=0,
+            soft_thresholds={
+                "warning_tokens": 1400,
+                "near_limit_tokens": 1800,
+                "guided_downgrade_explanation_tokens": 200,
+                "terse_downgrade_explanation_tokens": 320,
+                "minimum_alignment_confirmations": 1,
+            },
+            hard_thresholds={"stop_tokens": 2000},
+            budget_status="near_limit",
+        )
+        metrics = metrics_module.build_learning_efficiency_metrics(
+            task_id="task-001",
+            evidence_bundle={
+                "final_outcome": {"status": "failed"},
+                "interaction_trace": {
+                    "budget_snapshots": [{"used_explanation_tokens": 360}],
+                },
+            },
+        )
+
+        updated = interaction.apply_teaching_yield_guardrail(policy=policy, budget=budget, metrics=metrics)
+
+        self.assertEqual(updated.mode, "terse")
+        self.assertEqual(updated.posture, "compressing")
+        self.assertEqual(updated.compression_mode, "stage_summary")
+        self.assertEqual(updated.stop_or_escalate, "continue")
+
+    def test_teaching_yield_guardrail_stays_put_when_alignment_improved(self) -> None:
+        interaction = importlib.import_module("governed_ai_coding_runtime_contracts.interaction_governance")
+        metrics_module = importlib.import_module("governed_ai_coding_runtime_contracts.learning_efficiency_metrics")
+
+        policy = interaction.build_response_policy(
+            policy_id="policy-001",
+            task_id="task-001",
+            mode="teaching",
+            teaching_level="term_only",
+            clarification_mode="light",
+            compression_mode="none",
+            max_questions=1,
+            max_observation_items=0,
+            term_explain_limit=1,
+            restatement_required=False,
+            stop_or_escalate="continue",
+            rationale_signal_ids=["sig-001"],
+            posture="teaching",
+        )
+        budget = interaction.build_teaching_budget(
+            task_id="task-001",
+            total_token_budget=2000,
+            execution_budget=1000,
+            clarification_budget=300,
+            explanation_budget=400,
+            compaction_budget=300,
+            used_execution_tokens=600,
+            used_clarification_tokens=100,
+            used_explanation_tokens=220,
+            used_compaction_tokens=0,
+            soft_thresholds={
+                "warning_tokens": 1400,
+                "near_limit_tokens": 1800,
+                "guided_downgrade_explanation_tokens": 200,
+                "terse_downgrade_explanation_tokens": 320,
+                "minimum_alignment_confirmations": 1,
+            },
+            hard_thresholds={"stop_tokens": 2000},
+            budget_status="warning",
+        )
+        metrics = metrics_module.build_learning_efficiency_metrics(
+            task_id="task-001",
+            evidence_bundle={
+                "final_outcome": {"status": "completed"},
+                "interaction_trace": {
+                    "budget_snapshots": [{"used_explanation_tokens": 220}],
+                    "alignment_outcome": "user confirmed scope",
+                },
+            },
+        )
+
+        updated = interaction.apply_teaching_yield_guardrail(policy=policy, budget=budget, metrics=metrics)
+
+        self.assertEqual(updated.mode, "teaching")
+        self.assertEqual(updated.posture, "teaching")
+
+    def test_teaching_yield_guardrail_rejects_invalid_threshold_order(self) -> None:
+        interaction = importlib.import_module("governed_ai_coding_runtime_contracts.interaction_governance")
+        metrics_module = importlib.import_module("governed_ai_coding_runtime_contracts.learning_efficiency_metrics")
+
+        policy = interaction.build_response_policy(
+            policy_id="policy-001",
+            task_id="task-001",
+            mode="teaching",
+            teaching_level="term_only",
+            clarification_mode="light",
+            compression_mode="none",
+            max_questions=1,
+            max_observation_items=0,
+            term_explain_limit=1,
+            restatement_required=False,
+            stop_or_escalate="continue",
+            rationale_signal_ids=["sig-001"],
+            posture="teaching",
+        )
+        budget = interaction.build_teaching_budget(
+            task_id="task-001",
+            total_token_budget=2000,
+            execution_budget=1000,
+            clarification_budget=300,
+            explanation_budget=400,
+            compaction_budget=300,
+            used_execution_tokens=600,
+            used_clarification_tokens=100,
+            used_explanation_tokens=220,
+            used_compaction_tokens=0,
+            soft_thresholds={
+                "warning_tokens": 1400,
+                "near_limit_tokens": 1800,
+                "guided_downgrade_explanation_tokens": 320,
+                "terse_downgrade_explanation_tokens": 200,
+                "minimum_alignment_confirmations": 1,
+            },
+            hard_thresholds={"stop_tokens": 2000},
+            budget_status="warning",
+        )
+        metrics = metrics_module.build_learning_efficiency_metrics(
+            task_id="task-001",
+            evidence_bundle={"final_outcome": {"status": "failed"}},
+        )
+
+        with self.assertRaisesRegex(ValueError, "terse downgrade explanation threshold"):
+            interaction.apply_teaching_yield_guardrail(policy=policy, budget=budget, metrics=metrics)
+
     def test_exports_from_package_root(self) -> None:
         package = importlib.import_module("governed_ai_coding_runtime_contracts")
         for name in (
             "InteractionSignal",
             "ResponsePolicy",
             "TeachingBudget",
+            "apply_teaching_yield_guardrail",
             "build_interaction_signal",
             "build_response_policy",
             "build_teaching_budget",

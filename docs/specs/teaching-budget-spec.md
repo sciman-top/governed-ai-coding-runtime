@@ -47,3 +47,15 @@ Define the explicit interaction budget used to bound clarification, explanation,
 - Precise token accounting may vary by host and provider. This contract cares about bounded, reviewable budgeting rather than perfect telemetry.
 - The budget model is intentionally local to governed interaction behavior and must not become a hidden pricing system.
 
+## Yield Guardrail Threshold Keys
+When the teaching-yield guardrail is active, `soft_thresholds` should also define:
+- `guided_downgrade_explanation_tokens`
+- `terse_downgrade_explanation_tokens`
+- `minimum_alignment_confirmations`
+
+Guardrail rules:
+- `guided_downgrade_explanation_tokens` is the explanation-spend threshold that allows one-step downgrade from `teaching` to `guided` when alignment has not improved.
+- `terse_downgrade_explanation_tokens` is the later explanation-spend threshold that allows one-step downgrade from `guided` to `terse` when alignment still has not improved.
+- `minimum_alignment_confirmations` is the minimum count of explicit alignment confirmations needed to suppress the downgrade.
+- `terse_downgrade_explanation_tokens` must be greater than or equal to `guided_downgrade_explanation_tokens`.
+
