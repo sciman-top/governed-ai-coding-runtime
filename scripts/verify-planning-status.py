@@ -89,6 +89,14 @@ def inspect_planning_status(*, repo_root: Path, status_path: Path) -> dict:
             f"`{target_run_freshness}`",
             f"`{codex_adapter_tier}` / {codex_capability_status}",
         ],
+        "docs/backlog/issue-ready-backlog.md": [
+            f"active queue reference: `{queue_id}`",
+            "current authority for live posture and decision gate: `docs/architecture/planning-status.json`",
+        ],
+        "docs/prd/governed-ai-coding-runtime-prd.md": [
+            "The single source of current planning and live-posture truth is `docs/architecture/planning-status.json`.",
+            f"The current active queue is `{queue_id}`, and the current decision gate remains `{decision_gate}`.",
+        ],
         "docs/strategy/positioning-and-competitive-layering.md": [
             f"The current active queue is `{queue_id}`",
             f"The current live posture is `{target_run_freshness}`",
@@ -151,6 +159,12 @@ def inspect_planning_status(*, repo_root: Path, status_path: Path) -> dict:
         "docs/backlog/README.md": [
             "`current decision gate` remains `refresh_evidence_first`" if decision_gate != "refresh_evidence_first" else "",
             "current live posture remains `stale`" if target_run_freshness != "stale" else "",
+        ],
+        "docs/backlog/issue-ready-backlog.md": [
+            "active queue reference: `GAP-159..164`" if queue_id != "GAP-159..164" else "",
+        ],
+        "docs/prd/governed-ai-coding-runtime-prd.md": [
+            "The current active queue remains `GAP-159..164`" if queue_id != "GAP-159..164" else "",
         ],
         "README.md": [
             "`current decision gate`：`refresh_evidence_first`" if decision_gate != "refresh_evidence_first" else "",

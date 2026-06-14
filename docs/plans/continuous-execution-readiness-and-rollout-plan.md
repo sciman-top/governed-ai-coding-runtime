@@ -13,6 +13,7 @@
 - `Task 5` is complete by `docs/change-evidence/20260614-continuous-execution-phase2-misalignment-metrics.md`
 - `Task 6` is complete by `docs/change-evidence/20260614-continuous-execution-teaching-yield-guardrail.md`
 - `Task 7` is complete by `docs/change-evidence/20260614-continuous-execution-two-repo-trials.md`
+- `Task 8` is complete by `docs/change-evidence/20260615-continuous-execution-active-loop-reconciliation.md`
 
 ## Goal
 Turn the approved interaction-governance direction into continuously executable work across target repos, while keeping hard governance boundaries unchanged and token usage bounded.
@@ -166,19 +167,19 @@ Continuous rollout starts only when all conditions are met:
 **Files likely touched:** `.runtime/attachments/*`, `docs/change-evidence/*`  
 **Estimated scope:** M
 
-## Task 8: Promote Continuous Rollout To Active
-**Description:** Once readiness trigger is satisfied, switch from conditional mode to active continuous loop with daily evidence snapshots.
+## Task 8: Reconcile Active Continuous Loop Truth
+**Description:** Once readiness trigger is satisfied and the active queue is promoted, close the remaining truth gap between owner-directed activation and selector-driven defer posture by documenting the bounded active-loop cadence and publishing one gate-backed loop result.
 
 **Acceptance criteria:**
-- [ ] readiness trigger checklist is fully satisfied
-- [ ] active-loop cadence is documented and auditable
-- [ ] one full loop result is published with gate outputs
+- [x] readiness trigger checklist is fully satisfied
+- [x] active-loop cadence is documented and auditable
+- [x] one full loop result is published with gate outputs
 
 **Verification:**
-- [ ] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`
-- [ ] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`
-- [ ] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`
-- [ ] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`
 
 **Dependencies:** Task 7  
 **Files likely touched:** `docs/change-evidence/*`, `docs/plans/*`  
@@ -186,8 +187,8 @@ Continuous rollout starts only when all conditions are met:
 
 ### Checkpoint: Phase 3
 - [x] two-repo trial proof is present
-- [ ] readiness trigger is fully met
-- [ ] continuous loop is active with gate-backed evidence
+- [x] readiness trigger is fully met
+- [x] continuous loop is active with gate-backed evidence
 
 ## Risks and Mitigations
 | Risk | Impact | Mitigation |
@@ -198,6 +199,6 @@ Continuous rollout starts only when all conditions are met:
 | Evidence drift across loops | High | require per-loop evidence entry with rollback refs and gate outputs |
 
 ## Immediate Next Slice
-1. Reconcile `Task 8` with the current truth boundary between owner-directed active queue promotion and selector-driven defer posture.
-2. Decide whether any additional cadence/evidence surface is still missing before `Task 8` can be truthfully checked off.
-3. Keep the selector outcome `defer_ltp_and_refresh_evidence` unchanged unless new evidence explicitly justifies a stronger state claim.
+1. Keep `Continuous-Execution` active as a bounded selector-backed evidence loop instead of inferring heavy implementation permission.
+2. Open the next slice only when fresh evidence shows a real gap inside the active loop or a new owner-directed queue promotion is justified.
+3. Preserve `defer_ltp_and_refresh_evidence` until the selector output itself changes with stronger evidence.

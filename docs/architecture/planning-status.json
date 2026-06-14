@@ -1,20 +1,20 @@
 {
   "schema_version": "1.0",
   "status_id": "default-planning-status",
-  "updated_on": "2026-06-14",
+  "updated_on": "2026-06-15",
   "current_active_queue": {
     "queue_id": "Continuous-Execution",
     "label": "Continuous Execution Readiness And Rollout",
-    "status": "owner_directed_activation_ready",
+    "status": "owner_directed_active_bounded_loop",
     "source_plan": "docs/plans/continuous-execution-readiness-and-rollout-plan.md",
     "source_backlog": "docs/backlog/README.md",
-    "why_now": "The owner explicitly asked for continuous autonomous execution, and the documented readiness trigger is now satisfied by existing gate, interaction-default, learning-metrics, and low-risk target-trial evidence. This promotion changes the active queue focus to the continuous-execution follow-on plan without changing the current selector or authorizing heavy LTP work."
+    "why_now": "The owner explicitly asked for continuous autonomous execution. The readiness trigger, two-repo trial proof, and Task 8 reconciliation are now closed, so `Continuous-Execution` is the active bounded loop for evidence-and-gate upkeep while the selector still defers heavy LTP work."
   },
   "current_decision_gate": {
     "selector": "defer_ltp_and_refresh_evidence",
     "selector_source": "scripts/select-next-work.py",
-    "as_of": "2026-06-14",
-    "proof_ref": "docs/change-evidence/20260614-continuous-execution-promotion.md",
+    "as_of": "2026-06-15",
+    "proof_ref": "docs/change-evidence/20260615-continuous-execution-active-loop-reconciliation.md",
     "blocking_reasons": []
   },
   "certified_baseline": {

@@ -5,7 +5,7 @@ Governed AI Coding Runtime Full Functional Lifecycle
 
 ## Current Navigation
 - `Now`
-  - active queue reference: `GAP-159..164`
+  - active queue reference: `Continuous-Execution`
   - current authority for live posture and decision gate: `docs/architecture/planning-status.json`
 - `Next`
   - conditional follow-on package: `GAP-165..168`
@@ -1728,7 +1728,7 @@ The entries below record the executed queue for complete hybrid final-state and 
 - Type: HITL
 - Blocked by: GAP-164
 - User stories: 13, 18, 21, 23, 29, 31, 37, 44
-- Status: complete by `docs/change-evidence/20260607-gap-165-host-family-operationalization-scope-fence-closeout.md`; the queue remains conditional and does not become active while `planning-status.json` still keeps `GAP-159..164` as the active queue
+- Status: complete by `docs/change-evidence/20260607-gap-165-host-family-operationalization-scope-fence-closeout.md`; the queue remains conditional history and does not replace the current `Continuous-Execution` active queue recorded in `planning-status.json`
 - What to build:
   - define the bounded post-`GAP-164` queue for host-family and capability-first operationalization
   - keep current active queue and current live posture authoritative through `planning-status.json`
