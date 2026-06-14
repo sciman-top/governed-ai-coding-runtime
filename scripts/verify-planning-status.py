@@ -176,6 +176,13 @@ def inspect_planning_status(*, repo_root: Path, status_path: Path) -> dict:
             if token in text:
                 unexpected_tokens.append(f"{relative_path}:{token}")
 
+    promotion_guard_failures = _inspect_conditional_queue_promotion_guards(
+        root=root,
+        queue_id=queue_id,
+        decision_gate=decision_gate,
+    )
+    unexpected_tokens.extend(promotion_guard_failures)
+
     return {
         "status": "pass",
         "status_path": status_path.resolve(strict=False).as_posix(),
@@ -188,6 +195,51 @@ def inspect_planning_status(*, repo_root: Path, status_path: Path) -> dict:
         "missing_tokens": missing_tokens,
         "unexpected_tokens": unexpected_tokens,
     }
+
+
+def _inspect_conditional_queue_promotion_guards(*, root: Path, queue_id: str, decision_gate: str) -> list[str]:
+    if queue_id != "GAP-159..164":
+        return []
+
+    guarded_expectations: dict[str, list[str]] = {
+        "docs/plans/README.md": [
+            "do not treat it as active work unless `planning-status.json` is promoted",
+            "do not treat it as the current active queue unless the status file promotes it",
+        ],
+        "docs/backlog/README.md": [
+            "both packages stay outside the current active queue until `planning-status.json` explicitly promotes a later follow-on",
+            "The package stays inactive as current active work until a later promotion explicitly updates `planning-status.json`.",
+        ],
+        "docs/plans/host-family-capability-operationalization-plan.md": [
+            "Activation requires explicit promotion evidence and rollback.",
+            "Use this plan as a prepared follow-on queue, not as permission to start new implementation work while `planning-status.json` still keeps `GAP-159..164` as the active queue and this follow-on package inactive.",
+        ],
+        "docs/plans/continuous-execution-readiness-and-rollout-plan.md": [
+            "Continuous rollout starts only when all conditions are met:",
+            "Task 8: Promote Continuous Rollout To Active",
+        ],
+    }
+
+    failures: list[str] = []
+    for relative_path, required_snippets in guarded_expectations.items():
+        path = root / relative_path
+        if not path.exists():
+            failures.append(f"{relative_path}:missing conditional promotion guard file")
+            continue
+        text = path.read_text(encoding="utf-8")
+        for snippet in required_snippets:
+            if snippet not in text:
+                failures.append(f"{relative_path}:missing conditional promotion guard snippet `{snippet}`")
+
+    if decision_gate == "defer_ltp_and_refresh_evidence":
+        docs_readme = root / "docs" / "README.md"
+        if docs_readme.exists():
+            docs_text = docs_readme.read_text(encoding="utf-8")
+            required = "current active queue: `GAP-159..164`"
+            if required not in docs_text:
+                failures.append(f"docs/README.md:missing active queue marker `{required}`")
+
+    return failures
 
 
 def _load_json(path: Path) -> dict:

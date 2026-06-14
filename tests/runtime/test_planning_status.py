@@ -72,6 +72,86 @@ class PlanningStatusTests(unittest.TestCase):
         self.assertIn("Invoke-PlanningStatusChecks", verifier)
         self.assertIn('Write-CheckOk "planning-status"', verifier)
 
+    def test_planning_status_fails_when_conditional_queue_guard_is_missing(self) -> None:
+        module = _load_planning_status_script()
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            (repo_root / "docs" / "architecture").mkdir(parents=True, exist_ok=True)
+            (repo_root / "docs" / "plans").mkdir(parents=True, exist_ok=True)
+            (repo_root / "docs" / "backlog").mkdir(parents=True, exist_ok=True)
+            (repo_root / "docs").mkdir(exist_ok=True)
+            status_path = repo_root / "docs" / "architecture" / "planning-status.json"
+            status_path.write_text(
+                json.dumps(
+                    {
+                        "status_id": "test",
+                        "updated_on": "2026-06-14",
+                        "current_active_queue": {"queue_id": "GAP-159..164"},
+                        "current_decision_gate": {"selector": "defer_ltp_and_refresh_evidence"},
+                        "certified_baseline": {"queue_id": "GAP-104..111"},
+                        "current_live_posture": {
+                            "status": "ready",
+                            "target_run_freshness": "fresh",
+                            "codex_target_run_adapter_tier": "native_attach",
+                            "codex_target_run_capability_status": "ready",
+                            "claude_workload_adapter_tier": "native_attach",
+                            "claude_workload_status": "ready",
+                        },
+                        "authoritative_docs": ["docs/README.md", "docs/plans/README.md", "docs/backlog/README.md"],
+                        "required_consistency_tokens": ["single source of planning truth"],
+                        "rollback_ref": "git revert",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (repo_root / "docs" / "README.md").write_text(
+                "\n".join(
+                    [
+                        "Single source of planning truth",
+                        "certified baseline",
+                        "current live posture",
+                        "`current decision gate`: `defer_ltp_and_refresh_evidence`",
+                        "target-run freshness is `fresh`",
+                        "`native_attach` / ready",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (repo_root / "docs" / "plans" / "README.md").write_text(
+                "\n".join(
+                    [
+                        "Single source of planning truth",
+                        "current active queue",
+                        "do not treat it as active work unless `planning-status.json` is promoted",
+                        "do not treat it as the current active queue unless the status file promotes it",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (repo_root / "docs" / "backlog" / "README.md").write_text(
+                "\n".join(
+                    [
+                        "Single source of planning truth",
+                        "current decision gate",
+                        "`defer_ltp_and_refresh_evidence`",
+                        "`fresh`",
+                        "`native_attach` / ready",
+                        "both packages stay outside the current active queue until `planning-status.json` explicitly promotes a later follow-on",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (repo_root / "docs" / "plans" / "host-family-capability-operationalization-plan.md").write_text(
+                "Activation requires explicit promotion evidence and rollback.\n",
+                encoding="utf-8",
+            )
+            (repo_root / "docs" / "plans" / "continuous-execution-readiness-and-rollout-plan.md").write_text(
+                "Task 8: Promote Continuous Rollout To Active\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "conditional promotion guard"):
+                module.assert_planning_status(repo_root=repo_root, status_path=status_path)
+
 
 if __name__ == "__main__":
     unittest.main()
