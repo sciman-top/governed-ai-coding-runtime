@@ -17,6 +17,8 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260614 Continuous Execution Two-Repo Trials](./20260614-continuous-execution-two-repo-trials.md)
+  - evidence companion for the first two low-risk `runtime-flow-preset daily quick` trials, proving attachment posture, gate refs, rollback refs, and no hard-boundary override across `classroomtoolkit` and `github-toolkit`
 - [20260614 Continuous Execution Teaching Yield Guardrail](./20260614-continuous-execution-teaching-yield-guardrail.md)
   - evidence companion for adding the deterministic teaching-yield downgrade guardrail that uses explicit soft-threshold keys and alignment-confirmation counts to downshift `teaching -> guided -> terse`
 - [20260614 Continuous Execution Phase 2 Runtime Enforcement And Misalignment Metrics](./20260614-continuous-execution-phase2-misalignment-metrics.md)

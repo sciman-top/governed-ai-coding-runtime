@@ -12,6 +12,7 @@
   - revalidated by `docs/change-evidence/20260614-continuous-execution-phase2-misalignment-metrics.md`
 - `Task 5` is complete by `docs/change-evidence/20260614-continuous-execution-phase2-misalignment-metrics.md`
 - `Task 6` is complete by `docs/change-evidence/20260614-continuous-execution-teaching-yield-guardrail.md`
+- `Task 7` is complete by `docs/change-evidence/20260614-continuous-execution-two-repo-trials.md`
 
 ## Goal
 Turn the approved interaction-governance direction into continuously executable work across target repos, while keeping hard governance boundaries unchanged and token usage bounded.
@@ -153,13 +154,13 @@ Continuous rollout starts only when all conditions are met:
 **Description:** Execute attached trials on two low-risk target repos to validate baseline portability.
 
 **Acceptance criteria:**
-- [ ] each repo has successful attachment posture and gate references
-- [ ] each repo has evidence and rollback refs
-- [ ] no hard-boundary override is required
+- [x] each repo has successful attachment posture and gate references
+- [x] each repo has evidence and rollback refs
+- [x] no hard-boundary override is required
 
 **Verification:**
-- [ ] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -Target "<repo-a>" -FlowMode "daily" -Mode "quick"`
-- [ ] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -Target "<repo-b>" -FlowMode "daily" -Mode "quick"`
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -Target "classroomtoolkit" -FlowMode "daily" -Mode "quick"`
+- [x] `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -Target "github-toolkit" -FlowMode "daily" -Mode "quick"`
 
 **Dependencies:** Phase 2 checkpoint  
 **Files likely touched:** `.runtime/attachments/*`, `docs/change-evidence/*`  
@@ -184,7 +185,7 @@ Continuous rollout starts only when all conditions are met:
 **Estimated scope:** S
 
 ### Checkpoint: Phase 3
-- [ ] two-repo trial proof is present
+- [x] two-repo trial proof is present
 - [ ] readiness trigger is fully met
 - [ ] continuous loop is active with gate-backed evidence
 
@@ -197,6 +198,6 @@ Continuous rollout starts only when all conditions are met:
 | Evidence drift across loops | High | require per-loop evidence entry with rollback refs and gate outputs |
 
 ## Immediate Next Slice
-1. Start `Task 7` with one low-risk attached trial on the first target repo.
-2. Keep the current queue in `Continuous-Execution` while preserving the selector outcome `defer_ltp_and_refresh_evidence`.
-3. Publish one new gate-backed evidence entry for the first attached trial closure attempt before widening to the second repo.
+1. Reconcile `Task 8` with the current truth boundary between owner-directed active queue promotion and selector-driven defer posture.
+2. Decide whether any additional cadence/evidence surface is still missing before `Task 8` can be truthfully checked off.
+3. Keep the selector outcome `defer_ltp_and_refresh_evidence` unchanged unless new evidence explicitly justifies a stronger state claim.
