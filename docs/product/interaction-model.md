@@ -40,7 +40,7 @@ The repository has already landed a local runtime baseline through `GAP-034`:
 - local packaging and quickstart
 - explicit compatibility, maintenance, and degrade policy
 
-That baseline is a prerequisite, not the final product boundary. `Interactive Session Productization / GAP-035..039` is historical productization closure, not the current active queue. The current active queue is `GAP-159..164` per `docs/architecture/planning-status.json`, and the current decision gate remains `defer_ltp_and_refresh_evidence`.
+That baseline is a prerequisite, not the final product boundary. `Interactive Session Productization / GAP-035..039` is historical productization closure, not the current active queue. The current active queue is `Continuous-Execution` per `docs/architecture/planning-status.json`, and the current decision gate remains `defer_ltp_and_refresh_evidence`.
 
 ## Primary Users
 

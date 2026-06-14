@@ -2,7 +2,7 @@
 
 ## Current Snapshot
 - Single source of planning truth: [planning-status.json](./architecture/planning-status.json)
-- current active queue: `GAP-159..164` (`Agent Continuity And Shared Context`)
+- current active queue: `Continuous-Execution` (`Continuous Execution Readiness And Rollout`)
 - `current decision gate`: `defer_ltp_and_refresh_evidence`
 - `current live posture`: target-run freshness is `fresh`; Codex target runs are `native_attach` / ready; Claude workload probe is `native_attach` / ready
 - certified baseline: `GAP-104..111`
@@ -112,6 +112,7 @@
 ## Evidence, History, And Rollback
 - Current evidence index: [Change Evidence Index](./change-evidence/README.md)
 - Latest posture proof:
+  - [20260614 Continuous Execution Promotion](./change-evidence/20260614-continuous-execution-promotion.md)
   - [20260614 Active Queue Evidence-Upkeep Refresh](./change-evidence/20260614-active-queue-evidence-upkeep-refresh.md)
   - [20260613 Active Queue Evidence-Upkeep Refresh](./change-evidence/20260613-active-queue-evidence-upkeep-refresh.md)
   - [20260609 Live Posture Recovery](./change-evidence/20260609-live-posture-recovery.md)

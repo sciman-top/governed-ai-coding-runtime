@@ -7,7 +7,7 @@
 - Local single-machine baseline is complete through `Maintenance Baseline / GAP-034`.
 - `Strategy Alignment Gates / GAP-040` through `GAP-044` are complete on the current branch baseline.
 - `Interactive Session Productization / GAP-035` through `GAP-039` is historical productization closure, not the current active queue.
-- The current active queue is `GAP-159..164`, as recorded in `docs/architecture/planning-status.json`.
+- The current active queue is `Continuous-Execution`, as recorded in `docs/architecture/planning-status.json`.
 - The current live posture is `fresh`, and the latest 2026-06-09 recovery batch now shows both Codex target runs and the Claude workload probe at `native_attach` / ready. Stronger live-host claims remain bound to fresh evidence rather than historical certification alone.
 
 ## Final-State Shorthand

@@ -9,9 +9,11 @@ This directory holds executable implementation plans that translate strategy and
 - `certified baseline` and `current live posture` must stay aligned with the status file.
 - If a plan edit changes host/protocol/reference-source assumptions on guarded surfaces, planning prose alone is not enough; the same diff must satisfy the reference-required Contract gate and carry structured source-review evidence.
 - `Now`
-  - [Agent Continuity And Shared Context Plan](./agent-continuity-and-shared-context-plan.md)
-  - current active queue reference for `GAP-159..164`
+  - [Continuous Execution Readiness And Rollout Plan](./continuous-execution-readiness-and-rollout-plan.md)
+  - current active queue reference for `Continuous-Execution`
 - `Next`
+  - [Agent Continuity And Shared Context Plan](./agent-continuity-and-shared-context-plan.md)
+  - implemented prior queue kept as execution history and promotion prerequisite context
   - [Host-Family Capability Operationalization Plan](./host-family-capability-operationalization-plan.md)
   - completed conditional package for `GAP-165..168`; do not treat it as active work unless `planning-status.json` is promoted
 - `Later`
@@ -46,7 +48,7 @@ This directory holds executable implementation plans that translate strategy and
   - Scope: `GAP-152` through `GAP-158` for inventory, evidence archive layout, repo-map/context routing, README and plan-index slimming, runtime-flow responsibility split, gate timing split, operator screenshot retention, and closeout metrics
   - Safety boundary: the completed lane still leaves archive movement dry-run-first and manifest-backed; use the lane evidence and helper scripts before any future apply step.
 - [Agent Continuity And Shared Context Plan](./agent-continuity-and-shared-context-plan.md)
-  - Status: implemented queue and current active queue reference after `GAP-152..158`; use the status file for current decision-gate posture before starting new implementation work
+  - Status: implemented prior queue after `GAP-152..158`; use the status file for current decision-gate posture before starting new implementation work
   - Scope: `GAP-159` through `GAP-164` for cross-host continuity scope fencing, continuity record schema, read-only continuity auditing, portable handoff and memory index, MCP/operator exposure, and closeout evidence across Codex App, Codex CLI, Claude Code, and Claude Desktop boundaries
   - Safety boundary: share classified metadata, refs, summaries, handoff packages, and evidence; do not merge vendor-owned native history stores or copy credentials.
 - [Host-Family Capability Operationalization Plan](./host-family-capability-operationalization-plan.md)
@@ -59,7 +61,7 @@ This directory holds executable implementation plans that translate strategy and
   - Status: completed trigger-audit queue for `GAP-090` through `GAP-092`; all `LTP-01..05` packages remain deferred pending future trigger evidence
   - Scope: final-state claim refresh, sustained real-workload evidence window, and gated decision for whether exactly one `LTP-01..05` package should start
 - [Continuous Execution Readiness And Rollout Plan](./continuous-execution-readiness-and-rollout-plan.md)
-  - Status: conditional follow-up plan; do not treat it as the current active queue unless the status file promotes it
+  - Status: owner-directed active queue reference after the 2026-06-14 promotion evidence; selector still remains `defer_ltp_and_refresh_evidence`
   - Scope: readiness trigger contract, token-efficient teaching envelope, runtime interaction-default enforcement, learning-efficiency guardrails, and two-repo rollout proof
 - [Teaching Collaboration And Low-Token Governance Implementation Plan](./teaching-collaboration-and-low-token-governance-implementation-plan.md)
   - Status: completed bounded follow-on implementation lane verified on `2026-04-22`
@@ -113,10 +115,10 @@ This directory holds executable implementation plans that translate strategy and
    - use [Governance Hub Reuse And Controlled Evolution Plan](./governance-hub-reuse-and-controlled-evolution-plan.md) as the `GAP-130..143` queue for the governance hub, reusable contract, controlled evolution implementation path, real effect feedback, and evidence recovery posture
    - use [Target Repo Managed Asset Retirement And Uninstall Plan](./target-repo-managed-asset-retirement-and-uninstall-plan.md) as the completed `GAP-144..151` managed-asset queue record
    - use [Repo Slimming And Coding Speed Plan](./repo-slimming-and-speed-plan.md) as the completed `GAP-152..158` optimization lane for reducing active work-surface weight, default context cost, evidence/archive noise, hotspot script maintenance cost, and gate timing noise without weakening evidence or hard-gate semantics
-   - use [Agent Continuity And Shared Context Plan](./agent-continuity-and-shared-context-plan.md) as the current active queue reference for `GAP-159..164`
+   - use [Continuous Execution Readiness And Rollout Plan](./continuous-execution-readiness-and-rollout-plan.md) as the current active queue reference for `Continuous-Execution`
    - use [Reference Governance And Release Preflight Plan](./reference-governance-and-preflight-plan.md) as the completed `GAP-169..172` governance hardening package for local reference discipline plus release-preflight/CI convergence
    - use [Long-Term Gap Trigger Audit Plan](./long-term-gap-trigger-audit-plan.md) as the completed `GAP-090..092` trigger-audit record before opening any future long-term package implementation
-   - use [Continuous Execution Readiness And Rollout Plan](./continuous-execution-readiness-and-rollout-plan.md) as a follow-up execution plan that still depends on readiness-trigger satisfaction
+   - use [Agent Continuity And Shared Context Plan](./agent-continuity-and-shared-context-plan.md) as the immediately previous implemented queue
    - the local runtime baseline through `Maintenance Baseline / GAP-034` is complete on the current branch baseline
    - use [Direct-To-Hybrid Final-State Implementation Plan](./direct-to-hybrid-final-state-implementation-plan.md) as the completed closure execution record
    - use [Governance Optimization Lane Implementation Plan](./governance-optimization-lane-implementation-plan.md) as the completed governance-lane execution history after `GAP-060`
