@@ -17,6 +17,8 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260614 Continuous Execution Readiness Reassessment](./20260614-continuous-execution-readiness-reassessment.md)
+  - evidence companion for re-checking the continuous-execution activation trigger and recording that readiness is satisfied by existing repo-side evidence but still not promoted into the active queue
 - [20260614 Conditional Queue Promotion Guard](./20260614-conditional-queue-promotion-guard.md)
   - evidence companion for fail-closing the planning-status verifier when conditional follow-on queues lose their required promotion-boundary guard text
 - [20260614 Active Queue Evidence-Upkeep Refresh](./20260614-active-queue-evidence-upkeep-refresh.md)
