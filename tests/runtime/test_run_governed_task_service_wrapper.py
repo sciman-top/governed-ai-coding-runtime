@@ -454,10 +454,11 @@ class RunGovernedTaskServiceWrapperTests(unittest.TestCase):
             verification_artifact_refs=[],
         )
 
-        with tempfile.TemporaryDirectory(dir=str(ROOT.parent)) as tmp_dir:
+        with tempfile.TemporaryDirectory(dir=str(ROOT / ".runtime")) as tmp_dir:
+            repo_root = Path(tmp_dir) / "repo"
             runtime_root = Path(tmp_dir) / "runtime"
             replay_root = runtime_root / "replay"
-            with patch.object(module, "RUNTIME_ROOT", runtime_root), patch.object(module, "REPLAY_ROOT", replay_root):
+            with patch.object(module, "ROOT", repo_root), patch.object(module, "RUNTIME_ROOT", runtime_root), patch.object(module, "REPLAY_ROOT", replay_root):
                 replay_ref = module._write_replay_case(reference)
 
             self.assertEqual(replay_ref, "replay/task-external-runtime-run-external-runtime.json")

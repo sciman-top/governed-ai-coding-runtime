@@ -7,6 +7,7 @@
   },
   "current_refs": {
     "latest_machine_readable_refs": [
+      "docs/change-evidence/governance-hub-certification-report.json",
       "docs/change-evidence/repo-slimming-surface-audit.json",
       "docs/change-evidence/repo-map-context-artifact.json",
       "docs/change-evidence/runtime-test-speed-latest.json",
@@ -16,6 +17,10 @@
       "docs/change-evidence/target-repo-runs/summary-active-targets-latest.json"
     ],
     "latest_markdown_entries": [
+      "docs/change-evidence/20260616-self-evolution-review-refresh.md",
+      "docs/change-evidence/20260616-continuous-execution-runtime-gate-refresh.md",
+      "docs/change-evidence/20260615-self-evolution-review-refresh.md",
+      "docs/change-evidence/20260615-continuous-execution-active-loop-reconciliation.md",
       "docs/change-evidence/20260503-runtime-gate-timing-split.md",
       "docs/change-evidence/20260503-repo-slimming-closeout.md",
       "docs/change-evidence/20260503-operator-ui-screenshot-retention.md",
@@ -30,7 +35,7 @@
       "docs/change-evidence/20260502-root-readme-history-slimming.md"
     ]
   },
-  "generated_at": "2026-05-02T16:45:46.879234+00:00",
+  "generated_at": "2026-06-16T00:00:00+00:00",
   "index_kind": "change_evidence_archive_index",
   "schema_version": "1.0"
 }

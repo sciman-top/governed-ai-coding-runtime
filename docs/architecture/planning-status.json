@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "status_id": "default-planning-status",
-  "updated_on": "2026-06-15",
+  "updated_on": "2026-06-16",
   "current_active_queue": {
     "queue_id": "Continuous-Execution",
     "label": "Continuous Execution Readiness And Rollout",
@@ -13,8 +13,8 @@
   "current_decision_gate": {
     "selector": "defer_ltp_and_refresh_evidence",
     "selector_source": "scripts/select-next-work.py",
-    "as_of": "2026-06-15",
-    "proof_ref": "docs/change-evidence/20260615-continuous-execution-active-loop-reconciliation.md",
+    "as_of": "2026-06-16",
+    "proof_ref": "docs/change-evidence/20260616-continuous-execution-runtime-gate-refresh.md",
     "blocking_reasons": []
   },
   "certified_baseline": {
