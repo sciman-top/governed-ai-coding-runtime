@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_on": "2026-06-09",
+  "updated_on": "2026-06-14",
   "reference_root": "D:/CODE/external/ai-coding-runtime-references",
   "manifest_path": "D:/CODE/external/ai-coding-runtime-references/references.manifest.json",
   "references": [
@@ -31,20 +31,6 @@
       "tier": "Tier 1 / Must Read",
       "category": "official-or-protocol",
       "why": "Claude host semantics, plugins, runtime boundary"
-    },
-    {
-      "reference_id": "anthropic-claude-code-action",
-      "relative_path": "repos/anthropic-claude-code-action",
-      "tier": "Tier 2 / Keep",
-      "category": "official-or-protocol",
-      "why": "Claude CI/action boundary"
-    },
-    {
-      "reference_id": "anthropic-claude-plugins-official",
-      "relative_path": "repos/anthropic-claude-plugins-official",
-      "tier": "Tier 2 / Keep",
-      "category": "official-or-protocol",
-      "why": "Governed plugin packaging and MCP/skills composition boundary"
     },
     {
       "reference_id": "github-copilot-cli",
@@ -89,13 +75,6 @@
       "why": "Production MCP server boundary against external service"
     },
     {
-      "reference_id": "mcp-inspector",
-      "relative_path": "repos/mcp-inspector",
-      "tier": "Tier 2 / Keep",
-      "category": "official-or-protocol",
-      "why": "MCP tool-surface inspection and debugging"
-    },
-    {
       "reference_id": "a2aproject-A2A",
       "relative_path": "repos/a2aproject-A2A",
       "tier": "Tier 1 / Must Read",
@@ -115,6 +94,139 @@
       "tier": "Tier 1 / Must Read",
       "category": "official-or-protocol",
       "why": "Persistent browser MCP path with rich introspection"
+    },
+    {
+      "reference_id": "anthropic-claude-code-action",
+      "relative_path": "repos/anthropic-claude-code-action",
+      "tier": "Tier 2 / Keep",
+      "category": "official-or-protocol",
+      "why": "Claude CI/action boundary"
+    },
+    {
+      "reference_id": "anthropic-claude-plugins-official",
+      "relative_path": "repos/anthropic-claude-plugins-official",
+      "tier": "Tier 2 / Keep",
+      "category": "official-or-protocol",
+      "why": "Governed plugin packaging and MCP/skills composition boundary"
+    },
+    {
+      "reference_id": "mcp-inspector",
+      "relative_path": "repos/mcp-inspector",
+      "tier": "Tier 2 / Keep",
+      "category": "official-or-protocol",
+      "why": "MCP tool-surface inspection and debugging"
+    },
+    {
+      "reference_id": "mcp-servers",
+      "relative_path": "repos/mcp-servers",
+      "tier": "Tier 2 / Keep",
+      "category": "official-or-protocol",
+      "why": "Official MCP example server bundle for packaging and tool exposure patterns"
+    },
+    {
+      "reference_id": "microsoft-agent-framework",
+      "relative_path": "repos/microsoft-agent-framework",
+      "tier": "Tier 2 / Keep",
+      "category": "official-or-protocol",
+      "why": "Microsoft agent workflow framework for observability, checkpoints, middleware, and multi-agent workflows"
+    },
+    {
+      "reference_id": "aider",
+      "relative_path": "repos/aider",
+      "tier": "Tier 2 / Keep",
+      "category": "community-or-framework",
+      "why": "Repo-map, patch/edit loop, and terminal coding-agent ergonomics"
+    },
+    {
+      "reference_id": "swe-agent",
+      "relative_path": "repos/swe-agent",
+      "tier": "Tier 2 / Keep",
+      "category": "community-or-framework",
+      "why": "Issue-to-fix loop, trajectory discipline, and benchmark-aware verification"
+    },
+    {
+      "reference_id": "mini-swe-agent",
+      "relative_path": "repos/mini-swe-agent",
+      "tier": "Tier 2 / Keep",
+      "category": "community-or-framework",
+      "why": "Minimal SWE loop, linear trajectory, bash-only execution, and sandbox-friendly baseline"
+    },
+    {
+      "reference_id": "continue",
+      "relative_path": "repos/continue",
+      "tier": "Tier 3 / Legacy Bridge",
+      "category": "community-or-framework",
+      "why": "Source-controlled checks and IDE/CLI cooperation bridge"
+    },
+    {
+      "reference_id": "openhands",
+      "relative_path": "repos/openhands",
+      "tier": "Tier 2 / Keep",
+      "category": "community-or-framework",
+      "why": "Sandbox, execution host, workspace/runtime separation vocabulary"
+    },
+    {
+      "reference_id": "opencode",
+      "relative_path": "repos/opencode",
+      "tier": "Tier 2 / Keep",
+      "category": "community-or-framework",
+      "why": "Terminal coding-agent UX, provider/session abstraction, and tool execution experience"
+    },
+    {
+      "reference_id": "goose",
+      "relative_path": "repos/goose",
+      "tier": "Tier 2 / Keep",
+      "category": "community-or-framework",
+      "why": "Extension, MCP, desktop/CLI/API packaging boundary"
+    },
+    {
+      "reference_id": "cline",
+      "relative_path": "repos/cline",
+      "tier": "Tier 2 / Keep",
+      "category": "community-or-framework",
+      "why": "Approval, rules, skills, IDE/CLI/browser action, and headless CI permission posture"
+    },
+    {
+      "reference_id": "1code",
+      "relative_path": "repos/1code",
+      "tier": "Tier 2 / Keep",
+      "category": "community-or-framework",
+      "why": "Managed/background coding-agent client for worktree isolation, plan mode, diff preview, PR follow-through, and automation"
+    },
+    {
+      "reference_id": "openclaw-code-agent",
+      "relative_path": "repos/openclaw-code-agent",
+      "tier": "Tier 2 / Keep",
+      "category": "community-or-framework",
+      "why": "OpenClaw plugin for managed Claude Code/Codex/OpenCode coding sessions, plan approval, worktree lifecycle, goal loops, and chat routing"
+    },
+    {
+      "reference_id": "openclaw",
+      "relative_path": "repos/openclaw",
+      "tier": "Tier 4 / Observe",
+      "category": "community-or-framework",
+      "why": "Personal assistant gateway reference for channel routing, DM pairing, sandboxing, and remote exposure posture"
+    },
+    {
+      "reference_id": "hermes-agent",
+      "relative_path": "repos/hermes-agent",
+      "tier": "Tier 2 / Keep",
+      "category": "community-or-framework",
+      "why": "Skills/memory lifecycle, messaging gateway, multi-backend runtime, scheduling, and trajectory compression"
+    },
+    {
+      "reference_id": "langgraph",
+      "relative_path": "repos/langgraph",
+      "tier": "Tier 2 / Keep",
+      "category": "community-or-framework",
+      "why": "Durable state, checkpoints, interrupt/resume vocabulary, and graph orchestration"
+    },
+    {
+      "reference_id": "semantic-kernel",
+      "relative_path": "repos/semantic-kernel",
+      "tier": "Tier 2 / Keep",
+      "category": "community-or-framework",
+      "why": "Enterprise SDK, plugins, planners, tool calling, memory, and multi-language structure"
     }
   ]
 }

@@ -19,11 +19,11 @@
    Host semantics, AGENTS/config/sandbox/approval, official agent-runtime patterns, MCP boundaries, and A2A protocol boundaries.
 2. `github-mcp-server`, `mcp-servers`, `mcp-inspector`, `microsoft-playwright-cli`, `microsoft-playwright-mcp`, `google-antigravity-cli`, `google-gemini-cli`, `anthropic-claude-code`, `anthropic-claude-code-action`, `anthropic-claude-plugins-official`, `github-copilot-cli`
    Official or near-official implementation surfaces for tools, adapters, MCP inspection/debugging, browser automation, host-family transitions, main host products, plugin distribution, and multi-host compatibility.
-3. `aider`, `swe-agent`, `continue`, `openhands`, `opencode`, `goose`
-   Community coding-agent execution loops, repo grounding, permission posture, and UX.
-4. `hermes-agent`, `langgraph`, `semantic-kernel`
-   Skills, memory, gateway, multi-backend runtime, scheduling, durable state, and enterprise orchestration ideas.
-5. `anthropic-claude-code-monitoring-guide`, `microsoft-ai-agents-for-beginners`
+3. `1code`, `openclaw-code-agent`, `aider`, `swe-agent`, `mini-swe-agent`, `continue`, `openhands`, `opencode`, `goose`, `cline`
+   Managed/background coding-agent sessions, worktree isolation, repo grounding, permission posture, and UX.
+4. `hermes-agent`, `langgraph`, `semantic-kernel`, `microsoft-agent-framework`
+   Skills, memory, gateway, multi-backend runtime, scheduling, durable state, and enterprise workflow/orchestration ideas.
+5. `openclaw`, `anthropic-claude-code-monitoring-guide`, `microsoft-ai-agents-for-beginners`
    ROI/telemetry/onboarding material and teaching-grade agent practices.
 
 ## Official And Primary Reference Set / 官方与主要参考集
@@ -48,16 +48,22 @@
 | `anthropic-claude-plugins-official` | <https://github.com/anthropics/claude-plugins-official> | Anthropic-managed official plugin directory; useful for plugin packaging, MCP/skills composition, and plugin quality/distribution boundaries. |
 | `anthropic-claude-code-monitoring-guide` | <https://github.com/anthropics/claude-code-monitoring-guide> | Official measurement/ROI guide for telemetry, spend, productivity metrics, and rollout framing; useful as an operational guide, not a host-semantics source. |
 | `github-copilot-cli` | <https://github.com/github/copilot-cli> | GitHub official terminal entry for Copilot coding agent; useful for cross-host comparison of approvals, MCP default posture, and GitHub-native context integration. |
+| `microsoft-agent-framework` | <https://github.com/microsoft/agent-framework> | Microsoft agent workflow framework for observability, checkpoints, middleware, and multi-agent workflows. |
 
 ## Community Mechanism Sources / 社区机制参考源
 | Local Repo | Source | Why It Matters |
 | --- | --- | --- |
 | `aider` | <https://github.com/Aider-AI/aider> | Repo map, patch/edit loop, terminal coding-agent ergonomics. |
 | `swe-agent` | <https://github.com/SWE-agent/SWE-agent> | Issue-to-fix loop discipline, task closure, and benchmark-aware verification mindset. |
+| `mini-swe-agent` | <https://github.com/SWE-agent/mini-SWE-agent> | Minimal SWE loop, linear trajectory, bash-only execution, and sandbox-friendly baseline. |
 | `continue` | <https://github.com/continuedev/continue> | Source-controlled checks, IDE/CLI cooperation, and policy-shaped coding assistance. |
 | `openhands` | <https://github.com/All-Hands-AI/OpenHands> | Execution environment separation, sandbox vocabulary, and long-running coding-agent posture. |
 | `opencode` | <https://github.com/sst/opencode> | Terminal-first coding-agent UX and provider/session abstractions. |
 | `goose` | <https://github.com/block/goose> | Tool extensibility, desktop/CLI boundary, and agent surface packaging. |
+| `cline` | <https://github.com/cline/cline> | Approval, rules, skills, IDE/CLI/browser action, and headless CI permission posture. |
+| `1code` | <https://github.com/21st-dev/1code> | Managed/background coding-agent client with worktree isolation, plan mode, diff preview, PR follow-through, and automations. |
+| `openclaw-code-agent` | <https://github.com/goldmar/openclaw-code-agent> | OpenClaw plugin that runs Claude Code, Codex, and OpenCode as managed background coding sessions with plan approval and worktree lifecycle. |
+| `openclaw` | <https://github.com/openclaw/openclaw> | Personal assistant gateway, channel routing, DM pairing, sandbox, and remote-exposure posture; observe without copying its product identity. |
 | `hermes-agent` | <https://github.com/NousResearch/hermes-agent> | Skills/memory lifecycle, messaging gateway, multi-backend terminal runtime, scheduling, and trajectory compression. |
 | `langgraph` | <https://github.com/langchain-ai/langgraph> | Durable state, checkpoints, interrupt/resume vocabulary, and graph orchestration patterns. |
 | `semantic-kernel` | <https://github.com/microsoft/semantic-kernel> | Enterprise agent SDK patterns, plugins, planners, and multi-language structure. |

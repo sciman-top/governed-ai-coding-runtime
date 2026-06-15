@@ -17,6 +17,8 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260614 Reference Shelf Governance Refresh](./20260614-reference-shelf-governance-refresh.md)
+  - evidence companion for refreshing the local AI coding runtime reference shelf, classifying `openclaw`, `openclaw-code-agent`, and `1code`, and extending repo-owned `reference-basis` coverage for community execution-loop surfaces
 - [20260614 Continuous Execution Two-Repo Trials](./20260614-continuous-execution-two-repo-trials.md)
   - evidence companion for the first two low-risk `runtime-flow-preset daily quick` trials, proving attachment posture, gate refs, rollback refs, and no hard-boundary override across `classroomtoolkit` and `github-toolkit`
 - [20260614 Continuous Execution Teaching Yield Guardrail](./20260614-continuous-execution-teaching-yield-guardrail.md)
