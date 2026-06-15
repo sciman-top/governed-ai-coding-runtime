@@ -177,6 +177,42 @@
     "summary_template": "goal-plan-changes-verification-risks",
     "handoff_teaching_notes": "Highlight the latest task restatement, unresolved observation gaps, and the current interaction posture."
   },
+  "workflow_governance_policy": {
+    "default_workflow_mode": "spec_first",
+    "allowed_workflow_modes": [
+      "direct_fix",
+      "spec_first",
+      "spec_plus_review",
+      "worktree_isolated_execution",
+      "parallel_subagent_assist",
+      "maintenance_automation"
+    ],
+    "workflow_mode_overrides_by_risk": {
+      "low": "direct_fix",
+      "medium": "spec_first",
+      "high": "spec_plus_review"
+    },
+    "spec_artifact_requirements": [
+      "task_brief",
+      "change_plan"
+    ],
+    "review_requirements": {
+      "medium": "owner_review",
+      "high": "owner_review_required"
+    },
+    "worktree_policy": {
+      "allow": false,
+      "fallback_mode": "spec_plus_review"
+    },
+    "subagent_policy": {
+      "allow": false,
+      "fallback_mode": "spec_plus_review"
+    },
+    "automation_policy": {
+      "allow": true,
+      "fallback_mode": "direct_fix"
+    }
+  },
   "compatibility_signals": [
     {
       "capability": "structured_events",

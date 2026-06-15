@@ -1223,6 +1223,94 @@
           }
         }
       }
+    },
+    "workflow_governance_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "default_workflow_mode",
+        "allowed_workflow_modes",
+        "workflow_mode_overrides_by_risk",
+        "spec_artifact_requirements",
+        "review_requirements",
+        "worktree_policy",
+        "subagent_policy",
+        "automation_policy"
+      ],
+      "properties": {
+        "default_workflow_mode": {
+          "$ref": "#/$defs/workflow_mode"
+        },
+        "allowed_workflow_modes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/workflow_mode"
+          }
+        },
+        "workflow_mode_overrides_by_risk": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "low": { "$ref": "#/$defs/workflow_mode" },
+            "medium": { "$ref": "#/$defs/workflow_mode" },
+            "high": { "$ref": "#/$defs/workflow_mode" }
+          }
+        },
+        "spec_artifact_requirements": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "review_requirements": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "worktree_policy": {
+          "$ref": "#/$defs/workflow_capability_policy"
+        },
+        "subagent_policy": {
+          "$ref": "#/$defs/workflow_capability_policy"
+        },
+        "automation_policy": {
+          "$ref": "#/$defs/workflow_capability_policy"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "workflow_mode": {
+      "type": "string",
+      "enum": [
+        "direct_fix",
+        "spec_first",
+        "spec_plus_review",
+        "worktree_isolated_execution",
+        "parallel_subagent_assist",
+        "maintenance_automation"
+      ]
+    },
+    "workflow_capability_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allow",
+        "fallback_mode"
+      ],
+      "properties": {
+        "allow": {
+          "type": "boolean"
+        },
+        "fallback_mode": {
+          "$ref": "#/$defs/workflow_mode"
+        }
+      }
     }
   }
 }

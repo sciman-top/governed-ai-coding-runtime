@@ -761,6 +761,183 @@ function ConvertTo-JsonArrayValue {
   return ,$result
 }
 
+function Get-WorkflowGovernanceProjection {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$TargetName,
+    [Parameter(Mandatory = $true)]
+    [hashtable]$TargetConfig,
+    [Parameter(Mandatory = $true)]
+    [ValidateSet("onboard", "daily")]
+    [string]$FlowModeValue,
+    [Parameter(Mandatory = $true)]
+    [ValidateSet("quick", "full", "l1", "l2", "l3")]
+    [string]$ModeValue,
+    [Parameter(Mandatory = $true)]
+    [ValidateSet("allow", "escalate", "deny")]
+    [string]$PolicyStatusValue,
+    [Parameter(Mandatory = $true)]
+    [bool]$ExecuteWriteFlowEnabled,
+    [string]$TaskTypeValue = ""
+  )
+
+  $workflowPolicy = $null
+  $profilePath = Join-Path $TargetConfig.AttachmentRoot ".governed-ai\repo-profile.json"
+  if (Test-Path -LiteralPath $profilePath) {
+    $profile = Try-ParseJson -Raw (Get-Content -LiteralPath $profilePath -Raw)
+    if ($profile -and ($profile.PSObject.Properties.Name -contains "workflow_governance_policy")) {
+      $workflowPolicy = $profile.workflow_governance_policy
+    }
+  }
+
+  $allowedModes = @(
+    "direct_fix",
+    "spec_first",
+    "spec_plus_review",
+    "worktree_isolated_execution",
+    "parallel_subagent_assist",
+    "maintenance_automation"
+  )
+
+  $source = if ($null -ne $workflowPolicy) { "repo_profile_policy" } else { "deterministic_policy" }
+  $defaultMode = "spec_first"
+  if ($workflowPolicy -and ($workflowPolicy.PSObject.Properties.Name -contains "default_workflow_mode")) {
+    $candidateDefault = [string]$workflowPolicy.default_workflow_mode
+    if ($candidateDefault -in $allowedModes) {
+      $defaultMode = $candidateDefault
+    }
+  }
+
+  $riskBand = "medium"
+  $normalizedTaskType = ""
+  if (-not [string]::IsNullOrWhiteSpace($TaskTypeValue)) {
+    $normalizedTaskType = $TaskTypeValue.Trim().ToLowerInvariant()
+  }
+  $lowRiskTaskTypes = @("docs", "documentation", "chore", "style", "comment", "spelling", "format", "typo", "readme")
+  $maintenanceTaskTypes = @("maintenance", "routine", "cleanup", "automation", "ops")
+  $highRiskTaskTypes = @("release", "schema", "contract", "migration", "security", "hotfix", "incident", "rollback", "refactor", "multi_file", "multi-file", "workflow")
+  if ($normalizedTaskType -in $lowRiskTaskTypes) {
+    $riskBand = "low"
+  }
+  elseif ($normalizedTaskType -in $maintenanceTaskTypes) {
+    $riskBand = "low"
+  }
+  elseif (($normalizedTaskType -in $highRiskTaskTypes) -or $ExecuteWriteFlowEnabled -or ($ModeValue -in @("full", "l3")) -or ($PolicyStatusValue -ne "allow") -or ($FlowModeValue -eq "onboard")) {
+    $riskBand = "high"
+  }
+
+  $selectedMode = $defaultMode
+  $modeReason = "default_workflow_mode"
+  if ($workflowPolicy -and ($workflowPolicy.PSObject.Properties.Name -contains "workflow_mode_overrides_by_risk")) {
+    $overrides = $workflowPolicy.workflow_mode_overrides_by_risk
+    if ($overrides -and ($overrides.PSObject.Properties.Name -contains $riskBand)) {
+      $overrideMode = [string]$overrides.$riskBand
+      if ($overrideMode -in $allowedModes) {
+        $selectedMode = $overrideMode
+        $modeReason = ("workflow_mode_overrides_by_risk.{0}" -f $riskBand)
+      }
+    }
+  }
+
+  if (($riskBand -eq "low") -and ($selectedMode -eq "spec_plus_review")) {
+    $selectedMode = "direct_fix"
+    $modeReason = "low_risk_task_type"
+  }
+  elseif (($riskBand -eq "high") -and ($selectedMode -eq "direct_fix")) {
+    $selectedMode = "spec_plus_review"
+    $modeReason = "high_risk_task_type"
+  }
+
+  $degradeReason = ""
+  if (($selectedMode -eq "worktree_isolated_execution") -or ($selectedMode -eq "parallel_subagent_assist")) {
+    $degradeReason = if ($selectedMode -eq "worktree_isolated_execution") { "host_missing_worktree_capability" } else { "host_missing_subagent_capability" }
+    $selectedMode = "spec_plus_review"
+    $modeReason = ("{0}_degraded" -f $modeReason)
+  }
+
+  $requiredArtifacts = @()
+  $metrics = [ordered]@{
+    spec_required = $false
+    review_required = $false
+    used_worktree = $false
+    used_subagent = $false
+    automation_used = $false
+  }
+  switch ($selectedMode) {
+    "direct_fix" {
+      $requiredArtifacts = @("change_note")
+    }
+    "spec_first" {
+      $requiredArtifacts = @("task_brief", "change_plan")
+      $metrics.spec_required = $true
+    }
+    "spec_plus_review" {
+      $requiredArtifacts = @("task_brief", "change_plan", "review_note")
+      $metrics.spec_required = $true
+      $metrics.review_required = $true
+    }
+    "worktree_isolated_execution" {
+      $requiredArtifacts = @("task_brief", "change_plan", "worktree_plan")
+      $metrics.spec_required = $true
+      $metrics.review_required = $true
+      $metrics.used_worktree = $true
+    }
+    "parallel_subagent_assist" {
+      $requiredArtifacts = @("task_brief", "change_plan", "subagent_brief")
+      $metrics.spec_required = $true
+      $metrics.review_required = $true
+      $metrics.used_subagent = $true
+    }
+    "maintenance_automation" {
+      $requiredArtifacts = @("runbook", "automation_checklist")
+      $metrics.automation_used = $true
+    }
+  }
+
+  if ($workflowPolicy -and ($workflowPolicy.PSObject.Properties.Name -contains "spec_artifact_requirements")) {
+    $policyArtifacts = @(ConvertTo-JsonArrayValue -Value $workflowPolicy.spec_artifact_requirements)
+    if (@($policyArtifacts).Count -gt 0) {
+      $requiredArtifacts = @($policyArtifacts)
+      if (($selectedMode -eq "spec_plus_review") -and ($requiredArtifacts -notcontains "review_note")) {
+        $requiredArtifacts += "review_note"
+      }
+    }
+  }
+
+  return [ordered]@{
+    workflow_mode_selected    = $selectedMode
+    workflow_mode_source      = $source
+    workflow_mode_reason      = $modeReason
+    workflow_degrade_reason   = $degradeReason
+    workflow_required_artifacts = $requiredArtifacts
+    workflow_metrics          = $metrics
+  }
+}
+
+function Add-WorkflowGovernanceProjection {
+  param(
+    [Parameter(Mandatory = $true)]
+    [object]$Payload,
+    [Parameter(Mandatory = $true)]
+    [hashtable]$Projection
+  )
+
+  if ($null -eq $Payload) {
+    return $null
+  }
+
+  $merged = [ordered]@{}
+  foreach ($property in $Payload.PSObject.Properties) {
+    $merged[$property.Name] = $property.Value
+  }
+  foreach ($key in $Projection.Keys) {
+    if (-not $merged.Contains($key)) {
+      $merged[$key] = $Projection[$key]
+    }
+  }
+  return [pscustomobject]$merged
+}
+
 function Get-CodingSpeedProfileSummary {
   param(
     [Parameter(Mandatory = $true)]
@@ -1660,6 +1837,17 @@ function Invoke-TargetPresetFlow {
     -Status $flowStatus `
     -Detail ("duration_ms={0} exit_code={1}{2}" -f $flowDurationMs, $flowResult.exit_code, $flowTimeoutTag)
   $flowPayload = Try-ParseJson -Raw $flowResult.output
+  $workflowProjection = Get-WorkflowGovernanceProjection `
+    -TargetName $TargetName `
+    -TargetConfig $TargetConfig `
+    -FlowModeValue $FlowMode `
+    -ModeValue $Mode `
+    -PolicyStatusValue $PolicyStatus `
+    -ExecuteWriteFlowEnabled $ExecuteWriteFlow.IsPresent `
+    -TaskTypeValue $TaskType
+  if ($null -ne $flowPayload) {
+    $flowPayload = Add-WorkflowGovernanceProjection -Payload $flowPayload -Projection $workflowProjection
+  }
 
   $syncDurationMs = 0
   $syncResult = [pscustomobject]@{
@@ -1731,6 +1919,7 @@ function Invoke-TargetPresetFlow {
     flow_payload           = $flowPayload
     governance_sync_result = $syncResult
     governance_sync_duration_ms = $syncDurationMs
+    workflow_projection    = $workflowProjection
     milestone_commit_result = [pscustomobject]@{
       target             = $TargetName
       status             = "skipped"
@@ -2543,6 +2732,17 @@ if ($parallelBatchEligible) {
     else {
       [pscustomobject]@{ status = "skipped"; reason = "not_applicable"; exit_code = 0; refreshed = $false }
     }
+    $workflowProjection = Get-WorkflowGovernanceProjection `
+      -TargetName $TargetName `
+      -TargetConfig $targetConfigMap[$TargetName] `
+      -FlowModeValue $FlowMode `
+      -ModeValue $Mode `
+      -PolicyStatusValue $PolicyStatus `
+      -ExecuteWriteFlowEnabled $ExecuteWriteFlow.IsPresent `
+      -TaskTypeValue $TaskType
+    if ($null -ne $flowPayload) {
+      $flowPayload = Add-WorkflowGovernanceProjection -Payload $flowPayload -Projection $workflowProjection
+    }
 
     return [pscustomobject]@{
       target = $TargetName
@@ -2556,6 +2756,7 @@ if ($parallelBatchEligible) {
       }
       flow_duration_ms = $DurationMs
       flow_payload = $flowPayload
+      workflow_projection = $workflowProjection
       governance_sync_result = [pscustomobject]@{
         status = "skipped"
         reason = if ($FlowMode -eq "onboard" -and -not $SkipGovernanceBaselineSync.IsPresent) { "single_target_worker_owned" } else { "flow_mode_not_onboard" }
@@ -3119,6 +3320,12 @@ if ($Json) {
           flow_exit_code          = $single.flow_result.exit_code
           flow_output             = $single.flow_result.output
           attachment_repair       = $singleAttachmentRepairForJson
+          workflow_mode_selected  = if ($single.PSObject.Properties.Name -contains "workflow_projection") { $single.workflow_projection.workflow_mode_selected } else { "" }
+          workflow_mode_source    = if ($single.PSObject.Properties.Name -contains "workflow_projection") { $single.workflow_projection.workflow_mode_source } else { "" }
+          workflow_mode_reason    = if ($single.PSObject.Properties.Name -contains "workflow_projection") { $single.workflow_projection.workflow_mode_reason } else { "" }
+          workflow_degrade_reason = if ($single.PSObject.Properties.Name -contains "workflow_projection") { $single.workflow_projection.workflow_degrade_reason } else { "" }
+          workflow_required_artifacts = if ($single.PSObject.Properties.Name -contains "workflow_projection") { ConvertTo-JsonArrayValue -Value $single.workflow_projection.workflow_required_artifacts } else { @() }
+          workflow_metrics        = if ($single.PSObject.Properties.Name -contains "workflow_projection") { $single.workflow_projection.workflow_metrics } else { $null }
           governance_baseline_sync = [ordered]@{
             status       = $single.governance_sync_result.status
             reason       = $single.governance_sync_result.reason
@@ -3225,6 +3432,12 @@ if ($Json) {
           governance_sync_outer_ai_action = if ($_.governance_sync_result.payload) { $_.governance_sync_result.payload.outer_ai_action } else { "" }
           governance_sync_quick_test_prompt_path = if ($_.governance_sync_result.payload) { $_.governance_sync_result.payload.quick_test_prompt_path } else { "" }
           governance_sync_outer_ai_instruction = if ($_.governance_sync_result.payload) { $_.governance_sync_result.payload.outer_ai_instruction } else { "" }
+          workflow_mode_selected   = if ($_.flow_payload -and ($_.flow_payload.PSObject.Properties.Name -contains "workflow_mode_selected")) { $_.flow_payload.workflow_mode_selected } elseif ($_.PSObject.Properties.Name -contains "workflow_projection") { $_.workflow_projection.workflow_mode_selected } else { "" }
+          workflow_mode_source     = if ($_.flow_payload -and ($_.flow_payload.PSObject.Properties.Name -contains "workflow_mode_source")) { $_.flow_payload.workflow_mode_source } elseif ($_.PSObject.Properties.Name -contains "workflow_projection") { $_.workflow_projection.workflow_mode_source } else { "" }
+          workflow_mode_reason     = if ($_.flow_payload -and ($_.flow_payload.PSObject.Properties.Name -contains "workflow_mode_reason")) { $_.flow_payload.workflow_mode_reason } elseif ($_.PSObject.Properties.Name -contains "workflow_projection") { $_.workflow_projection.workflow_mode_reason } else { "" }
+          workflow_degrade_reason  = if ($_.flow_payload -and ($_.flow_payload.PSObject.Properties.Name -contains "workflow_degrade_reason")) { $_.flow_payload.workflow_degrade_reason } elseif ($_.PSObject.Properties.Name -contains "workflow_projection") { $_.workflow_projection.workflow_degrade_reason } else { "" }
+          workflow_required_artifacts = if ($_.flow_payload -and ($_.flow_payload.PSObject.Properties.Name -contains "workflow_required_artifacts")) { ConvertTo-JsonArrayValue -Value $_.flow_payload.workflow_required_artifacts } elseif ($_.PSObject.Properties.Name -contains "workflow_projection") { ConvertTo-JsonArrayValue -Value $_.workflow_projection.workflow_required_artifacts } else { @() }
+          workflow_metrics         = if ($_.flow_payload -and ($_.flow_payload.PSObject.Properties.Name -contains "workflow_metrics")) { $_.flow_payload.workflow_metrics } elseif ($_.PSObject.Properties.Name -contains "workflow_projection") { $_.workflow_projection.workflow_metrics } else { $null }
           milestone_commit_status  = $_.milestone_commit_result.status
           milestone_commit_reason  = $_.milestone_commit_result.reason
           milestone_commit_exit_code = $_.milestone_commit_result.exit_code

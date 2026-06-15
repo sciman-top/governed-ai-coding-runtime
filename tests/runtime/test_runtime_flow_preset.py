@@ -67,6 +67,54 @@ exit 0
     path.write_text(script, encoding="utf-8")
 
 
+def _write_fake_runtime_flow_with_workflow_projection_script(path: Path) -> None:
+    script = """param(
+  [string]$EntrypointId = "",
+  [ValidateSet("onboard", "daily")]
+  [string]$FlowMode = "daily",
+  [string]$AttachmentRoot = "",
+  [string]$AttachmentRuntimeStateRoot = "",
+  [string]$Mode = "quick",
+  [string]$PolicyStatus = "allow",
+  [string]$TaskId = "",
+  [string]$RunId = "",
+  [string]$CommandId = "",
+  [string]$AdapterId = "",
+  [string]$RepoBindingId = "",
+  [switch]$Json
+)
+
+if ($Json) {
+  @(
+    [ordered]@{
+      exit_code = 0
+      overall_status = "pass"
+      flow_mode = $FlowMode
+      attachment_root = $AttachmentRoot
+      task_id = $TaskId
+      repo_binding_id = $RepoBindingId
+      workflow_mode_selected = "spec_plus_review"
+      workflow_mode_source = "repo_profile_policy"
+      workflow_mode_reason = "medium_risk_multi_file_change"
+      workflow_degrade_reason = "host_missing_worktree_capability"
+      workflow_required_artifacts = @("task_brief", "change_plan", "review_note")
+      workflow_metrics = [ordered]@{
+        spec_required = $true
+        review_required = $true
+        used_worktree = $false
+        used_subagent = $false
+      }
+    }
+  ) | ConvertTo-Json -Depth 8
+}
+else {
+  Write-Host ("flow-pass target={0} mode={1}" -f $AttachmentRoot, $FlowMode)
+}
+exit 0
+"""
+    path.write_text(script, encoding="utf-8")
+
+
 def _write_fake_runtime_flow_requires_synced_profile_script(path: Path) -> None:
     script = """param(
   [string]$AttachmentRoot = "",
@@ -618,6 +666,82 @@ class RuntimeFlowPresetScriptTests(unittest.TestCase):
             self.assertEqual(payload["overall_status"], "pass")
             self.assertEqual(payload["flow_mode"], "daily")
             self.assertEqual(payload["repo_binding_id"], "binding-repo-a")
+
+    def test_runtime_flow_preset_projects_workflow_fields_from_runtime_flow_payload(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir)
+            repo_a = workspace / "repo-a"
+            _write_json(
+                repo_a / ".governed-ai" / "repo-profile.json",
+                {
+                    "repo_id": "repo-a",
+                    "required_entrypoint_policy": {"current_mode": "advisory"},
+                    "auto_commit_policy": {"enabled": False},
+                },
+            )
+
+            catalog_path = workspace / "catalog.json"
+            _write_json(
+                catalog_path,
+                {
+                    "schema_version": "1.0",
+                    "catalog_id": "test",
+                    "targets": {
+                        "repo-a": {
+                            "attachment_root": str(repo_a),
+                            "attachment_runtime_state_root": str(workspace / "state" / "repo-a"),
+                            "repo_id": "repo-a",
+                            "display_name": "repo-a",
+                            "primary_language": "python",
+                            "build_command": "python --version",
+                            "test_command": "python --version",
+                            "contract_command": "python --version",
+                        }
+                    },
+                },
+            )
+            fake_runtime_flow_path = workspace / "fake-runtime-flow-workflow.ps1"
+            _write_fake_runtime_flow_with_workflow_projection_script(fake_runtime_flow_path)
+
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "runtime-flow-preset.ps1"),
+                    "-Target",
+                    "repo-a",
+                    "-FlowMode",
+                    "daily",
+                    "-Mode",
+                    "quick",
+                    "-Json",
+                    "-CatalogPath",
+                    str(catalog_path),
+                    "-RuntimeFlowPath",
+                    str(fake_runtime_flow_path),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=ROOT,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(completed.stdout)
+            self.assertEqual(payload["workflow_mode_selected"], "spec_plus_review")
+            self.assertEqual(payload["workflow_mode_source"], "repo_profile_policy")
+            self.assertEqual(payload["workflow_mode_reason"], "medium_risk_multi_file_change")
+            self.assertEqual(payload["workflow_degrade_reason"], "host_missing_worktree_capability")
+            self.assertEqual(
+                payload["workflow_required_artifacts"],
+                ["task_brief", "change_plan", "review_note"],
+            )
+            self.assertEqual(payload["workflow_metrics"]["spec_required"], True)
+            self.assertEqual(payload["workflow_metrics"]["used_worktree"], False)
 
     def test_runtime_flow_preset_apply_governance_baseline_only_skips_runtime_flow(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
