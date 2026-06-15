@@ -11,6 +11,7 @@
 - 当前 active queue / current active queue: `Continuous-Execution` (`Continuous Execution Readiness And Rollout`)
 - `current decision gate`：`defer_ltp_and_refresh_evidence`
 - `current live posture`：target-run freshness 为 `fresh`；Codex target runs 为 `native_attach` / ready；Claude workload probe 为 `native_attach` / ready
+- `workflow-governor` 仍只是 owner-directed conditional follow-on package 的候选边界，不是当前 active queue，也不是替代宿主
 - `current decision gate`: `defer_ltp_and_refresh_evidence`
 - `current live posture`: target-run freshness is `fresh`; Codex target runs are `native_attach` / ready; Claude workload probe is `native_attach` / ready
 - 认证基线 / certified baseline: `GAP-104..111`
@@ -47,6 +48,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
 - 这是一个 AI coding governance runtime / control plane，不是新的执行宿主。
 - 它把治理契约、门禁、evidence、rollout、target-repo attach 和 host feedback 收敛成同一套 repo-owned 规则与脚本。
 - 当前最佳工程终态仍是 `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`。
+- 本项目已证实的主要价值是 workflow / gate / evidence governance；尚未证实它已经内建“最佳 AI 编程工作流自动执行器”。
+- 它可以演进成 `AI coding workflow governor`，但不是 replacement host，也不是固定唯一最佳 workflow executor。
 - Codex and Claude Code are cooperation hosts, not competitors；本仓治理它们的 attach、gate、evidence、handoff 和 degrade posture，不复制或替代宿主 UI、账号、provider 或模型循环。
 - 它不负责本机账号、provider、gateway 或宿主启动切换：
   - Codex/Cockpit 的 Direct OAuth、Direct API、API service 往返切换由 `Cockpit Tools` 负责。
@@ -132,6 +135,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
   - [Reference Basis Matrix](docs/research/reference-basis-matrix.md)
   - [Reference Governance And Release Preflight Roadmap](docs/roadmap/reference-governance-and-preflight-roadmap.md)
   - [Reference Governance And Release Preflight Plan](docs/plans/reference-governance-and-preflight-plan.md)
+  - [Workflow Governor Governance Plan](docs/plans/workflow-governor-governance-plan.md)
+  - [Workflow Governor Governance Roadmap](docs/roadmap/workflow-governor-governance-roadmap.md)
 - 历史与证据：
   - [Completed GAP History](docs/archive/completed-gap-history.md)
   - [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md)

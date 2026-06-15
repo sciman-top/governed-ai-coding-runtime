@@ -19,8 +19,8 @@
    Host semantics, AGENTS/config/sandbox/approval, official agent-runtime patterns, MCP boundaries, and A2A protocol boundaries.
 2. `github-mcp-server`, `mcp-servers`, `mcp-inspector`, `microsoft-playwright-cli`, `microsoft-playwright-mcp`, `google-antigravity-cli`, `google-gemini-cli`, `anthropic-claude-code`, `anthropic-claude-code-action`, `anthropic-claude-plugins-official`, `github-copilot-cli`
    Official or near-official implementation surfaces for tools, adapters, MCP inspection/debugging, browser automation, host-family transitions, main host products, plugin distribution, and multi-host compatibility.
-3. `1code`, `openclaw-code-agent`, `aider`, `swe-agent`, `mini-swe-agent`, `continue`, `openhands`, `opencode`, `goose`, `cline`
-   Managed/background coding-agent sessions, worktree isolation, repo grounding, permission posture, and UX.
+3. `github-spec-kit`, `obra-superpowers`, `1code`, `openclaw-code-agent`, `aider`, `swe-agent`, `mini-swe-agent`, `continue`, `openhands`, `opencode`, `goose`, `cline`
+   Spec-driven delivery, managed/background coding-agent sessions, worktree isolation, repo grounding, permission posture, and UX.
 4. `hermes-agent`, `langgraph`, `semantic-kernel`, `microsoft-agent-framework`
    Skills, memory, gateway, multi-backend runtime, scheduling, durable state, and enterprise workflow/orchestration ideas.
 5. `openclaw`, `anthropic-claude-code-monitoring-guide`, `microsoft-ai-agents-for-beginners`
@@ -61,7 +61,9 @@
 | `opencode` | <https://github.com/sst/opencode> | Terminal-first coding-agent UX and provider/session abstractions. |
 | `goose` | <https://github.com/block/goose> | Tool extensibility, desktop/CLI boundary, and agent surface packaging. |
 | `cline` | <https://github.com/cline/cline> | Approval, rules, skills, IDE/CLI/browser action, and headless CI permission posture. |
+| `github-spec-kit` | <https://github.com/github/spec-kit> | Spec-driven development workflow reference for requirements, specs, plans, and task breakdown. |
 | `1code` | <https://github.com/21st-dev/1code> | Managed/background coding-agent client with worktree isolation, plan mode, diff preview, PR follow-through, and automations. |
+| `obra-superpowers` | <https://github.com/obra/superpowers> | Plan-driven execution methodology reference for incremental delivery, subagent discipline, worktrees, and skills-based execution flow. |
 | `openclaw-code-agent` | <https://github.com/goldmar/openclaw-code-agent> | OpenClaw plugin that runs Claude Code, Codex, and OpenCode as managed background coding sessions with plan approval and worktree lifecycle. |
 | `openclaw` | <https://github.com/openclaw/openclaw> | Personal assistant gateway, channel routing, DM pairing, sandbox, and remote-exposure posture; observe without copying its product identity. |
 | `hermes-agent` | <https://github.com/NousResearch/hermes-agent> | Skills/memory lifecycle, messaging gateway, multi-backend terminal runtime, scheduling, and trajectory compression. |

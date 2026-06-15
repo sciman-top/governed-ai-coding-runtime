@@ -34,6 +34,8 @@ from governed_ai_coding_runtime_contracts.runtime_roots import ensure_runtime_ro
 from governed_ai_coding_runtime_contracts.subprocess_guard import run_governed_gate_command
 from governed_ai_coding_runtime_contracts.task_intake import TaskIntake, apply_interaction_profile_defaults
 from governed_ai_coding_runtime_contracts.task_store import FileTaskStore, TaskRecord, TaskRunRecord
+from governed_ai_coding_runtime_contracts.workflow_effect_metrics import build_workflow_effect_metrics
+from governed_ai_coding_runtime_contracts.workflow_selection import select_workflow_mode
 from governed_ai_coding_runtime_contracts.verification_runner import (
     build_repo_profile_verification_plan,
     run_verification_plan,
@@ -297,6 +299,7 @@ def run_task(*, task_id: str | None, goal: str, scope: str, repo: str, profile_p
             interaction_defaults=_interaction_defaults_from_profile(profile),
         )["task_id"]
     _apply_profile_interaction_defaults_to_record(store, identifier, profile)
+    workflow_decision = _select_workflow_decision(profile=profile, goal=goal, scope=scope, mode=mode)
     runtime = ExecutionRuntime(store=store, runtime_workspaces_root=WORKSPACES_ROOT.as_posix())
     artifact_store = LocalArtifactStore(ARTIFACT_ROOT)
 
@@ -368,7 +371,7 @@ def run_task(*, task_id: str | None, goal: str, scope: str, repo: str, profile_p
         artifact_refs=run.artifact_refs + list(verification_artifact.result_artifact_refs.values()),
         replay_case_ref=replay_ref or None,
         failure_signature="verification failed" if replay_ref else None,
-        interaction_trace=_interaction_trace_for_record(record, profile),
+        interaction_trace=_interaction_trace_for_record(record, profile, workflow_decision=workflow_decision),
     )
     evidence_artifact = artifact_store.write_json(
         task_id=record.task_id,
@@ -411,6 +414,15 @@ def run_task(*, task_id: str | None, goal: str, scope: str, repo: str, profile_p
     )
 
     refreshed = store.load(record.task_id)
+    workflow_metrics = build_workflow_effect_metrics(
+        workflow_mode_selected=workflow_decision["workflow_mode_selected"],
+        workflow_mode_source=workflow_decision["workflow_mode_source"],
+        workflow_degrade_reason=workflow_decision["workflow_degrade_reason"],
+        recommendation_improved=workflow_decision["workflow_mode_selected"] != "direct_fix",
+        mode_level_comparison_reason=workflow_decision["workflow_mode_reason"],
+        manual_intervention_count=1 if workflow_decision["workflow_mode_selected"] == "spec_plus_review" else 0,
+        problem_run_rate=0.0 if refreshed.current_state == "delivered" else 1.0,
+    )
     refreshed.run_history = [
         _merge_run_refs(
             item,
@@ -423,7 +435,7 @@ def run_task(*, task_id: str | None, goal: str, scope: str, repo: str, profile_p
         for item in refreshed.run_history
     ]
     store.save(refreshed)
-    return snapshot_payload(task_id=refreshed.task_id)
+    return snapshot_payload(task_id=refreshed.task_id, workflow_metrics=workflow_metrics, workflow_decision=workflow_decision)
 
 
 def snapshot_payload(
@@ -431,6 +443,8 @@ def snapshot_payload(
     task_id: str | None = None,
     attachment_root: str | None = None,
     attachment_runtime_state_root: str | None = None,
+    workflow_metrics: dict | None = None,
+    workflow_decision: dict | None = None,
 ) -> dict:
     response = _dispatch_session_command(
         command_type="inspect_status",
@@ -460,6 +474,7 @@ def snapshot_payload(
     attachments = status_payload.get("attachments")
     if not isinstance(attachments, list):
         attachments = []
+    workflow_decision = workflow_decision if isinstance(workflow_decision, dict) else {}
     payload = {
         "runtime_roots": {
             "runtime_root": RUNTIME_ROOT.as_posix(),
@@ -477,6 +492,12 @@ def snapshot_payload(
             if isinstance(item, dict) and (task_id is None or item.get("task_id") == task_id)
         ],
         "attachments": [item for item in attachments if isinstance(item, dict)],
+        "workflow_mode_selected": workflow_decision.get("workflow_mode_selected"),
+        "workflow_mode_source": workflow_decision.get("workflow_mode_source"),
+        "workflow_mode_reason": workflow_decision.get("workflow_mode_reason"),
+        "workflow_degrade_reason": workflow_decision.get("workflow_degrade_reason"),
+        "workflow_required_artifacts": workflow_decision.get("workflow_required_artifacts", []),
+        "workflow_metrics": workflow_metrics if isinstance(workflow_metrics, dict) else None,
     }
     try:
         payload["codex_capability"] = codex_capability_readiness_to_dict(
@@ -519,7 +540,40 @@ def _apply_profile_interaction_defaults_to_record(store: FileTaskStore, task_id:
     store.save(record)
 
 
-def _interaction_trace_for_record(record: TaskRecord, profile: object) -> dict | None:
+def _select_workflow_decision(*, profile: object, goal: str, scope: str, mode: str) -> dict:
+    workflow_policy = getattr(profile, "workflow_governance_policy", {}) if profile is not None else {}
+    allowed_modes = [
+        "direct_fix",
+        "spec_first",
+        "spec_plus_review",
+        "worktree_isolated_execution",
+        "parallel_subagent_assist",
+        "maintenance_automation",
+    ]
+    if isinstance(workflow_policy, dict):
+        configured = workflow_policy.get("allowed_workflow_modes")
+        if isinstance(configured, list) and configured:
+            allowed_modes = [item for item in configured if isinstance(item, str) and item in allowed_modes]
+    selected = select_workflow_mode(
+        risk_level="high" if mode == "full" else "low",
+        multi_file=("multi" in scope.lower()) or ("workflow" in goal.lower()),
+        unclear_requirements=("?" in goal) or ("spec" not in goal.lower()),
+        needs_review=mode == "full",
+        supports_worktrees="worktree_isolated_execution" in allowed_modes,
+        supports_subagents="parallel_subagent_assist" in allowed_modes,
+        supports_background_automation="maintenance_automation" in allowed_modes,
+        repeated_stable_task=scope.lower().startswith("runtime"),
+    )
+    return {
+        "workflow_mode_selected": selected.workflow_mode_selected,
+        "workflow_mode_source": selected.workflow_mode_source,
+        "workflow_mode_reason": selected.workflow_mode_reason,
+        "workflow_degrade_reason": selected.workflow_degrade_reason,
+        "workflow_required_artifacts": selected.workflow_required_artifacts,
+    }
+
+
+def _interaction_trace_for_record(record: TaskRecord, profile: object, *, workflow_decision: dict | None = None) -> dict | None:
     interaction_defaults = record.task.interaction_defaults or _interaction_defaults_from_profile(profile)
     if not interaction_defaults:
         return None
@@ -550,6 +604,22 @@ def _interaction_trace_for_record(record: TaskRecord, profile: object) -> dict |
         "alignment_outcome": "repo profile interaction defaults applied",
         "stop_or_degrade_reason": "none",
     }
+    if isinstance(workflow_decision, dict) and workflow_decision:
+        trace["workflow_mode_selected"] = workflow_decision.get("workflow_mode_selected")
+        trace["workflow_mode_source"] = workflow_decision.get("workflow_mode_source")
+        trace["workflow_mode_reason"] = workflow_decision.get("workflow_mode_reason")
+        trace["workflow_degrade_reason"] = workflow_decision.get("workflow_degrade_reason")
+        trace["workflow_required_artifacts"] = workflow_decision.get("workflow_required_artifacts", [])
+        trace["workflow_metrics"] = build_workflow_effect_metrics(
+            workflow_mode_selected=str(workflow_decision.get("workflow_mode_selected") or "direct_fix"),
+            workflow_mode_source=str(workflow_decision.get("workflow_mode_source") or "deterministic_policy"),
+            workflow_degrade_reason=str(workflow_decision.get("workflow_degrade_reason") or ""),
+            recommendation_improved=str(workflow_decision.get("workflow_mode_selected") or "") != "direct_fix",
+            mode_level_comparison_reason=str(workflow_decision.get("workflow_mode_reason") or ""),
+            manual_intervention_count=1 if workflow_decision.get("workflow_mode_selected") == "spec_plus_review" else 0,
+            problem_run_rate=0.0,
+        )
+    return trace
 
 
 def run_attachment_verification(

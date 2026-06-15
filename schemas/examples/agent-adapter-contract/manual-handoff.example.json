@@ -58,6 +58,12 @@
         "delegation_mode": "manual_only",
         "degrade_policy_ref": "docs/product/adapter-degrade-policy.md"
       },
+      "workflow_capability_surface": {
+        "supports_worktrees": false,
+        "supports_subagents": false,
+        "supports_plan_review": true,
+        "supports_background_automation": false
+      },
       "known_limitations": [
         "no native attach",
         "no process bridge"

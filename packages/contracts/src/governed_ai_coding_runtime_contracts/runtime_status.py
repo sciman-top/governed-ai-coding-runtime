@@ -30,6 +30,12 @@ class RuntimeTaskStatus:
     clarification_active: bool = False
     latest_compression_action: str | None = None
     outstanding_observation_items_count: int | None = None
+    workflow_mode_selected: str | None = None
+    workflow_mode_source: str | None = None
+    workflow_mode_reason: str | None = None
+    workflow_degrade_reason: str | None = None
+    workflow_required_artifacts: list[str] = field(default_factory=list)
+    workflow_metrics: dict | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -231,6 +237,15 @@ def _runtime_task_status_from_dict(raw: dict) -> RuntimeTaskStatus:
             raw.get("outstanding_observation_items_count"),
             "outstanding_observation_items_count",
         ),
+        workflow_mode_selected=_optional_string(raw.get("workflow_mode_selected"), "workflow_mode_selected"),
+        workflow_mode_source=_optional_string(raw.get("workflow_mode_source"), "workflow_mode_source"),
+        workflow_mode_reason=_optional_string(raw.get("workflow_mode_reason"), "workflow_mode_reason"),
+        workflow_degrade_reason=_optional_string(raw.get("workflow_degrade_reason"), "workflow_degrade_reason"),
+        workflow_required_artifacts=_required_string_list(
+            raw.get("workflow_required_artifacts", []),
+            "workflow_required_artifacts",
+        ),
+        workflow_metrics=_optional_object(raw.get("workflow_metrics"), "workflow_metrics"),
     )
 
 
@@ -312,6 +327,12 @@ def _interaction_projection(*, runtime_root: Path, evidence_refs: list[str]) -> 
         "clarification_active": False,
         "latest_compression_action": None,
         "outstanding_observation_items_count": None,
+        "workflow_mode_selected": None,
+        "workflow_mode_source": None,
+        "workflow_mode_reason": None,
+        "workflow_degrade_reason": None,
+        "workflow_required_artifacts": [],
+        "workflow_metrics": None,
     }
     interaction_trace = _load_latest_interaction_trace(runtime_root=runtime_root, evidence_refs=evidence_refs)
     if interaction_trace is None:

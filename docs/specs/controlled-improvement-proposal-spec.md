@@ -34,6 +34,7 @@ Define a structured proposal pipeline that turns evidence-backed signals into hu
 - policy
 - control
 - knowledge
+- workflow
 - repo_followup
 
 ### proposal_scope

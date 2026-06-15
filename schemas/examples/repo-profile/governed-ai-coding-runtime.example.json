@@ -192,24 +192,31 @@
       "medium": "spec_first",
       "high": "spec_plus_review"
     },
-    "spec_artifact_requirements": [
-      "task_brief",
-      "change_plan"
-    ],
+    "spec_artifact_requirements": {
+      "required_for_modes": [
+        "spec_first",
+        "spec_plus_review"
+      ],
+      "artifact_refs": [
+        "docs/specs/workflow-governance-spec.md"
+      ]
+    },
     "review_requirements": {
-      "medium": "owner_review",
-      "high": "owner_review_required"
+      "required_for_modes": [
+        "spec_plus_review"
+      ],
+      "reviewer_kind": "human_review"
     },
     "worktree_policy": {
-      "allow": false,
+      "required_for_modes": [],
       "fallback_mode": "spec_plus_review"
     },
     "subagent_policy": {
-      "allow": false,
+      "required_for_modes": [],
       "fallback_mode": "spec_plus_review"
     },
     "automation_policy": {
-      "allow": true,
+      "required_for_modes": [],
       "fallback_mode": "direct_fix"
     }
   },

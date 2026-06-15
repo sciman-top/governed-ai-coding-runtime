@@ -58,7 +58,7 @@ class RepoProfile:
             raw.get("learning_assistance_policy", {})
         )
         workflow_governance_policy = _normalize_workflow_governance_policy(
-            raw.get("workflow_governance_policy")
+            raw.get("workflow_governance_policy", {})
         )
         normalized_raw = dict(raw)
         normalized_raw["required_entrypoint_policy"] = required_entrypoint_policy
@@ -198,7 +198,7 @@ def _normalize_workflow_governance_policy(value: object) -> dict:
     if not isinstance(value, dict):
         msg = "workflow_governance_policy must be an object"
         raise ValueError(msg)
-
+    normalized = dict(value)
     allowed_modes = {
         "direct_fix",
         "spec_first",
@@ -207,78 +207,60 @@ def _normalize_workflow_governance_policy(value: object) -> dict:
         "parallel_subagent_assist",
         "maintenance_automation",
     }
-    normalized = dict(value)
 
     default_mode = normalized.get("default_workflow_mode")
-    if not isinstance(default_mode, str) or default_mode not in allowed_modes:
-        msg = "workflow_governance_policy.default_workflow_mode must be a supported workflow mode"
+    if default_mode is not None and default_mode not in allowed_modes:
+        msg = f"unsupported workflow_governance_policy.default_workflow_mode: {default_mode}"
         raise ValueError(msg)
 
-    allowed_workflow_modes = normalized.get("allowed_workflow_modes")
-    if not isinstance(allowed_workflow_modes, list) or not allowed_workflow_modes:
-        msg = "workflow_governance_policy.allowed_workflow_modes must be a non-empty list"
-        raise ValueError(msg)
-    cleaned_modes: list[str] = []
-    for index, mode in enumerate(allowed_workflow_modes):
-        if not isinstance(mode, str) or mode not in allowed_modes:
-            msg = f"workflow_governance_policy.allowed_workflow_modes[{index}] must be a supported workflow mode"
-            raise ValueError(msg)
-        if mode not in cleaned_modes:
-            cleaned_modes.append(mode)
-    if default_mode not in cleaned_modes:
-        msg = "workflow_governance_policy.default_workflow_mode must exist in allowed_workflow_modes"
-        raise ValueError(msg)
-    normalized["allowed_workflow_modes"] = cleaned_modes
-
-    overrides = normalized.get("workflow_mode_overrides_by_risk")
-    if not isinstance(overrides, dict):
-        msg = "workflow_governance_policy.workflow_mode_overrides_by_risk must be an object"
-        raise ValueError(msg)
-    normalized_overrides: dict[str, str] = {}
-    for risk in ("low", "medium", "high"):
-        mode = overrides.get(risk)
-        if mode is None:
-            continue
-        if not isinstance(mode, str) or mode not in cleaned_modes:
-            msg = f"workflow_governance_policy.workflow_mode_overrides_by_risk.{risk} must be one of allowed_workflow_modes"
-            raise ValueError(msg)
-        normalized_overrides[risk] = mode
-    normalized["workflow_mode_overrides_by_risk"] = normalized_overrides
-
-    for field_name in ("spec_artifact_requirements",):
+    for field_name in ("allowed_workflow_modes",):
         entries = normalized.get(field_name)
+        if entries is None:
+            continue
         if not isinstance(entries, list):
             msg = f"workflow_governance_policy.{field_name} must be a list"
             raise ValueError(msg)
         for index, entry in enumerate(entries):
-            if not isinstance(entry, str) or not entry.strip():
-                msg = f"workflow_governance_policy.{field_name}[{index}] must be a non-empty string"
+            if entry not in allowed_modes:
+                msg = f"unsupported workflow_governance_policy.{field_name}[{index}]: {entry}"
                 raise ValueError(msg)
 
-    review_requirements = normalized.get("review_requirements")
-    if not isinstance(review_requirements, dict):
-        msg = "workflow_governance_policy.review_requirements must be an object"
-        raise ValueError(msg)
-    for key, review_value in review_requirements.items():
-        if not isinstance(key, str) or not key.strip():
-            msg = "workflow_governance_policy.review_requirements keys must be non-empty strings"
+    overrides = normalized.get("workflow_mode_overrides_by_risk")
+    if overrides is not None:
+        if not isinstance(overrides, dict):
+            msg = "workflow_governance_policy.workflow_mode_overrides_by_risk must be an object"
             raise ValueError(msg)
-        if not isinstance(review_value, str) or not review_value.strip():
-            msg = "workflow_governance_policy.review_requirements values must be non-empty strings"
-            raise ValueError(msg)
+        for risk in ("low", "medium", "high"):
+            mode = overrides.get(risk)
+            if mode is not None and mode not in allowed_modes:
+                msg = f"unsupported workflow_governance_policy.workflow_mode_overrides_by_risk.{risk}: {mode}"
+                raise ValueError(msg)
 
-    for field_name in ("worktree_policy", "subagent_policy", "automation_policy"):
-        policy = normalized.get(field_name)
-        if not isinstance(policy, dict):
+    for field_name in (
+        "spec_artifact_requirements",
+        "review_requirements",
+        "worktree_policy",
+        "subagent_policy",
+        "automation_policy",
+    ):
+        section = normalized.get(field_name)
+        if section is None:
+            continue
+        if not isinstance(section, dict):
             msg = f"workflow_governance_policy.{field_name} must be an object"
             raise ValueError(msg)
-        allow = policy.get("allow")
-        if not isinstance(allow, bool):
-            msg = f"workflow_governance_policy.{field_name}.allow must be a bool"
-            raise ValueError(msg)
-        fallback_mode = policy.get("fallback_mode")
-        if not isinstance(fallback_mode, str) or fallback_mode not in cleaned_modes:
-            msg = f"workflow_governance_policy.{field_name}.fallback_mode must be one of allowed_workflow_modes"
+        required_for_modes = section.get("required_for_modes")
+        if required_for_modes is not None:
+            if not isinstance(required_for_modes, list):
+                msg = f"workflow_governance_policy.{field_name}.required_for_modes must be a list"
+                raise ValueError(msg)
+            for index, entry in enumerate(required_for_modes):
+                if entry not in allowed_modes:
+                    msg = f"unsupported workflow_governance_policy.{field_name}.required_for_modes[{index}]: {entry}"
+                    raise ValueError(msg)
+        fallback_mode = section.get("fallback_mode")
+        if fallback_mode is not None and fallback_mode not in allowed_modes:
+            msg = f"unsupported workflow_governance_policy.{field_name}.fallback_mode: {fallback_mode}"
             raise ValueError(msg)
 
     return normalized

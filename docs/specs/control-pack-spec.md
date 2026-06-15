@@ -19,6 +19,7 @@ Control packs may reference:
 - provenance or attestation records
 - memory and evidence review flows
 - rollback runbooks or rollback commands
+- workflow governance policies or workflow mode references
 
 Control packs do not inline executable policy semantics. They bind existing kernel contracts into an auditable package with execution references that prove how each surface is checked or invoked.
 
@@ -68,6 +69,7 @@ Control packs do not inline executable policy semantics. They bind existing kern
 - `field_ownership.unified_kernel_fields` and `field_ownership.target_repo_input_fields` must be explicit, non-overlapping, and sufficient to distinguish kernel-owned fields from target-repo supplied fields.
 - `materialization` must identify the source template, generated runtime-consumable pack path, apply command, and verification command.
 - every active pack must have provenance sufficient to identify its source material.
+- workflow refs included in execution or materialization contracts must be sufficient to prove repo-profile workflow policy distribution when such policy exists.
 
 ## Non-Goals
 - replacing the control registry

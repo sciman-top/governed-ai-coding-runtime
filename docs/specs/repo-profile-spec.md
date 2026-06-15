@@ -38,9 +38,9 @@ Define the per-repository configuration inherited by governed sessions.
 - auto_commit_policy
 - interaction_profile
 - learning_assistance_policy
+- workflow_governance_policy
 - rule_file_coordination_policy
 - windows_process_environment_policy
-- workflow_governance_policy
 
 ## Inheritance Model
 1. platform defaults
@@ -58,9 +58,9 @@ Repo profiles may override:
 - delivery templates
 - bounded interaction defaults
 - bounded learning-assistance policy
+- bounded workflow governance policy
 - rule-file coordination details that stay repo/profile scoped
 - Windows process environment guidance that stays repo/profile scoped
-- workflow governance defaults and capability fallbacks that stay repo/profile scoped
 
 Repo profiles may not override:
 - evidence minimum fields
@@ -161,6 +161,19 @@ The policy must treat confusion as observable interaction evidence, not as psych
 
 Low-token teaching should explain at most one or two terms per response, prefer `definition + task role + common mistake`, and switch to checklist-first bug observation when runtime symptoms are underspecified.
 
+## Workflow Governance Policy
+Repos may declare bounded workflow governance defaults through `workflow_governance_policy`.
+
+Supported fields:
+- `default_workflow_mode`
+- `allowed_workflow_modes`
+- `workflow_mode_overrides_by_risk`
+- `spec_artifact_requirements`
+- `review_requirements`
+- `worktree_policy`
+- `subagent_policy`
+- `automation_policy`
+
 ## Rule File Coordination Policy
 Repos may inherit or declare bounded rule-file coordination defaults through `rule_file_coordination_policy`.
 
@@ -199,21 +212,6 @@ Supported fields:
 
 The policy may strengthen repo/operator guidance, but it may not weaken the shared approval model, gate order, or rollback requirements.
 
-## Workflow Governance Policy
-Repos may declare bounded workflow selection defaults through `workflow_governance_policy`.
-
-Supported fields:
-- `default_workflow_mode`
-- `allowed_workflow_modes`
-- `workflow_mode_overrides_by_risk`
-- `spec_artifact_requirements`
-- `review_requirements`
-- `worktree_policy`
-- `subagent_policy`
-- `automation_policy`
-
-The policy may shape which workflow mode is preferred, but it may not claim unsupported worktree or subagent capability, and it must degrade explicitly when the host cannot honor an advanced mode.
-
 ## Verification
 A repo profile is valid only if:
 - all required commands are present or explicitly marked not applicable
@@ -225,6 +223,6 @@ A repo profile is valid only if:
 - compatibility degrade behavior is explicit whenever support is partial or unsupported
 - interaction defaults stay bounded and do not redefine hard clarification or stop-on-budget behavior
 - learning assistance stays evidence-backed, respects the clarification cap, and degrades to summaries or handoff when budget pressure is high
+- workflow governance stays explicit about fallback, review, and host capability proof
 - inherited and repo-local override fields resolve to explicit schema paths in the inheritance matrix
 - managed workspaces and runtime-local storage roots stay on one machine in the first Full Runtime stage
-- workflow governance fields remain explicit and degrade safely when advanced host capability is missing
