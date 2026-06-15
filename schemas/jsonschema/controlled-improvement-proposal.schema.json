@@ -41,6 +41,7 @@
         "policy",
         "control",
         "knowledge",
+        "workflow",
         "repo_followup"
       ],
       "type": "string"

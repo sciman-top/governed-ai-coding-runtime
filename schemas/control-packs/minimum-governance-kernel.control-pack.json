@@ -142,6 +142,13 @@
         "runtime_ref": "scripts/operator.ps1",
         "verification_ref": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action Help",
         "mode": "runnable"
+      },
+      {
+        "id": "workflow.governed_selection",
+        "source_ref": "docs/specs/workflow-governance-spec.md",
+        "runtime_ref": "schemas/examples/workflow-governance/default-workflow-governor.example.json",
+        "verification_ref": "python -m unittest tests.runtime.test_workflow_governance tests.runtime.test_workflow_selection",
+        "mode": "verifiable"
       }
     ],
     "skills": [

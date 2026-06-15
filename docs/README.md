@@ -13,9 +13,11 @@
 - Human-readable summary: `Automation-first, gate-controlled, evidence-measured governance`.
 - Compatibility token: `Governance Hub + Reusable Contract + Controlled Evolution loop + outer AI intelligent review/generation`.
 - Current end-state wording: `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`.
-- `Automation-first, outer-AI-assisted, gate-controlled evolution` remains the active operating posture.
-- The repo is a governance sidecar and does not authorize automatic host replacement, policy mutation, skill enablement, push, or merge.
-- `Context budget and instruction minimalism` and `Least-privilege tool and credential boundary` both require concise, reviewable, bounded tool outputs with auditable permissions, provider secrets, and MCP/tool identities.
+  - `Automation-first, outer-AI-assisted, gate-controlled evolution` remains the active operating posture.
+  - The repo is a governance sidecar and does not authorize automatic host replacement, policy mutation, skill enablement, push, or merge.
+  - The repo's proven value is workflow / gate / evidence governance; it has not yet proven a built-in best AI coding workflow auto-executor.
+  - The intended evolution target is `AI coding workflow governor`, not a replacement host or a single canonical execution recipe.
+  - `Context budget and instruction minimalism` and `Least-privilege tool and credential boundary` both require concise, reviewable, bounded tool outputs with auditable permissions, provider secrets, and MCP/tool identities.
 - `Measured effect feedback over claims` means completion claims must keep fresh evidence, effect feedback, and trace/replay/trajectory references attached to the verified outcome.
 - Efficiency never overrides safety, permissions, evidence, rollback, review, or gate constraints.
 - The minimum comparable evidence surface still includes fields such as `freshness_status`, verification commands, effect metrics, and rollback references where the surface supports them.
@@ -72,7 +74,11 @@
   - `scripts/verify-reference-basis.py`
 - Current hardening docs:
   - [Reference Governance And Release Preflight Roadmap](./roadmap/reference-governance-and-preflight-roadmap.md)
-  - [Reference Governance And Release Preflight Plan](./plans/reference-governance-and-preflight-plan.md)
+- [Reference Governance And Release Preflight Plan](./plans/reference-governance-and-preflight-plan.md)
+- [Workflow Governor Governance Plan](./plans/workflow-governor-governance-plan.md)
+- [Workflow Governor Governance Roadmap](./roadmap/workflow-governor-governance-roadmap.md)
+- [Workflow Governance Spec](./specs/workflow-governance-spec.md)
+- [Workflow Effect Metrics Spec](./specs/workflow-effect-metrics-spec.md)
   - [20260609 Reference Basis And Preflight Hardening](./change-evidence/20260609-reference-basis-and-preflight-hardening.md)
   - [20260609 Reference-Required Change Enforcement](./change-evidence/20260609-reference-required-change-enforcement.md)
 

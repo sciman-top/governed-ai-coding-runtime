@@ -30,6 +30,7 @@
 | `mcp-inspector` | Keep | official mcp tool | MCP server/tool surface inspection and debugging | 对 MCP 联调和 server/tool 验证非常实用，但不是协议真源 |
 | `microsoft-agent-framework` | Keep | official framework | Agent workflow observability, checkpoints, middleware | 补 Microsoft production workflow framework 视角 |
 | `anthropic-claude-code-action` | Keep | official ci | Claude CI/action surface | 重要但窄于主宿主本体 |
+| `anthropic-claude-code-monitoring-guide` | Keep | official ops guide | telemetry, ROI, rollout framing | 适合 workflow effect metrics、value audit 与 rollout measurement |
 | `anthropic-claude-plugins-official` | Keep | official plugin directory | Claude plugin packaging, MCP/skills composition, quality boundary | 对插件分发与受管插件边界更直接 |
 | `openhands` | Keep | community runtime | Sandbox/execution host vocabulary | 执行环境与宿主隔离参考强 |
 | `aider` | Keep | community cli | Repo map, patch/edit loop | repo grounding 和 edit ergonomics 仍然非常强 |
@@ -39,13 +40,14 @@
 | `opencode` | Keep | community cli | terminal UX, provider/session abstractions | 宿主抽象和 TUI 取舍参考面 |
 | `goose` | Keep | community app/cli | extension surface, desktop/CLI packaging | 桌面/CLI 边界可对照 |
 | `cline` | Keep | community ide/cli | approval, rules, skills, headless CI permission posture | 权限姿态和 IDE/CLI 协作参考面 |
+| `github-spec-kit` | Keep | community workflow | requirements -> spec -> plan -> tasks | 规范驱动交付和 spec-first 工作流参考面 |
 | `1code` | Keep | community managed agent | worktree isolation, plan mode, diff preview, PR follow-through | managed/background coding-agent UX 参考面 |
+| `obra-superpowers` | Keep | community workflow | plan-driven execution, subagents, worktrees, incremental delivery | workflow governor 设计最直接的社区方法论参考之一 |
 | `openclaw-code-agent` | Keep | community orchestration plugin | chat-launched Claude Code/Codex/OpenCode sessions, lifecycle, goal loops | 与本仓“受控后台编码会话”机制更贴近 |
 | `hermes-agent` | Keep | community self-improve | skills/memory/scheduling/trajectory | controlled improvement / memory 借鉴面 |
 | `langgraph` | Keep | orchestration | durable state, interrupt/resume | orchestration vocabulary 参考面 |
 | `semantic-kernel` | Keep | enterprise sdk | plugins/planners/multi-language structure | 企业 SDK 结构化参考面 |
 | `google-gemini-cli` | Legacy Bridge | official legacy host | GEMINI.md/tooling/MCP/enterprise bridge | 仍有真实兼容债，但不再是长期方向 |
-| `anthropic-claude-code-monitoring-guide` | Observe | official ops guide | telemetry, ROI, rollout framing | 适合运营和度量，不是宿主语义源 |
 | `microsoft-ai-agents-for-beginners` | Observe | teaching material | onboarding and examples | 教学价值高，架构直接价值低 |
 | `openclaw` | Observe | community assistant gateway | channel routing, DM pairing, sandbox, remote exposure | 观察 personal-assistant gateway，不作为核心 coding-runtime host |
 
@@ -55,6 +57,7 @@
 - 现在要研究“MCP server/tool 面怎么联调与验收”：先看 `mcp-inspector`、`github-mcp-server`
 - 现在要研究“浏览器自动化怎么选”：先看 `playwright-cli` 与 `playwright-mcp`
 - 现在要研究“编辑循环/修复闭环怎么借”：先看 `aider`、`swe-agent`、`openhands`
+- 现在要研究“spec-first / plan-driven workflow 怎么借”：先看 `github-spec-kit`、`obra-superpowers`，再对照 `1code`、`openclaw-code-agent`
 - 现在要研究“后台编码会话/托管 agent 怎么借”：先看 `openclaw-code-agent`、`1code`，再对照 `cline`、`goose`、`opencode`
 - 现在要研究“消息网关/远程暴露风险怎么借”：只观察 `openclaw` 和 `hermes-agent` 的安全边界，不复制其助手产品身份
 
@@ -62,7 +65,7 @@
 - 立即删除：`none`
 - 当前最不影响主线的未来归档候选：
   1. `microsoft-ai-agents-for-beginners`
-  2. `anthropic-claude-code-monitoring-guide`
+  2. `microsoft-ai-agents-for-beginners`
   3. `openclaw`，如果后续 personal-assistant gateway 观察不再提供新洞见
 
 ## Related Docs

@@ -33,6 +33,11 @@ class TargetRepoSpeedKpiRecord:
     window_start_utc: str | None
     window_end_utc: str | None
     latest_evidence_ref: str | None
+    workflow_mode_selected: str | None = None
+    workflow_mode_source: str | None = None
+    workflow_mode_reason: str | None = None
+    workflow_degrade_reason: str | None = None
+    workflow_metrics: dict[str, object] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,6 +115,11 @@ def _build_record(target: str, entries: list[dict], *, window_kind: WindowKind, 
             window_start_utc=None,
             window_end_utc=None,
             latest_evidence_ref=None,
+            workflow_mode_selected=None,
+            workflow_mode_source=None,
+            workflow_mode_reason=None,
+            workflow_degrade_reason=None,
+            workflow_metrics=None,
         )
 
     window_start = selected_daily[0]["timestamp"].isoformat()
@@ -178,6 +188,11 @@ def _build_record(target: str, entries: list[dict], *, window_kind: WindowKind, 
         window_start_utc=window_start,
         window_end_utc=window_end,
         latest_evidence_ref=_latest_evidence_ref(latest_daily["payload"]),
+        workflow_mode_selected=_workflow_mode(latest_daily["payload"], "workflow_mode_selected"),
+        workflow_mode_source=_workflow_mode(latest_daily["payload"], "workflow_mode_source"),
+        workflow_mode_reason=_workflow_mode(latest_daily["payload"], "workflow_mode_reason"),
+        workflow_degrade_reason=_workflow_mode(latest_daily["payload"], "workflow_degrade_reason"),
+        workflow_metrics=_workflow_metrics(latest_daily["payload"]),
     )
 
 
@@ -241,6 +256,32 @@ def _latest_evidence_ref(payload: dict) -> str | None:
     if verify_attachment and isinstance(verify_attachment.get("evidence_link"), str):
         return verify_attachment["evidence_link"]
     return None
+
+
+def _workflow_mode(payload: dict, field_name: str) -> str | None:
+    runtime_check = _required_object(payload.get("runtime_check"), "runtime_check")
+    if runtime_check is None:
+        return None
+    runtime_payload = _required_object(runtime_check.get("payload"), "runtime_check.payload")
+    if runtime_payload is None:
+        return None
+    value = runtime_payload.get(field_name)
+    if isinstance(value, str) and value.strip():
+        return value.strip()
+    return None
+
+
+def _workflow_metrics(payload: dict) -> dict[str, object] | None:
+    runtime_check = _required_object(payload.get("runtime_check"), "runtime_check")
+    if runtime_check is None:
+        return None
+    runtime_payload = _required_object(runtime_check.get("payload"), "runtime_check.payload")
+    if runtime_payload is None:
+        return None
+    metrics = _required_object(runtime_payload.get("workflow_metrics"), "workflow_metrics")
+    if metrics is None:
+        return None
+    return metrics
 
 
 def _has_problem(payload: dict) -> bool:

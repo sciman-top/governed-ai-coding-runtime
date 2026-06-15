@@ -983,6 +983,214 @@
         }
       }
     },
+    "workflow_governance_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_workflow_mode": {
+          "type": "string",
+          "enum": [
+            "direct_fix",
+            "spec_first",
+            "spec_plus_review",
+            "worktree_isolated_execution",
+            "parallel_subagent_assist",
+            "maintenance_automation"
+          ]
+        },
+        "allowed_workflow_modes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "direct_fix",
+              "spec_first",
+              "spec_plus_review",
+              "worktree_isolated_execution",
+              "parallel_subagent_assist",
+              "maintenance_automation"
+            ]
+          }
+        },
+        "workflow_mode_overrides_by_risk": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "low": {
+              "type": "string",
+              "enum": [
+                "direct_fix",
+                "spec_first",
+                "spec_plus_review",
+                "worktree_isolated_execution",
+                "parallel_subagent_assist",
+                "maintenance_automation"
+              ]
+            },
+            "medium": {
+              "type": "string",
+              "enum": [
+                "direct_fix",
+                "spec_first",
+                "spec_plus_review",
+                "worktree_isolated_execution",
+                "parallel_subagent_assist",
+                "maintenance_automation"
+              ]
+            },
+            "high": {
+              "type": "string",
+              "enum": [
+                "direct_fix",
+                "spec_first",
+                "spec_plus_review",
+                "worktree_isolated_execution",
+                "parallel_subagent_assist",
+                "maintenance_automation"
+              ]
+            }
+          }
+        },
+        "spec_artifact_requirements": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "required_for_modes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "direct_fix",
+                  "spec_first",
+                  "spec_plus_review",
+                  "worktree_isolated_execution",
+                  "parallel_subagent_assist",
+                  "maintenance_automation"
+                ]
+              }
+            },
+            "artifact_refs": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "review_requirements": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "required_for_modes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "direct_fix",
+                  "spec_first",
+                  "spec_plus_review",
+                  "worktree_isolated_execution",
+                  "parallel_subagent_assist",
+                  "maintenance_automation"
+                ]
+              }
+            },
+            "reviewer_kind": { "type": "string" }
+          }
+        },
+        "worktree_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "required_for_modes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "direct_fix",
+                  "spec_first",
+                  "spec_plus_review",
+                  "worktree_isolated_execution",
+                  "parallel_subagent_assist",
+                  "maintenance_automation"
+                ]
+              }
+            },
+            "fallback_mode": {
+              "type": "string",
+              "enum": [
+                "direct_fix",
+                "spec_first",
+                "spec_plus_review",
+                "worktree_isolated_execution",
+                "parallel_subagent_assist",
+                "maintenance_automation"
+              ]
+            }
+          }
+        },
+        "subagent_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "required_for_modes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "direct_fix",
+                  "spec_first",
+                  "spec_plus_review",
+                  "worktree_isolated_execution",
+                  "parallel_subagent_assist",
+                  "maintenance_automation"
+                ]
+              }
+            },
+            "fallback_mode": {
+              "type": "string",
+              "enum": [
+                "direct_fix",
+                "spec_first",
+                "spec_plus_review",
+                "worktree_isolated_execution",
+                "parallel_subagent_assist",
+                "maintenance_automation"
+              ]
+            }
+          }
+        },
+        "automation_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "required_for_modes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "direct_fix",
+                  "spec_first",
+                  "spec_plus_review",
+                  "worktree_isolated_execution",
+                  "parallel_subagent_assist",
+                  "maintenance_automation"
+                ]
+              }
+            },
+            "fallback_mode": {
+              "type": "string",
+              "enum": [
+                "direct_fix",
+                "spec_first",
+                "spec_plus_review",
+                "worktree_isolated_execution",
+                "parallel_subagent_assist",
+                "maintenance_automation"
+              ]
+            }
+          }
+        }
+      }
+    },
     "network_research_policy": {
       "type": "object",
       "additionalProperties": false,

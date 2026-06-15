@@ -3,6 +3,11 @@
 ## Purpose
 Show how to use this runtime with Codex/Claude Code style host workflows and what concrete help it provides during real coding tasks.
 
+What this guide does not claim:
+- it does not claim the runtime already contains the single best automatic AI coding workflow
+- it does not claim the runtime replaces Codex, Claude Code, or another host
+- it does not claim fixed multi-agent orchestration is the default mode everywhere
+
 ## Root Principle
 - The root operating principle for this repository's host-facing workflow is `efficiency first`.
 - In practice that means: low interruption, continuous execution, lower token and cost burn, necessary explanatory density, and high throughput.
@@ -188,6 +193,8 @@ python scripts/run-governed-task.py execute-attachment-write `
 
 ## Boundary
 - This runtime is a governance/runtime layer over upstream hosts, not a replacement host UI.
+- Its current proved value is workflow / gate / evidence governance.
+- Workflow modes such as spec-first, review-heavy, worktree-isolated, or subagent-assisted execution may be recommended or governed, but they are not all universally auto-executed by default today.
 - Native attach remains environment-dependent and may degrade to `process_bridge` or `manual_handoff`.
 - Do not claim universal full takeover across all repos/environments/high-risk workflows.
 

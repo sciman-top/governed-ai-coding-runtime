@@ -109,6 +109,11 @@ def _extract_metrics(entry: dict[str, Any]) -> dict[str, Any]:
         "evidence_complete": completeness_ratio >= 0.8,
         "evidence_completeness_ratio": completeness_ratio,
         "evidence_refs": list(dict.fromkeys(evidence_refs)),
+        "workflow_mode_selected": runtime_payload.get("workflow_mode_selected"),
+        "workflow_mode_source": runtime_payload.get("workflow_mode_source"),
+        "workflow_mode_reason": runtime_payload.get("workflow_mode_reason"),
+        "workflow_degrade_reason": runtime_payload.get("workflow_degrade_reason"),
+        "workflow_metrics": runtime_payload.get("workflow_metrics"),
     }
 
 

@@ -1,4 +1,4 @@
-schema_catalog_version: "1.14"
+schema_catalog_version: "1.15"
 items:
   - name: core-principles
     path: schemas/jsonschema/core-principles.schema.json
@@ -27,6 +27,9 @@ items:
   - name: repo-profile
     path: schemas/jsonschema/repo-profile.schema.json
     source_spec: docs/specs/repo-profile-spec.md
+  - name: workflow-governance
+    path: schemas/jsonschema/workflow-governance.schema.json
+    source_spec: docs/specs/workflow-governance-spec.md
   - name: repo-attachment-binding
     path: schemas/jsonschema/repo-attachment-binding.schema.json
     source_spec: docs/specs/repo-attachment-binding-spec.md
@@ -108,6 +111,9 @@ items:
   - name: target-repo-speed-kpi
     path: schemas/jsonschema/target-repo-speed-kpi.schema.json
     source_spec: docs/specs/target-repo-speed-kpi-spec.md
+  - name: workflow-effect-metrics
+    path: schemas/jsonschema/workflow-effect-metrics.schema.json
+    source_spec: docs/specs/workflow-effect-metrics-spec.md
   - name: interaction-signal
     path: schemas/jsonschema/interaction-signal.schema.json
     source_spec: docs/specs/interaction-signal-spec.md

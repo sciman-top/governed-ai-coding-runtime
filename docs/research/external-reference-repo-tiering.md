@@ -44,6 +44,7 @@
 | `mcp-servers` | Official example server bundle; useful but secondary to spec + SDKs. |
 | `mcp-inspector` | Official MCP testing/inspection tool; very useful for server/tool-surface debugging, but still secondary to spec + SDKs for protocol truth. |
 | `anthropic-claude-code-action` | First-party CI/action surface; important, but narrower than the main `claude-code` host repo. |
+| `anthropic-claude-code-monitoring-guide` | Official ROI/telemetry guide; useful for workflow effect metrics, rollout measurement, and value-audit framing. |
 | `anthropic-claude-plugins-official` | Official plugin directory with real packaging/MCP/skills combinations; useful for governed plugin-distribution boundaries, but narrower than the main host repo. |
 | `microsoft-agent-framework` | First-party workflow framework; useful for observability, checkpoints, middleware, and multi-agent workflow vocabulary without becoming this repo's required runtime. |
 | `openhands` | Strong execution-host and sandbox vocabulary reference. |
@@ -54,6 +55,8 @@
 | `opencode` | Useful terminal UX/provider/session abstraction reference. |
 | `goose` | Useful extension and desktop/CLI packaging reference. |
 | `cline` | Useful approval, rules, skills, IDE/CLI/browser action, and headless CI permission-surface reference. |
+| `github-spec-kit` | Useful spec-driven delivery reference for requirements, specs, plans, and task breakdown before execution. |
+| `obra-superpowers` | Useful plan-driven execution methodology reference for incremental delivery, subagent discipline, and worktree-aware implementation flow. |
 | `1code` | Useful managed/background coding-agent client reference for worktree isolation, plan mode, diff preview, PR follow-through, and automations. |
 | `openclaw-code-agent` | Directly relevant chat-to-Codex/Claude/OpenCode background session plugin; useful for plan approval, worktree lifecycle, goal loops, and routed outcome summaries. |
 | `hermes-agent` | Valuable skills/memory/self-improvement reference, but not a main host. |
@@ -68,7 +71,6 @@
 ## Tier 4 / Observe
 | Repo | Why it is lower priority |
 | --- | --- |
-| `anthropic-claude-code-monitoring-guide` | Helpful official ROI/telemetry guide, but it is an operational measurement supplement, not a host/runtime semantics source. |
 | `microsoft-ai-agents-for-beginners` | Useful teaching-grade examples, but lowest direct value for this repo's current host/runtime architecture decisions. |
 | `openclaw` | Useful for personal-assistant gateway, channel routing, DM pairing, sandbox, and remote-exposure posture; observe only because its product identity is not this repo's coding-runtime control layer. |
 
@@ -81,7 +83,7 @@
 
 ## First Archive Candidates If You Want To Slim Down Later
 1. `microsoft-ai-agents-for-beginners`
-2. `anthropic-claude-code-monitoring-guide`
+2. `microsoft-ai-agents-for-beginners`
 3. `openclaw` if personal-assistant gateway observations stop producing new security or routing insights
 
 ## Practical Rule

@@ -17,11 +17,18 @@ It is not:
 - a competing AI coding host
 - a wrapper-first orchestration product
 - a generation-guardrail product
+- a replacement host
+- a default multi-agent orchestrator with one fixed best workflow recipe
 
 ## Best-End-State Blueprint
 The current best engineering end state is:
 
 `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`
+
+Current product-boundary tightening:
+- the repo's proved value is workflow / gate / evidence governance
+- it may evolve into an `AI coding workflow governor`
+- it has **not** yet proved that a built-in best AI coding workflow auto-executor already exists
 
 ### 1. Governance Hub
 The runtime kernel owns:
@@ -125,6 +132,10 @@ Implication:
 
 ## Mechanism Intake Rule
 Borrow mechanisms, not product identities.
+
+For workflow design specifically:
+- borrow spec-first, plan-driven, worktree-aware, subagent-aware mechanisms
+- do not present `spec-kit + superpowers + multi-subagent + multi-worktree + auto-execution` as a single mandatory built-in default
 
 Take first from:
 - official product docs

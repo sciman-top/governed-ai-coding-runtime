@@ -5,7 +5,7 @@
     "docs/change-evidence/20260419-gap-064-control-rollout-waiver-recovery.md",
     "docs/change-evidence/20260419-gap-066-governance-asset-provenance.md"
   ],
-  "proposal_category": "policy",
+  "proposal_category": "workflow",
   "proposal_scope": "unified_governance",
   "summary": "Promote verification-hotspot control from observe to canary for selected repos after health-signal baseline stabilizes.",
   "rationale": "Trace and waiver history show stable rollback posture but incomplete promotion evidence for broad enforce mode.",

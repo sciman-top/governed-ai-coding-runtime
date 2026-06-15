@@ -17,6 +17,16 @@ It is a governed runtime layer around AI coding sessions that makes coding execu
 
 The product's job is to wrap agent execution in deterministic control-plane rules rather than to replace the agent itself.
 
+Current proved value boundary:
+- workflow governance
+- gate orchestration
+- evidence and rollback discipline
+
+Current unproved claim boundary:
+- a built-in best AI coding workflow auto-executor
+- a replacement host
+- a default multi-agent orchestrator that always selects the globally best recipe
+
 Final-state best practice means risk-proportional governance, not maximum friction. Low-risk exploration and local iteration should stay fast. Medium and high-risk actions should receive the approval, verification, evidence, and rollback controls that real engineering work requires.
 
 ## Best-End-State Blueprint

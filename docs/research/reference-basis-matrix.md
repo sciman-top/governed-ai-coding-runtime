@@ -8,9 +8,11 @@
 
 ## Add / Remove Decision
 - `立即删减`: `none`
-- `本轮新增`: `1code`, `openclaw-code-agent`, `openclaw`
-- `当前结论`: 现有本地参考 shelf 仍覆盖本仓当前主线需要的宿主、协议、浏览器自动化、CLI host、plugin/action、agent-runtime 关键面；本轮新增只补 managed/background coding-agent 和 personal-assistant gateway 观察缺口，不改变本仓控制层定位。
+- `本轮新增`: `github-spec-kit`, `obra-superpowers`
+- `当前结论`: 现有本地参考 shelf 仍覆盖本仓当前主线需要的宿主、协议、浏览器自动化、CLI host、plugin/action、agent-runtime 关键面；本轮新增只补 spec-driven / workflow-governance 参考面，不改变本仓控制层定位。
 - `OpenClaw / Hermes 结论`:
+  - `github-spec-kit`: 应作为 Tier 2 参考仓；它直接覆盖 requirement -> spec -> plan -> task breakdown 的 spec-driven 交付路径。
+  - `obra-superpowers`: 应作为 Tier 2 参考仓；它直接覆盖 plan-driven execution、incremental delivery、subagent discipline 和 worktree-aware flow。
   - `openclaw-code-agent`: 应作为 Tier 2 参考仓；它直接覆盖 Claude Code / Codex / OpenCode 后台编码会话、plan approval、worktree lifecycle、goal loop 和 chat routing。
   - `openclaw`: 只作为 Tier 4 观察参考；它的核心是 personal assistant gateway、channel routing、DM pairing、sandbox 和 remote exposure posture，不是本仓要复制的 coding-runtime host。
   - `hermes-agent`: 继续作为 Tier 2 参考仓；重点借 skills/memory lifecycle、messaging gateway、多 backend terminal runtime、cron 和 trajectory compression，不借长期助手身份或社交/通讯产品重心。
@@ -36,6 +38,7 @@
 | Browser automation and plugin/skill composition | `scripts/governance/preflight.ps1`, future browser/operator verification surfaces, plugin/skill boundary docs | `microsoft-playwright-cli`, `microsoft-playwright-mcp`, `anthropic-claude-plugins-official` | 借 token-efficient browser CLI、persistent browser MCP、plugin packaging 边界；不把 browser host 变成本仓产品身份 |
 | Release gate, preflight, and CI composition | `.github/workflows/*.yml`, `scripts/governance/*.ps1`, `.governed-ai/repo-profile.json`, `scripts/verify-repo.ps1` | `openai-codex`, `anthropic-claude-code-action`, `github-copilot-cli` | 借 release-style automation、host CI/action 边界、repo-profile/gate composition；保持“本地同契约、CI 兜底”，不造平行 gate 体系 |
 | Community execution loop and context shaping | `docs/research/runtime-governance-borrowing-matrix.md`, `docs/architecture/capability-portfolio-classifier.json`, repo-map/context artifacts | `aider`, `swe-agent`, `mini-swe-agent`, `continue`, `openhands`, `opencode`, `goose`, `cline`, `1code`, `openclaw-code-agent`, `hermes-agent`, `langgraph`, `semantic-kernel`, `microsoft-agent-framework` | 借 repo grounding、trace/eval、worktree lifecycle、managed/background session UX、memory lifecycle、orchestration vocabulary；不整体迁入 framework/runtime identity，不复制 personal-assistant gateway 身份 |
+| Workflow governance and spec-driven delivery | `docs/specs/*workflow*`, `docs/plans/*workflow*`, `docs/roadmap/*workflow*`, `docs/change-evidence/*workflow*`, workflow-aware schema/example/runtime outputs | `openai-codex`, `anthropic-claude-code`, `github-spec-kit`, `obra-superpowers`, `1code`, `openclaw-code-agent`, `aider`, `swe-agent` | 借 spec-first、plan-driven、managed/background execution、worktree/subagent discipline；不宣称固定唯一最佳配方，不把外部方法论直接当作本仓内建自动执行能力 |
 
 ## Hard Rule
 - 改动命中 [Reference Basis Policy](../architecture/reference-basis-policy.json) 里的 guarded surface 时，必须：
@@ -47,7 +50,7 @@
 
 ## Practical Answer
 - 当前不建议为这轮工作再删本地参考仓。
-- 本轮只新增 3 个 clone：`1code`、`openclaw-code-agent`、`openclaw`。前两个补 managed/background coding-agent 机制面，后一个只补 personal-assistant gateway 观察面。
+- 本轮只新增 2 个 clone：`github-spec-kit`、`obra-superpowers`。它们补的是 spec-driven / workflow-governance 缺口，而不是再扩一个新的宿主家族。
 - 后续不继续无界加仓；先把“哪些 surface 必查哪些 reference”收口成硬规则，比继续堆参考仓更值钱。
 - 未来真的要新增本地 reference repo 时，必须先回答：
   - 它补的是哪个当前 matrix 没覆盖的 surface？

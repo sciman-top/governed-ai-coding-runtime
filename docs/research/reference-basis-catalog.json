@@ -33,6 +33,13 @@
       "why": "Claude host semantics, plugins, runtime boundary"
     },
     {
+      "reference_id": "github-spec-kit",
+      "relative_path": "repos/github-spec-kit",
+      "tier": "Tier 2 / Keep",
+      "category": "community-or-framework",
+      "why": "Spec-driven development workflow reference for requirements, plans, and task breakdown."
+    },
+    {
       "reference_id": "github-copilot-cli",
       "relative_path": "repos/github-copilot-cli",
       "tier": "Tier 1 / Must Read",
@@ -101,6 +108,13 @@
       "tier": "Tier 2 / Keep",
       "category": "official-or-protocol",
       "why": "Claude CI/action boundary"
+    },
+    {
+      "reference_id": "anthropic-claude-code-monitoring-guide",
+      "relative_path": "repos/anthropic-claude-code-monitoring-guide",
+      "tier": "Tier 2 / Keep",
+      "category": "official-or-protocol",
+      "why": "Workflow ROI, telemetry, and organizational rollout measurement reference."
     },
     {
       "reference_id": "anthropic-claude-plugins-official",
@@ -206,6 +220,13 @@
       "tier": "Tier 4 / Observe",
       "category": "community-or-framework",
       "why": "Personal assistant gateway reference for channel routing, DM pairing, sandboxing, and remote exposure posture"
+    },
+    {
+      "reference_id": "obra-superpowers",
+      "relative_path": "repos/obra-superpowers",
+      "tier": "Tier 2 / Keep",
+      "category": "community-or-framework",
+      "why": "Workflow methodology reference for plan-driven execution, subagent discipline, and incremental delivery."
     },
     {
       "reference_id": "hermes-agent",

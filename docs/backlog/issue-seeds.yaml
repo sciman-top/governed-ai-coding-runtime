@@ -750,3 +750,43 @@ issues:
     type: HITL
     blocked_by: [GAP-171]
     user_stories: [11, 13, 18, 21, 31, 37, 44, 45]
+  - id: GAP-173
+    title: Workflow-Governor Value Audit And Product Boundary Rewrite
+    type: HITL
+    blocked_by: [GAP-172]
+    user_stories: [13, 18, 21, 23, 29, 31, 37, 44]
+  - id: GAP-174
+    title: Reference Shelf Refresh And Workflow Reference-Basis Enforcement
+    type: AFK
+    blocked_by: [GAP-173]
+    user_stories: [11, 13, 18, 21, 23, 29, 31, 44]
+  - id: GAP-175
+    title: Workflow Governance Contract Family
+    type: AFK
+    blocked_by: [GAP-174]
+    user_stories: [7, 8, 11, 13, 18, 21, 23, 31, 44]
+  - id: GAP-176
+    title: Repo-Profile, Control-Pack, And Adapter Workflow Expansion
+    type: AFK
+    blocked_by: [GAP-175]
+    user_stories: [7, 8, 11, 13, 18, 21, 23, 31, 44]
+  - id: GAP-177
+    title: Runtime Selection And Workflow Projection
+    type: AFK
+    blocked_by: [GAP-176]
+    user_stories: [11, 13, 14, 18, 21, 23, 31, 44]
+  - id: GAP-178
+    title: Workflow Effect Metrics And KPI Integration
+    type: AFK
+    blocked_by: [GAP-177]
+    user_stories: [13, 14, 15, 21, 31, 39, 44, 45]
+  - id: GAP-179
+    title: Two-Repo Workflow Comparison Proof
+    type: HITL
+    blocked_by: [GAP-178]
+    user_stories: [13, 14, 15, 18, 21, 31, 37, 44, 45]
+  - id: GAP-180
+    title: Claim Tightening, Closeout Evidence, And Conditional Package Completion
+    type: HITL
+    blocked_by: [GAP-179]
+    user_stories: [13, 18, 21, 23, 29, 31, 37, 44, 45]

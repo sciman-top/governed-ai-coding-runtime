@@ -358,6 +358,22 @@
           "output_schema_ref": {
             "type": "string"
           },
+          "workflow_capability_surface": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "supports_worktrees": { "type": "boolean" },
+              "supports_subagents": { "type": "boolean" },
+              "supports_plan_review": { "type": "boolean" },
+              "supports_background_automation": { "type": "boolean" }
+            },
+            "required": [
+              "supports_worktrees",
+              "supports_subagents",
+              "supports_plan_review",
+              "supports_background_automation"
+            ]
+          },
           "known_limitations": {
             "type": "array",
             "items": {

@@ -37,6 +37,7 @@ The contract describes capabilities, not vendor identity. Codex CLI/App, Claude 
 - ide_bridge_ref
 - browser_automation_ref
 - output_schema_ref
+- workflow_capability_surface
 - known_limitations
 - recommended_default_mode
 - compatibility_notes
@@ -61,6 +62,12 @@ Every adapter contract must also declare a canonical `capability_surface` object
 - `capability_surface.attach_mode` expresses the continuity and execution-attachment posture that the runtime is actually claiming (`native_attach`, `process_bridge`, `manual_handoff`, or `import_only`).
 - `capability_surface.degrade_reason` must be explicit whenever the declared attach mode or tier is weaker than the preferred or strongest posture. A `null` value is allowed only when no degradation is being claimed.
 - `capability_surface.verification_refs` and `capability_surface.evidence_refs` make the declaration auditable instead of narrative-only. They may point to docs, artifacts, trials, or runtime-owned evidence locations, but they must not be omitted.
+
+### workflow_capability_surface required fields
+- `supports_worktrees`
+- `supports_subagents`
+- `supports_plan_review`
+- `supports_background_automation`
 
 ## Enumerations
 
@@ -177,6 +184,22 @@ Every adapter contract must also declare a canonical `capability_surface` object
 - manual_handoff
 - import_only
 
+### workflow_capability_surface.supports_worktrees
+- true
+- false
+
+### workflow_capability_surface.supports_subagents
+- true
+- false
+
+### workflow_capability_surface.supports_plan_review
+- true
+- false
+
+### workflow_capability_surface.supports_background_automation
+- true
+- false
+
 ## Invariants
 - adapter tier must be one of `native_attach`, `process_bridge`, or `manual_handoff`
 - Agent adapters may not redefine task lifecycle states.
@@ -192,6 +215,7 @@ Every adapter contract must also declare a canonical `capability_surface` object
 - managed workspace or managed worktree adapters must leave enough run-level evidence for the runtime status surface to project approvals, verification, and artifact links honestly
 - `capability_surface` is the canonical host-capability declaration for operator, claim, adapter, and verification surfaces; older fields such as `product_family` or `invocation_mode` must not be treated as sufficient substitutes when the runtime makes live host claims
 - missing `capability_surface.host_family`, `surface_class`, `attach_mode`, `adapter_tier`, `verification_refs`, or `evidence_refs` is fail-closed for claim-strengthening and operator posture surfaces
+- missing `workflow_capability_surface` fields is fail-closed for advanced workflow-mode claims
 - historical certification alone must not be used as an implicit `verification_ref` or `evidence_ref` for a stronger current live-host claim
 
 ## Non-Goals

@@ -1838,6 +1838,120 @@ The entries below record the executed queue for complete hybrid final-state and 
   - [x] `verify.yml` also runs `scripts/governance/preflight.ps1`
   - [x] roadmap, plan, backlog, issue seeds, and evidence agree on `GAP-169..172`
 
+## Workflow Governor Governance
+
+### GAP-173 Workflow-Governor Value Audit And Product Boundary Rewrite
+- Type: HITL
+- Blocked by: GAP-172
+- User stories: 13, 18, 21, 23, 29, 31, 37, 44
+- Status: conditional follow-on only; do not treat as current active work while `planning-status.json` remains `Continuous-Execution`
+- What to build:
+  - a repo-owned value audit that separates proved governance value from unproved workflow-executor claims
+  - README/docs/product wording that converges on `workflow / gate / evidence governance`
+  - explicit claim tightening away from replacement-host and built-in best-workflow assertions
+- Acceptance criteria:
+  - [ ] value audit exists and is repo-owned
+  - [ ] README/docs/product wording converges on proved governance value
+  - [ ] docs stop implying replacement host or already-complete best-workflow automation
+
+### GAP-174 Reference Shelf Refresh And Workflow Reference-Basis Enforcement
+- Type: AFK
+- Blocked by: GAP-173
+- User stories: 11, 13, 18, 21, 23, 29, 31, 44
+- Status: conditional follow-on only; current active queue remains unchanged
+- What to build:
+  - add `github-spec-kit` and `obra-superpowers` to the local reference shelf
+  - add `workflow-governance-and-spec-driven-delivery` as a guarded reference-basis surface
+  - keep workflow-governance reference requirements machine-readable and fail-closed
+- Acceptance criteria:
+  - [ ] external shelf, manifest, README, clone results, and report include the two new references
+  - [ ] guarded workflow-governance surface exists in repo-owned reference policy
+  - [ ] required local reference ids are explicit for workflow-governance changes
+
+### GAP-175 Workflow Governance Contract Family
+- Type: AFK
+- Blocked by: GAP-174
+- User stories: 7, 8, 11, 13, 18, 21, 23, 31, 44
+- Status: conditional follow-on only
+- What to build:
+  - workflow-governance spec/schema/example
+  - workflow-effect-metrics spec/schema/example
+  - explicit workflow modes, degrade rules, and required artifacts
+- Acceptance criteria:
+  - [ ] workflow-governance contract family exists in docs/specs, schemas, and examples
+  - [ ] workflow-effect-metrics contract family exists in docs/specs, schemas, and examples
+  - [ ] workflow modes and degrade rules are explicit rather than chat-only
+
+### GAP-176 Repo-Profile, Control-Pack, And Adapter Workflow Expansion
+- Type: AFK
+- Blocked by: GAP-175
+- User stories: 7, 8, 11, 13, 18, 21, 23, 31, 44
+- Status: conditional follow-on only
+- What to build:
+  - `workflow_governance_policy` in repo profile
+  - workflow refs in control-pack execution/materialization
+  - workflow capability declarations in agent-adapter contract
+- Acceptance criteria:
+  - [ ] repo profile can carry workflow governance policy
+  - [ ] control-pack materialization can prove workflow policy distribution
+  - [ ] adapter contract can describe workflow-related capabilities honestly
+
+### GAP-177 Runtime Selection And Workflow Projection
+- Type: AFK
+- Blocked by: GAP-176
+- User stories: 11, 13, 14, 18, 21, 23, 31, 44
+- Status: conditional follow-on only
+- What to build:
+  - deterministic workflow selection from task/repo/adapter/evidence inputs
+  - explicit degrade path when host capability is insufficient
+  - workflow-aware projection fields in runtime, target-run, and operator outputs
+- Acceptance criteria:
+  - [ ] workflow selection is deterministic and machine-readable
+  - [ ] unsupported advanced modes degrade explicitly
+  - [ ] runtime and target-run outputs expose workflow mode, source, reason, and degrade reason
+
+### GAP-178 Workflow Effect Metrics And KPI Integration
+- Type: AFK
+- Blocked by: GAP-177
+- User stories: 13, 14, 15, 21, 31, 39, 44, 45
+- Status: conditional follow-on only
+- What to build:
+  - workflow-aware effect metrics contract
+  - KPI and effect-report fields that are mode-aware rather than pass/fail-only
+  - measurable workflow recommendation outputs
+- Acceptance criteria:
+  - [ ] workflow metrics are part of KPI/effect-report artifacts
+  - [ ] mode-level comparison reason is preserved in effect evidence
+  - [ ] workflow metrics stay evidence-backed instead of prose-only
+
+### GAP-179 Two-Repo Workflow Comparison Proof
+- Type: HITL
+- Blocked by: GAP-178
+- User stories: 13, 14, 15, 18, 21, 31, 37, 44, 45
+- Status: conditional follow-on only
+- What to build:
+  - one low-risk `direct_fix` proof
+  - one medium-risk `spec_first` or `spec_plus_review` proof
+  - advanced-mode recommendations only when host capability is actually proven
+- Acceptance criteria:
+  - [ ] proof targets remain `classroomtoolkit` and `github-toolkit`
+  - [ ] low-risk and medium-risk workflow comparison evidence both exist
+  - [ ] advanced-mode claims require explicit host-capability proof
+
+### GAP-180 Claim Tightening, Closeout Evidence, And Conditional Package Completion
+- Type: HITL
+- Blocked by: GAP-179
+- User stories: 13, 18, 21, 23, 29, 31, 37, 44, 45
+- Status: conditional follow-on only
+- What to build:
+  - closeout evidence for the workflow-governor package
+  - aligned roadmap, plan, backlog, issue seeds, script rendering, and outward claims
+  - conditional completion without mutating `planning-status.json`
+- Acceptance criteria:
+  - [ ] roadmap, plan, backlog, issue seeds, and evidence agree on `GAP-173..180`
+  - [ ] claim tightening remains aligned with actual proof boundaries
+  - [ ] package completion does not rewrite planning truth
+
 ## Vision
 
 ### GAP-018 Final Product Lifecycle Alignment
