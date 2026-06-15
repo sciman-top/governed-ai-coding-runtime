@@ -2,8 +2,8 @@
   "schema_version": "1.0",
   "portfolio_id": "default-governance-hub-capability-portfolio",
   "status": "enforced",
-  "reviewed_on": "2026-05-01",
-  "review_expires_at": "2026-06-01",
+  "reviewed_on": "2026-06-14",
+  "review_expires_at": "2026-07-14",
   "required_doc_refs": [
     {
       "path": "docs/plans/governance-hub-reuse-and-controlled-evolution-plan.md",
@@ -20,7 +20,8 @@
   ],
   "evidence_refs": [
     "docs/change-evidence/20260501-governance-hub-reuse-plan.md",
-    "docs/change-evidence/20260501-gap-131-capability-portfolio-classifier.md"
+    "docs/change-evidence/20260501-gap-131-capability-portfolio-classifier.md",
+    "docs/change-evidence/20260614-reference-shelf-governance-refresh.md"
   ],
   "entries": [
     {
@@ -291,6 +292,50 @@
         "verification_command": "python scripts/verify-capability-portfolio.py"
       },
       "rollback": "Drop the kept source if later audit-boundary work uses only repository-native policy inputs."
+    },
+    {
+      "id": "external-managed-background-coding-sessions",
+      "title": "Managed background coding sessions",
+      "source_type": "external_source",
+      "product_layer": "workflow_orchestration",
+      "lifecycle_outcome": "improve",
+      "summary": "Use 1Code and OpenClaw Code Agent as selective sources for observable background coding sessions, worktree lifecycle, plan approval, and branch follow-through contracts.",
+      "source_refs": [
+        "docs/research/runtime-governance-borrowing-matrix.md"
+      ],
+      "review_refs": [
+        "docs/specs/capability-portfolio-classifier-spec.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Sharpens future autonomous execution controls with concrete session lifecycle and worktree follow-through vocabulary.",
+        "expected_cost": "Requires local evidence and gates before any background-session behavior is promoted into repo-native contracts.",
+        "expected_risk": "Could be mistaken for approval to adopt an external managed-agent UI or cloud sandbox model.",
+        "effect_metric": "Future continuous-execution or worktree-lifecycle artifacts cite explicit reference ids and remain subordinate to local gates.",
+        "verification_command": "python scripts/verify-capability-portfolio.py"
+      },
+      "rollback": "Remove this classifier entry and the matching reference-shelf evidence if managed-background-agent borrowing is removed from scope."
+    },
+    {
+      "id": "external-openclaw-gateway-observation",
+      "title": "OpenClaw gateway observation boundary",
+      "source_type": "external_source",
+      "product_layer": "gateway",
+      "lifecycle_outcome": "keep",
+      "summary": "Keep OpenClaw as an observe-tier source for personal-assistant gateway security, channel routing, DM pairing, sandbox, and remote-exposure posture without adopting its product identity.",
+      "source_refs": [
+        "docs/research/runtime-governance-borrowing-matrix.md"
+      ],
+      "review_refs": [
+        "docs/specs/capability-portfolio-classifier-spec.md"
+      ],
+      "effect_hypothesis": {
+        "expected_benefit": "Preserves a concrete remote-exposure and messaging-risk reference while keeping this repo focused on coding-runtime governance.",
+        "expected_cost": "Requires docs to keep OpenClaw below core host/runtime references unless a real gateway surface is funded.",
+        "expected_risk": "Product-boundary drift could turn observe-tier channel behavior into an implied runtime requirement.",
+        "effect_metric": "Reference-basis docs continue to classify openclaw as observe-tier and exclude it from core guarded community execution-loop requirements.",
+        "verification_command": "python scripts/verify-capability-portfolio.py"
+      },
+      "rollback": "Remove this classifier entry if OpenClaw is no longer retained even as an observe-tier gateway reference."
     },
     {
       "id": "external-openai-cookbook-evals",

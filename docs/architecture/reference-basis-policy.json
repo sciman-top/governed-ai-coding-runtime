@@ -95,6 +95,44 @@
         "github-copilot-cli"
       ],
       "rationale": "Preflight and CI boundary changes should cite the local host/automation shelf that most directly informs release-style gate composition."
+    },
+    {
+      "surface_id": "community-execution-loop-and-context-shaping",
+      "path_exact": [
+        "docs/research/runtime-governance-borrowing-matrix.md",
+        "docs/architecture/capability-portfolio-classifier.json"
+      ],
+      "path_prefixes": [
+        "docs/architecture/",
+        "docs/research/",
+        "docs/product/",
+        "docs/specs/",
+        "docs/plans/",
+        "docs/backlog/"
+      ],
+      "path_contains": [
+        "repo-map",
+        "continuous-execution",
+        "self-evolution",
+        "skill",
+        "memory"
+      ],
+      "required_local_reference_ids": [
+        "aider",
+        "swe-agent",
+        "mini-swe-agent",
+        "openhands",
+        "opencode",
+        "goose",
+        "cline",
+        "1code",
+        "openclaw-code-agent",
+        "hermes-agent",
+        "langgraph",
+        "semantic-kernel",
+        "microsoft-agent-framework"
+      ],
+      "rationale": "Community execution-loop, context-shaping, skill, memory, and managed-background-agent changes must cite the specific local community/framework references reviewed rather than relying on broad benchmark prose."
     }
   ],
   "rollback_ref": "git revert docs/architecture/reference-basis-policy.json, docs/research/reference-basis-catalog.json, scripts/verify-reference-basis.py, scripts/verify-repo.ps1, scripts/governance/preflight.ps1, repo-profile full-gate changes, CI workflow updates, and the matching change-evidence file"

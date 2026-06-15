@@ -19,6 +19,8 @@ This directory stores dated evidence for planning, schema, script, and documenta
 ## Current Evidence Baseline
 - [20260615 Continuous Execution Active Loop Reconciliation](./20260615-continuous-execution-active-loop-reconciliation.md)
   - evidence companion for closing the Task 8 truth gap: `Continuous-Execution` is the active queue, bounded loop cadence stays selector-backed, and stale PRD/backlog queue text now fails verification
+- [20260614 Reference Shelf Governance Refresh](./20260614-reference-shelf-governance-refresh.md)
+  - evidence companion for refreshing the local AI coding runtime reference shelf, classifying `openclaw`, `openclaw-code-agent`, and `1code`, and extending repo-owned `reference-basis` coverage for community execution-loop surfaces
 - [20260614 Continuous Execution Two-Repo Trials](./20260614-continuous-execution-two-repo-trials.md)
   - evidence companion for the first two low-risk `runtime-flow-preset daily quick` trials, proving attachment posture, gate refs, rollback refs, and no hard-boundary override across `classroomtoolkit` and `github-toolkit`
 - [20260614 Continuous Execution Teaching Yield Guardrail](./20260614-continuous-execution-teaching-yield-guardrail.md)
