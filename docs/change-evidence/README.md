@@ -17,6 +17,8 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260615 Self-Evolution Review Refresh](./20260615-self-evolution-review-refresh.md)
+  - evidence companion for the latest review-only self-evolution/core-principle refresh, keeping generated variants, promotion plans, and proposal patches as bounded evidence without enabling unattended effective change
 - [20260615 Continuous Execution Active Loop Reconciliation](./20260615-continuous-execution-active-loop-reconciliation.md)
   - evidence companion for closing the Task 8 truth gap: `Continuous-Execution` is the active queue, bounded loop cadence stays selector-backed, and stale PRD/backlog queue text now fails verification
 - [20260614 Reference Shelf Governance Refresh](./20260614-reference-shelf-governance-refresh.md)

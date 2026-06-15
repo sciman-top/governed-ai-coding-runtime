@@ -1,0 +1,75 @@
+{
+  "artifact_refs": {
+    "json": "D:/CODE/governed-ai-coding-runtime/docs/change-evidence/self-evolution-promotions/20260615-self-evolution-promotion-controller.json"
+  },
+  "artifact_type": "self_evolution_promotion_controller_report",
+  "as_of": "2026-06-15",
+  "commands": {
+    "materialize_candidate": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action EvolutionMaterialize",
+    "plan_promotion": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action SelfEvolutionPromotionPlan",
+    "push_or_merge": "manual review/PR only",
+    "refresh_recommendation": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action SelfEvolutionRecommend",
+    "target_sync": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action ApplyAllFeatures"
+  },
+  "control_lanes": [
+    {
+      "automatic_enabled": false,
+      "guard_key": "automatic_policy_mutation",
+      "lane": "policy_mutation",
+      "next_action": "attach_promotion_evidence_and_review",
+      "reason": "requires_human_review_before_effective_change=true. Review a policy proposal, then run full gates before any policy mutation.",
+      "status": "review_required"
+    },
+    {
+      "automatic_enabled": false,
+      "guard_key": "automatic_skill_enablement",
+      "lane": "skill_enablement",
+      "next_action": "attach_promotion_evidence_and_review",
+      "reason": "requires_human_review_before_effective_change=true. Keep skill candidates disabled until promotion evidence and rollback refs are attached.",
+      "status": "review_required"
+    },
+    {
+      "automatic_enabled": false,
+      "guard_key": "automatic_target_repo_sync",
+      "lane": "target_repo_sync",
+      "next_action": "attach_promotion_evidence_and_review",
+      "reason": "requires_human_review_before_effective_change=true. Sync target repos only through explicit governed operator actions.",
+      "status": "review_required"
+    },
+    {
+      "automatic_enabled": false,
+      "guard_key": "automatic_push_or_merge",
+      "lane": "push_or_merge",
+      "next_action": "attach_promotion_evidence_and_review",
+      "reason": "requires_human_review_before_effective_change=true. Push or merge only after human review, branch evidence, and release gates.",
+      "status": "review_required"
+    }
+  ],
+  "effective_change_allowed": false,
+  "guards": {
+    "automatic_policy_mutation": false,
+    "automatic_push_or_merge": false,
+    "automatic_skill_enablement": false,
+    "automatic_target_repo_sync": false,
+    "requires_human_review_before_effective_change": true
+  },
+  "promotion_stage": "review_required",
+  "recommended_next_action": "review_promotion_evidence_before_effective_change",
+  "rollback": "Delete the generated promotion controller artifact. No policy, skill, target repo, push, or merge state is changed.",
+  "schema_version": "0.1-draft",
+  "selector_next_action": "defer_ltp_and_refresh_evidence",
+  "selector_why": "No heavy LTP package is currently trigger-selected and no safer autonomous continuation signal is available; defer heavy implementation and keep evidence/gate upkeep bounded.",
+  "source_recommendation_path": "docs/change-evidence/self-evolution-recommendations/20260615-self-evolution-recommendations.json",
+  "status": "ready_for_review",
+  "trigger_model": {
+    "automatic_effective_change": false,
+    "prerequisite_operator_action": "SelfEvolutionRecommend",
+    "proactive_operator_triggers": [
+      "SelfEvolutionRecommend",
+      "FeedbackReport",
+      "DailyAll"
+    ],
+    "recommended_operator_action": "SelfEvolutionPromotionPlan",
+    "recommended_operator_action_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action SelfEvolutionPromotionPlan"
+  }
+}
