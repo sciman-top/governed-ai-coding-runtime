@@ -17,6 +17,8 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260617 Self-Evolution Add Review No Add](./20260617-self-evolution-add-review-no-add.md)
+  - evidence companion for recording why the current add lane still recommends no new terminal self-evolution capability while the readiness ledger remains complete
 - [20260617 Self-Evolution Retirement Review No Delete](./20260617-self-evolution-retirement-review-no-delete.md)
   - evidence companion for recording why the current retirement lane still recommends no deletion and keeps every delete-related guard fail-closed
 - [20260617 Self-Evolution Promotion Review And Defer](./20260617-self-evolution-promotion-review-and-defer.md)
