@@ -17,6 +17,10 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260617 Runtime Evolution AI Experience Freshness Pointer](./20260617-runtime-evolution-ai-experience-freshness-pointer.md)
+  - evidence companion for replacing the stale fixed-date `EVOL-AI-EXPERIENCE` source pointer with the fresh current AI coding experience review artifact
+  - guarded surfaces: `scripts/evaluate-runtime-evolution.py`
+  - downstream sync: `scripts/generate-self-evolution-eval-dataset.py`, `tests/runtime/test_self_evolution_readiness.py`
 - [20260617 Host Feedback Nonblocking Config Attention](./20260617-host-feedback-nonblocking-config-attention.md)
   - evidence companion for keeping accepted local host config drift visible in detail while no longer letting it raise the whole feedback report to `attention` when real workload evidence is healthy
   - guarded surfaces: `scripts/host-feedback-summary.py`, `docs/product/host-feedback-loop.md`, `docs/product/host-feedback-loop.zh-CN.md`

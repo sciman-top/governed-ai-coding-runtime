@@ -42,7 +42,7 @@
       "lane": "optimize",
       "mutation_allowed": false,
       "priority": "P1",
-      "reason": "6 variant(s) reached review_candidate; selector_next_action=defer_ltp_and_refresh_evidence.",
+      "reason": "4 variant(s) reached review_candidate; selector_next_action=defer_ltp_and_refresh_evidence.",
       "recommendation_id": "optimize.review_candidate_variants",
       "risk_level": "medium",
       "title": "Review evaluated self-evolution variants before materialization."
@@ -90,5 +90,5 @@
     ],
     "recommended_operator_action": "SelfEvolutionRecommend"
   },
-  "variant_review_candidate_count": 6
+  "variant_review_candidate_count": 4
 }

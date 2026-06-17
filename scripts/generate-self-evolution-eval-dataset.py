@@ -138,11 +138,15 @@ def _load_extractor() -> Any:
 
 def _build_candidate_case(*, root: Path, candidate: dict) -> dict:
     candidate_id = str(candidate.get("candidate_id", "unknown")).lower().replace("_", "-")
-    expected_refs = [
+    explicit_refs = [
         ref.get("path")
         for ref in candidate.get("expected_verification_refs", [])
         if isinstance(ref, dict) and ref.get("type") == "file" and ref.get("path")
     ]
+    acceptance_gate_refs = _verification_refs_from_acceptance_gates(root=root, acceptance_gates=candidate.get("acceptance_gates", []))
+    source_ref = str(candidate.get("source_ref", "")).strip()
+    source_ref_paths = [source_ref] if source_ref and not source_ref.startswith("http") and source_ref != "dry-run source inventory" else []
+    expected_refs = list(dict.fromkeys(explicit_refs + acceptance_gate_refs + source_ref_paths))
     existing_refs = [ref for ref in expected_refs if (root / ref).exists()]
     return {
         "case_id": f"candidate.{candidate_id}",
@@ -165,6 +169,22 @@ def _build_candidate_case(*, root: Path, candidate: dict) -> dict:
         "mutation_allowed": False,
         "rollback_check": candidate.get("rollback_plan", "candidate-specific rollback must be provided"),
     }
+
+
+def _verification_refs_from_acceptance_gates(*, root: Path, acceptance_gates: list[Any]) -> list[str]:
+    refs: list[str] = []
+    for gate in acceptance_gates:
+        if not isinstance(gate, str):
+            continue
+        for token in gate.split():
+            normalized = token.strip('`"\'')
+            if not normalized:
+                continue
+            if normalized.startswith("scripts/") and (root / normalized).exists():
+                refs.append(normalized)
+            elif normalized.startswith("tests/") and (root / normalized).exists():
+                refs.append(normalized)
+    return refs
 
 
 def _build_experience_proposal_case(*, proposal: dict) -> dict:

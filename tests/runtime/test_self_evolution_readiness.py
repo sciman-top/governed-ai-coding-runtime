@@ -125,6 +125,9 @@ class SelfEvolutionReadinessTests(unittest.TestCase):
         self.assertFalse(dataset["mutation_allowed"])
         self.assertGreaterEqual(dataset["case_count"], 1)
         self.assertTrue(all(case["mutation_allowed"] is False for case in dataset["cases"]))
+        runtime_cases = [case for case in dataset["cases"] if case["source_kind"] == "runtime_evolution_candidate"]
+        self.assertTrue(runtime_cases)
+        self.assertTrue(all(case["verification_refs"] for case in runtime_cases))
 
     def test_trajectory_optimizer_and_variant_evaluator_form_non_mutating_loop(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

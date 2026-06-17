@@ -14,56 +14,8 @@
   "rollback": "Delete the generated variant artifact. No active runtime behavior is changed.",
   "schema_version": "0.1-draft",
   "source_dataset": "docs/change-evidence/self-evolution-evals/20260617-self-evolution-eval-dataset.json",
-  "variant_count": 6,
+  "variant_count": 4,
   "variants": [
-    {
-      "constraints": [
-        "mutation_allowed=false",
-        "rollback_check_required",
-        "human_review_before_effective_change",
-        "runtime_and_contract_gates_before_promotion"
-      ],
-      "expected_properties": [
-        "decision is one of promote, improve, defer, reject",
-        "decision cites source_ref and at least one verification ref",
-        "medium or high risk candidates require human review before any effective mutation",
-        "rollback plan is preserved"
-      ],
-      "mutation_allowed": false,
-      "optimization_strategy": "turn runtime-evolution candidate evidence into a bounded promote/improve/defer decision",
-      "proposed_change": "Create a runtime-evolution decision variant that must cite source_ref, verification refs, and rollback before promotion.",
-      "risk_level": "low",
-      "rollback_check": "remove host-feedback-driven candidate wiring if it misclassifies freshness or host posture",
-      "source_case_id": "candidate.evol-host-feedback",
-      "source_id": "EVOL-HOST-FEEDBACK",
-      "source_kind": "runtime_evolution_candidate",
-      "variant_id": "variant.candidate.evol-host-feedback",
-      "verification_refs": []
-    },
-    {
-      "constraints": [
-        "mutation_allowed=false",
-        "rollback_check_required",
-        "human_review_before_effective_change",
-        "runtime_and_contract_gates_before_promotion"
-      ],
-      "expected_properties": [
-        "decision is one of promote, improve, defer, reject",
-        "decision cites source_ref and at least one verification ref",
-        "medium or high risk candidates require human review before any effective mutation",
-        "rollback plan is preserved"
-      ],
-      "mutation_allowed": false,
-      "optimization_strategy": "turn runtime-evolution candidate evidence into a bounded promote/improve/defer decision",
-      "proposed_change": "Create a runtime-evolution decision variant that must cite source_ref, verification refs, and rollback before promotion.",
-      "risk_level": "medium",
-      "rollback_check": "revert any follow-up change that was justified only by stale or misread target effect feedback",
-      "source_case_id": "candidate.evol-effect-feedback",
-      "source_id": "EVOL-EFFECT-FEEDBACK",
-      "source_kind": "runtime_evolution_candidate",
-      "variant_id": "variant.candidate.evol-effect-feedback",
-      "verification_refs": []
-    },
     {
       "constraints": [
         "mutation_allowed=false",
@@ -86,7 +38,10 @@
       "source_id": "EVOL-AI-EXPERIENCE",
       "source_kind": "runtime_evolution_candidate",
       "variant_id": "variant.candidate.evol-ai-experience",
-      "verification_refs": []
+      "verification_refs": [
+        "scripts/verify-repo.ps1",
+        ".runtime/artifacts/ai-coding-experience/20260617-ai-coding-experience-review.json"
+      ]
     },
     {
       "constraints": [
@@ -110,7 +65,9 @@
       "source_id": "EVOL-SOURCE-COLLECTOR",
       "source_kind": "runtime_evolution_candidate",
       "variant_id": "variant.candidate.evol-source-collector",
-      "verification_refs": []
+      "verification_refs": [
+        "scripts/verify-repo.ps1"
+      ]
     },
     {
       "constraints": [

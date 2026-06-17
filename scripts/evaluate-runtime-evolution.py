@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_POLICY = ROOT / "docs" / "architecture" / "runtime-evolution-policy.json"
 DEFAULT_ARTIFACT_ROOT = ROOT / ".runtime" / "artifacts" / "runtime-evolution"
 DEFAULT_EVIDENCE_ROOT = ROOT / "docs" / "change-evidence"
+AI_CODING_EXPERIENCE_ARTIFACT_ROOT = Path(".runtime") / "artifacts" / "ai-coding-experience"
 VALID_STATUS = {"draft", "observe", "enforced", "waived"}
 VALID_ACTIONS = {"add", "modify", "delete", "defer", "no_action"}
 VALID_RISKS = {"low", "medium", "high"}
@@ -462,9 +463,23 @@ def _build_evidence_snapshot(*, repo_root: Path, as_of: dt.date) -> dict[str, di
         "skill_manifest_candidate_count": int(ai_experience["skill_manifest_candidate_count"]),
         "retirement_record_count": int(ai_experience["retirement_record_count"]),
         "invalid_reasons": list(ai_experience["invalid_reasons"]),
+        "artifact_source_ref": _resolve_ai_coding_experience_artifact_ref(repo_root=repo_root, as_of=as_of),
     }
 
     return snapshots
+
+
+def _resolve_ai_coding_experience_artifact_ref(*, repo_root: Path, as_of: dt.date) -> str:
+    artifact_root = repo_root / AI_CODING_EXPERIENCE_ARTIFACT_ROOT
+    expected = artifact_root / f"{as_of.strftime('%Y%m%d')}-ai-coding-experience-review.json"
+    if expected.exists():
+        return expected.relative_to(repo_root).as_posix()
+
+    candidates = sorted(artifact_root.glob("*-ai-coding-experience-review.json"))
+    if candidates:
+        return candidates[-1].relative_to(repo_root).as_posix()
+
+    return expected.relative_to(repo_root).as_posix()
 
 
 def _build_candidates(
@@ -619,7 +634,7 @@ def _build_candidates(
             {
                 "candidate_id": "EVOL-AI-EXPERIENCE",
                 "source_type": "internal_ai_coding_experience",
-                "source_ref": ".runtime/artifacts/ai-coding-experience/20260501-ai-coding-experience-review.json",
+                "source_ref": ai_experience["artifact_source_ref"],
                 "source_checked_on": as_of.isoformat(),
                 "observed_change": "AI coding evidence now contains reusable proposals, knowledge candidates, or retirement signals.",
                 "repo_impact": "Lets repeated AI coding patterns become governed proposals or cleanup candidates instead of hidden session-only know-how.",

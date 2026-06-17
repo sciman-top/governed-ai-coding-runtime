@@ -9,42 +9,12 @@
       "reasons": [
         "expected_properties=4",
         "constraints=4",
-        "verification_refs=0",
+        "verification_refs=2",
         "mutation_allowed=false"
       ],
       "required_next_step": "human_review_and_full_gates",
       "risk_level": "low",
-      "score": 8,
-      "source_case_id": "candidate.evol-host-feedback",
-      "variant_id": "variant.candidate.evol-host-feedback"
-    },
-    {
-      "decision": "review_candidate",
-      "mutation_allowed": false,
-      "reasons": [
-        "expected_properties=4",
-        "constraints=4",
-        "verification_refs=0",
-        "mutation_allowed=false"
-      ],
-      "required_next_step": "human_review_and_full_gates",
-      "risk_level": "medium",
-      "score": 8,
-      "source_case_id": "candidate.evol-effect-feedback",
-      "variant_id": "variant.candidate.evol-effect-feedback"
-    },
-    {
-      "decision": "review_candidate",
-      "mutation_allowed": false,
-      "reasons": [
-        "expected_properties=4",
-        "constraints=4",
-        "verification_refs=0",
-        "mutation_allowed=false"
-      ],
-      "required_next_step": "human_review_and_full_gates",
-      "risk_level": "low",
-      "score": 8,
+      "score": 10,
       "source_case_id": "candidate.evol-ai-experience",
       "variant_id": "variant.candidate.evol-ai-experience"
     },
@@ -54,12 +24,12 @@
       "reasons": [
         "expected_properties=4",
         "constraints=4",
-        "verification_refs=0",
+        "verification_refs=1",
         "mutation_allowed=false"
       ],
       "required_next_step": "human_review_and_full_gates",
       "risk_level": "medium",
-      "score": 8,
+      "score": 9,
       "source_case_id": "candidate.evol-source-collector",
       "variant_id": "variant.candidate.evol-source-collector"
     },
@@ -102,9 +72,9 @@
     "target_repo_sync": false
   },
   "mutation_allowed": false,
-  "review_candidate_count": 6,
+  "review_candidate_count": 4,
   "rollback": "Delete the generated variant-evaluation artifact. No active runtime behavior is changed.",
   "schema_version": "0.1-draft",
   "source_variants": "docs/change-evidence/self-evolution-variants/20260617-self-evolution-variants.json",
-  "variant_count": 6
+  "variant_count": 4
 }

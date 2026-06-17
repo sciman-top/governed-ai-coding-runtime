@@ -519,7 +519,7 @@
           "risk_level": "low",
           "rollback_plan": "remove generated AI-coding-experience candidates if their reuse value or verification posture regresses",
           "source_checked_on": "2026-06-17",
-          "source_ref": ".runtime/artifacts/ai-coding-experience/20260501-ai-coding-experience-review.json",
+          "source_ref": ".runtime/artifacts/ai-coding-experience/20260617-ai-coding-experience-review.json",
           "source_type": "internal_ai_coding_experience"
         },
         {
@@ -552,6 +552,7 @@
       ],
       "evidence_snapshot": {
         "ai_coding_experience": {
+          "artifact_source_ref": ".runtime/artifacts/ai-coding-experience/20260617-ai-coding-experience-review.json",
           "invalid_reasons": [],
           "knowledge_candidate_count": 1,
           "pattern_candidate_count": 1,

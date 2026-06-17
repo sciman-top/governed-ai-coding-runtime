@@ -2,50 +2,8 @@
   "artifact_refs": {},
   "artifact_type": "self_evolution_eval_dataset",
   "as_of": "2026-06-17",
-  "case_count": 6,
+  "case_count": 4,
   "cases": [
-    {
-      "case_id": "candidate.evol-host-feedback",
-      "expected_properties": [
-        "decision is one of promote, improve, defer, reject",
-        "decision cites source_ref and at least one verification ref",
-        "medium or high risk candidates require human review before any effective mutation",
-        "rollback plan is preserved"
-      ],
-      "inputs": {
-        "observed_change": "Host feedback or target-run freshness shows attention-level posture.",
-        "repo_impact": "Keeps self-evolution prompts aligned with real host degradation and stale target workload evidence.",
-        "source_ref": ".runtime/artifacts/host-feedback-summary/latest.md"
-      },
-      "mutation_allowed": false,
-      "prompt": "Evaluate whether this runtime-evolution candidate should be promoted, improved, or deferred.",
-      "risk_level": "low",
-      "rollback_check": "remove host-feedback-driven candidate wiring if it misclassifies freshness or host posture",
-      "source_id": "EVOL-HOST-FEEDBACK",
-      "source_kind": "runtime_evolution_candidate",
-      "verification_refs": []
-    },
-    {
-      "case_id": "candidate.evol-effect-feedback",
-      "expected_properties": [
-        "decision is one of promote, improve, defer, reject",
-        "decision cites source_ref and at least one verification ref",
-        "medium or high risk candidates require human review before any effective mutation",
-        "rollback plan is preserved"
-      ],
-      "inputs": {
-        "observed_change": "Target repo effect feedback still carries unresolved backlog candidates or verifier errors.",
-        "repo_impact": "Turns real target repo effect gaps into explicit evolution work instead of leaving them in report-only form.",
-        "source_ref": "docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json"
-      },
-      "mutation_allowed": false,
-      "prompt": "Evaluate whether this runtime-evolution candidate should be promoted, improved, or deferred.",
-      "risk_level": "medium",
-      "rollback_check": "revert any follow-up change that was justified only by stale or misread target effect feedback",
-      "source_id": "EVOL-EFFECT-FEEDBACK",
-      "source_kind": "runtime_evolution_candidate",
-      "verification_refs": []
-    },
     {
       "case_id": "candidate.evol-ai-experience",
       "expected_properties": [
@@ -57,7 +15,7 @@
       "inputs": {
         "observed_change": "AI coding evidence now contains reusable proposals, knowledge candidates, or retirement signals.",
         "repo_impact": "Lets repeated AI coding patterns become governed proposals or cleanup candidates instead of hidden session-only know-how.",
-        "source_ref": ".runtime/artifacts/ai-coding-experience/20260501-ai-coding-experience-review.json"
+        "source_ref": ".runtime/artifacts/ai-coding-experience/20260617-ai-coding-experience-review.json"
       },
       "mutation_allowed": false,
       "prompt": "Evaluate whether this runtime-evolution candidate should be promoted, improved, or deferred.",
@@ -65,7 +23,10 @@
       "rollback_check": "remove generated AI-coding-experience candidates if their reuse value or verification posture regresses",
       "source_id": "EVOL-AI-EXPERIENCE",
       "source_kind": "runtime_evolution_candidate",
-      "verification_refs": []
+      "verification_refs": [
+        "scripts/verify-repo.ps1",
+        ".runtime/artifacts/ai-coding-experience/20260617-ai-coding-experience-review.json"
+      ]
     },
     {
       "case_id": "candidate.evol-source-collector",
@@ -86,7 +47,9 @@
       "rollback_check": "remove the source collection candidate from the evolution dry-run output",
       "source_id": "EVOL-SOURCE-COLLECTOR",
       "source_kind": "runtime_evolution_candidate",
-      "verification_refs": []
+      "verification_refs": [
+        "scripts/verify-repo.ps1"
+      ]
     },
     {
       "case_id": "proposal.checklist-first-bugfix",
@@ -156,7 +119,7 @@
   "rollback": "Delete the generated dataset artifact. It is evaluation input only and does not enable any mutation.",
   "schema_version": "0.1-draft",
   "source_refs": [
-    "docs/change-evidence/runtime-evolution-candidates/20260606-runtime-evolution-candidates.json",
+    "docs/change-evidence/runtime-evolution-candidates/20260617-runtime-evolution-candidates.json",
     "scripts/extract-ai-coding-experience.py"
   ]
 }

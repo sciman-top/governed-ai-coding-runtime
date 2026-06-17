@@ -1,0 +1,104 @@
+{
+  "artifact_type": "runtime_evolution_candidates",
+  "as_of": "2026-06-17",
+  "candidate_count": 2,
+  "candidates": [
+    {
+      "acceptance_gates": [
+        "python -m unittest tests.runtime.test_runtime_evolution tests.runtime.test_learning_efficiency_metrics",
+        "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs"
+      ],
+      "candidate_id": "EVOL-AI-EXPERIENCE",
+      "decision": "promote_ai_experience_candidate",
+      "evidence_required": [
+        "learning-efficiency metrics or interaction evidence",
+        "controlled improvement proposals",
+        "knowledge or skill candidate manifest"
+      ],
+      "observed_change": "AI coding evidence now contains reusable proposals, knowledge candidates, or retirement signals.",
+      "patch_plan": [
+        {
+          "apply_mode": "proposal_only_until_reviewed",
+          "operation": "promote repeated signals into reviewable proposals and keep retirement candidate cleanup explicit",
+          "path": "scripts/extract-ai-coding-experience.py"
+        }
+      ],
+      "proposed_action": "add",
+      "repo_impact": "Lets repeated AI coding patterns become governed proposals or cleanup candidates instead of hidden session-only know-how.",
+      "risk_level": "low",
+      "rollback_plan": "remove generated AI-coding-experience candidates if their reuse value or verification posture regresses",
+      "source_checked_on": "2026-06-17",
+      "source_ref": ".runtime/artifacts/ai-coding-experience/20260617-ai-coding-experience-review.json",
+      "source_type": "internal_ai_coding_experience"
+    },
+    {
+      "acceptance_gates": [
+        "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs"
+      ],
+      "candidate_id": "EVOL-SOURCE-COLLECTOR",
+      "decision": "implement_source_collector_before_online_fetch",
+      "evidence_required": [
+        "source collection artifact",
+        "candidate evaluator artifact",
+        "platform_na record if online source is unavailable"
+      ],
+      "observed_change": "Official documentation source collection remains catalog-only unless the optional online probe is enabled.",
+      "patch_plan": [
+        {
+          "apply_mode": "defer_until_scope_fenced",
+          "operation": "promote source collection from probe-only to parsed source snapshots after schema is defined",
+          "path": "scripts/evaluate-runtime-evolution.py"
+        }
+      ],
+      "proposed_action": "defer",
+      "repo_impact": "Prevents community or stale assumptions from becoming execution rules without reviewable source evidence.",
+      "risk_level": "medium",
+      "rollback_plan": "remove the source collection candidate from the evolution dry-run output",
+      "source_checked_on": "2026-06-17",
+      "source_ref": "dry-run source inventory",
+      "source_type": "official_doc_or_changelog"
+    }
+  ],
+  "evidence_snapshot": {
+    "ai_coding_experience": {
+      "artifact_source_ref": ".runtime/artifacts/ai-coding-experience/20260617-ai-coding-experience-review.json",
+      "invalid_reasons": [],
+      "knowledge_candidate_count": 1,
+      "pattern_candidate_count": 1,
+      "proposal_count": 1,
+      "retirement_record_count": 0,
+      "skill_manifest_candidate_count": 1,
+      "status": "pass"
+    },
+    "current_source": {
+      "expired": false,
+      "forbidden_pattern_hits": [],
+      "missing_doc_refs": [],
+      "missing_evidence_refs": [],
+      "protocols_missing_kernel_semantics": [],
+      "review_expires_at": "2026-07-30",
+      "status": "pass"
+    },
+    "effect_feedback": {
+      "backlog_candidate_count": 0,
+      "decision": "promote",
+      "error_count": 0,
+      "errors": [],
+      "status": "pass",
+      "target": "classroomtoolkit"
+    },
+    "host_feedback": {
+      "claude_host_status": "ok",
+      "claude_workload_status": "ready",
+      "codex_host_status": "ok",
+      "recommendation_count": 1,
+      "stale_latest_runs": [],
+      "status": "pass",
+      "target_run_freshness": "fresh"
+    }
+  },
+  "mutation_allowed": false,
+  "policy_id": "default-runtime-evolution-review",
+  "rollback": "Remove this generated candidate artifact; applying any candidate still requires its own gates.",
+  "schema_version": "0.1-draft"
+}
