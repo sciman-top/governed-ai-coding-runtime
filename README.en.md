@@ -130,16 +130,18 @@ Do not claim:
   - [Agent Continuity Guide](docs/product/agent-continuity.md)
   - [Shared Context Continuity Guide (Chinese)](docs/product/agent-continuity.zh-CN.md)
 - recent hardening:
+  - [20260618 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260618-active-queue-evidence-upkeep-refresh.md)
   - [20260617 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260617-active-queue-evidence-upkeep-refresh.md)
+  - [20260617 Planning EntryPoint Proof Refresh](docs/change-evidence/20260617-planning-entrypoint-proof-refresh.md)
   - [20260616 Continuous Execution Runtime Gate Refresh](docs/change-evidence/20260616-continuous-execution-runtime-gate-refresh.md)
   - [20260614 Continuous Execution Promotion](docs/change-evidence/20260614-continuous-execution-promotion.md)
-  - [20260609 Live Posture Recovery](docs/change-evidence/20260609-live-posture-recovery.md)
   - [20260609 Reference Basis And Preflight Hardening](docs/change-evidence/20260609-reference-basis-and-preflight-hardening.md)
 - reference governance:
   - [Reference Basis Matrix](docs/research/reference-basis-matrix.md)
   - [Reference Governance And Release Preflight Roadmap](docs/roadmap/reference-governance-and-preflight-roadmap.md)
   - [Reference Governance And Release Preflight Plan](docs/plans/reference-governance-and-preflight-plan.md)
 - history and evidence:
+  - [20260609 Live Posture Recovery](docs/change-evidence/20260609-live-posture-recovery.md) (historical recovery milestone, archived)
   - [Completed GAP History](docs/archive/completed-gap-history.md)
   - [Change Evidence Index](docs/change-evidence/README.md)
 

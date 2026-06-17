@@ -23,9 +23,9 @@ Current proved value boundary:
 - evidence and rollback discipline
 
 Current unproved claim boundary:
-- a built-in best AI coding workflow auto-executor
-- a replacement host
-- a default multi-agent orchestrator that always selects the globally best recipe
+- a built-in best-workflow auto-executor that is already proven across repos, hosts, and risk tiers
+- a replacement host UI or replacement host product identity
+- a default multi-agent orchestrator that already selects the globally best recipe everywhere
 
 Final-state best practice means risk-proportional governance, not maximum friction. Low-risk exploration and local iteration should stay fast. Medium and high-risk actions should receive the approval, verification, evidence, and rollback controls that real engineering work requires.
 

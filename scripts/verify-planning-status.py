@@ -80,6 +80,11 @@ def inspect_planning_status(*, repo_root: Path, status_path: Path) -> dict:
             f"target-run freshness is `{target_run_freshness}`",
             f"`{codex_adapter_tier}` / {codex_capability_status}",
             f"`{claude_adapter_tier}` / {claude_workload_status}",
+            "20260617 Active Queue Evidence-Upkeep Refresh",
+            "20260617 Planning EntryPoint Proof Refresh",
+        ],
+        "docs/change-evidence/README.md": [
+            "20260617 Planning EntryPoint Proof Refresh",
         ],
         "docs/plans/README.md": ["Single source of planning truth", "current active queue"],
         "docs/backlog/README.md": [
@@ -88,6 +93,7 @@ def inspect_planning_status(*, repo_root: Path, status_path: Path) -> dict:
             f"`{decision_gate}`",
             f"`{target_run_freshness}`",
             f"`{codex_adapter_tier}` / {codex_capability_status}",
+            "2026-06-17",
         ],
         "docs/backlog/issue-ready-backlog.md": [
             f"active queue reference: `{queue_id}`",
@@ -100,6 +106,12 @@ def inspect_planning_status(*, repo_root: Path, status_path: Path) -> dict:
         "docs/strategy/positioning-and-competitive-layering.md": [
             f"The current active queue is `{queue_id}`",
             f"The current live posture is `{target_run_freshness}`",
+            "2026-06-17",
+        ],
+        "docs/strategy/current-best-end-state-blueprint.md": [
+            f"current active queue: `{queue_id}`",
+            f"current decision gate: `{decision_gate}`",
+            "2026-06-17",
         ],
         "docs/product/interaction-model.md": [
             f"The current active queue is `{queue_id}`",
@@ -114,6 +126,8 @@ def inspect_planning_status(*, repo_root: Path, status_path: Path) -> dict:
             "Single source of planning truth",
             f"`current decision gate`: `{decision_gate}`",
             f"target-run freshness is `{target_run_freshness}`",
+            "20260617 Active Queue Evidence-Upkeep Refresh",
+            "20260617 Planning EntryPoint Proof Refresh",
         ],
         "README.en.md": [
             "Single source of planning truth",
@@ -121,6 +135,8 @@ def inspect_planning_status(*, repo_root: Path, status_path: Path) -> dict:
             f"target-run freshness is `{target_run_freshness}`",
             f"`{codex_adapter_tier}` / {codex_capability_status}",
             f"`{claude_adapter_tier}` / {claude_workload_status}",
+            "20260617 Active Queue Evidence-Upkeep Refresh",
+            "20260617 Planning EntryPoint Proof Refresh",
         ],
         "README.zh-CN.md": [
             "唯一状态真源",
@@ -128,6 +144,8 @@ def inspect_planning_status(*, repo_root: Path, status_path: Path) -> dict:
             f"target-run freshness 为 `{target_run_freshness}`",
             f"`{codex_adapter_tier}` / {codex_capability_status}",
             f"`{claude_adapter_tier}` / {claude_workload_status}",
+            "20260617 Active Queue Evidence-Upkeep Refresh",
+            "20260617 Planning EntryPoint Proof Refresh",
         ],
     }
 
@@ -147,6 +165,10 @@ def inspect_planning_status(*, repo_root: Path, status_path: Path) -> dict:
             "The active next-step implementation queue remains `Interactive Session Productization / GAP-035` through `GAP-039`.",
             "The next active product queue is generic, interactive, attach-first session productization.",
             "The current live posture is still `stale`",
+            "latest 2026-06-09 recovery batch",
+        ],
+        "docs/strategy/current-best-end-state-blueprint.md": [
+            "current active queue: `GAP-159..164`" if queue_id != "GAP-159..164" else "",
         ],
         "docs/product/interaction-model.md": [
             "The next active product queue is generic, interactive, attach-first session productization.",
@@ -155,10 +177,19 @@ def inspect_planning_status(*, repo_root: Path, status_path: Path) -> dict:
         "docs/README.md": [
             "`current decision gate`: `refresh_evidence_first`" if decision_gate != "refresh_evidence_first" else "",
             "`current live posture`: target-run freshness is `stale`" if target_run_freshness != "stale" else "",
+            "Latest posture proof:\n- [20260609 Live Posture Recovery]" if queue_id == "Continuous-Execution" else "",
         ],
         "docs/backlog/README.md": [
             "`current decision gate` remains `refresh_evidence_first`" if decision_gate != "refresh_evidence_first" else "",
             "current live posture remains `stale`" if target_run_freshness != "stale" else "",
+            "2026-06-09 recovery batch now proves Codex target-run recovery",
+        ],
+        "docs/plans/README.md": [
+            "queue still must not be treated as the current active queue while `planning-status.json` keeps `GAP-159..164` active",
+        ],
+        "docs/plans/host-family-capability-operationalization-plan.md": [
+            "Use this plan as a prepared follow-on queue, not as permission to start new implementation work while `planning-status.json` still keeps `GAP-159..164` as the active queue and this follow-on package inactive.",
+            "current active queue: `GAP-159..164`",
         ],
         "docs/backlog/issue-ready-backlog.md": [
             "active queue reference: `GAP-159..164`" if queue_id != "GAP-159..164" else "",
@@ -226,7 +257,7 @@ def _inspect_conditional_queue_promotion_guards(*, root: Path, queue_id: str, de
         ],
         "docs/plans/host-family-capability-operationalization-plan.md": [
             "Activation requires explicit promotion evidence and rollback.",
-            "Use this plan as a prepared follow-on queue, not as permission to start new implementation work while `planning-status.json` still keeps `GAP-159..164` as the active queue and this follow-on package inactive.",
+            "Use this plan as a prepared follow-on queue, not as permission to start new implementation work while `planning-status.json` still keeps `Continuous-Execution` as the active queue and this follow-on package inactive.",
         ],
         "docs/plans/continuous-execution-readiness-and-rollout-plan.md": [
             "Continuous rollout starts only when all conditions are met:",
@@ -252,6 +283,20 @@ def _inspect_conditional_queue_promotion_guards(*, root: Path, queue_id: str, de
             required = "current active queue: `GAP-159..164`"
             if required not in docs_text:
                 failures.append(f"docs/README.md:missing active queue marker `{required}`")
+
+    readme_history_requirement = {
+        "README.md": "（历史恢复里程碑）",
+        "README.en.md": "(historical recovery milestone)",
+        "README.zh-CN.md": "（历史恢复里程碑）",
+        "docs/README.md": "(historical recovery milestone)",
+    }
+    for relative_path, marker in readme_history_requirement.items():
+        path = root / relative_path
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8")
+        if "20260609 Live Posture Recovery" not in text or marker not in text:
+            failures.append(f"{relative_path}:missing historical recovery milestone marker for 20260609")
 
     return failures
 

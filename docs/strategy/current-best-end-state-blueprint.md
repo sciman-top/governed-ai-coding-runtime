@@ -17,8 +17,8 @@ It is not:
 - a competing AI coding host
 - a wrapper-first orchestration product
 - a generation-guardrail product
-- a replacement host
-- a default multi-agent orchestrator with one fixed best workflow recipe
+- a replacement host UI or replacement host product identity
+- a default multi-agent orchestrator that already selects one fixed globally best workflow recipe everywhere
 
 ## Best-End-State Blueprint
 The current best engineering end state is:
@@ -28,7 +28,7 @@ The current best engineering end state is:
 Current product-boundary tightening:
 - the repo's proved value is workflow / gate / evidence governance
 - it may evolve into an `AI coding workflow governor`
-- it has **not** yet proved that a built-in best AI coding workflow auto-executor already exists
+- it has **not** yet proved that a built-in best-workflow auto-executor already exists across repos, hosts, and risk tiers
 
 ### 1. Governance Hub
 The runtime kernel owns:
@@ -122,9 +122,9 @@ The single source of current posture is:
 
 Current practical reading:
 - historical certification: `GAP-104..111`
-- current active queue: `GAP-159..164`
+- current active queue: `Continuous-Execution`
 - current decision gate: `defer_ltp_and_refresh_evidence`
-- current live posture: Codex target runs are now `native_attach / ready`; latest Claude workload probe is `native_attach / ready`
+- current live posture: the latest 2026-06-17 active-loop refresh shows Codex target runs at `native_attach / ready`; the latest Claude workload probe is `native_attach / ready`
 
 Implication:
 - do not reopen implementation queues just because historical closure exists

@@ -132,16 +132,18 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
   - [Agent Continuity Guide](docs/product/agent-continuity.md)
   - [共享上下文连续性指南](docs/product/agent-continuity.zh-CN.md)
 - 近期治理硬化：
+  - [20260618 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260618-active-queue-evidence-upkeep-refresh.md)
   - [20260617 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260617-active-queue-evidence-upkeep-refresh.md)
+  - [20260617 Planning EntryPoint Proof Refresh](docs/change-evidence/20260617-planning-entrypoint-proof-refresh.md)
   - [20260616 Continuous Execution Runtime Gate Refresh](docs/change-evidence/20260616-continuous-execution-runtime-gate-refresh.md)
   - [20260614 Continuous Execution Promotion](docs/change-evidence/20260614-continuous-execution-promotion.md)
-  - [20260609 Live Posture Recovery](docs/change-evidence/20260609-live-posture-recovery.md)
   - [20260609 Reference Basis And Preflight Hardening](docs/change-evidence/20260609-reference-basis-and-preflight-hardening.md)
 - reference governance：
   - [Reference Basis Matrix](docs/research/reference-basis-matrix.md)
   - [Reference Governance And Release Preflight Roadmap](docs/roadmap/reference-governance-and-preflight-roadmap.md)
   - [Reference Governance And Release Preflight Plan](docs/plans/reference-governance-and-preflight-plan.md)
 - 历史与证据：
+  - [20260609 Live Posture Recovery](docs/change-evidence/20260609-live-posture-recovery.md)（历史恢复里程碑，已归档）
   - [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md)
   - [Change Evidence Index](docs/change-evidence/README.md)
 

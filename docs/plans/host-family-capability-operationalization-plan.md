@@ -17,7 +17,7 @@ Turn the refreshed best-end-state definition, host-family posture, and capabilit
 ## Activation Trigger
 Promote this plan only when all of the following are true:
 1. the owner explicitly chooses to promote it, or the status file is updated to a new non-blocking next action that permits bounded follow-on planning work
-2. `GAP-159..164` no longer needs to be treated as the current active queue reference
+2. `Continuous-Execution` no longer needs to be treated as the current active queue reference
 3. fresh evidence exists for the live-host posture that justifies stronger operationalization work instead of continued bounded defer
 4. the promotion decision is written as evidence with rollback
 
@@ -99,4 +99,4 @@ Promote this plan only when all of the following are true:
 **Estimated scope:** S
 
 ## Immediate Rule
-Use this plan as a prepared follow-on queue, not as permission to start new implementation work while `planning-status.json` still keeps `GAP-159..164` as the active queue and this follow-on package inactive.
+Use this plan as a prepared follow-on queue, not as permission to start new implementation work while `planning-status.json` still keeps `Continuous-Execution` as the active queue and this follow-on package inactive.

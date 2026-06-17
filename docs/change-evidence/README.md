@@ -17,6 +17,16 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260618 Active Queue Evidence-Upkeep Refresh](./20260618-active-queue-evidence-upkeep-refresh.md)
+  - evidence companion for rerunning the full release-style active-loop upkeep on 2026-06-18, refreshing runtime/contract/docs outputs, and advancing the planning proof anchor to the current day
+- [20260618 Self-Evolution Review Refresh](./20260618-self-evolution-review-refresh.md)
+  - evidence companion for retaining the 2026-06-18 self-evolution, promotion, recommendation, core-principle, and certification artifacts as bounded review-only outputs
+- [20260618 Planning Proof And Claim Boundary Pre-Change Review](./20260618-planning-proof-and-claim-boundary-pre-change-review.md)
+  - evidence companion for the pre-change review that covers the current planning-proof, claim-boundary, README/docs entrypoint, and verifier-surface drift integration before changing self-repo docs/gates
+- [20260617 Workflow Governor Claim Tightening Refresh](./20260617-workflow-governor-claim-tightening-refresh.md)
+  - evidence companion for tightening interaction-model and docs-index product-boundary wording so `workflow governor` remains a governed value claim rather than an already-proven best-workflow executor claim
+- [20260617 Planning EntryPoint Proof Refresh](./20260617-planning-entrypoint-proof-refresh.md)
+  - evidence companion for re-centering README/docs/backlog/strategy entrypoints on the 2026-06-17 active-loop proof, downgrading `20260609 Live Posture Recovery` to historical milestone wording, and extending planning-status regression coverage
 - [20260617 Runtime Evolution AI Experience Freshness Pointer](./20260617-runtime-evolution-ai-experience-freshness-pointer.md)
   - evidence companion for replacing the stale fixed-date `EVOL-AI-EXPERIENCE` source pointer with the fresh current AI coding experience review artifact
   - guarded surfaces: `scripts/evaluate-runtime-evolution.py`

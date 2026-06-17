@@ -277,10 +277,14 @@ function Invoke-HostReplacementClaimBoundaryScan {
     "README.md",
     "README.en.md",
     "README.zh-CN.md",
+    "docs/README.md",
     "docs/quickstart/ai-coding-usage-guide.md",
     "docs/quickstart/ai-coding-usage-guide.zh-CN.md",
     "docs/product/codex-cli-app-integration-guide.md",
-    "docs/product/codex-cli-app-integration-guide.zh-CN.md"
+    "docs/product/codex-cli-app-integration-guide.zh-CN.md",
+    "docs/product/interaction-model.md",
+    "docs/strategy/current-best-end-state-blueprint.md",
+    "docs/strategy/positioning-and-competitive-layering.md"
   ) | ForEach-Object { Join-Path (Get-Location) $_ } | Where-Object { Test-Path $_ }
 
   $riskPatterns = @(

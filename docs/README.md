@@ -15,7 +15,7 @@
 - Current end-state wording: `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`.
   - `Automation-first, outer-AI-assisted, gate-controlled evolution` remains the active operating posture.
   - The repo is a governance sidecar and does not authorize automatic host replacement, policy mutation, skill enablement, push, or merge.
-  - The repo's proven value is workflow / gate / evidence governance; it has not yet proven a built-in best AI coding workflow auto-executor.
+  - The repo's proven value is workflow / gate / evidence governance; it has not yet proven a built-in best-workflow auto-executor across repos, hosts, and risk tiers.
   - The intended evolution target is `AI coding workflow governor`, not a replacement host or a single canonical execution recipe.
   - `Context budget and instruction minimalism` and `Least-privilege tool and credential boundary` both require concise, reviewable, bounded tool outputs with auditable permissions, provider secrets, and MCP/tool identities.
 - `Measured effect feedback over claims` means completion claims must keep fresh evidence, effect feedback, and trace/replay/trajectory references attached to the verified outcome.
@@ -119,12 +119,14 @@
 ## Evidence, History, And Rollback
 - Current evidence index: [Change Evidence Index](./change-evidence/README.md)
 - Latest posture proof:
+  - [20260618 Active Queue Evidence-Upkeep Refresh](./change-evidence/20260618-active-queue-evidence-upkeep-refresh.md)
   - [20260617 Active Queue Evidence-Upkeep Refresh](./change-evidence/20260617-active-queue-evidence-upkeep-refresh.md)
+  - [20260617 Planning EntryPoint Proof Refresh](./change-evidence/20260617-planning-entrypoint-proof-refresh.md)
   - [20260616 Continuous Execution Runtime Gate Refresh](./change-evidence/20260616-continuous-execution-runtime-gate-refresh.md)
   - [20260614 Continuous Execution Promotion](./change-evidence/20260614-continuous-execution-promotion.md)
-  - [20260609 Live Posture Recovery](./change-evidence/20260609-live-posture-recovery.md)
   - [20260613 README And Index Refresh](./change-evidence/20260613-readme-and-index-refresh.md)
 - Completed history:
+  - [20260609 Live Posture Recovery](./change-evidence/20260609-live-posture-recovery.md) (historical recovery milestone, archived)
   - [Completed GAP History](./archive/completed-gap-history.md)
   - [已完成 GAP 历史归档](./archive/completed-gap-history.zh-CN.md)
 - Recovery docs:

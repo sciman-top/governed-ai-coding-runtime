@@ -48,8 +48,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
 - 这是一个 AI coding governance runtime / control plane，不是新的执行宿主。
 - 它把治理契约、门禁、evidence、rollout、target-repo attach 和 host feedback 收敛成同一套 repo-owned 规则与脚本。
 - 当前最佳工程终态仍是 `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`。
-- 本项目已证实的主要价值是 workflow / gate / evidence governance；尚未证实它已经内建“最佳 AI 编程工作流自动执行器”。
-- 它可以演进成 `AI coding workflow governor`，但不是 replacement host，也不是固定唯一最佳 workflow executor。
+- 本项目已证实的主要价值是 workflow / gate / evidence governance；尚未证实它已经在跨仓库、跨宿主、跨风险层级上证明内建“最佳工作流自动执行器”。
+- 它可以演进成 `AI coding workflow governor`，但不是 replacement host，也不是已经在所有场景下证明的固定唯一最佳 workflow executor。
 - Codex and Claude Code are cooperation hosts, not competitors；本仓治理它们的 attach、gate、evidence、handoff 和 degrade posture，不复制或替代宿主 UI、账号、provider 或模型循环。
 - 它不负责本机账号、provider、gateway 或宿主启动切换：
   - Codex/Cockpit 的 Direct OAuth、Direct API、API service 往返切换由 `Cockpit Tools` 负责。
@@ -127,10 +127,11 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
   - [Agent Continuity Guide](docs/product/agent-continuity.md)
   - [共享上下文连续性指南](docs/product/agent-continuity.zh-CN.md)
 - 近期治理硬化：
+  - [20260618 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260618-active-queue-evidence-upkeep-refresh.md)
   - [20260617 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260617-active-queue-evidence-upkeep-refresh.md)
+  - [20260617 Planning EntryPoint Proof Refresh](docs/change-evidence/20260617-planning-entrypoint-proof-refresh.md)
   - [20260616 Continuous Execution Runtime Gate Refresh](docs/change-evidence/20260616-continuous-execution-runtime-gate-refresh.md)
   - [20260614 Continuous Execution Promotion](docs/change-evidence/20260614-continuous-execution-promotion.md)
-  - [20260609 Live Posture Recovery](docs/change-evidence/20260609-live-posture-recovery.md)
   - [20260609 Reference Basis And Preflight Hardening](docs/change-evidence/20260609-reference-basis-and-preflight-hardening.md)
 - reference governance：
   - [Reference Basis Matrix](docs/research/reference-basis-matrix.md)
@@ -139,6 +140,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
   - [Workflow Governor Governance Plan](docs/plans/workflow-governor-governance-plan.md)
   - [Workflow Governor Governance Roadmap](docs/roadmap/workflow-governor-governance-roadmap.md)
 - 历史与证据：
+  - [20260609 Live Posture Recovery](docs/change-evidence/20260609-live-posture-recovery.md)（历史恢复里程碑，已归档）
   - [Completed GAP History](docs/archive/completed-gap-history.md)
   - [已完成 GAP 历史归档](docs/archive/completed-gap-history.zh-CN.md)
   - [Change Evidence Index](docs/change-evidence/README.md)
