@@ -492,36 +492,8 @@
     "runtime_evolution": {
       "artifact_refs": {},
       "as_of": "2026-06-17",
-      "candidate_count": 3,
+      "candidate_count": 2,
       "candidates": [
-        {
-          "acceptance_gates": [
-            "python scripts/host-feedback-summary.py --assert-minimum",
-            "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs"
-          ],
-          "candidate_id": "EVOL-HOST-FEEDBACK",
-          "decision": "refresh_host_feedback",
-          "evidence_required": [
-            "host feedback summary",
-            "latest target repo runs",
-            "operator-facing recommendation surface"
-          ],
-          "observed_change": "Host feedback or target-run freshness shows attention-level posture.",
-          "patch_plan": [
-            {
-              "apply_mode": "manual_or_future_low_risk_only",
-              "operation": "refresh host and target-run evidence before promoting new implementation work",
-              "path": "scripts/host-feedback-summary.py"
-            }
-          ],
-          "proposed_action": "modify",
-          "repo_impact": "Keeps self-evolution prompts aligned with real host degradation and stale target workload evidence.",
-          "risk_level": "low",
-          "rollback_plan": "remove host-feedback-driven candidate wiring if it misclassifies freshness or host posture",
-          "source_checked_on": "2026-06-17",
-          "source_ref": ".runtime/artifacts/host-feedback-summary/latest.md",
-          "source_type": "internal_runtime_evidence"
-        },
         {
           "acceptance_gates": [
             "python -m unittest tests.runtime.test_runtime_evolution tests.runtime.test_learning_efficiency_metrics",
@@ -609,9 +581,9 @@
           "claude_host_status": "ok",
           "claude_workload_status": "ready",
           "codex_host_status": "ok",
-          "recommendation_count": 3,
+          "recommendation_count": 1,
           "stale_latest_runs": [],
-          "status": "attention",
+          "status": "pass",
           "target_run_freshness": "fresh"
         }
       },

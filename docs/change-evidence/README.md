@@ -17,6 +17,9 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260617 Host Feedback Nonblocking Config Attention](./20260617-host-feedback-nonblocking-config-attention.md)
+  - evidence companion for keeping accepted local host config drift visible in detail while no longer letting it raise the whole feedback report to `attention` when real workload evidence is healthy
+  - guarded surfaces: `scripts/host-feedback-summary.py`, `docs/product/host-feedback-loop.md`, `docs/product/host-feedback-loop.zh-CN.md`
 - [20260617 Self-Evolution Add Review No Add](./20260617-self-evolution-add-review-no-add.md)
   - evidence companion for recording why the current add lane still recommends no new terminal self-evolution capability while the readiness ledger remains complete
 - [20260617 Self-Evolution Retirement Review No Delete](./20260617-self-evolution-retirement-review-no-delete.md)

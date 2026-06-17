@@ -71,6 +71,15 @@ Markdown 报告固定落在：
 ### 情况 1.5：当前默认组合显得过时，但闭环仍然有效
 应先更新具体默认实现，再继续保持“综合效率优先”这条更高层规则，不要把原则写死成某一代模型组合。
 
+### 情况 1.6：宿主配置与仓库参考默认值不一致，但真实闭环健康
+当以下条件仍同时成立时，应把它视为 non-blocking host snapshot detail，而不是整体反馈异常：
+- 实际宿主入口可用
+- `claude_workload.readiness.status` 对当前使用仍然健康
+- latest target-run evidence 为 `fresh`
+- latest target runs 不存在 degraded 项
+
+此时 config drift 应继续保留在宿主细节里，但不应仅凭这一点把整个反馈报告抬成 `attention`。
+
 ### 情况 2：规则 manifest 正常，但全局副本缺失
 优先运行：
 ```powershell

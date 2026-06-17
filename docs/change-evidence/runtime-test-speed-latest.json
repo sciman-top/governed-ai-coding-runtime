@@ -1,12 +1,12 @@
 {
-  "elapsed_seconds": 196.95728729999973,
+  "elapsed_seconds": 190.94781460000013,
   "failure_count": 0,
   "failures": [],
   "prioritized_target_count": 10,
   "serial_target_count": 3,
   "slowest": [
     {
-      "duration_seconds": 158.1220917999999,
+      "duration_seconds": 163.45111779999934,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_operator_entrypoint",
@@ -15,7 +15,7 @@
       }
     },
     {
-      "duration_seconds": 157.53797059999943,
+      "duration_seconds": 160.7281322000017,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_flow_preset",
@@ -24,7 +24,7 @@
       }
     },
     {
-      "duration_seconds": 146.62912599999981,
+      "duration_seconds": 156.06124719999934,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_target_repo_powershell_policy",
@@ -33,7 +33,7 @@
       }
     },
     {
-      "duration_seconds": 131.5049554999996,
+      "duration_seconds": 135.4508421999999,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_evolution",
@@ -42,7 +42,7 @@
       }
     },
     {
-      "duration_seconds": 113.02058080000006,
+      "duration_seconds": 118.15030630000001,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_self_evolution_readiness",
@@ -51,7 +51,7 @@
       }
     },
     {
-      "duration_seconds": 88.54986120000012,
+      "duration_seconds": 101.51440899999943,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_governance_hub_certification",
@@ -60,16 +60,7 @@
       }
     },
     {
-      "duration_seconds": 84.50790940000024,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_attached_repo_e2e",
-        "path": "tests\\runtime\\test_attached_repo_e2e.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 75.5207891,
+      "duration_seconds": 98.43306350000057,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_repo_slimming_surface",
@@ -78,20 +69,29 @@
       }
     },
     {
-      "duration_seconds": 64.37865689999944,
+      "duration_seconds": 82.3173055999996,
       "exit_code": 0,
       "target": {
-        "module": "tests.runtime.test_autonomous_next_work_selection",
-        "path": "tests\\runtime\\test_autonomous_next_work_selection.py",
+        "module": "tests.runtime.test_runtime_doctor",
+        "path": "tests\\runtime\\test_runtime_doctor.py",
         "suite": "runtime"
       }
     },
     {
-      "duration_seconds": 40.81775789999938,
+      "duration_seconds": 68.13009649999913,
       "exit_code": 0,
       "target": {
-        "module": "tests.runtime.test_evidence_recovery_posture",
-        "path": "tests\\runtime\\test_evidence_recovery_posture.py",
+        "module": "tests.runtime.test_attached_repo_e2e",
+        "path": "tests\\runtime\\test_attached_repo_e2e.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 49.49812960000054,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_autonomous_next_work_selection",
+        "path": "tests\\runtime\\test_autonomous_next_work_selection.py",
         "suite": "runtime"
       }
     }

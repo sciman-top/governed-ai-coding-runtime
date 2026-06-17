@@ -69,6 +69,15 @@ Treat it as a host-local configuration problem first, not as a runtime regressio
 ### Current combo looks outdated, but the loop still works
 Update the concrete host default if needed, but preserve the higher-order `efficiency first` rule instead of replacing it with model-specific wording.
 
+### Host config differs from repo defaults, but the real loop is healthy
+Treat that as non-blocking host snapshot detail when all of the following still hold:
+- real host entrypoints are usable
+- `claude_workload.readiness.status` is healthy enough for current use
+- latest target-run evidence is `fresh`
+- no degraded latest target runs remain
+
+In that case the config drift should stay visible in host details, but it should not by itself turn the whole feedback report into `attention`.
+
 ### Manifest healthy, synchronized copies missing
 Run:
 ```powershell

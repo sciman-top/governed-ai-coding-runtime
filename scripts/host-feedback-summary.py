@@ -309,7 +309,11 @@ def _build_hosts_dimension() -> FeedbackDimension:
         command_exit_code=_nested_value(claude, "command", "exit_code"),
         mcp_exit_code=_nested_value(claude, "mcp", "exit_code"),
     )
-    status = "ok" if codex_health == "ok" and claude_health == "ok" else "attention"
+    codex_nonblocking_config_attention = codex_health == "attention" and _nested_value(codex, "config", "status") == "attention"
+    claude_nonblocking_config_attention = claude_health == "attention" and _nested_value(claude, "config", "status") == "attention"
+    codex_effective_health = "ok" if codex_nonblocking_config_attention else codex_health
+    claude_effective_health = "ok" if claude_nonblocking_config_attention else claude_health
+    status = "ok" if codex_effective_health == "ok" and claude_effective_health == "ok" else "attention"
     summary = "both host entrypoint snapshots are healthy" if status == "ok" else "one or more host snapshots need attention"
     return FeedbackDimension(
         dimension_id="hosts",
@@ -318,7 +322,8 @@ def _build_hosts_dimension() -> FeedbackDimension:
         details={
             "codex": {
                 "status": codex.get("status"),
-                "health": codex_health,
+                "health": codex_effective_health,
+                "nonblocking_config_attention": codex_nonblocking_config_attention,
                 "active_account": _active_codex_account_label(codex),
                 "config_status": _nested_value(codex, "config", "status"),
                 "login_exit_code": _nested_value(codex, "login_status", "exit_code"),
@@ -326,7 +331,8 @@ def _build_hosts_dimension() -> FeedbackDimension:
             },
             "claude": {
                 "status": claude.get("status"),
-                "health": claude_health,
+                "health": claude_effective_health,
+                "nonblocking_config_attention": claude_nonblocking_config_attention,
                 "active_provider": _nested_value(claude, "active_provider", "name"),
                 "config_status": _nested_value(claude, "config", "status"),
                 "command_exit_code": _nested_value(claude, "command", "exit_code"),
@@ -599,9 +605,20 @@ def _nested_value(payload: dict[str, Any], *keys: str) -> Any:
 def _aggregate_status(dimensions: list[FeedbackDimension]) -> str:
     if any(item.status == "fail" for item in dimensions):
         return "fail"
-    if any(item.status == "attention" for item in dimensions):
+    if any(_dimension_counts_as_attention(item) for item in dimensions):
         return "attention"
     return "pass"
+
+
+def _dimension_counts_as_attention(item: FeedbackDimension) -> bool:
+    if item.status != "attention":
+        return False
+    if item.dimension_id != "hosts":
+        return True
+    details = item.details if isinstance(item.details, dict) else {}
+    codex = details.get("codex") if isinstance(details.get("codex"), dict) else {}
+    claude = details.get("claude") if isinstance(details.get("claude"), dict) else {}
+    return not bool(codex.get("nonblocking_config_attention")) and not bool(claude.get("nonblocking_config_attention"))
 
 
 def _build_recommendations(dimensions: list[FeedbackDimension]) -> list[str]:

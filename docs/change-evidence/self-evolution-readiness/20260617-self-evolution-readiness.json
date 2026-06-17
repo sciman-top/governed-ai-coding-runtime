@@ -5,7 +5,7 @@
     {
       "capability_id": "source_review_and_candidate_generation",
       "evidence": [
-        "candidate_count=3"
+        "candidate_count=2"
       ],
       "existing_refs": [
         "scripts/evaluate-runtime-evolution.py",

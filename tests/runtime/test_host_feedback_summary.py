@@ -76,24 +76,47 @@ class HostFeedbackSummaryTests(unittest.TestCase):
         self.assertTrue(any("target repo run evidence" in item for item in failures))
         self.assertIn("-ExportTargetRepoRuns", "\n".join(payload["recommendations"]))
 
-    def test_host_dimension_surfaces_config_attention(self) -> None:
+    def test_host_dimension_keeps_config_attention_nonblocking(self) -> None:
         module = _load_host_feedback_summary_script()
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             repo_root = Path(tmp_dir)
-            self._write_minimal_repo(repo_root)
+            self._write_minimal_repo(repo_root, include_target_run=False)
+            runs_root = repo_root / "docs" / "change-evidence" / "target-repo-runs"
+            runs_root.mkdir(parents=True, exist_ok=True)
+            fresh_timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+            (runs_root / f"demo-daily-{fresh_timestamp}.json").write_text(
+                json.dumps(self._target_run_payload("daily")),
+                encoding="utf-8",
+            )
 
             with (
+                mock.patch.object(module, "REQUIRED_GLOBAL_TARGETS", ()),
                 mock.patch.object(module, "codex_status", return_value={"login_status": {"exit_code": 0}, "config": {"status": "attention"}}),
-                mock.patch.object(module, "claude_status", return_value={"active_provider": {"name": "glm"}, "config": {"status": "ok"}, "command": {"exit_code": 0}, "mcp": {"exit_code": 0}}),
+                mock.patch.object(module, "claude_status", return_value={"status": "ok", "active_provider": {"name": "glm"}, "config": {"status": "ok"}, "command": {"exit_code": 0}, "mcp": {"exit_code": 0}}),
                 mock.patch.object(module, "probe_claude_code_surface", return_value=self._claude_probe(module)),
             ):
                 payload = module.build_host_feedback_summary(repo_root=repo_root)
 
         hosts = next(item for item in payload["dimensions"] if item["dimension_id"] == "hosts")
-        self.assertEqual("attention", hosts["status"])
-        self.assertEqual("attention", hosts["details"]["codex"]["health"])
-        self.assertEqual("attention", payload["status"])
+        self.assertEqual("ok", hosts["status"])
+        self.assertEqual("ok", hosts["details"]["codex"]["health"])
+        self.assertEqual("attention", hosts["details"]["codex"]["config_status"])
+        self.assertEqual("pass", payload["status"])
+
+    def test_nonblocking_host_config_attention_does_not_raise_overall_attention(self) -> None:
+        module = _load_host_feedback_summary_script()
+
+        dimensions = [
+            module.FeedbackDimension("docs", "ok", "docs ok", {}),
+            module.FeedbackDimension("rules", "ok", "rules ok", {}),
+            module.FeedbackDimension("hosts", "ok", "hosts ok", {"codex": {"nonblocking_config_attention": True}}),
+            module.FeedbackDimension("parity", "ok", "parity ok", {}),
+            module.FeedbackDimension("claude_workload", "ok", "claude ok", {}),
+            module.FeedbackDimension("target_runs", "ok", "runs ok", {}),
+        ]
+
+        self.assertEqual("pass", module._aggregate_status(dimensions))
 
     def test_latest_target_run_prefers_newer_daily_evidence_over_onboard_snapshot(self) -> None:
         module = _load_host_feedback_summary_script()
