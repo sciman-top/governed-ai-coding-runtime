@@ -130,8 +130,9 @@ Do not claim:
   - [Agent Continuity Guide](docs/product/agent-continuity.md)
   - [Shared Context Continuity Guide (Chinese)](docs/product/agent-continuity.zh-CN.md)
 - recent hardening:
+  - [20260617 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260617-active-queue-evidence-upkeep-refresh.md)
+  - [20260616 Continuous Execution Runtime Gate Refresh](docs/change-evidence/20260616-continuous-execution-runtime-gate-refresh.md)
   - [20260614 Continuous Execution Promotion](docs/change-evidence/20260614-continuous-execution-promotion.md)
-  - [20260614 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260614-active-queue-evidence-upkeep-refresh.md)
   - [20260609 Live Posture Recovery](docs/change-evidence/20260609-live-posture-recovery.md)
   - [20260609 Reference Basis And Preflight Hardening](docs/change-evidence/20260609-reference-basis-and-preflight-hardening.md)
 - reference governance:

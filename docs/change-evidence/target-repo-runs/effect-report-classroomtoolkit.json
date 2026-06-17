@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0",
   "report_kind": "target_repo_reuse_effect_feedback",
-  "generated_at": "2026-06-08T16:02:24.877694+00:00",
+  "generated_at": "2026-06-17T11:08:01.032554+00:00",
   "target": "classroomtoolkit",
   "runs_root": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\target-repo-runs",
   "baseline_run_ref": "classroomtoolkit-daily-20260420225453.json",
-  "after_run_ref": "classroomtoolkit-daily-20260609000223.json",
+  "after_run_ref": "classroomtoolkit-daily-20260617190800.json",
   "baseline_metrics": {
     "run_ref": "classroomtoolkit-daily-20260420225453.json",
     "flow": "daily",
@@ -36,12 +36,17 @@
       "artifacts/task-classroomtoolkit-daily-20260420225453/session-bridge-request/verification-output/contract.txt",
       "artifacts/task-classroomtoolkit-daily-20260420225453/policy/session-bridge-allow.json",
       "artifacts/task-classroomtoolkit-daily-20260420225453/run-classroomtoolkit-daily-20260420225453/verification-output/test.txt"
-    ]
+    ],
+    "workflow_mode_selected": null,
+    "workflow_mode_source": null,
+    "workflow_mode_reason": null,
+    "workflow_degrade_reason": null,
+    "workflow_metrics": null
   },
   "after_metrics": {
-    "run_ref": "classroomtoolkit-daily-20260609000223.json",
+    "run_ref": "classroomtoolkit-daily-20260617190800.json",
     "flow": "daily",
-    "timestamp_utc": "2026-06-09T00:02:23+00:00",
+    "timestamp_utc": "2026-06-17T19:08:00+00:00",
     "overall_status": "pass",
     "attachment_health": "healthy",
     "binding_state": "healthy",
@@ -64,21 +69,26 @@
     "evidence_complete": true,
     "evidence_completeness_ratio": 1.0,
     "evidence_refs": [
-      "artifacts/task-20260608232752-classroomtoolkit/run-20260608232752-classroomtoolkit/verification-output/contract.txt",
-      "artifacts/task-20260608232752-classroomtoolkit/session-bridge-request/verification-output/contract.txt",
-      "artifacts/task-20260608232752-classroomtoolkit/policy/session-bridge-allow.json",
-      "artifacts/task-20260608232752-classroomtoolkit/task-20260608232752-classroomtoolkit-session-bridge-request/evidence/adapter-events.json",
-      "artifacts/task-20260608232752-classroomtoolkit/session-bridge-request/verification-output/test.txt",
-      "artifacts/task-20260608232752-classroomtoolkit/run-20260608232752-classroomtoolkit/verification-output/test.txt"
-    ]
+      "artifacts/task-20260617185636-classroomtoolkit/run-20260617185636-classroomtoolkit/verification-output/contract.txt",
+      "artifacts/task-20260617185636-classroomtoolkit/session-bridge-request/verification-output/contract.txt",
+      "artifacts/task-20260617185636-classroomtoolkit/policy/session-bridge-allow.json",
+      "artifacts/task-20260617185636-classroomtoolkit/task-20260617185636-classroomtoolkit-session-bridge-request/evidence/adapter-events.json",
+      "artifacts/task-20260617185636-classroomtoolkit/session-bridge-request/verification-output/test.txt",
+      "artifacts/task-20260617185636-classroomtoolkit/run-20260617185636-classroomtoolkit/verification-output/test.txt"
+    ],
+    "workflow_mode_selected": null,
+    "workflow_mode_source": null,
+    "workflow_mode_reason": null,
+    "workflow_degrade_reason": null,
+    "workflow_metrics": null
   },
   "rolling_kpi": {
     "target": "classroomtoolkit",
     "total_daily_runs": 5,
-    "onboarding_latency_seconds": 4078036,
-    "first_pass_latency_seconds": 4078036,
+    "onboarding_latency_seconds": 4837973,
+    "first_pass_latency_seconds": 4837973,
     "deny_to_success_retries": 0,
-    "fallback_rate": 0.8,
+    "fallback_rate": 0.6,
     "medium_risk_loop_success_ratio": null,
     "problem_run_rate": 0.0,
     "problem_recovery_retries": 0,
@@ -86,9 +96,14 @@
     "latest_problem_signature": null,
     "latest_problem_run_ref": null,
     "latest_problem_evidence_ref": null,
-    "window_start_utc": "2026-05-15T21:54:47+00:00",
-    "window_end_utc": "2026-06-09T00:02:23+00:00",
-    "latest_evidence_ref": "artifacts/task-20260608232752-classroomtoolkit/run-20260608232752-classroomtoolkit/verification-output/contract.txt"
+    "window_start_utc": "2026-05-23T14:03:40+00:00",
+    "window_end_utc": "2026-06-17T19:08:00+00:00",
+    "latest_evidence_ref": "artifacts/task-20260617185636-classroomtoolkit/run-20260617185636-classroomtoolkit/verification-output/contract.txt",
+    "workflow_mode_selected": null,
+    "workflow_mode_source": null,
+    "workflow_mode_reason": null,
+    "workflow_degrade_reason": null,
+    "workflow_metrics": null
   },
   "decision": "promote",
   "backlog_candidates": [],

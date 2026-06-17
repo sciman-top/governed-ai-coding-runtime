@@ -119,9 +119,9 @@
 ## Evidence, History, And Rollback
 - Current evidence index: [Change Evidence Index](./change-evidence/README.md)
 - Latest posture proof:
+  - [20260617 Active Queue Evidence-Upkeep Refresh](./change-evidence/20260617-active-queue-evidence-upkeep-refresh.md)
+  - [20260616 Continuous Execution Runtime Gate Refresh](./change-evidence/20260616-continuous-execution-runtime-gate-refresh.md)
   - [20260614 Continuous Execution Promotion](./change-evidence/20260614-continuous-execution-promotion.md)
-  - [20260614 Active Queue Evidence-Upkeep Refresh](./change-evidence/20260614-active-queue-evidence-upkeep-refresh.md)
-  - [20260613 Active Queue Evidence-Upkeep Refresh](./change-evidence/20260613-active-queue-evidence-upkeep-refresh.md)
   - [20260609 Live Posture Recovery](./change-evidence/20260609-live-posture-recovery.md)
   - [20260613 README And Index Refresh](./change-evidence/20260613-readme-and-index-refresh.md)
 - Completed history:

@@ -132,8 +132,9 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
   - [Agent Continuity Guide](docs/product/agent-continuity.md)
   - [共享上下文连续性指南](docs/product/agent-continuity.zh-CN.md)
 - 近期治理硬化：
+  - [20260617 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260617-active-queue-evidence-upkeep-refresh.md)
+  - [20260616 Continuous Execution Runtime Gate Refresh](docs/change-evidence/20260616-continuous-execution-runtime-gate-refresh.md)
   - [20260614 Continuous Execution Promotion](docs/change-evidence/20260614-continuous-execution-promotion.md)
-  - [20260614 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260614-active-queue-evidence-upkeep-refresh.md)
   - [20260609 Live Posture Recovery](docs/change-evidence/20260609-live-posture-recovery.md)
   - [20260609 Reference Basis And Preflight Hardening](docs/change-evidence/20260609-reference-basis-and-preflight-hardening.md)
 - reference governance：
