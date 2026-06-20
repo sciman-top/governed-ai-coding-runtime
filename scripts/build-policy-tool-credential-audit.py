@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from lib.codex_local import context_window_probe
-from lib.evidence_paths import canonicalize_repo_path
+from lib.evidence_paths import canonicalize_repo_path, load_json_object
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -344,15 +344,7 @@ def _inspect_local_agent_config(*, home_path: Path) -> dict[str, Any]:
 
 
 def _load_json(path: Path) -> dict[str, Any]:
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except OSError as exc:
-        raise ValueError(f"json file is not readable: {path} ({exc})") from exc
-    except json.JSONDecodeError as exc:
-        raise ValueError(f"json file is invalid: {path} ({exc.msg})") from exc
-    if not isinstance(payload, dict):
-        raise ValueError(f"json object required: {path}")
-    return payload
+    return load_json_object(path)
 
 
 def _load_optional_json(path: Path) -> dict[str, Any]:

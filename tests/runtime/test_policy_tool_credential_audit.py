@@ -333,6 +333,105 @@ class PolicyToolCredentialAuditTests(unittest.TestCase):
         browser = next(item for item in payload["audited_tools"] if item["tool_name"] == "browser")
         self.assertEqual("fail", browser["status"])
 
+    def test_builder_accepts_utf8_bom_local_agent_json(self) -> None:
+        home = Path(tempfile.gettempdir()) / f"policy-tool-audit-{uuid.uuid4().hex}"
+        home.mkdir(parents=True, exist_ok=False)
+        try:
+            codex = home / ".codex"
+            claude = home / ".claude"
+            gemini = home / ".gemini"
+            (codex / "rules").mkdir(parents=True)
+            claude.mkdir()
+            gemini.mkdir()
+            (gemini / ".geminiignore").write_text(
+                "oauth_creds.json\ngoogle_accounts.json\n*credentials*\n",
+                encoding="utf-8",
+            )
+
+            (codex / "config.toml").write_text(
+                '\n'.join(
+                    [
+                        'approval_policy = "never"',
+                        "model_context_window = 272000",
+                        "model_auto_compact_token_limit = 220000",
+                        "[analytics]",
+                        "enabled = false",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (codex / "rules" / "default.rules").write_text("allow prefix_rule([\"git\", \"status\"])\n", encoding="utf-8")
+            (claude / "settings.json").write_text(
+                json.dumps(
+                    {
+                        "permissions": {
+                            "deny": [
+                                f"Read({(claude / 'settings.json').as_posix()})",
+                                f"Read({(codex / 'auth*.json').as_posix()})",
+                                f"Read({(gemini / 'oauth_creds.json').as_posix()})",
+                                f"Read({(gemini / 'google_accounts.json').as_posix()})",
+                            ]
+                        }
+                    }
+                ),
+                encoding="utf-8-sig",
+            )
+            (gemini / "settings.json").write_text(
+                json.dumps(
+                    {
+                        "admin": {"secureModeEnabled": True},
+                        "security": {
+                            "environmentVariableRedaction": {
+                                "enabled": True,
+                                "blocked": [
+                                    "ANTHROPIC_AUTH_TOKEN",
+                                    "GITHUB_PERSONAL_ACCESS_TOKEN",
+                                    "OPENAI_API_KEY",
+                                    "GEMINI_API_KEY",
+                                ],
+                            }
+                        },
+                        "advanced": {
+                            "excludedEnvVars": [
+                                "ANTHROPIC_AUTH_TOKEN",
+                                "GITHUB_PERSONAL_ACCESS_TOKEN",
+                                "OPENAI_API_KEY",
+                                "GEMINI_API_KEY",
+                            ]
+                        },
+                        "context": {
+                            "fileFiltering": {
+                                "respectGeminiIgnore": True,
+                                "customIgnoreFilePaths": [(gemini / ".geminiignore").as_posix()],
+                            }
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/build-policy-tool-credential-audit.py",
+                    "--home",
+                    str(home),
+                    "--output",
+                    str(home / "report.json"),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+        finally:
+            shutil.rmtree(home, ignore_errors=True)
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        payload = json.loads(completed.stdout)
+        self.assertEqual(payload["status"], "pass")
+
     def test_report_path_uses_canonical_root_when_run_from_worktree(self) -> None:
         if ".worktrees" not in ROOT.parts:
             self.skipTest("worktree-specific canonical-path regression")

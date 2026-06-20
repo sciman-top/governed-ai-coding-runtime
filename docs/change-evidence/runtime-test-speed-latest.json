@@ -1,12 +1,12 @@
 {
-  "elapsed_seconds": 125.05381839999973,
+  "elapsed_seconds": 126.7847675999983,
   "failure_count": 0,
   "failures": [],
   "prioritized_target_count": 10,
   "serial_target_count": 3,
   "slowest": [
     {
-      "duration_seconds": 121.60932839999805,
+      "duration_seconds": 122.50950489999741,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_flow_preset",
@@ -15,7 +15,7 @@
       }
     },
     {
-      "duration_seconds": 98.93735329999981,
+      "duration_seconds": 90.41665790000116,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_operator_entrypoint",
@@ -24,16 +24,7 @@
       }
     },
     {
-      "duration_seconds": 82.32119570000214,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_runtime_evolution",
-        "path": "tests\\runtime\\test_runtime_evolution.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 77.57253769999807,
+      "duration_seconds": 74.44979590000003,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_attached_repo_e2e",
@@ -42,16 +33,16 @@
       }
     },
     {
-      "duration_seconds": 74.62564769999881,
+      "duration_seconds": 58.03259649999745,
       "exit_code": 0,
       "target": {
-        "module": "tests.runtime.test_governance_hub_certification",
-        "path": "tests\\runtime\\test_governance_hub_certification.py",
+        "module": "tests.runtime.test_runtime_evolution",
+        "path": "tests\\runtime\\test_runtime_evolution.py",
         "suite": "runtime"
       }
     },
     {
-      "duration_seconds": 67.05543930000204,
+      "duration_seconds": 57.24667930000214,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_doctor",
@@ -60,7 +51,16 @@
       }
     },
     {
-      "duration_seconds": 66.73372889999882,
+      "duration_seconds": 52.22635060000175,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_governance_hub_certification",
+        "path": "tests\\runtime\\test_governance_hub_certification.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 47.20015030000286,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_self_evolution_readiness",
@@ -69,16 +69,16 @@
       }
     },
     {
-      "duration_seconds": 39.03334689999974,
+      "duration_seconds": 40.109795700001996,
       "exit_code": 0,
       "target": {
-        "module": "tests.runtime.test_autonomous_next_work_selection",
-        "path": "tests\\runtime\\test_autonomous_next_work_selection.py",
+        "module": "tests.runtime.test_repo_slimming_surface",
+        "path": "tests\\runtime\\test_repo_slimming_surface.py",
         "suite": "runtime"
       }
     },
     {
-      "duration_seconds": 28.63134259999788,
+      "duration_seconds": 29.140469500001927,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_issue_seeding",
@@ -87,11 +87,11 @@
       }
     },
     {
-      "duration_seconds": 23.598891800000274,
+      "duration_seconds": 23.73190489999979,
       "exit_code": 0,
       "target": {
-        "module": "tests.runtime.test_repo_slimming_surface",
-        "path": "tests\\runtime\\test_repo_slimming_surface.py",
+        "module": "tests.runtime.test_autonomous_next_work_selection",
+        "path": "tests\\runtime\\test_autonomous_next_work_selection.py",
         "suite": "runtime"
       }
     }

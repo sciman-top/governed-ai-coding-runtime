@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -49,3 +50,15 @@ def _canonicalize_repo_ref_text(value: str, *, repo_root: Path) -> str:
     canonical_root = canonical_repo_root(root)
     text = value.replace(root.as_posix(), canonical_root.as_posix())
     return text.replace(str(root), str(canonical_root))
+
+
+def load_json_object(path: Path) -> dict[str, Any]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8-sig"))
+    except OSError as exc:
+        raise ValueError(f"json file is not readable: {path} ({exc})") from exc
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"json file is invalid: {path} ({exc.msg})") from exc
+    if not isinstance(payload, dict):
+        raise ValueError(f"json object required: {path}")
+    return payload
