@@ -1,6 +1,6 @@
 {
   "artifact_refs": {},
-  "as_of": "2026-06-20",
+  "as_of": "2026-06-21",
   "capabilities": [
     {
       "capability_id": "source_review_and_candidate_generation",

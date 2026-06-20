@@ -61,8 +61,8 @@ class PolicyToolCredentialAuditTests(unittest.TestCase):
                     [
                         'approval_policy = "never"',
                         'model = "gpt-5.3-codex"',
-                        "model_context_window = 272000",
-                        "model_auto_compact_token_limit = 220000",
+                        "model_context_window = 1000000",
+                        "model_auto_compact_token_limit = 810000",
                         '[analytics]',
                         'enabled = false',
                         '[mcp_servers.github]',
@@ -225,8 +225,8 @@ class PolicyToolCredentialAuditTests(unittest.TestCase):
                 '\n'.join(
                     [
                         'approval_policy = "never"',
-                        "model_context_window = 272000",
-                        "model_auto_compact_token_limit = 220000",
+                        "model_context_window = 1000000",
+                        "model_auto_compact_token_limit = 810000",
                         "[analytics]",
                         "enabled = false",
                     ]

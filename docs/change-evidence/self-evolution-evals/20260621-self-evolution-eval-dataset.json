@@ -1,7 +1,7 @@
 {
   "artifact_refs": {},
   "artifact_type": "self_evolution_eval_dataset",
-  "as_of": "2026-06-20",
+  "as_of": "2026-06-21",
   "case_count": 4,
   "cases": [
     {
@@ -108,7 +108,7 @@
       ]
     }
   ],
-  "dataset_id": "self-evolution-eval-dataset-2026-06-20",
+  "dataset_id": "self-evolution-eval-dataset-2026-06-21",
   "mutation_allowed": false,
   "required_gates": [
     "python scripts/evaluate-self-evolution-readiness.py",

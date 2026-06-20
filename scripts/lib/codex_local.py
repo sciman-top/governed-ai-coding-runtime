@@ -21,8 +21,8 @@ from urllib import request as urllib_request
 
 REQUIRED_CONFIG = {
     "cli_auth_credentials_store": "file",
-    "model_context_window": 272000,
-    "model_auto_compact_token_limit": 220000,
+    "model_context_window": 1000000,
+    "model_auto_compact_token_limit": 810000,
     "sandbox_mode": "workspace-write",
     "approval_policy": "never",
     "web_search": "cached",
@@ -30,7 +30,7 @@ REQUIRED_CONFIG = {
 }
 REFERENCE_CONFIG = {
     "model": "gpt-5.5",
-    "model_reasoning_effort": "medium",
+    "model_reasoning_effort": "xhigh",
     "model_verbosity": "medium",
 }
 DEFAULT_CONFIG = {**REQUIRED_CONFIG, **REFERENCE_CONFIG}
@@ -44,9 +44,9 @@ DEFAULT_CONFIG_PROFILE = {
         "保留必要解释",
         "高效率",
     ],
-    "current_combo": "gpt-5.5 + medium + never",
-    "current_combo_status": "current_temporary_choice",
-    "compact_policy": "220000 on a 272000 window",
+    "current_combo": "gpt-5.5 + xhigh + never",
+    "current_combo_status": "current_default_choice",
+    "compact_policy": "810000 on a 1000000 window",
     "compact_ratio": "81%",
     "manual_upgrade": "Switch to a stronger model or reasoning level manually when a task genuinely needs deeper reasoning.",
     "change_rule": "Future model or parameter updates should preserve the efficiency-first principle and necessary explanation rather than the current combo itself; existing safety and gate constraints continue to apply.",

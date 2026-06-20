@@ -1,7 +1,7 @@
 {
   "artifact_refs": {},
   "artifact_type": "self_evolution_variant_evaluation",
-  "as_of": "2026-06-20",
+  "as_of": "2026-06-21",
   "evaluations": [
     {
       "decision": "review_candidate",
@@ -75,6 +75,6 @@
   "review_candidate_count": 4,
   "rollback": "Delete the generated variant-evaluation artifact. No active runtime behavior is changed.",
   "schema_version": "0.1-draft",
-  "source_variants": "docs/change-evidence/self-evolution-variants/20260620-self-evolution-variants.json",
+  "source_variants": "docs/change-evidence/self-evolution-variants/20260621-self-evolution-variants.json",
   "variant_count": 4
 }
