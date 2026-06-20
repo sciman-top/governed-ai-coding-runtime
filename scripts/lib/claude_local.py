@@ -28,7 +28,7 @@ def _windows_no_window_kwargs() -> dict[str, Any]:
     return {"creationflags": creationflags} if creationflags else {}
 
 COMMON_RECOMMENDED_ENV = {
-    "CLAUDE_CODE_EFFORT_LEVEL": "high",
+    "CLAUDE_CODE_EFFORT_LEVEL": "max",
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
     "CLAUDE_CODE_ATTRIBUTION_HEADER": "0",
     "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS": "1",
@@ -91,21 +91,22 @@ DEFAULT_PROVIDER_PROFILES = [
         "auth_env": "ANTHROPIC_AUTH_TOKEN",
         "docs_url": "https://docs.bigmodel.cn/cn/guide/develop/claude",
         "models": {
-            "opus": "glm-5.1",
-            "sonnet": "glm-5-turbo",
+            "opus": "glm-5.2[1m]",
+            "sonnet": "glm-5.2[1m]",
             "haiku": "glm-4.5-air",
         },
         "env": {
             "API_TIMEOUT_MS": "3000000",
             "ANTHROPIC_BASE_URL": "https://open.bigmodel.cn/api/anthropic",
-            "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-5.1",
-            "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-5-turbo",
+            "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-5.2[1m]",
+            "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-5.2[1m]",
             "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-4.5-air",
-            "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "70",
-            "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "100000",
+            "CLAUDE_CODE_EFFORT_LEVEL": "max",
+            "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "81",
+            "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "1000000",
             "CLAUDE_CODE_SUBAGENT_MODEL": "glm-4.5-air",
         },
-        "note": "Recommended GLM profile for this machine: keep effective coding context around 80k-120k and compact early instead of pushing the full 200k window.",
+        "note": "Recommended GLM profile for this machine: use the 1M context window, max effort, compact around 81% of capacity, and keep manual upgrade as the escape hatch for harder tasks.",
     },
     {
         "name": "deepseek-v4",

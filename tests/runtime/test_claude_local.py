@@ -31,6 +31,17 @@ def _write_settings(path: Path, *, token_key: str = "ANTHROPIC_AUTH_TOKEN") -> N
 
 
 class ClaudeLocalTests(unittest.TestCase):
+    def test_default_glm_profile_targets_glm_5_2_one_million_window(self) -> None:
+        profile = next(item for item in claude_local.DEFAULT_PROVIDER_PROFILES if item["name"] == "bigmodel-glm")
+        self.assertEqual("glm-5.2[1m]", profile["models"]["opus"])
+        self.assertEqual("glm-5.2[1m]", profile["models"]["sonnet"])
+        self.assertEqual("glm-5.2[1m]", profile["env"]["ANTHROPIC_DEFAULT_OPUS_MODEL"])
+        self.assertEqual("glm-5.2[1m]", profile["env"]["ANTHROPIC_DEFAULT_SONNET_MODEL"])
+        self.assertEqual("max", profile["env"]["CLAUDE_CODE_EFFORT_LEVEL"])
+        self.assertEqual("1000000", profile["env"]["CLAUDE_CODE_AUTO_COMPACT_WINDOW"])
+        self.assertEqual("81", profile["env"]["CLAUDE_AUTOCOMPACT_PCT_OVERRIDE"])
+        self.assertEqual("max", claude_local.COMMON_RECOMMENDED_ENV["CLAUDE_CODE_EFFORT_LEVEL"])
+
     def test_status_redacts_settings_secret_values(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)

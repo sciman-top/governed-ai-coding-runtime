@@ -87,6 +87,14 @@ class CodexLocalTests(unittest.TestCase):
             self.assertEqual({"creationflags": 0x08000000}, codex_local._windows_no_window_kwargs())
             self.assertEqual({"creationflags": 0x08000000}, claude_local._windows_no_window_kwargs())
 
+    def test_default_codex_context_profile_targets_one_million_window(self) -> None:
+        self.assertEqual(1000000, codex_local.DEFAULT_CONFIG["model_context_window"])
+        self.assertEqual(810000, codex_local.DEFAULT_CONFIG["model_auto_compact_token_limit"])
+        self.assertEqual("810000 on a 1000000 window", codex_local.DEFAULT_CONFIG_PROFILE["compact_policy"])
+        self.assertEqual("xhigh", codex_local.DEFAULT_CONFIG["model_reasoning_effort"])
+        self.assertEqual("gpt-5.5 + xhigh + never", codex_local.DEFAULT_CONFIG_PROFILE["current_combo"])
+        self.assertEqual("current_default_choice", codex_local.DEFAULT_CONFIG_PROFILE["current_combo_status"])
+
     def test_auth_profiles_are_sanitized_for_read_only_status(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)
@@ -254,10 +262,10 @@ class CodexLocalTests(unittest.TestCase):
                     [
                         'cli_auth_credentials_store = "file"',
                         'model = "gpt-5.3-codex"',
-                        'model_reasoning_effort = "medium"',
+                        'model_reasoning_effort = "xhigh"',
                         'model_verbosity = "medium"',
-                        "model_context_window = 272000",
-                        "model_auto_compact_token_limit = 220000",
+                        "model_context_window = 1000000",
+                        "model_auto_compact_token_limit = 810000",
                         'sandbox_mode = "workspace-write"',
                         'approval_policy = "never"',
                         'web_search = "cached"',
@@ -328,8 +336,8 @@ class CodexLocalTests(unittest.TestCase):
                 "\n".join(
                     [
                         'model = "gpt-5.3-codex"',
-                        "model_context_window = 272000",
-                        "model_auto_compact_token_limit = 220000",
+                        "model_context_window = 1000000",
+                        "model_auto_compact_token_limit = 810000",
                     ]
                 ),
                 encoding="utf-8",
@@ -339,8 +347,8 @@ class CodexLocalTests(unittest.TestCase):
 
             self.assertEqual("pass", probe["status"])
             self.assertEqual("keep_current", probe["recommendation"])
-            self.assertEqual(272000, probe["configured_context_window"])
-            self.assertEqual(220000, probe["configured_auto_compact_token_limit"])
+            self.assertEqual(1000000, probe["configured_context_window"])
+            self.assertEqual(810000, probe["configured_auto_compact_token_limit"])
             self.assertEqual("not_run", probe["catalog_probe"]["status"])
             self.assertEqual([], probe["catalog_probes"])
             self.assertEqual("keep_current", probe["context_settings_decision"]["action"])
@@ -354,8 +362,8 @@ class CodexLocalTests(unittest.TestCase):
                 "\n".join(
                     [
                         'model = "gpt-5.3-codex"',
-                        "model_context_window = 272000",
-                        "model_auto_compact_token_limit = 220000",
+                        "model_context_window = 1000000",
+                        "model_auto_compact_token_limit = 810000",
                     ]
                 ),
                 encoding="utf-8",
@@ -366,7 +374,7 @@ class CodexLocalTests(unittest.TestCase):
                         {
                             "slug": "gpt-5.3-codex",
                             "display_name": "GPT-5.3-Codex",
-                            "context_window": 272000,
+                            "context_window": 1000000,
                             "max_context_window": 1000000,
                             "effective_context_window_percent": 95,
                         }
@@ -383,7 +391,7 @@ class CodexLocalTests(unittest.TestCase):
 
             self.assertEqual("pass", probe["status"])
             self.assertEqual("pass", probe["catalog_probe"]["status"])
-            self.assertEqual(272000, probe["catalog_probe"]["model"]["context_window"])
+            self.assertEqual(1000000, probe["catalog_probe"]["model"]["context_window"])
             self.assertEqual("single_catalog", probe["context_settings_decision"]["basis_status"])
             self.assertEqual("codex_debug_models_bundled", probe["context_settings_decision"]["context_source"])
             self.assertTrue(all(check["status"] == "pass" for check in probe["checks"]))
@@ -395,8 +403,8 @@ class CodexLocalTests(unittest.TestCase):
                 "\n".join(
                     [
                         'model = "gpt-5.3-codex"',
-                        "model_context_window = 272000",
-                        "model_auto_compact_token_limit = 220000",
+                        "model_context_window = 1000000",
+                        "model_auto_compact_token_limit = 810000",
                     ]
                 ),
                 encoding="utf-8",
@@ -407,8 +415,8 @@ class CodexLocalTests(unittest.TestCase):
                         {
                             "slug": "gpt-5.3-codex",
                             "display_name": "GPT-5.3-Codex",
-                            "context_window": 272000,
-                            "max_context_window": 272000,
+                            "context_window": 1000000,
+                            "max_context_window": 1000000,
                         }
                     ]
                 }
@@ -439,13 +447,13 @@ class CodexLocalTests(unittest.TestCase):
                 "\n".join(
                     [
                         'model = "gpt-5.3-codex"',
-                        "model_context_window = 272000",
-                        "model_auto_compact_token_limit = 220000",
+                        "model_context_window = 1000000",
+                        "model_auto_compact_token_limit = 810000",
                     ]
                 ),
                 encoding="utf-8",
             )
-            bundled_catalog = json.dumps({"models": [{"slug": "gpt-5.3-codex", "context_window": 272000, "max_context_window": 272000}]})
+            bundled_catalog = json.dumps({"models": [{"slug": "gpt-5.3-codex", "context_window": 1000000, "max_context_window": 1000000}]})
             refreshed_catalog = json.dumps({"models": [{"slug": "gpt-5.3-codex", "context_window": 300000, "max_context_window": 300000}]})
             completed = [
                 mock.Mock(returncode=0, stdout=bundled_catalog, stderr=""),
@@ -470,8 +478,8 @@ class CodexLocalTests(unittest.TestCase):
                 "\n".join(
                     [
                         'model = "gpt-5.3-codex"',
-                        "model_context_window = 272000",
-                        "model_auto_compact_token_limit = 220000",
+                        "model_context_window = 1000000",
+                        "model_auto_compact_token_limit = 810000",
                     ]
                 ),
                 encoding="utf-8",
@@ -488,8 +496,8 @@ class CodexLocalTests(unittest.TestCase):
             self.assertEqual("pass", probe["status"])
             self.assertEqual("pass", probe["exec_probe"]["status"])
             self.assertIn("exec", command)
-            self.assertIn("model_context_window=272000", command)
-            self.assertIn("model_auto_compact_token_limit=220000", command)
+            self.assertIn("model_context_window=1000000", command)
+            self.assertIn("model_auto_compact_token_limit=810000", command)
             self.assertTrue(probe["exec_probe"]["consumes_quota"])
 
     def test_status_includes_efficiency_first_core_principle_and_current_choice(self) -> None:
@@ -506,9 +514,9 @@ class CodexLocalTests(unittest.TestCase):
                 ["少打扰", "自动连续执行", "节省 token / 成本", "保留必要解释", "高效率"],
                 status["recommended_defaults"]["strategy_principles"],
             )
-            self.assertEqual("gpt-5.5 + medium + never", status["recommended_defaults"]["current_combo"])
-            self.assertEqual("current_temporary_choice", status["recommended_defaults"]["current_combo_status"])
-            self.assertEqual("220000 on a 272000 window", status["recommended_defaults"]["compact_policy"])
+            self.assertEqual("gpt-5.5 + xhigh + never", status["recommended_defaults"]["current_combo"])
+            self.assertEqual("current_default_choice", status["recommended_defaults"]["current_combo_status"])
+            self.assertEqual("810000 on a 1000000 window", status["recommended_defaults"]["compact_policy"])
             self.assertIn("preserve the efficiency-first principle", status["recommended_defaults"]["change_rule"])
 
     def test_usage_is_read_from_recent_codex_rate_limit_log_event(self) -> None:

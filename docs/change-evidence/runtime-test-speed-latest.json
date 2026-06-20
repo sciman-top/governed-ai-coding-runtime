@@ -1,49 +1,602 @@
 {
-  "elapsed_seconds": 248.97428010000294,
-  "failure_count": 0,
-  "failures": [],
+  "elapsed_seconds": 151.4180333000004,
+  "failure_count": 84,
+  "failures": [
+    {
+      "duration_seconds": 148.32752860000073,
+      "exit_code": 1,
+      "module": "tests.runtime.test_target_repo_powershell_policy",
+      "path": "tests\\runtime\\test_target_repo_powershell_policy.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 71.01430190000065,
+      "exit_code": 1,
+      "module": "tests.runtime.test_operator_entrypoint",
+      "path": "tests\\runtime\\test_operator_entrypoint.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 66.76234599999952,
+      "exit_code": 1,
+      "module": "tests.runtime.test_repo_slimming_surface",
+      "path": "tests\\runtime\\test_repo_slimming_surface.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 55.66660799999954,
+      "exit_code": 1,
+      "module": "tests.runtime.test_runtime_evolution",
+      "path": "tests\\runtime\\test_runtime_evolution.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 35.26478980000138,
+      "exit_code": 1,
+      "module": "tests.runtime.test_self_evolution_readiness",
+      "path": "tests\\runtime\\test_self_evolution_readiness.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 16.99633569999969,
+      "exit_code": 1,
+      "module": "tests.runtime.test_autonomous_next_work_selection",
+      "path": "tests\\runtime\\test_autonomous_next_work_selection.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 15.932411199999478,
+      "exit_code": 1,
+      "module": "tests.runtime.test_package_runtime",
+      "path": "tests\\runtime\\test_package_runtime.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 15.607878900000287,
+      "exit_code": 1,
+      "module": "tests.runtime.test_runtime_doctor",
+      "path": "tests\\runtime\\test_runtime_doctor.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 9.259079100000235,
+      "exit_code": 1,
+      "module": "tests.runtime.test_session_bridge",
+      "path": "tests\\runtime\\test_session_bridge.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 8.240703999999823,
+      "exit_code": 1,
+      "module": "tests.runtime.test_host_feedback_summary",
+      "path": "tests\\runtime\\test_host_feedback_summary.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 6.797591800001101,
+      "exit_code": 1,
+      "module": "tests.runtime.test_core_principles",
+      "path": "tests\\runtime\\test_core_principles.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 5.62678219999907,
+      "exit_code": 1,
+      "module": "tests.runtime.test_core_principle_change_materialization",
+      "path": "tests\\runtime\\test_core_principle_change_materialization.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 2.910747599999013,
+      "exit_code": 1,
+      "module": "tests.runtime.test_subprocess_guard",
+      "path": "tests\\runtime\\test_subprocess_guard.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 2.7632434999995894,
+      "exit_code": 1,
+      "module": "tests.runtime.test_bootstrap_runtime",
+      "path": "tests\\runtime\\test_bootstrap_runtime.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 1.8802266000002419,
+      "exit_code": 1,
+      "module": "tests.runtime.test_run_governed_task_cli",
+      "path": "tests\\runtime\\test_run_governed_task_cli.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 1.5923134999993636,
+      "exit_code": 1,
+      "module": "tests.runtime.test_repo_attachment",
+      "path": "tests\\runtime\\test_repo_attachment.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 1.583115400000679,
+      "exit_code": 1,
+      "module": "tests.runtime.test_dependency_baseline",
+      "path": "tests\\runtime\\test_dependency_baseline.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 1.5453837999993993,
+      "exit_code": 1,
+      "module": "tests.runtime.test_shell_risk_contract",
+      "path": "tests\\runtime\\test_shell_risk_contract.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 1.2431665000003704,
+      "exit_code": 1,
+      "module": "tests.runtime.test_transition_stack_convergence",
+      "path": "tests\\runtime\\test_transition_stack_convergence.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 1.1952762000000803,
+      "exit_code": 1,
+      "module": "tests.runtime.test_codex_guard_absence",
+      "path": "tests\\runtime\\test_codex_guard_absence.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 1.142512499998702,
+      "exit_code": 1,
+      "module": "tests.runtime.test_claude_code_adapter",
+      "path": "tests\\runtime\\test_claude_code_adapter.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 1.0218508999987534,
+      "exit_code": 1,
+      "module": "tests.runtime.test_reference_required_changes",
+      "path": "tests\\runtime\\test_reference_required_changes.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.9175820000000385,
+      "exit_code": 1,
+      "module": "tests.runtime.test_governance_hub_certification",
+      "path": "tests\\runtime\\test_governance_hub_certification.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.8420685000000958,
+      "exit_code": 1,
+      "module": "tests.runtime.test_policy_tool_credential_audit",
+      "path": "tests\\runtime\\test_policy_tool_credential_audit.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.7549768999997468,
+      "exit_code": 1,
+      "module": "tests.runtime.test_codex_adapter",
+      "path": "tests\\runtime\\test_codex_adapter.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.6600185000006604,
+      "exit_code": 1,
+      "module": "tests.runtime.test_pre_change_review",
+      "path": "tests\\runtime\\test_pre_change_review.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.6081075000001874,
+      "exit_code": 1,
+      "module": "tests.runtime.test_reference_basis",
+      "path": "tests\\runtime\\test_reference_basis.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.5339762999992672,
+      "exit_code": 1,
+      "module": "tests.runtime.test_run_governed_task_service_wrapper",
+      "path": "tests\\runtime\\test_run_governed_task_service_wrapper.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.4426719000002777,
+      "exit_code": 1,
+      "module": "tests.runtime.test_agent_continuity",
+      "path": "tests\\runtime\\test_agent_continuity.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.4400189000007231,
+      "exit_code": 1,
+      "module": "tests.runtime.test_current_source_compatibility",
+      "path": "tests\\runtime\\test_current_source_compatibility.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.43561740000041027,
+      "exit_code": 1,
+      "module": "tests.runtime.test_planning_status",
+      "path": "tests\\runtime\\test_planning_status.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.43292160000055446,
+      "exit_code": 1,
+      "module": "tests.runtime.test_target_repo_reuse_effect_feedback",
+      "path": "tests\\runtime\\test_target_repo_reuse_effect_feedback.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.4261149000012665,
+      "exit_code": 1,
+      "module": "tests.runtime.test_attached_write_execution",
+      "path": "tests\\runtime\\test_attached_write_execution.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.4260895999996137,
+      "exit_code": 1,
+      "module": "tests.runtime.test_operator_ui",
+      "path": "tests\\runtime\\test_operator_ui.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.4250688000010996,
+      "exit_code": 1,
+      "module": "tests.runtime.test_runtime_status",
+      "path": "tests\\runtime\\test_runtime_status.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.4182591999997385,
+      "exit_code": 1,
+      "module": "tests.runtime.test_artifact_store",
+      "path": "tests\\runtime\\test_artifact_store.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.41773300000022573,
+      "exit_code": 1,
+      "module": "tests.runtime.test_attached_repo_e2e",
+      "path": "tests\\runtime\\test_attached_repo_e2e.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.41494999999849824,
+      "exit_code": 1,
+      "module": "tests.runtime.test_replay",
+      "path": "tests\\runtime\\test_replay.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.41412820000005013,
+      "exit_code": 1,
+      "module": "tests.runtime.test_target_repo_rollout_contract",
+      "path": "tests\\runtime\\test_target_repo_rollout_contract.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.40758590000041295,
+      "exit_code": 1,
+      "module": "tests.runtime.test_target_repo_speed_kpi",
+      "path": "tests\\runtime\\test_target_repo_speed_kpi.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.3938951999989513,
+      "exit_code": 1,
+      "module": "tests.runtime.test_execution_runtime",
+      "path": "tests\\runtime\\test_execution_runtime.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.3860837000011088,
+      "exit_code": 1,
+      "module": "tests.runtime.test_multi_repo_trial",
+      "path": "tests\\runtime\\test_multi_repo_trial.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.38143489999856683,
+      "exit_code": 1,
+      "module": "tests.runtime.test_codex_local",
+      "path": "tests\\runtime\\test_codex_local.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.3756981000005908,
+      "exit_code": 1,
+      "module": "tests.runtime.test_task_store",
+      "path": "tests\\runtime\\test_task_store.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.37569489999987127,
+      "exit_code": 1,
+      "module": "tests.service.test_session_api",
+      "path": "tests\\service\\test_session_api.py",
+      "suite": "service"
+    },
+    {
+      "duration_seconds": 0.373602600000595,
+      "exit_code": 1,
+      "module": "tests.runtime.test_maintenance_policy",
+      "path": "tests\\runtime\\test_maintenance_policy.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.3678474999996979,
+      "exit_code": 1,
+      "module": "tests.runtime.test_runtime_evolution_materialization",
+      "path": "tests\\runtime\\test_runtime_evolution_materialization.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.3659547000006569,
+      "exit_code": 1,
+      "module": "tests.runtime.test_runtime_roots",
+      "path": "tests\\runtime\\test_runtime_roots.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.3656599999994796,
+      "exit_code": 1,
+      "module": "tests.runtime.test_operator_queries",
+      "path": "tests\\runtime\\test_operator_queries.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.3654538999999204,
+      "exit_code": 1,
+      "module": "tests.runtime.test_capability_portfolio_classifier",
+      "path": "tests\\runtime\\test_capability_portfolio_classifier.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.36236860000099114,
+      "exit_code": 1,
+      "module": "tests.runtime.test_workflow",
+      "path": "tests\\runtime\\test_workflow.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.3618399999995745,
+      "exit_code": 1,
+      "module": "tests.service.test_operator_api",
+      "path": "tests\\service\\test_operator_api.py",
+      "suite": "service"
+    },
+    {
+      "duration_seconds": 0.3497401999993599,
+      "exit_code": 1,
+      "module": "tests.runtime.test_control_pack_execution",
+      "path": "tests\\runtime\\test_control_pack_execution.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.3452121000009356,
+      "exit_code": 1,
+      "module": "tests.runtime.test_attached_write_governance",
+      "path": "tests\\runtime\\test_attached_write_governance.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.34201430000030086,
+      "exit_code": 1,
+      "module": "tests.runtime.test_run_runtime_tests_runner",
+      "path": "tests\\runtime\\test_run_runtime_tests_runner.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.3408928000008018,
+      "exit_code": 1,
+      "module": "tests.runtime.test_promotion_lifecycle",
+      "path": "tests\\runtime\\test_promotion_lifecycle.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.33615520000057586,
+      "exit_code": 1,
+      "module": "tests.runtime.test_prune_retired_managed_files",
+      "path": "tests\\runtime\\test_prune_retired_managed_files.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.333841300000131,
+      "exit_code": 1,
+      "module": "tests.runtime.test_target_repo_governance_consistency",
+      "path": "tests\\runtime\\test_target_repo_governance_consistency.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.33234970000012254,
+      "exit_code": 1,
+      "module": "tests.runtime.test_worker",
+      "path": "tests\\runtime\\test_worker.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.3236648000001878,
+      "exit_code": 1,
+      "module": "tests.runtime.test_target_repo_managed_asset_inventory",
+      "path": "tests\\runtime\\test_target_repo_managed_asset_inventory.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.31755949999933364,
+      "exit_code": 1,
+      "module": "tests.runtime.test_learning_efficiency_metrics",
+      "path": "tests\\runtime\\test_learning_efficiency_metrics.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.31359859999975015,
+      "exit_code": 1,
+      "module": "tests.runtime.test_runtime_flow_preset",
+      "path": "tests\\runtime\\test_runtime_flow_preset.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.29574419999880774,
+      "exit_code": 1,
+      "module": "tests.runtime.test_file_guard",
+      "path": "tests\\runtime\\test_file_guard.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.2911614999993617,
+      "exit_code": 1,
+      "module": "tests.runtime.test_verification_runner",
+      "path": "tests\\runtime\\test_verification_runner.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.28630879999946046,
+      "exit_code": 1,
+      "module": "tests.runtime.test_ltp_autonomous_promotion",
+      "path": "tests\\runtime\\test_ltp_autonomous_promotion.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.2810988000001089,
+      "exit_code": 1,
+      "module": "tests.runtime.test_host_capability_claim_upgrade_policy",
+      "path": "tests\\runtime\\test_host_capability_claim_upgrade_policy.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.25958710000122664,
+      "exit_code": 1,
+      "module": "tests.runtime.test_agent_rule_sync",
+      "path": "tests\\runtime\\test_agent_rule_sync.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.25814360000003944,
+      "exit_code": 1,
+      "module": "tests.runtime.test_functional_effectiveness",
+      "path": "tests\\runtime\\test_functional_effectiveness.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.2574819000001298,
+      "exit_code": 1,
+      "module": "tests.runtime.test_uninstall_target_repo_governance",
+      "path": "tests\\runtime\\test_uninstall_target_repo_governance.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.256926600000952,
+      "exit_code": 1,
+      "module": "tests.runtime.test_claude_local",
+      "path": "tests\\runtime\\test_claude_local.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.22882519999984652,
+      "exit_code": 1,
+      "module": "tests.runtime.test_repo_hook_enforcement",
+      "path": "tests\\runtime\\test_repo_hook_enforcement.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.22649429999910353,
+      "exit_code": 1,
+      "module": "tests.runtime.test_target_repo_worktree_change_classification",
+      "path": "tests\\runtime\\test_target_repo_worktree_change_classification.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.22352399999908812,
+      "exit_code": 1,
+      "module": "tests.runtime.test_source_string_contract_guard",
+      "path": "tests\\runtime\\test_source_string_contract_guard.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.22282129999985045,
+      "exit_code": 1,
+      "module": "tests.runtime.test_prune_runtime_state",
+      "path": "tests\\runtime\\test_prune_runtime_state.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.22060489999967103,
+      "exit_code": 1,
+      "module": "tests.runtime.test_codex_cli_continuity_runner",
+      "path": "tests\\runtime\\test_codex_cli_continuity_runner.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.21513649999906193,
+      "exit_code": 1,
+      "module": "tests.runtime.test_target_repo_gate_speed_audit",
+      "path": "tests\\runtime\\test_target_repo_gate_speed_audit.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.20898099999976694,
+      "exit_code": 1,
+      "module": "tests.runtime.test_operator_ui_evidence_retention",
+      "path": "tests\\runtime\\test_operator_ui_evidence_retention.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.2054969999990135,
+      "exit_code": 1,
+      "module": "tests.runtime.test_control_pack_inheritance",
+      "path": "tests\\runtime\\test_control_pack_inheritance.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.20195410000087577,
+      "exit_code": 1,
+      "module": "tests.service.test_persistence_data_plane",
+      "path": "tests\\service\\test_persistence_data_plane.py",
+      "suite": "service"
+    },
+    {
+      "duration_seconds": 0.1976993999996921,
+      "exit_code": 1,
+      "module": "tests.runtime.test_prune_target_repo_runs",
+      "path": "tests\\runtime\\test_prune_target_repo_runs.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.19700249999914377,
+      "exit_code": 1,
+      "module": "tests.runtime.test_governance_gate_runner",
+      "path": "tests\\runtime\\test_governance_gate_runner.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.18105649999961315,
+      "exit_code": 1,
+      "module": "tests.runtime.test_archive_change_evidence",
+      "path": "tests\\runtime\\test_archive_change_evidence.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.16987180000069202,
+      "exit_code": 1,
+      "module": "tests.runtime.test_codex_history_cwd_alias",
+      "path": "tests\\runtime\\test_codex_history_cwd_alias.py",
+      "suite": "runtime"
+    },
+    {
+      "duration_seconds": 0.16223720000016328,
+      "exit_code": 1,
+      "module": "tests.runtime.test_codex_history_view_diagnose",
+      "path": "tests\\runtime\\test_codex_history_view_diagnose.py",
+      "suite": "runtime"
+    }
+  ],
   "prioritized_target_count": 10,
   "serial_target_count": 3,
   "slowest": [
     {
-      "duration_seconds": 220.79362820000097,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_runtime_evolution",
-        "path": "tests\\runtime\\test_runtime_evolution.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 203.8331851999974,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_operator_entrypoint",
-        "path": "tests\\runtime\\test_operator_entrypoint.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 190.33253319999858,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_runtime_flow_preset",
-        "path": "tests\\runtime\\test_runtime_flow_preset.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 175.1131588999997,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_self_evolution_readiness",
-        "path": "tests\\runtime\\test_self_evolution_readiness.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 154.77957319999769,
-      "exit_code": 0,
+      "duration_seconds": 148.32752860000073,
+      "exit_code": 1,
       "target": {
         "module": "tests.runtime.test_target_repo_powershell_policy",
         "path": "tests\\runtime\\test_target_repo_powershell_policy.py",
@@ -51,26 +604,62 @@
       }
     },
     {
-      "duration_seconds": 132.3832395999998,
-      "exit_code": 0,
+      "duration_seconds": 71.01430190000065,
+      "exit_code": 1,
       "target": {
-        "module": "tests.runtime.test_governance_hub_certification",
-        "path": "tests\\runtime\\test_governance_hub_certification.py",
+        "module": "tests.runtime.test_operator_entrypoint",
+        "path": "tests\\runtime\\test_operator_entrypoint.py",
         "suite": "runtime"
       }
     },
     {
-      "duration_seconds": 107.3078303000002,
-      "exit_code": 0,
+      "duration_seconds": 66.76234599999952,
+      "exit_code": 1,
       "target": {
-        "module": "tests.runtime.test_attached_repo_e2e",
-        "path": "tests\\runtime\\test_attached_repo_e2e.py",
+        "module": "tests.runtime.test_repo_slimming_surface",
+        "path": "tests\\runtime\\test_repo_slimming_surface.py",
         "suite": "runtime"
       }
     },
     {
-      "duration_seconds": 101.31730479999896,
+      "duration_seconds": 55.66660799999954,
+      "exit_code": 1,
+      "target": {
+        "module": "tests.runtime.test_runtime_evolution",
+        "path": "tests\\runtime\\test_runtime_evolution.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 35.26478980000138,
+      "exit_code": 1,
+      "target": {
+        "module": "tests.runtime.test_self_evolution_readiness",
+        "path": "tests\\runtime\\test_self_evolution_readiness.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 23.053147399999943,
       "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_repo_map_context_artifact",
+        "path": "tests\\runtime\\test_repo_map_context_artifact.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 22.62191399999938,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_issue_seeding",
+        "path": "tests\\runtime\\test_issue_seeding.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 16.99633569999969,
+      "exit_code": 1,
       "target": {
         "module": "tests.runtime.test_autonomous_next_work_selection",
         "path": "tests\\runtime\\test_autonomous_next_work_selection.py",
@@ -78,20 +667,20 @@
       }
     },
     {
-      "duration_seconds": 78.33818429999883,
-      "exit_code": 0,
+      "duration_seconds": 15.932411199999478,
+      "exit_code": 1,
       "target": {
-        "module": "tests.runtime.test_runtime_doctor",
-        "path": "tests\\runtime\\test_runtime_doctor.py",
+        "module": "tests.runtime.test_package_runtime",
+        "path": "tests\\runtime\\test_package_runtime.py",
         "suite": "runtime"
       }
     },
     {
-      "duration_seconds": 76.18854250000004,
+      "duration_seconds": 15.880937199999607,
       "exit_code": 0,
       "target": {
-        "module": "tests.runtime.test_repo_slimming_surface",
-        "path": "tests\\runtime\\test_repo_slimming_surface.py",
+        "module": "tests.runtime.test_evidence_recovery_posture",
+        "path": "tests\\runtime\\test_evidence_recovery_posture.py",
         "suite": "runtime"
       }
     }
