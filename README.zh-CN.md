@@ -132,6 +132,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
   - [Agent Continuity Guide](docs/product/agent-continuity.md)
   - [共享上下文连续性指南](docs/product/agent-continuity.zh-CN.md)
 - 近期治理硬化：
+  - [20260620 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260620-active-queue-evidence-upkeep-refresh.md)
+  - [20260620 Self-Evolution Review Refresh](docs/change-evidence/20260620-self-evolution-review-refresh.md)
   - [20260618 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260618-active-queue-evidence-upkeep-refresh.md)
   - [20260617 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260617-active-queue-evidence-upkeep-refresh.md)
   - [20260617 Planning EntryPoint Proof Refresh](docs/change-evidence/20260617-planning-entrypoint-proof-refresh.md)

@@ -128,17 +128,17 @@ class RuntimeEvolutionTests(unittest.TestCase):
         result = module.inspect_runtime_evolution_policy(
             repo_root=ROOT,
             policy_path=ROOT / "docs" / "architecture" / "runtime-evolution-policy.json",
-            as_of=dt.date(2026, 6, 17),
+            as_of=dt.date(2026, 6, 20),
         )
 
         candidate = next(item for item in result["candidates"] if item["candidate_id"] == "EVOL-AI-EXPERIENCE")
         self.assertEqual(
             candidate["source_ref"],
-            ".runtime/artifacts/ai-coding-experience/20260617-ai-coding-experience-review.json",
+            ".runtime/artifacts/ai-coding-experience/20260620-ai-coding-experience-review.json",
         )
         self.assertEqual(
             result["evidence_snapshot"]["ai_coding_experience"]["artifact_source_ref"],
-            ".runtime/artifacts/ai-coding-experience/20260617-ai-coding-experience-review.json",
+            ".runtime/artifacts/ai-coding-experience/20260620-ai-coding-experience-review.json",
         )
 
     def test_runtime_evolution_rejects_invalid_candidate_action(self) -> None:
