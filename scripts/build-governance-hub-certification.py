@@ -10,6 +10,8 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+from lib.evidence_paths import canonicalize_repo_path, canonicalize_repo_refs
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = ROOT / "docs" / "architecture" / "governance-hub-certification.json"
@@ -187,7 +189,7 @@ def build_governance_hub_certification(*, repo_root: Path, config_path: Path) ->
         "certification_id": config.get("certification_id"),
         "reviewed_on": config.get("reviewed_on"),
         "verification_command": config.get("verification_command"),
-        "report_path": output_path.resolve(strict=False).as_posix(),
+        "report_path": canonicalize_repo_path(output_path, repo_root=repo_root),
         "host_posture": host_posture,
         "missing_artifact_refs": missing_artifact_refs,
         "missing_host_statement_refs": missing_host_statement_refs,
@@ -232,6 +234,7 @@ def build_governance_hub_certification(*, repo_root: Path, config_path: Path) ->
         "invalid_reasons": failures,
     }
 
+    result = canonicalize_repo_refs(result, repo_root=repo_root)
     _write_json_atomic(output_path, result)
     return result
 

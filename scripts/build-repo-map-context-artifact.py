@@ -5,6 +5,8 @@ import fnmatch
 import json
 from pathlib import Path
 
+from lib.evidence_paths import canonical_repo_id
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_STRATEGY_PATH = ROOT / ".governed-ai" / "repo-map-context-shaping.json"
@@ -79,7 +81,7 @@ def build_repo_map_context_artifact(*, repo_root: Path, strategy_path: Path, out
 
     payload = {
         "schema_version": "0.1-draft",
-        "repo_id": root.name,
+        "repo_id": canonical_repo_id(root),
         "strategy_id": strategy["strategy_id"],
         "strategy_path": strategy_path.relative_to(root).as_posix() if strategy_path.is_relative_to(root) else str(strategy_path),
         "required_governance_files": REQUIRED_GOVERNANCE_FILES,

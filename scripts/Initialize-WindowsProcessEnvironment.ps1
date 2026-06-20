@@ -174,7 +174,9 @@ function Initialize-WindowsProcessEnvironment {
 
   $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
   $runtimeTmp = Join-Path $repoRoot ".runtime\tmp"
+  $runtimeHome = Join-Path $repoRoot ".runtime\home"
   New-Item -ItemType Directory -Path $runtimeTmp -Force -ErrorAction SilentlyContinue | Out-Null
+  New-Item -ItemType Directory -Path $runtimeHome -Force -ErrorAction SilentlyContinue | Out-Null
   if (Test-Path -LiteralPath $runtimeTmp) {
     [Environment]::SetEnvironmentVariable("TMP", $runtimeTmp, "Process")
     [Environment]::SetEnvironmentVariable("TEMP", $runtimeTmp, "Process")
@@ -182,5 +184,9 @@ function Initialize-WindowsProcessEnvironment {
     $env:TMP = $runtimeTmp
     $env:TEMP = $runtimeTmp
     $env:TMPDIR = $runtimeTmp
+  }
+  if (-not [string]::IsNullOrWhiteSpace($runtimeHome)) {
+    [Environment]::SetEnvironmentVariable("GOVERNED_RUNTIME_HOME", $runtimeHome, "Process")
+    $env:GOVERNED_RUNTIME_HOME = $runtimeHome
   }
 }

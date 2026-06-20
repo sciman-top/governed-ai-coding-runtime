@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from lib.codex_local import context_window_probe
+from lib.evidence_paths import canonicalize_repo_path
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -184,7 +185,7 @@ def build_policy_tool_credential_audit(
         "audit_id": config.get("audit_id"),
         "reviewed_on": config.get("reviewed_on"),
         "verification_command": config.get("verification_command"),
-        "report_path": output_path.resolve(strict=False).as_posix(),
+        "report_path": canonicalize_repo_path(output_path, repo_root=repo_root),
         "fail_closed_defaults": config.get("fail_closed_defaults", {}),
         "registry_declared_tools": registry_declared_tools,
         "repo_profile_allowlist": normalized_allowlist,

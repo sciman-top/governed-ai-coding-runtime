@@ -6,6 +6,7 @@ import json
 import shutil
 import sys
 import tempfile
+import uuid
 from pathlib import Path
 
 
@@ -33,10 +34,11 @@ def verify_promotion_lifecycle(*, repo_root: Path, as_of: dt.date) -> dict:
 
     invalid_reasons: list[str] = []
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        temp_root = Path(tmp_dir)
+    temp_root = Path(tempfile.gettempdir()) / f"verify-promotion-lifecycle-{uuid.uuid4().hex}"
+    temp_root.mkdir(parents=True, exist_ok=False)
+    try:
         _copy_minimal_repo(repo_root=repo_root, temp_root=temp_root)
-        apply_result = materializer.materialize_runtime_evolution(repo_root=temp_root, as_of=as_of, apply=True)
+        materializer.materialize_runtime_evolution(repo_root=temp_root, as_of=as_of, apply=True)
         lifecycle_manifest_path = (
             temp_root
             / "docs/change-evidence/runtime-evolution-promotions"
@@ -59,6 +61,8 @@ def verify_promotion_lifecycle(*, repo_root: Path, as_of: dt.date) -> dict:
         guard = retirement_result["guard"]
         if guard.get("reviewed_asset_delete") is not False or guard.get("evidence_history_delete") is not False:
             invalid_reasons.append("retirement_guard_allows_reviewed_or_evidence_delete")
+    finally:
+        shutil.rmtree(temp_root, ignore_errors=True)
 
     if architecture.get("verification_command") != "python scripts/verify-promotion-lifecycle.py":
         invalid_reasons.append("architecture_verification_command_drift")

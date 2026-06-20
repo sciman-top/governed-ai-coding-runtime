@@ -20,7 +20,7 @@
       ],
       "decision": "no_addition_recommended",
       "evidence_refs": [
-        "D:/CODE/governed-ai-coding-runtime/.worktrees/codex-active-queue-evidence-upkeep-20260620/docs/architecture/self-evolution-readiness-policy.json"
+        "D:/CODE/governed-ai-coding-runtime/.worktrees/codex-continuous-execution-next-slice-20260620/docs/architecture/self-evolution-readiness-policy.json"
       ],
       "lane": "add",
       "mutation_allowed": false,

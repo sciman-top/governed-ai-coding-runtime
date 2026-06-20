@@ -42,6 +42,7 @@ coverage/
 *.log
 *.tmp
 *.temp
+tmp*/
 
 # Codex and agent local state
 .codex/

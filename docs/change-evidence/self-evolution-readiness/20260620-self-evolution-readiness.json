@@ -241,7 +241,7 @@
   "next_gap": null,
   "overall_state": "complete",
   "policy_id": "default-self-evolution-readiness",
-  "policy_path": "D:/CODE/governed-ai-coding-runtime/.worktrees/codex-active-queue-evidence-upkeep-20260620/docs/architecture/self-evolution-readiness-policy.json",
+  "policy_path": "D:/CODE/governed-ai-coding-runtime/.worktrees/codex-continuous-execution-next-slice-20260620/docs/architecture/self-evolution-readiness-policy.json",
   "policy_status": "enforced",
   "probe_summary": {
     "candidate_artifact_root_exists": {

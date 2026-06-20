@@ -2,7 +2,9 @@ import json
 import subprocess
 import sys
 import tempfile
+import uuid
 import unittest
+import shutil
 from pathlib import Path
 
 
@@ -22,6 +24,7 @@ class PolicyToolCredentialAuditTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         payload = json.loads(completed.stdout)
         self.assertEqual(payload["status"], "pass")
+        self.assertNotIn("/.worktrees/", json.dumps(payload).replace("\\", "/"))
         self.assertEqual(payload["summary"]["unknown_tool_count"], 0)
         self.assertGreaterEqual(payload["summary"]["audited_tool_count"], 4)
         self.assertGreaterEqual(payload["summary"]["override_surface_count"], 2)
@@ -42,8 +45,9 @@ class PolicyToolCredentialAuditTests(unittest.TestCase):
         self.assertFalse(payload["invalid_reasons"])
 
     def test_builder_audits_local_agent_config_without_exposing_tokens(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            home = Path(tmp_dir)
+        home = Path(tempfile.gettempdir()) / f"policy-tool-audit-{uuid.uuid4().hex}"
+        home.mkdir(parents=True, exist_ok=False)
+        try:
             codex = home / ".codex"
             claude = home / ".claude"
             gemini = home / ".gemini"
@@ -194,6 +198,8 @@ class PolicyToolCredentialAuditTests(unittest.TestCase):
                 text=True,
                 cwd=ROOT,
             )
+        finally:
+            shutil.rmtree(home, ignore_errors=True)
 
         self.assertEqual(completed.returncode, 0, completed.stderr)
         payload = json.loads(completed.stdout)
@@ -205,8 +211,9 @@ class PolicyToolCredentialAuditTests(unittest.TestCase):
         self.assertNotIn("secret-for-login-convenience", completed.stdout)
 
     def test_builder_flags_antigravity_settings_without_main_security(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            home = Path(tmp_dir)
+        home = Path(tempfile.gettempdir()) / f"policy-tool-audit-{uuid.uuid4().hex}"
+        home.mkdir(parents=True, exist_ok=False)
+        try:
             codex = home / ".codex"
             claude = home / ".claude"
             gemini = home / ".gemini"
@@ -283,6 +290,8 @@ class PolicyToolCredentialAuditTests(unittest.TestCase):
                 text=True,
                 cwd=ROOT,
             )
+        finally:
+            shutil.rmtree(home, ignore_errors=True)
 
         self.assertNotEqual(completed.returncode, 0, completed.stdout)
         payload = json.loads(completed.stdout)
@@ -294,8 +303,9 @@ class PolicyToolCredentialAuditTests(unittest.TestCase):
         profile = json.loads((ROOT / ".governed-ai/repo-profile.json").read_text(encoding="utf-8"))
         profile["tool_allowlist"] = ["shell", "browser"]
 
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            tmp_root = Path(tmp_dir)
+        tmp_root = Path(tempfile.gettempdir()) / f"policy-tool-audit-{uuid.uuid4().hex}"
+        tmp_root.mkdir(parents=True, exist_ok=False)
+        try:
             profile_path = tmp_root / "repo-profile.json"
             profile_path.write_text(json.dumps(profile, ensure_ascii=False, indent=2), encoding="utf-8")
 
@@ -313,6 +323,8 @@ class PolicyToolCredentialAuditTests(unittest.TestCase):
                 text=True,
                 cwd=ROOT,
             )
+        finally:
+            shutil.rmtree(tmp_root, ignore_errors=True)
 
         self.assertNotEqual(completed.returncode, 0, completed.stdout)
         payload = json.loads(completed.stdout)
@@ -320,6 +332,22 @@ class PolicyToolCredentialAuditTests(unittest.TestCase):
         self.assertIn("browser", payload["denied_allowlisted_tools"])
         browser = next(item for item in payload["audited_tools"] if item["tool_name"] == "browser")
         self.assertEqual("fail", browser["status"])
+
+    def test_report_path_uses_canonical_root_when_run_from_worktree(self) -> None:
+        if ".worktrees" not in ROOT.parts:
+            self.skipTest("worktree-specific canonical-path regression")
+
+        completed = subprocess.run(
+            [sys.executable, "scripts/build-policy-tool-credential-audit.py"],
+            check=False,
+            capture_output=True,
+            text=True,
+            cwd=ROOT,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        payload = json.loads(completed.stdout)
+        self.assertNotIn("/.worktrees/", json.dumps(payload).replace("\\", "/"))
 
 
 if __name__ == "__main__":

@@ -21,6 +21,7 @@ class GovernanceHubCertificationTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         payload = json.loads(completed.stdout)
         self.assertEqual(payload["status"], "pass")
+        self.assertNotIn("/.worktrees/", json.dumps(payload).replace("\\", "/"))
         self.assertEqual(payload["effect_feedback"]["target"], "classroomtoolkit")
         self.assertEqual(payload["effect_feedback"]["decision"], "promote")
         self.assertTrue(all(payload["loop_status"].values()))
@@ -28,6 +29,22 @@ class GovernanceHubCertificationTests(unittest.TestCase):
         self.assertTrue(payload["final_answers"]["self_evolution_readiness_loop_executable"])
         self.assertEqual(payload["verifier_results"]["self_evolution_readiness"]["overall_state"], "complete")
         self.assertFalse(payload["verifier_results"]["self_evolution_readiness"]["ready_for_unattended_self_update"])
+
+    def test_report_path_uses_canonical_root_when_run_from_worktree(self) -> None:
+        if ".worktrees" not in ROOT.parts:
+            self.skipTest("worktree-specific canonical-path regression")
+
+        completed = subprocess.run(
+            [sys.executable, "scripts/build-governance-hub-certification.py"],
+            check=False,
+            capture_output=True,
+            text=True,
+            cwd=ROOT,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        payload = json.loads(completed.stdout)
+        self.assertNotIn("/.worktrees/", json.dumps(payload).replace("\\", "/"))
 
     def test_verifier_passes(self) -> None:
         completed = subprocess.run(

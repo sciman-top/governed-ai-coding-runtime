@@ -6,6 +6,7 @@ import hashlib
 import os
 import re
 import subprocess
+import shutil
 import tempfile
 from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime
@@ -890,16 +891,23 @@ def _detect_app_server_thread_boundary(
     )
     if "generate-json-schema" not in app_server_help.lower():
         return False
-    with tempfile.TemporaryDirectory(prefix="codex-app-server-schema-") as temp_dir:
+    repo_root = Path(cwd).resolve(strict=False) if cwd is not None else Path.cwd().resolve(strict=False)
+    repo_tmp_root = repo_root / ".runtime" / "tmp"
+    repo_tmp_root.mkdir(parents=True, exist_ok=True)
+    temp_dir = repo_tmp_root / f"codex-app-server-schema-{os.urandom(8).hex()}"
+    temp_dir.mkdir(parents=True, exist_ok=False)
+    try:
         exit_code, _ = _run_probe_command(
             command_runner=command_runner,
             cwd=cwd,
-            argv=[effective_executable, "app-server", "generate-json-schema", "--out", temp_dir],
+            argv=[effective_executable, "app-server", "generate-json-schema", "--out", temp_dir.as_posix()],
             commands=commands,
         )
         if exit_code != 0:
             return False
-        return _schema_directory_has_thread_boundary(Path(temp_dir))
+        return _schema_directory_has_thread_boundary(temp_dir)
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 def _schema_directory_has_thread_boundary(schema_dir: Path) -> bool:

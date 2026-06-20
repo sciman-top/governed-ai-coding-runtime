@@ -45,7 +45,7 @@
     "merge": 3,
     "retire": 2
   },
-  "report_path": "D:/CODE/governed-ai-coding-runtime/.worktrees/codex-active-queue-evidence-upkeep-20260620/docs/change-evidence/governance-hub-certification-report.json",
+  "report_path": "D:/CODE/governed-ai-coding-runtime/docs/change-evidence/governance-hub-certification-report.json",
   "required_outcomes": [
     "add",
     "delete_candidate",
@@ -90,7 +90,7 @@
       "missing_doc_refs": [],
       "missing_evidence_refs": [],
       "policy_id": "default-current-source-compatibility",
-      "policy_path": "D:/CODE/governed-ai-coding-runtime/.worktrees/codex-active-queue-evidence-upkeep-20260620/docs/architecture/current-source-compatibility-policy.json",
+      "policy_path": "D:/CODE/governed-ai-coding-runtime/docs/architecture/current-source-compatibility-policy.json",
       "policy_status": "enforced",
       "protocol_ids": [
         "mcp_roots",
@@ -374,21 +374,21 @@
               "status": "pass"
             }
           ],
-          "compact_ratio": 0.8915,
+          "compact_ratio": 0.81,
           "config_path": "C:\\Users\\sciman\\.codex\\config.toml",
-          "configured_auto_compact_token_limit": 460000,
-          "configured_context_window": 516000,
+          "configured_auto_compact_token_limit": 810000,
+          "configured_context_window": 1000000,
           "context_settings_decision": {
             "action": "keep_current",
             "basis_status": "config_only",
             "catalog_entries": [],
-            "compact_ratio": 0.8915,
+            "compact_ratio": 0.81,
             "compact_source": "configured_guard_band",
             "context_source": "configured_fallback",
             "decision_rule": "Prefer matching bundled/refreshed `codex debug models` context_window values; keep configured auto-compact when it is below the context window and inside the guard band; otherwise derive an 81% rounded threshold.",
             "model": "gpt-5.5",
-            "model_auto_compact_token_limit": 460000,
-            "model_context_window": 516000,
+            "model_auto_compact_token_limit": 810000,
+            "model_context_window": 1000000,
             "status": "pass"
           },
           "exec_probe": {
@@ -458,7 +458,7 @@
       "repo_profile_allowlist": [
         "shell"
       ],
-      "report_path": "D:/CODE/governed-ai-coding-runtime/.worktrees/codex-active-queue-evidence-upkeep-20260620/docs/change-evidence/policy-tool-credential-audit-report.json",
+      "report_path": "D:/CODE/governed-ai-coding-runtime/docs/change-evidence/policy-tool-credential-audit-report.json",
       "reviewed_on": "2026-05-01",
       "rollback_ref": "Revert the GAP-138 audit boundary contract, verifier, tests, and generated report.",
       "schema_version": "0.1-draft",
@@ -595,7 +595,7 @@
       "mutation_allowed": false,
       "online_source_check": false,
       "policy_id": "default-runtime-evolution-review",
-      "policy_path": "D:/CODE/governed-ai-coding-runtime/.worktrees/codex-active-queue-evidence-upkeep-20260620/docs/architecture/runtime-evolution-policy.json",
+      "policy_path": "D:/CODE/governed-ai-coding-runtime/docs/architecture/runtime-evolution-policy.json",
       "policy_status": "enforced",
       "review_age_days": 11,
       "review_expires_at": "2026-07-09",
@@ -997,7 +997,7 @@
       "backlog_candidate_count": 0,
       "decision": "promote",
       "errors": [],
-      "report_path": "D:\\CODE\\governed-ai-coding-runtime\\.worktrees\\codex-active-queue-evidence-upkeep-20260620\\docs\\change-evidence\\target-repo-runs\\effect-report-classroomtoolkit.json",
+      "report_path": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\target-repo-runs\\effect-report-classroomtoolkit.json",
       "status": "pass",
       "target": "classroomtoolkit"
     }

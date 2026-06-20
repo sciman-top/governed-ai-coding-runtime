@@ -28,7 +28,7 @@ foreach ($path in $paths) {
 
 [void](Get-Command pwsh -ErrorAction Stop)
 $python = Get-PythonCommand
-$statusJson = & $python "scripts/run-governed-task.py" status --json
+$statusJson = & $python "scripts/run-governed-task.py" status --json 2>&1 | Out-String
 if ($LASTEXITCODE -ne 0) {
   throw "Runtime status command failed during bootstrap"
 }

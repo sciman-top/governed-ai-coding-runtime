@@ -22,6 +22,7 @@ class RepoMapContextArtifactTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         payload = json.loads(completed.stdout)
         self.assertEqual(payload["decision"], "keep")
+        self.assertEqual(payload["repo_id"], "governed-ai-coding-runtime")
         self.assertEqual(payload["metrics"]["file_selection_accuracy"], 1.0)
         self.assertGreater(payload["metrics"]["excluded_archive_candidate_count"], 0)
         self.assertIn("required_file_override_count", payload["metrics"])
@@ -40,6 +41,7 @@ class RepoMapContextArtifactTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         payload = json.loads(completed.stdout)
         self.assertEqual(payload["decision"], "keep")
+        self.assertEqual(payload["repo_id"], "governed-ai-coding-runtime")
         self.assertGreaterEqual(payload["metrics"]["clarification_reduction_proxy"], 0.75)
         self.assertGreater(payload["metrics"]["excluded_archive_candidate_count"], 0)
 
