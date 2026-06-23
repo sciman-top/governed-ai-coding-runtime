@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "status_id": "default-planning-status",
-  "updated_on": "2026-06-20",
+  "updated_on": "2026-06-23",
   "current_active_queue": {
     "queue_id": "Continuous-Execution",
     "label": "Continuous Execution Readiness And Rollout",
@@ -13,8 +13,8 @@
   "current_decision_gate": {
     "selector": "defer_ltp_and_refresh_evidence",
     "selector_source": "scripts/select-next-work.py",
-    "as_of": "2026-06-20",
-    "proof_ref": "docs/change-evidence/20260620-active-queue-evidence-upkeep-refresh.md",
+    "as_of": "2026-06-23",
+    "proof_ref": "docs/change-evidence/20260623-active-queue-evidence-upkeep-refresh.md",
     "blocking_reasons": []
   },
   "certified_baseline": {
@@ -32,7 +32,7 @@
     "codex_target_run_capability_status": "ready",
     "claude_workload_adapter_tier": "native_attach",
     "claude_workload_status": "ready",
-    "summary": "Fresh 2026-06-20 upkeep evidence now shows both Codex target runs and the Claude workload probe at native_attach/ready. Keep stronger live-host claims tied to fresh evidence, and keep separate non-blocking host snapshot config attention from this recovered live target-run posture."
+    "summary": "Fresh 2026-06-23 upkeep evidence now shows both Codex target runs and the Claude workload probe at native_attach/ready while the selector still defers heavy LTP work. Keep stronger live-host claims tied to fresh evidence, and keep separate non-blocking host snapshot config attention from this recovered live target-run posture."
   },
   "authoritative_docs": [
     "docs/README.md",

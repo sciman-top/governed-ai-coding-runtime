@@ -130,6 +130,8 @@ Do not claim:
   - [Agent Continuity Guide](docs/product/agent-continuity.md)
   - [Shared Context Continuity Guide (Chinese)](docs/product/agent-continuity.zh-CN.md)
 - recent hardening:
+  - [20260623 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260623-active-queue-evidence-upkeep-refresh.md)
+  - [20260623 Self-Evolution Review Refresh](docs/change-evidence/20260623-self-evolution-review-refresh.md)
   - [20260620 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260620-active-queue-evidence-upkeep-refresh.md)
   - [20260620 Self-Evolution Review Refresh](docs/change-evidence/20260620-self-evolution-review-refresh.md)
   - [20260618 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260618-active-queue-evidence-upkeep-refresh.md)

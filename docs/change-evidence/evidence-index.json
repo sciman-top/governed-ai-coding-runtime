@@ -1,12 +1,13 @@
 {
   "archive_candidate_groups": [
     {
-      "candidate_byte_count": 853908,
-      "candidate_file_count": 103,
-      "candidate_megabytes": 0.81,
+      "candidate_byte_count": 909373,
+      "candidate_file_count": 108,
+      "candidate_megabytes": 0.87,
       "group": "rule_sync_backups",
       "sample_paths": [
         "docs/change-evidence/rule-sync-backups/20260503-232713/C/Users/sciman/.claude/CLAUDE.md",
+        "docs/change-evidence/rule-sync-backups/20260503-232713/C/Users/sciman/.codex/AGENTS.md",
         "docs/change-evidence/rule-sync-backups/20260503-232713/C/Users/sciman/.gemini/GEMINI.md",
         "docs/change-evidence/rule-sync-backups/20260503-232713/D/CODE/ClassroomToolkit/AGENTS.md",
         "docs/change-evidence/rule-sync-backups/20260503-232713/D/CODE/ClassroomToolkit/CLAUDE.md",
@@ -16,8 +17,7 @@
         "docs/change-evidence/rule-sync-backups/20260503-232713/D/CODE/github-toolkit/GEMINI.md",
         "docs/change-evidence/rule-sync-backups/20260503-232713/D/CODE/governed-ai-coding-runtime/AGENTS.md",
         "docs/change-evidence/rule-sync-backups/20260503-232713/D/CODE/governed-ai-coding-runtime/CLAUDE.md",
-        "docs/change-evidence/rule-sync-backups/20260503-232713/D/CODE/governed-ai-coding-runtime/GEMINI.md",
-        "docs/change-evidence/rule-sync-backups/20260503-232713/D/CODE/skills-manager/AGENTS.md"
+        "docs/change-evidence/rule-sync-backups/20260503-232713/D/CODE/governed-ai-coding-runtime/GEMINI.md"
       ]
     },
     {
@@ -57,21 +57,21 @@
       "docs/change-evidence/target-repo-runs/summary-active-targets-latest.json"
     ],
     "latest_markdown_entries": [
+      "docs/change-evidence/20260623-self-evolution-review-refresh.md",
+      "docs/change-evidence/20260623-active-queue-evidence-upkeep-refresh.md",
       "docs/change-evidence/20260620-self-evolution-review-refresh.md",
+      "docs/change-evidence/20260620-reference-required-review-bom-json-evidence.md",
+      "docs/change-evidence/20260620-reference-required-review-and-tempdir-hardening.md",
       "docs/change-evidence/20260620-active-queue-evidence-upkeep-refresh.md",
       "docs/change-evidence/20260618-self-evolution-review-refresh.md",
       "docs/change-evidence/20260618-planning-proof-and-claim-boundary-pre-change-review.md",
       "docs/change-evidence/20260618-active-queue-evidence-upkeep-refresh.md",
       "docs/change-evidence/20260617-workflow-governor-claim-tightening-refresh.md",
       "docs/change-evidence/20260617-self-evolution-variant-review-and-defer.md",
-      "docs/change-evidence/20260617-self-evolution-review-refresh.md",
-      "docs/change-evidence/20260617-self-evolution-retirement-review-no-delete.md",
-      "docs/change-evidence/20260617-self-evolution-promotion-review-and-defer.md",
-      "docs/change-evidence/20260617-self-evolution-add-review-no-add.md",
-      "docs/change-evidence/20260617-runtime-evolution-ai-experience-freshness-pointer.md"
+      "docs/change-evidence/20260617-self-evolution-review-refresh.md"
     ]
   },
-  "generated_at": "2026-06-20T09:50:59.653965+00:00",
+  "generated_at": "2026-06-23T13:17:59.928907+00:00",
   "index_kind": "change_evidence_archive_index",
   "schema_version": "1.0"
 }
