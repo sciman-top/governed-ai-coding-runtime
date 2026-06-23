@@ -18,7 +18,7 @@ function Get-FileSha256 {
 function Get-DirectorySha256 {
   param([string]$Root)
 
-  $parts = Get-ChildItem -Path $Root -Recurse -File -Force | Sort-Object FullName | ForEach-Object {
+  $parts = New-StableFileList -Root $Root | ForEach-Object {
     $relativePath = $_.FullName.Substring($Root.Length).TrimStart('\', '/') -replace '\\', '/'
     $fileHash = Get-FileSha256 -Path $_.FullName
     "$relativePath=$fileHash"
@@ -33,6 +33,66 @@ function Get-DirectorySha256 {
     $sha.Dispose()
   }
   return "sha256:" + (($digest | ForEach-Object { $_.ToString("x2") }) -join "")
+}
+
+function Copy-FileWithRetry {
+  param(
+    [string]$SourcePath,
+    [string]$DestinationPath,
+    [int]$MaxAttempts = 8,
+    [int]$DelayMilliseconds = 250
+  )
+
+  $attempt = 0
+  while ($true) {
+    $attempt += 1
+    try {
+      Copy-Item -Force -LiteralPath $SourcePath -Destination $DestinationPath
+      return
+    }
+    catch {
+      if ($attempt -ge $MaxAttempts) {
+        throw
+      }
+      Start-Sleep -Milliseconds $DelayMilliseconds
+    }
+  }
+}
+
+function New-StableFileList {
+  param([string]$Root)
+
+  return @(Get-ChildItem -Path $Root -Recurse -File -Force | Sort-Object FullName)
+}
+
+function Add-ZipEntryFromFileWithRetry {
+  param(
+    [object]$ZipArchive,
+    [string]$SourcePath,
+    [string]$EntryName,
+    [int]$MaxAttempts = 8,
+    [int]$DelayMilliseconds = 250
+  )
+
+  $attempt = 0
+  while ($true) {
+    $attempt += 1
+    try {
+      [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
+        $ZipArchive,
+        $SourcePath,
+        $EntryName,
+        [System.IO.Compression.CompressionLevel]::Optimal
+      ) | Out-Null
+      return
+    }
+    catch {
+      if ($attempt -ge $MaxAttempts) {
+        throw
+      }
+      Start-Sleep -Milliseconds $DelayMilliseconds
+    }
+  }
 }
 
 function Assert-ReleaseVersion {
@@ -113,7 +173,7 @@ function Copy-FilteredTree {
     if (-not (Test-Path $targetDirectory)) {
       New-Item -ItemType Directory -Force -Path $targetDirectory | Out-Null
     }
-    Copy-Item -Force -LiteralPath $_.FullName -Destination $targetPath
+    Copy-FileWithRetry -SourcePath $_.FullName -DestinationPath $targetPath
   }
 }
 
@@ -131,14 +191,10 @@ function New-ZipFromDirectory {
   }
   $zip = [System.IO.Compression.ZipFile]::Open($DestinationPath, [System.IO.Compression.ZipArchiveMode]::Create)
   try {
-    Get-ChildItem -Path $SourceRoot -Recurse -File -Force | Sort-Object FullName | ForEach-Object {
+    $files = New-StableFileList -Root $SourceRoot
+    $files | ForEach-Object {
       $entryName = ($_.FullName.Substring($SourceRoot.Length).TrimStart('\', '/') -replace '\\', '/')
-      [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
-        $zip,
-        $_.FullName,
-        $entryName,
-        [System.IO.Compression.CompressionLevel]::Optimal
-      ) | Out-Null
+      Add-ZipEntryFromFileWithRetry -ZipArchive $zip -SourcePath $_.FullName -EntryName $entryName
     }
   }
   finally {
@@ -195,7 +251,7 @@ foreach ($relativePath in $copyPaths) {
     if (-not (Test-Path $targetDirectory)) {
       New-Item -ItemType Directory -Force -Path $targetDirectory | Out-Null
     }
-    Copy-Item -Force -LiteralPath $source -Destination $target
+    Copy-FileWithRetry -SourcePath $source -DestinationPath $target
   }
   [void]$copiedPaths.Add($relativePath)
 }

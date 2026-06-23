@@ -19,6 +19,7 @@ SERIAL_TEST_MODULES = frozenset(
     {
         "tests.runtime.test_dependency_baseline",
         "tests.runtime.test_functional_effectiveness",
+        "tests.runtime.test_package_runtime",
         "tests.runtime.test_transition_stack_convergence",
     }
 )

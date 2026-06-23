@@ -129,6 +129,24 @@ class RunRuntimeTestsRunnerTests(unittest.TestCase):
         )
         self.assertEqual(parallel_targets, [])
 
+    def test_package_runtime_target_is_serialized_with_other_shared_runtime_outputs(self) -> None:
+        runner = _load_runner_module()
+        package_runtime = runner.TestTarget(
+            suite="runtime",
+            module="tests.runtime.test_package_runtime",
+            path=ROOT / "tests" / "runtime" / "test_package_runtime.py",
+        )
+        fast = runner.TestTarget(
+            suite="runtime",
+            module="tests.runtime.test_fast",
+            path=ROOT / "tests" / "runtime" / "test_fast.py",
+        )
+
+        serial_targets, parallel_targets = runner._split_serial_targets([package_runtime, fast])
+
+        self.assertEqual([target.module for target in serial_targets], [package_runtime.module])
+        self.assertEqual([target.module for target in parallel_targets], [fast.module])
+
     def test_runtime_contract_guard_tests_do_not_reinvoke_full_contract_gate(self) -> None:
         for relative_path in [
             "tests/runtime/test_dependency_baseline.py",
