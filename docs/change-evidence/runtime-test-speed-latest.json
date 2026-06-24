@@ -1,12 +1,12 @@
 {
-  "elapsed_seconds": 205.8621162000054,
+  "elapsed_seconds": 189.4660555999999,
   "failure_count": 0,
   "failures": [],
   "prioritized_target_count": 10,
   "serial_target_count": 4,
   "slowest": [
     {
-      "duration_seconds": 187.61148120000144,
+      "duration_seconds": 173.41602680000005,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_repo_slimming_surface",
@@ -15,16 +15,7 @@
       }
     },
     {
-      "duration_seconds": 144.70329990000755,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_runtime_flow_preset",
-        "path": "tests\\runtime\\test_runtime_flow_preset.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 144.55985560000408,
+      "duration_seconds": 136.2710729999999,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_target_repo_powershell_policy",
@@ -33,7 +24,16 @@
       }
     },
     {
-      "duration_seconds": 79.89064930001041,
+      "duration_seconds": 129.96774970000024,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_runtime_flow_preset",
+        "path": "tests\\runtime\\test_runtime_flow_preset.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 72.69483510000009,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_operator_entrypoint",
@@ -42,7 +42,7 @@
       }
     },
     {
-      "duration_seconds": 79.70553809999547,
+      "duration_seconds": 71.7025778000002,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_attached_repo_e2e",
@@ -51,7 +51,7 @@
       }
     },
     {
-      "duration_seconds": 64.85625080000318,
+      "duration_seconds": 60.352162600000156,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_doctor",
@@ -60,7 +60,7 @@
       }
     },
     {
-      "duration_seconds": 55.53443580000021,
+      "duration_seconds": 53.15793570000005,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_repo_map_context_artifact",
@@ -69,7 +69,7 @@
       }
     },
     {
-      "duration_seconds": 27.989750900000217,
+      "duration_seconds": 27.550660699999753,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_issue_seeding",
@@ -78,7 +78,7 @@
       }
     },
     {
-      "duration_seconds": 27.035407700008363,
+      "duration_seconds": 25.129268199999842,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_evolution",
@@ -87,11 +87,11 @@
       }
     },
     {
-      "duration_seconds": 26.181020700008958,
+      "duration_seconds": 21.7022879000001,
       "exit_code": 0,
       "target": {
-        "module": "tests.runtime.test_self_evolution_readiness",
-        "path": "tests\\runtime\\test_self_evolution_readiness.py",
+        "module": "tests.runtime.test_governance_gate_runner",
+        "path": "tests\\runtime\\test_governance_gate_runner.py",
         "suite": "runtime"
       }
     }
