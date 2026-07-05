@@ -54,19 +54,19 @@ This directory holds executable implementation plans that translate strategy and
   - Scope: `GAP-159` through `GAP-164` for cross-host continuity scope fencing, continuity record schema, read-only continuity auditing, portable handoff and memory index, MCP/operator exposure, and closeout evidence across Codex App, Codex CLI, Claude Code, and Claude Desktop boundaries
   - Safety boundary: share classified metadata, refs, summaries, handoff packages, and evidence; do not merge vendor-owned native history stores or copy credentials.
 - [Host-Family Capability Operationalization Plan](./host-family-capability-operationalization-plan.md)
-  - Status: `GAP-165..168` are complete as an owner-directed conditional planning package; the queue still must not be treated as the current active queue while `planning-status.json` keeps `Continuous-Execution` active and the selector at `defer_ltp_and_refresh_evidence`
+  - Status: `GAP-165..168` are complete as an owner-directed conditional planning package; the queue still must not be treated as the current active queue while `planning-status.json` keeps `Continuous-Execution` active and the selector at `repair_gate_first`
   - Scope: `GAP-165` through `GAP-168` for the conditional follow-on queue that operationalizes host-family capability declarations, post-recovery claim-upgrade triggers, and queue-promotion rules without overriding current live posture
 - [Reference Governance And Release Preflight Plan](./reference-governance-and-preflight-plan.md)
   - Status: completed owner-directed bounded hardening queue on `2026-06-09`; current active queue remains unchanged in `planning-status.json`
   - Scope: `GAP-169` through `GAP-172` for repo-owned reference-basis mapping, fail-closed local-reference evidence, formal release-preflight, and CI alignment over the same repo contracts
 - [Workflow Governor Governance Plan](./workflow-governor-governance-plan.md)
-  - Status: owner-directed conditional follow-on package only; it does not replace the current active queue while `planning-status.json` keeps `Continuous-Execution` active and the selector at `defer_ltp_and_refresh_evidence`
+  - Status: owner-directed conditional follow-on package only; it does not replace the current active queue while `planning-status.json` keeps `Continuous-Execution` active and the selector at `repair_gate_first`
   - Scope: `GAP-173` through `GAP-180` for workflow-governor value audit, workflow-governance reference-basis, governed workflow modes/contracts, runtime selection/degrade projection, effect metrics, and two-repo proof
 - [Long-Term Gap Trigger Audit Plan](./long-term-gap-trigger-audit-plan.md)
   - Status: completed trigger-audit queue for `GAP-090` through `GAP-092`; all `LTP-01..05` packages remain deferred pending future trigger evidence
   - Scope: final-state claim refresh, sustained real-workload evidence window, and gated decision for whether exactly one `LTP-01..05` package should start
 - [Continuous Execution Readiness And Rollout Plan](./continuous-execution-readiness-and-rollout-plan.md)
-  - Status: owner-directed active queue reference after the 2026-06-14 promotion evidence; selector still remains `defer_ltp_and_refresh_evidence`
+  - Status: owner-directed active queue reference after the 2026-06-14 promotion evidence; fresh 2026-07-05 target-run and functional-effectiveness evidence return the selector to `defer_ltp_and_refresh_evidence`
   - Scope: readiness trigger contract, token-efficient teaching envelope, runtime interaction-default enforcement, learning-efficiency guardrails, and two-repo rollout proof
 - [Teaching Collaboration And Low-Token Governance Implementation Plan](./teaching-collaboration-and-low-token-governance-implementation-plan.md)
   - Status: completed bounded follow-on implementation lane verified on `2026-04-22`

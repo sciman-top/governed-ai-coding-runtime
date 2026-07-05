@@ -2,6 +2,9 @@
 
 ## Current Snapshot
 - Single source of planning truth: [planning-status.json](./architecture/planning-status.json)
+- planning status anchor: `updated_on=2026-07-05`
+- latest target-run / KPI / effect refresh: `2026-07-05`
+- latest governance / self-evolution machine-readable refresh: `2026-06-24`
 - current active queue: `Continuous-Execution` (`Continuous Execution Readiness And Rollout`)
 - `current decision gate`: `defer_ltp_and_refresh_evidence`
 - `current live posture`: target-run freshness is `fresh`; Codex target runs are `native_attach` / ready; Claude workload probe is `native_attach` / ready
@@ -28,6 +31,14 @@
 - [English Guide](../README.en.md)
 - [Project AGENTS](../AGENTS.md)
 - [planning-status.json](./architecture/planning-status.json)
+
+## Repository Surfaces
+- [Apps](../apps/README.md)
+- [Infra](../infra/README.md)
+- [Packages](../packages/README.md)
+- [Contracts](../packages/contracts/README.md)
+- [Schemas](../schemas/README.md)
+- [Tests](../tests/README.md)
 
 ## Operator And Daily Use
 - [Single-Machine Runtime Quickstart](./quickstart/single-machine-runtime-quickstart.md)
@@ -61,6 +72,14 @@
   - [Runbooks](./runbooks/README.md)
   - [Target Repo Test Slicing Policy](./targets/target-repo-test-slicing-policy.md)
   - [Acceptance Metrics Contract](./product/acceptance-metrics-contract.md)
+
+## Portable Packaging And Install
+- Package staging, release zip, sha256, manifest, and provenance: `scripts/package-runtime.ps1`
+- Release wrapper: `release.ps1`
+- Portable/User runtime initialization: `install.ps1`
+- Related criteria:
+  - [Public Usable Release Criteria](./product/public-usable-release-criteria.md)
+  - [公开可用发布标准（Chinese）](./product/public-usable-release-criteria.zh-CN.md)
 
 ## Reference Governance
 - High-drift changes are now fail-closed in the `Contract` gate.
@@ -119,6 +138,9 @@
 ## Evidence, History, And Rollback
 - Current evidence index: [Change Evidence Index](./change-evidence/README.md)
 - Latest posture proof:
+  - [20260705 Readme And Docs Current-State Refresh](./change-evidence/20260705-readme-and-docs-current-state-refresh.md)
+  - [20260705 Runtime Evolution Functional Verification](./change-evidence/20260705-runtime-evolution-functional-verification.md)
+  - [20260705 Claim Catalog Freshness Refresh](./change-evidence/20260705-claim-catalog-freshness-refresh.md)
   - [20260623 Active Queue Evidence-Upkeep Refresh](./change-evidence/20260623-active-queue-evidence-upkeep-refresh.md)
   - [20260623 Self-Evolution Review Refresh](./change-evidence/20260623-self-evolution-review-refresh.md)
   - [20260620 Active Queue Evidence-Upkeep Refresh](./change-evidence/20260620-active-queue-evidence-upkeep-refresh.md)

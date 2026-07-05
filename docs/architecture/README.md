@@ -3,6 +3,10 @@
 ## Purpose
 This directory holds the architectural views that explain product boundaries, target shape, MVP narrowing, and compatibility posture.
 
+## Current Boundary Note
+- Current active queue, decision gate, and live posture truth belong to [planning-status.json](./planning-status.json).
+- Architecture docs explain durable structure and ownership boundaries; they are not the authoritative current-queue tracker.
+
 ## Recommended Reading Order
 1. [Minimum Viable Governance Loop](./minimum-viable-governance-loop.md)
 2. [Governance Boundary Matrix](./governance-boundary-matrix.md)
@@ -28,7 +32,7 @@ This directory holds the architectural views that explain product boundaries, ta
 - [Repo-Native Contract Bundle](./repo-native-contract-bundle.md)
   - source-of-truth to runtime-bundle mapping for repo-local declarations versus machine-local state
 - [Local Baseline To Hybrid Final-State Migration Matrix](./local-baseline-to-hybrid-final-state-migration-matrix.md)
-  - decision bridge between completed local baseline slices, the landed hybrid boundary, and the active direct-to-hybrid closure queue
+  - decision bridge between completed local baseline slices, the landed hybrid boundary, and the later certified/follow-on queue history
 - [MVP Stack Vs Target Stack](./mvp-stack-vs-target-stack.md)
   - tracer-bullet implementation posture versus long-term platform direction
 - [Compatibility Matrix](./compatibility-matrix.md)
@@ -49,5 +53,5 @@ This directory holds the architectural views that explain product boundaries, ta
 ## Usage Rule
 - If implementation scope is under debate, start with the first three documents before reading the full target architecture.
 - If the question is where repo-local declarations end and machine-local runtime state begins, read the repo-native contract bundle doc before changing attachment or packaging behavior.
-- If historical completed plans or landed local runtime code are being compared against the hybrid final state, read the migration matrix before deciding that the current baseline is either "wrong" or "already final."
+- If historical completed plans or landed local runtime code are being compared against the hybrid final state, read the migration matrix before deciding that the current baseline is either "wrong" or "already final"; current queue truth still lives in `planning-status.json`.
 - If adapter or environment questions arise, pair this index with [docs/specs/agent-adapter-contract-spec.md](../specs/agent-adapter-contract-spec.md) and [docs/specs/repo-profile-spec.md](../specs/repo-profile-spec.md).

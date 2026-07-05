@@ -8,6 +8,9 @@
 ## Current Snapshot / 当前快照
 - 当前唯一状态真源：`docs/architecture/planning-status.json`
 - Single source of planning truth: `docs/architecture/planning-status.json`
+- 规划状态锚点 / planning status anchor: `updated_on=2026-07-05`
+- 最新 target-run / KPI / effect 刷新 / latest target-run / KPI / effect refresh: `2026-07-05`
+- 较新的治理 / self-evolution 机器可读刷新 / latest governance / self-evolution machine-readable refresh: `2026-06-24`
 - 当前 active queue / current active queue: `Continuous-Execution` (`Continuous Execution Readiness And Rollout`)
 - `current decision gate`：`defer_ltp_and_refresh_evidence`
 - `current live posture`：target-run freshness 为 `fresh`；Codex target runs 为 `native_attach` / ready；Claude workload probe 为 `native_attach` / ready
@@ -51,6 +54,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
 - 本项目已证实的主要价值是 workflow / gate / evidence governance；尚未证实它已经在跨仓库、跨宿主、跨风险层级上证明内建“最佳工作流自动执行器”。
 - 它可以演进成 `AI coding workflow governor`，但不是 replacement host，也不是已经在所有场景下证明的固定唯一最佳 workflow executor。
 - Codex and Claude Code are cooperation hosts, not competitors；本仓治理它们的 attach、gate、evidence、handoff 和 degrade posture，不复制或替代宿主 UI、账号、provider 或模型循环。
+- `apps/` 与 `infra/local-runtime/` 已提供 service-shaped scaffolds 和本地 compose helper，用于边界提取、打包与本地实验；默认 operator path 仍是 `run.ps1` / `scripts/operator.ps1` / `scripts/verify-repo.ps1`，不是 container-first 日常入口。
 - 它不负责本机账号、provider、gateway 或宿主启动切换：
   - Codex/Cockpit 的 Direct OAuth、Direct API、API service 往返切换由 `Cockpit Tools` 负责。
   - Claude Code / Claude Desktop 的账号与 provider 切换由 `CC Switch` 负责。
@@ -97,11 +101,14 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
   - 面向 target catalog 的 attach/daily/baseline/apply-all
 - `scripts/sync-agent-rules.ps1`
   - 从 `rules/manifest.json` 同步 `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`
+- `scripts/package-runtime.ps1`
+  - 组装 portable staging tree、zip、sha256、manifest 与 provenance 输出
 - `claude-provider continuity`
   - Claude 连续性只读检查
 - `scripts/Disable-CodexProjectInterop.ps1` 与 `scripts/Test-CodexGuardAbsence.ps1`
   - 仅用于旧 Codex shim 的清理与缺席验证
 - 绿色打包 / portable packaging:
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/package-runtime.ps1`
   - `.\release.ps1 -Version <version> -Channel portable`
   - `.\install.ps1 -Mode Portable`
 
@@ -127,6 +134,9 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
   - [Agent Continuity Guide](docs/product/agent-continuity.md)
   - [共享上下文连续性指南](docs/product/agent-continuity.zh-CN.md)
 - 近期治理硬化：
+  - [20260705 Readme And Docs Current-State Refresh](docs/change-evidence/20260705-readme-and-docs-current-state-refresh.md)
+  - [20260705 Runtime Evolution Functional Verification](docs/change-evidence/20260705-runtime-evolution-functional-verification.md)
+  - [20260705 Claim Catalog Freshness Refresh](docs/change-evidence/20260705-claim-catalog-freshness-refresh.md)
   - [20260623 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260623-active-queue-evidence-upkeep-refresh.md)
   - [20260623 Self-Evolution Review Refresh](docs/change-evidence/20260623-self-evolution-review-refresh.md)
   - [20260620 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260620-active-queue-evidence-upkeep-refresh.md)

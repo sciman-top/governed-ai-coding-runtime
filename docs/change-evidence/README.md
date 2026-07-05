@@ -17,6 +17,21 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260705 Readme And Docs Current-State Refresh](./20260705-readme-and-docs-current-state-refresh.md)
+  - evidence companion for refreshing root/docs/apps/infra/architecture entry surfaces so they reflect the recovered `2026-07-05` selector and live-posture truth, the `2026-07-05` target-run / KPI / effect refresh, the earlier `2026-06-24` governance/self-evolution refresh, and the current packaging/app scaffolds without promoting a new queue
+- [20260705 Runtime Evolution Functional Verification](./20260705-runtime-evolution-functional-verification.md)
+  - evidence companion for refreshing the stale functional-effectiveness gate after host-feedback and target-run evidence had already recovered
+- [20260705 Claim Catalog Freshness Refresh](./20260705-claim-catalog-freshness-refresh.md)
+  - evidence companion for refreshing `CLM-001..010` claim links to a fresh dated proof window without changing claim scope
+- latest target-run / KPI / effect refresh now on top of the bounded upkeep loop:
+  - `docs/change-evidence/target-repo-runs/*-20260705225034.json`
+  - `docs/change-evidence/target-repo-runs/kpi-latest.json`
+  - `docs/change-evidence/target-repo-runs/kpi-rolling.json`
+  - `docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json`
+- latest governance / self-evolution machine-readable refresh remains:
+  - `docs/change-evidence/runtime-test-speed-latest.json`
+  - `docs/change-evidence/governance-hub-certification-report.json`
+  - the dated `20260624` self-evolution and core-principle artifacts under `self-evolution-*` and `core-principle-change-*`
 - [20260623 Active Queue Evidence-Upkeep Refresh](./20260623-active-queue-evidence-upkeep-refresh.md)
   - evidence companion for rerunning the full release-style active-loop upkeep on 2026-06-23, refreshing runtime/contract/doctor/docs/scripts outputs, and advancing the planning proof anchor to the current day
 - [20260623 Self-Evolution Review Refresh](./20260623-self-evolution-review-refresh.md)

@@ -1,16 +1,33 @@
 # Apps
 
-Future runtime application entrypoints live here.
+Service-shaped runtime entrypoints and worker scaffolds live here.
 
-## Planned Boundaries
-- `control-plane/`: task lifecycle, policy decisions, approvals, and registry APIs.
-- `tool-runner/`: governed tool request validation and execution adapters.
-- `workflow-worker/`: durable task orchestration once workflow runtime is selected.
-- `console-web/`: future approval and evidence inspection UI.
+## Current Surface
+- `control-plane/`
+  - `main.py` exposes `/health`, `/session`, and `/operator` routes through `app.py`
+  - uses `packages/agent-runtime/service_facade.py` instead of owning a separate policy model
+- `workflow-worker/`
+  - persists workflow heartbeat metadata through `packages/agent-runtime/persistence.py`
+- `agent-worker/`
+  - persists worker-ready metadata through the same SQLite-backed metadata store contract
+- `tool-runner/`
+  - executes governed commands through `governed_ai_coding_runtime_contracts.tool_runner`
 
 ## Current Status
-No runtime services are implemented yet.
+- `apps/` is no longer future-only; checked-in service-shaped scaffolds exist today.
+- The current active queue is `Continuous-Execution`, but these entrypoints still support boundary extraction, packaging, and local compose experiments rather than replacing the default CLI/operator path.
+- Day-to-day operator flow still starts from `run.ps1`, `scripts/operator.ps1`, `scripts/verify-repo.ps1`, and `scripts/governance/preflight.ps1`.
 
-The current active stage remains `Full Runtime / GAP-024`, but it is still CLI-first and contract-layer heavy:
-- `scripts/` and `packages/contracts/` are the live execution substrate today
-- `apps/` stays reserved for later service-shaped boundaries once the runtime path and read models stabilize
+## Boundaries
+- These entrypoints are repo-owned scaffolds, not proof that production service deployment is the primary runtime posture.
+- Host login/provider switching, target-repo ownership, and rollout claims remain governed by the same contracts, gates, and evidence model as the CLI path.
+- Pair this directory with `infra/local-runtime/` when you need a local compose-backed service-shape experiment.
+
+## Verification
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
+```
+
+```powershell
+python apps/control-plane/main.py --route /health
+```

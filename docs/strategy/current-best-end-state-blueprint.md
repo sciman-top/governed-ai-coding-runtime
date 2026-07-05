@@ -124,7 +124,8 @@ Current practical reading:
 - historical certification: `GAP-104..111`
 - current active queue: `Continuous-Execution`
 - current decision gate: `defer_ltp_and_refresh_evidence`
-- current live posture: the latest 2026-06-17 active-loop refresh shows Codex target runs at `native_attach / ready`; the latest Claude workload probe is `native_attach / ready`
+- current live posture: fresh 2026-07-05 target-run evidence keeps both Codex target runs and the latest Claude workload probe at `native_attach / ready`
+- historical proof chain: keep the 2026-06-17 planning-entrypoint and active-loop refresh milestones visible as archived posture anchors, even though the current live posture now comes from the fresh 2026-07-05 evidence window
 
 Implication:
 - do not reopen implementation queues just because historical closure exists

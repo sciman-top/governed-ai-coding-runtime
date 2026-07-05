@@ -28,7 +28,7 @@ class FunctionalEffectivenessTests(unittest.TestCase):
 
     def test_functional_effectiveness_succeeds_for_repo_evidence(self) -> None:
         completed = subprocess.run(
-            [sys.executable, "scripts/verify-functional-effectiveness.py", "--as-of", "2026-05-28"],
+            [sys.executable, "scripts/verify-functional-effectiveness.py", "--as-of", "2026-07-05"],
             check=False,
             capture_output=True,
             text=True,
@@ -38,7 +38,7 @@ class FunctionalEffectivenessTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         payload = json.loads(completed.stdout)
         self.assertEqual(payload["status"], "pass")
-        self.assertTrue(payload["evidence_path"].endswith("20260528-runtime-evolution-functional-verification.md"))
+        self.assertTrue(payload["evidence_path"].endswith("20260705-runtime-evolution-functional-verification.md"))
         self.assertEqual(payload["evidence_age_days"], 0)
 
     def test_functional_effectiveness_rejects_missing_effect_token(self) -> None:

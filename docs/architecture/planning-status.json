@@ -1,20 +1,20 @@
 {
   "schema_version": "1.0",
   "status_id": "default-planning-status",
-  "updated_on": "2026-06-23",
+  "updated_on": "2026-07-05",
   "current_active_queue": {
     "queue_id": "Continuous-Execution",
     "label": "Continuous Execution Readiness And Rollout",
     "status": "owner_directed_active_bounded_loop",
     "source_plan": "docs/plans/continuous-execution-readiness-and-rollout-plan.md",
     "source_backlog": "docs/backlog/README.md",
-    "why_now": "The owner explicitly asked for continuous autonomous execution. The readiness trigger, two-repo trial proof, and Task 8 reconciliation are now closed, so `Continuous-Execution` is the active bounded loop for evidence-and-gate upkeep while the selector still defers heavy LTP work."
+    "why_now": "The owner explicitly asked for continuous autonomous execution. Fresh 2026-07-05 target-run evidence and a refreshed 2026-07-05 functional-effectiveness proof return the selector to `defer_ltp_and_refresh_evidence`, so `Continuous-Execution` remains the active bounded loop for evidence-and-gate upkeep while heavy LTP work stays deferred."
   },
   "current_decision_gate": {
     "selector": "defer_ltp_and_refresh_evidence",
     "selector_source": "scripts/select-next-work.py",
-    "as_of": "2026-06-23",
-    "proof_ref": "docs/change-evidence/20260623-active-queue-evidence-upkeep-refresh.md",
+    "as_of": "2026-07-05",
+    "proof_ref": "docs/change-evidence/20260705-readme-and-docs-current-state-refresh.md",
     "blocking_reasons": []
   },
   "certified_baseline": {
@@ -32,7 +32,7 @@
     "codex_target_run_capability_status": "ready",
     "claude_workload_adapter_tier": "native_attach",
     "claude_workload_status": "ready",
-    "summary": "Fresh 2026-06-23 upkeep evidence now shows both Codex target runs and the Claude workload probe at native_attach/ready while the selector still defers heavy LTP work. Keep stronger live-host claims tied to fresh evidence, and keep separate non-blocking host snapshot config attention from this recovered live target-run posture."
+    "summary": "Fresh 2026-07-05 upkeep evidence now shows both Codex target runs and the Claude workload probe at native_attach/ready while the selector again defers heavy LTP work. Keep stronger live-host claims tied to fresh evidence, and keep separate non-blocking host snapshot config attention from this recovered live target-run posture."
   },
   "authoritative_docs": [
     "docs/README.md",
@@ -50,5 +50,5 @@
     "fresh",
     "native_attach"
   ],
-  "rollback_ref": "git revert docs/architecture/planning-status.json and dependent doc/gate updates"
+  "rollback_ref": "git revert docs/architecture/planning-status.json and dependent doc/evidence routing updates"
 }

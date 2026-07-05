@@ -1,12 +1,12 @@
 {
-  "elapsed_seconds": 189.4660555999999,
+  "elapsed_seconds": 287.8697958999983,
   "failure_count": 0,
   "failures": [],
   "prioritized_target_count": 10,
   "serial_target_count": 4,
   "slowest": [
     {
-      "duration_seconds": 173.41602680000005,
+      "duration_seconds": 272.76514640000096,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_repo_slimming_surface",
@@ -15,7 +15,7 @@
       }
     },
     {
-      "duration_seconds": 136.2710729999999,
+      "duration_seconds": 151.10684069999843,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_target_repo_powershell_policy",
@@ -24,16 +24,7 @@
       }
     },
     {
-      "duration_seconds": 129.96774970000024,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_runtime_flow_preset",
-        "path": "tests\\runtime\\test_runtime_flow_preset.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 72.69483510000009,
+      "duration_seconds": 143.17041620000236,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_operator_entrypoint",
@@ -42,43 +33,16 @@
       }
     },
     {
-      "duration_seconds": 71.7025778000002,
+      "duration_seconds": 139.08728830000473,
       "exit_code": 0,
       "target": {
-        "module": "tests.runtime.test_attached_repo_e2e",
-        "path": "tests\\runtime\\test_attached_repo_e2e.py",
+        "module": "tests.runtime.test_runtime_flow_preset",
+        "path": "tests\\runtime\\test_runtime_flow_preset.py",
         "suite": "runtime"
       }
     },
     {
-      "duration_seconds": 60.352162600000156,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_runtime_doctor",
-        "path": "tests\\runtime\\test_runtime_doctor.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 53.15793570000005,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_repo_map_context_artifact",
-        "path": "tests\\runtime\\test_repo_map_context_artifact.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 27.550660699999753,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_issue_seeding",
-        "path": "tests\\runtime\\test_issue_seeding.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 25.129268199999842,
+      "duration_seconds": 128.76187509999727,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_evolution",
@@ -87,11 +51,47 @@
       }
     },
     {
-      "duration_seconds": 21.7022879000001,
+      "duration_seconds": 93.16426659999706,
       "exit_code": 0,
       "target": {
-        "module": "tests.runtime.test_governance_gate_runner",
-        "path": "tests\\runtime\\test_governance_gate_runner.py",
+        "module": "tests.runtime.test_self_evolution_readiness",
+        "path": "tests\\runtime\\test_self_evolution_readiness.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 84.84068010000192,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_repo_map_context_artifact",
+        "path": "tests\\runtime\\test_repo_map_context_artifact.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 76.4451390999966,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_governance_hub_certification",
+        "path": "tests\\runtime\\test_governance_hub_certification.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 68.33786159999727,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_attached_repo_e2e",
+        "path": "tests\\runtime\\test_attached_repo_e2e.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 58.01777659999789,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_runtime_doctor",
+        "path": "tests\\runtime\\test_runtime_doctor.py",
         "suite": "runtime"
       }
     }

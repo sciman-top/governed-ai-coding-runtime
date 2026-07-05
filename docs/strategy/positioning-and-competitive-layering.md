@@ -8,7 +8,8 @@
 - `Strategy Alignment Gates / GAP-040` through `GAP-044` are complete on the current branch baseline.
 - `Interactive Session Productization / GAP-035` through `GAP-039` is historical productization closure, not the current active queue.
 - The current active queue is `Continuous-Execution`, as recorded in `docs/architecture/planning-status.json`.
-- The current live posture is `fresh`, and the latest 2026-06-17 active-loop refresh now shows both Codex target runs and the Claude workload probe at `native_attach` / ready. Stronger live-host claims remain bound to fresh evidence rather than historical certification alone.
+- The current live posture is `fresh`, and the latest 2026-07-05 target-run refresh shows both Codex target runs and the Claude workload probe at `native_attach` / ready. Stronger live-host claims remain tied to the fresh evidence window.
+- The earlier 2026-06-17 active-loop refresh remains a historical planning-proof milestone, but it no longer substitutes for the current fresh evidence window.
 
 ## Final-State Shorthand
 The target product shape remains:

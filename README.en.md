@@ -2,6 +2,9 @@
 
 ## Current Snapshot
 - Single source of planning truth: `docs/architecture/planning-status.json`
+- planning status anchor: `updated_on=2026-07-05`
+- latest target-run / KPI / effect refresh: `2026-07-05`
+- latest governance / self-evolution machine-readable refresh: `2026-06-24`
 - current active queue: `Continuous-Execution` (`Continuous Execution Readiness And Rollout`)
 - `current decision gate`: `defer_ltp_and_refresh_evidence`
 - `current live posture`: target-run freshness is `fresh`; Codex target runs are `native_attach` / ready; Claude workload probe is `native_attach` / ready
@@ -39,6 +42,7 @@ Recommended interpretation:
 - It centralizes governance contracts, gates, evidence, rollout flows, target-repo attachment, and host feedback into one repo-owned rules-and-scripts baseline.
 - The best engineering end state remains `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`.
 - Codex and Claude Code are cooperation hosts, not competitors; this repo governs their attach, gate, evidence, handoff, and degrade posture without copying or replacing host UI, accounts, providers, or model loops.
+- `apps/` and `infra/local-runtime/` now carry service-shaped scaffolds and a local compose helper for boundary extraction, packaging, and local experiments. The default operator path is still `run.ps1` / `scripts/operator.ps1` / `scripts/verify-repo.ps1`, not container-first daily operation.
 - It does not own local account, provider, gateway, or host switching:
   - Codex/Cockpit Direct OAuth, Direct API, and API service roundtrips stay in `Cockpit Tools`.
   - Claude Code / Claude Desktop account and provider switching stay in `CC Switch`.
@@ -53,7 +57,8 @@ Recommended interpretation:
 - aggregate readiness, feedback, rule sync, target flows, and operator UI behind `scripts/operator.ps1`
 - attach external target repos and run attach-first governance flows
 - sync `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` from `rules/manifest.json`
-- create and initialize portable packages with:
+- assemble portable staging, zip, sha256, manifest, and provenance outputs with:
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/package-runtime.ps1`
   - `.\release.ps1 -Version <version> -Channel portable`
   - `.\install.ps1 -Mode Portable`
 
@@ -99,6 +104,8 @@ Recommended interpretation:
   - attach, daily, baseline, and apply-all flows for the managed target catalog
 - `scripts/sync-agent-rules.ps1`
   - sync surface for `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md`
+- `scripts/package-runtime.ps1`
+  - assembles the portable staging tree, release zip, sha256, manifest, and provenance outputs
 - `claude-provider continuity`
   - read-only Claude continuity check
 - `scripts/Disable-CodexProjectInterop.ps1` and `scripts/Test-CodexGuardAbsence.ps1`
@@ -130,6 +137,9 @@ Do not claim:
   - [Agent Continuity Guide](docs/product/agent-continuity.md)
   - [Shared Context Continuity Guide (Chinese)](docs/product/agent-continuity.zh-CN.md)
 - recent hardening:
+  - [20260705 Readme And Docs Current-State Refresh](docs/change-evidence/20260705-readme-and-docs-current-state-refresh.md)
+  - [20260705 Runtime Evolution Functional Verification](docs/change-evidence/20260705-runtime-evolution-functional-verification.md)
+  - [20260705 Claim Catalog Freshness Refresh](docs/change-evidence/20260705-claim-catalog-freshness-refresh.md)
   - [20260623 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260623-active-queue-evidence-upkeep-refresh.md)
   - [20260623 Self-Evolution Review Refresh](docs/change-evidence/20260623-self-evolution-review-refresh.md)
   - [20260620 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260620-active-queue-evidence-upkeep-refresh.md)

@@ -57,6 +57,9 @@
       "docs/change-evidence/target-repo-runs/summary-active-targets-latest.json"
     ],
     "latest_markdown_entries": [
+      "docs/change-evidence/20260705-runtime-evolution-functional-verification.md",
+      "docs/change-evidence/20260705-readme-and-docs-current-state-refresh.md",
+      "docs/change-evidence/20260705-claim-catalog-freshness-refresh.md",
       "docs/change-evidence/20260623-self-evolution-review-refresh.md",
       "docs/change-evidence/20260623-active-queue-evidence-upkeep-refresh.md",
       "docs/change-evidence/20260620-self-evolution-review-refresh.md",
@@ -65,13 +68,10 @@
       "docs/change-evidence/20260620-active-queue-evidence-upkeep-refresh.md",
       "docs/change-evidence/20260618-self-evolution-review-refresh.md",
       "docs/change-evidence/20260618-planning-proof-and-claim-boundary-pre-change-review.md",
-      "docs/change-evidence/20260618-active-queue-evidence-upkeep-refresh.md",
-      "docs/change-evidence/20260617-workflow-governor-claim-tightening-refresh.md",
-      "docs/change-evidence/20260617-self-evolution-variant-review-and-defer.md",
-      "docs/change-evidence/20260617-self-evolution-review-refresh.md"
+      "docs/change-evidence/20260618-active-queue-evidence-upkeep-refresh.md"
     ]
   },
-  "generated_at": "2026-06-23T13:17:59.928907+00:00",
+  "generated_at": "2026-07-05T15:21:33.417063+00:00",
   "index_kind": "change_evidence_archive_index",
   "schema_version": "1.0"
 }

@@ -136,12 +136,12 @@ The repository has already landed the local baseline through `GAP-034`:
 
 This baseline is intentionally retained as product history and implementation substrate. It is not the final product boundary by itself.
 
-## Current Authoritative Posture (2026-06)
+## Current Authoritative Posture (2026-07)
 
 - The single source of current planning and live-posture truth is `docs/architecture/planning-status.json`.
 - `GAP-104..111` remain the certified historical baseline for complete hybrid final-state closure.
 - The current active queue is `Continuous-Execution`, and the current decision gate remains `defer_ltp_and_refresh_evidence`.
-- The current live posture is intentionally host-specific but currently aligned: the latest Codex target-run batch and the latest Claude workload probe are both `native_attach / ready`.
+- The current live posture is intentionally host-specific but currently recovered on fresh 2026-07-05 target-run evidence: the latest Codex target-run batch and the latest Claude workload probe are both `native_attach / ready`.
 - Historical certification must not be used to overstate current live-host recovery.
 
 ## Best-End-State Blueprint (2026-06 Refresh)

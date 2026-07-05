@@ -2,6 +2,9 @@
 
 ## 当前快照
 - 唯一状态真源：`docs/architecture/planning-status.json`
+- 规划状态锚点：`updated_on=2026-07-05`
+- 最新 target-run / KPI / effect 刷新：`2026-07-05`
+- 较新的治理 / self-evolution 机器可读刷新：`2026-06-24`
 - 当前 active queue：`Continuous-Execution`（`Continuous Execution Readiness And Rollout`）
 - `current decision gate`：`defer_ltp_and_refresh_evidence`
 - `current live posture`：target-run freshness 为 `fresh`；Codex target runs 为 `native_attach` / ready；Claude workload probe 为 `native_attach` / ready
@@ -39,6 +42,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
 - 它把治理契约、门禁、evidence、rollout、target-repo attach 和 host feedback 收敛到同一套 repo-owned 规则与脚本中。
 - 当前最佳工程终态口径保持为 `Governance Hub + Reusable Contract + Capability-First Host Adapters + Controlled Evolution + Evidence-First Delivery`。
 - Codex and Claude Code are cooperation hosts, not competitors；本仓只治理它们的 attach、gate、evidence、handoff 与 degrade posture，不复制或替代宿主 UI、账号、provider 或模型循环。
+- `apps/` 与 `infra/local-runtime/` 现在已经有 service-shaped scaffolds 和本地 compose helper，用于边界提取、打包与本地实验；默认 operator path 仍是 `run.ps1` / `scripts/operator.ps1` / `scripts/verify-repo.ps1`，不是 container-first 日常入口。
 - 它不负责本机账号、provider、gateway 或宿主切换：
   - Codex/Cockpit 的 Direct OAuth、Direct API、API service 往返切换由 `Cockpit Tools` 负责。
   - Claude Code / Claude Desktop 的账号与 provider 切换由 `CC Switch` 负责。
@@ -54,7 +58,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
 - 通过 `scripts/runtime-flow-preset.ps1` 对 target catalog 执行 attach、daily、治理基线同步和 apply-all
 - 通过 `scripts/sync-agent-rules.ps1` 同步 `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`
 - 对外部仓执行 attach-first governance，并保留 approval / evidence / handoff / replay refs
-- 以绿色包方式发布与初始化：
+- 组装 portable staging tree、zip、sha256、manifest 与 provenance，并完成初始化：
+  - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/package-runtime.ps1`
   - `.\release.ps1 -Version <version> -Channel portable`
   - `.\install.ps1 -Mode Portable`
 
@@ -100,6 +105,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
   - 面向 target catalog 的 attach/daily/baseline/apply-all
 - `scripts/sync-agent-rules.ps1`
   - 从 `rules/manifest.json` 同步三套规则文件
+- `scripts/package-runtime.ps1`
+  - 组装 portable staging tree、release zip、sha256、manifest 与 provenance 输出
 - `claude-provider continuity`
   - Claude 连续性只读检查
 - `scripts/Disable-CodexProjectInterop.ps1` 与 `scripts/Test-CodexGuardAbsence.ps1`
@@ -132,6 +139,9 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
   - [Agent Continuity Guide](docs/product/agent-continuity.md)
   - [共享上下文连续性指南](docs/product/agent-continuity.zh-CN.md)
 - 近期治理硬化：
+  - [20260705 Readme And Docs Current-State Refresh](docs/change-evidence/20260705-readme-and-docs-current-state-refresh.md)
+  - [20260705 Runtime Evolution Functional Verification](docs/change-evidence/20260705-runtime-evolution-functional-verification.md)
+  - [20260705 Claim Catalog Freshness Refresh](docs/change-evidence/20260705-claim-catalog-freshness-refresh.md)
   - [20260623 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260623-active-queue-evidence-upkeep-refresh.md)
   - [20260623 Self-Evolution Review Refresh](docs/change-evidence/20260623-self-evolution-review-refresh.md)
   - [20260620 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260620-active-queue-evidence-upkeep-refresh.md)
