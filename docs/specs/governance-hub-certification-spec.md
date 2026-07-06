@@ -4,7 +4,7 @@
 Draft
 
 ## Purpose
-Define the certification package that proves the governance hub, reusable contract, controlled evolution loop, and target-repo effect feedback are executable together and remain bounded by current-source compatibility.
+Define the certification package that proves the governance hub, reusable contract, controlled evolution loop, and host-only feedback/evolution posture are executable together and remain bounded by current-source compatibility.
 
 ## Required Fields
 - schema_version
@@ -14,7 +14,6 @@ Define the certification package that proves the governance hub, reusable contra
 - verification_command
 - report_output_ref
 - portfolio_ref
-- effect_feedback_ref
 - policy_audit_ref
 - required_artifact_refs
 - required_outcomes
@@ -23,7 +22,7 @@ Define the certification package that proves the governance hub, reusable contra
 - rollback_ref
 
 ## Invariants
-- certification must include real target-repo effect evidence, not only plan or schema files
+- certification must include real repo-local host feedback and selector evidence, not only plan or schema files
 - all required lifecycle outcomes must be present in the capability portfolio review
 - `review_loop`, `knowledge_loop`, `capability_upgrade_loop`, `capability_cleanup_loop`, `controlled_evolution_loop`, and `self_improvement_loop` must each resolve to executable evidence
 - Codex and Claude Code must remain cooperation hosts, not competitor products

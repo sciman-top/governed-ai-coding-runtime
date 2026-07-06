@@ -9,12 +9,10 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-HOST_RECOVERY_RULE = "fresh target run with codex_capability_status=ready and adapter_tier=native_attach"
-HOST_CLAIM_GUARD = "do not claim native_attach recovery until a fresh target repo run proves it"
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Verify evidence recovery posture after host capability recovery.")
+    parser = argparse.ArgumentParser(description="Verify repo-local evidence recovery posture after host feedback stabilizes.")
     parser.add_argument("--repo-root", default=str(ROOT))
     parser.add_argument("--as-of", default=None, help="ISO date used for selector expiry checks; defaults to today.")
     args = parser.parse_args()
@@ -41,25 +39,15 @@ def assert_evidence_recovery_posture(*, repo_root: Path, as_of: dt.date | None =
     result = inspect_evidence_recovery_posture(repo_root=repo_root, as_of=as_of)
     failures: list[str] = []
     if result["selector"]["next_action"] != "defer_ltp_and_refresh_evidence":
-        failures.append("selector must return defer_ltp_and_refresh_evidence once fresh host capability recovery is proven and no LTP package is selected")
+        failures.append("selector must return defer_ltp_and_refresh_evidence once repo-local evidence is fresh and no LTP package is selected")
     if result["selector"]["evidence_state"] != "fresh":
-        failures.append("selector evidence_state must be fresh after latest target runs recover")
-    if result["target_runs"]["freshness_status"] != "fresh":
-        failures.append("target run evidence must be fresh before this recovery posture can close")
-    if result["target_runs"]["status"] != "ok":
-        failures.append("target_runs status must be ok after recovered latest target runs return ready/native_attach")
-    if result["target_runs"]["degraded_latest_run_count"] != 0:
-        failures.append("expected zero degraded latest target runs after recovery")
-    if result["effect_report"]["decision"] != "promote":
-        failures.append("effect report must keep decision=promote after host capability recovery closes the reusable gap")
-    if result["effect_report"]["host_capability_candidate_present"]:
-        failures.append("effect report must close target-repo-reuse-host-capability-gap after recovery")
-    if result["effect_report"]["latest_codex_capability_status"] != "ready":
-        failures.append("effect report after_metrics must report codex_capability_status=ready after recovery")
-    if result["effect_report"]["latest_adapter_tier"] != "native_attach":
-        failures.append("effect report after_metrics must report adapter_tier=native_attach after recovery")
-    if result["effect_report"]["latest_flow_kind"] != "live_attach":
-        failures.append("effect report after_metrics must report flow_kind=live_attach after recovery")
+        failures.append("selector evidence_state must be fresh after host-only feedback and repo-local evidence recover")
+    if result["host_feedback"]["status"] != "pass":
+        failures.append("host feedback summary must be pass after repo-local evidence recovery")
+    if result["host_feedback"]["claude_workload_status"] == "blocked":
+        failures.append("claude workload must not remain blocked after recovery")
+    if result["selector"]["evidence_blocker"] is not None:
+        failures.append("evidence_blocker must be cleared after recovery")
 
     if failures:
         raise ValueError("; ".join(failures))
@@ -82,16 +70,6 @@ def inspect_evidence_recovery_posture(*, repo_root: Path, as_of: dt.date | None 
     if not isinstance(host_feedback_details, dict):
         host_feedback_details = {}
 
-    effect_report = _load_json(
-        resolved_root
-        / "docs"
-        / "change-evidence"
-        / "target-repo-runs"
-        / "effect-report-classroomtoolkit.json"
-    )
-    host_candidate = _find_candidate(effect_report, "target-repo-reuse-host-capability-gap")
-    remediation_boundary = host_candidate.get("remediation_boundary", {}) if host_candidate else {}
-
     return {
         "status": "inspected",
         "as_of": today.isoformat(),
@@ -101,23 +79,13 @@ def inspect_evidence_recovery_posture(*, repo_root: Path, as_of: dt.date | None 
             "evidence_blocker": selector_result.get("evidence_blocker"),
             "ltp_decision": selector_result["ltp_decision"],
         },
-        "target_runs": {
-            "status": host_feedback_details.get("target_runs_status"),
-            "freshness_status": host_feedback_details.get("target_run_freshness"),
-            "degraded_latest_run_count": int(host_feedback_details.get("degraded_latest_run_count") or 0),
-            "degraded_repos": list(host_feedback_details.get("degraded_repos") or []),
+        "host_feedback": {
+            "status": host_feedback_details.get("status"),
+            "recommendation_count": int(host_feedback_details.get("recommendation_count") or 0),
+            "codex_host_status": host_feedback_details.get("codex_host_status"),
+            "claude_host_status": host_feedback_details.get("claude_host_status"),
+            "claude_workload_status": host_feedback_details.get("claude_workload_status"),
         },
-        "effect_report": {
-            "decision": effect_report.get("decision"),
-            "host_capability_candidate_present": bool(host_candidate),
-            "required_recovery_evidence": remediation_boundary.get("required_recovery_evidence"),
-            "claim_guard": remediation_boundary.get("claim_guard"),
-            "latest_codex_capability_status": effect_report.get("after_metrics", {}).get("codex_capability_status"),
-            "latest_adapter_tier": effect_report.get("after_metrics", {}).get("adapter_tier"),
-            "latest_flow_kind": effect_report.get("after_metrics", {}).get("flow_kind"),
-        },
-        "recovery_rule": HOST_RECOVERY_RULE,
-        "claim_guard": HOST_CLAIM_GUARD,
     }
 
 
@@ -129,32 +97,6 @@ def _load_module(name: str, path: Path):
     sys.modules[name] = module
     spec.loader.exec_module(module)
     return module
-
-
-def _load_json(path: Path) -> dict:
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except OSError as exc:
-        raise ValueError(f"unable to read JSON file: {path}") from exc
-    except json.JSONDecodeError as exc:
-        raise ValueError(f"invalid JSON file: {path}: {exc.msg}") from exc
-    if not isinstance(payload, dict):
-        raise ValueError(f"JSON file must contain an object: {path}")
-    return payload
-
-
-def _find_dimension(report: dict, dimension_id: str) -> dict:
-    for item in report.get("dimensions", []):
-        if isinstance(item, dict) and item.get("dimension_id") == dimension_id:
-            return item
-    raise ValueError(f"host feedback dimension not found: {dimension_id}")
-
-
-def _find_candidate(report: dict, candidate_id: str) -> dict | None:
-    for item in report.get("backlog_candidates", []):
-        if isinstance(item, dict) and item.get("candidate_id") == candidate_id:
-            return item
-    return None
 
 
 if __name__ == "__main__":

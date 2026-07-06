@@ -2,85 +2,71 @@
   "schema_version": "1.0",
   "matrix_id": "kernel.minimum-governance.inheritance",
   "control_pack_ref": "schemas/control-packs/minimum-governance-kernel.control-pack.json",
-  "target_baseline_ref": "docs/targets/target-repo-governance-baseline.json",
+  "repo_profile_ref": ".governed-ai/repo-profile.json",
   "repo_profile_schema_ref": "schemas/jsonschema/repo-profile.schema.json",
-  "light_pack_ref": ".governed-ai/light-pack.json",
   "unified_governance": [
     {
       "field_path": "execution_contract.gates",
-      "reason": "Gate execution semantics stay kernel-owned and must not be emitted as repo overrides.",
-      "validation_rule": "must_exist_in_control_pack_and_must_not_appear_in_repo_profile_or_light_pack"
+      "reason": "Gate execution semantics stay kernel-owned and must not be emitted as repo-profile overrides.",
+      "validation_rule": "must_exist_in_control_pack_and_must_not_appear_in_repo_profile"
     },
     {
       "field_path": "execution_contract.evidence",
-      "reason": "Evidence language is shared across repos and must not become repo-specific override payload.",
-      "validation_rule": "must_exist_in_control_pack_and_must_not_appear_in_repo_profile_or_light_pack"
+      "reason": "Evidence language is shared across repo-local surfaces and must not become repo-profile override payload.",
+      "validation_rule": "must_exist_in_control_pack_and_must_not_appear_in_repo_profile"
     },
     {
       "field_path": "execution_contract.rollback",
       "reason": "Rollback references remain kernel-governed and cannot be weakened per repo.",
-      "validation_rule": "must_exist_in_control_pack_and_must_not_appear_in_repo_profile_or_light_pack"
+      "validation_rule": "must_exist_in_control_pack_and_must_not_appear_in_repo_profile"
     },
     {
       "field_path": "field_ownership.unified_kernel_fields",
       "reason": "The ownership declaration itself must remain platform-controlled.",
-      "validation_rule": "must_exist_in_control_pack_and_must_not_appear_in_repo_profile_or_light_pack"
+      "validation_rule": "must_exist_in_control_pack_and_must_not_appear_in_repo_profile"
     },
     {
       "field_path": "materialization.fail_closed_if_missing",
-      "reason": "Target repos must not turn missing governance assets into soft-fail behavior.",
-      "validation_rule": "must_exist_in_control_pack_and_must_not_appear_in_repo_profile_or_light_pack"
+      "reason": "Repo-local materialization must not turn missing governance assets into soft-fail behavior.",
+      "validation_rule": "must_exist_in_control_pack_and_must_not_appear_in_repo_profile"
     }
   ],
   "target_inherit": [
     {
       "profile_field": "required_entrypoint_policy",
-      "baseline_field": "required_entrypoint_policy",
       "control_pack_reference": "repo_profile_requirements.required_gate_names",
       "schema_path": "required_entrypoint_policy",
-      "reason": "The hub may materialize entrypoint enforcement defaults into target repo profiles."
+      "reason": "Repo-local governance keeps entrypoint enforcement defaults in the typed repo profile."
     },
     {
       "profile_field": "auto_commit_policy",
-      "baseline_field": "auto_commit_policy",
       "control_pack_reference": "repo_profile_requirements.required_gate_names",
       "schema_path": "auto_commit_policy",
-      "reason": "Milestone auto-commit policy is distributed through baseline-controlled profile fields."
+      "reason": "Milestone auto-commit policy remains typed repo-profile state after target rollout retirement."
     },
     {
       "profile_field": "interaction_profile",
-      "baseline_field": "interaction_profile",
       "control_pack_reference": "repo_profile_requirements.required_gate_names",
       "schema_path": "interaction_profile",
-      "reason": "Bounded collaboration defaults are inherited from the hub into target repo profiles."
+      "reason": "Bounded collaboration defaults remain encoded in the repo-local profile."
     },
     {
       "profile_field": "learning_assistance_policy",
-      "baseline_field": "learning_assistance_policy",
       "control_pack_reference": "repo_profile_requirements.required_gate_names",
       "schema_path": "learning_assistance_policy",
-      "reason": "Low-token learning assistance is inherited through typed repo profile fields."
-    },
-    {
-      "profile_field": "network_research_policy",
-      "baseline_field": "network_research_policy",
-      "control_pack_reference": "repo_profile_requirements.required_gate_names",
-      "schema_path": "network_research_policy",
-      "reason": "Read-only external research defaults are inherited through typed repo profile fields while host tools remain responsible for actual search capability."
+      "reason": "Low-token learning assistance stays visible through typed repo-profile fields."
     },
     {
       "profile_field": "rule_file_coordination_policy",
-      "baseline_field": "rule_file_coordination_policy",
       "control_pack_reference": "repo_profile_requirements.required_gate_names",
       "schema_path": "rule_file_coordination_policy",
-      "reason": "Rule-file drift review requirements are inherited through the repo profile."
+      "reason": "Rule-file drift review requirements stay encoded in the repo profile."
     },
     {
       "profile_field": "windows_process_environment_policy",
-      "baseline_field": "windows_process_environment_policy",
       "control_pack_reference": "repo_profile_requirements.required_gate_names",
       "schema_path": "windows_process_environment_policy",
-      "reason": "Windows process environment normalization is inherited as a typed repo profile policy."
+      "reason": "Windows process environment normalization remains a typed repo-profile policy."
     }
   ],
   "target_override": [
@@ -135,11 +121,9 @@
         "canonical_gate_order"
       ],
       "blocked_in": [
-        "baseline",
-        "repo_profile",
-        "light_pack"
+        "repo_profile"
       ],
-      "reason": "Target repos must not redefine the canonical build -> test -> contract -> hotspot order through override payload."
+      "reason": "Repo profiles must not redefine the canonical build -> test -> contract -> hotspot order."
     },
     {
       "surface": "evidence_minimum_fields",
@@ -148,9 +132,7 @@
         "evidence_required_fields"
       ],
       "blocked_in": [
-        "baseline",
-        "repo_profile",
-        "light_pack"
+        "repo_profile"
       ],
       "reason": "Evidence minimums are kernel-owned and may not be weakened per repo."
     },
@@ -161,9 +143,7 @@
         "rollback_optional"
       ],
       "blocked_in": [
-        "baseline",
-        "repo_profile",
-        "light_pack"
+        "repo_profile"
       ],
       "reason": "Rollback references are mandatory and cannot be disabled through repo overrides."
     },
@@ -174,9 +154,7 @@
         "risk_level_semantics"
       ],
       "blocked_in": [
-        "baseline",
-        "repo_profile",
-        "light_pack"
+        "repo_profile"
       ],
       "reason": "Risk-level semantics must stay comparable across repos."
     },
@@ -187,9 +165,7 @@
         "approval_state_machine"
       ],
       "blocked_in": [
-        "baseline",
-        "repo_profile",
-        "light_pack"
+        "repo_profile"
       ],
       "reason": "Approval states and transitions are unified governance, not repo-local override payload."
     }

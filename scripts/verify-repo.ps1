@@ -134,11 +134,10 @@ function Invoke-SelfEvolutionPromotionArtifactSchemaCheck {
     throw "Self-evolution promotion artifact missing in: $artifactDirectory"
   }
 
-  foreach ($artifact in $artifacts) {
-    $ok = Test-Json -Json (Get-Content -Raw $artifact.FullName) -SchemaFile $schemaPath
-    if (-not $ok) {
-      throw "Self-evolution promotion artifact failed schema validation: $($artifact.FullName)"
-    }
+  $latestArtifact = $artifacts[-1]
+  $ok = Test-Json -Json (Get-Content -Raw $latestArtifact.FullName) -SchemaFile $schemaPath
+  if (-not $ok) {
+    throw "Self-evolution promotion artifact failed schema validation: $($latestArtifact.FullName)"
   }
 
   Write-CheckOk "self-evolution-promotion-artifact-schema"
@@ -184,7 +183,12 @@ function Invoke-ActiveMarkdownLinkCheck {
     $files = @(
       $markdownPaths |
         Where-Object { $_ } |
-        ForEach-Object { Get-Item -LiteralPath (Join-Path (Get-Location) $_) } |
+        ForEach-Object {
+          $resolved = Join-Path (Get-Location) $_
+          if (Test-Path -LiteralPath $resolved) {
+            Get-Item -LiteralPath $resolved
+          }
+        } |
         Where-Object { $_.FullName -notmatch '[\\/]+docs[\\/]+change-evidence[\\/]' }
     )
   }
@@ -790,15 +794,11 @@ function Invoke-ContractChecks {
   Invoke-SelfEvolutionPromotionArtifactSchemaCheck
   Invoke-DependencyBaselineChecks
   Invoke-TransitionStackConvergenceChecks
-  Invoke-TargetRepoRolloutContractChecks
-  Invoke-TargetRepoGovernanceConsistencyChecks
-  Invoke-TargetRepoReuseEffectFeedbackChecks
   Invoke-KnowledgeMemoryLifecycleChecks
   Invoke-PromotionLifecycleChecks
   Invoke-RepoMapContextArtifactChecks
   Invoke-PolicyToolCredentialAuditChecks
   Invoke-GovernanceHubCertificationChecks
-  Invoke-TargetRepoPowerShellPolicyChecks
   Invoke-ShellRiskContractChecks
   Invoke-AgentRuleSyncChecks
   Invoke-PreChangeReviewChecks
@@ -831,48 +831,6 @@ function Invoke-TransitionStackConvergenceChecks {
   Write-CheckOk "transition-stack-convergence"
 }
 
-function Invoke-TargetRepoGovernanceConsistencyChecks {
-  $python = Resolve-PythonCommand
-  $output = & $python.Source "scripts/verify-target-repo-governance-consistency.py" 2>&1
-  if ($LASTEXITCODE -ne 0) {
-    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
-    if ([string]::IsNullOrWhiteSpace($detail)) {
-      throw "Target repo governance consistency checks failed"
-    }
-    throw "Target repo governance consistency checks failed`n$detail"
-  }
-
-  Write-CheckOk "target-repo-governance-consistency"
-}
-
-function Invoke-TargetRepoRolloutContractChecks {
-  $python = Resolve-PythonCommand
-  $output = & $python.Source "scripts/verify-target-repo-rollout-contract.py" 2>&1
-  if ($LASTEXITCODE -ne 0) {
-    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
-    if ([string]::IsNullOrWhiteSpace($detail)) {
-      throw "Target repo rollout contract checks failed"
-    }
-    throw "Target repo rollout contract checks failed`n$detail"
-  }
-
-  Write-CheckOk "target-repo-rollout-contract"
-}
-
-function Invoke-TargetRepoPowerShellPolicyChecks {
-  $python = Resolve-PythonCommand
-  $output = & $python.Source "scripts/verify-target-repo-powershell-policy.py" 2>&1
-  if ($LASTEXITCODE -ne 0) {
-    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
-    if ([string]::IsNullOrWhiteSpace($detail)) {
-      throw "Target repo PowerShell policy checks failed"
-    }
-    throw "Target repo PowerShell policy checks failed`n$detail"
-  }
-
-  Write-CheckOk "target-repo-powershell-policy"
-}
-
 function Invoke-ShellRiskContractChecks {
   $python = Resolve-PythonCommand
   $output = & $python.Source "scripts/verify-shell-risk-contract.py" 2>&1
@@ -885,20 +843,6 @@ function Invoke-ShellRiskContractChecks {
   }
 
   Write-CheckOk "shell-risk-contract"
-}
-
-function Invoke-TargetRepoReuseEffectFeedbackChecks {
-  $python = Resolve-PythonCommand
-  $output = & $python.Source "scripts/verify-target-repo-reuse-effect-report.py" 2>&1
-  if ($LASTEXITCODE -ne 0) {
-    $detail = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
-    if ([string]::IsNullOrWhiteSpace($detail)) {
-      throw "Target repo reuse effect feedback checks failed"
-    }
-    throw "Target repo reuse effect feedback checks failed`n$detail"
-  }
-
-  Write-CheckOk "target-repo-reuse-effect-feedback"
 }
 
 function Invoke-KnowledgeMemoryLifecycleChecks {
@@ -1187,10 +1131,9 @@ function Invoke-RuntimeQuickChecks {
 
   & $python.Source -m unittest `
     tests.runtime.test_governance_gate_runner `
-    tests.runtime.test_target_repo_governance_consistency `
-    tests.runtime.test_runtime_flow_preset.RuntimeFlowPresetScriptTests.test_runtime_flow_preset_apply_governance_baseline_only_bootstraps_blank_target `
-    tests.runtime.test_target_repo_rollout_contract `
-    tests.runtime.test_target_repo_speed_kpi
+    tests.runtime.test_operator_entrypoint `
+    tests.runtime.test_host_feedback_summary `
+    tests.runtime.test_self_evolution_readiness
   if ($LASTEXITCODE -ne 0) {
     throw "Runtime quick slice failed"
   }

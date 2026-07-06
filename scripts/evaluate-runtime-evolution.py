@@ -417,37 +417,13 @@ def _build_evidence_snapshot(*, repo_root: Path, as_of: dt.date) -> dict[str, di
         repo_root / "scripts" / "host-feedback-summary.py",
         "host_feedback_summary_evolution",
     )
-    host_feedback = host_feedback_module.build_host_feedback_summary(repo_root=repo_root, max_target_runs=0)
-    target_runs_details = next(
-        (
-            item.get("details", {})
-            for item in host_feedback.get("dimensions", [])
-            if isinstance(item, dict) and item.get("dimension_id") == "target_runs"
-        ),
-        {},
-    )
+    host_feedback = host_feedback_module.build_host_feedback_summary(repo_root=repo_root)
     snapshots["host_feedback"] = {
         "status": host_feedback["status"],
-        "target_run_freshness": target_runs_details.get("freshness_status"),
-        "stale_latest_runs": list(target_runs_details.get("stale_latest_runs", [])),
         "recommendation_count": len(host_feedback.get("recommendations", [])),
         "codex_host_status": host_feedback.get("summary", {}).get("codex_host_status"),
         "claude_host_status": host_feedback.get("summary", {}).get("claude_host_status"),
         "claude_workload_status": host_feedback.get("summary", {}).get("claude_workload_status"),
-    }
-
-    effect_module = _load_script_module(
-        repo_root / "scripts" / "verify-target-repo-reuse-effect-report.py",
-        "verify_target_repo_effect_evolution",
-    )
-    effect_feedback = effect_module.inspect_effect_report()
-    snapshots["effect_feedback"] = {
-        "status": effect_feedback["status"],
-        "decision": effect_feedback.get("decision"),
-        "target": effect_feedback.get("target"),
-        "backlog_candidate_count": int(effect_feedback.get("backlog_candidate_count", 0)),
-        "error_count": len(effect_feedback.get("errors", [])),
-        "errors": list(effect_feedback.get("errors", [])),
     }
 
     ai_experience_module = _load_script_module(
@@ -563,20 +539,20 @@ def _build_candidates(
         )
 
     host_feedback = evidence_snapshot["host_feedback"]
-    if host_feedback["status"] != "pass" or host_feedback["target_run_freshness"] == "stale":
+    if host_feedback["status"] != "pass" or host_feedback["recommendation_count"] > 0:
         candidates.append(
             {
                 "candidate_id": "EVOL-HOST-FEEDBACK",
                 "source_type": "internal_runtime_evidence",
                 "source_ref": ".runtime/artifacts/host-feedback-summary/latest.md",
                 "source_checked_on": as_of.isoformat(),
-                "observed_change": "Host feedback or target-run freshness shows attention-level posture.",
-                "repo_impact": "Keeps self-evolution prompts aligned with real host degradation and stale target workload evidence.",
+                "observed_change": "Host feedback shows attention-level posture or still produces repo-local follow-up recommendations.",
+                "repo_impact": "Keeps self-evolution prompts aligned with real host degradation, rule-sync drift, and parity gaps instead of stale target-rollout assumptions.",
                 "proposed_action": "modify",
                 "risk_level": "low",
                 "evidence_required": [
                     "host feedback summary",
-                    "latest target repo runs",
+                    "global rule sync drift or parity evidence",
                     "operator-facing recommendation surface",
                 ],
                 "acceptance_gates": [
@@ -587,43 +563,11 @@ def _build_candidates(
                 "patch_plan": [
                     {
                         "path": "scripts/host-feedback-summary.py",
-                        "operation": "refresh host and target-run evidence before promoting new implementation work",
+                        "operation": "refresh host posture, global rule sync, and parity evidence before promoting new implementation work",
                         "apply_mode": "manual_or_future_low_risk_only",
                     }
                 ],
                 "decision": "refresh_host_feedback",
-            }
-        )
-
-    effect_feedback = evidence_snapshot["effect_feedback"]
-    if effect_feedback["status"] != "pass" or effect_feedback["backlog_candidate_count"] > 0:
-        proposed_action = "delete" if effect_feedback.get("decision") == "retire" else "modify"
-        decision = "retire_low_value_capability" if proposed_action == "delete" else "improve_target_effect_loop"
-        candidates.append(
-            {
-                "candidate_id": "EVOL-EFFECT-FEEDBACK",
-                "source_type": "internal_runtime_evidence",
-                "source_ref": "docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json",
-                "source_checked_on": as_of.isoformat(),
-                "observed_change": "Target repo effect feedback still carries unresolved backlog candidates or verifier errors.",
-                "repo_impact": "Turns real target repo effect gaps into explicit evolution work instead of leaving them in report-only form.",
-                "proposed_action": proposed_action,
-                "risk_level": "medium",
-                "evidence_required": [
-                    "target repo reuse effect report",
-                    "backlog candidates with reason and disposition",
-                    "fresh daily target-run evidence",
-                ],
-                "acceptance_gates": policy["verification_floor"],
-                "rollback_plan": "revert any follow-up change that was justified only by stale or misread target effect feedback",
-                "patch_plan": [
-                    {
-                        "path": "docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json",
-                        "operation": "refresh effect report and translate remaining candidates into bounded follow-up work",
-                        "apply_mode": "manual_or_future_low_risk_only",
-                    }
-                ],
-                "decision": decision,
             }
         )
 

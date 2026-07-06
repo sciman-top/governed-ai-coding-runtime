@@ -12,45 +12,14 @@ if str(CONTRACTS_SRC) not in sys.path:
 
 
 class OperatorQueryTests(unittest.TestCase):
-    def test_attachment_scoped_query_returns_task_refs_and_posture(self) -> None:
+    def test_repo_local_query_returns_task_refs_and_interaction_projection(self) -> None:
         task_store = importlib.import_module("governed_ai_coding_runtime_contracts.task_store")
         task_intake = importlib.import_module("governed_ai_coding_runtime_contracts.task_intake")
-        repo_attachment = importlib.import_module("governed_ai_coding_runtime_contracts.repo_attachment")
         operator_queries = importlib.import_module("governed_ai_coding_runtime_contracts.operator_queries")
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)
-            target_repo = workspace / "target"
-            target_repo.mkdir()
-            runtime_state_root = workspace / "runtime-state" / "target"
-            repo_attachment.attach_target_repo(
-                target_repo_root=str(target_repo),
-                runtime_state_root=str(runtime_state_root),
-                repo_id="target",
-                display_name="Target",
-                primary_language="python",
-                build_command="python -m compileall src",
-                test_command="python -m unittest discover",
-                contract_command="python -m unittest discover -s tests/contracts",
-            )
-
-            approvals_root = runtime_state_root / "approvals"
-            approvals_root.mkdir(parents=True, exist_ok=True)
-            approval_path = approvals_root / "approval-123.json"
-            approval_path.write_text(
-                json.dumps(
-                    {
-                        "approval_id": "approval-123",
-                        "task_id": "task-operator",
-                        "status": "approved",
-                    },
-                    indent=2,
-                    sort_keys=True,
-                ),
-                encoding="utf-8",
-            )
-
-            artifacts_root = runtime_state_root / "artifacts" / "task-operator" / "run-1"
+            artifacts_root = workspace / ".runtime" / "artifacts" / "task-operator" / "run-1"
             (artifacts_root / "handoff").mkdir(parents=True, exist_ok=True)
             (artifacts_root / "replay").mkdir(parents=True, exist_ok=True)
             (artifacts_root / "evidence").mkdir(parents=True, exist_ok=True)
@@ -110,13 +79,11 @@ class OperatorQueryTests(unittest.TestCase):
                 )
             )
 
-            result = operator_queries.query_operator_attachment_surface(
+            result = operator_queries.query_operator_task_surface(
                 task_root=store.root_path,
                 task_id="task-operator",
-                repo_binding_id="binding-target",
                 run_id="run-1",
-                attachment_root=target_repo,
-                attachment_runtime_state_root=runtime_state_root,
+                runtime_root=workspace / ".runtime",
             )
 
             self.assertTrue(result.task_found)
@@ -131,37 +98,18 @@ class OperatorQueryTests(unittest.TestCase):
             self.assertTrue(result.clarification_active)
             self.assertEqual(result.latest_compression_action, "stage_summary")
             self.assertEqual(result.outstanding_observation_items_count, 3)
-            self.assertEqual(result.posture_summary.binding_state, "healthy")
-            self.assertIsNotNone(result.posture_summary.context_pack_summary)
-            self.assertTrue(result.posture_summary.context_pack_summary["exists"])
             self.assertTrue(result.read_only)
 
-    def test_attachment_scoped_query_keeps_read_surface_when_task_missing(self) -> None:
-        repo_attachment = importlib.import_module("governed_ai_coding_runtime_contracts.repo_attachment")
+    def test_repo_local_query_keeps_read_surface_when_task_missing(self) -> None:
         operator_queries = importlib.import_module("governed_ai_coding_runtime_contracts.operator_queries")
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)
-            target_repo = workspace / "target"
-            target_repo.mkdir()
-            runtime_state_root = workspace / "runtime-state" / "target"
-            repo_attachment.attach_target_repo(
-                target_repo_root=str(target_repo),
-                runtime_state_root=str(runtime_state_root),
-                repo_id="target",
-                display_name="Target",
-                primary_language="python",
-                build_command="python -m compileall src",
-                test_command="python -m unittest discover",
-                contract_command="python -m unittest discover -s tests/contracts",
-            )
 
-            result = operator_queries.query_operator_attachment_surface(
+            result = operator_queries.query_operator_task_surface(
                 task_root=workspace / ".runtime" / "tasks",
                 task_id="task-missing",
-                repo_binding_id="binding-target",
-                attachment_root=target_repo,
-                attachment_runtime_state_root=runtime_state_root,
+                runtime_root=workspace / ".runtime",
             )
 
             self.assertFalse(result.task_found)
@@ -170,8 +118,6 @@ class OperatorQueryTests(unittest.TestCase):
             self.assertEqual(result.replay_refs, [])
             self.assertIsNone(result.interaction_posture)
             self.assertFalse(result.clarification_active)
-            self.assertIsNotNone(result.posture_summary)
-            self.assertEqual(result.posture_summary.binding_state, "healthy")
 
 
 if __name__ == "__main__":

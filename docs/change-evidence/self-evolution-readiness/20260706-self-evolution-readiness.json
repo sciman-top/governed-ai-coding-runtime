@@ -1,0 +1,333 @@
+{
+  "artifact_refs": {},
+  "as_of": "2026-07-06",
+  "capabilities": [
+    {
+      "capability_id": "source_review_and_candidate_generation",
+      "evidence": [
+        "candidate_count=0"
+      ],
+      "existing_refs": [
+        "scripts/evaluate-runtime-evolution.py",
+        "docs/architecture/runtime-evolution-policy.json"
+      ],
+      "expected_refs": [
+        "scripts/evaluate-runtime-evolution.py",
+        "docs/architecture/runtime-evolution-policy.json"
+      ],
+      "gap": "Runtime evolution review is not producing candidates.",
+      "implemented": false,
+      "missing_refs": [],
+      "priority": 10,
+      "status": "missing",
+      "target_state": "implemented",
+      "title": "Fresh source review and evolution candidate generation"
+    },
+    {
+      "capability_id": "experience_to_knowledge_memory",
+      "evidence": [
+        "knowledge_candidate_count=1",
+        "memory_record_count=1"
+      ],
+      "existing_refs": [
+        "scripts/extract-ai-coding-experience.py",
+        "docs/specs/knowledge-memory-lifecycle-spec.md"
+      ],
+      "expected_refs": [
+        "scripts/extract-ai-coding-experience.py",
+        "docs/specs/knowledge-memory-lifecycle-spec.md"
+      ],
+      "gap": "",
+      "implemented": true,
+      "missing_refs": [],
+      "priority": 20,
+      "status": "implemented",
+      "target_state": "implemented",
+      "title": "AI coding experience to knowledge and memory candidates"
+    },
+    {
+      "capability_id": "skill_candidate_generation",
+      "evidence": [
+        "skill_manifest_candidate_count=1"
+      ],
+      "existing_refs": [
+        "scripts/extract-ai-coding-experience.py",
+        "schemas/jsonschema/skill-manifest.schema.json"
+      ],
+      "expected_refs": [
+        "scripts/extract-ai-coding-experience.py",
+        "schemas/jsonschema/skill-manifest.schema.json"
+      ],
+      "gap": "",
+      "implemented": true,
+      "missing_refs": [],
+      "priority": 30,
+      "status": "implemented",
+      "target_state": "implemented",
+      "title": "Repeated experience to disabled skill candidate"
+    },
+    {
+      "capability_id": "disabled_candidate_materialization",
+      "evidence": [
+        "operation_count=5",
+        "has_disabled_skill=True"
+      ],
+      "existing_refs": [
+        "scripts/materialize-runtime-evolution.py",
+        "scripts/materialize-runtime-evolution.ps1"
+      ],
+      "expected_refs": [
+        "scripts/materialize-runtime-evolution.py",
+        "scripts/materialize-runtime-evolution.ps1"
+      ],
+      "gap": "",
+      "implemented": true,
+      "missing_refs": [],
+      "priority": 40,
+      "status": "implemented",
+      "target_state": "implemented",
+      "title": "Reviewable disabled candidate materialization"
+    },
+    {
+      "capability_id": "eval_dataset_generation",
+      "evidence": [
+        "generate-self-evolution-eval-dataset.py exists",
+        "self-evolution eval artifact root exists"
+      ],
+      "existing_refs": [
+        "scripts/generate-self-evolution-eval-dataset.py",
+        "scripts/generate-self-evolution-eval-dataset.ps1",
+        "docs/specs/eval-and-trace-grading-spec.md"
+      ],
+      "expected_refs": [
+        "scripts/generate-self-evolution-eval-dataset.py",
+        "scripts/generate-self-evolution-eval-dataset.ps1",
+        "docs/specs/eval-and-trace-grading-spec.md"
+      ],
+      "gap": "",
+      "implemented": true,
+      "missing_refs": [],
+      "priority": 50,
+      "status": "implemented",
+      "target_state": "implemented",
+      "title": "Self-evolution eval dataset generation"
+    },
+    {
+      "capability_id": "trajectory_optimizer",
+      "evidence": [
+        "optimize-runtime-evolution-trajectory.py exists",
+        "self-evolution variant artifact root exists"
+      ],
+      "existing_refs": [
+        "scripts/optimize-runtime-evolution-trajectory.py",
+        "scripts/optimize-runtime-evolution-trajectory.ps1",
+        "docs/specs/eval-and-trace-grading-spec.md"
+      ],
+      "expected_refs": [
+        "scripts/optimize-runtime-evolution-trajectory.py",
+        "scripts/optimize-runtime-evolution-trajectory.ps1",
+        "docs/specs/eval-and-trace-grading-spec.md"
+      ],
+      "gap": "",
+      "implemented": true,
+      "missing_refs": [],
+      "priority": 60,
+      "status": "implemented",
+      "target_state": "implemented",
+      "title": "Trajectory-aware prompt or skill optimizer"
+    },
+    {
+      "capability_id": "candidate_variant_evaluation",
+      "evidence": [
+        "evaluate-runtime-evolution-variant.py exists",
+        "self-evolution variant evaluation artifact root exists"
+      ],
+      "existing_refs": [
+        "scripts/evaluate-runtime-evolution-variant.py",
+        "scripts/evaluate-runtime-evolution-variant.ps1",
+        "docs/change-evidence/runtime-evolution-candidates"
+      ],
+      "expected_refs": [
+        "scripts/evaluate-runtime-evolution-variant.py",
+        "scripts/evaluate-runtime-evolution-variant.ps1",
+        "docs/change-evidence/runtime-evolution-candidates"
+      ],
+      "gap": "",
+      "implemented": true,
+      "missing_refs": [],
+      "priority": 70,
+      "status": "implemented",
+      "target_state": "implemented",
+      "title": "Candidate variant evaluation and comparison"
+    },
+    {
+      "capability_id": "review_gated_pr_preparation",
+      "evidence": [
+        "default_materialization_manifest_exists=True"
+      ],
+      "existing_refs": [
+        "scripts/prepare-runtime-evolution-pr.py"
+      ],
+      "expected_refs": [
+        "scripts/prepare-runtime-evolution-pr.py"
+      ],
+      "gap": "",
+      "implemented": true,
+      "missing_refs": [],
+      "priority": 80,
+      "status": "implemented",
+      "target_state": "implemented",
+      "title": "Review-gated PR preparation for materialized candidates"
+    },
+    {
+      "capability_id": "promotion_retirement_effect_feedback",
+      "evidence": [
+        "retire_proposal_count=0"
+      ],
+      "existing_refs": [
+        "scripts/review-runtime-evolution-retirements.py",
+        "scripts/verify-promotion-lifecycle.py",
+        "scripts/verify-knowledge-memory-lifecycle.py"
+      ],
+      "expected_refs": [
+        "scripts/review-runtime-evolution-retirements.py",
+        "scripts/verify-promotion-lifecycle.py",
+        "scripts/verify-knowledge-memory-lifecycle.py"
+      ],
+      "gap": "",
+      "implemented": true,
+      "missing_refs": [],
+      "priority": 90,
+      "status": "implemented",
+      "target_state": "implemented",
+      "title": "Promotion, retirement, and effect feedback lifecycle"
+    },
+    {
+      "capability_id": "terminal_capability_gap_ledger",
+      "evidence": [
+        "self-evolution readiness policy and evaluator are present"
+      ],
+      "existing_refs": [
+        "scripts/evaluate-self-evolution-readiness.py",
+        "docs/architecture/self-evolution-readiness-policy.json"
+      ],
+      "expected_refs": [
+        "scripts/evaluate-self-evolution-readiness.py",
+        "docs/architecture/self-evolution-readiness-policy.json"
+      ],
+      "gap": "",
+      "implemented": true,
+      "missing_refs": [],
+      "priority": 100,
+      "status": "implemented",
+      "target_state": "implemented",
+      "title": "Machine-readable terminal capability gap ledger"
+    }
+  ],
+  "capability_counts": {
+    "implemented": 9,
+    "missing": 1,
+    "partial": 0,
+    "total": 10
+  },
+  "expired": false,
+  "guards": {
+    "automatic_policy_mutation": false,
+    "automatic_push_or_merge": false,
+    "automatic_skill_enablement": false,
+    "automatic_target_repo_sync": false,
+    "missing_final_state_capabilities_are_reported_not_hidden": true
+  },
+  "next_gap": {
+    "capability_id": "source_review_and_candidate_generation",
+    "gap": "Runtime evolution review is not producing candidates.",
+    "priority": 10,
+    "status": "missing",
+    "title": "Fresh source review and evolution candidate generation"
+  },
+  "overall_state": "partial",
+  "policy_id": "default-self-evolution-readiness",
+  "policy_path": "D:/CODE/governed-ai-coding-runtime/docs/architecture/self-evolution-readiness-policy.json",
+  "policy_status": "enforced",
+  "probe_summary": {
+    "candidate_artifact_root_exists": {
+      "error": null,
+      "ok": true,
+      "status": null
+    },
+    "eval_dataset_artifact_root_exists": {
+      "error": null,
+      "ok": true,
+      "status": null
+    },
+    "eval_dataset_script_exists": {
+      "error": null,
+      "ok": true,
+      "status": null
+    },
+    "experience": {
+      "error": null,
+      "ok": true,
+      "status": "pass"
+    },
+    "materialization": {
+      "error": null,
+      "ok": true,
+      "status": "pass"
+    },
+    "pr_prepare_default_manifest_exists": {
+      "error": null,
+      "ok": true,
+      "status": null
+    },
+    "retirement": {
+      "error": null,
+      "ok": true,
+      "status": "pass"
+    },
+    "runtime_evolution": {
+      "error": "[Errno 2] No such file or directory: 'D:\\\\CODE\\\\governed-ai-coding-runtime\\\\scripts\\\\verify-target-repo-reuse-effect-report.py'",
+      "ok": false,
+      "status": null
+    },
+    "trajectory_optimizer_script_exists": {
+      "error": null,
+      "ok": true,
+      "status": null
+    },
+    "trajectory_variant_artifact_root_exists": {
+      "error": null,
+      "ok": true,
+      "status": null
+    },
+    "variant_evaluation_artifact_root_exists": {
+      "error": null,
+      "ok": true,
+      "status": null
+    },
+    "variant_evaluator_script_exists": {
+      "error": null,
+      "ok": true,
+      "status": null
+    }
+  },
+  "ready_for_unattended_self_update": false,
+  "reference_sources": [
+    {
+      "source_id": "hermes-agent-self-evolution",
+      "source_ref": "https://github.com/NousResearch/hermes-agent-self-evolution",
+      "source_type": "community_reference_project",
+      "summary": "Reference pattern for skill/prompt/tool inspection, eval dataset generation, trajectory-aware optimization, candidate variants, evaluation, and PR review."
+    },
+    {
+      "source_id": "internal-controlled-evolution-plan",
+      "source_ref": "docs/plans/governance-hub-reuse-and-controlled-evolution-plan.md",
+      "source_type": "internal_runtime_evidence",
+      "summary": "Internal final-state target for a governed controlled-evolution loop without direct automatic mutation."
+    }
+  ],
+  "review_expires_at": "2026-07-28",
+  "reviewed_on": "2026-05-29",
+  "status": "pass",
+  "truth_statement": "Governed self-evolution has review, extraction, disabled materialization, and lifecycle pieces, and now includes deterministic eval dataset, trajectory variant generation, and variant evaluation. It still refuses unattended active mutation; reviewed promotion and full gates remain required."
+}

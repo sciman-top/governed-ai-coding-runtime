@@ -57,35 +57,11 @@ def _load_self_evolution_promotion_verifier():
 verify_self_evolution_promotion_script = _load_self_evolution_promotion_verifier()
 
 ALLOWED_ACTIONS = {
-    "targets": {"operator_action": "Targets", "run_alias": "targets", "timeout_seconds": 300},
     "fast_feedback": {"operator_action": "FastFeedback", "run_alias": "fast", "timeout_seconds": 900},
     "readiness": {"operator_action": "Readiness", "run_alias": "readiness", "timeout_seconds": 1800},
+    "codex_guard_absence_check": {"operator_action": "CodexGuardAbsenceCheck", "run_alias": "codex-guard-absence-check", "timeout_seconds": 600},
     "rules_dry_run": {"operator_action": "RulesDryRun", "run_alias": "rules-check", "timeout_seconds": 600},
     "rules_apply": {"operator_action": "RulesApply", "run_alias": "rules-apply", "timeout_seconds": 900},
-    "governance_baseline_all": {"operator_action": "GovernanceBaselineAll", "run_alias": "governance-baseline", "timeout_seconds": 1800, "allow_multi_target": True},
-    "daily_all": {"operator_action": "DailyAll", "run_alias": "daily", "timeout_seconds": 1800, "allow_multi_target": True},
-    "apply_all_features": {
-        "operator_action": "ApplyAllFeatures",
-        "run_alias": "apply-all",
-        "timeout_seconds": 2400,
-        "allow_multi_target": True,
-        "managed_asset_removal_apply": True,
-        "managed_asset_removal_default": True,
-    },
-    "cleanup_targets": {
-        "operator_action": "CleanupTargets",
-        "run_alias": "cleanup-targets",
-        "timeout_seconds": 1800,
-        "allow_multi_target": True,
-        "managed_asset_removal": True,
-    },
-    "uninstall_governance": {
-        "operator_action": "UninstallGovernance",
-        "run_alias": "uninstall-governance",
-        "timeout_seconds": 1800,
-        "allow_multi_target": True,
-        "managed_asset_removal": True,
-    },
     "feedback_report": {"operator_action": "FeedbackReport", "run_alias": "feedback", "timeout_seconds": 600},
     "self_evolution_recommend": {"operator_action": "SelfEvolutionRecommend", "run_alias": "self-evolution-recommend", "timeout_seconds": 900},
     "self_evolution_promotion_plan": {"operator_action": "SelfEvolutionPromotionPlan", "run_alias": "self-evolution-promotion", "timeout_seconds": 600},
@@ -152,7 +128,7 @@ def main(argv: list[str] | None = None) -> int:
     if not output.is_absolute():
         output = ROOT / output
     snapshot = RuntimeStatusStore(ROOT / ".runtime" / "tasks", ROOT).snapshot()
-    html = render_runtime_snapshot_html(snapshot, language=args.lang, target_options=load_target_ids())
+    html = render_runtime_snapshot_html(snapshot, language=args.lang)
     html = inject_next_work_panel(html, language=args.lang)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(html, encoding="utf-8")
@@ -203,7 +179,7 @@ def _build_handler(*, default_language: str, host: str, port: int):
                     )
                     return
                 snapshot = RuntimeStatusStore(ROOT / ".runtime" / "tasks", ROOT).snapshot()
-                html = render_runtime_snapshot_html(snapshot, language=language, interactive=True, target_options=load_target_ids())
+                html = render_runtime_snapshot_html(snapshot, language=language, interactive=True)
                 html = inject_next_work_panel(html, language=language)
                 self._send_text(html, content_type="text/html; charset=utf-8")
                 return
@@ -213,9 +189,6 @@ def _build_handler(*, default_language: str, host: str, port: int):
                 return
             if parsed.path == "/api/ui-process":
                 self._send_json(operator_ui_process_status())
-                return
-            if parsed.path == "/api/targets":
-                self._send_json({"targets": load_target_ids()})
                 return
             if parsed.path == "/api/feedback/summary":
                 params = parse_qs(parsed.query)
@@ -425,7 +398,7 @@ def load_feedback_summary() -> dict:
 
 def _build_feedback_summary() -> dict:
     try:
-        payload = build_host_feedback_summary(repo_root=ROOT, max_target_runs=0)
+        payload = build_host_feedback_summary(repo_root=ROOT)
     except Exception as exc:  # pragma: no cover - defensive boundary for localhost UI
         return {"status": "error", "error": str(exc)}
     payload["overall_status"] = payload.get("status") or "pass"
@@ -465,7 +438,7 @@ def _build_self_evolution_recommendations() -> dict:
             "retire_proposal_count": 0,
             "trigger_model": {
                 "recommended_operator_action": "SelfEvolutionRecommend",
-                "proactive_operator_triggers": ["FeedbackReport", "DailyAll"],
+                "proactive_operator_triggers": ["SelfEvolutionRecommend", "FeedbackReport"],
                 "automatic_effective_change": False,
             },
             "recommendations": [],
@@ -528,13 +501,12 @@ def _build_self_evolution_promotion() -> dict:
             "control_lanes": [],
             "trigger_model": {
                 "recommended_operator_action": "SelfEvolutionPromotionPlan",
-                "proactive_operator_triggers": ["SelfEvolutionRecommend", "FeedbackReport", "DailyAll"],
+                "proactive_operator_triggers": ["SelfEvolutionRecommend", "FeedbackReport"],
                 "automatic_effective_change": False,
             },
             "guards": {
                 "automatic_policy_mutation": False,
                 "automatic_skill_enablement": False,
-                "automatic_target_repo_sync": False,
                 "automatic_push_or_merge": False,
                 "requires_human_review_before_effective_change": True,
             },
@@ -618,22 +590,16 @@ def _build_next_work_summary() -> dict:
 
     next_action = str(payload.get("next_action", "unknown"))
     if next_action == "repair_gate_first":
-        blocked_actions = [
-            "daily_all",
-            "apply_all_features",
-            "cleanup_targets",
-            "uninstall_governance",
-            "evolution_materialize",
-        ]
+        blocked_actions = ["evolution_materialize"]
         ui_status = "action_required"
     elif next_action == "refresh_evidence_first":
-        blocked_actions = ["apply_all_features", "evolution_materialize"]
+        blocked_actions = ["evolution_materialize"]
         ui_status = "action_required"
     elif next_action == "wait_for_host_capability_recovery":
         blocked_actions = ["evolution_materialize"]
         ui_status = "attention"
     elif next_action == "owner_directed_scope_required":
-        blocked_actions = ["apply_all_features", "evolution_materialize"]
+        blocked_actions = ["evolution_materialize"]
         ui_status = "action_required"
     elif next_action == "promote_ltp":
         blocked_actions = []
@@ -806,119 +772,32 @@ def run_operator_action(payload: dict) -> dict:
 
     language = _normalize_language(_string(payload.get("language"), "zh-CN"))
     mode = _choice(_string(payload.get("mode"), "quick"), {"quick", "full", "l1", "l2", "l3"}, "quick")
-    known_targets = set(load_target_ids())
-    target_values, target_error = _target_values_from_payload(payload, known_targets=known_targets)
-    if target_error:
-        return {"action": action_id, "exit_code": 2, "elapsed_seconds": 0, "output": target_error}
-    if len(target_values) > 1 and not action.get("allow_multi_target"):
-        return {
-            "action": action_id,
-            "exit_code": 2,
-            "elapsed_seconds": 0,
-            "output": f"multiple targets are not supported for action: {action_id}",
-            "targets": target_values,
-        }
-    target_parallelism = _int_range(payload.get("target_parallelism"), minimum=1, maximum=16, default=1)
-    milestone_tag = _string(payload.get("milestone_tag"), "milestone") or "milestone"
-    fail_fast = bool(payload.get("fail_fast", False))
     dry_run = bool(payload.get("dry_run", False))
-    apply_managed_asset_removal = bool(
-        payload.get("apply_managed_asset_removal", bool(action.get("managed_asset_removal_default", False)))
-    ) and not dry_run
 
     started = time.monotonic()
-    per_target: list[dict] = []
-    for target_value in target_values:
-        command = _build_operator_command(
-            action=action,
-            language=language,
-            target=target_value,
-            mode=mode,
-            target_parallelism=target_parallelism,
-            milestone_tag=milestone_tag,
-            fail_fast=fail_fast,
-            dry_run=dry_run,
-            apply_managed_asset_removal=apply_managed_asset_removal,
-        )
-        result = _run_operator_command(command, timeout_seconds=int(action["timeout_seconds"]))
-        result["target"] = target_value
-        per_target.append(result)
-        if target_value == "__all__" or (fail_fast and int(result["exit_code"]) != 0):
-            break
-
-    elapsed = round(time.monotonic() - started, 3)
-    exit_codes = [int(item["exit_code"]) for item in per_target]
-    exit_code = next((code for code in exit_codes if code != 0), 0)
-    if len(per_target) == 1:
-        single = per_target[0]
-        return {
-            "action": action_id,
-            "command": single["command"],
-            "elapsed_seconds": elapsed,
-            "exit_code": exit_code,
-            "output": single["output"],
-            "target": single["target"],
-            "targets": target_values,
-            "apply_managed_asset_removal": apply_managed_asset_removal,
-        }
-    output = "\n\n".join(
-        "\n".join(
-            [
-                f"===== target: {item['target']} =====",
-                f"command: {_command_for_display(item['command'])}",
-                f"exit_code: {item['exit_code']}",
-                f"elapsed_seconds: {item['elapsed_seconds']}",
-                "",
-                str(item["output"]),
-            ]
-        )
-        for item in per_target
+    command = _build_operator_command(
+        action=action,
+        language=language,
+        mode=mode,
+        dry_run=dry_run,
     )
+    result = _run_operator_command(command, timeout_seconds=int(action["timeout_seconds"]))
+    elapsed = round(time.monotonic() - started, 3)
     return {
         "action": action_id,
-        "commands": [item["command"] for item in per_target],
+        "command": result["command"],
         "elapsed_seconds": elapsed,
-        "exit_code": exit_code,
-        "output": output,
-        "targets": [item["target"] for item in per_target],
-        "apply_managed_asset_removal": apply_managed_asset_removal,
+        "exit_code": int(result["exit_code"]),
+        "output": result["output"],
     }
-
-
-def _target_values_from_payload(payload: dict, *, known_targets: set[str]) -> tuple[list[str], str | None]:
-    raw_targets = payload.get("targets")
-    values: list[str] = []
-    if isinstance(raw_targets, list):
-        values = [str(item).strip() for item in raw_targets if str(item).strip()]
-    elif isinstance(raw_targets, str) and raw_targets.strip():
-        values = [part.strip() for part in raw_targets.split(",") if part.strip()]
-    else:
-        values = [_string(payload.get("target"), "__all__") or "__all__"]
-
-    normalized: list[str] = []
-    for value in values:
-        if value in {"__all__", "all", "*"}:
-            return ["__all__"], None
-        if known_targets and value not in known_targets:
-            return [], f"unsupported target: {value}"
-        if value not in normalized:
-            normalized.append(value)
-    if not normalized:
-        return [], "no target selected"
-    return normalized, None
 
 
 def _build_operator_command(
     *,
     action: dict,
     language: str,
-    target: str,
     mode: str,
-    target_parallelism: int,
-    milestone_tag: str,
-    fail_fast: bool,
     dry_run: bool,
-    apply_managed_asset_removal: bool,
 ) -> list[str]:
     command = [
         "pwsh",
@@ -930,23 +809,11 @@ def _build_operator_command(
         action.get("run_alias") or action["operator_action"],
         "-UiLanguage",
         language,
-        "-Target",
-        target,
         "-Mode",
         mode,
-        "-TargetParallelism",
-        str(target_parallelism),
-        "-MilestoneTag",
-        milestone_tag,
     ]
-    if fail_fast:
-        command.append("-FailFast")
-    if dry_run and not action.get("managed_asset_removal"):
+    if dry_run:
         command.append("-DryRun")
-    if apply_managed_asset_removal and (
-        action.get("managed_asset_removal") or action.get("managed_asset_removal_apply")
-    ):
-        command.append("-ApplyManagedAssetRemoval")
     return command
 
 
@@ -1014,15 +881,7 @@ def write_continuity_handoff(payload: dict) -> dict:
 
 
 def load_target_ids() -> list[str]:
-    catalog_path = ROOT / "docs" / "targets" / "target-repos-catalog.json"
-    try:
-        payload = json.loads(catalog_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return []
-    targets = payload.get("targets", {})
-    if not isinstance(targets, dict):
-        return []
-    return sorted(str(name) for name in targets.keys())
+    return []
 
 
 def _normalize_language(value: str) -> str:

@@ -43,13 +43,11 @@ class RuntimeEvolutionTests(unittest.TestCase):
         self.assertGreaterEqual(payload["candidate_count"], 1)
         self.assertIn("evidence_snapshot", payload)
         self.assertEqual(payload["evidence_snapshot"]["current_source"]["status"], "pass")
+        self.assertEqual(payload["evidence_snapshot"]["host_feedback"]["status"], "pass")
         self.assertTrue(any(item["retrieval_mode"] == "dry_run_catalog" for item in payload["source_records"]))
         self.assertTrue(any(item["source_type"] == "internal_ai_coding_experience" for item in payload["source_records"]))
         self.assertTrue(any(item["candidate_id"] == "EVOL-AI-EXPERIENCE" for item in payload["candidates"]))
         self.assertFalse(any(item["candidate_id"] == "EVOL-EFFECT-FEEDBACK" for item in payload["candidates"]))
-        self.assertEqual(payload["evidence_snapshot"]["effect_feedback"]["status"], "pass")
-        self.assertEqual(payload["evidence_snapshot"]["effect_feedback"]["decision"], "promote")
-        self.assertEqual(payload["evidence_snapshot"]["effect_feedback"]["backlog_candidate_count"], 0)
         self.assertTrue(all(item["patch_plan"] for item in payload["candidates"]))
 
     def test_source_catalog_covers_required_ai_feature_sources(self) -> None:
@@ -132,13 +130,15 @@ class RuntimeEvolutionTests(unittest.TestCase):
         )
 
         candidate = next(item for item in result["candidates"] if item["candidate_id"] == "EVOL-AI-EXPERIENCE")
+        latest_artifact = sorted((ROOT / ".runtime" / "artifacts" / "ai-coding-experience").glob("*-ai-coding-experience-review.json"))[-1]
+        expected_ref = latest_artifact.relative_to(ROOT).as_posix()
         self.assertEqual(
             candidate["source_ref"],
-            ".runtime/artifacts/ai-coding-experience/20260620-ai-coding-experience-review.json",
+            expected_ref,
         )
         self.assertEqual(
             result["evidence_snapshot"]["ai_coding_experience"]["artifact_source_ref"],
-            ".runtime/artifacts/ai-coding-experience/20260620-ai-coding-experience-review.json",
+            expected_ref,
         )
 
     def test_runtime_evolution_rejects_invalid_candidate_action(self) -> None:

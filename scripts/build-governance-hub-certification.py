@@ -62,10 +62,8 @@ def build_governance_hub_certification(*, repo_root: Path, config_path: Path) ->
         repo_root / "scripts" / "evaluate-self-evolution-readiness.py",
         "evaluate_self_evolution_readiness_gap139",
     )
-    effect = _load_script(
-        repo_root / "scripts" / "verify-target-repo-reuse-effect-report.py",
-        "verify_target_repo_reuse_effect_gap139",
-    )
+    host_feedback = _load_script(repo_root / "scripts" / "host-feedback-summary.py", "host_feedback_summary_gap139")
+    selector = _load_script(repo_root / "scripts" / "select-next-work.py", "select_next_work_gap139")
     audit = _load_script(
         repo_root / "scripts" / "verify-policy-tool-credential-audit.py",
         "verify_policy_tool_credential_audit_gap139",
@@ -94,12 +92,14 @@ def build_governance_hub_certification(*, repo_root: Path, config_path: Path) ->
         as_of=date.today(),
         write_artifacts=False,
     )
-    effect_result = effect.inspect_effect_report(
-        report_path=repo_root / config["effect_feedback_ref"],
-        runs_root=repo_root / "docs" / "change-evidence" / "target-repo-runs",
+    host_feedback_result = host_feedback.build_host_feedback_summary(repo_root=repo_root)
+    selector_result = selector.assert_next_work_selection(
+        repo_root=repo_root,
+        policy_path=repo_root / "docs" / "architecture" / "autonomous-next-work-selection-policy.json",
+        ltp_policy_path=repo_root / "docs" / "architecture" / "ltp-autonomous-promotion-policy.json",
+        as_of=date.today(),
     )
     audit_result = audit.inspect_policy_tool_credential_audit(repo_root=repo_root)
-    raw_effect_report = _load_json(repo_root / config["effect_feedback_ref"])
     portfolio_payload = _load_json(repo_root / config["portfolio_ref"])
     audit_report_payload = _load_json(repo_root / config["policy_audit_ref"])
     repo_map_artifact = _load_json(repo_root / "docs" / "change-evidence" / "repo-map-context-artifact.json")
@@ -164,20 +164,24 @@ def build_governance_hub_certification(*, repo_root: Path, config_path: Path) ->
         failures.append("missing_host_statement_refs")
     if portfolio_result["status"] != "pass":
         failures.append("capability_portfolio_failed")
-    if effect_result["status"] != "pass":
-        failures.append("target_repo_effect_feedback_failed")
     if audit_result["status"] != "pass":
         failures.append("policy_tool_credential_audit_failed")
+    if host_feedback_result["status"] != "pass":
+        failures.append("host_feedback_failed")
+    if selector_result["status"] != "pass":
+        failures.append("next_work_selector_failed")
     if missing_outcomes:
         failures.append("missing_required_outcomes")
     if special_entries_without_future_trigger:
         failures.append("missing_future_trigger")
     if not all(loop_status.values()):
         failures.append("non_executable_loop")
-    if raw_effect_report.get("decision") not in {"keep", "adjust", "promote"}:
-        failures.append("effect_decision_not_certifiable")
-    if not raw_effect_report.get("after_metrics", {}).get("evidence_complete", False):
-        failures.append("effect_evidence_incomplete")
+    if selector_result["gate_state"] != "pass":
+        failures.append("selector_gate_not_passing")
+    if selector_result["source_state"] != "fresh":
+        failures.append("selector_source_not_fresh")
+    if selector_result["evidence_state"] != "fresh":
+        failures.append("selector_evidence_not_fresh")
     if repo_map_artifact.get("decision") not in {"keep", "adjust"}:
         failures.append("repo_map_artifact_not_certifiable")
     if audit_report_payload.get("status") != "pass":
@@ -198,12 +202,16 @@ def build_governance_hub_certification(*, repo_root: Path, config_path: Path) ->
         "missing_outcomes": missing_outcomes,
         "special_entries_without_future_trigger": special_entries_without_future_trigger,
         "effect_feedback": {
-          "target": raw_effect_report.get("target"),
-          "decision": raw_effect_report.get("decision"),
-          "backlog_candidate_count": len(raw_effect_report.get("backlog_candidates", [])),
-          "after_overall_status": raw_effect_report.get("after_metrics", {}).get("overall_status"),
-          "after_evidence_complete": raw_effect_report.get("after_metrics", {}).get("evidence_complete"),
-          "verifier_status": effect_result["status"]
+            "scope": "repo_local_host_feedback",
+            "decision": selector_result["next_action"],
+            "host_feedback_status": host_feedback_result["status"],
+            "recommendation_count": len(host_feedback_result.get("recommendations", [])),
+            "selector_status": selector_result["status"],
+            "selector_gate_state": selector_result["gate_state"],
+            "selector_source_state": selector_result["source_state"],
+            "selector_evidence_state": selector_result["evidence_state"],
+            "after_overall_status": "pass" if selector_result["gate_state"] == "pass" else "fail",
+            "after_evidence_complete": selector_result["evidence_state"] == "fresh",
         },
         "loop_status": loop_status,
         "final_answers": final_answers,
@@ -227,7 +235,8 @@ def build_governance_hub_certification(*, repo_root: Path, config_path: Path) ->
                 "knowledge_candidate_count": experience_result["knowledge_candidate_count"],
                 "pattern_candidate_count": experience_result["pattern_candidate_count"],
             },
-            "target_repo_effect_feedback": effect_result,
+            "host_feedback": host_feedback_result,
+            "next_work_selection": selector_result,
             "policy_tool_credential_audit": audit_result,
         },
         "rollback_ref": config.get("rollback_ref"),
@@ -254,6 +263,7 @@ def _load_script(path: Path, module_name: str):
     if spec is None or spec.loader is None:
         raise ValueError(f"unable to load module: {path}")
     module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
     spec.loader.exec_module(module)
     return module
 

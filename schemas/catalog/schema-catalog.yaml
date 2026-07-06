@@ -1,4 +1,4 @@
-schema_catalog_version: "1.15"
+schema_catalog_version: "1.16"
 items:
   - name: core-principles
     path: schemas/jsonschema/core-principles.schema.json
@@ -30,9 +30,6 @@ items:
   - name: workflow-governance
     path: schemas/jsonschema/workflow-governance.schema.json
     source_spec: docs/specs/workflow-governance-spec.md
-  - name: repo-attachment-binding
-    path: schemas/jsonschema/repo-attachment-binding.schema.json
-    source_spec: docs/specs/repo-attachment-binding-spec.md
   - name: clarification-protocol
     path: schemas/jsonschema/clarification-protocol.schema.json
     source_spec: docs/specs/clarification-protocol-spec.md
@@ -102,15 +99,9 @@ items:
   - name: policy-decision
     path: schemas/jsonschema/policy-decision.schema.json
     source_spec: docs/specs/policy-decision-spec.md
-  - name: session-bridge-command
-    path: schemas/jsonschema/session-bridge-command.schema.json
-    source_spec: docs/specs/session-bridge-command-spec.md
   - name: controlled-improvement-proposal
     path: schemas/jsonschema/controlled-improvement-proposal.schema.json
     source_spec: docs/specs/controlled-improvement-proposal-spec.md
-  - name: target-repo-speed-kpi
-    path: schemas/jsonschema/target-repo-speed-kpi.schema.json
-    source_spec: docs/specs/target-repo-speed-kpi-spec.md
   - name: workflow-effect-metrics
     path: schemas/jsonschema/workflow-effect-metrics.schema.json
     source_spec: docs/specs/workflow-effect-metrics-spec.md

@@ -43,7 +43,7 @@
     "effective_change_allowed": { "type": "boolean" },
     "control_lanes": {
       "type": "array",
-      "minItems": 4,
+      "minItems": 3,
       "items": { "$ref": "#/$defs/control_lane" }
     },
     "trigger_model": { "$ref": "#/$defs/trigger_model" },
@@ -67,14 +67,12 @@
         "refresh_recommendation",
         "plan_promotion",
         "materialize_candidate",
-        "target_sync",
         "push_or_merge"
       ],
       "properties": {
         "refresh_recommendation": { "type": "string" },
         "plan_promotion": { "type": "string" },
         "materialize_candidate": { "type": "string" },
-        "target_sync": { "type": "string" },
         "push_or_merge": { "type": "string" }
       }
     },
@@ -92,7 +90,7 @@
       "properties": {
         "lane": {
           "type": "string",
-          "enum": ["policy_mutation", "skill_enablement", "target_repo_sync", "push_or_merge"]
+          "enum": ["policy_mutation", "skill_enablement", "push_or_merge"]
         },
         "status": {
           "type": "string",
@@ -104,7 +102,6 @@
           "enum": [
             "automatic_policy_mutation",
             "automatic_skill_enablement",
-            "automatic_target_repo_sync",
             "automatic_push_or_merge"
           ]
         },
@@ -118,14 +115,12 @@
       "required": [
         "automatic_policy_mutation",
         "automatic_skill_enablement",
-        "automatic_target_repo_sync",
         "automatic_push_or_merge",
         "requires_human_review_before_effective_change"
       ],
       "properties": {
         "automatic_policy_mutation": { "type": "boolean" },
         "automatic_skill_enablement": { "type": "boolean" },
-        "automatic_target_repo_sync": { "type": "boolean" },
         "automatic_push_or_merge": { "type": "boolean" },
         "requires_human_review_before_effective_change": { "type": "boolean" }
       }

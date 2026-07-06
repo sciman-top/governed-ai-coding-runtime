@@ -15,6 +15,8 @@ class GovernanceHubCertificationTests(unittest.TestCase):
             check=False,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             cwd=ROOT,
         )
 
@@ -22,8 +24,8 @@ class GovernanceHubCertificationTests(unittest.TestCase):
         payload = json.loads(completed.stdout)
         self.assertEqual(payload["status"], "pass")
         self.assertNotIn("/.worktrees/", json.dumps(payload).replace("\\", "/"))
-        self.assertEqual(payload["effect_feedback"]["target"], "classroomtoolkit")
-        self.assertEqual(payload["effect_feedback"]["decision"], "promote")
+        self.assertEqual(payload["effect_feedback"]["scope"], "repo_local_host_feedback")
+        self.assertEqual(payload["effect_feedback"]["decision"], "defer_ltp_and_refresh_evidence")
         self.assertTrue(all(payload["loop_status"].values()))
         self.assertTrue(payload["loop_status"]["self_evolution_readiness_loop"])
         self.assertTrue(payload["final_answers"]["self_evolution_readiness_loop_executable"])
@@ -39,6 +41,8 @@ class GovernanceHubCertificationTests(unittest.TestCase):
             check=False,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             cwd=ROOT,
         )
 
@@ -52,6 +56,8 @@ class GovernanceHubCertificationTests(unittest.TestCase):
             check=False,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             cwd=ROOT,
         )
 

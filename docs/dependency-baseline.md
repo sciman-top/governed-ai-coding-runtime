@@ -8,7 +8,7 @@
 
 ## Machine verification
 - Repo baseline command: `python scripts/verify-dependency-baseline.py`
-- Target-repo baseline command: `python scripts/verify-dependency-baseline.py --target-repo-root <path> --require-target-repo-baseline`
+- Repo-local compatibility marker: `.governed-ai/dependency-baseline.json`
 - Machine-readable baseline: [dependency-baseline.json](./dependency-baseline.json)
 
 ## Host tooling baseline

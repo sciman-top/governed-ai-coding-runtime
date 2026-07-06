@@ -146,6 +146,6 @@ python scripts/run-codex-adapter-trial.py `
 
 ## Related
 - [Codex CLI/App 集成指南](./codex-cli-app-integration-guide.zh-CN.md)
-- [Session Bridge 命令](./session-bridge-commands.zh-CN.md)
+- [Codex CLI/App 集成指南](./codex-cli-app-integration-guide.zh-CN.md)
 - [Adapter Degrade Policy](./adapter-degrade-policy.md)
 - [English Version](./codex-direct-adapter.md)

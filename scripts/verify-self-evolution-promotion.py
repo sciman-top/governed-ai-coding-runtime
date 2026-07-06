@@ -14,13 +14,11 @@ DEFAULT_SCHEMA_PATH = ROOT / "schemas" / "jsonschema" / "self-evolution-promotio
 REQUIRED_LANES = {
     "policy_mutation",
     "skill_enablement",
-    "target_repo_sync",
     "push_or_merge",
 }
 DISABLED_GUARDS = {
     "automatic_policy_mutation",
     "automatic_skill_enablement",
-    "automatic_target_repo_sync",
     "automatic_push_or_merge",
 }
 
@@ -92,7 +90,7 @@ def verify_self_evolution_promotion_artifact(*, artifact_path: Path) -> dict:
         lanes = []
     lane_ids = {lane.get("lane") for lane in lanes if isinstance(lane, dict)}
     if lane_ids != REQUIRED_LANES:
-        invalid_reasons.append("control_lanes_must_cover_policy_skill_target_push")
+        invalid_reasons.append("control_lanes_must_cover_policy_skill_push")
     for lane in lanes:
         if not isinstance(lane, dict):
             invalid_reasons.append("control_lane_must_be_object")

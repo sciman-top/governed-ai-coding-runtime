@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
-from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -33,10 +31,14 @@ from lib.claude_local import claude_status
 from lib.codex_local import codex_status
 
 
+GUIDE_PATH_ZH = "docs/product/host-feedback-loop.zh-CN.md"
+GUIDE_PATH_EN = "docs/product/host-feedback-loop.md"
+PARITY_PATH = "docs/product/adapter-conformance-parity-matrix.md"
+
 REQUIRED_DOCS = (
-    "docs/product/host-feedback-loop.md",
-    "docs/product/host-feedback-loop.zh-CN.md",
-    "docs/product/adapter-conformance-parity-matrix.md",
+    GUIDE_PATH_EN,
+    GUIDE_PATH_ZH,
+    PARITY_PATH,
     "docs/quickstart/ai-coding-usage-guide.md",
     "docs/quickstart/ai-coding-usage-guide.zh-CN.md",
 )
@@ -44,9 +46,8 @@ REQUIRED_DOCS = (
 REQUIRED_GLOBAL_TARGETS = (
     ("codex", ".codex/AGENTS.md"),
     ("claude", ".claude/CLAUDE.md"),
+    ("gemini", ".gemini/GEMINI.md"),
 )
-TARGET_RUN_STALE_AFTER_HOURS = 168
-TARGET_RUN_FILE_RE = re.compile(r"^(?P<repo>.+?)-(?P<kind>daily(?:-[^-]+)?|onboard)-(?P<stamp>\d{14})\.json$")
 
 
 @dataclass(frozen=True)
@@ -67,19 +68,18 @@ class FeedbackDimension:
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Summarize Codex/Claude host feedback surfaces, rule distribution, and target-run evidence."
+        description="Summarize Codex/Claude host feedback surfaces, global rule distribution, and repo-local parity posture."
     )
     parser.add_argument("--repo-root", default=str(ROOT))
     parser.add_argument("--write-markdown", default=None, help="Optional markdown output path.")
     parser.add_argument("--assert-minimum", action="store_true", help="Fail if the minimum feedback surface is incomplete.")
-    parser.add_argument("--max-target-runs", type=int, default=0, help="Maximum number of target run summaries to include. Use 0 to include all latest target summaries.")
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     repo_root = Path(args.repo_root)
-    payload = build_host_feedback_summary(repo_root=repo_root, max_target_runs=args.max_target_runs)
+    payload = build_host_feedback_summary(repo_root=repo_root)
 
     if args.write_markdown:
         output = Path(args.write_markdown)
@@ -87,7 +87,7 @@ def main(argv: list[str] | None = None) -> int:
             output = repo_root / output
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(render_markdown_report(payload), encoding="utf-8")
-        payload["markdown_report"] = output.resolve(strict=False).as_posix()
+        payload["report_path"] = output.resolve(strict=False).as_posix()
 
     if args.assert_minimum:
         failures = validate_minimum_feedback_surface(payload)
@@ -100,7 +100,7 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def build_host_feedback_summary(*, repo_root: Path, max_target_runs: int = 0) -> dict[str, Any]:
+def build_host_feedback_summary(*, repo_root: Path) -> dict[str, Any]:
     resolved_root = repo_root.resolve(strict=False)
     generated_at = datetime.now(timezone.utc)
     docs_dimension = _build_docs_dimension(resolved_root)
@@ -108,7 +108,6 @@ def build_host_feedback_summary(*, repo_root: Path, max_target_runs: int = 0) ->
     hosts_dimension = _build_hosts_dimension()
     parity_dimension = _build_parity_dimension(resolved_root)
     claude_workload_dimension = _build_claude_workload_dimension(resolved_root)
-    target_runs_dimension = _build_target_runs_dimension(resolved_root, max_target_runs=max_target_runs, generated_at=generated_at)
 
     dimensions = [
         docs_dimension,
@@ -116,7 +115,6 @@ def build_host_feedback_summary(*, repo_root: Path, max_target_runs: int = 0) ->
         hosts_dimension,
         parity_dimension,
         claude_workload_dimension,
-        target_runs_dimension,
     ]
     status = _aggregate_status(dimensions)
     recommendations = _build_recommendations(dimensions)
@@ -124,18 +122,19 @@ def build_host_feedback_summary(*, repo_root: Path, max_target_runs: int = 0) ->
         "dimensions_ok": sum(1 for item in dimensions if item.status == "ok"),
         "dimensions_attention": sum(1 for item in dimensions if item.status == "attention"),
         "dimensions_fail": sum(1 for item in dimensions if item.status == "fail"),
-        "latest_target_repos": [item["repo_id"] for item in target_runs_dimension.details.get("latest_runs", [])],
         "codex_host_status": hosts_dimension.details["codex"].get("status"),
         "claude_host_status": hosts_dimension.details["claude"].get("status"),
         "claude_workload_status": claude_workload_dimension.details.get("readiness", {}).get("status"),
         "claude_adapter_tier": claude_workload_dimension.details.get("readiness", {}).get("adapter_tier"),
-        "target_run_freshness": target_runs_dimension.details.get("freshness_status"),
         "rule_manifest_revision": rules_dimension.details.get("sync_revision"),
     }
     return {
         "status": status,
         "generated_at": generated_at.isoformat(),
         "repo_root": resolved_root.as_posix(),
+        "guide_path": GUIDE_PATH_ZH,
+        "guide_path_en": GUIDE_PATH_EN,
+        "parity_path": PARITY_PATH,
         "summary": summary,
         "dimensions": [item.to_dict() for item in dimensions],
         "recommendations": recommendations,
@@ -176,15 +175,6 @@ def validate_minimum_feedback_surface(payload: dict[str, Any]) -> list[str]:
     elif claude_workload["details"].get("readiness", {}).get("status") == "blocked":
         failures.append("claude workload probe is blocked")
 
-    target_runs = dimensions.get("target_runs")
-    if not target_runs:
-        failures.append("missing target-runs dimension")
-    else:
-        if target_runs["details"].get("total_run_files", 0) < 1:
-            failures.append("no target repo run evidence found")
-        if not target_runs["details"].get("latest_runs"):
-            failures.append("no latest target repo summaries extracted")
-
     return failures
 
 
@@ -194,7 +184,7 @@ def render_markdown_report(payload: dict[str, Any]) -> str:
         "# Host Feedback Summary",
         "",
         "## Goal",
-        "- Give one repeatable feedback surface for Codex and Claude host entrypoints, rule distribution, parity posture, and target-run evidence.",
+        "- Give one repeatable host-only feedback surface for Codex and Claude host entrypoints, global rule distribution, and repo-local parity posture.",
         "",
         "## Snapshot",
         f"- Generated at: `{payload['generated_at']}`",
@@ -204,7 +194,6 @@ def render_markdown_report(payload: dict[str, Any]) -> str:
         f"- Claude host status: `{summary.get('claude_host_status') or 'unknown'}`",
         f"- Claude workload status: `{summary.get('claude_workload_status') or 'unknown'}`",
         f"- Claude adapter tier: `{summary.get('claude_adapter_tier') or 'unknown'}`",
-        f"- Latest target repos: `{', '.join(summary.get('latest_target_repos') or []) or 'none'}`",
         "",
         "## Dimensions",
     ]
@@ -232,7 +221,7 @@ def render_markdown_report(payload: dict[str, Any]) -> str:
             "- `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs`",
             "",
             "## Rollback",
-            "- Remove or revert the new feedback summary script, docs, and operator wiring if they regress the existing operator workflow.",
+            "- Remove or revert the host-only feedback summary script, docs, and operator wiring if they regress the existing operator workflow.",
         ]
     )
     return "\n".join(lines)
@@ -249,6 +238,9 @@ def _build_docs_dimension(repo_root: Path) -> FeedbackDimension:
         details={
             "required_docs": list(REQUIRED_DOCS),
             "missing_docs": missing,
+            "guide_path": GUIDE_PATH_ZH,
+            "guide_path_en": GUIDE_PATH_EN,
+            "parity_path": PARITY_PATH,
         },
     )
 
@@ -289,7 +281,7 @@ def _build_rules_dimension(repo_root: Path) -> FeedbackDimension:
             missing_targets.append(f"{tool}:{expected.as_posix()}")
     details["missing_global_targets"] = missing_targets
     status = "ok" if not missing_targets else "attention"
-    summary = "manifest-backed rule distribution is present"
+    summary = "manifest-backed global rule distribution is present"
     if missing_targets:
         summary = "manifest exists but some synchronized global targets are missing"
     return FeedbackDimension("rules", status, summary, details)
@@ -345,7 +337,7 @@ def _build_hosts_dimension() -> FeedbackDimension:
 
 
 def _build_parity_dimension(repo_root: Path) -> FeedbackDimension:
-    path = repo_root / "docs" / "product" / "adapter-conformance-parity-matrix.md"
+    path = repo_root / PARITY_PATH
     details = {"path": path.as_posix(), "exists": path.exists(), "missing_hosts": []}
     if not path.exists():
         return FeedbackDimension("parity", "fail", "adapter parity matrix is missing", details)
@@ -405,153 +397,6 @@ def _build_claude_workload_dimension(repo_root: Path) -> FeedbackDimension:
         status = "fail"
         summary = "Claude Code workload adapter probe is blocked"
     return FeedbackDimension("claude_workload", status, summary, details)
-
-
-def _build_target_runs_dimension(repo_root: Path, *, max_target_runs: int, generated_at: datetime) -> FeedbackDimension:
-    evidence_root = repo_root / "docs" / "change-evidence" / "target-repo-runs"
-    latest_run_limit = None if max_target_runs <= 0 else max_target_runs
-    details: dict[str, Any] = {
-        "path": evidence_root.as_posix(),
-        "exists": evidence_root.exists(),
-        "total_run_files": 0,
-        "max_target_runs": max_target_runs,
-        "latest_runs": [],
-        "degraded_latest_runs": [],
-        "skipped_files": [],
-        "freshness_status": "unknown",
-        "stale_after_hours": TARGET_RUN_STALE_AFTER_HOURS,
-    }
-    if not evidence_root.exists():
-        return FeedbackDimension("target_runs", "fail", "target repo run evidence directory is missing", details)
-
-    files = sorted(evidence_root.glob("*.json"))
-    details["total_run_files"] = len(files)
-    grouped: dict[str, list[Path]] = defaultdict(list)
-    for path in files:
-        parsed = _parse_target_run_file(path)
-        if parsed is None:
-            details["skipped_files"].append({"file_name": path.name, "reason": "not a target daily/onboard run artifact"})
-            continue
-        grouped[parsed["repo_id"]].append(path)
-
-    latest_runs: list[dict[str, Any]] = []
-    for repo_id, paths in grouped.items():
-        selected = max(paths, key=_target_run_sort_key)
-        try:
-            latest_runs.append(_summarize_target_run(repo_id, selected, generated_at=generated_at))
-        except ValueError as exc:
-            details["skipped_files"].append({"file_name": selected.name, "reason": str(exc)})
-    latest_runs.sort(key=lambda item: item.get("run_stamp") or item["file_name"], reverse=True)
-    report_latest_runs = latest_runs if latest_run_limit is None else latest_runs[:latest_run_limit]
-    details["latest_runs"] = report_latest_runs
-    details["degraded_latest_runs"] = [
-        {
-            "repo_id": item["repo_id"],
-            "file_name": item["file_name"],
-            "codex_capability_status": item.get("codex_capability_status"),
-            "adapter_tier": item.get("adapter_tier"),
-            "flow_kind": item.get("flow_kind"),
-            "recovery_evidence_rule": "fresh target run with codex_capability_status=ready and adapter_tier=native_attach",
-            "claim_guard": "do not claim native_attach recovery until a fresh target repo run proves it",
-        }
-        for item in report_latest_runs
-        if item.get("codex_capability_status") not in {"ready", None}
-    ]
-    stale_runs = [
-        item
-        for item in latest_runs
-        if isinstance(item.get("age_hours"), (int, float)) and item["age_hours"] > TARGET_RUN_STALE_AFTER_HOURS
-    ]
-    details["stale_latest_runs"] = [
-        {"repo_id": item["repo_id"], "file_name": item["file_name"], "age_hours": item["age_hours"]}
-        for item in (stale_runs if latest_run_limit is None else stale_runs[:latest_run_limit])
-    ]
-    if latest_runs:
-        details["freshness_status"] = "stale" if stale_runs else "fresh"
-
-    degraded_runs = details.get("degraded_latest_runs") or []
-    if not latest_runs:
-        status = "fail"
-        summary = "no target-run evidence found"
-    elif stale_runs:
-        status = "attention"
-        summary = f"latest target-run evidence is stale for {len(stale_runs)} repos"
-    elif degraded_runs:
-        status = "attention"
-        summary = f"fresh target-run evidence is degraded for {len(degraded_runs)} repos"
-    else:
-        status = "ok"
-        summary = f"fresh target-run evidence summarized for {len(latest_runs)} repos"
-    return FeedbackDimension("target_runs", status, summary, details)
-
-
-def _summarize_target_run(repo_id: str, path: Path, *, generated_at: datetime) -> dict[str, Any]:
-    parsed = _parse_target_run_file(path) or {"run_kind": "", "run_stamp": ""}
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
-        raise ValueError("target-run payload must be an object")
-    runtime_payload = _nested_value(payload, "runtime_check", "payload") or {}
-    status_payload = runtime_payload.get("status") if isinstance(runtime_payload, dict) and isinstance(runtime_payload.get("status"), dict) else {}
-    summary_payload = runtime_payload.get("summary") if isinstance(runtime_payload, dict) and isinstance(runtime_payload.get("summary"), dict) else {}
-    live_loop = runtime_payload.get("live_loop") if isinstance(runtime_payload, dict) and isinstance(runtime_payload.get("live_loop"), dict) else {}
-    write_execute = runtime_payload.get("write_execute") if isinstance(runtime_payload, dict) else None
-    codex_capability = status_payload.get("codex_capability") if isinstance(status_payload, dict) and isinstance(status_payload.get("codex_capability"), dict) else {}
-    return {
-        "repo_id": repo_id,
-        "file_name": path.name,
-        "run_kind": parsed["run_kind"],
-        "run_stamp": parsed["run_stamp"],
-        "age_hours": _target_run_age_hours(parsed["run_stamp"], generated_at),
-        "overall_status": payload.get("overall_status"),
-        "flow_mode": payload.get("flow_mode"),
-        "adapter_tier": codex_capability.get("adapter_tier"),
-        "flow_kind": codex_capability.get("flow_kind") or summary_payload.get("flow_kind"),
-        "codex_capability_status": codex_capability.get("status"),
-        "closure_state": live_loop.get("closure_state"),
-        "write_status": _extract_write_status(write_execute),
-        "attachment_health": summary_payload.get("attachment_health"),
-        "unsupported_capabilities": codex_capability.get("unsupported_capabilities") or [],
-    }
-
-
-def _parse_target_run_file(path: Path) -> dict[str, str] | None:
-    match = TARGET_RUN_FILE_RE.match(path.name)
-    if not match:
-        return None
-    return {
-        "repo_id": match.group("repo"),
-        "run_kind": match.group("kind"),
-        "run_stamp": match.group("stamp"),
-    }
-
-
-def _target_run_sort_key(path: Path) -> tuple[str, int, str]:
-    parsed = _parse_target_run_file(path)
-    if parsed is None:
-        return ("", 0, path.name)
-    # For equal timestamps prefer daily evidence over onboard snapshots because daily carries real workload feedback.
-    kind_rank = 1 if parsed["run_kind"].startswith("daily") else 0
-    return (parsed["run_stamp"], kind_rank, path.name)
-
-
-def _target_run_age_hours(stamp: str, generated_at: datetime) -> float | None:
-    if not stamp:
-        return None
-    try:
-        parsed = datetime.strptime(stamp, "%Y%m%d%H%M%S").replace(tzinfo=timezone.utc)
-    except ValueError:
-        return None
-    return round(max(0.0, (generated_at - parsed).total_seconds() / 3600), 2)
-
-
-def _extract_write_status(write_execute: object) -> str | None:
-    if not isinstance(write_execute, dict):
-        return None
-    if isinstance(write_execute.get("execution_status"), str):
-        return str(write_execute["execution_status"])
-    if isinstance(write_execute.get("status"), str):
-        return str(write_execute["status"])
-    return None
 
 
 def _safe_host_status(loader) -> dict[str, Any]:
@@ -631,7 +476,7 @@ def _build_recommendations(dimensions: list[FeedbackDimension]) -> list[str]:
 
     rules = dimension_map["rules"]
     if rules.details["missing_global_targets"]:
-        recommendations.append("先运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply`，确认 Codex/Claude 全局规则副本已经真正同步。")
+        recommendations.append("先运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply`，确认 Codex/Claude/Gemini 全局规则副本已经真正同步。")
 
     hosts = dimension_map["hosts"]
     if hosts.details["codex"]["health"] != "ok":
@@ -650,15 +495,8 @@ def _build_recommendations(dimensions: list[FeedbackDimension]) -> list[str]:
     elif claude_readiness.get("status") == "degraded":
         recommendations.append("Claude workload probe 处于 degraded；优先补齐 managed settings/hooks、session/resume 或 structured event 能力，避免只停留在配置可用。")
 
-    target_runs = dimension_map["target_runs"]
-    if not target_runs.details["latest_runs"]:
-        recommendations.append("先跑一轮 `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow-preset.ps1 -AllTargets -FlowMode daily -Mode quick -SkipGovernanceBaselineSync -Json -ExportTargetRepoRuns`，否则没有真实目标仓反馈可分析。")
-    elif target_runs.details.get("freshness_status") == "stale":
-        recommendations.append("最新 target-run evidence 已过期；先跑 `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action DailyAll -Mode quick` 刷新真实 workload 反馈。")
-    elif target_runs.details.get("degraded_latest_runs"):
-        recommendations.append("最新 target runs 仍存在 degraded host posture；先刷新目标仓 run 和 host feedback，并仅在 fresh evidence 同时回到 `codex_capability_status=ready` 与 `adapter_tier=native_attach` 后再宣称恢复。")
-    else:
-        recommendations.append("对每次功能优化，先生成 host feedback summary，再对照 latest target runs 的 `adapter_tier / closure_state / write_status` 判断是宿主问题、规则问题还是 runtime 问题。")
+    if not recommendations:
+        recommendations.append("本仓 host-only feedback 面正常；后续每次修改 host/规则/自演化链时先重跑 `FeedbackReport`，再决定是否需要更高成本 gate。")
 
     return recommendations
 

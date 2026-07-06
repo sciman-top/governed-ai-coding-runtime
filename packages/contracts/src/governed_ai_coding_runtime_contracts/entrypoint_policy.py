@@ -11,24 +11,17 @@ ENTRYPOINT_POLICY_MODES: Final[set[str]] = {
     "repo_wide_enforced",
 }
 DEFAULT_CANONICAL_ENTRYPOINTS: Final[list[str]] = [
-    "runtime-flow",
-    "runtime-flow-preset",
+    "operator",
+    "run-governed-task.run",
 ]
 DEFAULT_ALLOWED_DIRECT_ENTRYPOINTS: Final[list[str]] = [
+    "run-governed-task.create",
     "run-governed-task.status",
-    "session-bridge.inspect_status",
-    "session-bridge.inspect_evidence",
-    "session-bridge.inspect_handoff",
     "verify-repo",
 ]
 DEFAULT_TARGETED_ENFORCEMENT_SCOPES: Final[list[str]] = [
     "run_quick_gate",
     "run_full_gate",
-    "verify_attachment",
-    "govern_attachment_write",
-    "write_request",
-    "write_execute",
-    "execute_attachment_write",
 ]
 _READ_ONLY_SCOPES: Final[set[str]] = {
     "inspect_status",

@@ -31,7 +31,7 @@ REQUIRED_EXISTING_IDS = {
     "existing-benchmark-borrowing-notes",
     "existing-core-principles-policy",
     "existing-current-source-compatibility-guard",
-    "existing-target-repo-governance-baseline",
+    "existing-global-rule-sync-surface",
     "existing-runtime-evolution-review",
     "existing-ai-coding-experience-extraction",
     "existing-claim-drift-sentinel",

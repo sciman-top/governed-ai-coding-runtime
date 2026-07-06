@@ -21,13 +21,8 @@ SENSITIVE_EXACT = {
     "CLAUDE.md",
     "GEMINI.md",
     ".governed-ai/repo-profile.json",
-    "docs/targets/target-repo-governance-baseline.json",
-    "docs/targets/target-repos-catalog.json",
     "scripts/sync-agent-rules.py",
     "scripts/sync-agent-rules.ps1",
-    "scripts/apply-target-repo-governance.py",
-    "scripts/runtime-flow-preset.ps1",
-    "scripts/verify-target-repo-governance-consistency.py",
     "scripts/verify-repo.ps1",
     "scripts/verify-pre-change-review.py",
 }
@@ -40,10 +35,9 @@ REQUIRED_EVIDENCE_TOKENS = (
     "pre_change_review",
     "control_repo_manifest_and_rule_sources",
     "user_level_deployed_rule_files",
-    "target_repo_deployed_rule_files",
-    "target_repo_gate_scripts_and_ci",
-    "target_repo_repo_profile",
-    "target_repo_readme_and_operator_docs",
+    "repo_local_gate_scripts_and_ci",
+    "repo_local_repo_profile",
+    "repo_local_readme_and_operator_docs",
     "current_official_tool_loading_docs",
     "drift-integration decision",
 )
@@ -87,7 +81,7 @@ def _is_sensitive_path(path: str) -> bool:
     if any(path.startswith(prefix) for prefix in SENSITIVE_PREFIXES):
         return True
     lowered = path.lower()
-    if lowered.startswith(("scripts/", "docs/targets/", ".governed-ai/")):
+    if lowered.startswith(("scripts/", ".governed-ai/")):
         return any(part in lowered for part in SENSITIVE_NAME_PARTS)
     return False
 

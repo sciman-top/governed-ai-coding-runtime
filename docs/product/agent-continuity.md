@@ -80,5 +80,5 @@ Current guarantees:
 ## Related Files
 - [Agent Continuity And Shared Context Plan](../plans/agent-continuity-and-shared-context-plan.md)
 - [Host Feedback Loop](./host-feedback-loop.md)
-- [Session Bridge Commands](./session-bridge-commands.md)
+- [Codex CLI/App Integration Guide](./codex-cli-app-integration-guide.md)
 - [Change Evidence Index](../change-evidence/README.md)

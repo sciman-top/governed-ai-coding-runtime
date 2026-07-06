@@ -5,9 +5,10 @@ Explain how to use this repository with Codex CLI/App using the current executab
 
 ## Current State
 - This project remains **Codex-compatible first** and keeps Codex auth ownership upstream (`user_owned_upstream_auth`).
-- The runtime now exposes a direct Codex adapter surface for capability probing, session-identity handshake, and adapter-tier projection.
-- Governed session operations can run through the local session bridge with Codex identity attached (`run_quick_gate`, `run_full_gate`, `write_request`, `write_approve`, `write_execute`, `write_status`).
-- Capability posture is environment-dependent and may degrade (`native_attach -> process_bridge -> manual_handoff`) with explicit reasons.
+- The runtime keeps a direct Codex adapter surface for capability probing, session-identity handshake, and adapter-tier projection.
+- `scripts/run-governed-task.py` is now repo-local only and exposes `create`, `run`, and `status`.
+- Operator and control-plane surfaces are read-only: status, evidence, handoff, and continuity queries.
+- Target-repo attachment, session-bridge, and apply-all governance flows are retired from current scope.
 
 ## What Works Today
 
@@ -23,14 +24,23 @@ For Codex specifically, the strongest currently recognized attached-session boun
 - if `status` is unavailable, `codex app-server` can still provide a strong thread boundary when its schema exposes `thread.sessionId`, `thread/resume`, and running-thread rejoin or session-tree semantics together.
 - `remote-control` and `doctor` remain supporting health or daemon surfaces; they do not upgrade Codex to `native_attach` by themselves.
 
-### 2. Runtime-Managed Session Bridge Surface
-The local session bridge can execute governed gate and write flows with Codex identity metadata attached:
-- `run_quick_gate` / `run_full_gate` execute verification by default (`plan_only` remains available)
-- `write_request` / `write_approve` / `write_execute` / `write_status` enforce policy and approval requirements
-- execution outputs include continuation identity plus evidence, handoff, and replay references
-- adapter evidence mapping is emitted for governed execution events
+### 2. Repo-Local Runtime Task Surface
+`scripts/run-governed-task.py` proves the repo-local governed runtime path:
+- task persistence
+- workspace allocation
+- gate execution
+- evidence and handoff generation
+- runtime status projection
 
-### 3. Codex Adapter Smoke Trial
+It should be understood as a **repo-local runtime task surface**, not as an external target-repo rollout mechanism.
+
+### 3. Read-Only Operator Surface
+The operator surface stays read-only and repo-local:
+- `/operator` exposes `status`, `inspect_evidence`, and `inspect_handoff`
+- continuity search/write stays local to this repository's continuity index
+- `python scripts/serve-operator-ui.py` may project the same read model without reintroducing attachment or write bridging
+
+### 4. Codex Adapter Smoke Trial
 `scripts/run-codex-adapter-trial.py` remains available as a deterministic adapter-surface check.
 - default mode is still safe-mode
 - `--probe-live` can derive posture from live Codex capability probing
@@ -40,30 +50,20 @@ See:
 - [Adapter Degrade Policy](./adapter-degrade-policy.md)
 - [Codex Direct Adapter](./codex-direct-adapter.md)
 
-### 3. Runtime Smoke Task
-`python scripts/run-governed-task.py run --json` proves the local governed runtime path:
-- task persistence
-- workspace allocation
-- gate execution
-- evidence and handoff generation
-- runtime status projection
-
-It should be understood as a **runtime smoke task**, not as a direct Codex coding integration.
-
 ## Recommended Workflow Today
 
-### Option A: Attach-First Governed Flow (Recommended)
-Use this when you want the runtime to manage attachment posture, gate execution, and write governance in one flow.
+### Option A: Repo-Local Verification And Evidence (Recommended)
+Use this when you want repo-local gates, evidence, and operator visibility without any external target-repo bridge.
 
 1. Run:
    - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/bootstrap-runtime.ps1`
    - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`
-2. Attach or validate the target repository light pack.
-3. Run one-command daily flow:
-   - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/runtime-flow.ps1 -FlowMode "daily" ...`
-4. Verify full gates when needed:
+2. Run repo-local task or gate verification:
+   - `python scripts/run-governed-task.py run --json`
+   - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check RuntimeQuick`
+3. Verify full gates when needed:
    - `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All`
-5. Inspect runtime evidence/status surfaces:
+4. Inspect runtime evidence/status surfaces:
    - `python scripts/run-governed-task.py status --json`
    - `python scripts/serve-operator-ui.py`
 
@@ -71,8 +71,8 @@ Use this when you want the runtime to manage attachment posture, gate execution,
 Use this when you want minimal workflow change.
 
 1. Run Codex CLI/App as your primary host workflow.
-2. Use this runtime for readiness checks, governed verification, and evidence/handoff/replay inspection.
-3. Use session-bridge commands only for bounded governed operations when needed.
+2. Use this runtime for host capability checks, repo-local verification, and evidence/handoff/continuity inspection.
+3. Do not expect this repository to attach to another repo or to execute session-bridge governance on your behalf.
 
 ## Local Cockpit API Interop Boundary
 Cockpit Tools owns Codex login, provider switching, and launch-on-switch behavior. This repository must not install background guards, SQLite triggers, no-op launchers, restart wrappers, no-restart shims, or CLI preflight wrappers to intercept that behavior.
@@ -85,6 +85,7 @@ Codex/Cockpit Direct OAuth, Direct API, and Cockpit API service roundtrip switch
 - no runtime-owned replacement of the upstream Codex host UX
 - no service-owned Codex authentication model (by design)
 - no long-running managed Codex orchestration worker that ingests full upstream prompt/edit/tool-call streams as first-class runtime events
+- no target-repo attachment, light-pack distribution, or session-bridge execution chain
 - no guarantee that `native_attach` is available in every host environment or Codex build
 - no claim of universal full takeover for every external repo and every high-risk workflow
 
@@ -101,7 +102,7 @@ This section is a boundary definition, not a delivery promise or timeline commit
 ## Bottom Line
 Today, this repository is best used as:
 - a local governed runtime substrate
-- a Codex-compatible governed execution layer with explicit capability tiers and degrade rules
+- a Codex-compatible repo-local verification and evidence layer with explicit capability tiers and degrade rules
 - a governance sidecar around Codex workflows where full host replacement is not required
 
 It should not be described as "the runtime fully replaces Codex host execution in every environment."

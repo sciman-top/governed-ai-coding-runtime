@@ -1,8 +1,9 @@
 {
-  "baseline_kind": "target_repo_dependency_baseline",
-  "generated_at": "2026-04-23T15:00:52.299575+00:00",
+  "baseline_kind": "repo_local_dependency_baseline_marker",
+  "generated_at": "2026-07-06T00:00:00+08:00",
   "owner_runtime": "governed-ai-coding-runtime",
   "repo_id": "governed-ai-coding-runtime",
   "schema_version": "1.0",
-  "verify_command": "python scripts/verify-dependency-baseline.py --target-repo-root <target-repo-root> --require-target-repo-baseline"
+  "scope": "repo_local_compatibility_marker",
+  "verify_command": "python scripts/verify-dependency-baseline.py"
 }

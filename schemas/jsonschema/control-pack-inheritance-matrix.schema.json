@@ -8,9 +8,8 @@
     "schema_version",
     "matrix_id",
     "control_pack_ref",
-    "target_baseline_ref",
+    "repo_profile_ref",
     "repo_profile_schema_ref",
-    "light_pack_ref",
     "unified_governance",
     "target_inherit",
     "target_override",
@@ -29,15 +28,11 @@
       "type": "string",
       "minLength": 1
     },
-    "target_baseline_ref": {
+    "repo_profile_ref": {
       "type": "string",
       "minLength": 1
     },
     "repo_profile_schema_ref": {
-      "type": "string",
-      "minLength": 1
-    },
-    "light_pack_ref": {
       "type": "string",
       "minLength": 1
     },
@@ -76,17 +71,12 @@
         "additionalProperties": false,
         "required": [
           "profile_field",
-          "baseline_field",
           "control_pack_reference",
           "schema_path",
           "reason"
         ],
         "properties": {
           "profile_field": {
-            "type": "string",
-            "minLength": 1
-          },
-          "baseline_field": {
             "type": "string",
             "minLength": 1
           },

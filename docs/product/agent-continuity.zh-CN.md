@@ -80,5 +80,5 @@ continuity 面板是只读的，会展示：
 ## 相关文件
 - [Agent Continuity And Shared Context Plan](../plans/agent-continuity-and-shared-context-plan.md)
 - [Codex / Claude 功能反馈闭环](./host-feedback-loop.zh-CN.md)
-- [Session Bridge 命令](./session-bridge-commands.zh-CN.md)
+- [Codex CLI/App 集成指南](./codex-cli-app-integration-guide.zh-CN.md)
 - [Change Evidence Index](../change-evidence/README.md)

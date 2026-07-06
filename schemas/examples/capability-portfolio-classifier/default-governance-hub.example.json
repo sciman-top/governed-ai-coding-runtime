@@ -425,26 +425,26 @@
       "rollback": "Replace with the newer compatibility source if this guard is superseded."
     },
     {
-      "id": "existing-target-repo-governance-baseline",
-      "title": "Target repo governance baseline",
+      "id": "existing-global-rule-sync-surface",
+      "title": "Global rule sync surface",
       "source_type": "existing_capability",
       "product_layer": "governance_kernel",
       "lifecycle_outcome": "keep",
-      "summary": "Keep the target-repo governance baseline as the landing surface that later GAP-134 effect feedback will exercise.",
+      "summary": "Keep user-directory global rule sync as the retained distribution surface after target-repo rollout retirement.",
       "source_refs": [
-        "docs/targets/target-repo-governance-baseline.json"
+        "rules/manifest.json"
       ],
       "review_refs": [
-        "docs/targets/target-repo-rollout-contract.json"
+        "docs/specs/capability-portfolio-classifier-spec.md"
       ],
       "effect_hypothesis": {
-        "expected_benefit": "Preserves the reusable baseline that later effect harness work needs.",
-        "expected_cost": "Requires inheritance and override verification before effect claims are trusted.",
-        "expected_risk": "Baseline drift can hide later rollout inconsistencies.",
-        "effect_metric": "Target-repo governance consistency verification remains green.",
-        "verification_command": "python scripts/verify-target-repo-governance-consistency.py"
+        "expected_benefit": "Preserves cross-host rule distribution without reintroducing target-repo write surfaces.",
+        "expected_cost": "Requires manifest and sync scripts to stay aligned with host-level rule copies only.",
+        "expected_risk": "Old target-rollout assumptions could leak back into manifest or operator docs.",
+        "effect_metric": "Global-only rule sync dry-run remains green and operator-facing docs stay host-only.",
+        "verification_command": "python scripts/sync-agent-rules.py --scope All --fail-on-change"
       },
-      "rollback": "Restore the previous baseline mapping if later rollout contracts change."
+      "rollback": "Restore the previous global-only manifest and sync description if a future distribution model is explicitly adopted."
     },
     {
       "id": "existing-runtime-evolution-review",

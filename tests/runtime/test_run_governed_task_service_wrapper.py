@@ -4,7 +4,6 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from types import SimpleNamespace
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -24,23 +23,14 @@ def _load_run_governed_task_module():
     return module
 
 
-class _FakeApp:
-    def __init__(self, responses):
-        self._responses = list(responses)
-        self.calls = []
-
-    def dispatch(self, *, route: str, payload: dict | None = None) -> dict:
-        self.calls.append({"route": route, "payload": dict(payload or {})})
-        if not self._responses:
-            raise AssertionError("no fake response left for dispatch")
-        return self._responses.pop(0)
-
-
 class RunGovernedTaskServiceWrapperTests(unittest.TestCase):
     def test_run_task_applies_repo_profile_interaction_defaults_to_task_and_evidence(self) -> None:
         module = _load_run_governed_task_module()
-        task_store = importlib.import_module("governed_ai_coding_runtime_contracts.task_store")
-        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+        task_store = __import__("governed_ai_coding_runtime_contracts.task_store", fromlist=["FileTaskStore"])
+        verification_runner = __import__(
+            "governed_ai_coding_runtime_contracts.verification_runner",
+            fromlist=["build_verification_artifact"],
+        )
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)
@@ -57,10 +47,6 @@ class RunGovernedTaskServiceWrapperTests(unittest.TestCase):
                 module, "ARTIFACT_ROOT", workspace / "artifacts"
             ), patch.object(module, "WORKSPACES_ROOT", workspace / "workspaces"), patch.object(
                 module, "run_verification_plan", side_effect=fake_run_verification_plan
-            ), patch.object(
-                module,
-                "_dispatch_session_command",
-                return_value={"payload": {"total_tasks": 0, "tasks": [], "attachments": []}},
             ), patch.object(
                 module, "summarize_codex_capability_readiness", return_value={"status": "ready"}
             ), patch.object(module, "codex_capability_readiness_to_dict", return_value={"status": "ready"}):
@@ -84,385 +70,61 @@ class RunGovernedTaskServiceWrapperTests(unittest.TestCase):
             evidence = json.loads(evidence_files[0].read_text(encoding="utf-8"))
             self.assertEqual(evidence["interaction_trace"]["applied_policies"][0]["mode"], "guided")
             self.assertEqual(evidence["interaction_trace"]["applied_policies"][0]["posture"], "aligned")
-            metrics_files = sorted((workspace / "artifacts").glob("*/**/metrics/learning-efficiency.json"))
-            self.assertEqual(len(metrics_files), 1)
-            metrics = json.loads(metrics_files[0].read_text(encoding="utf-8"))
-            self.assertEqual(metrics["task_id"], record.task_id)
-            self.assertEqual(metrics["metrics_source_ref"], evidence_files[0].relative_to(workspace / "artifacts").as_posix())
-            self.assertEqual(metrics["issue_resolution_without_repeated_question"], 1)
 
-    def test_run_task_with_new_explicit_task_id_creates_task_before_execution(self) -> None:
+    def test_snapshot_payload_reads_repo_local_runtime_status(self) -> None:
         module = _load_run_governed_task_module()
-        task_store = importlib.import_module("governed_ai_coding_runtime_contracts.task_store")
-        verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
+        task_store = __import__("governed_ai_coding_runtime_contracts.task_store", fromlist=["FileTaskStore", "TaskRecord", "TaskRunRecord"])
+        task_intake = __import__("governed_ai_coding_runtime_contracts.task_intake", fromlist=["TaskIntake"])
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)
-            observed_gate_commands = []
-
-            def fake_run_verification_plan(plan, *, artifact_store, execute_gate):
-                observed_gate_commands.extend(gate.command for gate in plan.gates)
-                return verification_runner.build_verification_artifact(
-                    plan,
-                    "artifacts/task/run/verification-output/test.txt",
-                    {gate.gate_id: "pass" for gate in plan.gates},
-                    {gate.gate_id: f"artifacts/task/run/verification-output/{gate.gate_id}.txt" for gate in plan.gates},
+            tasks_root = workspace / "tasks"
+            artifacts_root = workspace / "artifacts" / "task-1" / "run-1" / "evidence"
+            artifacts_root.mkdir(parents=True, exist_ok=True)
+            (artifacts_root / "bundle.json").write_text(
+                json.dumps({"interaction_trace": {"applied_policies": [{"posture": "clarifying"}]}}),
+                encoding="utf-8",
+            )
+            store = task_store.FileTaskStore(tasks_root)
+            store.save(
+                task_store.TaskRecord(
+                    task_id="task-1",
+                    task=task_intake.TaskIntake(
+                        goal="goal",
+                        scope="scope",
+                        acceptance=["ok"],
+                        repo="governed-ai-coding-runtime",
+                        budgets={"max_steps": 1, "max_minutes": 1},
+                    ),
+                    current_state="planned",
+                    active_run_id="run-1",
+                    run_history=[
+                        task_store.TaskRunRecord(
+                            run_id="run-1",
+                            attempt_id="attempt-1",
+                            worker_id="worker",
+                            status="planned",
+                            workspace_root=".governed-workspaces/task-1/run-1",
+                            started_at="2026-01-01T00:00:00+00:00",
+                            evidence_refs=["artifacts/task-1/run-1/evidence/bundle.json"],
+                        )
+                    ],
                 )
+            )
 
-            with patch.object(module, "TASK_ROOT", workspace / "tasks"), patch.object(
-                module, "ARTIFACT_ROOT", workspace / "artifacts"
-            ), patch.object(module, "WORKSPACES_ROOT", workspace / "workspaces"), patch.object(
-                module, "run_verification_plan", side_effect=fake_run_verification_plan
+            with patch.object(module, "TASK_ROOT", tasks_root), patch.object(
+                module, "RUNTIME_ROOT", workspace
             ), patch.object(
-                module,
-                "_dispatch_session_command",
-                return_value={"payload": {"total_tasks": 0, "tasks": [], "attachments": []}},
+                module, "ARTIFACT_ROOT", workspace / "artifacts"
             ), patch.object(
                 module, "summarize_codex_capability_readiness", return_value={"status": "ready"}
             ), patch.object(module, "codex_capability_readiness_to_dict", return_value={"status": "ready"}):
-                module.run_task(
-                    task_id="task-explicit-new",
-                    goal="explicit id run creates the task",
-                    scope="cli smoke",
-                    repo="governed-ai-coding-runtime",
-                    profile_path=str(ROOT / "schemas" / "examples" / "repo-profile" / "python-service.example.json"),
-                    mode="quick",
-                )
-
-            store = task_store.FileTaskStore(workspace / "tasks")
-            record = store.load("task-explicit-new")
-            self.assertEqual(record.task.goal, "explicit id run creates the task")
-            self.assertEqual(record.current_state, "delivered")
-            self.assertEqual(
-                observed_gate_commands,
-                [
-                    "uv run ruff check src tests",
-                    "uv run pytest tests/contracts -q",
-                ],
-            )
-
-    def test_snapshot_payload_uses_service_dispatch(self) -> None:
-        module = _load_run_governed_task_module()
-        fake_app = _FakeApp(
-            [
-                {
-                    "payload": {
-                        "total_tasks": 1,
-                        "maintenance_stage": "observe",
-                        "maintenance": {
-                            "stage": "observe",
-                            "compatibility_policy_ref": "docs/policy.md",
-                            "upgrade_policy_ref": None,
-                            "triage_policy_ref": None,
-                            "deprecation_policy_ref": None,
-                            "retirement_policy_ref": None,
-                        },
-                        "tasks": [
-                            {
-                                "task_id": "task-1",
-                                "state": "planned",
-                                "goal": "goal",
-                                "active_run_id": None,
-                                "workspace_root": None,
-                                "rollback_ref": None,
-                                "approval_ids": [],
-                                "artifact_refs": [],
-                                "evidence_refs": [],
-                                "verification_refs": [],
-                            }
-                        ],
-                        "attachments": [],
-                    }
-                }
-            ]
-        )
-
-        with patch.object(module, "_build_control_plane_app", return_value=fake_app), patch.object(
-            module, "summarize_codex_capability_readiness", return_value={"status": "ready"}
-        ), patch.object(module, "codex_capability_readiness_to_dict", return_value={"status": "ready"}):
-            payload = module.snapshot_payload()
+                payload = module.snapshot_payload()
 
         self.assertEqual(payload["total_tasks"], 1)
-        self.assertEqual(payload["maintenance"]["stage"], "observe")
-        self.assertEqual(len(fake_app.calls), 1)
-        self.assertEqual(fake_app.calls[0]["route"], "/session")
-        self.assertEqual(fake_app.calls[0]["payload"]["command_type"], "inspect_status")
-
-    def test_govern_attachment_write_uses_service_dispatch(self) -> None:
-        module = _load_run_governed_task_module()
-        fake_app = _FakeApp(
-            [
-                {
-                    "service_boundary": "control-plane",
-                    "payload": {"execution_status": "blocked", "approval_id": "approval-1"},
-                }
-            ]
-        )
-
-        with patch.object(module, "_build_control_plane_app", return_value=fake_app):
-            payload = module.govern_attachment_write(
-                attachment_root=str(ROOT),
-                attachment_runtime_state_root=str(ROOT / ".runtime"),
-                task_id="task-govern",
-                tool_name="write_file",
-                command_text="",
-                target_path="docs/x.txt",
-                tier="medium",
-                rollback_reference="docs/runbooks/control-rollback.md",
-                adapter_id="codex-cli",
-            )
-
-        self.assertEqual(payload["execution_status"], "blocked")
-        self.assertEqual(payload["service_boundary"], "control-plane")
-        self.assertEqual(fake_app.calls[0]["payload"]["command_type"], "write_request")
-
-    def test_decide_attachment_write_uses_service_dispatch(self) -> None:
-        module = _load_run_governed_task_module()
-        fake_app = _FakeApp([{"payload": {"approval_id": "approval-1", "status": "approved"}}])
-
-        with patch.object(module, "_build_control_plane_app", return_value=fake_app):
-            payload = module.decide_attachment_write(
-                attachment_runtime_state_root=str(ROOT / ".runtime"),
-                approval_id="approval-1",
-                decision="approve",
-                decided_by="tester",
-                adapter_id="codex-cli",
-                task_id="task-approve",
-            )
-
-        self.assertEqual(payload["status"], "approved")
-        self.assertEqual(fake_app.calls[0]["payload"]["command_type"], "write_approve")
-
-    def test_execute_attachment_write_uses_two_service_dispatch_calls(self) -> None:
-        module = _load_run_governed_task_module()
-        fake_app = _FakeApp(
-            [
-                {
-                    "payload": {
-                        "execution_id": "task:approval:1",
-                        "continuation_id": "task:approval:1",
-                        "approval_id": "approval-1",
-                        "session_identity": {"session_id": "s-1", "resume_id": "r-1"},
-                    }
-                },
-                {"payload": {"execution_status": "write_executed", "approval_status": "approved"}},
-            ]
-        )
-
-        with patch.object(module, "_build_control_plane_app", return_value=fake_app):
-            payload = module.execute_attachment_write(
-                attachment_root=str(ROOT),
-                attachment_runtime_state_root=str(ROOT / ".runtime"),
-                task_id="task-write",
-                tool_name="write_file",
-                command_text="",
-                target_path="docs/x.txt",
-                tier="medium",
-                rollback_reference="docs/runbooks/control-rollback.md",
-                content="payload",
-                approval_id=None,
-                adapter_id="codex-cli",
-            )
-
-        self.assertEqual(payload["execution_status"], "write_executed")
-        self.assertEqual(len(fake_app.calls), 2)
-        self.assertEqual(fake_app.calls[0]["payload"]["command_type"], "write_request")
-        self.assertEqual(fake_app.calls[1]["payload"]["command_type"], "write_execute")
-
-    def test_execute_attachment_write_passes_expected_sha256_to_execute_payload(self) -> None:
-        module = _load_run_governed_task_module()
-        fake_app = _FakeApp(
-            [
-                {
-                    "payload": {
-                        "execution_id": "task:approval:1",
-                        "continuation_id": "task:approval:1",
-                        "approval_id": "approval-1",
-                        "session_identity": {"session_id": "s-1", "resume_id": "r-1"},
-                    }
-                },
-                {"payload": {"execution_status": "write_executed", "approval_status": "approved"}},
-            ]
-        )
-
-        with patch.object(module, "_build_control_plane_app", return_value=fake_app):
-            module.execute_attachment_write(
-                attachment_root=str(ROOT),
-                attachment_runtime_state_root=str(ROOT / ".runtime"),
-                task_id="task-write",
-                tool_name="write_file",
-                command_text="",
-                target_path="docs/x.txt",
-                tier="medium",
-                rollback_reference="docs/runbooks/control-rollback.md",
-                content="payload",
-                approval_id=None,
-                expected_sha256="sha256:abcd",
-                adapter_id="codex-cli",
-            )
-
-        execute_payload = fake_app.calls[1]["payload"]["payload"]
-        self.assertEqual(execute_payload["expected_sha256"], "sha256:abcd")
-
-    def test_run_attachment_verification_uses_service_dispatch(self) -> None:
-        module = _load_run_governed_task_module()
-        fake_app = _FakeApp(
-            [
-                {
-                    "service_boundary": "control-plane",
-                    "payload": {
-                        "mode": "quick",
-                        "run_id": "run-1",
-                        "gate_order": ["test", "contract"],
-                        "results": {"test": "pass", "contract": "pass"},
-                        "result_artifact_refs": {"test": "a.json", "contract": "b.json"},
-                        "evidence_link": "artifacts/task/run-1/verification-output/contract.json",
-                    }
-                }
-            ]
-        )
-        fake_attachment = SimpleNamespace(
-            binding=SimpleNamespace(binding_id="binding-1"),
-            repo_profile_path="schemas/examples/repo-profile/python-service.example.json",
-        )
-        fake_profile = SimpleNamespace(repo_id="target-repo")
-
-        with patch.object(module, "_build_control_plane_app", return_value=fake_app), patch.object(
-            module, "validate_light_pack", return_value=fake_attachment
-        ), patch.object(module, "load_repo_profile", return_value=fake_profile):
-            payload = module.run_attachment_verification(
-                attachment_root=str(ROOT),
-                attachment_runtime_state_root=str(ROOT / ".runtime"),
-                mode="quick",
-                task_id="task-verify",
-                run_id="run-1",
-            )
-
-        self.assertEqual(payload["repo_id"], "target-repo")
-        self.assertEqual(payload["binding_id"], "binding-1")
-        self.assertEqual(payload["service_boundary"], "control-plane")
-        self.assertEqual(payload["results"], {"test": "pass", "contract": "pass"})
-        self.assertEqual(fake_app.calls[0]["payload"]["command_type"], "run_quick_gate")
-
-    def test_run_attachment_verification_l2_uses_full_command_with_gate_level_payload(self) -> None:
-        module = _load_run_governed_task_module()
-        fake_app = _FakeApp(
-            [
-                {
-                    "payload": {
-                        "mode": "l2",
-                        "run_id": "run-2",
-                        "gate_order": ["build", "test", "contract"],
-                        "results": {"build": "pass", "test": "pass", "contract": "pass"},
-                        "result_artifact_refs": {"build": "a.json", "test": "b.json", "contract": "c.json"},
-                        "evidence_link": "artifacts/task/run-2/verification-output/contract.json",
-                    }
-                }
-            ]
-        )
-        fake_attachment = SimpleNamespace(
-            binding=SimpleNamespace(binding_id="binding-2"),
-            repo_profile_path="schemas/examples/repo-profile/python-service.example.json",
-        )
-        fake_profile = SimpleNamespace(repo_id="target-repo")
-
-        with patch.object(module, "_build_control_plane_app", return_value=fake_app), patch.object(
-            module, "validate_light_pack", return_value=fake_attachment
-        ), patch.object(module, "load_repo_profile", return_value=fake_profile):
-            payload = module.run_attachment_verification(
-                attachment_root=str(ROOT),
-                attachment_runtime_state_root=str(ROOT / ".runtime"),
-                mode="l2",
-                task_id="task-verify-l2",
-                run_id="run-2",
-            )
-
-        self.assertEqual(payload["mode"], "l2")
-        self.assertEqual(payload["gate_order"], ["build", "test", "contract"])
-        self.assertEqual(fake_app.calls[0]["payload"]["command_type"], "run_full_gate")
-        self.assertEqual(fake_app.calls[0]["payload"]["payload"]["gate_level"], "l2")
-
-    def test_run_attachment_verification_prefers_service_outcome_for_non_blocking_failures(self) -> None:
-        module = _load_run_governed_task_module()
-        fake_app = _FakeApp(
-            [
-                {
-                    "payload": {
-                        "mode": "quick",
-                        "run_id": "run-3",
-                        "gate_order": ["test", "contract", "ui-sampling"],
-                        "results": {"test": "pass", "contract": "pass", "ui-sampling": "fail"},
-                        "required_gate_ids": ["test", "contract"],
-                        "blocking_gate_ids": ["test", "contract"],
-                        "outcome": "pass",
-                        "result_artifact_refs": {
-                            "test": "a.json",
-                            "contract": "b.json",
-                            "ui-sampling": "c.json",
-                        },
-                        "evidence_link": "artifacts/task/run-3/verification-output/contract.json",
-                    }
-                }
-            ]
-        )
-        fake_attachment = SimpleNamespace(
-            binding=SimpleNamespace(binding_id="binding-3"),
-            repo_profile_path="schemas/examples/repo-profile/python-service.example.json",
-        )
-        fake_profile = SimpleNamespace(repo_id="target-repo")
-
-        with patch.object(module, "_build_control_plane_app", return_value=fake_app), patch.object(
-            module, "validate_light_pack", return_value=fake_attachment
-        ), patch.object(module, "load_repo_profile", return_value=fake_profile):
-            payload = module.run_attachment_verification(
-                attachment_root=str(ROOT),
-                attachment_runtime_state_root=str(ROOT / ".runtime"),
-                mode="quick",
-                task_id="task-verify-non-blocking",
-                run_id="run-3",
-            )
-
-        self.assertEqual(payload["outcome"], "pass")
-        self.assertEqual(payload["blocking_gate_ids"], ["test", "contract"])
-        self.assertEqual(payload["results"]["ui-sampling"], "fail")
-
-    def test_write_replay_case_rejects_unsafe_task_id(self) -> None:
-        module = _load_run_governed_task_module()
-        replay = importlib.import_module("governed_ai_coding_runtime_contracts.replay")
-
-        reference = replay.build_replay_reference(
-            task_id="../escape",
-            run_id="run-safe",
-            failure_reason="verification failed",
-            artifact_refs=["artifacts/task/run/evidence.json"],
-            verification_artifact_refs=[],
-        )
-
-        with tempfile.TemporaryDirectory() as tmp_dir, patch.object(module, "REPLAY_ROOT", Path(tmp_dir)):
-            with self.assertRaisesRegex(ValueError, "task_id"):
-                module._write_replay_case(reference)
-
-    def test_write_replay_case_returns_runtime_relative_ref_for_external_runtime_root(self) -> None:
-        module = _load_run_governed_task_module()
-        replay = importlib.import_module("governed_ai_coding_runtime_contracts.replay")
-
-        reference = replay.build_replay_reference(
-            task_id="task-external-runtime",
-            run_id="run-external-runtime",
-            failure_reason="verification failed",
-            artifact_refs=["artifacts/task/run/evidence.json"],
-            verification_artifact_refs=[],
-        )
-
-        with tempfile.TemporaryDirectory(dir=str(ROOT / ".runtime")) as tmp_dir:
-            repo_root = Path(tmp_dir) / "repo"
-            runtime_root = Path(tmp_dir) / "runtime"
-            replay_root = runtime_root / "replay"
-            with patch.object(module, "ROOT", repo_root), patch.object(module, "RUNTIME_ROOT", runtime_root), patch.object(module, "REPLAY_ROOT", replay_root):
-                replay_ref = module._write_replay_case(reference)
-
-            self.assertEqual(replay_ref, "replay/task-external-runtime-run-external-runtime.json")
-            self.assertTrue((runtime_root / replay_ref).exists())
+        self.assertEqual(payload["tasks"][0]["task_id"], "task-1")
+        self.assertEqual(payload["tasks"][0]["interaction_posture"], "clarifying")
+        self.assertNotIn("attachments", payload)
 
 
 if __name__ == "__main__":

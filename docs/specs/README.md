@@ -16,7 +16,6 @@ This directory holds the normative contract descriptions that the schema drafts 
 - [Evidence Bundle Spec](./evidence-bundle-spec.md)
 - [Eval And Trace Grading Spec](./eval-and-trace-grading-spec.md)
 - [Policy Decision Spec](./policy-decision-spec.md)
-- [Session Bridge Command Spec](./session-bridge-command-spec.md)
 - [Waiver And Exception Spec](./waiver-and-exception-spec.md)
 - [Provenance And Attestation Spec](./provenance-and-attestation-spec.md)
 - [Controlled Improvement Proposal Spec](./controlled-improvement-proposal-spec.md)
@@ -24,7 +23,6 @@ This directory holds the normative contract descriptions that the schema drafts 
 ### Repo and execution inputs
 - [Repo Admission Minimums Spec](./repo-admission-minimums-spec.md)
 - [Repo Profile Spec](./repo-profile-spec.md)
-- [Repo Attachment Binding Spec](./repo-attachment-binding-spec.md)
 - [Tool Contract Spec](./tool-contract-spec.md)
 - [Hook Contract Spec](./hook-contract-spec.md)
 - [Knowledge Source Spec](./knowledge-source-spec.md)
@@ -49,9 +47,7 @@ This directory holds the normative contract descriptions that the schema drafts 
 3. [Verification Gates Spec](./verification-gates-spec.md)
 4. [Evidence Bundle Spec](./evidence-bundle-spec.md)
 5. [Repo Profile Spec](./repo-profile-spec.md)
-6. [Repo Attachment Binding Spec](./repo-attachment-binding-spec.md)
 7. [Policy Decision Spec](./policy-decision-spec.md)
-8. [Session Bridge Command Spec](./session-bridge-command-spec.md)
 9. [Tool Contract Spec](./tool-contract-spec.md)
 10. [Agent Adapter Contract Spec](./agent-adapter-contract-spec.md)
 11. Remaining specs by the contract family you are changing

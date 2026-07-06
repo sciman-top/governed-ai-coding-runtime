@@ -1,9 +1,7 @@
 param(
-  [ValidateSet("All", "Global", "Targets")]
+  [ValidateSet("All", "Global")]
   [string]$Scope = "All",
-  [string[]]$Target = @(),
-  [string]$ManifestPath = "rules/manifest.json",
-  [string]$CatalogPath = "docs/targets/target-repos-catalog.json"
+  [string]$ManifestPath = "rules/manifest.json"
 )
 
 Set-StrictMode -Version Latest
@@ -19,14 +17,8 @@ $argsList = @(
   $Scope,
   "-ManifestPath",
   $ManifestPath,
-  "-CatalogPath",
-  $CatalogPath,
   "-FailOnChange"
 )
-
-foreach ($item in $Target) {
-  $argsList += @("-Target", $item)
-}
 
 & pwsh @argsList
 exit $LASTEXITCODE

@@ -22,51 +22,30 @@ def _extract_json_payload(raw_stdout: str) -> dict:
 
 
 class GovernanceGateRunnerTests(unittest.TestCase):
-    def test_level_check_l2_runs_middle_gate_layer(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            workspace = Path(tmp_dir)
-            profile_path = workspace / ".governed-ai" / "repo-profile.json"
-            _write_json(
-                profile_path,
-                {
-                    "repo_id": "layered-l2",
-                    "full_gate_commands": [
-                        {"id": "build", "required": True, "command": "Write-Host 'build-ok'"},
-                        {"id": "test", "required": True, "command": "Write-Host 'test-ok'"},
-                        {"id": "contract", "required": True, "command": "Write-Host 'contract-ok'"},
-                        {"id": "doctor", "required": True, "command": "Write-Host 'doctor-should-skip'"},
-                    ],
-                    "auto_commit_policy": {"enabled": False},
-                },
-            )
+    def test_level_check_l2_fails_closed_after_retirement(self) -> None:
+        completed = subprocess.run(
+            [
+                "pwsh",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(ROOT / "scripts" / "governance" / "level-check.ps1"),
+                "-Level",
+                "l2",
+                "-Json",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            cwd=ROOT,
+        )
 
-            completed = subprocess.run(
-                [
-                    "pwsh",
-                    "-NoProfile",
-                    "-ExecutionPolicy",
-                    "Bypass",
-                    "-File",
-                    str(ROOT / "scripts" / "governance" / "level-check.ps1"),
-                    "-RepoProfilePath",
-                    str(profile_path),
-                    "-WorkingDirectory",
-                    str(workspace),
-                    "-Level",
-                    "l2",
-                    "-Json",
-                ],
-                check=False,
-                capture_output=True,
-                text=True,
-                cwd=ROOT,
-            )
-
-            self.assertEqual(completed.returncode, 0, completed.stderr)
-            payload = _extract_json_payload(completed.stdout)
-            self.assertEqual(payload["summary"]["gate_level"], "l2")
-            self.assertEqual(payload["summary"]["gate_order"], ["build", "test", "contract"])
-            self.assertNotIn("doctor-should-skip", completed.stdout)
+        self.assertEqual(completed.returncode, 1, completed.stderr)
+        payload = json.loads(completed.stdout)
+        self.assertEqual(payload["status"], "retired_command")
+        self.assertEqual(payload["command"], "level-check")
+        self.assertEqual(payload["requested_level"], "l2")
 
     def test_fast_check_runs_matching_additional_non_blocking_gate(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

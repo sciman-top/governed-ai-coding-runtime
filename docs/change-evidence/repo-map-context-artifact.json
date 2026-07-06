@@ -3,7 +3,7 @@
   "governance_override_enforced": false,
   "metrics": {
     "clarification_reduction_proxy": 1.0,
-    "estimated_token_cost": 5993,
+    "estimated_token_cost": 5991,
     "excluded_archive_candidate_count": 261,
     "file_selection_accuracy": 1.0,
     "max_tokens": 6000,
@@ -46,12 +46,12 @@
     "scripts/Start-CodexContinuity.ps1",
     "scripts/Test-CodexGuardAbsence.ps1",
     "scripts/agent-continuity.py",
-    "scripts/apply-target-repo-governance.py",
     "scripts/archive-change-evidence.py",
-    "scripts/attach-target-repo.py",
+    "scripts/audit-repo-slimming-surface.py",
+    "scripts/bootstrap-runtime.ps1",
     "scripts/lib/__init__.py",
-    ".governed-ai/dependency-baseline.json",
-    "docs/governed-runtime-batch-validation.md"
+    "scripts/verify-agent-rules.ps1",
+    "docs/product/claim-exceptions.json"
   ],
   "strategy_id": "governed-ai-coding-runtime-default",
   "strategy_path": ".governed-ai/repo-map-context-shaping.json"

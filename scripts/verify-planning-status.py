@@ -120,30 +120,20 @@ def inspect_planning_status(*, repo_root: Path, status_path: Path) -> dict:
         "README.md": [
             "当前唯一状态真源",
             f"`current decision gate`：`{decision_gate}`",
-            f"target-run freshness 为 `{target_run_freshness}`",
-            f"`{codex_adapter_tier}` / {codex_capability_status}",
-            f"`{claude_adapter_tier}` / {claude_workload_status}",
             "Single source of planning truth",
             f"`current decision gate`: `{decision_gate}`",
-            f"target-run freshness is `{target_run_freshness}`",
             "20260617 Active Queue Evidence-Upkeep Refresh",
             "20260617 Planning EntryPoint Proof Refresh",
         ],
         "README.en.md": [
             "Single source of planning truth",
             f"`current decision gate`: `{decision_gate}`",
-            f"target-run freshness is `{target_run_freshness}`",
-            f"`{codex_adapter_tier}` / {codex_capability_status}",
-            f"`{claude_adapter_tier}` / {claude_workload_status}",
             "20260617 Active Queue Evidence-Upkeep Refresh",
             "20260617 Planning EntryPoint Proof Refresh",
         ],
         "README.zh-CN.md": [
             "唯一状态真源",
             f"`current decision gate`：`{decision_gate}`",
-            f"target-run freshness 为 `{target_run_freshness}`",
-            f"`{codex_adapter_tier}` / {codex_capability_status}",
-            f"`{claude_adapter_tier}` / {claude_workload_status}",
             "20260617 Active Queue Evidence-Upkeep Refresh",
             "20260617 Planning EntryPoint Proof Refresh",
         ],
@@ -199,17 +189,13 @@ def inspect_planning_status(*, repo_root: Path, status_path: Path) -> dict:
         ],
         "README.md": [
             "`current decision gate`：`refresh_evidence_first`" if decision_gate != "refresh_evidence_first" else "",
-            "`current live posture`：target-run freshness 为 `stale`" if target_run_freshness != "stale" else "",
             "`current decision gate`: `refresh_evidence_first`" if decision_gate != "refresh_evidence_first" else "",
-            "`current live posture`: target-run freshness is `stale`" if target_run_freshness != "stale" else "",
         ],
         "README.en.md": [
             "`current decision gate`: `refresh_evidence_first`" if decision_gate != "refresh_evidence_first" else "",
-            "`current live posture`: target-run freshness is `stale`" if target_run_freshness != "stale" else "",
         ],
         "README.zh-CN.md": [
             "`current decision gate`：`refresh_evidence_first`" if decision_gate != "refresh_evidence_first" else "",
-            "`current live posture`：target-run freshness 为 `stale`" if target_run_freshness != "stale" else "",
         ],
     }
     for relative_path, tokens in stale_checks.items():

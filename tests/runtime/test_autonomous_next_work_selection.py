@@ -46,8 +46,8 @@ class AutonomousNextWorkSelectionTests(unittest.TestCase):
         self.assertEqual(payload["source_state"], "fresh")
         self.assertEqual(payload["evidence_state"], "fresh")
         self.assertIsNone(payload["evidence_blocker"])
-        self.assertEqual(payload["auto_detected_inputs"]["details"]["host_feedback"]["target_runs_status"], "ok")
-        self.assertEqual(payload["auto_detected_inputs"]["details"]["host_feedback"]["degraded_latest_run_count"], 0)
+        self.assertEqual(payload["auto_detected_inputs"]["details"]["host_feedback"]["status"], "pass")
+        self.assertEqual(payload["auto_detected_inputs"]["details"]["host_feedback"]["claude_workload_status"], "ready")
         self.assertIn("auto_detected_inputs", payload)
 
     def test_selector_promotes_one_auto_selected_ltp_package(self) -> None:

@@ -3,11 +3,12 @@
 ## Current Snapshot
 - Single source of planning truth: [planning-status.json](./architecture/planning-status.json)
 - planning status anchor: `updated_on=2026-07-05`
-- latest target-run / KPI / effect refresh: `2026-07-05`
+- latest archived multi-repo evidence refresh: `2026-07-05`
 - latest governance / self-evolution machine-readable refresh: `2026-06-24`
 - current active queue: `Continuous-Execution` (`Continuous Execution Readiness And Rollout`)
 - `current decision gate`: `defer_ltp_and_refresh_evidence`
-- `current live posture`: target-run freshness is `fresh`; Codex target runs are `native_attach` / ready; Claude workload probe is `native_attach` / ready
+- `current live posture`: repo-local gates, host feedback, and self-evolution evidence remain live; archived target-run posture is historical only
+  - historical archive note: the latest archived 2026-07-05 batch still records target-run freshness is `fresh` and paired Codex/Claude host probes at `native_attach` / ready, but that archive no longer implies a live target-repo capability
 - certified baseline: `GAP-104..111`
 - latest completed governance hardening slice: `GAP-169..172`
   - adds repo-owned `reference-basis`, release-style `preflight`, and CI `release-preflight`
@@ -47,12 +48,6 @@
 - [AI 编码使用指南](./quickstart/ai-coding-usage-guide.zh-CN.md)
 - [Use With An Existing Repo](./quickstart/use-with-existing-repo.md)
 - [在现有仓库中使用](./quickstart/use-with-existing-repo.zh-CN.md)
-- [Multi-Repo Trial Quickstart](./quickstart/multi-repo-trial-quickstart.md)
-- [多仓试运行快速开始](./quickstart/multi-repo-trial-quickstart.zh-CN.md)
-- [Target Repo Attachment Flow](./product/target-repo-attachment-flow.md)
-- [Target Repo 接入流程](./product/target-repo-attachment-flow.zh-CN.md)
-- [Session Bridge Commands](./product/session-bridge-commands.md)
-- [Session Bridge 命令](./product/session-bridge-commands.zh-CN.md)
 - [Codex CLI/App Integration Guide](./product/codex-cli-app-integration-guide.md)
 - [Codex CLI/App 集成指南](./product/codex-cli-app-integration-guide.zh-CN.md)
 - [Agent Continuity Guide](./product/agent-continuity.md)
@@ -70,7 +65,6 @@
 - Related docs:
   - [Change Evidence Index](./change-evidence/README.md)
   - [Runbooks](./runbooks/README.md)
-  - [Target Repo Test Slicing Policy](./targets/target-repo-test-slicing-policy.md)
   - [Acceptance Metrics Contract](./product/acceptance-metrics-contract.md)
 
 ## Portable Packaging And Install
@@ -113,7 +107,6 @@
 - Architecture:
   - [Architecture Index](./architecture/README.md)
   - [Hybrid Final-State Master Outline](./architecture/hybrid-final-state-master-outline.md)
-  - [Generic Target-Repo Attachment Blueprint](./architecture/generic-target-repo-attachment-blueprint.md)
   - [Repo-Native Contract Bundle](./architecture/repo-native-contract-bundle.md)
   - [Host Family Capability Surface Blueprint](./architecture/host-family-capability-surface-blueprint.md)
 - Product and PRD:
@@ -122,17 +115,9 @@
   - [Continuous Execution Output Envelope](./product/continuous-execution-output-envelope.md)
   - [Adapter Capability Tiers](./product/adapter-capability-tiers.md)
 
-## Targets, Rules, And Managed Assets
-- Managed target-repo metadata:
-  - [target-repos-catalog.json](./targets/target-repos-catalog.json)
-  - [target-repo-governance-baseline.json](./targets/target-repo-governance-baseline.json)
-  - [target-repo-rollout-contract.json](./targets/target-repo-rollout-contract.json)
-- Managed templates:
-  - `docs/targets/templates/claude-code/`
-  - `docs/targets/templates/git-hooks/`
-  - `docs/targets/templates/verify-powershell-policy.py`
-  - `docs/targets/templates/search-context.ignore`
-- Rule sync source of truth:
+## Rules And Managed Assets
+- Target-repo rollout, attachment, session-bridge, and managed template distribution have been retired from current repo scope.
+- Retained rule-sync source of truth:
   - [rules/manifest.json](../rules/manifest.json)
 
 ## Evidence, History, And Rollback
@@ -166,8 +151,6 @@ Operator-facing docs that are expected to stay bilingual include:
 - `docs/quickstart/*`
 - `docs/product/codex-cli-app-integration-guide*`
 - `docs/product/agent-continuity*`
-- `docs/product/target-repo-attachment-flow*`
-- `docs/product/session-bridge-commands*`
 - `docs/product/host-feedback-loop*`
 
 Policy, research, architecture, ADR, planning, and schema/spec companions are not automatically required to be bilingual unless they become the primary operator path.

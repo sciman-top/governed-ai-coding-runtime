@@ -35,12 +35,9 @@ class ContractReaderParityTests(unittest.TestCase):
             )
 
     def test_reader_contracts_fail_loudly_on_missing_fields(self) -> None:
-        session_bridge = importlib.import_module("governed_ai_coding_runtime_contracts.session_bridge")
         runtime_status = importlib.import_module("governed_ai_coding_runtime_contracts.runtime_status")
         verification_runner = importlib.import_module("governed_ai_coding_runtime_contracts.verification_runner")
 
-        with self.assertRaises(ValueError):
-            session_bridge.session_bridge_result_from_dict({"command_id": "cmd"})
         with self.assertRaises(ValueError):
             runtime_status.runtime_snapshot_from_dict({"total_tasks": 0})
         with self.assertRaises(ValueError):

@@ -1,23 +1,16 @@
 param(
-  [ValidateSet("Help", "Targets", "FastFeedback", "Readiness", "CodexGuardAbsenceCheck", "RulesDryRun", "RulesApply", "GovernanceBaselineAll", "DailyAll", "ApplyAllFeatures", "CleanupTargets", "UninstallGovernance", "FeedbackReport", "SelfEvolutionReadiness", "SelfEvolutionEvalDataset", "SelfEvolutionOptimize", "SelfEvolutionVariantEvaluate", "SelfEvolutionRecommend", "SelfEvolutionPromotionPlan", "EvolutionReview", "ExperienceReview", "EvolutionMaterialize", "CorePrincipleMaterialize", "OperatorUi")]
   [string]$Action = "Help",
 
   [ValidateSet("quick", "full", "l1", "l2", "l3")]
   [string]$Mode = "quick",
 
-  [string]$Target = "__all__",
-  [int]$TargetParallelism = 1,
-  [string]$MilestoneTag = "milestone",
   [ValidateSet("zh-CN", "en")]
   [string]$UiLanguage = "zh-CN",
   [switch]$OpenUi,
   [switch]$OnlineSourceCheck,
   [switch]$ConfirmCorePrincipleProposalWrite,
   [switch]$WriteCorePrincipleDryRunReport,
-  [switch]$ApplyManagedAssetRemoval,
-  [switch]$DisableManagedAssetRemoval,
-  [switch]$DryRun,
-  [switch]$FailFast
+  [switch]$DryRun
 )
 
 Set-StrictMode -Version Latest
@@ -26,11 +19,36 @@ $ErrorActionPreference = "Stop"
 . "$PSScriptRoot\Initialize-WindowsProcessEnvironment.ps1"
 Initialize-WindowsProcessEnvironment
 
-if ($TargetParallelism -lt 1) {
-  throw "TargetParallelism must be >= 1."
-}
-
 $RepoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
+$SupportedOperatorActions = @(
+  "Help",
+  "FastFeedback",
+  "Readiness",
+  "CodexGuardAbsenceCheck",
+  "RulesDryRun",
+  "RulesApply",
+  "FeedbackReport",
+  "SelfEvolutionReadiness",
+  "SelfEvolutionEvalDataset",
+  "SelfEvolutionOptimize",
+  "SelfEvolutionVariantEvaluate",
+  "SelfEvolutionRecommend",
+  "SelfEvolutionPromotionPlan",
+  "EvolutionReview",
+  "ExperienceReview",
+  "EvolutionMaterialize",
+  "CorePrincipleMaterialize",
+  "OperatorUi"
+)
+
+$RetiredOperatorActions = @{
+  "Targets" = "Target-repo target listing was removed with the target distribution layer."
+  "GovernanceBaselineAll" = "Target-repo governance baseline rollout was removed from this repository."
+  "DailyAll" = "Target-repo daily governance sweep was removed from this repository."
+  "ApplyAllFeatures" = "Target-repo apply-all governance was removed from this repository."
+  "CleanupTargets" = "Target-repo managed-file cleanup was removed from this repository."
+  "UninstallGovernance" = "Target-repo governance uninstall was removed from this repository."
+}
 
 function Resolve-RequiredCommand {
   param([Parameter(Mandatory = $true)][string[]]$Names)
@@ -188,10 +206,6 @@ function Assert-OperatorPreflight {
 
   $blockingActions = @{
     "Readiness"            = @()
-    "DailyAll"             = @("repair_gate_first")
-    "ApplyAllFeatures"     = @("repair_gate_first", "refresh_evidence_first", "owner_directed_scope_required")
-    "CleanupTargets"       = @("repair_gate_first")
-    "UninstallGovernance"  = @("repair_gate_first")
     "EvolutionMaterialize" = @("repair_gate_first", "refresh_evidence_first", "wait_for_host_capability_recovery", "owner_directed_scope_required")
   }
 
@@ -211,26 +225,25 @@ function Assert-OperatorPreflight {
   }
 }
 
-function Get-BatchFlowArguments {
-  param(
-    [string[]]$BaseArguments = @()
-  )
+function Throw-RetiredOperatorAction {
+  param([Parameter(Mandatory = $true)][string]$ActionName)
 
-  $arguments = @(Get-TargetSelectionArguments) + @($BaseArguments)
-  if ($TargetParallelism -gt 1) {
-    $arguments += @("-TargetParallelism", [string]$TargetParallelism)
-  }
-  if ($FailFast) {
-    $arguments += "-FailFast"
-  }
-  return $arguments
+  $reason = $RetiredOperatorActions[$ActionName]
+  throw "Retired operator action: $ActionName. $reason Use Readiness, RulesDryRun, RulesApply, FeedbackReport, SelfEvolutionRecommend, SelfEvolutionPromotionPlan, EvolutionReview, ExperienceReview, EvolutionMaterialize, CorePrincipleMaterialize, OperatorUi, or CodexGuardAbsenceCheck instead."
 }
 
-function Get-TargetSelectionArguments {
-  if ([string]::IsNullOrWhiteSpace($Target) -or $Target -in @("__all__", "all", "*")) {
-    return @("-AllTargets")
+function Assert-SupportedOperatorAction {
+  param([Parameter(Mandatory = $true)][string]$ActionName)
+
+  if ($RetiredOperatorActions.ContainsKey($ActionName)) {
+    return
   }
-  return @("-Target", $Target)
+  if ($SupportedOperatorActions -contains $ActionName) {
+    return
+  }
+
+  $supported = @($SupportedOperatorActions + $RetiredOperatorActions.Keys | Sort-Object) -join ", "
+  throw "Unsupported operator action: $ActionName. Supported actions: $supported"
 }
 
 function Show-OperatorHelp {
@@ -247,18 +260,12 @@ AI 推荐:
 
 常用动作:
   Help                   显示本指南。
-  Targets                列出 target catalog 中的 active target repos。
   FastFeedback           执行本仓日常编码快速反馈：build + quick feedback tests；不替代交付前 Readiness。
   Readiness              执行 build -> test -> contract/invariant -> hotspot，然后生成 operator UI。
   CodexGuardAbsenceCheck
                          确认本机不存在已退役 Codex/Cockpit 后台 guard、启动项、worker 和 installed wrapper。
-  RulesDryRun            只检查全局/项目级规则漂移，不写入。
-  RulesApply             应用规则 manifest 同步，然后复查漂移。
-  GovernanceBaselineAll  对所有 active targets 下发治理基线，然后验证目标仓治理一致性。
-  DailyAll               对所有 active targets 执行 daily flow，主动生成自演化建议报告，并刷新 operator UI。
-  ApplyAllFeatures       同步规则 manifest 后执行全部当前目标仓功能，并刷新 target-run/KPI/effect 证据；默认删除已证明安全的退役托管文件；可用 -DisableManagedAssetRemoval 仅检测。
-  CleanupTargets         预演清理退役治理文件；加 -ApplyManagedAssetRemoval 才实际删除。
-  UninstallGovernance    预演卸载目标仓治理资产；加 -ApplyManagedAssetRemoval 才实际删除/修补。
+  RulesDryRun            只检查全局规则漂移，不写入。
+  RulesApply             应用全局规则 manifest 同步，然后复查漂移。
   FeedbackReport         生成 Codex/Claude 功能反馈汇总报告，并主动附带自演化建议报告。
   SelfEvolutionReadiness 评估 Hermes-style 自我进化终态能力账本，报告 implemented/partial/missing，不自动改代码。
   SelfEvolutionEvalDataset
@@ -268,7 +275,7 @@ AI 推荐:
                          评估 self-evolution variants，输出 review_candidate/improve/defer，不自动改代码。
   SelfEvolutionRecommend 触发一次非变异自演化建议周期：刷新 readiness/eval/variants/evaluation，并报告新增/优化/退休建议。
   SelfEvolutionPromotionPlan
-                         生成自演化晋升控制器报告，判定 policy/skill/target-sync/push-merge 是否可晋升；不执行有效变更。
+                         生成自演化晋升控制器报告，判定 policy/skill/push-merge 是否可晋升；不执行有效变更。
   EvolutionReview        执行 runtime 自我演进 dry-run，只生成候选和证据，不自动改代码。
   ExperienceReview       从 AI 编码证据/指标中生成 dry-run knowledge/memory 记录、改进提案和 skill manifest 候选。
   EvolutionMaterialize   将低风险候选物化为 proposal 文件和禁用态 skill candidate 文件，不启用技能。
@@ -286,15 +293,7 @@ UI:
 
 便捷参数:
   -DryRun                只打印将执行的命令，不执行。
-  -Target <id|__all__>   目标仓动作默认 __all__，可指定单个 target id。
   -Mode <quick|full|l1|l2|l3>
-  -TargetParallelism <n>
-  -FailFast
-  -ApplyManagedAssetRemoval
-                          CleanupTargets / UninstallGovernance 时才允许真实删除或修补受管文件。
-                          ApplyAllFeatures 默认真实删除已证明安全的退役托管文件。
-  -DisableManagedAssetRemoval
-                          ApplyAllFeatures 时只检测退役托管文件，不真实删除。
   -OpenUi
   -OnlineSourceCheck      EvolutionReview 时执行轻量在线 source probe；默认不联网。
   -ConfirmCorePrincipleProposalWrite
@@ -336,10 +335,6 @@ function Invoke-CodexGuardAbsenceCheck {
   Invoke-PwshScript -Name "codex-guard-absence-check" -ScriptPath "scripts/Test-CodexGuardAbsence.ps1"
 }
 
-function Invoke-Targets {
-  Invoke-PwshScript -Name "target-list" -ScriptPath "scripts/runtime-flow-preset.ps1" -ScriptArguments @("-ListTargets")
-}
-
 function Invoke-RulesDryRun {
   Invoke-PwshScript -Name "rules-drift-check" -ScriptPath "scripts/sync-agent-rules.ps1" -ScriptArguments @("-Scope", "All", "-FailOnChange")
 }
@@ -347,80 +342,6 @@ function Invoke-RulesDryRun {
 function Invoke-RulesApply {
   Invoke-PwshScript -Name "rules-apply" -ScriptPath "scripts/sync-agent-rules.ps1" -ScriptArguments @("-Scope", "All", "-Apply")
   Invoke-RulesDryRun
-}
-
-function Invoke-GovernanceBaselineAll {
-  $arguments = Get-BatchFlowArguments -BaseArguments @("-ApplyGovernanceBaselineOnly", "-Json")
-  Invoke-PwshScript -Name "governance-baseline-all" -ScriptPath "scripts/runtime-flow-preset.ps1" -ScriptArguments $arguments
-  Invoke-PythonScript -Name "target-governance-consistency" -ScriptPath "scripts/verify-target-repo-governance-consistency.py"
-}
-
-function Invoke-DailyAll {
-  Assert-OperatorPreflight -ActionName "DailyAll"
-  $arguments = Get-BatchFlowArguments -BaseArguments @("-FlowMode", "daily", "-Mode", $Mode, "-Json", "-ExportTargetRepoRuns")
-  Invoke-PwshScript -Name "daily-all-targets" -ScriptPath "scripts/runtime-flow-preset.ps1" -ScriptArguments $arguments
-  Invoke-SelfEvolutionRecommend
-  Invoke-OperatorUi
-}
-
-function Invoke-ApplyAllFeatures {
-  Assert-OperatorPreflight -ActionName "ApplyAllFeatures"
-  Invoke-RulesApply
-  $arguments = Get-BatchFlowArguments -BaseArguments @(
-    "-ApplyAllFeatures",
-    "-FlowMode",
-    "daily",
-    "-Mode",
-    $Mode,
-    "-MilestoneTag",
-    $MilestoneTag,
-    "-Json",
-    "-ExportTargetRepoRuns",
-    "-PruneRetiredManagedFiles"
-  )
-  if (-not $DisableManagedAssetRemoval) {
-    $arguments += "-ApplyManagedAssetRemoval"
-  }
-  else {
-    $arguments += "-DisableManagedAssetRemoval"
-  }
-  Invoke-PwshScript -Name "apply-all-features" -ScriptPath "scripts/runtime-flow-preset.ps1" -ScriptArguments $arguments
-  Invoke-PythonScript -Name "target-governance-consistency" -ScriptPath "scripts/verify-target-repo-governance-consistency.py"
-  Invoke-OperatorUi
-}
-
-function Invoke-CleanupTargets {
-  Assert-OperatorPreflight -ActionName "CleanupTargets"
-  $arguments = Get-BatchFlowArguments -BaseArguments @(
-    "-FlowMode",
-    "daily",
-    "-Mode",
-    $Mode,
-    "-Json",
-    "-PruneRetiredManagedFiles"
-  )
-  if ($ApplyManagedAssetRemoval) {
-    $arguments += "-ApplyManagedAssetRemoval"
-  }
-  Invoke-PwshScript -Name "cleanup-retired-managed-files" -ScriptPath "scripts/runtime-flow-preset.ps1" -ScriptArguments $arguments
-  Invoke-OperatorUi
-}
-
-function Invoke-UninstallGovernance {
-  Assert-OperatorPreflight -ActionName "UninstallGovernance"
-  $arguments = Get-BatchFlowArguments -BaseArguments @(
-    "-FlowMode",
-    "daily",
-    "-Mode",
-    $Mode,
-    "-Json",
-    "-UninstallGovernance"
-  )
-  if ($ApplyManagedAssetRemoval) {
-    $arguments += "-ApplyManagedAssetRemoval"
-  }
-  Invoke-PwshScript -Name "uninstall-governance" -ScriptPath "scripts/runtime-flow-preset.ps1" -ScriptArguments $arguments
-  Invoke-OperatorUi
 }
 
 function Invoke-FeedbackReport {
@@ -495,19 +416,20 @@ function Invoke-CorePrincipleMaterialize {
 
 Push-Location -LiteralPath $RepoRoot
 try {
+  Assert-SupportedOperatorAction -ActionName $Action
   switch ($Action) {
     "Help" { Show-OperatorHelp }
-    "Targets" { Invoke-Targets }
+    "Targets" { Throw-RetiredOperatorAction -ActionName $Action }
     "FastFeedback" { Invoke-FastFeedback }
     "Readiness" { Invoke-Readiness }
     "CodexGuardAbsenceCheck" { Invoke-CodexGuardAbsenceCheck }
     "RulesDryRun" { Invoke-RulesDryRun }
     "RulesApply" { Invoke-RulesApply }
-    "GovernanceBaselineAll" { Invoke-GovernanceBaselineAll }
-    "DailyAll" { Invoke-DailyAll }
-    "ApplyAllFeatures" { Invoke-ApplyAllFeatures }
-    "CleanupTargets" { Invoke-CleanupTargets }
-    "UninstallGovernance" { Invoke-UninstallGovernance }
+    "GovernanceBaselineAll" { Throw-RetiredOperatorAction -ActionName $Action }
+    "DailyAll" { Throw-RetiredOperatorAction -ActionName $Action }
+    "ApplyAllFeatures" { Throw-RetiredOperatorAction -ActionName $Action }
+    "CleanupTargets" { Throw-RetiredOperatorAction -ActionName $Action }
+    "UninstallGovernance" { Throw-RetiredOperatorAction -ActionName $Action }
     "FeedbackReport" { Invoke-FeedbackReport }
     "SelfEvolutionReadiness" { Invoke-SelfEvolutionReadiness }
     "SelfEvolutionEvalDataset" { Invoke-SelfEvolutionEvalDataset }

@@ -1,12 +1,6 @@
 param(
-  [string]$RepoProfilePath = ".governed-ai/repo-profile.json",
-  [string]$WorkingDirectory = "",
   [ValidateSet("l1", "l2", "l3", "quick", "fast", "full")]
   [string]$Level = "l1",
-  [string]$MilestoneTag = "",
-  [int]$GateTimeoutSeconds = 0,
-  [int]$MaxGateCount = 50,
-  [switch]$ContinueOnError,
   [switch]$Json
 )
 
@@ -14,17 +8,22 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-. (Join-Path $scriptRoot "gate-runner-common.ps1")
+. (Join-Path $scriptRoot "..\Initialize-WindowsProcessEnvironment.ps1")
+Initialize-WindowsProcessEnvironment
 
-# Layered entrypoint for explicit l1/l2/l3 target-repo gate runs.
-$result = Invoke-RepoProfileGateRun `
-  -Mode $Level `
-  -RepoProfilePath $RepoProfilePath `
-  -WorkingDirectory $WorkingDirectory `
-  -MilestoneTag $MilestoneTag `
-  -GateTimeoutSeconds $GateTimeoutSeconds `
-  -MaxGateCount $MaxGateCount `
-  -ContinueOnError:$ContinueOnError.IsPresent `
-  -JsonOutput:$Json.IsPresent
+$payload = [ordered]@{
+  status = "retired_command"
+  command = "level-check"
+  requested_level = $Level
+  reason = "Layered target-repo gate runs were retired with the target-repo rollout surface."
+  remediation_hint = "Use scripts/verify-repo.ps1 or scripts/operator.ps1 for repo-local checks."
+}
 
-exit ([int]$result.exit_code)
+if ($Json.IsPresent) {
+  $payload | ConvertTo-Json -Depth 4
+}
+else {
+  Write-Error ("Retired level-check command: {0} {1}" -f $payload.reason, $payload.remediation_hint)
+}
+
+exit 1

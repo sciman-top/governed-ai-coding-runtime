@@ -3,10 +3,14 @@
   "effect_feedback": {
     "after_evidence_complete": true,
     "after_overall_status": "pass",
-    "backlog_candidate_count": 0,
-    "decision": "promote",
-    "target": "classroomtoolkit",
-    "verifier_status": "pass"
+    "decision": "defer_ltp_and_refresh_evidence",
+    "host_feedback_status": "pass",
+    "recommendation_count": 1,
+    "scope": "repo_local_host_feedback",
+    "selector_evidence_state": "fresh",
+    "selector_gate_state": "pass",
+    "selector_source_state": "fresh",
+    "selector_status": "pass"
   },
   "final_answers": {
     "capability_cleanup_loop_executable": true,
@@ -75,7 +79,7 @@
       "status": "pass"
     },
     "current_source_compatibility": {
-      "as_of": "2026-07-05",
+      "as_of": "2026-07-06",
       "expired": false,
       "forbidden_pattern_hits": [],
       "kernel_owned_semantics": [
@@ -121,8 +125,198 @@
       ],
       "status": "pass"
     },
+    "host_feedback": {
+      "dimensions": [
+        {
+          "details": {
+            "guide_path": "docs/product/host-feedback-loop.zh-CN.md",
+            "guide_path_en": "docs/product/host-feedback-loop.md",
+            "missing_docs": [],
+            "parity_path": "docs/product/adapter-conformance-parity-matrix.md",
+            "required_docs": [
+              "docs/product/host-feedback-loop.md",
+              "docs/product/host-feedback-loop.zh-CN.md",
+              "docs/product/adapter-conformance-parity-matrix.md",
+              "docs/quickstart/ai-coding-usage-guide.md",
+              "docs/quickstart/ai-coding-usage-guide.zh-CN.md"
+            ]
+          },
+          "dimension_id": "docs",
+          "status": "ok",
+          "summary": "feedback guide docs are present"
+        },
+        {
+          "details": {
+            "default_version": "9.53",
+            "global_entries": [
+              {
+                "id": "global-codex-agents",
+                "target_path": "${user_profile}/.codex/AGENTS.md",
+                "tool": "codex"
+              },
+              {
+                "id": "global-claude-claude",
+                "target_path": "${user_profile}/.claude/CLAUDE.md",
+                "tool": "claude"
+              },
+              {
+                "id": "global-gemini-gemini",
+                "target_path": "${user_profile}/.gemini/GEMINI.md",
+                "tool": "gemini"
+              }
+            ],
+            "manifest_exists": true,
+            "manifest_path": "D:/CODE/governed-ai-coding-runtime/rules/manifest.json",
+            "missing_global_targets": [],
+            "required_global_tools_present": [
+              "codex",
+              "claude",
+              "gemini"
+            ],
+            "sync_revision": "2026-05-23.1"
+          },
+          "dimension_id": "rules",
+          "status": "ok",
+          "summary": "manifest-backed global rule distribution is present"
+        },
+        {
+          "details": {
+            "claude": {
+              "active_provider": "bigmodel-glm",
+              "command_exit_code": 0,
+              "command_summary": "2.1.201 (Claude Code)",
+              "config_status": "attention",
+              "health": "ok",
+              "mcp_exit_code": 0,
+              "mcp_summary": "Checking MCP server health…\n\nweb-search-prime: https://open.bigmodel.cn/api/mcp/web_search_prime/mcp (HTTP) - √ Connected\ngithub: https://api.githubcopilot.com/mcp/ (HTTP) - √ Connected\nfilesystem: cmd /c npx -y @modelcontextprotocol/server-filesystem D:\\CODE\\skills-manager - √ Connected\npostgres: pwsh -NoLogo -NoProfile -Command $conn = $env:POSTGRES_CONNECTION_STRING; if ([string]::IsNullOrWhiteSpace($conn)) { $conn = [Environment]::GetEnvironmentVariable(\"POSTGRES_CONNECTION_STRING\", \"User\") }; if ([string]::IsNullOrWhiteSpace($conn)) { $conn = [Environment]::GetEnvironmentVariable(\"POSTGRES_CONNECTION_STRING\", \"Machine\") }; if ([string]::IsNullOrWhiteSpace($conn)) { Write-Error \"POSTGRES_CONNECTION_STRING is required for postgres MCP.\"; exit 64 }; $env:POSTGRES_CONNECTION_STRING = $conn; npx -y @modelcontextprotocol/server-postgres $conn - √ Connected\nfetch: python -m mcp_server_fetch - √ Connected\nweb-reader: https://open.bigmodel.cn/api/mcp/web_reader/mcp (HTTP) - √ Connected\nplaywright: cmd /c npx @playwright/mcp@latest --isolated - √ Connected\nzai-mcp-server: cmd /c npx -y @z_ai/mcp-server@latest - √ Connected\nopenaiDeveloperDocs: https://developers.openai.com/mcp (HTTP) - √ Connected\nzread: https://open.bigmodel.cn/api/mcp/zread/mcp (HTTP) - √ Connected\nmicrosoft-learn: https://learn.microsoft.com/api/mcp (HTTP) - √ Connected\ncontext7: cmd /c npx -y @upstash/context7-mcp - √ Connected",
+              "nonblocking_config_attention": true,
+              "status": "ok"
+            },
+            "codex": {
+              "active_account": "7cf614267d60",
+              "config_status": "attention",
+              "health": "ok",
+              "login_exit_code": 0,
+              "login_summary": "Logged in using an API key - sk-379bc***6ef84",
+              "nonblocking_config_attention": true,
+              "status": "ok"
+            }
+          },
+          "dimension_id": "hosts",
+          "status": "ok",
+          "summary": "both host entrypoint snapshots are healthy"
+        },
+        {
+          "details": {
+            "exists": true,
+            "missing_hosts": [],
+            "path": "D:/CODE/governed-ai-coding-runtime/docs/product/adapter-conformance-parity-matrix.md"
+          },
+          "dimension_id": "parity",
+          "status": "ok",
+          "summary": "Codex and Claude parity posture is documented"
+        },
+        {
+          "details": {
+            "probe": {
+              "claude_cli_available": true,
+              "evidence_export_available": true,
+              "failure_stage": null,
+              "hooks_available": true,
+              "live_resume_id": null,
+              "live_session_id": null,
+              "native_attach_available": true,
+              "probe_commands": [
+                {
+                  "cmd": "claude --version",
+                  "exit_code": 0,
+                  "key_output": "2.1.201 (Claude Code)",
+                  "timestamp": "2026-07-06T04:21:51.152040+00:00"
+                },
+                {
+                  "cmd": "claude --help",
+                  "exit_code": 0,
+                  "key_output": "Usage: claude [options] [command] [prompt]\n\nClaude Code - starts an interactive session by default, use -p/--print for\nnon-interactive output\n\nArguments:\n  prompt                                Your prompt\n\nOptions:\n  --add-dir <director...",
+                  "timestamp": "2026-07-06T04:21:51.545530+00:00"
+                }
+              ],
+              "process_bridge_available": true,
+              "reason": "Claude Code CLI exposes resume/session-id, stream-json hook events, and managed settings/hooks",
+              "remediation_hint": null,
+              "resume_available": true,
+              "session_id_available": true,
+              "settings_available": true,
+              "structured_events_available": true,
+              "version": "2.1.201 (Claude Code)"
+            },
+            "probe_source": "live_claude_code_adapter_probe",
+            "readiness": {
+              "adapter_tier": "native_attach",
+              "failure_stage": null,
+              "flow_kind": "live_attach",
+              "hooks_available": true,
+              "remediation_hint": null,
+              "session_id_available": true,
+              "settings_available": true,
+              "status": "ready",
+              "unsupported_capabilities": []
+            },
+            "trial": {
+              "adapter_id": "claude-code",
+              "adapter_tier": "native_attach",
+              "binding_id": "binding-claude-code",
+              "continuation_id": "host-feedback-claude-code-probe:host-feedback-live-probe",
+              "evidence_refs": [
+                "artifacts/host-feedback-claude-code-probe/host-feedback-live-probe/evidence/claude-code-session.json",
+                "artifacts/host-feedback-claude-code-probe/host-feedback-live-probe/evidence/claude-code-probe.json"
+              ],
+              "flow_kind": "live_attach",
+              "handoff_ref": "artifacts/host-feedback-claude-code-probe/host-feedback-live-probe/handoff/package.json",
+              "hook_evidence_refs": [
+                "artifacts/host-feedback-claude-code-probe/host-feedback-live-probe/evidence/claude-code-hooks.json"
+              ],
+              "mode": "safe",
+              "probe_source": "live_probe",
+              "replay_ref": "artifacts/host-feedback-claude-code-probe/host-feedback-live-probe/replay/adapter-flow.json",
+              "repo_id": "governed-ai-coding-runtime",
+              "resume_id": "claude-code-resume-c14e9fced650",
+              "session_id": "claude-code-session-c14e9fced650",
+              "task_id": "host-feedback-claude-code-probe",
+              "unsupported_capabilities": [],
+              "unsupported_capability_behavior": "none",
+              "verification_refs": [
+                "artifacts/host-feedback-claude-code-probe/host-feedback-live-probe/verification-output/runtime.txt",
+                "artifacts/host-feedback-claude-code-probe/host-feedback-live-probe/verification-output/contract.txt"
+              ]
+            }
+          },
+          "dimension_id": "claude_workload",
+          "status": "ok",
+          "summary": "Claude Code workload adapter probe is ready"
+        }
+      ],
+      "generated_at": "2026-07-06T04:21:42.580423+00:00",
+      "guide_path": "docs/product/host-feedback-loop.zh-CN.md",
+      "guide_path_en": "docs/product/host-feedback-loop.md",
+      "parity_path": "docs/product/adapter-conformance-parity-matrix.md",
+      "recommendations": [
+        "本仓 host-only feedback 面正常；后续每次修改 host/规则/自演化链时先重跑 `FeedbackReport`，再决定是否需要更高成本 gate。"
+      ],
+      "repo_root": "D:/CODE/governed-ai-coding-runtime",
+      "status": "pass",
+      "summary": {
+        "claude_adapter_tier": "native_attach",
+        "claude_host_status": "ok",
+        "claude_workload_status": "ready",
+        "codex_host_status": "ok",
+        "dimensions_attention": 0,
+        "dimensions_fail": 0,
+        "dimensions_ok": 5,
+        "rule_manifest_revision": "2026-05-23.1"
+      }
+    },
     "knowledge_memory_lifecycle": {
-      "as_of": "2026-07-05",
+      "as_of": "2026-07-06",
       "entrypoint": "scripts/operator.ps1 -Action ExperienceReview",
       "knowledge_candidate_count": 1,
       "memory_record_count": 1,
@@ -130,6 +324,66 @@
       "retirement_record_count": 0,
       "status": "pass",
       "verification_command": "python scripts/verify-knowledge-memory-lifecycle.py"
+    },
+    "next_work_selection": {
+      "as_of": "2026-07-06",
+      "auto_detected_inputs": {
+        "details": {
+          "ai_coding_experience": {
+            "proposal_count": 1,
+            "retirement_record_count": 0,
+            "status": "pass"
+          },
+          "current_source": {
+            "expired": false,
+            "review_expires_at": "2026-07-30",
+            "status": "pass"
+          },
+          "evidence_stale_reasons": [],
+          "functional_effectiveness": {
+            "evidence_age_days": 1,
+            "evidence_date": "2026-07-05",
+            "expired": false,
+            "status": "pass"
+          },
+          "host_feedback": {
+            "claude_host_status": "ok",
+            "claude_workload_status": "ready",
+            "codex_host_status": "ok",
+            "recommendation_count": 1,
+            "status": "pass"
+          },
+          "runtime_evolution_review": {
+            "expired": false,
+            "review_expires_at": "2026-07-09",
+            "stale": false,
+            "status": "pass"
+          }
+        },
+        "evidence_blocker": null,
+        "evidence_state": "fresh",
+        "gate_state": "pass",
+        "source_state": "fresh"
+      },
+      "evidence_blocker": null,
+      "evidence_state": "fresh",
+      "expired": false,
+      "gate_state": "pass",
+      "invalid_reasons": [],
+      "ltp_decision": "defer_all",
+      "ltp_should_promote": false,
+      "missing_refs": [],
+      "missing_required_doc_text": [],
+      "next_action": "defer_ltp_and_refresh_evidence",
+      "policy_id": "default-autonomous-next-work-selection",
+      "policy_path": "D:/CODE/governed-ai-coding-runtime/docs/architecture/autonomous-next-work-selection-policy.json",
+      "policy_status": "enforced",
+      "review_expires_at": "2026-07-26",
+      "reviewed_on": "2026-04-27",
+      "selected_package": null,
+      "source_state": "fresh",
+      "status": "pass",
+      "why": "No heavy LTP package is currently trigger-selected and no safer autonomous continuation signal is available; defer heavy implementation and keep evidence/gate upkeep bounded."
     },
     "policy_tool_credential_audit": {
       "audit_id": "default-policy-tool-credential-audit-boundary",
@@ -481,7 +735,7 @@
       "verification_command": "python scripts/verify-policy-tool-credential-audit.py"
     },
     "promotion_lifecycle": {
-      "as_of": "2026-07-05",
+      "as_of": "2026-07-06",
       "entrypoint": "python scripts/materialize-runtime-evolution.py --apply",
       "lifecycle_entry_count": 2,
       "retire_proposal_count": 2,
@@ -491,9 +745,37 @@
     },
     "runtime_evolution": {
       "artifact_refs": {},
-      "as_of": "2026-07-05",
-      "candidate_count": 2,
+      "as_of": "2026-07-06",
+      "candidate_count": 3,
       "candidates": [
+        {
+          "acceptance_gates": [
+            "python scripts/host-feedback-summary.py --assert-minimum",
+            "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Docs"
+          ],
+          "candidate_id": "EVOL-HOST-FEEDBACK",
+          "decision": "refresh_host_feedback",
+          "evidence_required": [
+            "host feedback summary",
+            "global rule sync drift or parity evidence",
+            "operator-facing recommendation surface"
+          ],
+          "observed_change": "Host feedback shows attention-level posture or still produces repo-local follow-up recommendations.",
+          "patch_plan": [
+            {
+              "apply_mode": "manual_or_future_low_risk_only",
+              "operation": "refresh host posture, global rule sync, and parity evidence before promoting new implementation work",
+              "path": "scripts/host-feedback-summary.py"
+            }
+          ],
+          "proposed_action": "modify",
+          "repo_impact": "Keeps self-evolution prompts aligned with real host degradation, rule-sync drift, and parity gaps instead of stale target-rollout assumptions.",
+          "risk_level": "low",
+          "rollback_plan": "remove host-feedback-driven candidate wiring if it misclassifies freshness or host posture",
+          "source_checked_on": "2026-07-06",
+          "source_ref": ".runtime/artifacts/host-feedback-summary/latest.md",
+          "source_type": "internal_runtime_evidence"
+        },
         {
           "acceptance_gates": [
             "python -m unittest tests.runtime.test_runtime_evolution tests.runtime.test_learning_efficiency_metrics",
@@ -518,8 +800,8 @@
           "repo_impact": "Lets repeated AI coding patterns become governed proposals or cleanup candidates instead of hidden session-only know-how.",
           "risk_level": "low",
           "rollback_plan": "remove generated AI-coding-experience candidates if their reuse value or verification posture regresses",
-          "source_checked_on": "2026-07-05",
-          "source_ref": ".runtime/artifacts/ai-coding-experience/20260705-ai-coding-experience-review.json",
+          "source_checked_on": "2026-07-06",
+          "source_ref": ".runtime/artifacts/ai-coding-experience/20260706-ai-coding-experience-review.json",
           "source_type": "internal_ai_coding_experience"
         },
         {
@@ -545,14 +827,14 @@
           "repo_impact": "Prevents community or stale assumptions from becoming execution rules without reviewable source evidence.",
           "risk_level": "medium",
           "rollback_plan": "remove the source collection candidate from the evolution dry-run output",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_ref": "dry-run source inventory",
           "source_type": "official_doc_or_changelog"
         }
       ],
       "evidence_snapshot": {
         "ai_coding_experience": {
-          "artifact_source_ref": ".runtime/artifacts/ai-coding-experience/20260705-ai-coding-experience-review.json",
+          "artifact_source_ref": ".runtime/artifacts/ai-coding-experience/20260706-ai-coding-experience-review.json",
           "invalid_reasons": [],
           "knowledge_candidate_count": 1,
           "pattern_candidate_count": 1,
@@ -570,22 +852,12 @@
           "review_expires_at": "2026-07-30",
           "status": "pass"
         },
-        "effect_feedback": {
-          "backlog_candidate_count": 0,
-          "decision": "promote",
-          "error_count": 0,
-          "errors": [],
-          "status": "pass",
-          "target": "classroomtoolkit"
-        },
         "host_feedback": {
           "claude_host_status": "ok",
           "claude_workload_status": "ready",
           "codex_host_status": "ok",
           "recommendation_count": 1,
-          "stale_latest_runs": [],
-          "status": "pass",
-          "target_run_freshness": "fresh"
+          "status": "pass"
         }
       },
       "expired": false,
@@ -597,7 +869,7 @@
       "policy_id": "default-runtime-evolution-review",
       "policy_path": "D:/CODE/governed-ai-coding-runtime/docs/architecture/runtime-evolution-policy.json",
       "policy_status": "enforced",
-      "review_age_days": 26,
+      "review_age_days": 27,
       "review_expires_at": "2026-07-09",
       "reviewed_on": "2026-06-09",
       "source_count": 35,
@@ -605,7 +877,7 @@
         {
           "confidence": "high",
           "retrieval_mode": "dry_run_no_network",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "policy-source-1",
           "source_ref": "official_doc_or_changelog",
           "source_type": "official_doc_or_changelog",
@@ -614,7 +886,7 @@
         {
           "confidence": "high",
           "retrieval_mode": "dry_run_no_network",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "policy-source-2",
           "source_ref": "primary_project_or_reference_implementation",
           "source_type": "primary_project_or_reference_implementation",
@@ -623,7 +895,7 @@
         {
           "confidence": "medium",
           "retrieval_mode": "dry_run_no_network",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "policy-source-3",
           "source_ref": "internal_runtime_evidence",
           "source_type": "internal_runtime_evidence",
@@ -632,7 +904,7 @@
         {
           "confidence": "medium",
           "retrieval_mode": "dry_run_no_network",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "policy-source-4",
           "source_ref": "internal_ai_coding_experience",
           "source_type": "internal_ai_coding_experience",
@@ -641,7 +913,7 @@
         {
           "confidence": "medium",
           "retrieval_mode": "dry_run_no_network",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "policy-source-5",
           "source_ref": "community_best_practice",
           "source_type": "community_best_practice",
@@ -652,7 +924,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "openai-codex-agents-md",
           "source_ref": "https://developers.openai.com/codex/guides/agents-md",
           "source_type": "official_doc_or_changelog",
@@ -663,7 +935,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "openai-agents-sdk-evolution",
           "source_ref": "https://openai.com/index/the-next-evolution-of-the-agents-sdk/",
           "source_type": "official_doc_or_changelog",
@@ -674,7 +946,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "openai-agents-sdk-sandboxes",
           "source_ref": "https://developers.openai.com/api/docs/guides/agents/sandboxes",
           "source_type": "official_doc_or_changelog",
@@ -685,7 +957,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "openai-agents-sdk-guardrails-human-review",
           "source_ref": "https://developers.openai.com/api/docs/guides/agents/guardrails-approvals",
           "source_type": "official_doc_or_changelog",
@@ -696,7 +968,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "openai-codex-subagents",
           "source_ref": "https://developers.openai.com/codex/concepts/subagents",
           "source_type": "official_doc_or_changelog",
@@ -707,7 +979,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "openai-codex-sandboxing",
           "source_ref": "https://developers.openai.com/codex/concepts/sandboxing",
           "source_type": "official_doc_or_changelog",
@@ -718,7 +990,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "openai-codex-app-features",
           "source_ref": "https://developers.openai.com/codex/app/features",
           "source_type": "official_doc_or_changelog",
@@ -729,7 +1001,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "openai-codex-app-computer-use",
           "source_ref": "https://developers.openai.com/codex/app/computer-use",
           "source_type": "official_doc_or_changelog",
@@ -740,7 +1012,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "openai-codex-remote-connections",
           "source_ref": "https://developers.openai.com/codex/remote-connections",
           "source_type": "official_doc_or_changelog",
@@ -751,7 +1023,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "anthropic-claude-code-settings",
           "source_ref": "https://docs.anthropic.com/en/docs/claude-code/settings",
           "source_type": "official_doc_or_changelog",
@@ -762,7 +1034,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "anthropic-claude-code-hooks",
           "source_ref": "https://docs.anthropic.com/en/docs/claude-code/hooks",
           "source_type": "official_doc_or_changelog",
@@ -773,7 +1045,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "google-antigravity-transition-announcement",
           "source_ref": "https://developers.googleblog.com/an-important-update-transitioning-gemini-cli-to-antigravity-cli/",
           "source_type": "official_doc_or_changelog",
@@ -784,7 +1056,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "google-antigravity-cli-repository",
           "source_ref": "https://github.com/google-antigravity/antigravity-cli",
           "source_type": "official_doc_or_changelog",
@@ -795,7 +1067,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "google-antigravity-cli-overview",
           "source_ref": "https://antigravity.google/docs/cli-overview",
           "source_type": "official_doc_or_changelog",
@@ -806,7 +1078,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "mcp-security-best-practices",
           "source_ref": "https://modelcontextprotocol.io/specification/2025-11-25/basic/security_best_practices",
           "source_type": "official_doc_or_changelog",
@@ -817,7 +1089,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "github-actions-schedule",
           "source_ref": "https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule",
           "source_type": "official_doc_or_changelog",
@@ -828,7 +1100,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "openai-codex-repository",
           "source_ref": "https://github.com/openai/codex",
           "source_type": "primary_project_or_reference_implementation",
@@ -839,7 +1111,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "mcp-inspector",
           "source_ref": "https://github.com/modelcontextprotocol/inspector",
           "source_type": "primary_project_or_reference_implementation",
@@ -850,7 +1122,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "anthropic-claude-plugins-official",
           "source_ref": "https://github.com/anthropics/claude-plugins-official",
           "source_type": "primary_project_or_reference_implementation",
@@ -861,7 +1133,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "openhands-sandbox-runtimes",
           "source_ref": "https://docs.openhands.dev/openhands/usage/runtimes/overview",
           "source_type": "primary_project_or_reference_implementation",
@@ -872,7 +1144,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "aider-repo-map",
           "source_ref": "https://aider.chat/docs/repomap.html",
           "source_type": "primary_project_or_reference_implementation",
@@ -883,7 +1155,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "swe-agent-aci",
           "source_ref": "https://swe-agent.com/latest/",
           "source_type": "primary_project_or_reference_implementation",
@@ -894,7 +1166,7 @@
           "local_ref_exists": null,
           "online_probe": null,
           "retrieval_mode": "dry_run_catalog",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "google-sre-eliminating-toil",
           "source_ref": "https://sre.google/workbook/eliminating-toil/",
           "source_type": "community_best_practice",
@@ -905,7 +1177,7 @@
           "local_ref_exists": true,
           "online_probe": null,
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "runtime-learning-efficiency-metrics",
           "source_ref": "docs/specs/learning-efficiency-metrics-spec.md",
           "source_type": "internal_ai_coding_experience",
@@ -916,7 +1188,7 @@
           "local_ref_exists": true,
           "online_probe": null,
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "controlled-improvement-proposals",
           "source_ref": "docs/specs/controlled-improvement-proposal-spec.md",
           "source_type": "internal_ai_coding_experience",
@@ -927,7 +1199,7 @@
           "local_ref_exists": true,
           "online_probe": null,
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "skill-manifest-contract",
           "source_ref": "docs/specs/skill-manifest-spec.md",
           "source_type": "internal_ai_coding_experience",
@@ -936,7 +1208,7 @@
         {
           "confidence": "high",
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "internal-current-source-compatibility-policy",
           "source_ref": "docs/architecture/current-source-compatibility-policy.json",
           "source_type": "internal_runtime_evidence",
@@ -945,7 +1217,7 @@
         {
           "confidence": "high",
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "internal-ltp-autonomous-promotion-policy",
           "source_ref": "docs/architecture/ltp-autonomous-promotion-policy.json",
           "source_type": "internal_runtime_evidence",
@@ -954,7 +1226,7 @@
         {
           "confidence": "high",
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "internal-autonomous-next-work-selection-policy",
           "source_ref": "docs/architecture/autonomous-next-work-selection-policy.json",
           "source_type": "internal_runtime_evidence",
@@ -963,7 +1235,7 @@
         {
           "confidence": "high",
           "retrieval_mode": "local_file_check",
-          "source_checked_on": "2026-07-05",
+          "source_checked_on": "2026-07-06",
           "source_id": "internal-20260501-runtime-evolution-planning",
           "source_ref": "docs/change-evidence/20260501-runtime-evolution-planning.md",
           "source_type": "internal_runtime_evidence",
@@ -992,14 +1264,6 @@
       "overall_state": "complete",
       "ready_for_unattended_self_update": false,
       "status": "pass"
-    },
-    "target_repo_effect_feedback": {
-      "backlog_candidate_count": 0,
-      "decision": "promote",
-      "errors": [],
-      "report_path": "D:\\CODE\\governed-ai-coding-runtime\\docs\\change-evidence\\target-repo-runs\\effect-report-classroomtoolkit.json",
-      "status": "pass",
-      "target": "classroomtoolkit"
     }
   }
 }

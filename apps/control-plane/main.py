@@ -21,7 +21,7 @@ def _load_module(path: Path, module_name: str):
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Control-plane facade entrypoint.")
-    parser.add_argument("--route", choices=["/session", "/operator", "/health"], default="/health")
+    parser.add_argument("--route", choices=["/operator", "/health"], default="/health")
     parser.add_argument("--payload-json", default="{}")
     parser.add_argument("--repo-root", default=str(Path(__file__).resolve().parents[2]))
     parser.add_argument("--task-root")

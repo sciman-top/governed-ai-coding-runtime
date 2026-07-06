@@ -4,7 +4,7 @@ Service-shaped runtime entrypoints and worker scaffolds live here.
 
 ## Current Surface
 - `control-plane/`
-  - `main.py` exposes `/health`, `/session`, and `/operator` routes through `app.py`
+  - `main.py` exposes `/health` and `/operator` routes through `app.py`
   - uses `packages/agent-runtime/service_facade.py` instead of owning a separate policy model
 - `workflow-worker/`
   - persists workflow heartbeat metadata through `packages/agent-runtime/persistence.py`
@@ -20,7 +20,7 @@ Service-shaped runtime entrypoints and worker scaffolds live here.
 
 ## Boundaries
 - These entrypoints are repo-owned scaffolds, not proof that production service deployment is the primary runtime posture.
-- Host login/provider switching, target-repo ownership, and rollout claims remain governed by the same contracts, gates, and evidence model as the CLI path.
+- Host login/provider switching and adapter-tier claims remain governed by the same repo-local contracts, gates, and evidence model as the CLI path.
 - Pair this directory with `infra/local-runtime/` when you need a local compose-backed service-shape experiment.
 
 ## Verification

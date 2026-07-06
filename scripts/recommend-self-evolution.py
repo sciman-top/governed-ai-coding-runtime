@@ -82,8 +82,8 @@ def recommend_self_evolution(
             "recommended_operator_action": "SelfEvolutionRecommend",
             "manual_trigger_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action SelfEvolutionRecommend",
             "proactive_operator_triggers": [
+                "SelfEvolutionRecommend",
                 "FeedbackReport",
-                "DailyAll",
             ],
             "cycle_steps": [
                 "SelfEvolutionReadiness",
@@ -95,7 +95,7 @@ def recommend_self_evolution(
             "proactive_report_sources": [
                 "after Readiness closeout",
                 "after FeedbackReport evidence refresh",
-                "daily operator automation if configured by the owner",
+                "manual SelfEvolutionRecommend refresh",
             ],
             "automatic_effective_change": False,
         },
@@ -115,7 +115,6 @@ def recommend_self_evolution(
         "guards": {
             "automatic_policy_mutation": False,
             "automatic_skill_enablement": False,
-            "automatic_target_repo_sync": False,
             "automatic_push_or_merge": False,
             "requires_human_review_before_effective_change": True,
         },

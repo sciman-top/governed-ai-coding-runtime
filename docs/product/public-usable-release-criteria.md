@@ -50,4 +50,4 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All
 ## Boundary Note
 The `scripts/run-governed-task.py` command proves the local governed runtime path. It should not be interpreted as proof that Codex CLI/App is already directly invoked through a managed runtime adapter.
 
-The portable release carries generic source files, contracts, rules, scripts, schemas, docs, tests, and hooks. It excludes `.runtime` state, historical evidence, credentials, provider settings, and target-repo working trees. Target repos and global rules must be attached or synced again on the new host.
+The portable release carries generic source files, contracts, rules, scripts, schemas, docs, tests, and hooks. It excludes `.runtime` state, historical evidence, credentials, provider settings, and any external repo working tree. Global rules can be synced again on the new host; any separately governed repo must be handled in its own checkout.

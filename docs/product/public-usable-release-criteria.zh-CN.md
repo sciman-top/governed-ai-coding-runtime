@@ -50,7 +50,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All
 ## Boundary Note
 `scripts/run-governed-task.py` 证明的是本地 governed runtime path，不应被解读为已经通过 managed runtime adapter 直接调用 Codex CLI/App。
 
-portable release 只携带通用源文件、契约、规则、脚本、schema、docs、tests 和 hooks；不携带 `.runtime` 运行态、历史 evidence、凭据、provider 设置或目标仓工作树。新机器上的目标仓与全局规则必须重新 attach/sync。
+portable release 只携带通用源文件、契约、规则、脚本、schema、docs、tests 和 hooks；不携带 `.runtime` 运行态、历史 evidence、凭据、provider 设置或任何外部仓工作树。新机器上可以重新同步全局规则；若还要治理其他仓库，应在那些仓库自己的 checkout 中处理。
 
 ## Related
 - [English Version](./public-usable-release-criteria.md)

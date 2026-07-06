@@ -16,36 +16,37 @@ def render_runtime_snapshot_html(
     interactive: bool = False,
     target_options: list[str] | None = None,
 ) -> str:
+    del target_options
     text = _ui_text(language)
     approval_count = sum(len(task.approval_ids) for task in snapshot.tasks)
     verification_count = sum(len(task.verification_refs) for task in snapshot.tasks)
-    fail_closed_count = sum(1 for attachment in snapshot.attachments if attachment.fail_closed)
     summary = "\n".join(
         [
             f"<section class='summary-grid' aria-label='{escape(text['summary_aria'])}'>",
             _render_metric(text["tasks"], str(snapshot.total_tasks), text["tasks_caption"]),
             _render_metric(text["approvals"], str(approval_count), text["approvals_caption"]),
             _render_metric(text["verification"], str(verification_count), text["verification_caption"]),
-            _render_metric(text["attachments"], str(len(snapshot.attachments)), f"{fail_closed_count} {text['fail_closed_caption']}"),
+            _render_metric(text["stage"], _humanize_runtime_value(snapshot.maintenance.stage, language=text["html_lang"]), text["stage_metric_caption"]),
             "</section>",
         ]
     )
     maintenance = _render_maintenance(snapshot, text)
     tasks = _render_tasks(snapshot, text, interactive=interactive)
-    attachments = _render_attachments(snapshot, text, interactive=interactive)
-    actions = _render_actions(text, language=language, interactive=interactive, target_options=target_options or [])
+    actions = _render_actions(text, language=language, interactive=interactive)
     feedback = _render_feedback(text, interactive=interactive)
     continuity_panel = _render_continuity_panel(text, interactive=interactive)
     feedback_panel = _render_host_feedback_panel(text, interactive=interactive)
-    script = render_interactive_script(
-        text,
-        language=language,
-        total_tasks=snapshot.total_tasks,
-        approval_count=approval_count,
-        verification_count=verification_count,
-        attachment_count=len(snapshot.attachments),
-        fail_closed_count=fail_closed_count,
-    ) if interactive else ""
+    script = (
+        render_interactive_script(
+            text,
+            language=language,
+            total_tasks=snapshot.total_tasks,
+            approval_count=approval_count,
+            verification_count=verification_count,
+        )
+        if interactive
+        else ""
+    )
     runtime_root = snapshot.runtime_root or text["missing"]
     tabs = _render_view_tabs(text)
     workspace_overview = _render_workspace_overview(text, interactive=interactive)
@@ -82,7 +83,6 @@ def render_runtime_snapshot_html(
             <div class="runtime-side">
               <div class="details-grid">
                 {maintenance}
-                {attachments}
               </div>
             </div>
           </div>
@@ -157,7 +157,7 @@ def _render_workspace_overview(text: dict[str, str], *, interactive: bool) -> st
         summary_lines = [
             text["surface_loading"],
             caption,
-            _runtime_surface_default_summary(text) if surface_id == "runtime" else _surface_action_text(surface_id, text),
+            _surface_action_text(surface_id, text),
         ]
         cards.append(
             "\n".join(
@@ -185,10 +185,6 @@ def _render_workspace_overview(text: dict[str, str], *, interactive: bool) -> st
             "</section>",
         ]
     )
-
-
-def _runtime_surface_default_summary(text: dict[str, str]) -> str:
-    return text["surface_runtime_action"]
 
 
 def _surface_action_text(surface_id: str, text: dict[str, str]) -> str:
@@ -281,70 +277,6 @@ def _render_task_row(task, text: dict[str, str], *, interactive: bool) -> str:
     )
 
 
-def _render_attachments(snapshot: RuntimeSnapshot, text: dict[str, str], *, interactive: bool) -> str:
-    if not snapshot.attachments:
-        return "\n".join(
-            [
-                "<section class='section'>",
-                f"<h2>{escape(text['attachments'])}</h2>",
-                f"<div class='empty-state'>{escape(text['no_attachments'])}</div>",
-                "</section>",
-            ]
-        )
-
-    rows = "\n".join(_render_attachment_row(attachment, text, interactive=interactive) for attachment in snapshot.attachments)
-    return "\n".join(
-        [
-            "<section class='section'>",
-            f"<h2>{escape(text['attachments'])}</h2>",
-            "<div class='table-wrap'>",
-            "<table>",
-            (
-                "<thead><tr>"
-                f"<th>{escape(text['repo'])}</th>"
-                f"<th>{escape(text['state'])}</th>"
-                f"<th>{escape(text['adapter'])}</th>"
-                f"<th>{escape(text['diagnostics'])}</th>"
-                "</tr></thead>"
-            ),
-            f"<tbody>{rows}</tbody>",
-            "</table>",
-            "</div>",
-            "</section>",
-        ]
-    )
-
-
-def _render_attachment_row(attachment, text: dict[str, str], *, interactive: bool) -> str:
-    state_class = "danger" if attachment.fail_closed else _state_class(attachment.binding_state)
-    state_label = _humanize_runtime_value(attachment.binding_state, language=text["html_lang"])
-    adapter_label = _humanize_runtime_value(attachment.adapter_preference or text["missing"], language=text["html_lang"])
-    gate_profile_label = _humanize_runtime_value(attachment.gate_profile or text["missing"], language=text["html_lang"])
-    return "\n".join(
-        [
-            "<tr>",
-            f"<td data-label='{escape(text['repo'])}'>",
-            f"<div class='task-id'>{escape(attachment.repo_id or text['unknown_repo'])}</div>",
-            f"<div class='meta'>{escape(text['binding'])}: <code>{escape(attachment.binding_id or text['missing'])}</code></div>",
-            f"<div class='meta'>{escape(text['light_pack'])}: {_render_ref_value(attachment.light_pack_path, interactive=interactive)}</div>",
-            "</td>",
-            f"<td data-label='{escape(text['state'])}'>",
-            f"<div class='state {state_class}'>{escape(state_label)}</div>",
-            f"<div class='meta'>{escape(text['fail_closed'])}: {escape(_humanize_bool(attachment.fail_closed, language=text['html_lang']))}</div>",
-            "</td>",
-            f"<td data-label='{escape(text['adapter'])}'>",
-            f"<div>{escape(text['preference'])}: <code>{escape(adapter_label)}</code></div>",
-            f"<div class='meta'>{escape(text['gate_profile'])}: <code>{escape(gate_profile_label)}</code></div>",
-            "</td>",
-            f"<td data-label='{escape(text['diagnostics'])}'>",
-            f"<div>{escape(text['reason'])}: {escape(attachment.reason or text['none'])}</div>",
-            f"<div class='meta'>{escape(text['remediation'])}: {escape(attachment.remediation or text['none'])}</div>",
-            "</td>",
-            "</tr>",
-        ]
-    )
-
-
 def _render_list(title: str, values: list[str], text: dict[str, str], *, interactive: bool) -> str:
     if not values:
         return f"<div><span class='ref-title'>{escape(title)}</span><span class='meta'>{escape(text['none'])}</span></div>"
@@ -380,47 +312,7 @@ def _render_policy_item(title: str, value: str | None, text: dict[str, str]) -> 
     )
 
 
-def _humanize_bool(value: bool, *, language: str) -> str:
-    if language == "zh-CN":
-        return "是" if value else "否"
-    return "yes" if value else "no"
-
-
-def _humanize_runtime_value(value: str, *, language: str) -> str:
-    normalized = str(value or "").strip()
-    if not normalized:
-        return normalized
-    lower = normalized.lower()
-    zh_map = {
-        "missing": "未配置",
-        "not recorded": "未记录",
-        "completed": "已完成",
-        "delivered": "已完成",
-        "running": "执行中",
-        "queued": "排队中",
-        "failed": "失败",
-        "attached": "已接入",
-        "detached": "未接入",
-        "native_attach": "原生接入",
-        "manual_handoff": "人工接力",
-        "process_bridge": "进程桥接",
-        "quick": "快速",
-        "full": "完整",
-        "l1": "L1 基础",
-        "l2": "L2 标准",
-        "l3": "L3 深度",
-    }
-    en_map = {
-        "native_attach": "native attach",
-        "manual_handoff": "manual handoff",
-        "process_bridge": "process bridge",
-    }
-    if language == "zh-CN":
-        return zh_map.get(lower, normalized)
-    return en_map.get(lower, normalized)
-
-
-def _render_actions(text: dict[str, str], *, language: str, interactive: bool, target_options: list[str]) -> str:
+def _render_actions(text: dict[str, str], *, language: str, interactive: bool) -> str:
     if not interactive:
         return "\n".join(
             [
@@ -441,18 +333,7 @@ def _render_actions(text: dict[str, str], *, language: str, interactive: bool, t
                 ("fast_feedback", text["fast_feedback_action"], "primary", ""),
                 ("readiness", text["readiness_action"], "primary", ""),
                 ("feedback_report", text["feedback_report_action"], "", ""),
-            ],
-        ),
-        (
-            text["target_actions"],
-            False,
-            [
-                ("targets", text["targets_action"], "", ""),
-                ("daily_all", text["daily_all_action"], "", ""),
-                ("governance_baseline_all", text["governance_baseline_action"], "danger", text["confirm_mutating"]),
-                ("apply_all_features", text["apply_all_action"], "danger", text["confirm_mutating"]),
-                ("cleanup_targets", text["cleanup_targets_action"], "danger", text["confirm_managed_cleanup"]),
-                ("uninstall_governance", text["uninstall_governance_action"], "danger", text["confirm_governance_uninstall"]),
+                ("codex_guard_absence_check", text["codex_guard_absence_action"], "", ""),
             ],
         ),
         (
@@ -503,20 +384,6 @@ def _render_actions(text: dict[str, str], *, language: str, interactive: bool, t
                     "</details>",
                 ]
             )
-    target_choices = [("__all__", text["all_targets"])] + [(target, target) for target in target_options]
-    target_select_options = "".join(
-        f"<option value='{escape(value, quote=True)}'>{escape(label)}</option>"
-        for value, label in target_choices
-    )
-    target_checkboxes = [
-        (
-            "<label class='checkbox-row target-option'>"
-            f"<input type='checkbox' data-ui-target-option='{escape(target, quote=True)}'> "
-            f"<span>{escape(target)}</span>"
-            "</label>"
-        )
-        for target in target_options
-    ]
 
     return "\n".join(
         [
@@ -534,17 +401,6 @@ def _render_actions(text: dict[str, str], *, language: str, interactive: bool, t
             f"<h2>{escape(text['settings'])}</h2>",
             "<div class='setting-grid'>",
             f"<label>{escape(text['language'])}<select id='ui-language'><option value='zh-CN' {'selected' if language == 'zh-CN' else ''}>中文</option><option value='en' {'selected' if language == 'en' else ''}>English</option></select></label>",
-            f"<label hidden>{escape(text['target'])}<select id='ui-target'>{target_select_options}</select></label>",
-            "<div class='target-picker' role='group' aria-labelledby='ui-target-picker-title'>",
-            "<div class='target-picker-head'>",
-            f"<span class='target-picker-title' id='ui-target-picker-title'>{escape(text['target_selection'])}</span>",
-            f"<span class='meta'>{escape(text['target_selection_hint'])}</span>",
-            "</div>",
-            f"<label class='checkbox-row'><input id='ui-target-all' type='checkbox' checked> {escape(text['all_targets'])}</label>",
-            "<div id='ui-target-list' class='target-checkbox-list'>",
-            *target_checkboxes,
-            "</div>",
-            "</div>",
             f"<label>{escape(text['mode'])}<select id='ui-mode'><option value='quick'>quick</option><option value='full'>full</option><option value='l1'>l1</option><option value='l2'>l2</option><option value='l3'>l3</option></select></label>",
             f"<label class='checkbox-row'><input id='ui-dry-run' type='checkbox'> {escape(text['dry_run'])}</label>",
             "<details class='foldout'>",
@@ -552,8 +408,6 @@ def _render_actions(text: dict[str, str], *, language: str, interactive: bool, t
             f"<label>{escape(text['parallelism'])}<input id='ui-parallelism' type='number' min='1' max='16' value='1'></label>",
             f"<label>{escape(text['milestone'])}<input id='ui-milestone' type='text' value='milestone'></label>",
             f"<label class='checkbox-row'><input id='ui-fail-fast' type='checkbox'> {escape(text['fail_fast'])}</label>",
-            f"<label class='checkbox-row danger-row'><input id='ui-apply-removal' type='checkbox'> {escape(text['apply_removal'])}</label>",
-            f"<p class='meta'>{escape(text['apply_removal_hint'])}</p>",
             "</details>",
             "</div>",
             "</section>",
@@ -566,6 +420,8 @@ def _render_shortcut_entrypoints(text: dict[str, str]) -> str:
     items = [
         ("fast_feedback", text["shortcut_fast"], text["shortcut_fast_command"], text["shortcut_fast_caption"], True),
         ("readiness", text["shortcut_daily"], text["shortcut_daily_command"], text["shortcut_daily_caption"], False),
+        ("feedback_report", text["shortcut_feedback"], text["shortcut_feedback_command"], text["shortcut_feedback_caption"], False),
+        ("rules_dry_run", text["shortcut_rules"], text["shortcut_rules_command"], text["shortcut_rules_caption"], False),
     ]
     rendered: list[str] = []
     for action_id, title, command, caption, recommended in items:
@@ -722,11 +578,6 @@ def _render_host_feedback_panel(text: dict[str, str], *, interactive: bool) -> s
             "</section>",
             "</div>",
             "</div>",
-            "<section class='panel'>",
-            f"<h2>{escape(text['feedback_latest_runs'])}</h2>",
-            f"<p class='meta'>{escape(text['feedback_latest_runs_hint'])}</p>",
-            "<div id='feedback-latest-runs' class='feedback-runs-grid'></div>",
-            "</section>",
             "</section>",
         ]
     )
@@ -739,6 +590,30 @@ def _state_class(value: str) -> str:
     if normalized in {"pending", "escalated", "warning", "warn", "advisory"}:
         return "warn"
     return ""
+
+
+def _humanize_runtime_value(value: str, *, language: str) -> str:
+    normalized = str(value or "").strip()
+    if not normalized:
+        return normalized
+    lower = normalized.lower()
+    zh_map = {
+        "missing": "未配置",
+        "not recorded": "未记录",
+        "completed": "已完成",
+        "delivered": "已完成",
+        "running": "执行中",
+        "queued": "排队中",
+        "failed": "失败",
+        "quick": "快速",
+        "full": "完整",
+        "l1": "L1 基础",
+        "l2": "L2 标准",
+        "l3": "L3 深度",
+    }
+    if language == "zh-CN":
+        return zh_map.get(lower, normalized)
+    return normalized
 
 
 def _ui_text(language: str) -> dict[str, str]:

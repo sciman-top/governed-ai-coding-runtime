@@ -10,18 +10,17 @@ packages/contracts/src/governed_ai_coding_runtime_contracts/
 ## Current Surface
 The current package exposes pure-Python contract primitives for:
 - task intake, task storage, workflow, and worker coordination
-- repo profiles, repo attachment, runtime roots, and entrypoint-policy enforcement
-- tool governance, subprocess guardrails, write policy, approval, and attached-write execution
+- repo profiles, runtime roots, runtime status, and entrypoint-policy enforcement
+- tool governance, subprocess guardrails, write policy, approval, and verification planning
 - evidence, replay, delivery handoff, eval traces, and learning-efficiency metrics
-- session bridge, runtime status, operator queries, operator UI models, and control-console read models
-- host and adapter surfaces for Codex, Claude Code, adapter registry, compatibility, and continuity
-- target-repo reuse, multi-repo trial, target-repo speed KPI, and clarification governance
+- operator queries, operator UI models, control-console read models, and workflow-effect metrics
+- host and adapter surfaces for Codex, Claude Code, adapter registry, compatibility, continuity, and clarification governance
 
 ## Current Consumers
 - `scripts/run-governed-task.py`
-- `scripts/runtime-flow*.ps1`
-- `scripts/session-bridge.py`
 - `scripts/host-feedback-summary.py`
+- `scripts/serve-operator-ui.py`
+- `apps/control-plane/`
 - runtime and service tests under `tests/`
 
 ## Boundaries

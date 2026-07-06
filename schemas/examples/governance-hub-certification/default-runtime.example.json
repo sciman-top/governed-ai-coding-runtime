@@ -6,10 +6,8 @@
   "verification_command": "python scripts/verify-governance-hub-certification.py",
   "report_output_ref": "docs/change-evidence/governance-hub-certification-report.json",
   "portfolio_ref": "docs/architecture/capability-portfolio-classifier.json",
-  "effect_feedback_ref": "docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json",
   "policy_audit_ref": "docs/change-evidence/policy-tool-credential-audit-report.json",
   "required_artifact_refs": [
-    "docs/change-evidence/target-repo-runs/effect-report-classroomtoolkit.json",
     "docs/change-evidence/policy-tool-credential-audit-report.json"
   ],
   "required_outcomes": [

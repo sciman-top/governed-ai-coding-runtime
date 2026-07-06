@@ -26,7 +26,7 @@ class EvidenceRecoveryPostureTests(unittest.TestCase):
         for module_name in (
             "verify_evidence_recovery_posture_script",
             "select_next_work_recovery",
-            "host_feedback_summary_recovery",
+            "host_feedback_summary_selector",
             "evaluate_ltp_promotion_script",
         ):
             sys.modules.pop(module_name, None)
@@ -41,18 +41,14 @@ class EvidenceRecoveryPostureTests(unittest.TestCase):
             )
         return dict(cls._live_payload)
 
-    def test_live_recovery_posture_requires_fresh_ready_native_attach_evidence(self) -> None:
+    def test_live_recovery_posture_requires_fresh_repo_local_feedback(self) -> None:
         payload = self._live_recovery_payload()
         self.assertEqual(payload["status"], "pass")
         self.assertEqual(payload["selector"]["next_action"], "defer_ltp_and_refresh_evidence")
         self.assertEqual(payload["selector"]["evidence_state"], "fresh")
         self.assertIsNone(payload["selector"]["evidence_blocker"])
-        self.assertEqual(payload["target_runs"]["status"], "ok")
-        self.assertEqual(payload["target_runs"]["degraded_latest_run_count"], 0)
-        self.assertFalse(payload["effect_report"]["host_capability_candidate_present"])
-        self.assertEqual(payload["effect_report"]["decision"], "promote")
-        self.assertEqual(payload["effect_report"]["latest_codex_capability_status"], "ready")
-        self.assertEqual(payload["effect_report"]["latest_adapter_tier"], "native_attach")
+        self.assertEqual(payload["host_feedback"]["status"], "pass")
+        self.assertEqual(payload["host_feedback"]["claude_workload_status"], "ready")
 
     def test_recovery_posture_fails_closed_when_selector_is_not_in_recovered_defer_state(self) -> None:
         result = self._live_recovery_payload()
@@ -61,7 +57,7 @@ class EvidenceRecoveryPostureTests(unittest.TestCase):
         failures = []
         if result["selector"]["next_action"] != "defer_ltp_and_refresh_evidence":
             failures.append(
-                "selector must return defer_ltp_and_refresh_evidence once fresh host capability recovery is proven and no LTP package is selected"
+                "selector must return defer_ltp_and_refresh_evidence once repo-local evidence is fresh and no LTP package is selected"
             )
 
         self.assertIn("selector must return defer_ltp_and_refresh_evidence", failures[0])

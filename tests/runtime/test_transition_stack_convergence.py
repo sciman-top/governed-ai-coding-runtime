@@ -80,7 +80,7 @@ class TransitionStackConvergenceTests(unittest.TestCase):
             "tests/service/test_control_plane_cli.py",
             "tests/runtime/test_run_governed_task_service_wrapper.py",
             "packages/observability/runtime_tracing.py",
-            "tests/service/test_session_api.py",
+            "tests/service/test_operator_api.py",
             "scripts/run-governed-task.py",
         ]:
             target = repo_root / path
@@ -120,7 +120,7 @@ class TransitionStackConvergenceTests(unittest.TestCase):
                 ],
                 "tracing_hook_refs": [
                     "packages/observability/runtime_tracing.py",
-                    "tests/service/test_session_api.py",
+                    "tests/service/test_operator_api.py",
                 ],
                 "wrapper_drift_guard": {
                     "path": "scripts/run-governed-task.py",

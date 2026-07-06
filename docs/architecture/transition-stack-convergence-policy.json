@@ -88,7 +88,7 @@
     ],
     "tracing_hook_refs": [
       "packages/observability/runtime_tracing.py",
-      "tests/service/test_session_api.py"
+      "tests/service/test_operator_api.py"
     ],
     "wrapper_drift_guard": {
       "path": "scripts/run-governed-task.py",

@@ -37,10 +37,14 @@ def inspect_governance_hub_certification(*, repo_root: Path) -> dict:
         failures.append("missing_future_trigger")
     if not all(result["loop_status"].values()):
         failures.append("non_executable_loop")
+    if result["effect_feedback"]["host_feedback_status"] != "pass":
+        failures.append("host_feedback_not_passing")
+    if result["effect_feedback"]["selector_status"] != "pass":
+        failures.append("next_work_selector_not_passing")
     if result["effect_feedback"]["after_overall_status"] != "pass":
-        failures.append("target_repo_effect_not_passing")
+        failures.append("repo_local_effect_not_passing")
     if not result["effect_feedback"]["after_evidence_complete"]:
-        failures.append("target_repo_effect_evidence_incomplete")
+        failures.append("repo_local_effect_evidence_incomplete")
     if not result["host_posture"]["no_host_competition_claim"]:
         failures.append("host_competition_claim_detected")
 

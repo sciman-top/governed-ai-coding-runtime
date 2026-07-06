@@ -16,7 +16,7 @@ Provide minimal but realistic JSON instances that exercise the repository's curr
 - `provenance-and-attestation/`: provenance and attestation examples
 - `controlled-improvement-proposal/`: controlled proposal pipeline examples
 - `repo-map-context-shaping/`: repo-map strategy examples
-- `repo-profile/`: sample target-repository profiles
+- `repo-profile/`: sample repository profiles
 - `control-pack/`: sample control-pack metadata
 - `control-pack-inheritance-matrix/`: control-pack inheritance and override boundaries
 - `policy-decision/`: policy decision examples
@@ -40,16 +40,11 @@ Provide minimal but realistic JSON instances that exercise the repository's curr
 - `governance-hub-certification/default-runtime.example.json`
 - `waiver-and-exception/temporary-gate-waiver.example.json`
 - `provenance-and-attestation/schema-bundle-release.example.json`
-- `provenance-and-attestation/repo-light-pack.example.json`
 - `controlled-improvement-proposal/policy-rollout-review-proposal.example.json`
 - `repo-map-context-shaping/hybrid-default.example.json`
+- `repo-profile/governed-ai-coding-runtime.example.json`
 - `repo-profile/python-service.example.json`
 - `repo-profile/typescript-webapp.example.json`
-- `repo-profile/target-repo-fast-full-template.example.json`
-- `repo-profile/target-repo-entrypoint-advisory.example.json`
-- `repo-profile/target-repo-entrypoint-targeted-enforced.example.json`
-- `repo-profile/target-repo-entrypoint-repo-wide-enforced.example.json`
-- `repo-profile/target-repo-milestone-autocommit.example.json`
 - `policy-decision/escalate-write.example.json`
 - `agent-adapter-contract/manual-handoff.example.json`
 - `agent-adapter-contract/process-bridge.example.json`
@@ -99,31 +94,16 @@ Get-Content -Raw 'schemas/examples/waiver-and-exception/temporary-gate-waiver.ex
 Get-Content -Raw 'schemas/examples/provenance-and-attestation/schema-bundle-release.example.json' |
   Test-Json -SchemaFile 'schemas/jsonschema/provenance-and-attestation.schema.json'
 
-Get-Content -Raw 'schemas/examples/provenance-and-attestation/repo-light-pack.example.json' |
-  Test-Json -SchemaFile 'schemas/jsonschema/provenance-and-attestation.schema.json'
-
 Get-Content -Raw 'schemas/examples/repo-map-context-shaping/hybrid-default.example.json' |
   Test-Json -SchemaFile 'schemas/jsonschema/repo-map-context-shaping.schema.json'
+
+Get-Content -Raw 'schemas/examples/repo-profile/governed-ai-coding-runtime.example.json' |
+  Test-Json -SchemaFile 'schemas/jsonschema/repo-profile.schema.json'
 
 Get-Content -Raw 'schemas/examples/repo-profile/python-service.example.json' |
   Test-Json -SchemaFile 'schemas/jsonschema/repo-profile.schema.json'
 
 Get-Content -Raw 'schemas/examples/repo-profile/typescript-webapp.example.json' |
-  Test-Json -SchemaFile 'schemas/jsonschema/repo-profile.schema.json'
-
-Get-Content -Raw 'schemas/examples/repo-profile/target-repo-fast-full-template.example.json' |
-  Test-Json -SchemaFile 'schemas/jsonschema/repo-profile.schema.json'
-
-Get-Content -Raw 'schemas/examples/repo-profile/target-repo-entrypoint-advisory.example.json' |
-  Test-Json -SchemaFile 'schemas/jsonschema/repo-profile.schema.json'
-
-Get-Content -Raw 'schemas/examples/repo-profile/target-repo-entrypoint-targeted-enforced.example.json' |
-  Test-Json -SchemaFile 'schemas/jsonschema/repo-profile.schema.json'
-
-Get-Content -Raw 'schemas/examples/repo-profile/target-repo-entrypoint-repo-wide-enforced.example.json' |
-  Test-Json -SchemaFile 'schemas/jsonschema/repo-profile.schema.json'
-
-Get-Content -Raw 'schemas/examples/repo-profile/target-repo-milestone-autocommit.example.json' |
   Test-Json -SchemaFile 'schemas/jsonschema/repo-profile.schema.json'
 
 Get-Content -Raw 'schemas/examples/policy-decision/escalate-write.example.json' |
@@ -153,7 +133,7 @@ Get-Content -Raw 'schemas/examples/learning-efficiency-metrics/baseline.example.
 
 ## Notes
 - These examples are intentionally small enough to be easy to audit.
-- The repo-profile examples demonstrate `same kernel, different profiles` across Python and TypeScript targets.
+- The repo-profile examples demonstrate `same kernel, different profiles` across the self-runtime baseline plus Python and TypeScript targets.
 - The control-pack example demonstrates bundle metadata; it does not contain executable policy or hook code.
 - The adapter examples demonstrate honest fallback posture for non-Codex integrations.
 - The interaction-governance examples demonstrate checklist-first bugfix guidance, bounded response policy, and token-budget-aware behavior.

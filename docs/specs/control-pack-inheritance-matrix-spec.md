@@ -6,17 +6,16 @@ Draft
 ## Purpose
 Define a machine-readable matrix that separates:
 - unified governance owned by the hub control pack
-- target-repo fields inherited through baseline materialization
+- repo-local fields inherited through typed repo-profile materialization
 - repo-local override points that remain bounded and typed
-- forbidden override surfaces that must never be delegated to repo profiles or emitted light packs
+- forbidden override surfaces that must never be delegated to repo profiles
 
 ## Required Fields
 - `schema_version`
 - `matrix_id`
 - `control_pack_ref`
-- `target_baseline_ref`
+- `repo_profile_ref`
 - `repo_profile_schema_ref`
-- `light_pack_ref`
 - `unified_governance`
 - `target_inherit`
 - `target_override`
@@ -29,16 +28,16 @@ Each entry must declare:
 - `validation_rule`
 
 These entries identify kernel-owned fields that target repos must not redefine through profile materialization or light-pack emission.
+These entries identify kernel-owned fields that repo-local profiles must not inline or weaken.
 
 ## Target Inherit Entries
 Each entry must declare:
 - `profile_field`
-- `baseline_field`
 - `control_pack_reference`
 - `schema_path`
 - `reason`
 
-These entries identify target-repo fields that the hub is allowed to materialize into repo profiles through `required_profile_overrides`.
+These entries identify repo-local fields that the runtime expects to exist in the checked-in repo profile while remaining sourced from the shared control-pack contract.
 
 ## Target Override Entries
 Each entry must declare:
@@ -66,11 +65,12 @@ Optional fields:
 - `blocked_in`
 
 These entries identify semantic surfaces that must not appear as override fields in baseline-distributed profiles or emitted light packs.
+These entries identify semantic surfaces that must not appear as repo-profile override payload.
 
 ## Verification
 The matrix is valid only if:
-- every inherited baseline field is listed exactly once in `target_inherit`
+- every inherited repo-profile field is listed exactly once in `target_inherit`
 - every inherited or override field resolves to an explicit path in `repo-profile.schema.json`
-- unified governance fields exist in the hub control pack and do not appear as repo-profile or light-pack override payload
-- forbidden override fields are absent from baseline materialization, repo-local light packs, and any other declared emission surface
+- unified governance fields exist in the hub control pack and do not appear as repo-profile override payload
+- forbidden override fields are absent from the checked-in repo profile and any other declared repo-local emission surface
 - the verifier reports drift through the existing contract verification entrypoint

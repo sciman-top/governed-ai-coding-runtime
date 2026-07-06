@@ -8,7 +8,6 @@ from governed_ai_coding_runtime_contracts.maintenance_policy import (
     MaintenancePolicyStatus,
     load_maintenance_policy_status,
 )
-from governed_ai_coding_runtime_contracts.repo_attachment import inspect_attachment_posture
 from governed_ai_coding_runtime_contracts.task_store import FileTaskStore, TaskRecord
 
 
@@ -39,26 +38,10 @@ class RuntimeTaskStatus:
 
 
 @dataclass(frozen=True, slots=True)
-class RuntimeAttachmentStatus:
-    repo_id: str | None
-    binding_id: str | None
-    binding_state: str
-    light_pack_path: str
-    adapter_preference: str | None
-    gate_profile: str | None
-    reason: str | None
-    remediation: str | None
-    fail_closed: bool
-    context_pack_summary: dict | None = None
-    provenance_summary: dict | None = None
-
-
-@dataclass(frozen=True, slots=True)
 class RuntimeSnapshot:
     total_tasks: int
     maintenance: MaintenancePolicyStatus
     tasks: list[RuntimeTaskStatus]
-    attachments: list[RuntimeAttachmentStatus] = field(default_factory=list)
     runtime_root: str | None = None
     persistence_backend: str = "filesystem"
 
@@ -78,10 +61,6 @@ def runtime_snapshot_from_dict(raw: dict) -> RuntimeSnapshot:
     tasks_raw = raw.get("tasks")
     if not isinstance(tasks_raw, list):
         msg = "tasks must be a list"
-        raise ValueError(msg)
-    attachments_raw = raw.get("attachments", [])
-    if not isinstance(attachments_raw, list):
-        msg = "attachments must be a list"
         raise ValueError(msg)
     total_tasks = raw.get("total_tasks")
     if not isinstance(total_tasks, int):
@@ -107,7 +86,6 @@ def runtime_snapshot_from_dict(raw: dict) -> RuntimeSnapshot:
             ),
         ),
         tasks=[_runtime_task_status_from_dict(item) for item in tasks_raw],
-        attachments=[_runtime_attachment_status_from_dict(item) for item in attachments_raw],
         runtime_root=_optional_string(raw.get("runtime_root"), "runtime_root"),
         persistence_backend=_required_string(raw.get("persistence_backend", "filesystem"), "persistence_backend"),
     )
@@ -118,27 +96,21 @@ class RuntimeStatusStore:
         self,
         task_root: Path,
         repo_root: Path | None = None,
-        attachment_roots: list[Path] | None = None,
-        attachment_runtime_state_root: Path | None = None,
         runtime_root: Path | None = None,
         persistence_backend: str = "filesystem",
     ) -> None:
         self._task_root = task_root
         self._repo_root = repo_root or task_root.parent.parent
-        self._attachment_roots = attachment_roots or []
-        self._attachment_runtime_state_root = attachment_runtime_state_root
         self._runtime_root = runtime_root or task_root.parent
         self._persistence_backend = persistence_backend
 
     def snapshot(self) -> RuntimeSnapshot:
         maintenance = load_maintenance_policy_status(self._repo_root)
-        attachments = self._attachment_statuses()
         if not self._task_root.exists():
             return RuntimeSnapshot(
                 total_tasks=0,
                 maintenance=maintenance,
                 tasks=[],
-                attachments=attachments,
                 runtime_root=self._runtime_root.as_posix(),
                 persistence_backend=self._persistence_backend,
             )
@@ -152,7 +124,6 @@ class RuntimeStatusStore:
             total_tasks=len(tasks),
             maintenance=maintenance,
             tasks=tasks,
-            attachments=attachments,
             runtime_root=self._runtime_root.as_posix(),
             persistence_backend=self._persistence_backend,
         )
@@ -180,31 +151,6 @@ class RuntimeStatusStore:
                 evidence_refs=active_run.evidence_refs if active_run else [],
             ),
         )
-
-    def _attachment_statuses(self) -> list[RuntimeAttachmentStatus]:
-        statuses: list[RuntimeAttachmentStatus] = []
-        for attachment_root in self._attachment_roots:
-            runtime_state_root = self._attachment_runtime_state_root or self._task_root.parent / "attachments" / attachment_root.name
-            posture = inspect_attachment_posture(
-                target_repo_root=str(attachment_root),
-                runtime_state_root=str(runtime_state_root),
-            )
-            statuses.append(
-                RuntimeAttachmentStatus(
-                    repo_id=posture.repo_id,
-                    binding_id=posture.binding_id,
-                    binding_state=posture.binding_state,
-                    light_pack_path=posture.light_pack_path,
-                    adapter_preference=posture.adapter_preference,
-                    gate_profile=posture.gate_profile,
-                    reason=posture.reason,
-                    remediation=posture.remediation,
-                    fail_closed=posture.fail_closed,
-                    context_pack_summary=posture.context_pack_summary,
-                    provenance_summary=posture.provenance_summary,
-                )
-            )
-        return statuses
 
 
 def _runtime_task_status_from_dict(raw: dict) -> RuntimeTaskStatus:
@@ -246,29 +192,6 @@ def _runtime_task_status_from_dict(raw: dict) -> RuntimeTaskStatus:
             "workflow_required_artifacts",
         ),
         workflow_metrics=_optional_object(raw.get("workflow_metrics"), "workflow_metrics"),
-    )
-
-
-def _runtime_attachment_status_from_dict(raw: dict) -> RuntimeAttachmentStatus:
-    if not isinstance(raw, dict):
-        msg = "attachment status entry must be an object"
-        raise ValueError(msg)
-    fail_closed = raw.get("fail_closed")
-    if not isinstance(fail_closed, bool):
-        msg = "attachment.fail_closed must be a boolean"
-        raise ValueError(msg)
-    return RuntimeAttachmentStatus(
-        repo_id=_optional_string(raw.get("repo_id"), "repo_id"),
-        binding_id=_optional_string(raw.get("binding_id"), "binding_id"),
-        binding_state=_required_string(raw.get("binding_state"), "binding_state"),
-        light_pack_path=_required_string(raw.get("light_pack_path"), "light_pack_path"),
-        adapter_preference=_optional_string(raw.get("adapter_preference"), "adapter_preference"),
-        gate_profile=_optional_string(raw.get("gate_profile"), "gate_profile"),
-        reason=_optional_string(raw.get("reason"), "reason"),
-        remediation=_optional_string(raw.get("remediation"), "remediation"),
-        fail_closed=fail_closed,
-        context_pack_summary=_optional_object(raw.get("context_pack_summary"), "context_pack_summary"),
-        provenance_summary=_optional_object(raw.get("provenance_summary"), "provenance_summary"),
     )
 
 
@@ -351,6 +274,32 @@ def _interaction_projection(*, runtime_root: Path, evidence_refs: list[str]) -> 
     empty["clarification_active"] = bool(clarification_rounds)
     empty["latest_compression_action"] = _last_mapping_value(compression_actions, "compression_mode")
     empty["outstanding_observation_items_count"] = _last_list_size(observation_checklists, "items")
+    empty["workflow_mode_selected"] = _optional_string(
+        interaction_trace.get("workflow_mode_selected"),
+        "workflow_mode_selected",
+    )
+    empty["workflow_mode_source"] = _optional_string(
+        interaction_trace.get("workflow_mode_source"),
+        "workflow_mode_source",
+    )
+    empty["workflow_mode_reason"] = _optional_string(
+        interaction_trace.get("workflow_mode_reason"),
+        "workflow_mode_reason",
+    )
+    empty["workflow_degrade_reason"] = _optional_string(
+        interaction_trace.get("workflow_degrade_reason"),
+        "workflow_degrade_reason",
+    )
+    workflow_required_artifacts = interaction_trace.get("workflow_required_artifacts", [])
+    if isinstance(workflow_required_artifacts, list):
+        empty["workflow_required_artifacts"] = [
+            item.strip()
+            for item in workflow_required_artifacts
+            if isinstance(item, str) and item.strip()
+        ]
+    workflow_metrics = interaction_trace.get("workflow_metrics")
+    if isinstance(workflow_metrics, dict):
+        empty["workflow_metrics"] = dict(workflow_metrics)
     return empty
 
 

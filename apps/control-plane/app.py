@@ -23,14 +23,11 @@ class ControlPlaneApplication:
     def __init__(self, *, facade: Any) -> None:
         self._facade = facade
         routes_dir = Path(__file__).resolve().parent / "routes"
-        self._session_route = _load_route(routes_dir / "session.py", "control_plane_session_route")
         self._operator_route = _load_route(routes_dir / "operator.py", "control_plane_operator_route")
 
     def dispatch(self, *, route: str, payload: dict | None = None) -> dict:
         body = dict(payload or {})
         normalized_route = route.strip().lower()
-        if normalized_route == "/session":
-            return self._session_route.handle_session_route(self._facade, body)
         if normalized_route == "/operator":
             return self._operator_route.handle_operator_route(self._facade, body)
         if normalized_route == "/health":

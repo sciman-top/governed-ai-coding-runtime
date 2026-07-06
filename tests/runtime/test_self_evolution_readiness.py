@@ -342,7 +342,7 @@ class SelfEvolutionReadinessTests(unittest.TestCase):
         self.assertEqual(artifact["artifact_type"], "self_evolution_recommendation_report")
         self.assertFalse(artifact["mutation_allowed"])
         self.assertEqual(artifact["trigger_model"]["recommended_operator_action"], "SelfEvolutionRecommend")
-        self.assertEqual(artifact["trigger_model"]["proactive_operator_triggers"], ["FeedbackReport", "DailyAll"])
+        self.assertEqual(artifact["trigger_model"]["proactive_operator_triggers"], ["SelfEvolutionRecommend", "FeedbackReport"])
         self.assertEqual(artifact["recommended_next_action"], "report_only_until_wait_for_host_capability_recovery")
         self.assertTrue(artifact["materialization_blocked"])
         self.assertEqual(
@@ -374,7 +374,6 @@ class SelfEvolutionReadinessTests(unittest.TestCase):
                         "guards": {
                             "automatic_policy_mutation": False,
                             "automatic_skill_enablement": False,
-                            "automatic_target_repo_sync": False,
                             "automatic_push_or_merge": False,
                             "requires_human_review_before_effective_change": True,
                         },
@@ -403,7 +402,7 @@ class SelfEvolutionReadinessTests(unittest.TestCase):
         self.assertFalse(artifact["effective_change_allowed"])
         self.assertEqual("wait_for_host_capability_recovery", artifact["selector_next_action"])
         self.assertEqual(
-            {"policy_mutation", "skill_enablement", "target_repo_sync", "push_or_merge"},
+            {"policy_mutation", "skill_enablement", "push_or_merge"},
             {lane["lane"] for lane in artifact["control_lanes"]},
         )
         self.assertTrue(all(lane["status"] == "blocked" for lane in artifact["control_lanes"]))
@@ -454,7 +453,6 @@ class SelfEvolutionReadinessTests(unittest.TestCase):
                         "guards": {
                             "automatic_policy_mutation": True,
                             "automatic_skill_enablement": False,
-                            "automatic_target_repo_sync": False,
                             "automatic_push_or_merge": False,
                             "requires_human_review_before_effective_change": False,
                         },
@@ -512,7 +510,6 @@ class SelfEvolutionReadinessTests(unittest.TestCase):
                         "guards": {
                             "automatic_policy_mutation": False,
                             "automatic_skill_enablement": False,
-                            "automatic_target_repo_sync": False,
                             "automatic_push_or_merge": False,
                             "requires_human_review_before_effective_change": True,
                         },
@@ -534,14 +531,6 @@ class SelfEvolutionReadinessTests(unittest.TestCase):
                                 "next_action": "wait_for_host_capability_recovery",
                             },
                             {
-                                "lane": "target_repo_sync",
-                                "status": "blocked",
-                                "automatic_enabled": False,
-                                "guard_key": "automatic_target_repo_sync",
-                                "reason": "fixture",
-                                "next_action": "wait_for_host_capability_recovery",
-                            },
-                            {
                                 "lane": "push_or_merge",
                                 "status": "blocked",
                                 "automatic_enabled": False,
@@ -556,7 +545,6 @@ class SelfEvolutionReadinessTests(unittest.TestCase):
                             "proactive_operator_triggers": [
                                 "SelfEvolutionRecommend",
                                 "FeedbackReport",
-                                "DailyAll",
                             ],
                             "recommended_operator_action": "SelfEvolutionPromotionPlan",
                             "recommended_operator_action_command": (
@@ -580,11 +568,11 @@ class SelfEvolutionReadinessTests(unittest.TestCase):
 
         self.assertEqual("pass", result["status"])
         self.assertFalse(result["effective_change_allowed"])
-        self.assertEqual("review_required", result["promotion_stage"])
-        self.assertEqual("defer_ltp_and_refresh_evidence", result["selector_next_action"])
-        self.assertTrue(all(item["status"] == "review_required" for item in result["lane_status"].values()))
+        self.assertEqual("blocked_by_selector", result["promotion_stage"])
+        self.assertEqual("refresh_evidence_first", result["selector_next_action"])
+        self.assertTrue(all(item["status"] == "blocked" for item in result["lane_status"].values()))
         self.assertEqual(
-            {"policy_mutation", "skill_enablement", "target_repo_sync", "push_or_merge"},
+            {"policy_mutation", "skill_enablement", "push_or_merge"},
             set(result["lane_status"].keys()),
         )
 

@@ -5,7 +5,6 @@ import hashlib
 import json
 import os
 import re
-import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -13,7 +12,6 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST_PATH = ROOT / "rules" / "manifest.json"
-DEFAULT_CATALOG_PATH = ROOT / "docs" / "targets" / "target-repos-catalog.json"
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -32,33 +30,6 @@ def _expand_template(value: str, variables: dict[str, str]) -> str:
     for key, raw in variables.items():
         expanded = expanded.replace("${" + key + "}", raw)
     return expanded
-
-
-def _load_targets(catalog_path: Path) -> dict[str, dict[str, Any]]:
-    catalog = _load_json(catalog_path)
-    targets = catalog.get("targets")
-    if not isinstance(targets, dict) or not targets:
-        raise ValueError("target catalog must define a non-empty targets object")
-    return targets
-
-
-def _resolve_code_root(repo_root: Path) -> Path:
-    completed = subprocess.run(
-        ["git", "rev-parse", "--git-common-dir"],
-        cwd=repo_root,
-        check=False,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-    )
-    if completed.returncode != 0:
-        return repo_root.parent
-    common_dir = completed.stdout.strip()
-    if not common_dir:
-        return repo_root.parent
-    resolved_common_dir = (repo_root / common_dir).resolve(strict=False)
-    canonical_repo_root = resolved_common_dir.parent if resolved_common_dir.is_dir() else resolved_common_dir.parent
-    return canonical_repo_root.parent
 
 
 def _validate_manifest(manifest: dict[str, Any]) -> list[dict[str, Any]]:
@@ -84,8 +55,10 @@ def _validate_manifest(manifest: dict[str, Any]) -> list[dict[str, Any]]:
         if entry_id in seen:
             raise ValueError(f"duplicate manifest entry id: {entry_id}")
         seen.add(entry_id)
-        if scope not in {"global", "project"}:
-            raise ValueError(f"manifest.entries[{index}].scope must be global or project")
+        if scope != "global":
+            raise ValueError(
+                "target-repo/project rule distribution was retired; manifest entries must all use scope=global"
+            )
         if tool not in {"codex", "claude", "gemini"}:
             raise ValueError(f"manifest.entries[{index}].tool must be codex, claude, or gemini")
         if not isinstance(version, str) or not version.strip():
@@ -94,10 +67,10 @@ def _validate_manifest(manifest: dict[str, Any]) -> list[dict[str, Any]]:
             raise ValueError(f"manifest.entries[{index}].source must be a non-empty string")
         if not isinstance(target_path, str) or not target_path.strip():
             raise ValueError(f"manifest.entries[{index}].target_path must be a non-empty string")
-        if scope == "project":
-            target_repo_id = entry.get("target_repo_id")
-            if not isinstance(target_repo_id, str) or not target_repo_id.strip():
-                raise ValueError(f"manifest.entries[{index}].target_repo_id is required for project entries")
+        if "target_repo_id" in entry:
+            raise ValueError(
+                "target-repo/project rule distribution was retired; target_repo_id is no longer supported"
+            )
         entry["version"] = version
         validated.append(entry)
     return validated
@@ -112,20 +85,6 @@ def _resolve_source_path(raw_path: str) -> Path:
         resolved.relative_to(ROOT.resolve(strict=False))
     except ValueError as exc:
         raise ValueError(f"source path must stay inside this repo: {raw_path}") from exc
-    return resolved
-
-
-def _target_relative_path(target_repo: Path, raw_path: str) -> Path:
-    relative = Path(raw_path)
-    if relative.is_absolute():
-        raise ValueError(f"project target path must be repo-relative: {raw_path}")
-    if any(part == ".." for part in relative.parts):
-        raise ValueError(f"project target path must not contain '..': {raw_path}")
-    resolved = (target_repo / relative).resolve(strict=False)
-    try:
-        resolved.relative_to(target_repo.resolve(strict=False))
-    except ValueError as exc:
-        raise ValueError(f"project target path escapes target repo: {raw_path}") from exc
     return resolved
 
 
@@ -161,28 +120,6 @@ def _compare_versions(left: str | None, right: str | None) -> int | None:
     return (left_tuple > right_tuple) - (left_tuple < right_tuple)
 
 
-def _resolve_project_roots(
-    *,
-    catalog_path: Path,
-    repo_root: Path,
-    code_root: Path,
-    runtime_state_base: Path,
-) -> dict[str, Path]:
-    targets = _load_targets(catalog_path)
-    variables = {
-        "repo_root": str(repo_root),
-        "code_root": str(code_root),
-        "runtime_state_base": str(runtime_state_base),
-    }
-    roots: dict[str, Path] = {}
-    for target_name, target in targets.items():
-        attachment_root = target.get("attachment_root")
-        if not isinstance(attachment_root, str) or not attachment_root.strip():
-            raise ValueError(f"target '{target_name}' missing attachment_root")
-        roots[target_name] = Path(_expand_template(attachment_root, variables)).resolve(strict=False)
-    return roots
-
-
 def _backup_existing(target_path: Path, backup_root: Path, target_text: str) -> Path:
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     anchor = target_path.anchor
@@ -198,96 +135,6 @@ def _backup_existing(target_path: Path, backup_root: Path, target_text: str) -> 
     backup_path.parent.mkdir(parents=True, exist_ok=True)
     backup_path.write_text(target_text, encoding="utf-8")
     return backup_path
-
-
-def _split_markdown_sections(text: str, prefix: str) -> tuple[str, list[tuple[str, str]]]:
-    pattern = re.compile(rf"(?m)^(?P<heading>{re.escape(prefix)}[^\n]*\n)")
-    matches = list(pattern.finditer(text))
-    if not matches:
-        return text, []
-
-    preamble = text[: matches[0].start()]
-    sections: list[tuple[str, str]] = []
-    for index, match in enumerate(matches):
-        start = match.end()
-        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
-        sections.append((match.group("heading"), text[start:end]))
-    return preamble, sections
-
-
-def _tokenize_markdown_body(body: str) -> list[str]:
-    tokens: list[str] = []
-    paragraph_lines: list[str] = []
-
-    def flush_paragraph() -> None:
-        nonlocal paragraph_lines
-        if paragraph_lines:
-            tokens.append("\n".join(paragraph_lines).strip())
-            paragraph_lines = []
-
-    for raw_line in body.splitlines():
-        line = raw_line.rstrip()
-        stripped = line.strip()
-        if not stripped:
-            flush_paragraph()
-            continue
-        if re.match(r"^([-*] |\d+\. )", stripped):
-            flush_paragraph()
-            tokens.append(stripped)
-            continue
-        paragraph_lines.append(line)
-
-    flush_paragraph()
-    return [token for token in tokens if token.strip()]
-
-
-def _normalize_token(token: str) -> str:
-    return " ".join(token.split())
-
-
-def _merge_markdown_body(source_body: str, target_body: str) -> tuple[str, int]:
-    source_tokens = _tokenize_markdown_body(source_body)
-    target_tokens = _tokenize_markdown_body(target_body)
-    source_seen = {_normalize_token(token) for token in source_tokens}
-    target_only = [token for token in target_tokens if _normalize_token(token) not in source_seen]
-    if not target_only:
-        return source_body, 0
-
-    merged = source_body.rstrip()
-    addition_block = "\n".join(target_only)
-    if merged:
-        merged += "\n\n"
-    merged += "<!-- auto-merged target-local additions -->\n" + addition_block + "\n"
-    return merged, len(target_only)
-
-
-def _merge_project_rule_text(source_text: str, target_text: str) -> tuple[str, int] | None:
-    source_preamble, source_sections = _split_markdown_sections(source_text, "## ")
-    target_preamble, target_sections = _split_markdown_sections(target_text, "## ")
-    if [heading for heading, _ in source_sections] != [heading for heading, _ in target_sections]:
-        return None
-
-    merged_parts = [source_preamble]
-    added_count = 0
-    for (source_heading, source_body), (_, target_body) in zip(source_sections, target_sections):
-        source_intro, source_subsections = _split_markdown_sections(source_body, "### ")
-        target_intro, target_subsections = _split_markdown_sections(target_body, "### ")
-        if [heading for heading, _ in source_subsections] != [heading for heading, _ in target_subsections]:
-            return None
-
-        merged_section_parts = []
-        merged_intro, intro_additions = _merge_markdown_body(source_intro, target_intro)
-        added_count += intro_additions
-        merged_section_parts.append(merged_intro)
-
-        for (source_subheading, source_subbody), (_, target_subbody) in zip(source_subsections, target_subsections):
-            merged_subbody, sub_additions = _merge_markdown_body(source_subbody, target_subbody)
-            added_count += sub_additions
-            merged_section_parts.append(source_subheading + merged_subbody)
-
-        merged_parts.append(source_heading + "".join(merged_section_parts))
-
-    return "".join(merged_parts), added_count
 
 
 def _plan_entry(
@@ -331,46 +178,6 @@ def _plan_entry(
         return result
 
     comparison = _compare_versions(target_version, source_version)
-    if (
-        entry["scope"] == "project"
-        and target_version == source_version
-        and target_path.suffix.lower() == ".md"
-    ):
-        merged_text = _merge_project_rule_text(source_text, target_text)
-        if merged_text is not None:
-            integrated_text, integrated_additions = merged_text
-            integrated_hash = _sha256_text(integrated_text)
-            source_needs_update = integrated_hash != source_hash
-            target_needs_update = integrated_hash != target_hash
-            result["merge_strategy"] = "project_rule_structured_union"
-            result["merged_target_additions"] = integrated_additions
-            result["source_update"] = (
-                ("updated" if apply else "would_update") if source_needs_update else "unchanged"
-            )
-            result["target_update"] = (
-                ("updated" if apply else "would_update") if target_needs_update else "unchanged"
-            )
-            if not source_needs_update and not target_needs_update:
-                result["status"] = "skipped_same_hash"
-                return result
-            result["status"] = "merged_same_version_drift" if apply else "would_merge_same_version_drift"
-            result["merged_sha256"] = integrated_hash
-            if apply:
-                same_physical_path = source_path.resolve(strict=False) == target_path.resolve(strict=False)
-                if source_needs_update:
-                    source_backup_path = _backup_existing(source_path, backup_root, source_text)
-                    result["source_backup_path"] = str(source_backup_path)
-                if target_needs_update and not same_physical_path:
-                    backup_path = _backup_existing(target_path, backup_root, target_text)
-                    result["backup_path"] = str(backup_path)
-                if source_needs_update:
-                    source_path.parent.mkdir(parents=True, exist_ok=True)
-                    source_path.write_text(integrated_text, encoding="utf-8")
-                if target_needs_update and not same_physical_path:
-                    target_path.parent.mkdir(parents=True, exist_ok=True)
-                    target_path.write_text(integrated_text, encoding="utf-8")
-            return result
-
     if not force and target_version == source_version:
         result["status"] = "blocked_same_version_drift"
         result["reason"] = "target has the same rule version but different content"
@@ -393,40 +200,23 @@ def _plan_entry(
     return result
 
 
-def _scope_matches(entry_scope: str, selected_scope: str) -> bool:
-    if selected_scope == "all":
-        return True
-    if selected_scope == "global":
-        return entry_scope == "global"
-    if selected_scope == "targets":
-        return entry_scope == "project"
-    raise ValueError(f"unknown scope: {selected_scope}")
+def _scope_matches(selected_scope: str) -> bool:
+    if selected_scope not in {"all", "global"}:
+        raise ValueError(f"unknown scope: {selected_scope}")
+    return True
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Dry-run or apply managed agent rule files.")
-    parser.add_argument("--scope", choices=("All", "Global", "Targets", "all", "global", "targets"), default="All")
-    parser.add_argument("--target", action="append", default=[], help="Limit project entries to one target repo id.")
-    parser.add_argument("--apply", action="store_true", help="Write target files. Default is dry-run.")
+    parser = argparse.ArgumentParser(description="Dry-run or apply managed global agent rule files.")
+    parser.add_argument("--scope", choices=("All", "Global", "all", "global"), default="All")
+    parser.add_argument("--apply", action="store_true", help="Write global target files. Default is dry-run.")
     parser.add_argument("--force", action="store_true", help="Allow overwriting same-version drift or unknown-version targets.")
     parser.add_argument("--fail-on-change", action="store_true", help="Return non-zero when dry-run detects create/update drift.")
     parser.add_argument("--manifest-path", default=str(DEFAULT_MANIFEST_PATH))
-    parser.add_argument("--catalog-path", default=str(DEFAULT_CATALOG_PATH))
-    parser.add_argument("--repo-root", default=str(ROOT))
-    parser.add_argument("--code-root", default=None)
-    parser.add_argument("--runtime-state-base", default=None)
     parser.add_argument("--user-profile", default=os.environ.get("USERPROFILE") or str(Path.home()))
     args = parser.parse_args()
 
     manifest_path = Path(args.manifest_path).resolve(strict=False)
-    catalog_path = Path(args.catalog_path).resolve(strict=False)
-    repo_root = Path(args.repo_root).resolve(strict=False)
-    code_root = Path(args.code_root).resolve(strict=False) if args.code_root else _resolve_code_root(repo_root)
-    runtime_state_base = (
-        Path(args.runtime_state_base).resolve(strict=False)
-        if args.runtime_state_base
-        else repo_root / ".runtime" / "attachments"
-    )
     user_profile = Path(args.user_profile).resolve(strict=False)
 
     if not manifest_path.exists():
@@ -434,49 +224,24 @@ def main() -> int:
 
     manifest = _load_json(manifest_path)
     entries = _validate_manifest(manifest)
-    project_roots = _resolve_project_roots(
-        catalog_path=catalog_path,
-        repo_root=repo_root,
-        code_root=code_root,
-        runtime_state_base=runtime_state_base,
-    )
 
     backup_root_raw = manifest.get("backup_policy", {}).get("root", "docs/change-evidence/rule-sync-backups")
     backup_root = Path(str(backup_root_raw))
     if not backup_root.is_absolute():
         backup_root = ROOT / backup_root
     variables = {
-        "repo_root": str(repo_root),
-        "code_root": str(code_root),
-        "runtime_state_base": str(runtime_state_base),
         "user_profile": str(user_profile),
     }
 
     selected_scope = args.scope.lower()
-    selected_targets = set(args.target)
+    _scope_matches(selected_scope)
     results: list[dict[str, Any]] = []
     for entry in entries:
-        if not _scope_matches(str(entry["scope"]), selected_scope):
-            continue
-        if entry["scope"] == "project" and selected_targets and entry["target_repo_id"] not in selected_targets:
-            continue
-
         source_path = _resolve_source_path(str(entry["source"]))
         if not source_path.exists():
             raise SystemExit(f"source rule file not found: {source_path}")
         source_text = source_path.read_text(encoding="utf-8")
-
-        if entry["scope"] == "global":
-            target_path = Path(_expand_template(str(entry["target_path"]), variables)).resolve(strict=False)
-        else:
-            target_repo_id = str(entry["target_repo_id"])
-            if target_repo_id not in project_roots:
-                raise SystemExit(f"target repo id not found in catalog: {target_repo_id}")
-            target_repo = project_roots[target_repo_id]
-            if not target_repo.exists():
-                raise SystemExit(f"target repo not found: {target_repo}")
-            target_path = _target_relative_path(target_repo, str(entry["target_path"]))
-
+        target_path = Path(_expand_template(str(entry["target_path"]), variables)).resolve(strict=False)
         results.append(
             _plan_entry(
                 entry=entry,
@@ -493,15 +258,7 @@ def main() -> int:
     changed = [
         item
         for item in results
-        if item["status"]
-        in {
-            "would_create",
-            "would_update",
-            "would_merge_same_version_drift",
-            "created",
-            "updated",
-            "merged_same_version_drift",
-        }
+        if item["status"] in {"would_create", "would_update", "created", "updated"}
     ]
     status = "blocked" if blocked else ("applied" if args.apply and changed else ("dry_run_changes" if changed else "pass"))
     output = {
@@ -509,7 +266,6 @@ def main() -> int:
         "mode": "apply" if args.apply else "dry-run",
         "force": args.force,
         "manifest_path": str(manifest_path),
-        "catalog_path": str(catalog_path),
         "scope": selected_scope,
         "entry_count": len(results),
         "changed_count": len(changed),

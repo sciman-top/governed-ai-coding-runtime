@@ -406,26 +406,7 @@ def _auto_detect_runtime_inputs(*, repo_root: Path, as_of: dt.date) -> dict:
             ROOT / "scripts" / "host-feedback-summary.py",
             "host_feedback_summary_selector",
         )
-        host_feedback = host_feedback_module.build_host_feedback_summary(repo_root=repo_root, max_target_runs=0)
-        target_runs = next(
-            (
-                item.get("details", {})
-                for item in host_feedback.get("dimensions", [])
-                if isinstance(item, dict) and item.get("dimension_id") == "target_runs"
-            ),
-            {},
-        )
-        degraded_latest_runs = target_runs.get("degraded_latest_runs")
-        if not isinstance(degraded_latest_runs, list):
-            degraded_latest_runs = []
-        effect_module = _load_helper_module(
-            ROOT / "scripts" / "verify-target-repo-reuse-effect-report.py",
-            "verify_target_repo_effect_selector",
-        )
-        effect = effect_module.inspect_effect_report(
-            report_path=repo_root / "docs" / "change-evidence" / "target-repo-runs" / "effect-report-classroomtoolkit.json",
-            runs_root=repo_root / "docs" / "change-evidence" / "target-repo-runs",
-        )
+        host_feedback = host_feedback_module.build_host_feedback_summary(repo_root=repo_root)
         ai_experience_module = _load_helper_module(
             ROOT / "scripts" / "extract-ai-coding-experience.py",
             "extract_ai_coding_experience_selector",
@@ -434,12 +415,8 @@ def _auto_detect_runtime_inputs(*, repo_root: Path, as_of: dt.date) -> dict:
         evidence_stale_reasons: list[str] = []
         if host_feedback["status"] == "fail":
             evidence_stale_reasons.append("host_feedback_failed")
-        if target_runs.get("freshness_status") != "fresh":
-            evidence_stale_reasons.append("target_runs_not_fresh")
-        if degraded_latest_runs:
+        elif host_feedback["status"] == "attention":
             evidence_stale_reasons.append("host_capability_degraded")
-        if effect["status"] != "pass":
-            evidence_stale_reasons.append("effect_feedback_failed")
         if ai_experience["status"] != "pass" or bool(ai_experience["invalid_reasons"]):
             evidence_stale_reasons.append("ai_coding_experience_invalid")
         evidence_stale = bool(evidence_stale_reasons)
@@ -450,26 +427,12 @@ def _auto_detect_runtime_inputs(*, repo_root: Path, as_of: dt.date) -> dict:
         result["evidence_state"] = "stale" if evidence_stale else "fresh"
         result["details"]["host_feedback"] = {
             "status": host_feedback["status"],
-            "target_runs_status": next(
-                (
-                    item.get("status")
-                    for item in host_feedback.get("dimensions", [])
-                    if isinstance(item, dict) and item.get("dimension_id") == "target_runs"
-                ),
-                None,
-            ),
-            "target_run_freshness": target_runs.get("freshness_status"),
-            "degraded_latest_run_count": len(degraded_latest_runs),
-            "degraded_repos": sorted(
-                str(item.get("repo_id")) for item in degraded_latest_runs if isinstance(item, dict)
-            ),
+            "recommendation_count": len(host_feedback.get("recommendations", [])),
+            "codex_host_status": host_feedback.get("summary", {}).get("codex_host_status"),
+            "claude_host_status": host_feedback.get("summary", {}).get("claude_host_status"),
+            "claude_workload_status": host_feedback.get("summary", {}).get("claude_workload_status"),
         }
         result["details"]["evidence_stale_reasons"] = evidence_stale_reasons
-        result["details"]["effect_feedback"] = {
-            "status": effect["status"],
-            "decision": effect.get("decision"),
-            "backlog_candidate_count": effect.get("backlog_candidate_count"),
-        }
         result["details"]["ai_coding_experience"] = {
             "status": ai_experience["status"],
             "proposal_count": ai_experience["proposal_count"],
@@ -493,29 +456,8 @@ def _explicit_runtime_inputs(*, gate_state: str, source_state: str, evidence_sta
 
 
 def _has_bounded_host_capability_defer(*, repo_root: Path) -> bool:
-    report_path = repo_root / "docs" / "change-evidence" / "target-repo-runs" / "effect-report-classroomtoolkit.json"
     defer_evidence = repo_root / "docs" / "change-evidence" / "20260501-gap-140-bounded-defer.md"
-    try:
-        report = json.loads(report_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return False
-    has_candidate = False
-    for item in report.get("backlog_candidates", []):
-        if not isinstance(item, dict):
-            continue
-        if item.get("candidate_id") != "target-repo-reuse-host-capability-gap":
-            continue
-        boundary = item.get("remediation_boundary", {})
-        if not isinstance(boundary, dict):
-            continue
-        if (
-            boundary.get("required_recovery_evidence")
-            == "fresh target run with codex_capability_status=ready and adapter_tier=native_attach"
-            and boundary.get("claim_guard") == "do not claim native_attach recovery until a fresh target repo run proves it"
-        ):
-            has_candidate = True
-            break
-    return has_candidate and defer_evidence.exists()
+    return defer_evidence.exists()
 
 
 def _validate_runtime_state(field_name: str, value: object, allowed: set[str]) -> None:

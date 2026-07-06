@@ -26,9 +26,9 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All
   - runtime contract tests under `tests/runtime/`
   - service-boundary tests under `tests/service/`
 - `RuntimeQuick`
-  - bounded inner-loop slice for target-governance speed-profile work
+  - bounded host-only inner-loop slice for gate ownership, operator entrypoints, host feedback, and self-evolution readiness
 - `Contract`
-  - reference-required changes, reference-basis enforcement, target-governance consistency, rollout contracts, dependency baseline, and other fail-closed invariants
+  - reference-required changes, reference-basis enforcement, repo-local contract invariants, dependency baseline, and other fail-closed checks
 - `All`
   - build, runtime, contract, doctor-adjacent integrity, docs, links, and script checks
 
@@ -42,15 +42,15 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check All
   - `test_reference_required_changes.py`
   - `test_reference_basis.py`
   - `test_preflight_ci_wiring.py`
-- target-repo governance and speed:
-  - `test_target_repo_governance_consistency.py`
-  - `test_target_repo_rollout_contract.py`
-  - `test_target_repo_speed_kpi.py`
+- repo-local fast feedback:
   - `test_governance_gate_runner.py`
+  - `test_operator_entrypoint.py`
+  - `test_host_feedback_summary.py`
+  - `test_self_evolution_readiness.py`
 - operator and runtime read models:
   - `test_operator_ui.py`
   - `test_runtime_status.py`
-  - `test_session_bridge.py`
+  - `test_run_governed_task_cli.py`
 
 ## Direct Commands
 Use direct unittest commands only when the current shell environment is already known-good:

@@ -16,12 +16,12 @@ This directory stores the machine-readable contract surface for the runtime:
 ## Current Schema Families
 - Governance and control packs:
   - `control-registry`, `control-pack`, `control-pack-inheritance-matrix`, `capability-portfolio-classifier`
-- Repo, host, and attachment surfaces:
-  - `repo-profile`, `repo-admission-minimums`, `repo-attachment-binding`, `agent-adapter-contract`, `runtime-operator-surface`, `target-repo-speed-kpi`
+- Repo, host, and repo-local runtime surfaces:
+  - `repo-profile`, `repo-admission-minimums`, `agent-adapter-contract`, `runtime-operator-surface`
 - Policy, interaction, and evidence:
   - `tool-contract`, `hook-contract`, `policy-decision`, `response-policy`, `risk-tier-approval-policy`, `verification-gates`, `evidence-bundle`, `provenance-and-attestation`, `waiver-and-exception`, `interaction-signal`, `interaction-evidence`
 - Runtime flow and task semantics:
-  - `task-lifecycle`, `session-bridge-command`, `teaching-budget`, `clarification-protocol`, `transition-stack-convergence`
+  - `task-lifecycle`, `teaching-budget`, `clarification-protocol`, `transition-stack-convergence`
 - Knowledge, continuity, and controlled evolution:
   - `knowledge-source`, `knowledge-memory-lifecycle`, `agent-continuity-record`, `promotion-lifecycle`, `self-evolution-promotion-controller`, `learning-efficiency-metrics`, `controlled-improvement-proposal`, `core-principles`, `core-principle-change-proposal`, `core-principle-change-manifest`, `core-principle-change-report`
 - Skill and governed rollout support:

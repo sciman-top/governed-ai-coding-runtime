@@ -10,7 +10,7 @@
 ## 1. 阅读指引
 - 本文件通过上方 import 承接 governed-ai-coding-runtime 的共同项目规则，只追加 Claude Code 差异。
 - `AGENTS.md` 中的 `## B. Codex 平台差异` 只适用于 Codex；Claude 以本文件后续 `## B. Claude 平台差异` 为准。
-- 不在本文件复制项目事实、门禁、证据、回滚或 `Global Rule -> Repo Action`；若共同规则要变，先改控制仓 `rules/projects/governed-ai-coding-runtime/codex/AGENTS.md` 源文件并同步。
+- 不在本文件复制项目事实、门禁、证据、回滚或 `Global Rule -> Repo Action`；若共同规则要变，先改仓库根 `AGENTS.md`。
 - 合并后的有效上下文必须能推出：当前落点、目标归宿、门禁顺序、证据路径和回滚入口。
 
 ## B. Claude 平台差异

@@ -146,5 +146,5 @@ Expected JSON fields:
 
 ## Related
 - [Codex CLI/App Integration Guide](./codex-cli-app-integration-guide.md)
-- [Session Bridge Commands](./session-bridge-commands.md)
+- [Codex CLI/App Integration Guide](./codex-cli-app-integration-guide.md)
 - [Adapter Degrade Policy](./adapter-degrade-policy.md)

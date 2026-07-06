@@ -23,6 +23,8 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             check=True,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             cwd=ROOT,
         )
 
@@ -124,9 +126,6 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             ROOT / "scripts" / "build-runtime.ps1",
             ROOT / "scripts" / "doctor-runtime.ps1",
             ROOT / "scripts" / "runtime-check.ps1",
-            ROOT / "scripts" / "runtime-flow.ps1",
-            ROOT / "scripts" / "runtime-flow-classroomtoolkit.ps1",
-            ROOT / "scripts" / "runtime-flow-preset.ps1",
             ROOT / "scripts" / "operator.ps1",
             ROOT / "scripts" / "operator-ui-service.ps1",
             ROOT / "scripts" / "verify-repo.ps1",
@@ -137,6 +136,19 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
                 text = script.read_text(encoding="utf-8")
                 self.assertIn("Initialize-WindowsProcessEnvironment.ps1", text)
                 self.assertIn("Initialize-WindowsProcessEnvironment", text)
+
+    def test_repo_local_doctor_surface_no_longer_references_target_attachment_flow(self) -> None:
+        script = ROOT / "scripts" / "doctor-runtime.ps1"
+        text = script.read_text(encoding="utf-8")
+
+        for token in (
+            "attach-target-repo.py",
+            "repo_attachment",
+            "light-pack",
+            "AttachmentRoot",
+            "RuntimeStateRoot",
+        ):
+            self.assertNotIn(token, text)
 
     def test_verify_repo_exposes_build_and_doctor_checks(self) -> None:
         script = ROOT / "scripts" / "verify-repo.ps1"
@@ -172,6 +184,8 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
                 check=True,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 cwd=ROOT,
             )
         finally:
@@ -199,143 +213,14 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
                 check=True,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 cwd=ROOT,
             )
         finally:
             fixture_path.unlink(missing_ok=True)
 
         self.assertIn("OK active-markdown-links", completed.stdout)
-
-    def test_doctor_runtime_reports_attachment_postures(self) -> None:
-        import tempfile
-
-        from governed_ai_coding_runtime_contracts.repo_attachment import attach_target_repo
-
-        script = ROOT / "scripts" / "doctor-runtime.ps1"
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            workspace = Path(tmp_dir)
-
-            missing_root = workspace / "missing"
-            missing_root.mkdir()
-            missing_completed = self._run_doctor_attachment(script, missing_root, workspace / "state" / "missing")
-            self.assertNotEqual(missing_completed.returncode, 0)
-            self.assertIn("FAIL attachment-posture-missing-light-pack", missing_completed.stdout)
-            self.assertIn("REMEDIATE", missing_completed.stdout)
-            self.assertIn("REMEDIATE-ACTION", missing_completed.stdout)
-            self.assertIn("scripts/attach-target-repo.py", missing_completed.stdout)
-            self.assertIn("--target-repo", missing_completed.stdout)
-            self.assertNotIn("--target-repo-root", missing_completed.stdout)
-            self.assertNotIn("attach --target-repo", missing_completed.stdout)
-            self.assertIn("REMEDIATE-EVIDENCE", missing_completed.stdout)
-            self.assertTrue((workspace / "state" / "missing" / "doctor" / "latest-remediation.json").exists())
-
-            healthy_root = workspace / "healthy"
-            healthy_root.mkdir()
-            attach_target_repo(
-                target_repo_root=str(healthy_root),
-                runtime_state_root=str(workspace / "state" / "healthy"),
-                repo_id="healthy",
-                display_name="Healthy",
-                primary_language="python",
-                build_command="python -m compileall src",
-                test_command="python -m unittest discover",
-                contract_command="python -m unittest discover -s tests/contracts",
-                adapter_preference="manual_handoff",
-                gate_profile="default",
-            )
-            healthy_completed = self._run_doctor_attachment(script, healthy_root, workspace / "state" / "healthy")
-            self.assertEqual(healthy_completed.returncode, 0)
-            self.assertIn("OK attachment-target-repo-dependency-baseline", healthy_completed.stdout)
-            self.assertIn("OK attachment-light-pack-provenance", healthy_completed.stdout)
-            self.assertIn("OK attachment-posture-healthy", healthy_completed.stdout)
-            self.assertIn("REMEDIATE-EVIDENCE", healthy_completed.stdout)
-            self.assertTrue((workspace / "state" / "healthy" / "doctor" / "latest-remediation.json").exists())
-
-            missing_baseline_path = healthy_root / ".governed-ai" / "dependency-baseline.json"
-            missing_baseline_path.unlink()
-            missing_baseline_completed = self._run_doctor_attachment(
-                script,
-                healthy_root,
-                workspace / "state" / "healthy",
-            )
-            self.assertNotEqual(missing_baseline_completed.returncode, 0)
-            self.assertIn(
-                "FAIL attachment-posture-missing-target-repo-dependency-baseline",
-                missing_baseline_completed.stdout,
-            )
-            self.assertIn("scripts/verify-dependency-baseline.py", missing_baseline_completed.stdout)
-            self.assertIn("REMEDIATE-ACTION", missing_baseline_completed.stdout)
-
-            invalid_root = workspace / "invalid"
-            (invalid_root / ".governed-ai").mkdir(parents=True)
-            (invalid_root / ".governed-ai" / "light-pack.json").write_text(
-                json.dumps({"pack_kind": "repo_attachment_light_pack", "repo_profile_ref": "../outside.json"}),
-                encoding="utf-8",
-            )
-            invalid_completed = self._run_doctor_attachment(script, invalid_root, workspace / "state" / "invalid")
-            self.assertNotEqual(invalid_completed.returncode, 0)
-            self.assertIn("FAIL attachment-posture-invalid-light-pack", invalid_completed.stdout)
-            self.assertIn("REMEDIATE", invalid_completed.stdout)
-            self.assertIn("REMEDIATE-ACTION", invalid_completed.stdout)
-            self.assertIn("scripts/attach-target-repo.py", invalid_completed.stdout)
-            self.assertIn("--target-repo", invalid_completed.stdout)
-            self.assertNotIn("--target-repo-root", invalid_completed.stdout)
-            self.assertNotIn("attach --target-repo", invalid_completed.stdout)
-            self.assertIn("REMEDIATE-EVIDENCE", invalid_completed.stdout)
-            self.assertTrue((workspace / "state" / "invalid" / "doctor" / "latest-remediation.json").exists())
-
-            stale_root = workspace / "stale"
-            stale_root.mkdir()
-            attach_target_repo(
-                target_repo_root=str(stale_root),
-                runtime_state_root=str(workspace / "state" / "stale"),
-                repo_id="stale",
-                display_name="Stale",
-                primary_language="python",
-                build_command="python -m compileall src",
-                test_command="python -m unittest discover",
-                contract_command="python -m unittest discover -s tests/contracts",
-                adapter_preference="manual_handoff",
-                gate_profile="default",
-            )
-            light_pack_path = stale_root / ".governed-ai" / "light-pack.json"
-            light_pack = json.loads(light_pack_path.read_text(encoding="utf-8"))
-            light_pack["binding_id"] = "binding-old-target"
-            light_pack_path.write_text(json.dumps(light_pack), encoding="utf-8")
-            stale_completed = self._run_doctor_attachment(script, stale_root, workspace / "state" / "stale")
-            self.assertNotEqual(stale_completed.returncode, 0)
-            self.assertIn("FAIL attachment-posture-stale-binding", stale_completed.stdout)
-            self.assertIn("REMEDIATE", stale_completed.stdout)
-            self.assertIn("REMEDIATE-ACTION", stale_completed.stdout)
-            self.assertIn("scripts/attach-target-repo.py", stale_completed.stdout)
-            self.assertIn("--target-repo", stale_completed.stdout)
-            self.assertNotIn("--target-repo-root", stale_completed.stdout)
-            self.assertNotIn("attach --target-repo", stale_completed.stdout)
-            self.assertIn("REMEDIATE-EVIDENCE", stale_completed.stdout)
-            self.assertTrue((workspace / "state" / "stale" / "doctor" / "latest-remediation.json").exists())
-
-    def _run_doctor_attachment(self, script: Path, attachment_root: Path, runtime_state_root: Path) -> subprocess.CompletedProcess:
-        return subprocess.run(
-            [
-                "pwsh",
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                str(script),
-                "-AttachmentRoot",
-                str(attachment_root),
-                "-RuntimeStateRoot",
-                str(runtime_state_root),
-            ],
-            check=False,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            cwd=ROOT,
-        )
-
 
 if __name__ == "__main__":
     unittest.main()

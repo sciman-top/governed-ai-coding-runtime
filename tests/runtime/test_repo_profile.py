@@ -35,7 +35,7 @@ class RepoProfileContractTests(unittest.TestCase):
         self.assertEqual(profile.learning_assistance_policy["max_terms_per_response"], 1)
         self.assertIn("observation_gap", profile.learning_assistance_policy["trigger_signals"])
         self.assertEqual(profile.required_entrypoint_policy["current_mode"], "advisory")
-        self.assertIn("runtime-flow", profile.required_entrypoint_policy["canonical_entrypoints"])
+        self.assertIn("operator", profile.required_entrypoint_policy["canonical_entrypoints"])
         if not hasattr(profile, "command_ids"):
             self.fail("RepoProfile.command_ids is not implemented")
         self.assertEqual(profile.command_ids("build"), ["build-wheel"])

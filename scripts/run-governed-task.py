@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import json
 import sys
 from pathlib import Path
-from typing import Any
 from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,10 +13,6 @@ if str(CONTRACTS_SRC) not in sys.path:
 
 from governed_ai_coding_runtime_contracts.artifact_store import LocalArtifactStore
 from governed_ai_coding_runtime_contracts.delivery_handoff import build_handoff_package
-from governed_ai_coding_runtime_contracts.entrypoint_policy import (
-    EntrypointPolicyViolation,
-    evaluate_required_entrypoint_policy,
-)
 from governed_ai_coding_runtime_contracts.evidence import build_evidence_bundle
 from governed_ai_coding_runtime_contracts.codex_adapter import (
     codex_capability_readiness_to_dict,
@@ -27,9 +21,9 @@ from governed_ai_coding_runtime_contracts.codex_adapter import (
 from governed_ai_coding_runtime_contracts.execution_runtime import ExecutionRuntime, WorkerExecutionResult
 from governed_ai_coding_runtime_contracts.file_guard import atomic_write_text, validate_file_component
 from governed_ai_coding_runtime_contracts.learning_efficiency_metrics import build_learning_efficiency_metrics
-from governed_ai_coding_runtime_contracts.repo_attachment import validate_light_pack
 from governed_ai_coding_runtime_contracts.repo_profile import load_repo_profile
 from governed_ai_coding_runtime_contracts.replay import build_replay_reference
+from governed_ai_coding_runtime_contracts.runtime_status import RuntimeStatusStore, runtime_snapshot_to_dict
 from governed_ai_coding_runtime_contracts.runtime_roots import ensure_runtime_roots, resolve_runtime_roots
 from governed_ai_coding_runtime_contracts.subprocess_guard import run_governed_gate_command
 from governed_ai_coding_runtime_contracts.task_intake import TaskIntake, apply_interaction_profile_defaults
@@ -52,9 +46,19 @@ ARTIFACT_ROOT = Path(_RUNTIME_ROOTS.artifacts_root)
 REPLAY_ROOT = Path(_RUNTIME_ROOTS.replay_root)
 WORKSPACES_ROOT = Path(_RUNTIME_ROOTS.workspaces_root)
 VERIFICATION_MODE_CHOICES = ["quick", "full", "l1", "l2", "l3"]
+RETIRED_RUN_GOVERNED_TASK_COMMANDS = {
+    "verify-attachment": "Attached target-repo verification was removed with the attachment bridge.",
+    "govern-attachment-write": "Attached target-repo write governance was removed with the attachment bridge.",
+    "decide-attachment-write": "Attached target-repo approval flow was removed with the attachment bridge.",
+    "execute-attachment-write": "Attached target-repo write execution was removed with the attachment bridge.",
+}
 
 
 def main() -> int:
+    retired_result = _dispatch_retired_command(sys.argv[1:])
+    if retired_result is not None:
+        return retired_result
+
     parser = argparse.ArgumentParser(description="CLI-first governed runtime operator surface")
     parser.add_argument("--runtime-root")
     parser.add_argument("--compat-runtime-root", action="store_true")
@@ -78,173 +82,61 @@ def main() -> int:
     run_parser.add_argument("--mode", choices=VERIFICATION_MODE_CHOICES, default="full")
     run_parser.add_argument("--json", action="store_true")
 
-    verify_attachment_parser = subparsers.add_parser(
-        "verify-attachment",
-        help="Execute declared verification gates for an attached target repo",
-        description="Execute declared verification gates for an attached target repo.",
-    )
-    verify_attachment_parser.add_argument("--attachment-root", required=True)
-    verify_attachment_parser.add_argument("--attachment-runtime-state-root", required=True)
-    verify_attachment_parser.add_argument("--mode", choices=VERIFICATION_MODE_CHOICES, default="quick")
-    verify_attachment_parser.add_argument("--task-id", required=True)
-    verify_attachment_parser.add_argument("--run-id", required=True)
-    verify_attachment_parser.add_argument("--entrypoint-id", default="run-governed-task.verify-attachment")
-    verify_attachment_parser.add_argument("--json", action="store_true")
-
-    govern_attachment_write_parser = subparsers.add_parser(
-        "govern-attachment-write",
-        help="Evaluate attached repo write governance.",
-        description="Evaluate attached repo write governance.",
-    )
-    govern_attachment_write_parser.add_argument("--attachment-root", required=True)
-    govern_attachment_write_parser.add_argument("--attachment-runtime-state-root", required=True)
-    govern_attachment_write_parser.add_argument("--task-id", required=True)
-    govern_attachment_write_parser.add_argument("--tool-name", default="apply_patch")
-    govern_attachment_write_parser.add_argument("--tool-command")
-    govern_attachment_write_parser.add_argument("--target-path", required=True)
-    govern_attachment_write_parser.add_argument("--tier", choices=["low", "medium", "high"], default="medium")
-    govern_attachment_write_parser.add_argument("--rollback-reference", default="")
-    govern_attachment_write_parser.add_argument("--adapter-id", default="codex-cli")
-    govern_attachment_write_parser.add_argument("--session-id")
-    govern_attachment_write_parser.add_argument("--resume-id")
-    govern_attachment_write_parser.add_argument("--continuation-id")
-    govern_attachment_write_parser.add_argument("--entrypoint-id", default="run-governed-task.govern-attachment-write")
-    govern_attachment_write_parser.add_argument("--json", action="store_true")
-
-    decide_attachment_write_parser = subparsers.add_parser(
-        "decide-attachment-write",
-        help="Approve or reject an attached write request.",
-        description="Approve or reject an attached write request.",
-    )
-    decide_attachment_write_parser.add_argument("--attachment-runtime-state-root", required=True)
-    decide_attachment_write_parser.add_argument("--approval-id", required=True)
-    decide_attachment_write_parser.add_argument("--decision", choices=["approve", "reject"], required=True)
-    decide_attachment_write_parser.add_argument("--decided-by", default="operator")
-    decide_attachment_write_parser.add_argument("--task-id", default="attachment-write")
-    decide_attachment_write_parser.add_argument("--adapter-id", default="codex-cli")
-    decide_attachment_write_parser.add_argument("--session-id")
-    decide_attachment_write_parser.add_argument("--resume-id")
-    decide_attachment_write_parser.add_argument("--continuation-id")
-    decide_attachment_write_parser.add_argument("--json", action="store_true")
-
-    execute_attachment_write_parser = subparsers.add_parser(
-        "execute-attachment-write",
-        help="Execute an approved attached write request.",
-        description="Execute an approved attached write request.",
-    )
-    execute_attachment_write_parser.add_argument("--attachment-root", required=True)
-    execute_attachment_write_parser.add_argument("--attachment-runtime-state-root", required=True)
-    execute_attachment_write_parser.add_argument("--task-id", required=True)
-    execute_attachment_write_parser.add_argument(
-        "--tool-name",
-        choices=["write_file", "append_file", "shell", "git", "package"],
-        default="write_file",
-    )
-    execute_attachment_write_parser.add_argument("--tool-command")
-    execute_attachment_write_parser.add_argument("--target-path", required=True)
-    execute_attachment_write_parser.add_argument("--tier", choices=["low", "medium", "high"], default="medium")
-    execute_attachment_write_parser.add_argument("--rollback-reference", required=True)
-    execute_attachment_write_parser.add_argument("--content", required=True)
-    execute_attachment_write_parser.add_argument("--approval-id")
-    execute_attachment_write_parser.add_argument("--expected-sha256")
-    execute_attachment_write_parser.add_argument("--adapter-id", default="codex-cli")
-    execute_attachment_write_parser.add_argument("--session-id")
-    execute_attachment_write_parser.add_argument("--resume-id")
-    execute_attachment_write_parser.add_argument("--continuation-id")
-    execute_attachment_write_parser.add_argument("--entrypoint-id", default="run-governed-task.execute-attachment-write")
-    execute_attachment_write_parser.add_argument("--json", action="store_true")
-
     status_parser = subparsers.add_parser("status", help="Print runtime status snapshot")
     status_parser.add_argument("--json", action="store_true")
-    status_parser.add_argument("--attachment-root")
-    status_parser.add_argument("--attachment-runtime-state-root")
 
     args = parser.parse_args()
     _configure_runtime_roots(runtime_root=args.runtime_root, compat_runtime_root=bool(args.compat_runtime_root))
-    try:
-        if args.command == "create":
-            payload = create_task(task_id=args.task_id, goal=args.goal, scope=args.scope, repo=args.repo)
-        elif args.command == "run":
-            payload = run_task(task_id=args.task_id, goal=args.goal, scope=args.scope, repo=args.repo, profile_path=args.profile, mode=args.mode)
-        elif args.command == "verify-attachment":
-            payload = run_attachment_verification(
-                attachment_root=args.attachment_root,
-                attachment_runtime_state_root=args.attachment_runtime_state_root,
-                mode=args.mode,
-                task_id=args.task_id,
-                run_id=args.run_id,
-                entrypoint_id=args.entrypoint_id,
-            )
-        elif args.command == "govern-attachment-write":
-            payload = govern_attachment_write(
-                attachment_root=args.attachment_root,
-                attachment_runtime_state_root=args.attachment_runtime_state_root,
-                task_id=args.task_id,
-                tool_name=args.tool_name,
-                command_text=args.tool_command,
-                target_path=args.target_path,
-                tier=args.tier,
-                rollback_reference=args.rollback_reference,
-                adapter_id=args.adapter_id,
-                session_id=args.session_id,
-                resume_id=args.resume_id,
-                continuation_id=args.continuation_id,
-                entrypoint_id=args.entrypoint_id,
-            )
-        elif args.command == "decide-attachment-write":
-            payload = decide_attachment_write(
-                attachment_runtime_state_root=args.attachment_runtime_state_root,
-                approval_id=args.approval_id,
-                decision=args.decision,
-                decided_by=args.decided_by,
-                task_id=args.task_id,
-                adapter_id=args.adapter_id,
-                session_id=args.session_id,
-                resume_id=args.resume_id,
-                continuation_id=args.continuation_id,
-            )
-        elif args.command == "execute-attachment-write":
-            payload = execute_attachment_write(
-                attachment_root=args.attachment_root,
-                attachment_runtime_state_root=args.attachment_runtime_state_root,
-                task_id=args.task_id,
-                tool_name=args.tool_name,
-                command_text=args.tool_command,
-                target_path=args.target_path,
-                tier=args.tier,
-                rollback_reference=args.rollback_reference,
-                content=args.content,
-                approval_id=args.approval_id,
-                expected_sha256=args.expected_sha256,
-                adapter_id=args.adapter_id,
-                session_id=args.session_id,
-                resume_id=args.resume_id,
-                continuation_id=args.continuation_id,
-                entrypoint_id=args.entrypoint_id,
-            )
-        else:
-            payload = snapshot_payload(
-                attachment_root=args.attachment_root,
-                attachment_runtime_state_root=args.attachment_runtime_state_root,
-            )
-    except EntrypointPolicyViolation as exc:
-        payload = {
-            "status": "entrypoint_policy_denied",
-            "entrypoint_policy": exc.evaluation,
-            "reason": exc.evaluation.get("reason"),
-            "remediation_hint": exc.evaluation.get("remediation_hint"),
-        }
-        if getattr(args, "json", False):
-            print(json.dumps(payload, indent=2, sort_keys=True))
-        else:
-            print(render_payload(payload))
-        return 1
+    if args.command == "create":
+        payload = create_task(task_id=args.task_id, goal=args.goal, scope=args.scope, repo=args.repo)
+    elif args.command == "run":
+        payload = run_task(task_id=args.task_id, goal=args.goal, scope=args.scope, repo=args.repo, profile_path=args.profile, mode=args.mode)
+    else:
+        payload = snapshot_payload()
 
     if getattr(args, "json", False):
         print(json.dumps(payload, indent=2, sort_keys=True))
     else:
         print(render_payload(payload))
     return 0
+
+
+def _dispatch_retired_command(argv: list[str]) -> int | None:
+    command, json_output = _extract_requested_command(argv)
+    if command not in RETIRED_RUN_GOVERNED_TASK_COMMANDS:
+        return None
+    payload = {
+        "status": "retired_command",
+        "command": command,
+        "reason": RETIRED_RUN_GOVERNED_TASK_COMMANDS[command],
+        "remediation_hint": "Use create/run/status for repo-local runtime work. Attachment and target-repo bridge flows were removed.",
+    }
+    if json_output:
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        print(render_payload(payload))
+    return 1
+
+
+def _extract_requested_command(argv: list[str]) -> tuple[str | None, bool]:
+    json_output = False
+    skip_next = False
+    for token in argv:
+        if skip_next:
+            skip_next = False
+            continue
+        if token == "--json":
+            json_output = True
+            continue
+        if token == "--runtime-root":
+            skip_next = True
+            continue
+        if token == "--compat-runtime-root":
+            continue
+        if token.startswith("-"):
+            continue
+        return token, json_output
+    return None, json_output
 
 
 def create_task(
@@ -441,39 +333,18 @@ def run_task(*, task_id: str | None, goal: str, scope: str, repo: str, profile_p
 def snapshot_payload(
     *,
     task_id: str | None = None,
-    attachment_root: str | None = None,
-    attachment_runtime_state_root: str | None = None,
     workflow_metrics: dict | None = None,
     workflow_decision: dict | None = None,
 ) -> dict:
-    response = _dispatch_session_command(
-        command_type="inspect_status",
-        task_id="operator-status",
-        repo_binding_id="operator-status",
-        adapter_id="codex-cli",
-        risk_tier="low",
-        payload={},
-        command_id="cli-status",
-        attachment_root=attachment_root,
-        attachment_runtime_state_root=attachment_runtime_state_root,
+    status_payload = runtime_snapshot_to_dict(
+        RuntimeStatusStore(
+            TASK_ROOT,
+            ROOT,
+            runtime_root=RUNTIME_ROOT,
+        ).snapshot()
     )
-    status_payload = _response_payload(response)
-    tasks = status_payload.get("tasks")
-    if not isinstance(tasks, list):
-        tasks = []
-    maintenance = status_payload.get("maintenance")
-    if not isinstance(maintenance, dict):
-        maintenance = {
-            "stage": status_payload.get("maintenance_stage", "unknown"),
-            "compatibility_policy_ref": None,
-            "upgrade_policy_ref": None,
-            "triage_policy_ref": None,
-            "deprecation_policy_ref": None,
-            "retirement_policy_ref": None,
-        }
-    attachments = status_payload.get("attachments")
-    if not isinstance(attachments, list):
-        attachments = []
+    tasks = status_payload.get("tasks", [])
+    maintenance = status_payload.get("maintenance", {})
     workflow_decision = workflow_decision if isinstance(workflow_decision, dict) else {}
     payload = {
         "runtime_roots": {
@@ -491,7 +362,6 @@ def snapshot_payload(
             for item in tasks
             if isinstance(item, dict) and (task_id is None or item.get("task_id") == task_id)
         ],
-        "attachments": [item for item in attachments if isinstance(item, dict)],
         "workflow_mode_selected": workflow_decision.get("workflow_mode_selected"),
         "workflow_mode_source": workflow_decision.get("workflow_mode_source"),
         "workflow_mode_reason": workflow_decision.get("workflow_mode_reason"),
@@ -622,263 +492,10 @@ def _interaction_trace_for_record(record: TaskRecord, profile: object, *, workfl
     return trace
 
 
-def run_attachment_verification(
-    *,
-    attachment_root: str,
-    attachment_runtime_state_root: str,
-    mode: str,
-    task_id: str,
-    run_id: str,
-    entrypoint_id: str = "run-governed-task.verify-attachment",
-) -> dict:
-    attachment, profile = _try_load_attachment_contract(
-        attachment_root=attachment_root,
-        attachment_runtime_state_root=attachment_runtime_state_root,
-    )
-    entrypoint_policy = (
-        _evaluate_entrypoint_policy(
-            profile=profile,
-            entrypoint_id=entrypoint_id,
-            scope="verify_attachment",
-        )
-        if profile is not None
-        else None
-    )
-    repo_binding_id = attachment.binding.binding_id if attachment is not None else "attachment-binding"
-    command_type = _gate_command_type_for_mode(mode)
-    response = _dispatch_session_command(
-        command_type=command_type,
-        task_id=task_id,
-        repo_binding_id=repo_binding_id,
-        adapter_id="codex-cli",
-        risk_tier="low",
-        payload={"run_id": run_id, "plan_only": False, "gate_level": mode, "entrypoint_id": entrypoint_id},
-        command_id=f"cli-verify-{task_id}-{run_id}",
-        attachment_root=attachment_root,
-        attachment_runtime_state_root=attachment_runtime_state_root,
-    )
-    payload = _response_payload(response)
-    return {
-        "repo_id": profile.repo_id if profile is not None else None,
-        "entrypoint_policy": entrypoint_policy,
-        "binding_id": repo_binding_id,
-        "mode": mode,
-        "task_id": task_id,
-        "run_id": run_id,
-        "gate_order": payload["gate_order"],
-        "results": payload["results"],
-        "required_gate_ids": payload.get("required_gate_ids", []),
-        "blocking_gate_ids": payload.get("blocking_gate_ids", []),
-        "outcome": payload.get(
-            "outcome",
-            "fail" if any(result != "pass" for result in payload["results"].values()) else "pass",
-        ),
-        "service_boundary": payload.get("service_boundary"),
-        "result_artifact_refs": payload["result_artifact_refs"],
-        "evidence_link": payload["evidence_link"],
-    }
-
-
-def govern_attachment_write(
-    *,
-    attachment_root: str,
-    attachment_runtime_state_root: str,
-    task_id: str,
-    tool_name: str,
-    command_text: str | None,
-    target_path: str,
-    tier: str,
-    rollback_reference: str,
-    adapter_id: str,
-    session_id: str | None = None,
-    resume_id: str | None = None,
-    continuation_id: str | None = None,
-    entrypoint_id: str = "run-governed-task.govern-attachment-write",
-) -> dict:
-    _attachment, profile = _try_load_attachment_contract(
-        attachment_root=attachment_root,
-        attachment_runtime_state_root=attachment_runtime_state_root,
-    )
-    entrypoint_policy = (
-        _evaluate_entrypoint_policy(
-            profile=profile,
-            entrypoint_id=entrypoint_id,
-            scope="govern_attachment_write",
-        )
-        if profile is not None
-        else None
-    )
-    request_payload = {
-        "tool_name": tool_name,
-        "command": command_text or "",
-        "target_path": target_path,
-        "tier": tier,
-        "rollback_reference": rollback_reference,
-        "entrypoint_id": entrypoint_id,
-    }
-    if session_id:
-        request_payload["session_id"] = session_id
-    if resume_id:
-        request_payload["resume_id"] = resume_id
-    if continuation_id:
-        request_payload["continuation_id"] = continuation_id
-    response = _dispatch_session_command(
-        command_type="write_request",
-        task_id=task_id,
-        repo_binding_id="attachment-binding",
-        adapter_id=adapter_id,
-        risk_tier=tier,
-        payload=request_payload,
-        command_id=f"cli-govern-{task_id}",
-        attachment_root=attachment_root,
-        attachment_runtime_state_root=attachment_runtime_state_root,
-    )
-    payload = _response_payload(response)
-    payload["entrypoint_policy"] = entrypoint_policy
-    return payload
-
-
-def decide_attachment_write(
-    *,
-    attachment_runtime_state_root: str,
-    approval_id: str,
-    decision: str,
-    decided_by: str,
-    adapter_id: str,
-    task_id: str = "attachment-write",
-    session_id: str | None = None,
-    resume_id: str | None = None,
-    continuation_id: str | None = None,
-) -> dict:
-    decision_payload = {
-        "approval_id": approval_id,
-        "decision": decision,
-        "decided_by": decided_by,
-    }
-    if session_id:
-        decision_payload["session_id"] = session_id
-    if resume_id:
-        decision_payload["resume_id"] = resume_id
-    if continuation_id:
-        decision_payload["continuation_id"] = continuation_id
-    response = _dispatch_session_command(
-        command_type="write_approve",
-        task_id=task_id,
-        repo_binding_id="attachment-binding",
-        adapter_id=adapter_id,
-        risk_tier="medium",
-        payload=decision_payload,
-        command_id=f"cli-approve-{approval_id}",
-        attachment_runtime_state_root=attachment_runtime_state_root,
-    )
-    return _response_payload(response)
-
-
-def execute_attachment_write(
-    *,
-    attachment_root: str,
-    attachment_runtime_state_root: str,
-    task_id: str,
-    tool_name: str,
-    command_text: str | None,
-    target_path: str,
-    tier: str,
-    rollback_reference: str,
-    content: str,
-    approval_id: str | None,
-    expected_sha256: str | None = None,
-    adapter_id: str,
-    session_id: str | None = None,
-    resume_id: str | None = None,
-    continuation_id: str | None = None,
-    entrypoint_id: str = "run-governed-task.execute-attachment-write",
-) -> dict:
-    _attachment, profile = _try_load_attachment_contract(
-        attachment_root=attachment_root,
-        attachment_runtime_state_root=attachment_runtime_state_root,
-    )
-    entrypoint_policy = (
-        _evaluate_entrypoint_policy(
-            profile=profile,
-            entrypoint_id=entrypoint_id,
-            scope="execute_attachment_write",
-        )
-        if profile is not None
-        else None
-    )
-    request_payload = {
-        "tool_name": tool_name,
-        "command": command_text or "",
-        "target_path": target_path,
-        "tier": tier,
-        "rollback_reference": rollback_reference,
-        "approval_id": approval_id,
-        "entrypoint_id": entrypoint_id,
-    }
-    if session_id:
-        request_payload["session_id"] = session_id
-    if resume_id:
-        request_payload["resume_id"] = resume_id
-    if continuation_id:
-        request_payload["continuation_id"] = continuation_id
-    request_response = _dispatch_session_command(
-        command_type="write_request",
-        task_id=task_id,
-        repo_binding_id="attachment-binding",
-        adapter_id=adapter_id,
-        risk_tier=tier,
-        payload=request_payload,
-        command_id=f"cli-exec-request-{task_id}",
-        attachment_root=attachment_root,
-        attachment_runtime_state_root=attachment_runtime_state_root,
-    )
-    request_result = _response_payload(request_response)
-
-    request_identity = request_result.get("session_identity")
-    if not isinstance(request_identity, dict):
-        request_identity = {}
-    resolved_session_id = session_id or request_identity.get("session_id")
-    resolved_resume_id = resume_id or request_identity.get("resume_id")
-    resolved_continuation_id = continuation_id or request_result.get("continuation_id")
-    execute_payload = {
-        "tool_name": tool_name,
-        "command": command_text or "",
-        "target_path": target_path,
-        "tier": tier,
-        "rollback_reference": rollback_reference,
-        "content": content,
-        "approval_id": approval_id or request_result.get("approval_id"),
-        "execution_id": request_result.get("execution_id"),
-        "continuation_id": resolved_continuation_id,
-        "entrypoint_id": entrypoint_id,
-    }
-    if expected_sha256:
-        execute_payload["expected_sha256"] = expected_sha256
-    if isinstance(resolved_session_id, str) and resolved_session_id.strip():
-        execute_payload["session_id"] = resolved_session_id.strip()
-    if isinstance(resolved_resume_id, str) and resolved_resume_id.strip():
-        execute_payload["resume_id"] = resolved_resume_id.strip()
-    execute_response = _dispatch_session_command(
-        command_type="write_execute",
-        task_id=task_id,
-        repo_binding_id="attachment-binding",
-        adapter_id=adapter_id,
-        risk_tier=tier,
-        payload=execute_payload,
-        command_id=f"cli-exec-{task_id}",
-        attachment_root=attachment_root,
-        attachment_runtime_state_root=attachment_runtime_state_root,
-    )
-    payload = _response_payload(execute_response)
-    payload["entrypoint_policy"] = entrypoint_policy
-    return payload
-
-
 def render_payload(payload: dict) -> str:
-    if payload.get("status") == "entrypoint_policy_denied":
-        reason = payload.get("reason", "entrypoint policy denied")
+    if payload.get("status") == "retired_command":
+        lines = [f"Status: {payload['status']}", f"Reason: {payload.get('reason', 'retired')}"]
         remediation = payload.get("remediation_hint", "")
-        lines = [f"Status: {payload['status']}", f"Reason: {reason}"]
         if remediation:
             lines.append(f"Remediation: {remediation}")
         return "\n".join(lines)
@@ -888,11 +505,6 @@ def render_payload(payload: dict) -> str:
         codex_status = codex_capability.get("status", "unknown")
         codex_tier = codex_capability.get("adapter_tier", "unknown")
         codex_line = f"Codex capability: {codex_status} ({codex_tier})"
-    attachment_lines = [
-        f"Attachment {attachment['repo_id']}: {attachment['binding_state']} "
-        f"({attachment['adapter_preference'] or 'adapter-unknown'})"
-        for attachment in payload["attachments"]
-    ]
     if not payload["tasks"]:
         lines = [
             f"Total tasks: {payload['total_tasks']}",
@@ -900,7 +512,6 @@ def render_payload(payload: dict) -> str:
         ]
         if codex_line is not None:
             lines.append(codex_line)
-        lines.extend(attachment_lines)
         lines.append("No governed tasks recorded.")
         return "\n".join(lines)
     lines = [
@@ -910,9 +521,8 @@ def render_payload(payload: dict) -> str:
     ]
     if codex_line is not None:
         lines.append(codex_line)
-    lines.extend(attachment_lines)
     for task in payload["tasks"]:
-        lines.append(f"- {task['task_id']}: {task['state']} ({task['goal']})")
+        lines.append(f"- {task['task_id']}: {task['current_state']} ({task['goal']})")
         if task["active_run_id"]:
             lines.append(f"  run={task['active_run_id']} workspace={task['workspace_root']}")
         if task["verification_refs"]:
@@ -924,12 +534,6 @@ def render_payload(payload: dict) -> str:
 
 def _execute_gate(gate) -> tuple[int, str]:
     return _execute_gate_at_root(gate.command, cwd=ROOT)
-
-
-def _gate_command_type_for_mode(mode: str) -> str:
-    if mode in {"quick", "l1"}:
-        return "run_quick_gate"
-    return "run_full_gate"
 
 
 def _execute_gate_at_root(command: str, *, cwd: Path) -> tuple[int, str]:
@@ -1026,95 +630,6 @@ def _configure_runtime_roots(*, runtime_root: str | None, compat_runtime_root: b
     ARTIFACT_ROOT = Path(_RUNTIME_ROOTS.artifacts_root)
     REPLAY_ROOT = Path(_RUNTIME_ROOTS.replay_root)
     WORKSPACES_ROOT = Path(_RUNTIME_ROOTS.workspaces_root)
-
-
-def _load_module(path: Path, module_name: str) -> Any:
-    spec = importlib.util.spec_from_file_location(module_name, path)
-    if spec is None or spec.loader is None:
-        msg = f"unable to load module: {path}"
-        raise RuntimeError(msg)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[module_name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-def _build_control_plane_app() -> Any:
-    facade_module = _load_module(ROOT / "packages" / "agent-runtime" / "service_facade.py", "runtime_service_facade")
-    app_module = _load_module(ROOT / "apps" / "control-plane" / "app.py", "runtime_control_plane_app")
-    facade = facade_module.RuntimeServiceFacade(repo_root=ROOT, task_root=TASK_ROOT)
-    return app_module.ControlPlaneApplication(facade=facade)
-
-
-def _dispatch_session_command(
-    *,
-    command_type: str,
-    task_id: str,
-    repo_binding_id: str,
-    adapter_id: str,
-    risk_tier: str,
-    payload: dict,
-    command_id: str,
-    attachment_root: str | Path | None = None,
-    attachment_runtime_state_root: str | Path | None = None,
-) -> dict:
-    app = _build_control_plane_app()
-    return app.dispatch(
-        route="/session",
-        payload={
-            "command_type": command_type,
-            "task_id": task_id,
-            "repo_binding_id": repo_binding_id,
-            "adapter_id": adapter_id,
-            "risk_tier": risk_tier,
-            "payload": payload,
-            "command_id": command_id,
-            "attachment_root": str(attachment_root) if attachment_root is not None else None,
-            "attachment_runtime_state_root": (
-                str(attachment_runtime_state_root) if attachment_runtime_state_root is not None else None
-            ),
-        },
-    )
-
-
-def _response_payload(response: dict) -> dict:
-    payload = response.get("payload") if isinstance(response, dict) else None
-    if not isinstance(payload, dict):
-        msg = "invalid control-plane response payload"
-        raise RuntimeError(msg)
-    payload = dict(payload)
-    service_boundary = response.get("service_boundary")
-    if isinstance(service_boundary, str) and service_boundary and "service_boundary" not in payload:
-        payload["service_boundary"] = service_boundary
-    return payload
-
-
-def _try_load_attachment_contract(
-    *,
-    attachment_root: str,
-    attachment_runtime_state_root: str,
-) -> tuple[object | None, object | None]:
-    try:
-        attachment = validate_light_pack(
-            target_repo_root=attachment_root,
-            light_pack_path=str(Path(attachment_root) / ".governed-ai" / "light-pack.json"),
-            runtime_state_root=str(Path(attachment_runtime_state_root)),
-        )
-        profile = load_repo_profile(attachment.repo_profile_path)
-    except (OSError, ValueError):
-        return None, None
-    return attachment, profile
-
-
-def _evaluate_entrypoint_policy(*, profile: object, entrypoint_id: str, scope: str) -> dict:
-    evaluation = evaluate_required_entrypoint_policy(
-        getattr(profile, "required_entrypoint_policy", None),
-        entrypoint_id=entrypoint_id,
-        scope=scope,
-    )
-    if evaluation["blocked"]:
-        raise EntrypointPolicyViolation(evaluation)
-    return evaluation
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@
 Draft
 
 ## Purpose
-Define the non-mutating controller report that explains how self-evolution recommendations may advance toward policy mutation, skill enablement, target-repo sync, push, or merge.
+Define the non-mutating controller report that explains how self-evolution recommendations may advance toward policy mutation, skill enablement, push, or merge.
 
 The controller is an admission surface, not an executor. It reports the current trigger, lane state, blockers, required review, and rollback posture before any effective change is allowed.
 
@@ -30,7 +30,6 @@ Each report must cover exactly these lane identities:
 
 - policy_mutation
 - skill_enablement
-- target_repo_sync
 - push_or_merge
 
 Each lane records:
@@ -43,13 +42,13 @@ Each lane records:
 - next_action
 
 ## Trigger Model
-The recommended operator action is `SelfEvolutionPromotionPlan`. It may be refreshed proactively by `SelfEvolutionRecommend`, `FeedbackReport`, and `DailyAll`, but the controller must not perform effective changes by itself.
+The recommended operator action is `SelfEvolutionPromotionPlan`. It may be refreshed proactively by `SelfEvolutionRecommend` and `FeedbackReport`, but the controller must not perform effective changes by itself.
 
 ## Invariants
 - `artifact_type` is `self_evolution_promotion_controller_report`.
 - `effective_change_allowed` is `false` until a separate reviewed promotion path explicitly changes the governed contract.
 - `trigger_model.automatic_effective_change` is `false`.
-- `guards.automatic_policy_mutation`, `guards.automatic_skill_enablement`, `guards.automatic_target_repo_sync`, and `guards.automatic_push_or_merge` are `false`.
+- `guards.automatic_policy_mutation`, `guards.automatic_skill_enablement`, and `guards.automatic_push_or_merge` are `false`.
 - `guards.requires_human_review_before_effective_change` is `true`.
 - Every lane has `automatic_enabled=false`.
 - Missing recommendation or selector-blocked states remain report-only and must point to the next bounded action.
@@ -58,6 +57,5 @@ The recommended operator action is `SelfEvolutionPromotionPlan`. It may be refre
 ## Non-Goals
 - Automatically modifying policies.
 - Automatically enabling skills.
-- Automatically syncing target repositories.
 - Automatically pushing or merging branches.
 - Replacing review, gate evidence, or rollback evidence with hidden heuristics.

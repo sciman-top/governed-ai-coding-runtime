@@ -22,7 +22,6 @@ _BLOCKING_SELECTOR_ACTIONS = {
 _LANES = [
     ("policy_mutation", "automatic_policy_mutation", "Review a policy proposal, then run full gates before any policy mutation."),
     ("skill_enablement", "automatic_skill_enablement", "Keep skill candidates disabled until promotion evidence and rollback refs are attached."),
-    ("target_repo_sync", "automatic_target_repo_sync", "Sync target repos only through explicit governed operator actions."),
     ("push_or_merge", "automatic_push_or_merge", "Push or merge only after human review, branch evidence, and release gates."),
 ]
 
@@ -191,10 +190,9 @@ def _build_promotion_report(
             "refresh_recommendation": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action SelfEvolutionRecommend",
             "plan_promotion": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action SelfEvolutionPromotionPlan",
             "materialize_candidate": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action EvolutionMaterialize",
-            "target_sync": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action ApplyAllFeatures",
             "push_or_merge": "manual review/PR only",
         },
-        "rollback": "Delete the generated promotion controller artifact. No policy, skill, target repo, push, or merge state is changed.",
+        "rollback": "Delete the generated promotion controller artifact. No policy, skill, push, or merge state is changed.",
         "artifact_refs": {},
     }
 
@@ -246,7 +244,7 @@ def _trigger_model(*, prerequisite: str) -> dict:
         "recommended_operator_action": "SelfEvolutionPromotionPlan",
         "recommended_operator_action_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action SelfEvolutionPromotionPlan",
         "prerequisite_operator_action": prerequisite,
-        "proactive_operator_triggers": ["SelfEvolutionRecommend", "FeedbackReport", "DailyAll"],
+        "proactive_operator_triggers": ["SelfEvolutionRecommend", "FeedbackReport"],
         "automatic_effective_change": False,
     }
 
@@ -263,7 +261,6 @@ def _default_guards() -> dict:
     return {
         "automatic_policy_mutation": False,
         "automatic_skill_enablement": False,
-        "automatic_target_repo_sync": False,
         "automatic_push_or_merge": False,
         "requires_human_review_before_effective_change": True,
     }

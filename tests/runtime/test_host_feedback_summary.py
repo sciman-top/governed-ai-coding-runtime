@@ -3,7 +3,6 @@ import json
 import sys
 import tempfile
 import unittest
-from datetime import datetime, timezone
 from pathlib import Path
 from unittest import mock
 
@@ -38,7 +37,8 @@ class HostFeedbackSummaryTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         payload = json.loads(completed.stdout)
         self.assertIn(payload["status"], {"pass", "attention", "fail"})
-        self.assertEqual(6, len(payload["dimensions"]))
+        self.assertEqual(5, len(payload["dimensions"]))
+        self.assertNotIn("target_run_freshness", payload["summary"])
 
     def test_assert_minimum_passes_for_complete_temp_repo(self) -> None:
         module = _load_host_feedback_summary_script()
@@ -57,13 +57,15 @@ class HostFeedbackSummaryTests(unittest.TestCase):
 
         self.assertEqual([], failures)
         self.assertEqual("ok", payload["dimensions"][0]["status"])
+        self.assertEqual("docs/product/host-feedback-loop.zh-CN.md", payload["guide_path"])
 
-    def test_assert_minimum_rejects_missing_target_run_evidence(self) -> None:
+    def test_assert_minimum_rejects_missing_required_docs(self) -> None:
         module = _load_host_feedback_summary_script()
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             repo_root = Path(tmp_dir)
-            self._write_minimal_repo(repo_root, include_target_run=False)
+            self._write_minimal_repo(repo_root)
+            (repo_root / "docs" / "product" / "host-feedback-loop.md").unlink()
 
             with (
                 mock.patch.object(module, "codex_status", return_value={"login_status": {"exit_code": 0}, "config": {"status": "ok"}}),
@@ -73,25 +75,16 @@ class HostFeedbackSummaryTests(unittest.TestCase):
                 payload = module.build_host_feedback_summary(repo_root=repo_root)
                 failures = module.validate_minimum_feedback_surface(payload)
 
-        self.assertTrue(any("target repo run evidence" in item for item in failures))
-        self.assertIn("-ExportTargetRepoRuns", "\n".join(payload["recommendations"]))
+        self.assertTrue(any("feedback guide docs" in item for item in failures))
 
     def test_host_dimension_keeps_config_attention_nonblocking(self) -> None:
         module = _load_host_feedback_summary_script()
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             repo_root = Path(tmp_dir)
-            self._write_minimal_repo(repo_root, include_target_run=False)
-            runs_root = repo_root / "docs" / "change-evidence" / "target-repo-runs"
-            runs_root.mkdir(parents=True, exist_ok=True)
-            fresh_timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-            (runs_root / f"demo-daily-{fresh_timestamp}.json").write_text(
-                json.dumps(self._target_run_payload("daily")),
-                encoding="utf-8",
-            )
+            self._write_minimal_repo(repo_root)
 
             with (
-                mock.patch.object(module, "REQUIRED_GLOBAL_TARGETS", ()),
                 mock.patch.object(module, "codex_status", return_value={"login_status": {"exit_code": 0}, "config": {"status": "attention"}}),
                 mock.patch.object(module, "claude_status", return_value={"status": "ok", "active_provider": {"name": "glm"}, "config": {"status": "ok"}, "command": {"exit_code": 0}, "mcp": {"exit_code": 0}}),
                 mock.patch.object(module, "probe_claude_code_surface", return_value=self._claude_probe(module)),
@@ -113,72 +106,9 @@ class HostFeedbackSummaryTests(unittest.TestCase):
             module.FeedbackDimension("hosts", "ok", "hosts ok", {"codex": {"nonblocking_config_attention": True}}),
             module.FeedbackDimension("parity", "ok", "parity ok", {}),
             module.FeedbackDimension("claude_workload", "ok", "claude ok", {}),
-            module.FeedbackDimension("target_runs", "ok", "runs ok", {}),
         ]
 
         self.assertEqual("pass", module._aggregate_status(dimensions))
-
-    def test_latest_target_run_prefers_newer_daily_evidence_over_onboard_snapshot(self) -> None:
-        module = _load_host_feedback_summary_script()
-
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            repo_root = Path(tmp_dir)
-            self._write_minimal_repo(repo_root, include_target_run=False)
-            runs_root = repo_root / "docs" / "change-evidence" / "target-repo-runs"
-            runs_root.mkdir(parents=True, exist_ok=True)
-            (runs_root / "demo-onboard-20260430090000.json").write_text(
-                json.dumps(self._target_run_payload("onboard")),
-                encoding="utf-8",
-            )
-            (runs_root / "demo-daily-20260430110000.json").write_text(
-                json.dumps(self._target_run_payload("daily")),
-                encoding="utf-8",
-            )
-
-            with (
-                mock.patch.object(module, "codex_status", return_value={"login_status": {"exit_code": 0}, "config": {"status": "ok"}}),
-                mock.patch.object(module, "claude_status", return_value={"active_provider": {"name": "glm"}, "config": {"status": "ok"}, "command": {"exit_code": 0}, "mcp": {"exit_code": 0}}),
-                mock.patch.object(module, "probe_claude_code_surface", return_value=self._claude_probe(module)),
-            ):
-                payload = module.build_host_feedback_summary(repo_root=repo_root)
-
-        target_runs = next(item for item in payload["dimensions"] if item["dimension_id"] == "target_runs")
-        demo_run = next(item for item in target_runs["details"]["latest_runs"] if item["repo_id"] == "demo")
-        self.assertEqual("demo-daily-20260430110000.json", demo_run["file_name"])
-        self.assertEqual("daily", demo_run["run_kind"])
-
-    def test_latest_target_runs_are_not_truncated_by_default(self) -> None:
-        module = _load_host_feedback_summary_script()
-
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            repo_root = Path(tmp_dir)
-            self._write_minimal_repo(repo_root, include_target_run=False)
-            runs_root = repo_root / "docs" / "change-evidence" / "target-repo-runs"
-            runs_root.mkdir(parents=True, exist_ok=True)
-            fresh_timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-            for repo_id in (
-                "classroomtoolkit",
-                "github-toolkit",
-                "k12-question-graph",
-                "self-runtime",
-                "skills-manager",
-                "vps-ssh-launcher",
-            ):
-                (runs_root / f"{repo_id}-daily-{fresh_timestamp}.json").write_text(
-                    json.dumps(self._target_run_payload("daily")),
-                    encoding="utf-8",
-                )
-
-            with (
-                mock.patch.object(module, "codex_status", return_value={"login_status": {"exit_code": 0}, "config": {"status": "ok"}}),
-                mock.patch.object(module, "claude_status", return_value={"active_provider": {"name": "glm"}, "config": {"status": "ok"}, "command": {"exit_code": 0}, "mcp": {"exit_code": 0}}),
-                mock.patch.object(module, "probe_claude_code_surface", return_value=self._claude_probe(module)),
-            ):
-                payload = module.build_host_feedback_summary(repo_root=repo_root)
-
-        target_runs = next(item for item in payload["dimensions"] if item["dimension_id"] == "target_runs")
-        self.assertEqual(6, len(target_runs["details"]["latest_runs"]))
-        self.assertEqual(6, len(payload["summary"]["latest_target_repos"]))
 
     def test_claude_workload_dimension_surfaces_degraded_probe(self) -> None:
         module = _load_host_feedback_summary_script()
@@ -201,39 +131,24 @@ class HostFeedbackSummaryTests(unittest.TestCase):
         self.assertEqual("degraded", claude_workload["details"]["readiness"]["status"])
         self.assertEqual("process_bridge", payload["summary"]["claude_adapter_tier"])
 
-    def test_target_runs_dimension_surfaces_degraded_run_recovery_boundary(self) -> None:
+    def test_recommendations_are_host_only(self) -> None:
         module = _load_host_feedback_summary_script()
 
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            repo_root = Path(tmp_dir)
-            self._write_minimal_repo(repo_root, include_target_run=False)
-            runs_root = repo_root / "docs" / "change-evidence" / "target-repo-runs"
-            runs_root.mkdir(parents=True, exist_ok=True)
-            degraded_payload = self._target_run_payload("daily")
-            degraded_payload["runtime_check"]["payload"]["status"]["codex_capability"]["adapter_tier"] = "process_bridge"
-            degraded_payload["runtime_check"]["payload"]["status"]["codex_capability"]["flow_kind"] = "process_bridge"
-            degraded_payload["runtime_check"]["payload"]["status"]["codex_capability"]["status"] = "degraded"
-            fresh_timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-            (runs_root / f"demo-daily-{fresh_timestamp}.json").write_text(
-                json.dumps(degraded_payload),
-                encoding="utf-8",
-            )
+        dimensions = [
+            module.FeedbackDimension("docs", "ok", "docs ok", {"missing_docs": []}),
+            module.FeedbackDimension("rules", "ok", "rules ok", {"missing_global_targets": []}),
+            module.FeedbackDimension("hosts", "ok", "hosts ok", {"codex": {"health": "ok"}, "claude": {"health": "ok"}}),
+            module.FeedbackDimension("parity", "ok", "parity ok", {"missing_hosts": []}),
+            module.FeedbackDimension("claude_workload", "ok", "claude ok", {"readiness": {"status": "ready"}}),
+        ]
 
-            with (
-                mock.patch.object(module, "codex_status", return_value={"login_status": {"exit_code": 0}, "config": {"status": "ok"}}),
-                mock.patch.object(module, "claude_status", return_value={"active_provider": {"name": "glm"}, "config": {"status": "ok"}, "command": {"exit_code": 0}, "mcp": {"exit_code": 0}}),
-                mock.patch.object(module, "probe_claude_code_surface", return_value=self._claude_probe(module)),
-            ):
-                payload = module.build_host_feedback_summary(repo_root=repo_root)
+        recommendations = module._build_recommendations(dimensions)
 
-        target_runs = next(item for item in payload["dimensions"] if item["dimension_id"] == "target_runs")
-        self.assertEqual("attention", target_runs["status"])
-        self.assertEqual("degraded", target_runs["details"]["degraded_latest_runs"][0]["codex_capability_status"])
-        self.assertEqual("process_bridge", target_runs["details"]["degraded_latest_runs"][0]["adapter_tier"])
-        self.assertIn("native_attach", target_runs["details"]["degraded_latest_runs"][0]["recovery_evidence_rule"])
-        self.assertTrue(any("native_attach" in recommendation for recommendation in payload["recommendations"]))
+        self.assertEqual(1, len(recommendations))
+        self.assertNotIn("DailyAll", recommendations[0])
+        self.assertNotIn("target-run", recommendations[0])
 
-    def _write_minimal_repo(self, repo_root: Path, *, include_target_run: bool = True) -> None:
+    def _write_minimal_repo(self, repo_root: Path) -> None:
         for relative in (
             "docs/product/host-feedback-loop.md",
             "docs/product/host-feedback-loop.zh-CN.md",
@@ -247,35 +162,17 @@ class HostFeedbackSummaryTests(unittest.TestCase):
             path.write_text(content, encoding="utf-8")
 
         manifest = {
-            "sync_revision": "2026-04-30.1",
-            "default_version": "9.47",
+            "sync_revision": "2026-07-06.1",
+            "default_version": "9.53",
             "entries": [
                 {"scope": "global", "tool": "codex", "target_path": "${user_profile}/.codex/AGENTS.md"},
                 {"scope": "global", "tool": "claude", "target_path": "${user_profile}/.claude/CLAUDE.md"},
+                {"scope": "global", "tool": "gemini", "target_path": "${user_profile}/.gemini/GEMINI.md"},
             ],
         }
         manifest_path = repo_root / "rules" / "manifest.json"
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
         manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
-
-        if include_target_run:
-            run_path = repo_root / "docs" / "change-evidence" / "target-repo-runs" / "demo-daily-20260430120000.json"
-            run_path.parent.mkdir(parents=True, exist_ok=True)
-            run_path.write_text(json.dumps(self._target_run_payload("daily")), encoding="utf-8")
-
-    def _target_run_payload(self, flow_mode: str) -> dict:
-        return {
-            "overall_status": "pass",
-            "flow_mode": flow_mode,
-            "runtime_check": {
-                "payload": {
-                    "status": {"codex_capability": {"adapter_tier": "native_attach", "flow_kind": "live_attach", "status": "ready", "unsupported_capabilities": []}},
-                    "summary": {"flow_kind": "live_attach", "attachment_health": "healthy"},
-                    "live_loop": {"closure_state": "live_closure_ready"},
-                    "write_execute": {"execution_status": "executed"},
-                }
-            },
-        }
 
     def _claude_probe(
         self,

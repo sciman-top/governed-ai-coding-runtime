@@ -12,7 +12,6 @@
     "verification_command",
     "report_output_ref",
     "portfolio_ref",
-    "effect_feedback_ref",
     "policy_audit_ref",
     "required_artifact_refs",
     "required_outcomes",
@@ -50,10 +49,6 @@
       "minLength": 1
     },
     "portfolio_ref": {
-      "type": "string",
-      "minLength": 1
-    },
-    "effect_feedback_ref": {
       "type": "string",
       "minLength": 1
     },

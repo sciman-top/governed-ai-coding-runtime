@@ -1,4 +1,3 @@
-import importlib
 import importlib.util
 import json
 import sys
@@ -24,17 +23,51 @@ def _load_module(relative_path: str, module_name: str):
 
 
 class OperatorApiTests(unittest.TestCase):
-    def test_operator_routes_expose_status_and_evidence_queries(self) -> None:
+    def test_operator_routes_expose_status_evidence_handoff_and_continuity_queries(self) -> None:
         service_facade_module = _load_module("packages/agent-runtime/service_facade.py", "service_facade")
         app_module = _load_module("apps/control-plane/app.py", "control_plane_app")
-        session_bridge = importlib.import_module("governed_ai_coding_runtime_contracts.session_bridge")
-        agent_continuity = importlib.import_module("governed_ai_coding_runtime_contracts.agent_continuity")
-        task_store = importlib.import_module("governed_ai_coding_runtime_contracts.task_store")
-        task_intake = importlib.import_module("governed_ai_coding_runtime_contracts.task_intake")
+        agent_continuity = _load_module(
+            "packages/contracts/src/governed_ai_coding_runtime_contracts/agent_continuity.py",
+            "agent_continuity_contract",
+        )
+        task_store = _load_module(
+            "packages/contracts/src/governed_ai_coding_runtime_contracts/task_store.py",
+            "task_store_contract",
+        )
+        task_intake = _load_module(
+            "packages/contracts/src/governed_ai_coding_runtime_contracts/task_intake.py",
+            "task_intake_contract",
+        )
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)
             tasks_root = workspace / ".runtime" / "tasks"
+            evidence_root = workspace / ".runtime" / "artifacts" / "task-operator-api" / "run-operator" / "evidence"
+            evidence_root.mkdir(parents=True, exist_ok=True)
+            (evidence_root / "bundle.json").write_text(
+                json.dumps(
+                    {
+                        "interaction_trace": {
+                            "applied_policies": [{"posture": "clarifying"}],
+                            "task_restatements": ["Restate the failing request before retrying."],
+                            "clarification_rounds": [{"scenario": "bugfix", "questions": [], "answers": []}],
+                            "observation_checklists": [{"checklist_kind": "bugfix", "items": ["request", "logs", "diff"]}],
+                            "compression_actions": [{"compression_mode": "stage_summary"}],
+                            "budget_snapshots": [{"budget_status": "near_limit"}],
+                        }
+                    },
+                    indent=2,
+                    sort_keys=True,
+                ),
+                encoding="utf-8",
+            )
+            handoff_root = workspace / ".runtime" / "artifacts" / "task-operator-api" / "run-operator" / "handoff"
+            handoff_root.mkdir(parents=True, exist_ok=True)
+            (handoff_root / "package.json").write_text("{}", encoding="utf-8")
+            replay_root = workspace / ".runtime" / "artifacts" / "task-operator-api" / "run-operator" / "replay"
+            replay_root.mkdir(parents=True, exist_ok=True)
+            (replay_root / "write-flow.json").write_text("{}", encoding="utf-8")
+
             store = task_store.FileTaskStore(tasks_root)
             record = task_store.TaskRecord(
                 task_id="task-operator-api",
@@ -56,31 +89,17 @@ class OperatorApiTests(unittest.TestCase):
                         workspace_root=".governed-workspaces/task-operator-api/run-operator",
                         started_at="2026-04-19T00:00:00+00:00",
                         finished_at="2026-04-19T00:01:00+00:00",
+                        approval_ids=["approval-operator"],
                         evidence_refs=["artifacts/task-operator-api/run-operator/evidence/bundle.json"],
-                        artifact_refs=["artifacts/task-operator-api/run-operator/handoff/package.json"],
+                        artifact_refs=[
+                            "artifacts/task-operator-api/run-operator/handoff/package.json",
+                            "artifacts/task-operator-api/run-operator/replay/write-flow.json",
+                        ],
                         verification_refs=["artifacts/task-operator-api/run-operator/verification-output/test.txt"],
                     )
                 ],
             )
             store.save(record)
-            approvals_root = workspace / ".runtime" / "approvals"
-            approvals_root.mkdir(parents=True, exist_ok=True)
-            (approvals_root / "approval-operator.json").write_text(
-                json.dumps(
-                    {
-                        "approval_id": "approval-operator",
-                        "task_id": "task-operator-api",
-                        "tool_name": "write_file",
-                        "target_path": "docs/operator.txt",
-                        "tier": "medium",
-                        "status": "approved",
-                        "reason": "operator approved",
-                    },
-                    indent=2,
-                    sort_keys=True,
-                ),
-                encoding="utf-8",
-            )
 
             facade = service_facade_module.RuntimeServiceFacade(repo_root=workspace, task_root=tasks_root)
             app = app_module.ControlPlaneApplication(facade=facade)
@@ -94,72 +113,7 @@ class OperatorApiTests(unittest.TestCase):
                 route="/operator",
                 payload={"action": "inspect_handoff", "task_id": "task-operator-api", "run_id": "run-operator"},
             )
-            write_status_result = app.dispatch(
-                route="/operator",
-                payload={
-                    "action": "write_status",
-                    "task_id": "task-operator-api",
-                    "approval_id": "approval-operator",
-                    "target_path": "docs/operator.txt",
-                    "attachment_runtime_state_root": str(workspace / ".runtime"),
-                },
-            )
-            direct_status = session_bridge.handle_session_bridge_command(
-                session_bridge.build_session_bridge_command(
-                    command_id="direct-operator-status",
-                    command_type="inspect_status",
-                    task_id="operator-status",
-                    repo_binding_id="operator-status",
-                    adapter_id="codex-cli",
-                    risk_tier="low",
-                    payload={},
-                ),
-                task_root=tasks_root,
-                repo_root=workspace,
-            )
-            direct_evidence = session_bridge.handle_session_bridge_command(
-                session_bridge.build_session_bridge_command(
-                    command_id="direct-operator-evidence",
-                    command_type="inspect_evidence",
-                    task_id="task-operator-api",
-                    repo_binding_id="binding-task-operator-api",
-                    adapter_id="codex-cli",
-                    risk_tier="low",
-                    payload={"run_id": "run-operator"},
-                ),
-                task_root=tasks_root,
-                repo_root=workspace,
-            )
-            direct_handoff = session_bridge.handle_session_bridge_command(
-                session_bridge.build_session_bridge_command(
-                    command_id="direct-operator-handoff",
-                    command_type="inspect_handoff",
-                    task_id="task-operator-api",
-                    repo_binding_id="binding-task-operator-api",
-                    adapter_id="codex-cli",
-                    risk_tier="low",
-                    payload={"run_id": "run-operator"},
-                ),
-                task_root=tasks_root,
-                repo_root=workspace,
-            )
-            direct_write_status = session_bridge.handle_session_bridge_command(
-                session_bridge.build_session_bridge_command(
-                    command_id="direct-operator-write-status",
-                    command_type="write_status",
-                    task_id="task-operator-api",
-                    repo_binding_id="binding-task-operator-api",
-                    adapter_id="codex-cli",
-                    risk_tier="low",
-                    payload={
-                        "approval_id": "approval-operator",
-                        "target_path": "docs/operator.txt",
-                    },
-                ),
-                task_root=tasks_root,
-                repo_root=workspace,
-                attachment_runtime_state_root=workspace / ".runtime",
-            )
+
             continuity_record = agent_continuity.build_claude_desktop_boundary_record(
                 repo_root=workspace,
                 now="2026-05-10T00:00:00Z",
@@ -182,42 +136,36 @@ class OperatorApiTests(unittest.TestCase):
                 },
             )
 
-            self.assertEqual(status_result["status"], "ok")
-            self.assertEqual(status_result["status"], direct_status.status)
-            self.assertEqual(status_result["service_boundary"], "control-plane")
-            self.assertEqual(evidence_result["status"], "ok")
-            self.assertEqual(evidence_result["status"], direct_evidence.status)
-            self.assertEqual(evidence_result["payload"]["task_id"], direct_evidence.payload["task_id"])
-            self.assertEqual(evidence_result["payload"]["run_id"], direct_evidence.payload["run_id"])
-            self.assertEqual(evidence_result["payload"]["evidence_refs"], direct_evidence.payload["evidence_refs"])
+            self.assertEqual("ok", status_result["status"])
+            self.assertEqual("control-plane", status_result["service_boundary"])
+            self.assertTrue(status_result["read_only"])
+            self.assertEqual(1, status_result["payload"]["total_tasks"])
+            self.assertEqual("task-operator-api", status_result["payload"]["tasks"][0]["task_id"])
+
+            self.assertEqual("ok", evidence_result["status"])
+            self.assertEqual("task-operator-api", evidence_result["payload"]["task_id"])
+            self.assertEqual("run-operator", evidence_result["payload"]["run_id"])
             self.assertIn(
                 "artifacts/task-operator-api/run-operator/evidence/bundle.json",
                 evidence_result["payload"]["evidence_refs"],
             )
-            self.assertEqual(handoff_result["status"], "ok")
-            self.assertEqual(handoff_result["status"], direct_handoff.status)
-            self.assertEqual(handoff_result["payload"]["task_id"], direct_handoff.payload["task_id"])
-            self.assertEqual(handoff_result["payload"]["run_id"], direct_handoff.payload["run_id"])
-            self.assertEqual(handoff_result["payload"]["handoff_refs"], direct_handoff.payload["handoff_refs"])
+            self.assertEqual("clarifying", evidence_result["payload"]["interaction_posture"])
+
+            self.assertEqual("ok", handoff_result["status"])
             self.assertIn(
                 "artifacts/task-operator-api/run-operator/handoff/package.json",
                 handoff_result["payload"]["handoff_refs"],
             )
-            self.assertEqual(write_status_result["status"], direct_write_status.status)
-            self.assertEqual(
-                write_status_result["payload"]["approval_status"],
-                direct_write_status.payload["approval_status"],
+            self.assertIn(
+                "artifacts/task-operator-api/run-operator/replay/write-flow.json",
+                handoff_result["payload"]["replay_refs"],
             )
-            self.assertEqual(
-                write_status_result["payload"]["approval_ref"],
-                direct_write_status.payload["approval_ref"],
-            )
+
             self.assertEqual("written", continuity_write["status"])
             self.assertEqual("control-plane", continuity_write["service_boundary"])
             self.assertEqual("ok", continuity_search["status"])
             self.assertEqual(1, continuity_search["record_count"])
             self.assertTrue(continuity_search["read_only"])
-            self.assertEqual("claude-desktop-boundary", continuity_search["records"][0]["record_id"])
 
 
 if __name__ == "__main__":

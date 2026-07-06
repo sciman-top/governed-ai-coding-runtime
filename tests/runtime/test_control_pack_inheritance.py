@@ -1,6 +1,5 @@
 import importlib.util
 import json
-import shutil
 import sys
 import tempfile
 import unittest
@@ -38,23 +37,21 @@ class ControlPackInheritanceTests(unittest.TestCase):
         self.assertEqual([], result["na_records"])
         self.assertGreaterEqual(result["inherited_field_count"], 6)
 
-    def test_fails_when_baseline_declares_forbidden_override(self) -> None:
+    def test_fails_when_repo_profile_is_missing_required_inherited_field(self) -> None:
         module = _load_script("scripts/verify-control-pack-inheritance.py", "verify_control_pack_inheritance_script")
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)
-            baseline = json.loads((ROOT / "docs/targets/target-repo-governance-baseline.json").read_text(encoding="utf-8"))
-            baseline["required_profile_overrides"]["hard_gate_order"] = {"value": "test-build-contract"}
-            baseline_path = workspace / "baseline.json"
-            _write_json(baseline_path, baseline)
+            repo_profile = json.loads((ROOT / ".governed-ai/repo-profile.json").read_text(encoding="utf-8"))
+            repo_profile.pop("windows_process_environment_policy", None)
+            repo_profile_path = workspace / "repo-profile.json"
+            _write_json(repo_profile_path, repo_profile)
 
-            result = module.inspect_control_pack_inheritance(
-                baseline_path=baseline_path,
-            )
+            result = module.inspect_control_pack_inheritance(repo_profile_path=repo_profile_path)
 
             self.assertEqual("fail", result["status"])
             codes = {error["code"] for error in result["errors"]}
-            self.assertIn("forbidden_override_present_in_baseline", codes)
+            self.assertIn("missing_repo_profile_inherited_field", codes)
 
     def test_fails_when_schema_is_missing_inherited_field_path(self) -> None:
         module = _load_script("scripts/verify-control-pack-inheritance.py", "verify_control_pack_inheritance_script")
@@ -66,33 +63,27 @@ class ControlPackInheritanceTests(unittest.TestCase):
             schema_path = workspace / "repo-profile.schema.json"
             _write_json(schema_path, schema)
 
-            result = module.inspect_control_pack_inheritance(
-                repo_profile_schema_path=schema_path,
-            )
+            result = module.inspect_control_pack_inheritance(repo_profile_schema_path=schema_path)
 
             self.assertEqual("fail", result["status"])
             codes = {error["code"] for error in result["errors"]}
             self.assertIn("missing_schema_path", codes)
 
-    def test_fails_when_light_pack_inlines_repo_override_payload(self) -> None:
+    def test_fails_when_repo_profile_declares_forbidden_override(self) -> None:
         module = _load_script("scripts/verify-control-pack-inheritance.py", "verify_control_pack_inheritance_script")
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             workspace = Path(tmp_dir)
-            light_pack = json.loads((ROOT / ".governed-ai/light-pack.json").read_text(encoding="utf-8"))
-            light_pack["required_entrypoint_policy"] = {
-                "current_mode": "targeted_enforced"
-            }
-            light_pack_path = workspace / "light-pack.json"
-            _write_json(light_pack_path, light_pack)
+            repo_profile = json.loads((ROOT / ".governed-ai/repo-profile.json").read_text(encoding="utf-8"))
+            repo_profile["hard_gate_order"] = ["build", "test"]
+            repo_profile_path = workspace / "repo-profile.json"
+            _write_json(repo_profile_path, repo_profile)
 
-            result = module.inspect_control_pack_inheritance(
-                light_pack_path=light_pack_path,
-            )
+            result = module.inspect_control_pack_inheritance(repo_profile_path=repo_profile_path)
 
             self.assertEqual("fail", result["status"])
             codes = {error["code"] for error in result["errors"]}
-            self.assertIn("light_pack_inlines_repo_override", codes)
+            self.assertIn("forbidden_override_present_in_repo_profile", codes)
 
 
 if __name__ == "__main__":
