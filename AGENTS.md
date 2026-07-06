@@ -1,13 +1,13 @@
 # AGENTS.md — governed-ai-coding-runtime（共同项目规则 / Codex 直接读取）
 **项目**: governed-ai-coding-runtime
-**承接来源**: `GlobalUser/AGENTS.md v9.53`
+**承接来源**: `GlobalUser/AGENTS.md v9.54`
 **适用范围**: 项目级（仓库根）
-**最后更新**: 2026-05-23
+**最后更新**: 2026-07-06
 
 ## 1. 阅读指引
 - 本文件只写本仓事实、门禁命令、证据位置和回滚入口，不重写全局 `R/E` 语义。
-- 本文件是三工具共同项目规则主体；Codex 直接读取，Claude/Gemini 通过各自 wrapper 的 `AGENTS.md` import 承接并只追加平台差异。
-- 固定结构：本文件保持 `1 / A / B / C / D`；Claude/Gemini wrapper 保持 `1 / B / D`，并通过 import 承接本文件 `A/C/D`。
+- 本文件是 Codex / Claude 共同项目规则主体；Codex 直接读取，Claude 通过 wrapper 的 `@AGENTS.md` import 承接并只追加平台差异。Gemini 不在当前受管规则家族实施面内。
+- 固定结构：本文件保持 `1 / A / B / C / D`；Claude wrapper 保持 `1 / B / D`，并通过 import 承接本文件 `A/C/D`。
 - 裁决链：`运行事实/代码 > 项目级文件 > 全局文件 > 临时上下文`。
 - 自包含约束：执行规则以本文件正文为准，不依赖外部子文档或治理脚本作为前置条件。
 - 渐进披露边界：根文件保留本仓归宿、门禁、阻断、证据和回滚；长 runbook、批量目标仓细节和历史证据放入 `docs/`。
@@ -17,7 +17,9 @@
 ### A.1 事实边界
 - 本仓是 governed AI coding runtime 的控制仓；当前核心目录为 `docs/`、`schemas/`、`scripts/`、`packages/`、`tests/`。
 - 文档、决策、审查结论归 `docs/`；机器可读契约归 `schemas/`；GitHub/规划/同步脚本归 `scripts/`；运行时契约代码归 `packages/`；验证归 `tests/`。
-- 规则文件家族由 `rules/manifest.json` 管理，当前仅同步 3 个用户目录级全局规则副本；本仓根 `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` 直接维护，不再经 manifest 分发。
+- 规则文件家族由 `rules/manifest.json` 管理，当前仅同步 2 个用户目录级全局规则副本：`~/.codex/AGENTS.md` 与 `~/.claude/CLAUDE.md`。
+- `rules/target-project-rule-coordination.json` 只记录受管目标仓的项目级规则协同审计清单；本仓不再分发任何 target-repo 项目规则副本。
+- 本仓根 `AGENTS.md` / `CLAUDE.md` 直接维护；`GEMINI.md` 仅保留为未纳入当前 managed family 的历史 wrapper。
 - `docs/specs/*` 定义语义，`schemas/jsonschema/*` 是配套机器可读草案；修改其一必须同步检查另一侧。
 - `scripts/github/create-roadmap-issues.ps1` 只负责 backlog/issue 种子生成，不代表运行时实现已经存在。
 
@@ -33,7 +35,7 @@
 - `效果反馈优先于完成声明`：完成声明必须有 fresh repo-local evidence、eval trace、trace/replay/trajectory refs、effect feedback、verification command 与 rollback；文档、代码存在或候选文件本身不等于完成。
 - 全局规则给风险、语言、N/A 和门禁语义；本文件给本仓目录归宿、真实命令、阻断条件、证据位置和回滚入口。
 - 项目规则只保留本仓不可由代码/CI自动推断且会改变执行、风险或验收的事实；长流程下沉到子文档或工具专属规则。
-- 规则文件、门禁、profile、baseline 或同步脚本修改前，必须先比对控制仓 `governed-ai-coding-runtime/rules/manifest.json`、源文件、用户目录全局副本、本仓根规则文件与当前工具官方加载模型；发现漂移先整合再同步，不盲目覆盖。
+- 规则文件、门禁、profile、baseline 或同步脚本修改前，必须先比对 `rules/manifest.json`、`rules/target-project-rule-coordination.json`、源文件、用户目录全局副本、本仓根规则文件与当前工具官方加载模型；发现漂移先整合再同步，不盲目覆盖。
 - 面向操作者的使用说明/指南/教程类文档必须保持中英双语可用；纯策略、研究、架构、规划、ADR 默认不强制逐篇双语。
 
 ### A.3 N/A 分类与字段
@@ -61,8 +63,10 @@
 
 ## C. 项目差异
 ### C.1 模块职责
-- `rules/`：Codex/Claude/Gemini 全局规则源。
-- `scripts/sync-agent-rules.py` / `.ps1`：规则源到用户目录全局副本的同步入口。
+- `rules/`：Codex/Claude 全局规则源，以及 target-project coordination audit 清单。
+- `scripts/sync-agent-rules.py` / `.ps1`：规则源到用户目录全局副本的 global-only 同步入口。
+- `scripts/verify-agent-rule-family.py`：Codex/Claude 全局规则家族一致性 verifier。
+- `scripts/verify-target-project-rules.py`：受管目标仓 `AGENTS.md + CLAUDE.md thin wrapper` 协同审计入口。
 - `scripts/verify-repo.ps1`：本仓 contract/runtime/dependency/doctor 门禁聚合入口。
 - `packages/contracts/`、`tests/runtime/`：运行时契约代码与单元测试。
 
@@ -78,7 +82,7 @@
 - `docs/specs/*` 与 `schemas/jsonschema/*` 只改一侧时阻断。
 - 根 `README.md`、`docs/README.md`、`docs/roadmap/*`、`docs/backlog/*` 叙述不一致时阻断。
 - `scripts/github/create-roadmap-issues.ps1` 与当前 roadmap/backlog 基线不一致时阻断。
-- agent rule sync drift、dependency baseline drift 均属 contract 阻断。
+- agent rule sync drift、agent rule family drift、dependency baseline drift 均属 contract 阻断。
 - 本机 Codex/Cockpit Direct OAuth、Direct API 和 Cockpit API service 往返切换由 Cockpit Tools 完全负责；本仓不得提供 8770 页面动作、operator action、repair/smoke/checker、profile 写入、LiteLLM gateway 管理、history bucket 写入、launcher/no-op 包装或后台切换守护。
 - 本仓只允许保留旧项目 shim 清理和缺席验证：`Disable-CodexProjectInterop.ps1` 与 `Test-CodexGuardAbsence.ps1`。它们只能证明或移除旧 guard/wrapper/shortcut，不得写入当前 Codex auth/provider/history/Cockpit account state。
 - 禁止恢复 `codex-interop-check.py`、`CodexProjectionSmoke`、`CodexApiProjectionRepair`、`CodexOauthProjectionRepair`、`CodexLaunchBindingRepair`、`Manage-LiteLLMGateway.ps1`、`codex-cockpit-switch-guard.py`、generic `--apply`、`--migrate-provider-bucket`、SQLite provider trigger、后台 guard、no-op launcher、restart wrapper 或自动重启 Codex。
@@ -91,6 +95,8 @@
 ### C.5 同步入口
 - drift dry-run：`python scripts/sync-agent-rules.py --scope All --fail-on-change`
 - 一键同步：`pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply`
+- 规则家族校验：`python scripts/verify-agent-rule-family.py`
+- 目标仓项目规则审计：`python scripts/verify-target-project-rules.py --targets local-ai-dev-orchestrator`
 - 同版本内容漂移不得盲覆盖；先整合源文件，再按 manifest 同步。
 
 ## D. 维护校验清单
@@ -107,4 +113,4 @@
   - `LocalCodexCockpit`: 本机 Codex/Cockpit Direct OAuth、Direct API 和 Cockpit API service 往返切换由 Cockpit Tools 完全负责；`Test-CodexGuardAbsence.ps1` 和 `tests.runtime.test_codex_cockpit_policy_contract` 必须共同防止旧 repair/smoke/gateway/guard/bucket 写入路径回归。
 - 本文件属于本仓直接维护的根规则文件；修改后若影响用户目录级全局规则，再经 `rules/manifest.json` 同步全局副本。
 - 子文档只承载细节，不替代根文件中的硬门禁和项目事实。
-- 三工具协同约束：`AGENTS.md` 承载共同 A/C/D 项目事实；`CLAUDE.md` / `GEMINI.md` 通过 import 追加 B/D 平台差异，不复制共同正文。
+- 两工具协同约束：`AGENTS.md` 承载共同 A/C/D 项目事实；`CLAUDE.md` 通过 import 追加 B/D 平台差异，不复制共同正文。

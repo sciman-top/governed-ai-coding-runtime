@@ -17,6 +17,8 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260706 Global Rule Governance And Project Audit](./20260706-global-rule-governance-and-project-audit.md)
+  - evidence companion for narrowing the managed rule family to Codex/Claude global-only sync, adding the target-project `AGENTS.md + CLAUDE.md` coordination audit, and documenting the rule/wrapper/enforcement boundary without restoring blind target-repo distribution
 - [20260705 Readme And Docs Current-State Refresh](./20260705-readme-and-docs-current-state-refresh.md)
   - evidence companion for refreshing root/docs/apps/infra/architecture entry surfaces so they reflect the recovered `2026-07-05` selector and live-posture truth, the `2026-07-05` target-run / KPI / effect refresh, the earlier `2026-06-24` governance/self-evolution refresh, and the current packaging/app scaffolds without promoting a new queue
 - [20260705 Runtime Evolution Functional Verification](./20260705-runtime-evolution-functional-verification.md)

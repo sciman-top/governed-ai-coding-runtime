@@ -206,6 +206,8 @@ class PolicyToolCredentialAuditTests(unittest.TestCase):
         local_audit = payload["local_agent_config_audit"]
         self.assertEqual(local_audit["status"], "pass")
         self.assertFalse(local_audit["failed_checks"])
+        self.assertFalse(local_audit["failed_required_checks"])
+        self.assertFalse(local_audit["failed_observed_checks"])
         self.assertIn("codex_context_window_policy_sane", [check["check_id"] for check in local_audit["checks"]])
         self.assertIn("gemini_antigravity_security_guarded_when_present", [check["check_id"] for check in local_audit["checks"]])
         self.assertNotIn("secret-for-login-convenience", completed.stdout)
@@ -275,6 +277,83 @@ class PolicyToolCredentialAuditTests(unittest.TestCase):
                 json.dumps({"security": {"environmentVariableRedaction": {"enabled": True, "blocked": ["OPENAI_API_KEY"]}}}),
                 encoding="utf-8",
             )
+            config = json.loads((ROOT / "docs" / "architecture" / "policy-tool-credential-audit-boundary.json").read_text(encoding="utf-8"))
+            config["local_agent_config_policy"] = {
+                "managed_host_families": ["codex", "claude", "gemini"],
+                "observed_host_families": [],
+            }
+            config_path = home / "policy-tool-credential-audit-boundary.json"
+            config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/build-policy-tool-credential-audit.py",
+                    "--config",
+                    str(config_path),
+                    "--home",
+                    str(home),
+                    "--output",
+                    str(home / "report.json"),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+        finally:
+            shutil.rmtree(home, ignore_errors=True)
+
+        self.assertNotEqual(completed.returncode, 0, completed.stdout)
+        payload = json.loads(completed.stdout)
+        local_audit = payload["local_agent_config_audit"]
+        self.assertEqual("fail", local_audit["status"])
+        self.assertIn("gemini", local_audit["managed_host_families"])
+        self.assertIn("gemini_antigravity_security_guarded_when_present", local_audit["failed_checks"])
+        self.assertIn("gemini_antigravity_security_guarded_when_present", local_audit["failed_required_checks"])
+
+    def test_builder_treats_unmanaged_gemini_drift_as_observation_only(self) -> None:
+        home = Path(tempfile.gettempdir()) / f"policy-tool-audit-{uuid.uuid4().hex}"
+        home.mkdir(parents=True, exist_ok=False)
+        try:
+            codex = home / ".codex"
+            claude = home / ".claude"
+            gemini = home / ".gemini"
+            antigravity = gemini / "antigravity"
+            (codex / "rules").mkdir(parents=True)
+            claude.mkdir()
+            antigravity.mkdir(parents=True)
+            (codex / "config.toml").write_text(
+                '\n'.join(
+                    [
+                        'approval_policy = "never"',
+                        "model_context_window = 1000000",
+                        "model_auto_compact_token_limit = 810000",
+                        "[analytics]",
+                        "enabled = false",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (codex / "rules" / "default.rules").write_text("allow prefix_rule([\"git\", \"status\"])\n", encoding="utf-8")
+            (claude / "settings.json").write_text(
+                json.dumps(
+                    {
+                        "permissions": {
+                            "deny": [
+                                f"Read({(claude / 'settings.json').as_posix()})",
+                                f"Read({(codex / 'auth*.json').as_posix()})",
+                                f"Read({(gemini / 'oauth_creds.json').as_posix()})",
+                                f"Read({(gemini / 'google_accounts.json').as_posix()})",
+                            ]
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (gemini / "settings.json").write_text(json.dumps({}), encoding="utf-8")
+            (antigravity / "settings.json").write_text(json.dumps({}), encoding="utf-8")
 
             completed = subprocess.run(
                 [
@@ -293,11 +372,16 @@ class PolicyToolCredentialAuditTests(unittest.TestCase):
         finally:
             shutil.rmtree(home, ignore_errors=True)
 
-        self.assertNotEqual(completed.returncode, 0, completed.stdout)
+        self.assertEqual(completed.returncode, 0, completed.stderr)
         payload = json.loads(completed.stdout)
         local_audit = payload["local_agent_config_audit"]
-        self.assertEqual("fail", local_audit["status"])
-        self.assertIn("gemini_antigravity_security_guarded_when_present", local_audit["failed_checks"])
+        self.assertEqual("pass", local_audit["status"])
+        self.assertEqual(["claude", "codex"], local_audit["managed_host_families"])
+        self.assertEqual(["gemini"], local_audit["observed_host_families"])
+        self.assertFalse(local_audit["failed_required_checks"])
+        self.assertIn("gemini_secure_mode_enabled", local_audit["failed_observed_checks"])
+        self.assertIn("gemini_secret_redaction_configured", local_audit["failed_observed_checks"])
+        self.assertIn("gemini_sensitive_files_ignored", local_audit["failed_observed_checks"])
 
     def test_builder_fails_when_denied_tool_is_allowlisted(self) -> None:
         profile = json.loads((ROOT / ".governed-ai/repo-profile.json").read_text(encoding="utf-8"))

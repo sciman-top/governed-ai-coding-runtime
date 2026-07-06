@@ -23,9 +23,9 @@ class AgentRuleSyncTests(unittest.TestCase):
         ids = [entry["id"] for entry in entries]
 
         self.assertEqual(len(ids), len(set(ids)))
-        self.assertEqual(len(entries), 3)
+        self.assertEqual(len(entries), 2)
         self.assertEqual({entry["scope"] for entry in entries}, {"global"})
-        self.assertEqual({entry["tool"] for entry in entries}, {"codex", "claude", "gemini"})
+        self.assertEqual({entry["tool"] for entry in entries}, {"codex", "claude"})
         global_version = manifest["default_version"]
         for entry in entries:
             self.assertEqual(entry["version"], global_version)
@@ -38,7 +38,6 @@ class AgentRuleSyncTests(unittest.TestCase):
             copies = {
                 user_profile / ".codex" / "AGENTS.md": ROOT / "rules" / "global" / "codex" / "AGENTS.md",
                 user_profile / ".claude" / "CLAUDE.md": ROOT / "rules" / "global" / "claude" / "CLAUDE.md",
-                user_profile / ".gemini" / "GEMINI.md": ROOT / "rules" / "global" / "gemini" / "GEMINI.md",
             }
             for target, source in copies.items():
                 target.parent.mkdir(parents=True, exist_ok=True)
@@ -88,7 +87,7 @@ class AgentRuleSyncTests(unittest.TestCase):
             self.assertEqual(completed.returncode, 0, completed.stderr)
             payload = json.loads(completed.stdout)
             self.assertEqual(payload["scope"], "all")
-            self.assertEqual(payload["entry_count"], 3)
+            self.assertEqual(payload["entry_count"], 2)
             self.assertEqual({item["scope"] for item in payload["results"]}, {"global"})
 
     def test_global_sync_blocks_same_version_content_drift(self) -> None:
@@ -97,7 +96,6 @@ class AgentRuleSyncTests(unittest.TestCase):
             copies = {
                 user_profile / ".codex" / "AGENTS.md": ROOT / "rules" / "global" / "codex" / "AGENTS.md",
                 user_profile / ".claude" / "CLAUDE.md": ROOT / "rules" / "global" / "claude" / "CLAUDE.md",
-                user_profile / ".gemini" / "GEMINI.md": ROOT / "rules" / "global" / "gemini" / "GEMINI.md",
             }
             for target, source in copies.items():
                 target.parent.mkdir(parents=True, exist_ok=True)

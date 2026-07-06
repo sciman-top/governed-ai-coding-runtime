@@ -117,8 +117,14 @@
 
 ## Rules And Managed Assets
 - Target-repo rollout, attachment, session-bridge, and managed template distribution have been retired from current repo scope.
-- Retained rule-sync source of truth:
+- Retained global-only rule-sync source of truth:
   - [rules/manifest.json](../rules/manifest.json)
+- Target-project coordination audit source of truth:
+  - [rules/target-project-rule-coordination.json](../rules/target-project-rule-coordination.json)
+- Verifiers:
+  - `python scripts/verify-agent-rule-family.py`
+  - `python scripts/verify-target-project-rules.py --targets local-ai-dev-orchestrator`
+- Deterministic enforcement stays in `.codex`, `.claude/settings.json`, hooks, permissions, MCP, and CI; it is not solved by blind text synchronization.
 
 ## Evidence, History, And Rollback
 - Current evidence index: [Change Evidence Index](./change-evidence/README.md)

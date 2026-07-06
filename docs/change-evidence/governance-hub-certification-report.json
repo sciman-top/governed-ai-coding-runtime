@@ -147,7 +147,7 @@
         },
         {
           "details": {
-            "default_version": "9.53",
+            "default_version": "9.54",
             "global_entries": [
               {
                 "id": "global-codex-agents",
@@ -158,11 +158,6 @@
                 "id": "global-claude-claude",
                 "target_path": "${user_profile}/.claude/CLAUDE.md",
                 "tool": "claude"
-              },
-              {
-                "id": "global-gemini-gemini",
-                "target_path": "${user_profile}/.gemini/GEMINI.md",
-                "tool": "gemini"
               }
             ],
             "manifest_exists": true,
@@ -170,10 +165,9 @@
             "missing_global_targets": [],
             "required_global_tools_present": [
               "codex",
-              "claude",
-              "gemini"
+              "claude"
             ],
-            "sync_revision": "2026-05-23.1"
+            "sync_revision": "2026-07-06.1"
           },
           "dimension_id": "rules",
           "status": "ok",
@@ -188,16 +182,16 @@
               "config_status": "attention",
               "health": "ok",
               "mcp_exit_code": 0,
-              "mcp_summary": "Checking MCP server health…\n\nweb-search-prime: https://open.bigmodel.cn/api/mcp/web_search_prime/mcp (HTTP) - ✔ Connected\ngithub: https://api.githubcopilot.com/mcp/ (HTTP) - ✔ Connected\nfilesystem: cmd /c npx -y @modelcontextprotocol/server-filesystem D:\\CODE\\skills-manager - ✔ Connected\npostgres: pwsh -NoLogo -NoProfile -Command $conn = $env:POSTGRES_CONNECTION_STRING; if ([string]::IsNullOrWhiteSpace($conn)) { $conn = [Environment]::GetEnvironmentVariable(\"POSTGRES_CONNECTION_STRING\", \"User\") }; if ([string]::IsNullOrWhiteSpace($conn)) { $conn = [Environment]::GetEnvironmentVariable(\"POSTGRES_CONNECTION_STRING\", \"Machine\") }; if ([string]::IsNullOrWhiteSpace($conn)) { Write-Error \"POSTGRES_CONNECTION_STRING is required for postgres MCP.\"; exit 64 }; $env:POSTGRES_CONNECTION_STRING = $conn; npx -y @modelcontextprotocol/server-postgres $conn - ✔ Connected\nfetch: python -m mcp_server_fetch - ✔ Connected\nweb-reader: https://open.bigmodel.cn/api/mcp/web_reader/mcp (HTTP) - ✔ Connected\nplaywright: cmd /c npx @playwright/mcp@latest --isolated - ✔ Connected\nzai-mcp-server: cmd /c npx -y @z_ai/mcp-server@latest - ✔ Connected\nopenaiDeveloperDocs: https://developers.openai.com/mcp (HTTP) - ✔ Connected\nzread: https://open.bigmodel.cn/api/mcp/zread/mcp (HTTP) - ✔ Connected\nmicrosoft-learn: https://learn.microsoft.com/api/mcp (HTTP) - ✔ Connected\ncontext7: cmd /c npx -y @upstash/context7-mcp - ✔ Connected",
+              "mcp_summary": "Checking MCP server health…\n\nweb-search-prime: https://open.bigmodel.cn/api/mcp/web_search_prime/mcp (HTTP) - √ Connected\nweb-reader: https://open.bigmodel.cn/api/mcp/web_reader/mcp (HTTP) - √ Connected\nzai-mcp-server: cmd /c npx -y @z_ai/mcp-server@latest - √ Connected\nzread: https://open.bigmodel.cn/api/mcp/zread/mcp (HTTP) - √ Connected\ncontext7: npx -y @upstash/context7-mcp - √ Connected\ngithub: https://api.githubcopilot.com/mcp/ (HTTP) - √ Connected\nmicrosoft-learn: https://learn.microsoft.com/api/mcp (HTTP) - √ Connected\nopenaiDeveloperDocs: https://developers.openai.com/mcp (HTTP) - √ Connected\nplaywright: npx @playwright/mcp@latest --isolated - √ Connected\nfilesystem: npx -y @modelcontextprotocol/server-filesystem D:\\CODE - √ Connected\npostgres: pwsh -NoLogo -NoProfile -Command $conn = $env:POSTGRES_CONNECTION_STRING; if ([string]::IsNullOrWhiteSpace($conn)) { $conn = [Environment]::GetEnvironmentVariable(\"POSTGRES_CONNECTION_STRING\", \"User\") }; if ([string]::IsNullOrWhiteSpace($conn)) { $conn = [Environment]::GetEnvironmentVariable(\"POSTGRES_CONNECTION_STRING\", \"Machine\") }; if ([string]::IsNullOrWhiteSpace($conn)) { Write-Error \"POSTGRES_CONNECTION_STRING is required for postgres MCP.\"; exit 64 }; $env:POSTGRES_CONNECTION_STRING = $conn; npx -y @modelcontextprotocol/server-postgres $conn - √ Connected\ncodebase-memory-mcp: pwsh -NoLogo -NoProfile -Command $exe = Join-Path $env:LOCALAPPDATA 'Programs\\codebase-memory-mcp\\codebase-memory-mcp.exe'; if (-not (Test-Path -LiteralPath $exe)) { $cmd = Get-Command codebase-memory-mcp -ErrorAction SilentlyContinue; if ($cmd) { $exe = [string]$cmd.Source } else { Write-Error 'codebase-memory-mcp.exe not found. Run the official installer first.'; exit 64 } }; & $exe - √ Connected",
               "nonblocking_config_attention": true,
               "status": "ok"
             },
             "codex": {
-              "active_account": "7cf614267d60",
+              "active_account": "645074f6c716",
               "config_status": "attention",
               "health": "ok",
               "login_exit_code": 0,
-              "login_summary": "Logged in using an API key - sk-379bc***6ef84",
+              "login_summary": "Logged in using an API key - sk-a0bf7***4f09b",
               "nonblocking_config_attention": true,
               "status": "ok"
             }
@@ -231,13 +225,13 @@
                   "cmd": "claude --version",
                   "exit_code": 0,
                   "key_output": "2.1.201 (Claude Code)",
-                  "timestamp": "2026-07-06T04:33:36.192918+00:00"
+                  "timestamp": "2026-07-06T07:58:48.046583+00:00"
                 },
                 {
                   "cmd": "claude --help",
                   "exit_code": 0,
                   "key_output": "Usage: claude [options] [command] [prompt]\n\nClaude Code - starts an interactive session by default, use -p/--print for\nnon-interactive output\n\nArguments:\n  prompt                                Your prompt\n\nOptions:\n  --add-dir <director...",
-                  "timestamp": "2026-07-06T04:33:36.724750+00:00"
+                  "timestamp": "2026-07-06T07:58:48.436296+00:00"
                 }
               ],
               "process_bridge_available": true,
@@ -295,7 +289,7 @@
           "summary": "Claude Code workload adapter probe is ready"
         }
       ],
-      "generated_at": "2026-07-06T04:33:24.565571+00:00",
+      "generated_at": "2026-07-06T07:58:40.591020+00:00",
       "guide_path": "docs/product/host-feedback-loop.zh-CN.md",
       "guide_path_en": "docs/product/host-feedback-loop.md",
       "parity_path": "docs/product/adapter-conformance-parity-matrix.md",
@@ -312,7 +306,7 @@
         "dimensions_attention": 0,
         "dimensions_fail": 0,
         "dimensions_ok": 5,
-        "rule_manifest_revision": "2026-05-23.1"
+        "rule_manifest_revision": "2026-07-06.1"
       }
     },
     "knowledge_memory_lifecycle": {
@@ -524,78 +518,55 @@
           {
             "check_id": "codex_analytics_disabled",
             "evidence_ref": "~/.codex/config.toml",
+            "host_family": "codex",
             "reason": "Codex analytics should be explicitly disabled for local governance runs.",
             "remediation": "Set analytics.enabled = false in ~/.codex/config.toml.",
+            "required": true,
             "status": "pass"
           },
           {
             "check_id": "codex_never_policy_has_rules_guard",
             "evidence_ref": "~/.codex/config.toml + ~/.codex/rules/*.rules",
+            "host_family": "codex",
             "reason": "approval_policy=never is an accepted operator preference only when deterministic rules are present.",
             "remediation": "Keep ~/.codex/rules/*.rules present and non-empty when using approval_policy=never.",
+            "required": true,
             "status": "pass"
           },
           {
             "check_id": "codex_context_window_policy_sane",
             "evidence_ref": "~/.codex/config.toml model_context_window + model_auto_compact_token_limit",
+            "host_family": "codex",
             "reason": "Codex context window and auto-compact thresholds should remain coherent before changing model defaults.",
             "remediation": "Run the read-only Codex context probe from `scripts/lib/codex_local.py` through the runtime tests before changing defaults; do not restore the deleted codex-account mutation CLI.",
+            "required": true,
             "status": "pass"
           },
           {
             "check_id": "claude_sensitive_settings_read_denied",
             "evidence_ref": "~/.claude/settings.json permissions.deny",
+            "host_family": "claude",
             "reason": "Plaintext Claude login convenience is accepted, but agent reads of credential-bearing user config must be denied.",
             "remediation": "Add Read denies for Claude/Codex/Gemini credential-bearing user config files.",
-            "status": "pass"
-          },
-          {
-            "check_id": "gemini_secure_mode_enabled",
-            "evidence_ref": "~/.gemini/settings.json admin.secureModeEnabled",
-            "reason": "Gemini secure mode should block YOLO and Always allow bypass paths for local governance runs.",
-            "remediation": "Set admin.secureModeEnabled = true in ~/.gemini/settings.json.",
-            "status": "pass"
-          },
-          {
-            "check_id": "gemini_secret_redaction_configured",
-            "evidence_ref": "~/.gemini/settings.json security.environmentVariableRedaction + advanced.excludedEnvVars",
-            "reason": "Gemini should redact and exclude known credential environment variables from model context.",
-            "remediation": "Add common token variables to Gemini redaction and excludedEnvVars settings.",
-            "status": "pass"
-          },
-          {
-            "check_id": "gemini_sensitive_files_ignored",
-            "evidence_ref": "~/.gemini/settings.json context.fileFiltering + ~/.gemini/.geminiignore",
-            "reason": "Gemini file discovery should respect a user-level ignore file for OAuth and account state.",
-            "remediation": "Create ~/.gemini/.geminiignore and reference it from context.fileFiltering.customIgnoreFilePaths.",
-            "status": "pass"
-          },
-          {
-            "check_id": "gemini_antigravity_security_guarded_when_present",
-            "evidence_ref": "~/.gemini/antigravity/settings.json + ~/.gemini/settings.json",
-            "reason": "Gemini Antigravity settings, when present, should carry the same secure mode, secret redaction, file filtering, and GitHub MCP exclusion posture as the current Google local settings baseline.",
-            "remediation": "Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/Optimize-GeminiLocal.ps1 -Apply` to mirror the bounded security posture.",
+            "required": true,
             "status": "pass"
           },
           {
             "check_id": "codex_mcp_tokens_use_env_refs",
             "evidence_ref": "~/.codex/config.toml mcp_servers.*.bearer_token_env_var",
+            "host_family": "codex",
             "reason": "Codex MCP credentials should be referenced through env vars, not expanded into config.toml.",
             "remediation": "Use bearer_token_env_var for Codex MCP credentials.",
+            "required": true,
             "status": "pass"
           },
           {
             "check_id": "claude_mcp_tokens_use_env_refs",
             "evidence_ref": "~/.claude/.mcp.json",
+            "host_family": "claude",
             "reason": "Claude MCP config should not contain expanded bearer tokens.",
             "remediation": "Keep MCP Authorization headers as environment-variable references.",
-            "status": "pass"
-          },
-          {
-            "check_id": "gemini_mcp_tokens_use_env_refs",
-            "evidence_ref": "~/.gemini/settings.json + ~/.gemini/.mcp.json + ~/.gemini/antigravity/settings.json",
-            "reason": "Gemini MCP config should not contain expanded bearer tokens.",
-            "remediation": "Keep MCP Authorization headers as environment-variable references.",
+            "required": true,
             "status": "pass"
           }
         ],
@@ -661,7 +632,16 @@
           "status": "pass"
         },
         "failed_checks": [],
+        "failed_observed_checks": [],
+        "failed_required_checks": [],
         "home_ref": "~",
+        "managed_host_families": [
+          "claude",
+          "codex"
+        ],
+        "observed_host_families": [
+          "gemini"
+        ],
         "personal_preference_exceptions": [
           {
             "accepted_when": "credential-bearing settings files remain read-denied to agents and are not synchronized into repositories",
@@ -677,6 +657,15 @@
           }
         ],
         "status": "pass"
+      },
+      "local_agent_config_policy": {
+        "managed_host_families": [
+          "claude",
+          "codex"
+        ],
+        "observed_host_families": [
+          "gemini"
+        ]
       },
       "missing_evidence_refs": [],
       "missing_policy_basis_refs": [],

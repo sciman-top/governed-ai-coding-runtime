@@ -801,6 +801,7 @@ function Invoke-ContractChecks {
   Invoke-GovernanceHubCertificationChecks
   Invoke-ShellRiskContractChecks
   Invoke-AgentRuleSyncChecks
+  Invoke-AgentRuleFamilyChecks
   Invoke-PreChangeReviewChecks
   Invoke-ReferenceRequiredChangeChecks
   Invoke-ReferenceBasisChecks
@@ -955,6 +956,20 @@ function Invoke-AgentRuleSyncChecks {
   }
 
   Write-CheckOk "agent-rule-sync"
+}
+
+function Invoke-AgentRuleFamilyChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-agent-rule-family.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = ($output | Out-String).Trim()
+    if (-not $detail) {
+      throw "Agent rule family checks failed"
+    }
+    throw "Agent rule family checks failed`n$detail"
+  }
+
+  Write-CheckOk "agent-rule-family"
 }
 
 function Invoke-PreChangeReviewChecks {

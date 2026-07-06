@@ -5,9 +5,10 @@
 - Single source of planning truth: `docs/architecture/planning-status.json`.
 - current active queue: `Continuous-Execution`
 - `current decision gate`: `defer_ltp_and_refresh_evidence`
-- The repository is now intentionally narrowed to three live surfaces:
+- The repository is now intentionally narrowed to four live surfaces:
   - self-repo governance: `build -> test -> contract/invariant -> hotspot`
-  - global user-rule synchronization for `~/.codex`, `~/.claude`, and `~/.gemini`
+  - global user-rule synchronization for `~/.codex` and `~/.claude`
+  - target-project rule coordination audit for `AGENTS.md + CLAUDE.md` thin-wrapper projects
   - host/self-evolution/continuity read-only feedback, evidence, and gates
 - Historical `docs/change-evidence/**` records remain archived, but they no longer imply that target-repo rollout, attachment, or session-bridge write flows are still live features.
 
@@ -36,7 +37,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
 ## What This Repo Does
 - runs the canonical self-repo gate chain through `scripts/build-runtime.ps1`, `scripts/verify-repo.ps1`, and `scripts/doctor-runtime.ps1`
 - produces repo-local task, evidence, handoff, and status artifacts through `scripts/run-governed-task.py`
-- syncs global rule files through `scripts/sync-agent-rules.ps1`
+- syncs managed Codex/Claude global rule files through `scripts/sync-agent-rules.ps1`
+- audits target-project wrapper/contract coordination through `scripts/verify-target-project-rules.py`
 - generates host feedback, self-evolution recommendations, continuity evidence, and the operator UI
 - packages the portable runtime release through `scripts/package-runtime.ps1`
 - keeps only the retired Codex shim cleanup/absence checks
@@ -51,6 +53,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
 - no more target-repo `daily`, `governance-baseline`, `apply-all`, `cleanup-targets`, or `uninstall-governance`
 - no more attachment, light-pack, session-bridge, or attached-write bridge flows
 - `rules/manifest.json` no longer distributes any `rules/projects/**` project copies
+- no blind sync of target-repo `AGENTS.md` / `CLAUDE.md`; target differences now require audit, manual integration, and verification
 - target-run, KPI, and effect artifacts remain historical evidence only
 
 Retired command names remain fail-closed and return explicit retirement messages.
@@ -61,6 +64,8 @@ Retired command names remain fail-closed and return explicit retirement messages
 - `scripts/verify-repo.ps1`
 - `scripts/governance/preflight.ps1`
 - `scripts/sync-agent-rules.ps1`
+- `scripts/verify-agent-rule-family.py`
+- `scripts/verify-target-project-rules.py`
 - `scripts/run-governed-task.py`
 - `scripts/package-runtime.ps1`
 
