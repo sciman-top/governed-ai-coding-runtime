@@ -2,9 +2,9 @@
 
 ## Change Identity
 
-- `status`: `target_published_control_pending`
+- `status`: `control_pr_verified_merge_pending`
 - 风险等级：中；变更 GitHub Actions、目标仓规则契约 Schema、审计脚本并发布 9 个目标仓规则 PR；不新增跨仓密钥、不修改 provider/auth，也不替代产品门禁。
-- 当前落点：9 个目标 PR 已合并，目标仓 `main` 上的规则契约 workflow 全部通过；控制仓聚合认证尚待发布。
+- 当前落点：9 个目标 PR 已合并，目标仓 `main` 上的规则契约 workflow 全部通过；控制仓 PR 聚合认证已通过，尚待合并并复核 `main`。
 - 目标归宿：`target-local proof + control aggregate certification`，让项目规则、Claude wrapper、CI 模板和控制清单形成确定性闭环。
 
 ## Pre-Change Review
@@ -140,11 +140,11 @@
 - GREEN：安全门禁改为“正值、早于上下文且不晚于 90%”；低于 75% 记录为 `configured_early_threshold`，不自动改写用户偏好。新增回归、`test_codex_local` 29 项、policy audit 8 项、governance certification 3 项与完整固定门禁全部通过。
 - 未修改 `~/.codex/config.toml`，未重启、停止或拉起 Codex/Claude 进程。
 - `issue_id=aggregate-skills-manager-checkout-cleanup`：控制仓首次 PR 聚合运行 [29148837996](https://github.com/sciman-top/governed-ai-coding-runtime/actions/runs/29148837996) 中 8 个目标 job 通过，`skills-manager` 在 checkout 的即时 credential cleanup 阶段因 `imports/agent-browser` 缺少 `.gitmodules` URL 失败。新增 RED 断言后，将目标 checkout 改为 `persist-credentials: true`，并在审计后、Post Checkout 前只在 runner 临时副本补齐 gitlink 元数据；`test_target_rule_ci` 6 项和 `actionlint v1.7.12` 通过。
+- hosted aggregate：[29148963827](https://github.com/sciman-top/governed-ai-coding-runtime/actions/runs/29148963827) 返回 `success`；matrix 构建成功，7 个公开目标完成 checkout + strict audit，`github-toolkit` 与 `qq-codex-bot` 两个私有目标完成显式边界记录，所有 checkout Post Cleanup 成功。
 
 ## N/A Boundary
 
 - `platform_na`：控制仓默认 `GITHUB_TOKEN` 不能跨仓读取两个私有目标。`reason=private repositories and no cross-repository credential by design`；`alternative_verification=repository-local Agent Rule Contract on each private main branch`；`evidence_link=the github-toolkit and qq-codex-bot hosted run URLs above`；`expires_at=2026-08-09`。
-- `platform_na`：控制仓聚合 workflow 尚未发布。`reason=control PR pending`；`alternative_verification=matrix export + schema tests + target audit + actionlint`；`evidence_link=this file`；`expires_at=2026-08-09`。
 - `gate_na`：控制仓既有 `.github/workflows/verify.yml` 在本 PR 运行 [29148837977](https://github.com/sciman-top/governed-ai-coding-runtime/actions/runs/29148837977) 中失败；`reason=the workflow depends on uncommitted host-local .runtime artifacts and host feedback, and the latest five main-branch runs already fail on the same repository-integrity/release-preflight surface`；`alternative_verification=the fresh local fixed-order build/runtime/contract/doctor results recorded above plus the independent agent-rule aggregate workflow`；`evidence_link=https://github.com/sciman-top/governed-ai-coding-runtime/actions/runs/28768144311`；`expires_at=2026-08-09`；`recovery_plan=repair CI fixture isolation and host-evidence platform_na semantics in a separate runtime-governance slice`。
 - 目标产品 build/test/contract/hotspot 对纯规则 Markdown/workflow 切片为 `gate_na`；3 个既有失败仓的 PR 评论补齐四字段与 recovery plan，其余可执行产品门禁以实际托管结果收口。
 
