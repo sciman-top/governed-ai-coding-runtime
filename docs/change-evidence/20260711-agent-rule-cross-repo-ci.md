@@ -2,9 +2,9 @@
 
 ## Change Identity
 
-- `status`: `control_pr_verified_merge_pending`
+- `status`: `complete`
 - 风险等级：中；变更 GitHub Actions、目标仓规则契约 Schema、审计脚本并发布 9 个目标仓规则 PR；不新增跨仓密钥、不修改 provider/auth，也不替代产品门禁。
-- 当前落点：9 个目标 PR 已合并，目标仓 `main` 上的规则契约 workflow 全部通过；控制仓 PR 聚合认证已通过，尚待合并并复核 `main`。
+- 当前落点：9 个目标 PR 与控制仓 PR #10 均已合并；目标仓 `main` 规则契约和控制仓 `main` 聚合认证全部通过。
 - 目标归宿：`target-local proof + control aggregate certification`，让项目规则、Claude wrapper、CI 模板和控制清单形成确定性闭环。
 
 ## Pre-Change Review
@@ -141,6 +141,7 @@
 - 未修改 `~/.codex/config.toml`，未重启、停止或拉起 Codex/Claude 进程。
 - `issue_id=aggregate-skills-manager-checkout-cleanup`：控制仓首次 PR 聚合运行 [29148837996](https://github.com/sciman-top/governed-ai-coding-runtime/actions/runs/29148837996) 中 8 个目标 job 通过，`skills-manager` 在 checkout 的即时 credential cleanup 阶段因 `imports/agent-browser` 缺少 `.gitmodules` URL 失败。新增 RED 断言后，将目标 checkout 改为 `persist-credentials: true`，并在审计后、Post Checkout 前只在 runner 临时副本补齐 gitlink 元数据；`test_target_rule_ci` 6 项和 `actionlint v1.7.12` 通过。
 - hosted aggregate：[29148963827](https://github.com/sciman-top/governed-ai-coding-runtime/actions/runs/29148963827) 返回 `success`；matrix 构建成功，7 个公开目标完成 checkout + strict audit，`github-toolkit` 与 `qq-codex-bot` 两个私有目标完成显式边界记录，所有 checkout Post Cleanup 成功。
+- main closeout：控制仓 PR #10 squash merge 为 `4fae07ae690e70c79d874f10751d7efd9e702ff1`；`main` 聚合运行 [29149074399](https://github.com/sciman-top/governed-ai-coding-runtime/actions/runs/29149074399) 返回 `success`。合并后本地 family、9 仓 `--require-all` 与 global sync dry-run 再次通过，sync 为 `changed=0 / blocked=0`。
 
 ## N/A Boundary
 
