@@ -10,6 +10,9 @@
   - global user-rule synchronization for `~/.codex` and `~/.claude`
   - target-project rule coordination audit for `AGENTS.md + CLAUDE.md` thin-wrapper projects
   - host/self-evolution/continuity read-only feedback, evidence, and gates
+- The active coordination versions are `rule_release=9.55 / project_contract_version=2.0`. Nine targets are selected by an explicit allowlist; sibling directories are never auto-enrolled.
+- A target `AGENTS.md` is host-neutral. Its `CLAUDE.md` is normally a BOM-free, one-line `@AGENTS.md` wrapper. Global sync never distributes target rule bodies.
+- CI coordination uses `coordination_schema=2.2 / ci_contract=2.1`: a local workflow proves each target's rule changes. The control repository generates a nine-target matrix, checks out and audits seven public repositories, and explicitly routes two private repositories to target-local enforcement. Neither layer replaces product gates.
 - Historical `docs/change-evidence/**` records remain archived, but they no longer imply that target-repo rollout, attachment, or session-bridge write flows are still live features.
 
 ## Fastest Path
@@ -39,6 +42,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
 - produces repo-local task, evidence, handoff, and status artifacts through `scripts/run-governed-task.py`
 - syncs managed Codex/Claude global rule files through `scripts/sync-agent-rules.ps1`
 - audits target-project wrapper/contract coordination through `scripts/verify-target-project-rules.py`
+- exports the cross-repository CI matrix through `scripts/export-target-rule-ci-matrix.py`
 - generates host feedback, self-evolution recommendations, continuity evidence, and the operator UI
 - packages the portable runtime release through `scripts/package-runtime.ps1`
 - keeps only the retired Codex shim cleanup/absence checks
@@ -66,10 +70,18 @@ Retired command names remain fail-closed and return explicit retirement messages
 - `scripts/sync-agent-rules.ps1`
 - `scripts/verify-agent-rule-family.py`
 - `scripts/verify-target-project-rules.py`
+- `scripts/export-target-rule-ci-matrix.py`
 - `scripts/run-governed-task.py`
 - `scripts/package-runtime.ps1`
 
 ## Verification
+```powershell
+python scripts/verify-agent-rule-family.py
+python scripts/verify-target-project-rules.py --require-all
+python scripts/export-target-rule-ci-matrix.py
+python scripts/sync-agent-rules.py --scope All --fail-on-change
+```
+
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
 ```

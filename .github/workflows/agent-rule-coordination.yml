@@ -1,0 +1,97 @@
+name: Agent Rule Coordination
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/agent-rule-coordination.yml
+      - rules/target-project-rule-coordination.json
+      - rules/templates/github/agent-rule-contract.yml
+      - schemas/jsonschema/target-project-rule-coordination.schema.json
+      - scripts/export-target-rule-ci-matrix.py
+      - scripts/verify-target-project-rules.py
+      - tests/runtime/test_target_rule_ci.py
+      - tests/runtime/test_verify_target_project_rules.py
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/agent-rule-coordination.yml
+      - rules/target-project-rule-coordination.json
+      - rules/templates/github/agent-rule-contract.yml
+      - schemas/jsonschema/target-project-rule-coordination.schema.json
+      - scripts/export-target-rule-ci-matrix.py
+      - scripts/verify-target-project-rules.py
+      - tests/runtime/test_target_rule_ci.py
+      - tests/runtime/test_verify_target_project_rules.py
+  workflow_dispatch:
+  schedule:
+    - cron: "23 3 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-rule-coordination-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prepare:
+    name: Build target matrix
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - name: Checkout control repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Export allowlisted target matrix
+        id: matrix
+        shell: bash
+        run: |
+          matrix="$(python scripts/export-target-rule-ci-matrix.py)"
+          echo "matrix=${matrix}" >> "${GITHUB_OUTPUT}"
+
+  audit:
+    name: Coordinate ${{ matrix.repo_id }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    steps:
+      - name: Checkout control repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          path: control
+          persist-credentials: false
+
+      - name: Checkout target repository
+        if: matrix.aggregate_mode == 'checkout'
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          repository: ${{ matrix.repository }}
+          path: workspace/${{ matrix.repo_path }}
+          persist-credentials: false
+
+      - name: Audit target rule contract
+        if: matrix.aggregate_mode == 'checkout'
+        shell: bash
+        run: >-
+          python control/scripts/verify-target-project-rules.py
+          --coordination-path control/rules/target-project-rule-coordination.json
+          --workspace-root workspace
+          --targets "${{ matrix.repo_id }}"
+          --require-all
+
+      - name: Record private-repository aggregate boundary
+        if: matrix.aggregate_mode == 'target_local_only'
+        shell: bash
+        run: >-
+          echo "::notice title=platform_na::${{ matrix.repo_id }} is private;
+          the repository-local Agent Rule Contract workflow is authoritative because
+          the control repository does not hold a cross-repository credential."

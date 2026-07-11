@@ -84,6 +84,23 @@ function Invoke-SchemaCatalogPairing {
   Write-CheckOk "schema-catalog-pairing"
 }
 
+function Invoke-TargetProjectRuleCoordinationSchemaCheck {
+  $instancePath = "rules/target-project-rule-coordination.json"
+  $schemaPath = "schemas/jsonschema/target-project-rule-coordination.schema.json"
+  foreach ($path in @($instancePath, $schemaPath)) {
+    if (-not (Test-Path $path)) {
+      throw "Target project rule coordination contract path missing: $path"
+    }
+  }
+
+  $ok = Test-Json -Json (Get-Content -Raw $instancePath) -SchemaFile $schemaPath
+  if (-not $ok) {
+    throw "Target project rule coordination manifest failed schema validation: $instancePath"
+  }
+
+  Write-CheckOk "target-project-rule-coordination-schema"
+}
+
 function Invoke-CorePrincipleChangeArtifactSchemaCheck {
   $checks = @(
     @{
@@ -788,6 +805,7 @@ function Invoke-ContractChecks {
   Invoke-SchemaJsonParse
   Invoke-SchemaExampleValidation
   Invoke-SchemaCatalogPairing
+  Invoke-TargetProjectRuleCoordinationSchemaCheck
   Invoke-ControlPackInheritanceChecks
   Invoke-ControlPackExecutionChecks
   Invoke-CorePrincipleChangeArtifactSchemaCheck
@@ -802,6 +820,7 @@ function Invoke-ContractChecks {
   Invoke-ShellRiskContractChecks
   Invoke-AgentRuleSyncChecks
   Invoke-AgentRuleFamilyChecks
+  Invoke-TargetProjectRuleChecks
   Invoke-PreChangeReviewChecks
   Invoke-ReferenceRequiredChangeChecks
   Invoke-ReferenceBasisChecks
@@ -970,6 +989,20 @@ function Invoke-AgentRuleFamilyChecks {
   }
 
   Write-CheckOk "agent-rule-family"
+}
+
+function Invoke-TargetProjectRuleChecks {
+  $python = Resolve-PythonCommand
+  $output = & $python.Source "scripts/verify-target-project-rules.py" 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $detail = ($output | Out-String).Trim()
+    if (-not $detail) {
+      throw "Target project rule checks failed"
+    }
+    throw "Target project rule checks failed`n$detail"
+  }
+
+  Write-CheckOk "target-project-rules"
 }
 
 function Invoke-PreChangeReviewChecks {

@@ -1,18 +1,223 @@
 {
-  "schema_version": "1.0",
+  "$schema": "../schemas/jsonschema/target-project-rule-coordination.schema.json",
+  "schema_version": "2.2",
   "coordination_id": "target-project-rule-coordination",
-  "updated_on": "2026-07-06",
+  "rule_release": "9.55",
+  "project_contract_version": "2.0",
+  "workspace_root": "D:\\CODE",
+  "updated_on": "2026-07-11",
+  "ci_contract": {
+    "contract_id": "agent-rule-contract-ci",
+    "version": "2.1",
+    "workflow_sha256": "634eb76978774b8eaad39fe61172c9f65f5558fcd32ce7f13e98ecfae7214190"
+  },
   "targets": [
     {
-      "repo_id": "local-ai-dev-orchestrator",
-      "repo_root": "D:\\CODE\\local-ai-dev-orchestrator",
-      "tools": [
-        "codex",
-        "claude"
-      ],
+      "repo_id": "ai-content-delivery-studio",
+      "repo_path": "ai-content-delivery-studio",
+      "github_repository": "sciman-top/ai-content-delivery-studio",
+      "github_visibility": "public",
+      "aggregate_mode": "checkout",
+      "ci_workflow_path": ".github/workflows/agent-rule-contract.yml",
+      "tools": ["codex", "claude"],
       "project_common_rule": "AGENTS.md",
       "claude_wrapper_rule": "CLAUDE.md",
-      "coordination_mode": "wrapper_and_contract_audit"
+      "claude_wrapper_mode": "import_only",
+      "project_contract_version": "2.0",
+      "reviewed_global_release": "9.55",
+      "required_anchors": ["ContentDeliveryStudio.sln", "src/", "tests/"],
+      "evidence_path": "docs/change-evidence/",
+      "budgets": {
+        "project_max_bytes": 16384,
+        "project_max_lines": 140,
+        "wrapper_max_lines": 4,
+        "effective_context_warning_lines": 160
+      },
+      "coordination_mode": "audit_only"
+    },
+    {
+      "repo_id": "classroom-answer-toolkit",
+      "repo_path": "classroom-answer-toolkit",
+      "github_repository": "sciman-top/classroom-answer-toolkit",
+      "github_visibility": "public",
+      "aggregate_mode": "checkout",
+      "ci_workflow_path": ".github/workflows/agent-rule-contract.yml",
+      "tools": ["codex", "claude"],
+      "project_common_rule": "AGENTS.md",
+      "claude_wrapper_rule": "CLAUDE.md",
+      "claude_wrapper_mode": "import_only",
+      "project_contract_version": "2.0",
+      "reviewed_global_release": "9.55",
+      "required_anchors": ["ClassroomToolkit.sln", "prompts/specs/compiled/", "snapshot"],
+      "evidence_path": "docs/change-evidence/",
+      "budgets": {
+        "project_max_bytes": 16384,
+        "project_max_lines": 140,
+        "wrapper_max_lines": 4,
+        "effective_context_warning_lines": 160
+      },
+      "coordination_mode": "audit_only"
+    },
+    {
+      "repo_id": "ClassroomToolkit",
+      "repo_path": "ClassroomToolkit",
+      "github_repository": "sciman-top/ClassroomToolkit",
+      "github_visibility": "public",
+      "aggregate_mode": "checkout",
+      "ci_workflow_path": ".github/workflows/agent-rule-contract.yml",
+      "tools": ["codex", "claude"],
+      "project_common_rule": "AGENTS.md",
+      "claude_wrapper_rule": "CLAUDE.md",
+      "claude_wrapper_mode": "import_only",
+      "project_contract_version": "2.0",
+      "reviewed_global_release": "9.55",
+      "required_anchors": ["ClassroomToolkit.sln", "scripts/quality/run-local-quality-gates.ps1", "students.xlsx"],
+      "evidence_path": "docs/change-evidence/",
+      "budgets": {
+        "project_max_bytes": 16384,
+        "project_max_lines": 140,
+        "wrapper_max_lines": 4,
+        "effective_context_warning_lines": 160
+      },
+      "coordination_mode": "audit_only"
+    },
+    {
+      "repo_id": "github-toolkit",
+      "repo_path": "github-toolkit",
+      "github_repository": "sciman-top/github-toolkit",
+      "github_visibility": "private",
+      "aggregate_mode": "target_local_only",
+      "ci_workflow_path": ".github/workflows/agent-rule-contract.yml",
+      "tools": ["codex", "claude"],
+      "project_common_rule": "AGENTS.md",
+      "claude_wrapper_rule": "CLAUDE.md",
+      "claude_wrapper_mode": "import_only",
+      "project_contract_version": "2.0",
+      "reviewed_global_release": "9.55",
+      "required_anchors": ["sync-forks.py", "test_toolkit.py", "GH_TOKEN"],
+      "evidence_path": "docs/change-evidence/",
+      "budgets": {
+        "project_max_bytes": 16384,
+        "project_max_lines": 140,
+        "wrapper_max_lines": 4,
+        "effective_context_warning_lines": 160
+      },
+      "coordination_mode": "audit_only"
+    },
+    {
+      "repo_id": "k12-question-graph",
+      "repo_path": "k12-question-graph",
+      "github_repository": "sciman-top/k12-question-graph",
+      "github_visibility": "public",
+      "aggregate_mode": "checkout",
+      "ci_workflow_path": ".github/workflows/agent-rule-contract.yml",
+      "tools": ["codex", "claude"],
+      "project_common_rule": "AGENTS.md",
+      "claude_wrapper_rule": "CLAUDE.md",
+      "claude_wrapper_mode": "import_only",
+      "project_contract_version": "2.0",
+      "reviewed_global_release": "9.55",
+      "required_anchors": ["apps/", "schemas/", "C002R"],
+      "evidence_path": "docs/evidence/",
+      "budgets": {
+        "project_max_bytes": 16384,
+        "project_max_lines": 140,
+        "wrapper_max_lines": 4,
+        "effective_context_warning_lines": 160
+      },
+      "coordination_mode": "audit_only"
+    },
+    {
+      "repo_id": "local-ai-dev-orchestrator",
+      "repo_path": "local-ai-dev-orchestrator",
+      "github_repository": "sciman-top/local-ai-runtime",
+      "github_visibility": "public",
+      "aggregate_mode": "checkout",
+      "ci_workflow_path": ".github/workflows/agent-rule-contract.yml",
+      "tools": ["codex", "claude"],
+      "project_common_rule": "AGENTS.md",
+      "claude_wrapper_rule": "CLAUDE.md",
+      "claude_wrapper_mode": "import_only",
+      "project_contract_version": "2.0",
+      "reviewed_global_release": "9.55",
+      "required_anchors": ["runtime/host-orchestrator", ".ai/state/control-plane.db", ".ai/runs/<run_id>/<task_id>/"],
+      "evidence_path": "docs/change-evidence/",
+      "budgets": {
+        "project_max_bytes": 16384,
+        "project_max_lines": 140,
+        "wrapper_max_lines": 4,
+        "effective_context_warning_lines": 160
+      },
+      "coordination_mode": "audit_only"
+    },
+    {
+      "repo_id": "qq-codex-bot",
+      "repo_path": "qq-codex-bot",
+      "github_repository": "sciman-top/qq-astrbot-stack",
+      "github_visibility": "private",
+      "aggregate_mode": "target_local_only",
+      "ci_workflow_path": ".github/workflows/agent-rule-contract.yml",
+      "tools": ["codex", "claude"],
+      "project_common_rule": "AGENTS.md",
+      "claude_wrapper_rule": "CLAUDE.md",
+      "claude_wrapper_mode": "import_only",
+      "project_contract_version": "2.0",
+      "reviewed_global_release": "9.55",
+      "required_anchors": ["compose.yml", "scripts/verify-repo.py", ".env.example"],
+      "evidence_path": "docs/change-evidence/",
+      "budgets": {
+        "project_max_bytes": 16384,
+        "project_max_lines": 140,
+        "wrapper_max_lines": 4,
+        "effective_context_warning_lines": 160
+      },
+      "coordination_mode": "audit_only"
+    },
+    {
+      "repo_id": "skills-manager",
+      "repo_path": "skills-manager",
+      "github_repository": "sciman-top/skills-manager",
+      "github_visibility": "public",
+      "aggregate_mode": "checkout",
+      "ci_workflow_path": ".github/workflows/agent-rule-contract.yml",
+      "tools": ["codex", "claude"],
+      "project_common_rule": "AGENTS.md",
+      "claude_wrapper_rule": "CLAUDE.md",
+      "claude_wrapper_mode": "import_only",
+      "project_contract_version": "2.0",
+      "reviewed_global_release": "9.55",
+      "required_anchors": ["skills.ps1", "skills.json", "scripts/quality/run-local-quality-gates.ps1"],
+      "evidence_path": "docs/change-evidence/",
+      "budgets": {
+        "project_max_bytes": 16384,
+        "project_max_lines": 140,
+        "wrapper_max_lines": 4,
+        "effective_context_warning_lines": 160
+      },
+      "coordination_mode": "audit_only"
+    },
+    {
+      "repo_id": "vps-ssh-launcher",
+      "repo_path": "vps-ssh-launcher",
+      "github_repository": "sciman-top/vps-ssh-launcher",
+      "github_visibility": "public",
+      "aggregate_mode": "checkout",
+      "ci_workflow_path": ".github/workflows/agent-rule-contract.yml",
+      "tools": ["codex", "claude"],
+      "project_common_rule": "AGENTS.md",
+      "claude_wrapper_rule": "CLAUDE.md",
+      "claude_wrapper_mode": "import_only",
+      "project_contract_version": "2.0",
+      "reviewed_global_release": "9.55",
+      "required_anchors": ["ssh_tool.py", "scripts/run_gates.ps1", "target.example.json"],
+      "evidence_path": "docs/change-evidence/",
+      "budgets": {
+        "project_max_bytes": 16384,
+        "project_max_lines": 140,
+        "wrapper_max_lines": 4,
+        "effective_context_warning_lines": 160
+      },
+      "coordination_mode": "audit_only"
     }
   ]
 }

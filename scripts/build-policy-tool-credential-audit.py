@@ -269,6 +269,11 @@ def _inspect_local_agent_config(
         if codex_dir.exists()
         else {"status": "platform_na", "reason": "Codex user config directory is not present.", "checks": []}
     )
+    if (
+        codex_context_probe.get("status") != "platform_na"
+        and codex_context_probe.get("configured_context_window") is None
+    ):
+        codex_context_probe = context_window_probe(codex_dir, run_codex=True, bundled=True)
     codex_active = "codex" in managed or ("codex" in observed and codex_dir.exists())
     claude_active = "claude" in managed or ("claude" in observed and claude_dir.exists())
     gemini_active = "gemini" in managed or ("gemini" in observed and gemini_dir.exists())

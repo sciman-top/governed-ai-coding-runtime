@@ -1,5 +1,8 @@
-schema_catalog_version: "1.16"
+schema_catalog_version: "1.18"
 items:
+  - name: target-project-rule-coordination
+    path: schemas/jsonschema/target-project-rule-coordination.schema.json
+    source_spec: docs/specs/agent-rule-coordination-v2-spec.md
   - name: core-principles
     path: schemas/jsonschema/core-principles.schema.json
     source_spec: docs/specs/core-principles-spec.md

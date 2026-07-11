@@ -17,6 +17,10 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260711 Agent Rule Cross-Repo CI](./20260711-agent-rule-cross-repo-ci.md)
+  - evidence companion for schema `2.1`, target-local rule-contract workflows, canonical workflow hash enforcement, and the nine-target aggregate GitHub Actions matrix
+- [20260710 Agent Rule Coordination v2](./20260710-agent-rule-coordination-v2.md)
+  - evidence companion for the `9.55 / project contract 2.0` Codex/Claude global-plus-project rule framework, nine-target explicit audit, guarded global sync, loading probes, and scoped rollback
 - [20260706 Global Rule Governance And Project Audit](./20260706-global-rule-governance-and-project-audit.md)
   - evidence companion for narrowing the managed rule family to Codex/Claude global-only sync, adding the target-project `AGENTS.md + CLAUDE.md` coordination audit, and documenting the rule/wrapper/enforcement boundary without restoring blind target-repo distribution
 - [20260705 Readme And Docs Current-State Refresh](./20260705-readme-and-docs-current-state-refresh.md)

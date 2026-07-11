@@ -1,4 +1,5 @@
 import json
+import hashlib
 import subprocess
 import sys
 import tempfile
@@ -7,159 +8,325 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
+SCRIPT = ROOT / "scripts" / "verify-target-project-rules.py"
+SCHEMA = ROOT / "schemas" / "jsonschema" / "target-project-rule-coordination.schema.json"
+VERIFY_REPO = ROOT / "scripts" / "verify-repo.ps1"
+WORKFLOW_BYTES = b"name: Agent Rule Contract\n# agent-rule-contract-ci: 2.1\n"
 
 
-def _write_target_repo(repo_root: Path, *, wrapper_body: str | None = None, project_body: str | None = None) -> None:
-    repo_root.mkdir(parents=True, exist_ok=True)
-    agents = project_body or "\n".join(
+def _project_body(*, anchor: str = "runtime/main.py", reviewed_release: str = "9.55") -> str:
+    return "\n".join(
         [
-            "# AGENTS.md",
-            "**承接来源**: `GlobalUser/AGENTS.md v9.54`",
-            "runtime/host-orchestrator",
-            ".ai/state/control-plane.db",
-            ".ai/runs/<run_id>/<task_id>/",
-            "docs/change-evidence/README.md",
-            "Global Rule -> Repo Action",
-            "回滚",
+            "# AGENTS.md - pilot",
+            "**项目契约**: 2.0",
+            f"**全局规则复核**: {reviewed_release}",
+            "",
+            "## 1. 范围",
+            "- 当前落点：pilot。",
+            "- 目标归宿：保持仓库契约可执行。",
+            "",
+            "## A. 仓库事实",
+            f"- `{anchor}` 是运行入口。",
+            "",
+            "## B. 执行与风险边界",
+            "- 只修改当前任务范围。",
+            "",
+            "## C. 门禁",
+            "- fixed order：`build -> test -> contract/invariant -> hotspot`。",
+            "- `.github/workflows/agent-rule-contract.yml` 只验证规则契约，不替代产品门禁。",
+            "",
+            "## D. 证据与回滚",
+            "- 证据：`docs/change-evidence/`。",
+            "- 回滚：只回滚当前规则切片。",
             "",
         ]
     )
-    (repo_root / "AGENTS.md").write_text(agents, encoding="utf-8")
-    if wrapper_body is not None:
-        (repo_root / "CLAUDE.md").write_text(wrapper_body, encoding="utf-8")
+
+
+def _write_target(
+    repo_root: Path,
+    *,
+    project_body: str | None = None,
+    wrapper: bytes | None = b"@AGENTS.md\n",
+    workflow: bytes | None = WORKFLOW_BYTES,
+) -> None:
+    repo_root.mkdir(parents=True, exist_ok=True)
+    (repo_root / "AGENTS.md").write_text(project_body or _project_body(), encoding="utf-8")
+    if wrapper is not None:
+        (repo_root / "CLAUDE.md").write_bytes(wrapper)
+    if workflow is not None:
+        workflow_path = repo_root / ".github" / "workflows" / "agent-rule-contract.yml"
+        workflow_path.parent.mkdir(parents=True, exist_ok=True)
+        workflow_path.write_bytes(workflow)
+
+
+def _coordination_payload(workspace_root: Path, *, reviewed_release: str = "9.55") -> dict:
+    return {
+        "schema_version": "2.2",
+        "coordination_id": "target-project-rule-coordination",
+        "rule_release": "9.55",
+        "project_contract_version": "2.0",
+        "workspace_root": str(workspace_root),
+        "updated_on": "2026-07-10",
+        "ci_contract": {
+            "contract_id": "agent-rule-contract-ci",
+            "version": "2.1",
+            "workflow_sha256": hashlib.sha256(WORKFLOW_BYTES).hexdigest(),
+        },
+        "targets": [
+            {
+                "repo_id": "pilot",
+                "repo_path": "pilot",
+                "github_repository": "example/pilot",
+                "github_visibility": "public",
+                "aggregate_mode": "checkout",
+                "ci_workflow_path": ".github/workflows/agent-rule-contract.yml",
+                "tools": ["codex", "claude"],
+                "project_common_rule": "AGENTS.md",
+                "claude_wrapper_rule": "CLAUDE.md",
+                "claude_wrapper_mode": "import_only",
+                "project_contract_version": "2.0",
+                "reviewed_global_release": reviewed_release,
+                "required_anchors": ["runtime/main.py"],
+                "evidence_path": "docs/change-evidence/",
+                "budgets": {
+                    "project_max_bytes": 16384,
+                    "project_max_lines": 120,
+                    "wrapper_max_lines": 20,
+                    "effective_context_warning_lines": 180,
+                },
+                "coordination_mode": "audit_only",
+            }
+        ],
+    }
+
+
+def _run(coordination_path: Path, *extra: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, str(SCRIPT), "--coordination-path", str(coordination_path), *extra],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
 
 
 class VerifyTargetProjectRulesTests(unittest.TestCase):
-    def _coordination_payload(self, repo_root: Path) -> dict:
-        return {
-            "targets": [
-                {
-                    "repo_id": "pilot",
-                    "repo_root": str(repo_root),
-                    "tools": ["codex", "claude"],
-                    "project_common_rule": "AGENTS.md",
-                    "claude_wrapper_rule": "CLAUDE.md",
-                    "coordination_mode": "wrapper_and_contract_audit",
-                }
-            ]
-        }
+    def test_schema_requires_explicit_wrapper_mode(self) -> None:
+        schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
 
-    def test_wrapper_missing_is_reported(self) -> None:
+        self.assertIn("claude_wrapper_mode", schema["$defs"]["target"]["required"])
+
+    def test_schema_requires_ci_contract_and_target_ci_metadata(self) -> None:
+        schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
+
+        self.assertEqual(schema["properties"]["schema_version"]["const"], "2.2")
+        self.assertIn("ci_contract", schema["required"])
+        self.assertIn("github_repository", schema["$defs"]["target"]["required"])
+        self.assertIn("ci_workflow_path", schema["$defs"]["target"]["required"])
+
+    def test_coordination_metadata_is_required(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
-            repo_root = Path(tmp_dir) / "pilot"
-            _write_target_repo(repo_root, wrapper_body=None)
+            workspace = Path(tmp_dir) / "workspace"
+            _write_target(workspace / "pilot")
+            payload = _coordination_payload(workspace)
+            payload.pop("workspace_root")
+            payload.pop("updated_on")
             coordination_path = Path(tmp_dir) / "coordination.json"
-            coordination_path.write_text(json.dumps(self._coordination_payload(repo_root)), encoding="utf-8")
+            coordination_path.write_text(json.dumps(payload), encoding="utf-8")
 
-            completed = subprocess.run(
-                [sys.executable, str(ROOT / "scripts" / "verify-target-project-rules.py"), "--coordination-path", str(coordination_path)],
-                cwd=ROOT,
-                check=False,
-                capture_output=True,
-                text=True,
-            )
+            completed = _run(coordination_path, "--require-all")
 
         self.assertEqual(completed.returncode, 1)
-        payload = json.loads(completed.stdout)
-        self.assertEqual(payload["results"][0]["drift_category"], "project_wrapper_missing")
+        findings = json.loads(completed.stdout)["blocking_findings"]
+        self.assertIn("workspace_root_missing", findings)
+        self.assertIn("updated_on_invalid:missing", findings)
 
-    def test_nonthin_wrapper_is_reported(self) -> None:
+    def test_control_contract_gate_wires_schema_and_target_audit(self) -> None:
+        verifier = VERIFY_REPO.read_text(encoding="utf-8")
+        contract_body = verifier.split("function Invoke-ContractChecks", 1)[1].split(
+            "function Invoke-DependencyBaselineChecks", 1
+        )[0]
+
+        self.assertIn("Invoke-TargetProjectRuleCoordinationSchemaCheck", verifier)
+        self.assertIn("Invoke-TargetProjectRuleChecks", verifier)
+        self.assertIn("Invoke-TargetProjectRuleCoordinationSchemaCheck", contract_body)
+        self.assertIn("Invoke-TargetProjectRuleChecks", contract_body)
+
+    def test_v2_contract_passes_with_relative_repo_and_one_line_wrapper(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
-            repo_root = Path(tmp_dir) / "pilot"
-            _write_target_repo(
-                repo_root,
-                wrapper_body="\n".join(
-                    [
-                        "@AGENTS.md",
-                        "",
-                        "## 1. 阅读指引",
-                        "**承接来源**: `GlobalUser/CLAUDE.md v9.54`",
-                        "## A. 不应复制共同正文",
-                        "runtime/host-orchestrator",
-                    ]
-                ),
-            )
+            workspace = Path(tmp_dir) / "workspace"
+            _write_target(workspace / "pilot")
             coordination_path = Path(tmp_dir) / "coordination.json"
-            coordination_path.write_text(json.dumps(self._coordination_payload(repo_root)), encoding="utf-8")
-
-            completed = subprocess.run(
-                [sys.executable, str(ROOT / "scripts" / "verify-target-project-rules.py"), "--coordination-path", str(coordination_path)],
-                cwd=ROOT,
-                check=False,
-                capture_output=True,
-                text=True,
+            coordination_path.write_text(
+                json.dumps(_coordination_payload(workspace), ensure_ascii=False), encoding="utf-8"
             )
 
-        self.assertEqual(completed.returncode, 1)
-        payload = json.loads(completed.stdout)
-        self.assertEqual(payload["results"][0]["drift_category"], "project_wrapper_nonthin")
-
-    def test_contract_missing_is_reported(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            repo_root = Path(tmp_dir) / "pilot"
-            _write_target_repo(
-                repo_root,
-                wrapper_body="\n".join(
-                    [
-                        "@AGENTS.md",
-                        "",
-                        "# CLAUDE.md",
-                        "**承接来源**: `GlobalUser/CLAUDE.md v9.54`",
-                        "## 1. 阅读指引",
-                        "## B. Claude 平台差异",
-                        "## D. 维护校验",
-                    ]
-                ),
-                project_body="# AGENTS.md\n**承接来源**: `GlobalUser/AGENTS.md v9.54`\n",
-            )
-            coordination_path = Path(tmp_dir) / "coordination.json"
-            coordination_path.write_text(json.dumps(self._coordination_payload(repo_root)), encoding="utf-8")
-
-            completed = subprocess.run(
-                [sys.executable, str(ROOT / "scripts" / "verify-target-project-rules.py"), "--coordination-path", str(coordination_path)],
-                cwd=ROOT,
-                check=False,
-                capture_output=True,
-                text=True,
-            )
-
-        self.assertEqual(completed.returncode, 1)
-        payload = json.loads(completed.stdout)
-        self.assertEqual(payload["results"][0]["drift_category"], "project_contract_missing")
-
-    def test_passes_for_shared_body_and_thin_wrapper(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            repo_root = Path(tmp_dir) / "pilot"
-            _write_target_repo(
-                repo_root,
-                wrapper_body="\n".join(
-                    [
-                        "@AGENTS.md",
-                        "",
-                        "# CLAUDE.md",
-                        "**承接来源**: `GlobalUser/CLAUDE.md v9.54`",
-                        "## 1. 阅读指引",
-                        "## B. Claude 平台差异",
-                        "CLAUDE.local.md",
-                        "## D. 维护校验",
-                    ]
-                ),
-            )
-            coordination_path = Path(tmp_dir) / "coordination.json"
-            coordination_path.write_text(json.dumps(self._coordination_payload(repo_root)), encoding="utf-8")
-
-            completed = subprocess.run(
-                [sys.executable, str(ROOT / "scripts" / "verify-target-project-rules.py"), "--coordination-path", str(coordination_path)],
-                cwd=ROOT,
-                check=False,
-                capture_output=True,
-                text=True,
-            )
+            completed = _run(coordination_path, "--require-all")
 
         self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
         payload = json.loads(completed.stdout)
+        self.assertEqual(payload["project_contract_version"], "2.0")
         self.assertEqual(payload["results"][0]["status"], "pass")
-        self.assertTrue(payload["results"][0]["shared_body_model"])
+        self.assertEqual(payload["results"][0]["blocking_findings"], [])
+
+    def test_workspace_root_override_supports_ci_checkout_layout(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "ci-workspace"
+            _write_target(workspace / "pilot")
+            payload = _coordination_payload(Path("D:/stale-local-workspace"))
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(json.dumps(payload), encoding="utf-8")
+
+            completed = _run(
+                coordination_path,
+                "--workspace-root",
+                str(workspace),
+                "--require-all",
+            )
+
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        self.assertEqual(json.loads(completed.stdout)["workspace_root"], str(workspace).replace("\\", "/"))
+
+    def test_ci_workflow_hash_drift_is_blocking(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "workspace"
+            _write_target(workspace / "pilot", workflow=b"name: drifted\n")
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(
+                json.dumps(_coordination_payload(workspace)), encoding="utf-8"
+            )
+
+            completed = _run(coordination_path, "--require-all")
+
+        self.assertEqual(completed.returncode, 1)
+        payload = json.loads(completed.stdout)
+        self.assertIn("ci_workflow_hash_mismatch", payload["results"][0]["blocking_findings"])
+
+    def test_project_rule_must_reference_its_ci_contract_workflow(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "workspace"
+            body = _project_body().replace(
+                "- `.github/workflows/agent-rule-contract.yml` 只验证规则契约，不替代产品门禁。\n",
+                "",
+            )
+            _write_target(workspace / "pilot", project_body=body)
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(
+                json.dumps(_coordination_payload(workspace)), encoding="utf-8"
+            )
+
+            completed = _run(coordination_path, "--require-all")
+
+        self.assertEqual(completed.returncode, 1)
+        payload = json.loads(completed.stdout)
+        self.assertIn(
+            "project_contract_token_missing:.github/workflows/agent-rule-contract.yml",
+            payload["results"][0]["blocking_findings"],
+        )
+
+    def test_wrapper_requires_raw_first_physical_line(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "workspace"
+            _write_target(workspace / "pilot", wrapper=b"# heading\n@AGENTS.md\n")
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(json.dumps(_coordination_payload(workspace)), encoding="utf-8")
+
+            completed = _run(coordination_path, "--require-all")
+
+        self.assertEqual(completed.returncode, 1)
+        payload = json.loads(completed.stdout)
+        self.assertIn("wrapper_first_line_invalid", payload["results"][0]["blocking_findings"])
+
+    def test_wrapper_rejects_utf8_bom(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "workspace"
+            _write_target(workspace / "pilot", wrapper=b"\xef\xbb\xbf@AGENTS.md\n")
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(json.dumps(_coordination_payload(workspace)), encoding="utf-8")
+
+            completed = _run(coordination_path, "--require-all")
+
+        self.assertEqual(completed.returncode, 1)
+        payload = json.loads(completed.stdout)
+        self.assertIn("wrapper_utf8_bom", payload["results"][0]["blocking_findings"])
+
+    def test_project_rule_rejects_host_specific_platform_section(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "workspace"
+            body = _project_body().replace(
+                "## B. 执行与风险边界", "## B. Codex 平台差异\n- `codex --version`。"
+            )
+            _write_target(workspace / "pilot", project_body=body)
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(json.dumps(_coordination_payload(workspace)), encoding="utf-8")
+
+            completed = _run(coordination_path, "--require-all")
+
+        self.assertEqual(completed.returncode, 1)
+        payload = json.loads(completed.stdout)
+        self.assertIn("project_rule_not_host_neutral", payload["results"][0]["blocking_findings"])
+
+    def test_missing_target_anchor_is_blocking(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "workspace"
+            _write_target(workspace / "pilot", project_body=_project_body(anchor="src/other.py"))
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(json.dumps(_coordination_payload(workspace)), encoding="utf-8")
+
+            completed = _run(coordination_path, "--require-all")
+
+        self.assertEqual(completed.returncode, 1)
+        payload = json.loads(completed.stdout)
+        self.assertIn("required_anchor_missing:runtime/main.py", payload["results"][0]["blocking_findings"])
+
+    def test_reviewed_release_lag_is_observed_not_blocking(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "workspace"
+            _write_target(workspace / "pilot", project_body=_project_body(reviewed_release="9.54"))
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(
+                json.dumps(_coordination_payload(workspace, reviewed_release="9.54")), encoding="utf-8"
+            )
+
+            completed = _run(coordination_path, "--require-all")
+
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        payload = json.loads(completed.stdout)
+        self.assertIn("global_review_lag:9.54->9.55", payload["results"][0]["observations"])
+
+    def test_missing_target_only_blocks_with_require_all(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "workspace"
+            workspace.mkdir()
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(json.dumps(_coordination_payload(workspace)), encoding="utf-8")
+
+            observed = _run(coordination_path)
+            enforced = _run(coordination_path, "--require-all")
+
+        self.assertEqual(observed.returncode, 0, observed.stdout + observed.stderr)
+        self.assertEqual(json.loads(observed.stdout)["results"][0]["status"], "unavailable")
+        self.assertEqual(enforced.returncode, 1)
+
+    def test_generated_transaction_rule_files_are_outside_managed_observation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "workspace"
+            repo_root = workspace / "pilot"
+            _write_target(repo_root)
+            generated_rule = repo_root / ".txn" / "vendor-cache" / "AGENTS.md"
+            generated_rule.parent.mkdir(parents=True)
+            generated_rule.write_text("# third-party cache\n", encoding="utf-8")
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(
+                json.dumps(_coordination_payload(workspace), ensure_ascii=False), encoding="utf-8"
+            )
+
+            completed = _run(coordination_path, "--require-all")
+
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        observations = json.loads(completed.stdout)["results"][0]["observations"]
+        self.assertFalse(any(item.startswith("nested_rule_files:") for item in observations))
 
 
 if __name__ == "__main__":

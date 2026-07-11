@@ -1,12 +1,12 @@
 {
-  "elapsed_seconds": 260.93582560000004,
+  "elapsed_seconds": 268.48994239999956,
   "failure_count": 0,
   "failures": [],
   "prioritized_target_count": 10,
   "serial_target_count": 4,
   "slowest": [
     {
-      "duration_seconds": 249.1248744000004,
+      "duration_seconds": 256.91241660000014,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_repo_slimming_surface",
@@ -15,7 +15,7 @@
       }
     },
     {
-      "duration_seconds": 152.91536010000027,
+      "duration_seconds": 122.99031660000037,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_governance_hub_certification",
@@ -24,16 +24,7 @@
       }
     },
     {
-      "duration_seconds": 98.60142810000025,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_runtime_evolution",
-        "path": "tests\\runtime\\test_runtime_evolution.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 86.91183490000003,
+      "duration_seconds": 101.18336269999963,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_repo_map_context_artifact",
@@ -42,7 +33,16 @@
       }
     },
     {
-      "duration_seconds": 73.2295638999999,
+      "duration_seconds": 99.00212490000013,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_runtime_evolution",
+        "path": "tests\\runtime\\test_runtime_evolution.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 77.59777479999957,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_self_evolution_readiness",
@@ -51,7 +51,7 @@
       }
     },
     {
-      "duration_seconds": 43.71107290000009,
+      "duration_seconds": 45.13244080000004,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_autonomous_next_work_selection",
@@ -60,16 +60,7 @@
       }
     },
     {
-      "duration_seconds": 30.459701300000233,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_evidence_recovery_posture",
-        "path": "tests\\runtime\\test_evidence_recovery_posture.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 25.804748799999743,
+      "duration_seconds": 31.554138600000442,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_operator_entrypoint",
@@ -78,7 +69,16 @@
       }
     },
     {
-      "duration_seconds": 24.3898365,
+      "duration_seconds": 30.607820700000048,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_evidence_recovery_posture",
+        "path": "tests\\runtime\\test_evidence_recovery_posture.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 27.486616199999844,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_issue_seeding",
@@ -87,7 +87,7 @@
       }
     },
     {
-      "duration_seconds": 18.095601800000168,
+      "duration_seconds": 22.848419099999774,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_doctor",
@@ -96,7 +96,7 @@
       }
     }
   ],
-  "target_count": 98,
+  "target_count": 101,
   "timeout_seconds": 600,
   "timing_history_path": "docs\\change-evidence\\runtime-test-speed-latest.json",
   "worker_count": 8
