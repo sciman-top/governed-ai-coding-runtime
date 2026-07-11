@@ -108,11 +108,16 @@ class RuntimeEvolutionTests(unittest.TestCase):
 
     def test_runtime_evolution_marks_stale_after_30_days(self) -> None:
         module = _load_runtime_evolution_script()
+        policy = json.loads(
+            (ROOT / "docs" / "architecture" / "runtime-evolution-policy.json").read_text(encoding="utf-8")
+        )
+        reviewed_on = dt.date.fromisoformat(policy["reviewed_on"])
+        stale_as_of = reviewed_on + dt.timedelta(days=int(policy["stale_after_days"]) + 1)
 
         result = module.inspect_runtime_evolution_policy(
             repo_root=ROOT,
             policy_path=ROOT / "docs" / "architecture" / "runtime-evolution-policy.json",
-            as_of=dt.date(2026, 7, 10),
+            as_of=stale_as_of,
         )
 
         self.assertTrue(result["stale"])

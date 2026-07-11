@@ -396,6 +396,86 @@ class CodexLocalTests(unittest.TestCase):
             self.assertEqual("codex_debug_models_bundled", probe["context_settings_decision"]["context_source"])
             self.assertTrue(all(check["status"] == "pass" for check in probe["checks"]))
 
+    def test_context_window_probe_accepts_catalog_backed_host_default(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            (home / "config.toml").write_text(
+                "\n".join(
+                    [
+                        'model = "gpt-5.5"',
+                        "model_auto_compact_token_limit = 220000",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            catalog = json.dumps(
+                {
+                    "models": [
+                        {
+                            "slug": "gpt-5.5",
+                            "display_name": "GPT-5.5",
+                            "context_window": 272000,
+                            "max_context_window": 1000000,
+                            "effective_context_window_percent": 95,
+                        }
+                    ]
+                }
+            )
+            completed = mock.Mock(returncode=0, stdout=catalog, stderr="")
+
+            with (
+                mock.patch("lib.codex_local.shutil.which", return_value="codex.cmd"),
+                mock.patch("lib.codex_local.subprocess.run", return_value=completed),
+            ):
+                probe = codex_local.context_window_probe(home, run_codex=True)
+
+            self.assertEqual("pass", probe["status"])
+            self.assertIsNone(probe["configured_context_window"])
+            self.assertEqual(272000, probe["effective_context_window"])
+            self.assertEqual(0.8088, probe["compact_ratio"])
+            self.assertEqual("keep_host_default", probe["context_settings_decision"]["action"])
+            self.assertEqual("keep_current", probe["recommendation"])
+
+    def test_context_window_probe_preserves_explicit_early_compaction_after_catalog_growth(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            home = Path(tmp_dir)
+            (home / "config.toml").write_text(
+                "\n".join(
+                    [
+                        'model = "gpt-5.6-sol"',
+                        "model_auto_compact_token_limit = 220000",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            catalog = json.dumps(
+                {
+                    "models": [
+                        {
+                            "slug": "gpt-5.6-sol",
+                            "display_name": "GPT-5.6",
+                            "context_window": 372000,
+                            "max_context_window": 372000,
+                            "effective_context_window_percent": 95,
+                        }
+                    ]
+                }
+            )
+            completed = mock.Mock(returncode=0, stdout=catalog, stderr="")
+
+            with (
+                mock.patch("lib.codex_local.shutil.which", return_value="codex.cmd"),
+                mock.patch("lib.codex_local.subprocess.run", return_value=completed),
+            ):
+                probe = codex_local.context_window_probe(home, run_codex=True)
+
+            self.assertEqual("pass", probe["status"])
+            self.assertEqual(372000, probe["effective_context_window"])
+            self.assertEqual(0.5914, probe["compact_ratio"])
+            self.assertEqual("keep_host_default", probe["context_settings_decision"]["action"])
+            self.assertEqual("configured_early_threshold", probe["context_settings_decision"]["compact_source"])
+            self.assertEqual("keep_current", probe["recommendation"])
+
     def test_context_window_probe_compares_bundled_and_refreshed_catalogs(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             home = Path(tmp_dir)

@@ -46,7 +46,6 @@ REQUIRED_DOCS = (
 REQUIRED_GLOBAL_TARGETS = (
     ("codex", ".codex/AGENTS.md"),
     ("claude", ".claude/CLAUDE.md"),
-    ("gemini", ".gemini/GEMINI.md"),
 )
 
 
@@ -476,7 +475,7 @@ def _build_recommendations(dimensions: list[FeedbackDimension]) -> list[str]:
 
     rules = dimension_map["rules"]
     if rules.details["missing_global_targets"]:
-        recommendations.append("先运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply`，确认 Codex/Claude/Gemini 全局规则副本已经真正同步。")
+        recommendations.append("先运行 `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply`，确认 Codex/Claude 全局规则副本已经真正同步。")
 
     hosts = dimension_map["hosts"]
     if hosts.details["codex"]["health"] != "ok":

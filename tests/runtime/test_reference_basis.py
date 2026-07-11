@@ -7,6 +7,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
+FIXTURE_AS_OF = "2026-07-09"
 
 
 def _run(args: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
@@ -39,6 +40,8 @@ class ReferenceBasisTests(unittest.TestCase):
                     str(repo),
                     "--policy",
                     str(policy_path),
+                    "--as-of",
+                    FIXTURE_AS_OF,
                 ],
                 repo,
             )
@@ -84,6 +87,8 @@ class ReferenceBasisTests(unittest.TestCase):
                     str(repo),
                     "--policy",
                     str(policy_path),
+                    "--as-of",
+                    FIXTURE_AS_OF,
                 ],
                 repo,
             )

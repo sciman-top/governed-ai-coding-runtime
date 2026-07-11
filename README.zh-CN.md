@@ -5,10 +5,14 @@
 - 唯一规划真源仍是 `docs/architecture/planning-status.json`。
 - 当前 active queue：`Continuous-Execution`
 - `current decision gate`：`defer_ltp_and_refresh_evidence`
-- 本仓当前只保留三类 live 能力：
+- 本仓当前只保留四类 live 能力：
   - 本仓自治理：`build -> test -> contract/invariant -> hotspot`
-  - 用户目录级全局规则同步：`~/.codex`、`~/.claude`、`~/.gemini`
+  - 用户目录级全局规则同步：`~/.codex`、`~/.claude`
+  - 目标仓项目规则协同审计：`AGENTS.md + CLAUDE.md thin wrapper`
   - host/self-evolution/continuity 的只读反馈、证据与门禁
+- 当前规则协调版本：`rule_release=9.55 / project_contract_version=2.0`。9 个目标仓来自显式 allowlist，不自动扫描纳管相邻目录。
+- 目标仓 `AGENTS.md` 保持宿主中立；`CLAUDE.md` 默认仅含无 BOM 首行 `@AGENTS.md`。全局同步只写两个用户级副本，不写目标仓正文。
+- CI 协同版本为 `coordination_schema=2.2 / ci_contract=2.1`：每仓本地 workflow 验证规则变更；控制仓按清单生成 9 仓矩阵，实际 checkout 审计 7 个公开仓，并将 2 个私有仓明确分流到 target-local enforcement；两者都不能替代产品门禁。
 - 历史 `docs/change-evidence/**` 继续保留，但不再表示 target-repo rollout、attachment、session-bridge write 仍是当前能力。
 
 ## 最快路径
@@ -36,7 +40,9 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
 ## 本仓现在负责什么
 - 运行本仓 canonical gate：`scripts/build-runtime.ps1`、`scripts/verify-repo.ps1`、`scripts/doctor-runtime.ps1`
 - 通过 `scripts/run-governed-task.py` 生成 repo-local task/evidence/handoff/status
-- 通过 `scripts/sync-agent-rules.ps1` 同步三套全局规则文件
+- 通过 `scripts/sync-agent-rules.ps1` 同步 Codex/Claude 全局规则文件
+- 通过 `scripts/verify-target-project-rules.py` 审计受管目标仓的项目规则协同
+- 通过 `scripts/export-target-rule-ci-matrix.py` 生成跨仓 CI matrix
 - 生成 host feedback、自演化建议、continuity 证据与 operator UI
 - 通过 `scripts/package-runtime.ps1` 组装 portable release
 - 只保留旧 Codex shim 的清理与缺席验证
@@ -51,6 +57,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
 - 不再提供 target-repo `daily`、`governance-baseline`、`apply-all`、`cleanup-targets`、`uninstall-governance`
 - 不再提供 attachment/light-pack/session-bridge/attached-write 桥接链
 - `rules/manifest.json` 不再分发任何 `rules/projects/**` 项目规则副本
+- 不再向目标仓 blind sync `AGENTS.md` / `CLAUDE.md`；目标差异只允许通过 audit + integration + verification 闭环处理
 - target-run、KPI、effect 相关文件只保留历史证据意义
 
 已退役命令名仍会 fail-closed 返回退休提示，不会静默兼容执行。
@@ -61,10 +68,20 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -
 - `scripts/verify-repo.ps1`
 - `scripts/governance/preflight.ps1`
 - `scripts/sync-agent-rules.ps1`
+- `scripts/verify-agent-rule-family.py`
+- `scripts/verify-target-project-rules.py`
+- `scripts/export-target-rule-ci-matrix.py`
 - `scripts/run-governed-task.py`
 - `scripts/package-runtime.ps1`
 
 ## 验证命令
+```powershell
+python scripts/verify-agent-rule-family.py
+python scripts/verify-target-project-rules.py --require-all
+python scripts/export-target-rule-ci-matrix.py
+python scripts/sync-agent-rules.py --scope All --fail-on-change
+```
+
 ```powershell
 pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
 ```

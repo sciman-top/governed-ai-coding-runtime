@@ -659,9 +659,9 @@ def context_window_probe(
 
     checks = [
         {
-            "check_id": "context_window_configured",
+            "check_id": "context_window_resolved",
             "status": "pass" if configured_context and configured_context > 0 else "fail",
-            "reason": "model_context_window must be present and positive.",
+            "reason": "The effective model context window must be resolvable from explicit config or the local Codex catalog.",
         },
         {
             "check_id": "auto_compact_configured",
@@ -674,11 +674,11 @@ def context_window_probe(
             "reason": "Auto compact must trigger before the configured context window is exhausted.",
         },
         {
-            "check_id": "auto_compact_ratio_in_guard_band",
+            "check_id": "auto_compact_not_too_late",
             "status": "pass"
-            if compact_ratio is not None and CONTEXT_COMPACT_RATIO_MIN <= compact_ratio <= CONTEXT_COMPACT_RATIO_MAX
+            if compact_ratio is not None and 0 < compact_ratio <= CONTEXT_COMPACT_RATIO_MAX
             else "fail",
-            "reason": f"Auto compact ratio should stay between {CONTEXT_COMPACT_RATIO_MIN:.0%} and {CONTEXT_COMPACT_RATIO_MAX:.0%}.",
+            "reason": f"Auto compact must trigger no later than {CONTEXT_COMPACT_RATIO_MAX:.0%} of the effective context window; earlier explicit thresholds remain valid operator preferences.",
         },
     ]
 
@@ -774,6 +774,34 @@ def context_window_probe(
                 }
             )
 
+    effective_context = configured_context
+    if effective_context is None and context_settings_decision.get("basis_status") in {
+        "single_catalog",
+        "catalog_consensus",
+    }:
+        effective_context = _coerce_int(context_settings_decision.get("model_context_window"))
+    compact_ratio = (
+        round(configured_compact / effective_context, 4)
+        if effective_context and configured_compact
+        else None
+    )
+    for check in checks:
+        if check["check_id"] == "context_window_resolved":
+            check["status"] = "pass" if effective_context and effective_context > 0 else "fail"
+        elif check["check_id"] == "auto_compact_below_context_window":
+            check["status"] = (
+                "pass"
+                if effective_context and configured_compact and configured_compact < effective_context
+                else "fail"
+            )
+        elif check["check_id"] == "auto_compact_not_too_late":
+            check["status"] = (
+                "pass"
+                if compact_ratio is not None
+                and 0 < compact_ratio <= CONTEXT_COMPACT_RATIO_MAX
+                else "fail"
+            )
+
     if probe_exec:
         exec_probe = _probe_codex_context_settings_exec(
             model=model,
@@ -793,13 +821,16 @@ def context_window_probe(
     failed = [check for check in checks if check["status"] != "pass"]
     if failed:
         recommendation = "probe_before_changing_defaults" if run_codex or probe_exec else "run_catalog_probe"
-    elif context_settings_decision.get("action") == "update_config":
+    elif context_settings_decision.get("action") in {"update_config", "update_auto_compact"}:
         recommendation = "align_config_to_context_settings_decision"
+    else:
+        recommendation = "keep_current"
     return {
         "status": "pass" if not failed else "attention",
         "config_path": str(config_path),
         "model": model,
         "configured_context_window": configured_context,
+        "effective_context_window": effective_context,
         "configured_auto_compact_token_limit": configured_compact,
         "compact_ratio": compact_ratio,
         "recommended_defaults": {
@@ -2030,19 +2061,25 @@ def _context_settings_decision(
     if selected_context:
         if configured_compact and configured_compact < selected_context:
             compact_ratio = round(configured_compact / selected_context, 4)
-            if CONTEXT_COMPACT_RATIO_MIN <= compact_ratio <= CONTEXT_COMPACT_RATIO_MAX:
+            if 0 < compact_ratio <= CONTEXT_COMPACT_RATIO_MAX:
                 selected_compact = configured_compact
-                compact_source = "configured_guard_band"
+                compact_source = (
+                    "configured_guard_band"
+                    if compact_ratio >= CONTEXT_COMPACT_RATIO_MIN
+                    else "configured_early_threshold"
+                )
         if selected_compact is None:
             selected_compact = _recommended_compact_limit(selected_context)
             compact_ratio = round(selected_compact / selected_context, 4) if selected_compact else None
             compact_source = "derived_ratio"
 
     action = "keep_current"
-    if selected_context != configured_context or selected_compact != configured_compact:
-        action = "update_config"
     if basis_status == "catalog_disagreement":
         action = "manual_review"
+    elif configured_context is None and distinct_contexts:
+        action = "keep_host_default" if selected_compact == configured_compact else "update_auto_compact"
+    elif selected_context != configured_context or selected_compact != configured_compact:
+        action = "update_config"
 
     return {
         "model": model,
@@ -2055,7 +2092,7 @@ def _context_settings_decision(
         "context_source": context_source,
         "compact_source": compact_source,
         "catalog_entries": catalog_entries,
-        "decision_rule": "Prefer matching bundled/refreshed `codex debug models` context_window values; keep configured auto-compact when it is below the context window and inside the guard band; otherwise derive an 81% rounded threshold.",
+        "decision_rule": "Prefer matching bundled/refreshed `codex debug models` context_window values; preserve a positive explicit auto-compact threshold at or below the 90% late-compaction guard, classifying values below 75% as an early operator preference; otherwise derive an 81% rounded threshold.",
     }
 
 

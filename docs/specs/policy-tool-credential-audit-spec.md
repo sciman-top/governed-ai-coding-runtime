@@ -18,6 +18,12 @@ Define the fail-closed audit boundary that normalizes tool identity, credential 
 - target_repo_override_entries
 - rollback_ref
 
+## Optional Fields
+- `local_agent_config_policy`
+  - `managed_host_families`
+  - `observed_host_families`
+  - use this when the current governed host/rule family is narrower than the repository's broader compatibility references
+
 ## Tool Entry Fields
 Each audit entry must include:
 - id
@@ -56,7 +62,8 @@ Allowed `declared_rule` values:
 - every audit output must identify tool, scope, policy basis, decision, evidence, and remediation
 - target-repo overrides in this audit boundary may only tighten policy or declare platform limitations
 - Codex and Claude Code remain cooperation hosts; credential ownership stays user-owned unless a later bounded contract proves otherwise
-- local Codex/Claude/Gemini user configuration may preserve operator convenience settings only when deterministic guard evidence remains present
+- local Codex and Claude user configuration may preserve operator convenience settings only when deterministic guard evidence remains present
+- Gemini or other non-managed host-family local configuration may still be observed for compatibility, but it must not block the current rule-governance slice unless a later policy explicitly promotes it back into managed scope
 - plaintext local login tokens are accepted operator-owned state only when credential-bearing config files are denied to agents and are not synchronized into repositories
 - MCP server synchronization is acceptable only when credentials remain indirect through environment-variable references rather than expanded token values
 

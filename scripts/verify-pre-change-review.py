@@ -23,6 +23,8 @@ SENSITIVE_EXACT = {
     ".governed-ai/repo-profile.json",
     "scripts/sync-agent-rules.py",
     "scripts/sync-agent-rules.ps1",
+    "scripts/verify-agent-rule-family.py",
+    "scripts/verify-target-project-rules.py",
     "scripts/verify-repo.ps1",
     "scripts/verify-pre-change-review.py",
 }

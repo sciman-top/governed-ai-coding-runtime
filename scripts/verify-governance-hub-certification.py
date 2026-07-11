@@ -16,7 +16,7 @@ def main() -> int:
         print(str(exc), file=sys.stderr)
         return 1
 
-    print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+    print(json.dumps(result, ensure_ascii=True, indent=2, sort_keys=True))
     return 0 if result["status"] == "pass" else 1
 
 

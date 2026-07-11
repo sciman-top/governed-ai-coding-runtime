@@ -163,11 +163,10 @@ class HostFeedbackSummaryTests(unittest.TestCase):
 
         manifest = {
             "sync_revision": "2026-07-06.1",
-            "default_version": "9.53",
+            "default_version": "9.54",
             "entries": [
                 {"scope": "global", "tool": "codex", "target_path": "${user_profile}/.codex/AGENTS.md"},
                 {"scope": "global", "tool": "claude", "target_path": "${user_profile}/.claude/CLAUDE.md"},
-                {"scope": "global", "tool": "gemini", "target_path": "${user_profile}/.gemini/GEMINI.md"},
             ],
         }
         manifest_path = repo_root / "rules" / "manifest.json"

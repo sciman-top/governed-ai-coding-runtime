@@ -116,13 +116,27 @@
   - [Adapter Capability Tiers](./product/adapter-capability-tiers.md)
 
 ## Rules And Managed Assets
-- Target-repo rollout, attachment, session-bridge, and managed template distribution have been retired from current repo scope.
-- Retained rule-sync source of truth:
+- Automated target-repo rollout, attachment, session-bridge, and managed template distribution have been retired. Target rules are maintained in place and audited against an explicit allowlist.
+- Retained global-only rule-sync source of truth:
   - [rules/manifest.json](../rules/manifest.json)
+- Target-project coordination audit source of truth:
+  - [rules/target-project-rule-coordination.json](../rules/target-project-rule-coordination.json)
+- Coordination contract and evidence:
+  - [Agent Rule Coordination v2 Spec](./specs/agent-rule-coordination-v2-spec.md)
+  - [Official And Community Practices Research](./research/2026-07-10-agent-rules-official-and-community-practices.md)
+- Verifiers:
+  - `python scripts/verify-agent-rule-family.py`
+  - `python scripts/verify-target-project-rules.py --require-all`
+  - `python scripts/export-target-rule-ci-matrix.py`
+- Each target owns a rule-only CI workflow matching `rules/templates/github/agent-rule-contract.yml`; the control workflow generates a nine-target matrix for scheduled/manual aggregate audits.
+- The control-repository `Contract` gate also validates the coordination manifest against schema `2.1` and audits locally available targets; release verification uses `--require-all` for the full nine-repository scope.
+- Deterministic enforcement stays in `.codex`, `.claude/settings.json`, hooks, permissions, MCP, and CI; it is not solved by blind text synchronization.
 
 ## Evidence, History, And Rollback
 - Current evidence index: [Change Evidence Index](./change-evidence/README.md)
 - Latest posture proof:
+  - [20260711 Agent Rule Cross-Repo CI](./change-evidence/20260711-agent-rule-cross-repo-ci.md)
+  - [20260710 Agent Rule Coordination v2](./change-evidence/20260710-agent-rule-coordination-v2.md)
   - [20260705 Readme And Docs Current-State Refresh](./change-evidence/20260705-readme-and-docs-current-state-refresh.md)
   - [20260705 Runtime Evolution Functional Verification](./change-evidence/20260705-runtime-evolution-functional-verification.md)
   - [20260705 Claim Catalog Freshness Refresh](./change-evidence/20260705-claim-catalog-freshness-refresh.md)

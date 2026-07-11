@@ -59,8 +59,8 @@ def _validate_manifest(manifest: dict[str, Any]) -> list[dict[str, Any]]:
             raise ValueError(
                 "target-repo/project rule distribution was retired; manifest entries must all use scope=global"
             )
-        if tool not in {"codex", "claude", "gemini"}:
-            raise ValueError(f"manifest.entries[{index}].tool must be codex, claude, or gemini")
+        if tool not in {"codex", "claude"}:
+            raise ValueError(f"manifest.entries[{index}].tool must be codex or claude")
         if not isinstance(version, str) or not version.strip():
             raise ValueError(f"manifest.entries[{index}].version must be a non-empty string")
         if not isinstance(source, str) or not source.strip():
@@ -90,7 +90,7 @@ def _resolve_source_path(raw_path: str) -> Path:
 
 def _extract_rule_version(text: str) -> str | None:
     patterns = (
-        r"GlobalUser/(?:AGENTS|CLAUDE|GEMINI)\.md v([0-9][0-9A-Za-z_.-]*)",
+        r"GlobalUser/(?:AGENTS|CLAUDE)\.md v([0-9][0-9A-Za-z_.-]*)",
         r"\*\*版本\*\*:\s*([0-9][0-9A-Za-z_.-]*)",
     )
     for pattern in patterns:

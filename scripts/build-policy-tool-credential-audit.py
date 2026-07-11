@@ -59,6 +59,15 @@ def build_policy_tool_credential_audit(
     config = _load_json(config_path)
     repo_profile = _load_json(repo_profile_path)
     tool_contract = _load_json(tool_contract_path)
+    local_agent_config_policy = config.get("local_agent_config_policy", {})
+    if not isinstance(local_agent_config_policy, dict):
+        raise ValueError("audit config local_agent_config_policy must be an object when provided")
+    managed_host_families = _normalize_host_families(
+        local_agent_config_policy.get("managed_host_families"),
+        default={"codex", "claude", "gemini"},
+    )
+    observed_host_families = _normalize_host_families(local_agent_config_policy.get("observed_host_families"))
+    observed_host_families -= managed_host_families
 
     entries = config.get("entries", [])
     if not isinstance(entries, list) or not entries:
@@ -164,7 +173,11 @@ def build_policy_tool_credential_audit(
             }
         )
 
-    local_agent_config_audit = _inspect_local_agent_config(home_path=home_path)
+    local_agent_config_audit = _inspect_local_agent_config(
+        home_path=home_path,
+        managed_host_families=managed_host_families,
+        observed_host_families=observed_host_families,
+    )
 
     status = "pass"
     if (
@@ -191,6 +204,10 @@ def build_policy_tool_credential_audit(
         "repo_profile_allowlist": normalized_allowlist,
         "audited_tools": audited_tools,
         "override_audit": override_audit,
+        "local_agent_config_policy": {
+            "managed_host_families": sorted(managed_host_families),
+            "observed_host_families": sorted(observed_host_families),
+        },
         "local_agent_config_audit": local_agent_config_audit,
         "unknown_tools": unknown_tools,
         "denied_allowlisted_tools": denied_allowlisted_tools,
@@ -219,16 +236,25 @@ def build_policy_tool_credential_audit(
     output_path.write_text(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return report
 
-
-def _inspect_local_agent_config(*, home_path: Path) -> dict[str, Any]:
+def _inspect_local_agent_config(
+    *,
+    home_path: Path,
+    managed_host_families: set[str] | None = None,
+    observed_host_families: set[str] | None = None,
+) -> dict[str, Any]:
     codex_dir = home_path / ".codex"
     claude_dir = home_path / ".claude"
     gemini_dir = home_path / ".gemini"
+    managed = _normalize_host_families(managed_host_families, default={"codex", "claude", "gemini"})
+    observed = _normalize_host_families(observed_host_families)
+    observed -= managed
 
     if not codex_dir.exists() and not claude_dir.exists() and not gemini_dir.exists():
         return {
             "status": "platform_na",
             "home_ref": "~",
+            "managed_host_families": sorted(managed),
+            "observed_host_families": sorted(observed),
             "reason": "No Codex, Claude, or Gemini user config directory is present under the inspected home path.",
             "checks": [],
             "failed_checks": [],
@@ -243,16 +269,30 @@ def _inspect_local_agent_config(*, home_path: Path) -> dict[str, Any]:
         if codex_dir.exists()
         else {"status": "platform_na", "reason": "Codex user config directory is not present.", "checks": []}
     )
+    if (
+        codex_context_probe.get("status") != "platform_na"
+        and codex_context_probe.get("configured_context_window") is None
+    ):
+        codex_context_probe = context_window_probe(codex_dir, run_codex=True, bundled=True)
+    codex_active = "codex" in managed or ("codex" in observed and codex_dir.exists())
+    claude_active = "claude" in managed or ("claude" in observed and claude_dir.exists())
+    gemini_active = "gemini" in managed or ("gemini" in observed and gemini_dir.exists())
+    checks: list[dict[str, Any]] = []
 
-    checks = [
-        _check(
+    if codex_active:
+        checks.append(
+            _check(
             check_id="codex_analytics_disabled",
             status=_nested_get(codex_config, ["analytics", "enabled"]) is False,
             reason="Codex analytics should be explicitly disabled for local governance runs.",
             evidence_ref="~/.codex/config.toml",
             remediation="Set analytics.enabled = false in ~/.codex/config.toml.",
-        ),
-        _check(
+            required="codex" in managed,
+            host_family="codex",
+            )
+        )
+        checks.append(
+            _check(
             check_id="codex_never_policy_has_rules_guard",
             status=(
                 _nested_get(codex_config, ["approval_policy"]) != "never"
@@ -261,43 +301,63 @@ def _inspect_local_agent_config(*, home_path: Path) -> dict[str, Any]:
             reason="approval_policy=never is an accepted operator preference only when deterministic rules are present.",
             evidence_ref="~/.codex/config.toml + ~/.codex/rules/*.rules",
             remediation="Keep ~/.codex/rules/*.rules present and non-empty when using approval_policy=never.",
-        ),
-        _check(
+            required="codex" in managed,
+            host_family="codex",
+            )
+        )
+        checks.append(
+            _check(
             check_id="codex_context_window_policy_sane",
             status=codex_context_probe.get("status") in {"pass", "platform_na"},
             reason="Codex context window and auto-compact thresholds should remain coherent before changing model defaults.",
             evidence_ref="~/.codex/config.toml model_context_window + model_auto_compact_token_limit",
             remediation="Run the read-only Codex context probe from `scripts/lib/codex_local.py` through the runtime tests before changing defaults; do not restore the deleted codex-account mutation CLI.",
-        ),
-        _check(
+            required="codex" in managed,
+            host_family="codex",
+            )
+        )
+    if claude_active:
+        checks.append(
+            _check(
             check_id="claude_sensitive_settings_read_denied",
             status=_claude_denies_sensitive_user_files(claude_settings),
             reason="Plaintext Claude login convenience is accepted, but agent reads of credential-bearing user config must be denied.",
             evidence_ref="~/.claude/settings.json permissions.deny",
             remediation="Add Read denies for Claude/Codex/Gemini credential-bearing user config files.",
-        ),
-        _check(
+            required="claude" in managed,
+            host_family="claude",
+            )
+        )
+    if gemini_active:
+        checks.extend([
+            _check(
             check_id="gemini_secure_mode_enabled",
             status=_nested_get(gemini_settings, ["admin", "secureModeEnabled"]) is True,
             reason="Gemini secure mode should block YOLO and Always allow bypass paths for local governance runs.",
             evidence_ref="~/.gemini/settings.json admin.secureModeEnabled",
             remediation="Set admin.secureModeEnabled = true in ~/.gemini/settings.json.",
-        ),
-        _check(
+                required="gemini" in managed,
+                host_family="gemini",
+            ),
+            _check(
             check_id="gemini_secret_redaction_configured",
             status=_gemini_redacts_secret_env(gemini_settings),
             reason="Gemini should redact and exclude known credential environment variables from model context.",
             evidence_ref="~/.gemini/settings.json security.environmentVariableRedaction + advanced.excludedEnvVars",
             remediation="Add common token variables to Gemini redaction and excludedEnvVars settings.",
-        ),
-        _check(
+                required="gemini" in managed,
+                host_family="gemini",
+            ),
+            _check(
             check_id="gemini_sensitive_files_ignored",
             status=_gemini_ignores_sensitive_files(gemini_settings, gemini_dir / ".geminiignore"),
             reason="Gemini file discovery should respect a user-level ignore file for OAuth and account state.",
             evidence_ref="~/.gemini/settings.json context.fileFiltering + ~/.gemini/.geminiignore",
             remediation="Create ~/.gemini/.geminiignore and reference it from context.fileFiltering.customIgnoreFilePaths.",
-        ),
-        _check(
+                required="gemini" in managed,
+                host_family="gemini",
+            ),
+            _check(
             check_id="gemini_antigravity_security_guarded_when_present",
             status=_gemini_antigravity_security_guarded(
                 main_settings=gemini_settings,
@@ -307,8 +367,10 @@ def _inspect_local_agent_config(*, home_path: Path) -> dict[str, Any]:
             reason="Gemini Antigravity settings, when present, should carry the same secure mode, secret redaction, file filtering, and GitHub MCP exclusion posture as the current Google local settings baseline.",
             evidence_ref="~/.gemini/antigravity/settings.json + ~/.gemini/settings.json",
             remediation="Run `pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/Optimize-GeminiLocal.ps1 -Apply` to mirror the bounded security posture.",
-        ),
-    ]
+                required="gemini" in managed,
+                host_family="gemini",
+            ),
+        ])
 
     mcp_checks = _inspect_mcp_token_indirection(
         codex_config=codex_config,
@@ -316,13 +378,23 @@ def _inspect_local_agent_config(*, home_path: Path) -> dict[str, Any]:
         gemini_settings=gemini_settings,
         gemini_mcp=_load_optional_json(gemini_dir / ".mcp.json"),
         gemini_antigravity_settings=gemini_antigravity_settings,
+        include_codex=codex_active,
+        codex_required="codex" in managed,
+        include_claude=claude_active,
+        claude_required="claude" in managed,
+        include_gemini=gemini_active,
+        gemini_required="gemini" in managed,
     )
     checks.extend(mcp_checks)
 
     failed = [item["check_id"] for item in checks if item["status"] != "pass"]
+    failed_required = [item["check_id"] for item in checks if item["status"] != "pass" and item.get("required", True)]
+    failed_observed = [item["check_id"] for item in checks if item["status"] != "pass" and not item.get("required", True)]
     return {
-        "status": "fail" if failed else "pass",
+        "status": "fail" if failed_required else "pass",
         "home_ref": "~",
+        "managed_host_families": sorted(managed),
+        "observed_host_families": sorted(observed),
         "personal_preference_exceptions": [
             {
                 "exception_id": "claude_plaintext_token_for_login_convenience",
@@ -339,6 +411,8 @@ def _inspect_local_agent_config(*, home_path: Path) -> dict[str, Any]:
         ],
         "checks": checks,
         "failed_checks": failed,
+        "failed_required_checks": failed_required,
+        "failed_observed_checks": failed_observed,
         "codex_context_window_probe": codex_context_probe,
     }
 
@@ -366,7 +440,7 @@ def _load_optional_toml(path: Path) -> dict[str, Any]:
 
 
 def _string_list(value: object) -> list[str]:
-    if not isinstance(value, list):
+    if not isinstance(value, (list, tuple, set)):
         return []
     result: list[str] = []
     for item in value:
@@ -374,6 +448,11 @@ def _string_list(value: object) -> list[str]:
         if text:
             result.append(text)
     return result
+
+
+def _normalize_host_families(value: object, *, default: set[str] | None = None) -> set[str]:
+    normalized = {item.lower() for item in _string_list(value)}
+    return normalized if normalized else set(default or set())
 
 
 def _nested_get(payload: dict[str, Any], keys: list[str]) -> Any:
@@ -385,14 +464,27 @@ def _nested_get(payload: dict[str, Any], keys: list[str]) -> Any:
     return current
 
 
-def _check(*, check_id: str, status: bool, reason: str, evidence_ref: str, remediation: str) -> dict[str, str]:
-    return {
+def _check(
+    *,
+    check_id: str,
+    status: bool,
+    reason: str,
+    evidence_ref: str,
+    remediation: str,
+    required: bool = True,
+    host_family: str | None = None,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {
         "check_id": check_id,
         "status": "pass" if status else "fail",
         "reason": reason,
         "evidence_ref": evidence_ref,
         "remediation": remediation,
     }
+    if host_family:
+        payload["host_family"] = host_family
+    payload["required"] = required
+    return payload
 
 
 def _has_nonempty_rules_file(rules_dir: Path) -> bool:
@@ -464,23 +556,41 @@ def _inspect_mcp_token_indirection(
     gemini_settings: dict[str, Any],
     gemini_mcp: dict[str, Any],
     gemini_antigravity_settings: dict[str, Any],
-) -> list[dict[str, str]]:
-    return [
-        _check(
+    include_codex: bool,
+    codex_required: bool,
+    include_claude: bool,
+    claude_required: bool,
+    include_gemini: bool,
+    gemini_required: bool,
+) -> list[dict[str, Any]]:
+    checks: list[dict[str, Any]] = []
+    if include_codex:
+        checks.append(
+            _check(
             check_id="codex_mcp_tokens_use_env_refs",
             status=_codex_mcp_tokens_are_indirect(codex_config),
             reason="Codex MCP credentials should be referenced through env vars, not expanded into config.toml.",
             evidence_ref="~/.codex/config.toml mcp_servers.*.bearer_token_env_var",
             remediation="Use bearer_token_env_var for Codex MCP credentials.",
-        ),
-        _check(
+                required=codex_required,
+                host_family="codex",
+            )
+        )
+    if include_claude:
+        checks.append(
+            _check(
             check_id="claude_mcp_tokens_use_env_refs",
             status=_json_mcp_tokens_are_indirect(claude_mcp),
             reason="Claude MCP config should not contain expanded bearer tokens.",
             evidence_ref="~/.claude/.mcp.json",
             remediation="Keep MCP Authorization headers as environment-variable references.",
-        ),
-        _check(
+                required=claude_required,
+                host_family="claude",
+            )
+        )
+    if include_gemini:
+        checks.append(
+            _check(
             check_id="gemini_mcp_tokens_use_env_refs",
             status=_json_mcp_tokens_are_indirect({"mcpServers": gemini_settings.get("mcpServers", {})})
             and _json_mcp_tokens_are_indirect(gemini_mcp)
@@ -488,8 +598,11 @@ def _inspect_mcp_token_indirection(
             reason="Gemini MCP config should not contain expanded bearer tokens.",
             evidence_ref="~/.gemini/settings.json + ~/.gemini/.mcp.json + ~/.gemini/antigravity/settings.json",
             remediation="Keep MCP Authorization headers as environment-variable references.",
-        ),
-    ]
+                required=gemini_required,
+                host_family="gemini",
+            )
+        )
+    return checks
 
 
 def _codex_mcp_tokens_are_indirect(config: dict[str, Any]) -> bool:

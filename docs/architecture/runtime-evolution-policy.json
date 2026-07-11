@@ -2,8 +2,8 @@
   "schema_version": "0.1-draft",
   "policy_id": "default-runtime-evolution-review",
   "status": "enforced",
-  "reviewed_on": "2026-06-09",
-  "review_expires_at": "2026-07-09",
+  "reviewed_on": "2026-07-10",
+  "review_expires_at": "2026-08-09",
   "stale_after_days": 30,
   "decision_claim": "Runtime self-evolution must be evidence-triggered, source-prioritized, default dry-run, and bounded by the existing build -> test -> contract/invariant -> hotspot verification floor.",
   "manual_trigger": {
