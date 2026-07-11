@@ -117,6 +117,17 @@ class TargetRuleCiTests(unittest.TestCase):
         self.assertIn("--workspace-root", workflow)
         self.assertIn("--require-all", workflow)
 
+    def test_aggregate_workflow_normalizes_incomplete_target_submodule_metadata(self) -> None:
+        workflow = AGGREGATE_WORKFLOW.read_text(encoding="utf-8")
+        target_checkout = workflow.split("- name: Checkout target repository", 1)[1].split(
+            "- name: Audit target rule contract", 1
+        )[0]
+
+        self.assertIn("persist-credentials: true", target_checkout)
+        self.assertIn("Normalize incomplete target submodule metadata", workflow)
+        self.assertIn("working-directory: workspace/${{ matrix.repo_path }}", workflow)
+        self.assertIn("if: always() && matrix.aggregate_mode == 'checkout'", workflow)
+
     def test_new_workflows_pin_checkout_to_a_full_commit_sha(self) -> None:
         template = TEMPLATE.read_text(encoding="utf-8")
         aggregate = AGGREGATE_WORKFLOW.read_text(encoding="utf-8")

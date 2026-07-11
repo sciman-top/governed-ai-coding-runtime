@@ -76,7 +76,7 @@ jobs:
         with:
           repository: ${{ matrix.repository }}
           path: workspace/${{ matrix.repo_path }}
-          persist-credentials: false
+          persist-credentials: true
 
       - name: Audit target rule contract
         if: matrix.aggregate_mode == 'checkout'
@@ -87,6 +87,20 @@ jobs:
           --workspace-root workspace
           --targets "${{ matrix.repo_id }}"
           --require-all
+
+      - name: Normalize incomplete target submodule metadata
+        if: always() && matrix.aggregate_mode == 'checkout'
+        working-directory: workspace/${{ matrix.repo_path }}
+        shell: bash
+        run: |
+          known_paths="$({ git config -f .gitmodules --get-regexp '^submodule\..*\.path$' 2>/dev/null || true; } | awk '{print $2}')"
+          while IFS= read -r path; do
+            if ! grep -Fxq "$path" <<<"$known_paths"; then
+              key="${path//\//-}"
+              git config -f .gitmodules "submodule.${key}.path" "$path"
+              git config -f .gitmodules "submodule.${key}.url" "$GITHUB_SERVER_URL/${{ matrix.repository }}.git"
+            fi
+          done < <(git ls-files --stage | awk '$1 == "160000" {print $4}')
 
       - name: Record private-repository aggregate boundary
         if: matrix.aggregate_mode == 'target_local_only'
