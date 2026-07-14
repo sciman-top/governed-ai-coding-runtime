@@ -1,19 +1,19 @@
 # AGENTS.md - governed-ai-coding-runtime
 **项目契约**: 2.0
-**全局规则复核**: 9.55
+**全局规则复核**: 9.56
 **适用范围**: 仓库根
-**最后更新**: 2026-07-10
+**最后更新**: 2026-07-14
 
 ## 1. 当前落点与目标归宿
 - 当前落点：本仓是 governed AI coding runtime 的控制仓，负责全局规则源、机器契约、治理运行时、审计与同步工具。
 - 目标归宿：保持“全局 WHAT + 项目 WHERE/HOW + 宿主 DELTA + 确定性 enforcement”的治理 sidecar；不替代 Codex、Claude Code 或目标仓自身事实。
-- 当前最小里程碑：完成 `9.55 / 项目契约 2.0` 发布、9 个显式目标仓审计、受保护全局同步与 fresh-session 加载证明。
+- 当前最小里程碑：完成 `9.56 / 项目契约 2.0 / coordination 2.3` 发布、9 个动态发现且显式登记的目标仓审计、受保护全局同步与 fresh-process 加载证明。
 - 事实裁决顺序：运行事实/代码 -> 根 `README.md` -> `docs/README.md` -> PRD/Architecture/Roadmap/Backlog -> Specs/Schemas；这不是宿主指令优先级。
 - 根规则只保留本仓高频事实、阻断、门禁、证据和回滚；长研究、runbook、计划与历史证据放入 `docs/`。
 
 ## A. 仓库事实与模块边界
 - `rules/global/`：Codex/Claude 全局用户规则源；`rules/manifest.json` 只分发两个用户级全局副本。
-- `rules/target-project-rule-coordination.json`：9 个目标仓的显式 allowlist 与审计契约；只审计，不保存或覆盖目标仓正文。
+- `rules/target-project-rule-coordination.json`：9 个目标仓的显式 allowlist、直接子 Git 根发现契约与审计契约；只审计，不保存或覆盖目标仓正文。
 - `schemas/jsonschema/`：机器可读契约；`docs/specs/`：对应语义规范；修改任一侧必须检查另一侧与 schema catalog。
 - `scripts/sync-agent-rules.py` / `.ps1`：global-only 同步入口；`scripts/verify-agent-rule-family.py` 与 `scripts/verify-target-project-rules.py`：规则协同 verifier。
 - `rules/templates/github/agent-rule-contract.yml` 是目标仓规则 CI 规范模板；`scripts/export-target-rule-ci-matrix.py` 与 `.github/workflows/agent-rule-coordination.yml` 承接九仓矩阵聚合审计。

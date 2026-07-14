@@ -16,6 +16,11 @@ AGGREGATE_WORKFLOW = ROOT / ".github" / "workflows" / "agent-rule-coordination.y
 CHECKOUT_V4_SHA = "34e114876b0b11c390a56381ad16ebd13914f8d5"
 
 
+def _workflow_sha256(raw: bytes) -> str:
+    normalized = raw.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
 class TargetRuleCiTests(unittest.TestCase):
     @staticmethod
     def _workflow_script() -> str:
@@ -65,9 +70,10 @@ class TargetRuleCiTests(unittest.TestCase):
         workflow = TEMPLATE.read_bytes()
 
         self.assertEqual(
-            hashlib.sha256(workflow).hexdigest(),
+            _workflow_sha256(workflow),
             payload["ci_contract"]["workflow_sha256"],
         )
+        self.assertEqual(payload["ci_contract"]["workflow_hash_mode"], "utf8_lf_v1")
         self.assertIn(b"agent-rule-contract-ci: 2.1", workflow)
         self.assertIn(b"@AGENTS.md", workflow)
         self.assertIn(b"Normalize incomplete submodule metadata", workflow)

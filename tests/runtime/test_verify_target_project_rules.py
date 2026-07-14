@@ -14,6 +14,11 @@ VERIFY_REPO = ROOT / "scripts" / "verify-repo.ps1"
 WORKFLOW_BYTES = b"name: Agent Rule Contract\n# agent-rule-contract-ci: 2.1\n"
 
 
+def _workflow_sha256(raw: bytes) -> str:
+    normalized = raw.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
 def _project_body(*, anchor: str = "runtime/main.py", reviewed_release: str = "9.55") -> str:
     return "\n".join(
         [
@@ -51,6 +56,12 @@ def _write_target(
     workflow: bytes | None = WORKFLOW_BYTES,
 ) -> None:
     repo_root.mkdir(parents=True, exist_ok=True)
+    subprocess.run(
+        ["git", "init", "--quiet", str(repo_root)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
     (repo_root / "AGENTS.md").write_text(project_body or _project_body(), encoding="utf-8")
     if wrapper is not None:
         (repo_root / "CLAUDE.md").write_bytes(wrapper)
@@ -62,16 +73,28 @@ def _write_target(
 
 def _coordination_payload(workspace_root: Path, *, reviewed_release: str = "9.55") -> dict:
     return {
-        "schema_version": "2.2",
+        "schema_version": "2.3",
         "coordination_id": "target-project-rule-coordination",
         "rule_release": "9.55",
         "project_contract_version": "2.0",
         "workspace_root": str(workspace_root),
         "updated_on": "2026-07-10",
+        "workspace_inventory": {
+            "mode": "direct_git_roots",
+            "excluded_directories": [
+                "external",
+                "governed-ai-coding-runtime",
+                "physicist_chinese_poster_batch_tool",
+                "文档",
+            ],
+            "unlisted_repository_policy": "block",
+            "missing_allowlisted_repository_policy": "block_on_require_all",
+        },
         "ci_contract": {
             "contract_id": "agent-rule-contract-ci",
             "version": "2.1",
-            "workflow_sha256": hashlib.sha256(WORKFLOW_BYTES).hexdigest(),
+            "workflow_hash_mode": "utf8_lf_v1",
+            "workflow_sha256": _workflow_sha256(WORKFLOW_BYTES),
         },
         "targets": [
             {
@@ -120,8 +143,10 @@ class VerifyTargetProjectRulesTests(unittest.TestCase):
     def test_schema_requires_ci_contract_and_target_ci_metadata(self) -> None:
         schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
 
-        self.assertEqual(schema["properties"]["schema_version"]["const"], "2.2")
+        self.assertEqual(schema["properties"]["schema_version"]["const"], "2.3")
         self.assertIn("ci_contract", schema["required"])
+        self.assertIn("workspace_inventory", schema["required"])
+        self.assertIn("workflow_hash_mode", schema["$defs"]["ci_contract"]["required"])
         self.assertIn("github_repository", schema["$defs"]["target"]["required"])
         self.assertIn("ci_workflow_path", schema["$defs"]["target"]["required"])
 
@@ -202,6 +227,147 @@ class VerifyTargetProjectRulesTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 1)
         payload = json.loads(completed.stdout)
         self.assertIn("ci_workflow_hash_mismatch", payload["results"][0]["blocking_findings"])
+
+    def test_ci_workflow_hash_normalizes_crlf_to_lf(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "workspace"
+            crlf_workflow = WORKFLOW_BYTES.replace(b"\n", b"\r\n")
+            _write_target(workspace / "pilot", workflow=crlf_workflow)
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(
+                json.dumps(_coordination_payload(workspace)), encoding="utf-8"
+            )
+
+            completed = _run(coordination_path, "--require-all")
+
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        details = json.loads(completed.stdout)["results"][0]["details"]
+        self.assertEqual(details["ci_workflow_sha256"], _workflow_sha256(WORKFLOW_BYTES))
+        self.assertEqual(details["ci_workflow_line_endings"], "crlf")
+
+    def test_unlisted_direct_child_git_repository_is_blocking(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "workspace"
+            _write_target(workspace / "pilot")
+            _write_target(workspace / "unlisted")
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(
+                json.dumps(_coordination_payload(workspace)), encoding="utf-8"
+            )
+
+            completed = _run(coordination_path, "--require-all")
+
+        self.assertEqual(completed.returncode, 1)
+        payload = json.loads(completed.stdout)
+        self.assertIn("unlisted_workspace_repository:unlisted", payload["blocking_findings"])
+        self.assertEqual(payload["workspace_inventory"]["discovered_repositories"], ["pilot", "unlisted"])
+
+    def test_excluded_direct_child_git_repository_is_not_discovered(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "workspace"
+            _write_target(workspace / "pilot")
+            _write_target(workspace / "external")
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(
+                json.dumps(_coordination_payload(workspace)), encoding="utf-8"
+            )
+
+            completed = _run(coordination_path, "--require-all")
+
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        inventory = json.loads(completed.stdout)["workspace_inventory"]
+        self.assertEqual(inventory["discovered_repositories"], ["pilot"])
+
+    def test_filtered_ci_audit_skips_workspace_inventory_comparison(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "workspace"
+            _write_target(workspace / "pilot")
+            _write_target(workspace / "unlisted")
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(
+                json.dumps(_coordination_payload(workspace)), encoding="utf-8"
+            )
+
+            completed = _run(
+                coordination_path,
+                "--workspace-root",
+                str(workspace),
+                "--targets",
+                "pilot",
+                "--require-all",
+            )
+
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        inventory = json.loads(completed.stdout)["workspace_inventory"]
+        self.assertEqual(inventory["status"], "skipped")
+        self.assertEqual(inventory["reason"], "target_filters")
+
+    def test_allowlisted_directory_must_be_its_own_git_root(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "workspace"
+            repo_root = workspace / "pilot"
+            _write_target(repo_root)
+            git_dir = repo_root / ".git"
+            if git_dir.is_dir():
+                for path in sorted(git_dir.rglob("*"), reverse=True):
+                    if path.is_file():
+                        path.unlink()
+                    elif path.is_dir():
+                        path.rmdir()
+                git_dir.rmdir()
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(
+                json.dumps(_coordination_payload(workspace)), encoding="utf-8"
+            )
+
+            completed = _run(coordination_path, "--require-all")
+
+        self.assertEqual(completed.returncode, 1)
+        payload = json.loads(completed.stdout)
+        self.assertIn("target_not_git_root", payload["results"][0]["blocking_findings"])
+
+    def test_na_contract_requires_recovery_condition(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "workspace"
+            body = _project_body().replace(
+                "- fixed order：`build -> test -> contract/invariant -> hotspot`。",
+                "- fixed order：`build -> test -> contract/invariant -> hotspot`。\n"
+                "- build：`gate_na`，`reason=docs`、`alternative_verification=parse`、"
+                "`evidence_link=docs/evidence.md`、`expires_at=task_end`。",
+            )
+            _write_target(workspace / "pilot", project_body=body)
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(
+                json.dumps(_coordination_payload(workspace)), encoding="utf-8"
+            )
+
+            completed = _run(coordination_path, "--require-all")
+
+        self.assertEqual(completed.returncode, 1)
+        findings = json.loads(completed.stdout)["results"][0]["blocking_findings"]
+        self.assertIn("na_contract_fields_missing:recovery_condition", findings)
+
+    def test_na_contract_rejects_similar_field_names_without_backticks(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "workspace"
+            body = _project_body().replace(
+                "- fixed order：`build -> test -> contract/invariant -> hotspot`。",
+                "- fixed order：`build -> test -> contract/invariant -> hotspot`。\n"
+                "- build：gate_na，reasoning=docs、alternative_verification=parse、"
+                "evidence_link=docs/evidence.md、expires_at=task_end、"
+                "recovery_condition=add_build。",
+            )
+            _write_target(workspace / "pilot", project_body=body)
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(
+                json.dumps(_coordination_payload(workspace)), encoding="utf-8"
+            )
+
+            completed = _run(coordination_path, "--require-all")
+
+        self.assertEqual(completed.returncode, 1)
+        findings = json.loads(completed.stdout)["results"][0]["blocking_findings"]
+        self.assertIn("na_contract_fields_missing:reason", findings)
 
     def test_project_rule_must_reference_its_ci_contract_workflow(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

@@ -1,9 +1,9 @@
-# AGENTS.md - Universal Agent Protocol v9.56
-# OpenAI ChatGPT Work / Codex App / Codex CLI - Global User Rules
-**版本**: 9.56
+# AGENTS.md - Universal Agent Protocol v9.55
+# OpenAI Codex / Codex CLI - Global User Rules
+**版本**: 9.55
 **项目契约版本**: 2.0
 **适用范围**: 全局用户级（GlobalUser/）
-**最后更新**: 2026-07-14
+**最后更新**: 2026-07-10
 
 ## 1. 阅读指引
 - 本文件定义跨仓稳定语义（WHAT）；项目根 `AGENTS.md` 定义仓库事实与动作（WHERE/HOW）；平台章节只定义宿主差异（DELTA）。
@@ -42,7 +42,7 @@
 ### A.4 N/A 口径
 - `platform_na`：宿主能力、命令或当前非交互入口客观不可用。
 - `gate_na`：仅纯文档/注释/排版，或门禁/子项目客观不存在时允许。
-- 两类 N/A 都记录 `reason / alternative_verification / evidence_link / expires_at / recovery_condition`；不得改变门禁顺序，缺口到期或恢复条件满足后恢复真实门禁。
+- 两类 N/A 都记录 `reason / alternative_verification / evidence_link / expires_at`；不得改变门禁顺序，缺口到期后恢复真实门禁。
 
 ### A.5 治理演进 E1-E6
 - `E1` 版本化：规则、schema、baseline、profile 与迁移都有版本。
@@ -70,14 +70,12 @@
 - `project_doc_max_bytes` 默认 32 KiB，约束的是一次项目规则链的总读取预算，不是每个文件各有 32 KiB；关键规则前置，超限内容下沉。
 - fallback 只认显式配置文件名；不得假定 `CLAUDE.md` 会自动加载。当前官方稳定面未证明的选项不得写成既定能力。
 - `AGENTS.override.md` 仅用于短期排障，结束后删除并用新 run/session 复测；不假定当前会话热加载。
-- ChatGPT 桌面端 Personalization 可编辑 Codex personal instructions；ChatGPT Work Web 的 hosted/project instructions 与本机 `~/.codex/AGENTS.md` 不得假定为同一存储或自动双向投影。
 
 ### B.2 诊断与强制
 - 最小诊断：`codex --version`、`codex --help`；加载核验优先使用新会话的 `codex debug prompt-input`，不可用时记录 `platform_na`、替代证据与复测条件。
 - 扩展命令必须先由当前 help 证明存在；日志/session jsonl 只作补充证据。
-- `AGENTS.md` 不是权限系统；可重复权限、危险命令拦截和沙箱边界放入 `config.toml`、hooks、仓库脚本或 CI；项目 config/hooks/rules 只在 trusted repo 中生效。
-- `.codex/rules/*.rules` 当前仍是 experimental；使用时按精确命令前缀建模，提供 `match/not_match` 样例并以当前 `codex execpolicy check` 实测，避免过宽 allowlist。
-- ChatGPT Work Web 运行于 hosted environment，不继承本机 Codex sandbox/approval 控件；`requirements.toml`、managed config 与 ChatGPT workspace RBAC 也不得混为同一层。
+- `AGENTS.md` 不是权限系统；可重复权限、危险命令拦截和沙箱边界放入 `config.toml`、`.codex/rules/*.rules`、hooks、仓库脚本或 CI。
+- exec policy 按精确命令前缀建模并提供 `match/not_match` 样例；避免过宽 allowlist。
 - `approval_policy = "never"`、`danger-full-access` 或 bypass 模式不取消 R4/R8；只在明确授权或外部隔离边界内使用。
 - 修改 auth、provider、MCP 或权限前，先区分登录链路、执行权限、模型能力与仓库代码问题。
 - 未经当前任务明确确认，不得重启、停止、杀掉或自动拉起 Codex App / `codex` 进程；先做文件级投影、dry-run、连通性探针与回滚证据。
@@ -88,7 +86,7 @@
 ## C. 项目级承接契约
 ### C.1 边界与版本
 - 项目根 `AGENTS.md` 是 Codex/Claude 共用、宿主中立的项目契约；记录 `**项目契约**: 2.0` 与 `**全局规则复核**: <release>`。
-- 受管全局副本标识为 `GlobalUser/AGENTS.md v9.56` 与 `GlobalUser/CLAUDE.md v9.56`；项目契约不兼容必须阻断，兼容范围内的全局复核滞后只作 observation。
+- 受管全局副本标识为 `GlobalUser/AGENTS.md v9.55` 与 `GlobalUser/CLAUDE.md v9.55`；项目契约不兼容必须阻断，兼容范围内的全局复核滞后只作 observation。
 - Claude 项目 wrapper 的第一物理行必须是无 BOM 的独立 `@AGENTS.md`；无真实仓库级 Claude 差异时只保留这一行。
 - 项目规则不复述全局 R/E 正文、语言偏好、通用 N/A 或宿主加载教程，也不复制 README/PRD/架构全文。
 

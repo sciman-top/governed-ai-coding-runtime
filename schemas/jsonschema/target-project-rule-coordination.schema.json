@@ -11,6 +11,7 @@
     "project_contract_version",
     "workspace_root",
     "updated_on",
+    "workspace_inventory",
     "ci_contract",
     "targets"
   ],
@@ -19,7 +20,7 @@
       "type": "string"
     },
     "schema_version": {
-      "const": "2.2"
+      "const": "2.3"
     },
     "coordination_id": {
       "const": "target-project-rule-coordination"
@@ -40,6 +41,9 @@
       "type": "string",
       "format": "date"
     },
+    "workspace_inventory": {
+      "$ref": "#/$defs/workspace_inventory"
+    },
     "ci_contract": {
       "$ref": "#/$defs/ci_contract"
     },
@@ -58,6 +62,7 @@
       "required": [
         "contract_id",
         "version",
+        "workflow_hash_mode",
         "workflow_sha256"
       ],
       "properties": {
@@ -67,9 +72,43 @@
         "version": {
           "const": "2.1"
         },
+        "workflow_hash_mode": {
+          "const": "utf8_lf_v1"
+        },
         "workflow_sha256": {
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "workspace_inventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "excluded_directories",
+        "unlisted_repository_policy",
+        "missing_allowlisted_repository_policy"
+      ],
+      "properties": {
+        "mode": {
+          "const": "direct_git_roots"
+        },
+        "excluded_directories": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[^/\\\\]+$"
+          }
+        },
+        "unlisted_repository_policy": {
+          "const": "block"
+        },
+        "missing_allowlisted_repository_policy": {
+          "const": "block_on_require_all"
         }
       }
     },

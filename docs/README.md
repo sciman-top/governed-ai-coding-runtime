@@ -116,7 +116,7 @@
   - [Adapter Capability Tiers](./product/adapter-capability-tiers.md)
 
 ## Rules And Managed Assets
-- Automated target-repo rollout, attachment, session-bridge, and managed template distribution have been retired. Target rules are maintained in place and audited against an explicit allowlist.
+- Automated target-repo rollout, attachment, session-bridge, and managed template distribution have been retired. Target rules are maintained in place; direct-child Git-root discovery is reconciled with an explicit allowlist before audit, but discovery never auto-enrolls a repository.
 - Retained global-only rule-sync source of truth:
   - [rules/manifest.json](../rules/manifest.json)
 - Target-project coordination audit source of truth:
@@ -129,7 +129,7 @@
   - `python scripts/verify-target-project-rules.py --require-all`
   - `python scripts/export-target-rule-ci-matrix.py`
 - Each target owns a rule-only CI workflow matching `rules/templates/github/agent-rule-contract.yml`; the control workflow generates a nine-target matrix for scheduled/manual aggregate audits.
-- The control-repository `Contract` gate also validates the coordination manifest against schema `2.1` and audits locally available targets; release verification uses `--require-all` for the full nine-repository scope.
+- The control-repository `Contract` gate also validates the coordination manifest against schema `2.3`, reconciles direct-child Git roots with the allowlist, and audits locally available targets; release verification uses `--require-all` for the full nine-repository scope.
 - Deterministic enforcement stays in `.codex`, `.claude/settings.json`, hooks, permissions, MCP, and CI; it is not solved by blind text synchronization.
 
 ## Evidence, History, And Rollback

@@ -1,9 +1,9 @@
-# CLAUDE.md - Universal Agent Protocol v9.55
+# CLAUDE.md - Universal Agent Protocol v9.56
 # Anthropic Claude Code / Claude CLI - Global User Rules
-**版本**: 9.55
+**版本**: 9.56
 **项目契约版本**: 2.0
 **适用范围**: 全局用户级（GlobalUser/）
-**最后更新**: 2026-07-10
+**最后更新**: 2026-07-14
 
 ## 1. 阅读指引
 - 本文件定义跨仓稳定语义（WHAT）；项目根 `AGENTS.md` 定义仓库事实与动作（WHERE/HOW）；平台章节只定义宿主差异（DELTA）。
@@ -42,7 +42,7 @@
 ### A.4 N/A 口径
 - `platform_na`：宿主能力、命令或当前非交互入口客观不可用。
 - `gate_na`：仅纯文档/注释/排版，或门禁/子项目客观不存在时允许。
-- 两类 N/A 都记录 `reason / alternative_verification / evidence_link / expires_at`；不得改变门禁顺序，缺口到期后恢复真实门禁。
+- 两类 N/A 都记录 `reason / alternative_verification / evidence_link / expires_at / recovery_condition`；不得改变门禁顺序，缺口到期或恢复条件满足后恢复真实门禁。
 
 ### A.5 治理演进 E1-E6
 - `E1` 版本化：规则、schema、baseline、profile 与迁移都有版本。
@@ -70,24 +70,26 @@
 - 项目 `CLAUDE.md` 用首行 `@AGENTS.md` 承接共用项目契约；import 相对包含它的文件解析，最多按官方四跳限制展开，组织拆分不节省 context。
 - `.claude/rules/` 无 `paths` 的规则常驻；带 `paths` 的规则通常由相关文件 Read 触发。关键安全规则不得只放在延迟触发规则中。
 - 内置 Explore/Plan 子代理不自动继承完整 `CLAUDE.md` 上下文；委派时显式传递任务所需约束，或使用已验证的自定义 agent 配置。
-- `--bare` 会跳过自动 memory 发现；auto memory 是本机辅助记忆，不是项目规则真源。
+- `--bare` 会跳过 hooks、plugins、skills、auto memory 和 `CLAUDE.md` 自动发现等普通 customization；`--safe-mode` 同样禁用普通 customization，但 managed policy 仍适用。两者都不能充当正常规则已加载的证据。
+- Claude Code cloud/Web 会读取仓内项目规则和 server-managed settings，但不加载本机 `~/.claude/CLAUDE.md`；普通 Claude Web/Desktop profile/preferences 也不得假定与本机用户文件同源。
 
 ### B.2 诊断与强制
-- 最小诊断：`claude --version`、`claude --help`；交互场景用 `/memory` 核对已加载规则、用 `/status` 核对 settings 来源，非交互不可用时记录 `platform_na`。
+- 最小诊断：`claude --version`、`claude --help`；交互场景用 `/context`、`/memory` 核对加载，用 `/status`、`/permissions`、`/hooks` 核对强制来源；终端 `claude doctor` 只读诊断，交互 `/doctor` 可能在确认后修复，不能混用。
 - 扩展命令、hook event、tool matcher 与通配符必须先由当前 help/schema/官方文档证明；可用时以 `InstructionsLoaded` 等 hook 补充加载证据。
 - `CLAUDE.md` 不是权限配置；敏感文件阻断、工具限制、sandbox、环境变量与强制动作放入用户/项目 `.claude/settings.json`、managed settings、permissions、hooks、MCP、仓库脚本或 CI。
 - path rules 与 permissions 的 matcher 语义不同，不能互相替代；deny/allow 必须用正反例实测。
+- Claude 内建 Bash sandbox 不支持 native Windows，只支持 macOS、Linux 与 WSL2；native Windows 按 `platform_na` 留痕，并以 permissions、`PreToolUse`、外部隔离和 CI 补位。
 - bypass permissions 不提供 prompt-injection 防护，也不取消 R4/R8；只在明确授权或外部隔离边界内使用。
 - 修改 auth、provider、MCP 或权限前，先区分登录链路、执行权限、模型能力与仓库代码问题。
 - 未经当前任务明确确认，不得重启、停止、杀掉或自动拉起 Claude Code / Claude Desktop / `claude` 进程；先做文件级投影、dry-run、连通性探针与回滚证据。
 
 ### B.3 回退
-- 命令缺失、help 与行为不一致、workspace trust/import approval 或非交互限制导致失败时，按 `platform_na` 留痕；替代证据只补证明，不改变共同规则和门禁语义。
+- 命令缺失、help 与行为不一致、workspace trust/import approval 或非交互限制导致失败时，按 `platform_na` 留痕；`claude -p` 会跳过 trust 对话且可能静默忽略无效 settings，不能单独证明授权或规则生效。
 
 ## C. 项目级承接契约
 ### C.1 边界与版本
 - 项目根 `AGENTS.md` 是 Codex/Claude 共用、宿主中立的项目契约；记录 `**项目契约**: 2.0` 与 `**全局规则复核**: <release>`。
-- 受管全局副本标识为 `GlobalUser/AGENTS.md v9.55` 与 `GlobalUser/CLAUDE.md v9.55`；项目契约不兼容必须阻断，兼容范围内的全局复核滞后只作 observation。
+- 受管全局副本标识为 `GlobalUser/AGENTS.md v9.56` 与 `GlobalUser/CLAUDE.md v9.56`；项目契约不兼容必须阻断，兼容范围内的全局复核滞后只作 observation。
 - Claude 项目 wrapper 的第一物理行必须是无 BOM 的独立 `@AGENTS.md`；无真实仓库级 Claude 差异时只保留这一行。
 - 项目规则不复述全局 R/E 正文、语言偏好、通用 N/A 或宿主加载教程，也不复制 README/PRD/架构全文。
 

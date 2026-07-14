@@ -16,14 +16,14 @@
 直接在那一仓库内维护。
 
 推荐做法：
-1. 在目标仓根 `AGENTS.md` 记录 `**项目契约**: 2.0`、`**全局规则复核**: 9.55`、当前落点、目标归宿、仓库事实、真实门禁、证据和回滚。
+1. 在目标仓根 `AGENTS.md` 记录 `**项目契约**: 2.0`、`**全局规则复核**: 9.56`、当前落点、目标归宿、仓库事实、真实门禁、证据和回滚。
 2. 保持 `AGENTS.md` 宿主中立，不复制全局 R/E 或平台加载教程；固定门禁仍是 `build -> test -> contract/invariant -> hotspot`。
 3. 目标仓 `CLAUDE.md` 第一物理行写裸文本 `@AGENTS.md`，无 BOM；没有真实仓库级差异时文件只保留这一行。
 4. 在 `rules/target-project-rule-coordination.json` 显式登记目标，并填写 `github_repository` 与 `ci_workflow_path`；控制仓只审计，不保存或盲覆盖目标正文。
 5. 将已审查的 `rules/templates/github/agent-rule-contract.yml` 字节复制到目标仓声明的 workflow 路径，并在 `AGENTS.md` 引用该路径；本地 workflow 只验证规则契约，绝不替代产品门禁。
 6. rollout evidence 与验收证明留在目标仓；全局同步备份、聚合 CI 证据与加载探针证据留在控制仓。
 
-当前 allowlist：`ai-content-delivery-studio`、`classroom-answer-toolkit`、`ClassroomToolkit`、`github-toolkit`、`k12-question-graph`、`local-ai-dev-orchestrator`、`qq-codex-bot`、`skills-manager`、`vps-ssh-launcher`。其他相邻目录仍受用户级全局规则影响，但不接受本轮项目规则审计或写入。
+当前 allowlist：`ai-content-delivery-studio`、`classroom-answer-toolkit`、`ClassroomToolkit`、`github-toolkit`、`k12-question-graph`、`local-ai-dev-orchestrator`、`qq-codex-bot`、`skills-manager`、`vps-ssh-launcher`。发布审计会将该清单与 `D:\CODE` 直接子 Git 根动态发现结果对账；发现本身不会自动纳管。其他相邻目录仍受用户级全局规则影响，但不接受本轮项目规则审计或写入。
 
 ## 在本仓仍应使用的命令
 ```powershell

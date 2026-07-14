@@ -9,11 +9,11 @@
       "source_refs": [
         {
           "path": "README.en.md",
-          "contains": "The repository is now intentionally narrowed to three live surfaces:"
+          "contains": "The repository is now intentionally narrowed to four live surfaces:"
         },
         {
           "path": "README.zh-CN.md",
-          "contains": "本仓当前只保留三类 live 能力："
+          "contains": "本仓当前只保留四类 live 能力："
         }
       ]
     },

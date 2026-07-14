@@ -16,14 +16,14 @@ As of July 6, 2026, this repository no longer attaches to external target repos,
 Use that repository directly.
 
 Recommended approach:
-1. Record `**项目契约**: 2.0`, `**全局规则复核**: 9.55`, landing, target, repository truth, real gates, evidence, and rollback in the target root `AGENTS.md`.
+1. Record `**项目契约**: 2.0`, `**全局规则复核**: 9.56`, landing, target, repository truth, real gates, evidence, and rollback in the target root `AGENTS.md`.
 2. Keep `AGENTS.md` host-neutral and retain the fixed `build -> test -> contract/invariant -> hotspot` order. Do not duplicate global R/E text or host-loading tutorials.
 3. Make the first physical line of target `CLAUDE.md` the raw, BOM-free `@AGENTS.md` import. Keep it to that single line when no real repository-specific Claude delta exists.
 4. Add targets explicitly to `rules/target-project-rule-coordination.json`, including `github_repository` and `ci_workflow_path`. The control repo audits but does not store or blindly overwrite target bodies.
 5. Copy the reviewed `rules/templates/github/agent-rule-contract.yml` bytes to the target's declared workflow path and mention that path in `AGENTS.md`. The local workflow verifies only the rule contract and never replaces product gates.
 6. Keep rollout evidence in each target; keep global-sync backups, aggregate-CI evidence, and loading-probe evidence in this control repo.
 
-The current allowlist contains `ai-content-delivery-studio`, `classroom-answer-toolkit`, `ClassroomToolkit`, `github-toolkit`, `k12-question-graph`, `local-ai-dev-orchestrator`, `qq-codex-bot`, `skills-manager`, and `vps-ssh-launcher`. Other sibling directories still receive user-level rules but are not project-rule targets.
+The current allowlist contains `ai-content-delivery-studio`, `classroom-answer-toolkit`, `ClassroomToolkit`, `github-toolkit`, `k12-question-graph`, `local-ai-dev-orchestrator`, `qq-codex-bot`, `skills-manager`, and `vps-ssh-launcher`. Release audit reconciles it with dynamically discovered direct-child Git roots under `D:\CODE`; discovery never auto-enrolls a repository. Other sibling directories still receive user-level rules but are not project-rule targets.
 
 ## Commands To Use Here
 ```powershell

@@ -1,7 +1,8 @@
 # Agent Rule Coordination v2 Spec
 
 ## Status
-Active design baseline for the 2026-07-10 Codex and Claude rule-family rollout.
+Active design baseline, refreshed on 2026-07-14 for the Codex, ChatGPT Work,
+and Claude rule-governance audit.
 
 ## Purpose
 Define a concise, auditable collaboration contract between user-level rules and repository-level rules for OpenAI Codex and Anthropic Claude Code.
@@ -27,8 +28,10 @@ The contract must produce a practical `global WHAT + project WHERE/HOW + host DE
 
 ## Version Model
 
-- `rule_release` identifies the deployed global rule content release. This rollout uses `9.55`.
+- `rule_release` identifies the deployed global rule content release. This refresh uses `9.56`.
 - `project_contract_version` identifies the machine-audited project integration interface. This rollout uses `2.0`.
+- `schema_version=2.3` adds deterministic workspace inventory and a line-ending-neutral
+  workflow hash contract without changing the project integration interface.
 - A target declares both its compatible project contract and the global release last reviewed.
 - Contract incompatibility blocks. A later compatible global content release may be reported as review drift without treating wording-only changes as a broken project contract.
 
@@ -66,7 +69,10 @@ The contract must produce a practical `global WHAT + project WHERE/HOW + host DE
 
 ## Coordination Manifest
 
-`rules/target-project-rule-coordination.json` is an explicit allowlist, not a discovery-and-auto-enroll mechanism.
+`rules/target-project-rule-coordination.json` is an explicit allowlist, not an
+auto-enrollment mechanism. The verifier independently discovers direct child Git roots
+under the configured workspace and blocks unlisted repositories; a human-reviewed
+manifest change is still required before a repository becomes managed.
 
 Each target records:
 
@@ -79,18 +85,44 @@ Each target records:
 - size budgets
 - local-only availability semantics
 
-The top-level CI contract records the project workflow contract version and canonical workflow SHA-256. `schema_version=2.2` adds explicit GitHub visibility and aggregate execution mode without changing `project_contract_version=2.0` or `rule_release=9.55`. Public targets use aggregate checkout; private targets use repository-local enforcement because the control repository deliberately holds no cross-repository credential.
+The top-level CI contract records the project workflow contract version, the canonical
+workflow SHA-256, and `workflow_hash_mode=utf8_lf_v1`. The hash is calculated after
+UTF-8 decoding and CRLF/CR normalization to LF, so Windows checkout policy cannot create
+false drift while any semantic byte change still blocks. `schema_version=2.3` retains
+the `2.2` GitHub visibility and aggregate execution model. Public targets use aggregate
+checkout; private targets use repository-local enforcement because the control
+repository deliberately holds no cross-repository credential.
+
+The top-level `workspace_inventory` contract records:
+
+- `mode=direct_git_roots`
+- the exact excluded direct-child directory names
+- `unlisted_repository_policy=block`
+- `missing_allowlisted_repository_policy=block_on_require_all`
+
+Discovery never walks nested repositories and never modifies a discovered repository.
+It only proves whether the explicit allowlist still matches current workspace truth.
 
 The manifest stores audit contracts, not target rule bodies.
 
 ## Deterministic Audit
 
-The standalone target verifier rejects missing workspace/date/CI metadata. The control-repository contract gate validates the coordination manifest against its JSON Schema and audits every target available on the current machine; release verification adds `--require-all` so any missing allowlisted target blocks rollout. `--workspace-root` provides an explicit CI checkout override without changing the local manifest path.
+The standalone target verifier rejects missing workspace/date/CI/inventory metadata. The
+control-repository contract gate validates the coordination manifest against its JSON
+Schema, checks the canonical template against the normalized hash, compares the local
+direct-child Git inventory with the explicit allowlist, and audits every target available
+on the current machine. Release verification adds `--require-all` so any missing
+allowlisted target blocks rollout. Filtered or isolated CI target audits report workspace
+inventory as skipped because those layouts deliberately contain only one checkout.
+`--workspace-root` provides an explicit CI checkout override without changing the local
+manifest path.
 
 Hard failures include:
 
 - missing target, project rule, or Claude wrapper when `--require-all` is used
 - missing/drifted target rule-contract workflow or an invalid GitHub repository locator
+- canonical workflow template drift under the normalized hash contract
+- an unlisted direct-child Git repository or an allowlisted path that is not its own Git root
 - missing/invalid coordination metadata or a schema-invalid coordination manifest
 - incompatible project contract
 - missing repository-specific anchors
@@ -106,7 +138,10 @@ Hard failures include:
 ## Cross-Repository CI Parity
 
 - Each target owns `.github/workflows/agent-rule-contract.yml`; it runs only for rule/workflow changes, uses read-only contents permission, requires no secret, and validates the project rule plus exact Claude wrapper.
-- All nine project workflows must match `rules/templates/github/agent-rule-contract.yml` byte-for-byte. The manifest SHA-256 and target verifier make drift blocking.
+- All nine project workflows must match `rules/templates/github/agent-rule-contract.yml`
+  after `utf8_lf_v1` normalization. Raw CRLF/LF differences are reported as details, not
+  drift. The manifest SHA-256, canonical-template self-check, and target verifier make
+  semantic drift blocking.
 - `.github/workflows/agent-rule-coordination.yml` builds its matrix from the explicit manifest, checks out each public target into an isolated workspace, and runs a strict one-target audit with `--require-all`.
 - The aggregate workflow is scheduled and manually runnable, and also reacts to control-contract changes. Target workflows cover target pull requests independently.
 - Rule-contract CI never substitutes for a target's build, test, contract/invariant, or hotspot gates.
@@ -125,7 +160,10 @@ Observations include:
 - Commands must reflect repository-owned runnable entrypoints.
 - Setup/install commands are not routine gates.
 - Repeating the same command under two gate labels must be declared as a temporary gap, not represented as independent evidence.
-- `gate_na` is valid only with `reason`, `alternative_verification`, `evidence_link`, and a machine-readable `expires_at` value (`task_end`, `next_executable_change`, or ISO-8601 timestamp).
+- `gate_na` and `platform_na` are valid only with `reason`,
+  `alternative_verification`, `evidence_link`, `expires_at`, and
+  `recovery_condition`. The verifier checks repository rule lines that declare these
+  states; N/A cannot rename, remove, or reorder a gate.
 - The control-repository contract gate includes global-family verification, coordination-schema validation, and audit of locally available targets; the release command remains the stricter all-target check.
 
 ## Rollout And Rollback
@@ -150,6 +188,6 @@ Rollback is scoped:
 - synchronizing target project rules as manifest-owned copies
 - modifying provider, auth, MCP, sandbox, or permission settings
 - deleting historical Gemini files
-- auto-enrolling new sibling directories
+- auto-enrolling new sibling directories; discovery only blocks stale inventory until a reviewed manifest update
 - rewriting third-party instruction files under generated/vendor/import directories
 - claiming product runtime gates passed when only rule-structure verification ran

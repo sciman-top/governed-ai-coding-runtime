@@ -32,6 +32,13 @@ HOST_SPECIFIC_PROJECT_PATTERNS = {
     "claude_loading_setting": r"CLAUDE\.local\.md",
 }
 MANAGED_FAMILY_FORBIDDEN_TOKENS = ["Gemini", "GEMINI.md", ".gemini/"]
+NA_REQUIRED_FIELDS = [
+    "reason",
+    "alternative_verification",
+    "evidence_link",
+    "expires_at",
+    "recovery_condition",
+]
 WRAPPER_DUPLICATION_TOKENS = [
     "## 1.",
     "## A.",
@@ -108,6 +115,80 @@ def _git_dirty(repo_root: Path) -> bool:
     except (OSError, subprocess.SubprocessError):
         return False
     return completed.returncode == 0 and bool(completed.stdout.strip())
+
+
+def _git_root(candidate: Path) -> Path | None:
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            cwd=candidate,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if completed.returncode != 0 or not completed.stdout.strip():
+        return None
+    return Path(completed.stdout.strip()).resolve(strict=False)
+
+
+def _discover_direct_git_roots(workspace_root: Path, excluded: set[str]) -> list[str]:
+    if not workspace_root.is_dir():
+        return []
+    discovered: list[str] = []
+    for child in workspace_root.iterdir():
+        if child.name in excluded or not child.is_dir():
+            continue
+        resolved = child.resolve(strict=False)
+        if not _is_within(resolved, workspace_root):
+            continue
+        if _git_root(resolved) == resolved:
+            discovered.append(child.name)
+    return sorted(discovered, key=str.casefold)
+
+
+def _normalize_utf8_lf(raw: bytes) -> bytes:
+    text = raw.decode("utf-8")
+    return text.replace("\r\n", "\n").replace("\r", "\n").encode("utf-8")
+
+
+def _workflow_line_endings(raw: bytes) -> str:
+    crlf_count = raw.count(b"\r\n")
+    lf_count = raw.count(b"\n") - crlf_count
+    cr_count = raw.count(b"\r") - crlf_count
+    kinds = [
+        name
+        for name, count in (("crlf", crlf_count), ("lf", lf_count), ("cr", cr_count))
+        if count
+    ]
+    return "+".join(kinds) if kinds else "none"
+
+
+def _contains_contract_token(line: str, token: str) -> bool:
+    return re.search(
+        rf"(?<![A-Za-z0-9_]){re.escape(token)}(?![A-Za-z0-9_])",
+        line,
+    ) is not None
+
+
+def _audit_na_contract(project_text: str, blocking: list[str]) -> None:
+    for line in project_text.splitlines():
+        if not any(
+            _contains_contract_token(line, token)
+            for token in ("gate_na", "platform_na")
+        ):
+            continue
+        missing = [
+            field
+            for field in NA_REQUIRED_FIELDS
+            if not _contains_contract_token(line, field)
+        ]
+        if missing:
+            finding = "na_contract_fields_missing:" + ",".join(missing)
+            if finding not in blocking:
+                blocking.append(finding)
 
 
 def _nested_rule_files(repo_root: Path, project_rule: str, wrapper_rule: str) -> list[str]:
@@ -241,6 +322,8 @@ def _classify_target(
         audit["status"] = "unavailable"
         observations.append("repo_root_unavailable")
         return audit
+    if _git_root(repo_root) != repo_root:
+        blocking.append("target_not_git_root")
 
     tools = target.get("tools")
     if tools != EXPECTED_TOOLS:
@@ -277,12 +360,23 @@ def _classify_target(
         return audit
 
     ci_workflow_sha256 = None
+    ci_workflow_raw_sha256 = None
+    ci_workflow_line_endings = None
     if not ci_workflow_path.is_file():
         blocking.append("ci_workflow_missing")
     else:
-        ci_workflow_sha256 = hashlib.sha256(ci_workflow_path.read_bytes()).hexdigest()
-        if ci_workflow_sha256 != expected_ci_workflow_sha256:
-            blocking.append("ci_workflow_hash_mismatch")
+        ci_workflow_raw = ci_workflow_path.read_bytes()
+        ci_workflow_raw_sha256 = hashlib.sha256(ci_workflow_raw).hexdigest()
+        ci_workflow_line_endings = _workflow_line_endings(ci_workflow_raw)
+        try:
+            ci_workflow_sha256 = hashlib.sha256(
+                _normalize_utf8_lf(ci_workflow_raw)
+            ).hexdigest()
+        except UnicodeDecodeError:
+            blocking.append("ci_workflow_not_utf8")
+        else:
+            if ci_workflow_sha256 != expected_ci_workflow_sha256:
+                blocking.append("ci_workflow_hash_mismatch")
 
     project_raw = project_path.read_bytes()
     try:
@@ -340,6 +434,7 @@ def _classify_target(
     ]
     if managed_family_hits:
         blocking.append("project_managed_family_residue")
+    _audit_na_contract(project_text, blocking)
 
     required_contract_tokens = [
         "当前落点",
@@ -388,6 +483,8 @@ def _classify_target(
         "github_repository": github_repository,
         "ci_workflow_path": str(ci_workflow_path.relative_to(repo_root)).replace("\\", "/"),
         "ci_workflow_sha256": ci_workflow_sha256,
+        "ci_workflow_raw_sha256": ci_workflow_raw_sha256,
+        "ci_workflow_line_endings": ci_workflow_line_endings,
         "project_contract_version": project_version,
         "reviewed_global_release": reviewed_release,
         "project_bytes": len(project_raw),
@@ -414,7 +511,7 @@ def verify(
     schema_version = str(payload.get("schema_version") or "").strip()
     rule_release = str(payload.get("rule_release") or "").strip()
     project_contract_version = str(payload.get("project_contract_version") or "").strip()
-    if schema_version != "2.2":
+    if schema_version != "2.3":
         top_level_blocking.append(f"schema_version_unsupported:{schema_version or 'missing'}")
     if payload.get("coordination_id") != "target-project-rule-coordination":
         top_level_blocking.append("coordination_id_invalid")
@@ -431,6 +528,9 @@ def verify(
         top_level_blocking.append("ci_contract_id_invalid")
     if ci_contract.get("version") != "2.1":
         top_level_blocking.append("ci_contract_version_invalid")
+    workflow_hash_mode = str(ci_contract.get("workflow_hash_mode") or "").strip()
+    if workflow_hash_mode != "utf8_lf_v1":
+        top_level_blocking.append("ci_workflow_hash_mode_invalid")
     expected_ci_workflow_sha256 = str(ci_contract.get("workflow_sha256") or "").strip()
     if not re.fullmatch(r"[0-9a-f]{64}", expected_ci_workflow_sha256):
         top_level_blocking.append("ci_workflow_sha256_invalid")
@@ -466,6 +566,32 @@ def verify(
         else:
             target_by_id[repo_id] = target
 
+    inventory_contract = payload.get("workspace_inventory")
+    if not isinstance(inventory_contract, dict):
+        top_level_blocking.append("workspace_inventory_missing")
+        inventory_contract = {}
+    inventory_mode = str(inventory_contract.get("mode") or "").strip()
+    excluded_directories_raw = inventory_contract.get("excluded_directories")
+    unlisted_policy = str(
+        inventory_contract.get("unlisted_repository_policy") or ""
+    ).strip()
+    missing_policy = str(
+        inventory_contract.get("missing_allowlisted_repository_policy") or ""
+    ).strip()
+    if inventory_mode != "direct_git_roots":
+        top_level_blocking.append("workspace_inventory_mode_invalid")
+    if not isinstance(excluded_directories_raw, list) or not all(
+        isinstance(item, str) and item.strip() for item in excluded_directories_raw
+    ):
+        top_level_blocking.append("workspace_inventory_exclusions_invalid")
+        excluded_directories: set[str] = set()
+    else:
+        excluded_directories = {item.strip() for item in excluded_directories_raw}
+    if unlisted_policy != "block":
+        top_level_blocking.append("workspace_inventory_unlisted_policy_invalid")
+    if missing_policy != "block_on_require_all":
+        top_level_blocking.append("workspace_inventory_missing_policy_invalid")
+
     wanted = list(dict.fromkeys(target_filters or []))
     unknown_filters = [repo_id for repo_id in wanted if repo_id not in target_by_id]
     if unknown_filters:
@@ -475,6 +601,63 @@ def verify(
         if wanted
         else list(target_by_id.values())
     )
+    listed_repo_paths = sorted(
+        {
+            str(target.get("repo_path") or "").strip().replace("\\", "/")
+            for target in target_by_id.values()
+            if str(target.get("repo_path") or "").strip()
+        },
+        key=str.casefold,
+    )
+    if wanted:
+        inventory_result: dict[str, Any] = {
+            "status": "skipped",
+            "reason": "target_filters",
+            "mode": inventory_mode,
+            "excluded_directories": sorted(excluded_directories, key=str.casefold),
+            "discovered_repositories": [],
+            "unlisted_repositories": [],
+            "allowlisted_not_discovered": [],
+        }
+    elif not workspace_root.is_dir():
+        inventory_result = {
+            "status": "unavailable",
+            "reason": "workspace_root_unavailable",
+            "mode": inventory_mode,
+            "excluded_directories": sorted(excluded_directories, key=str.casefold),
+            "discovered_repositories": [],
+            "unlisted_repositories": [],
+            "allowlisted_not_discovered": listed_repo_paths,
+        }
+    else:
+        discovered_repositories = _discover_direct_git_roots(
+            workspace_root, excluded_directories
+        )
+        unlisted_repositories = sorted(
+            set(discovered_repositories) - set(listed_repo_paths), key=str.casefold
+        )
+        allowlisted_not_discovered = sorted(
+            set(listed_repo_paths) - set(discovered_repositories), key=str.casefold
+        )
+        if unlisted_policy == "block":
+            top_level_blocking.extend(
+                f"unlisted_workspace_repository:{repo_path}"
+                for repo_path in unlisted_repositories
+            )
+        if require_all and missing_policy == "block_on_require_all":
+            top_level_blocking.extend(
+                f"allowlisted_repository_not_discovered:{repo_path}"
+                for repo_path in allowlisted_not_discovered
+            )
+        inventory_result = {
+            "status": "fail" if unlisted_repositories or (require_all and allowlisted_not_discovered) else "pass",
+            "reason": None,
+            "mode": inventory_mode,
+            "excluded_directories": sorted(excluded_directories, key=str.casefold),
+            "discovered_repositories": discovered_repositories,
+            "unlisted_repositories": unlisted_repositories,
+            "allowlisted_not_discovered": allowlisted_not_discovered,
+        }
     def classify(target: dict[str, Any]) -> dict[str, Any]:
         return _classify_target(
             target,
@@ -508,9 +691,11 @@ def verify(
         "ci_contract": {
             "contract_id": ci_contract.get("contract_id"),
             "version": ci_contract.get("version"),
+            "workflow_hash_mode": workflow_hash_mode,
             "workflow_sha256": expected_ci_workflow_sha256,
         },
         "workspace_root": _display_path(workspace_root),
+        "workspace_inventory": inventory_result,
         "require_all": require_all,
         "selected_target_count": len(audits),
         "failed_target_count": len(failures),
