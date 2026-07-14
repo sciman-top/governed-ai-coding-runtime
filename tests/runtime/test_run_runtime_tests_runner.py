@@ -254,11 +254,66 @@ class RunRuntimeTestsRunnerTests(unittest.TestCase):
             payload = json.loads(summary_path.read_text(encoding="utf-8"))
             self.assertEqual(payload["target_count"], 1)
             self.assertEqual(payload["worker_count"], 1)
+            self.assertEqual(payload["parallel_worker_count"], 1)
+            self.assertEqual(payload["serial_target_count"], 0)
+            self.assertEqual(payload["parallel_target_count"], 1)
+            self.assertEqual(payload["serial_target_modules"], [])
+            self.assertEqual(payload["parallel_target_modules"], [f"{package_dir.name}.test_ok"])
             self.assertEqual(payload["timeout_seconds"], 30)
             self.assertIn("prioritized_target_count", payload)
             self.assertIn("timing_history_path", payload)
             self.assertEqual(payload["failure_count"], 0)
             self.assertEqual(payload["slowest"][0]["target"]["path"], str((package_dir / "test_ok.py").relative_to(ROOT)))
+            self.assertEqual(payload["slowest"][0]["execution_mode"], "parallel")
+
+    def test_summary_json_records_stdout_and_stderr_for_failures(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="tmp_runtime_runner_", dir=ROOT) as tmp_dir:
+            package_dir = Path(tmp_dir)
+            (package_dir / "__init__.py").write_text("", encoding="utf-8")
+            (package_dir / "test_fail.py").write_text(
+                textwrap.dedent(
+                    """
+                    import sys
+                    import unittest
+
+                    class FailTests(unittest.TestCase):
+                        def test_fail(self):
+                            print("stdout-marker")
+                            print("stderr-marker", file=sys.stderr)
+                            self.fail("boom")
+                    """
+                ),
+                encoding="utf-8",
+            )
+            summary_path = package_dir / "summary.json"
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT_PATH),
+                    "--suite",
+                    f"tmp={package_dir.relative_to(ROOT)}",
+                    "--workers",
+                    "1",
+                    "--timeout-seconds",
+                    "30",
+                    "--summary-json",
+                    str(summary_path.relative_to(ROOT)),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=ROOT,
+            )
+
+            self.assertNotEqual(completed.returncode, 0)
+            payload = json.loads(summary_path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["failure_count"], 1)
+            self.assertIn("stdout", payload["failures"][0])
+            self.assertIn("stderr", payload["failures"][0])
+            self.assertEqual(payload["failures"][0]["execution_mode"], "parallel")
+            self.assertIn("stdout-marker", payload["failures"][0]["stdout"])
+            self.assertIn("stderr-marker", payload["failures"][0]["stderr"])
 
 
 if __name__ == "__main__":

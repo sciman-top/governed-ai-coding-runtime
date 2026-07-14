@@ -20,6 +20,14 @@ def _load_script_module():
     return module
 
 
+def _build_minimal_repo(repo_root: Path) -> None:
+    (repo_root / "docs" / "change-evidence").mkdir(parents=True, exist_ok=True)
+    (repo_root / "scripts").mkdir(parents=True, exist_ok=True)
+    (repo_root / "README.md").write_text("# demo\n", encoding="utf-8")
+    (repo_root / "scripts" / "check.ps1").write_text("Write-Host ok\n", encoding="utf-8")
+    (repo_root / "docs" / "change-evidence" / "note.txt").write_text("evidence\n", encoding="utf-8")
+
+
 class RepoSlimmingSurfaceAuditTests(unittest.TestCase):
     def test_audit_generates_surface_summary_and_safety_fence(self) -> None:
         module = _load_script_module()
@@ -44,11 +52,15 @@ class RepoSlimmingSurfaceAuditTests(unittest.TestCase):
 
     def test_cli_writes_expected_output(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir) / "mini-repo"
+            _build_minimal_repo(repo_root)
             output_path = Path(tmp_dir) / "surface-audit.json"
             completed = subprocess.run(
                 [
                     sys.executable,
-                    "scripts/audit-repo-slimming-surface.py",
+                    str(SCRIPT_PATH),
+                    "--repo-root",
+                    str(repo_root),
                     "--output",
                     str(output_path),
                 ],
@@ -62,9 +74,11 @@ class RepoSlimmingSurfaceAuditTests(unittest.TestCase):
             self.assertEqual(completed.returncode, 0, completed.stderr)
             payload = json.loads(completed.stdout)
             self.assertEqual(payload["report_kind"], "repo_slimming_surface_audit")
+            self.assertEqual(payload["repo_id"], "mini-repo")
+            self.assertGreater(payload["visible_surface"]["file_count"], 0)
             self.assertTrue(output_path.exists())
             written = json.loads(output_path.read_text(encoding="utf-8"))
-            self.assertEqual(written["repo_id"], "governed-ai-coding-runtime")
+            self.assertEqual(written["repo_id"], "mini-repo")
 
 
 if __name__ == "__main__":

@@ -225,13 +225,13 @@
                   "cmd": "claude --version",
                   "exit_code": 0,
                   "key_output": "2.1.206 (Claude Code)",
-                  "timestamp": "2026-07-14T18:19:39.466220+00:00"
+                  "timestamp": "2026-07-14T18:36:55.879924+00:00"
                 },
                 {
                   "cmd": "claude --help",
                   "exit_code": 0,
                   "key_output": "Usage: claude [options] [command] [prompt]\n\nClaude Code - starts an interactive session by default, use -p/--print for\nnon-interactive output\n\nArguments:\n  prompt                                Your prompt\n\nOptions:\n  --add-dir <director...",
-                  "timestamp": "2026-07-14T18:19:39.876886+00:00"
+                  "timestamp": "2026-07-14T18:36:56.293864+00:00"
                 }
               ],
               "process_bridge_available": true,
@@ -289,7 +289,7 @@
           "summary": "Claude Code workload adapter probe is ready"
         }
       ],
-      "generated_at": "2026-07-14T18:19:31.921222+00:00",
+      "generated_at": "2026-07-14T18:36:48.140955+00:00",
       "guide_path": "docs/product/host-feedback-loop.zh-CN.md",
       "guide_path_en": "docs/product/host-feedback-loop.md",
       "parity_path": "docs/product/adapter-conformance-parity-matrix.md",

@@ -248,6 +248,41 @@ class CodexAdapterTests(unittest.TestCase):
         self.assertEqual(profile.unsupported_capabilities, [])
         self.assertGreaterEqual(len(probe.probe_commands), 4)
 
+    def test_degraded_probe_cache_can_recover_after_refresh(self) -> None:
+        module = self._module()
+        module._probe_codex_surface_cached.cache_clear()
+        calls = {"count": 0}
+
+        def cached_runner(argv, _cwd):
+            if argv == ["codex", "--version"]:
+                calls["count"] += 1
+                if calls["count"] == 1:
+                    return 127, "", "codex: command not found"
+                return 0, "codex-cli 0.121.0\n", ""
+            if argv == ["codex", "--help"]:
+                return 0, "Commands:\n  exec\n  resume\n  status\n", ""
+            if argv == ["codex", "exec", "--help"]:
+                return 0, "Options:\n  --json\n  --output-last-message\n", ""
+            if argv == ["codex", "status"]:
+                return 0, "session_id=session-live-001 resume_id=resume-live-001\n", ""
+            return 1, "", "unsupported"
+
+        degraded = module.probe_codex_surface(
+            command_runner=cached_runner,
+            retry_on_degraded=False,
+            max_probe_attempts=1,
+        )
+        recovered = module.probe_codex_surface(
+            command_runner=cached_runner,
+            refresh=True,
+            retry_on_degraded=False,
+            max_probe_attempts=1,
+        )
+
+        self.assertFalse(degraded.codex_cli_available)
+        self.assertTrue(recovered.codex_cli_available)
+        self.assertIsNone(recovered.failure_stage)
+
     def test_codex_live_probe_uses_exec_surface_when_status_command_is_missing(self) -> None:
         module = self._module()
 

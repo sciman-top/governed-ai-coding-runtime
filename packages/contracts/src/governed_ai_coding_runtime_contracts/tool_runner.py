@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import fnmatch
+import shlex
 from pathlib import PurePosixPath
 from typing import Any
 
@@ -213,9 +214,10 @@ def execute_governed_command(
         timeout_exempt=timeout_exempt,
         allowlist_patterns=timeout_exempt_allowlist,
     )
+    command_payload, use_shell = _resolve_subprocess_invocation(normalized_command)
     completed = run_subprocess(
-        command=normalized_command,
-        shell=True,
+        command=command_payload,
+        shell=use_shell,
         cwd=cwd,
         timeout_seconds=timeout_policy.timeout_seconds,
     )
@@ -322,7 +324,7 @@ def _is_allowed_path(target_path: str, path_policies: dict) -> bool:
 
 
 def _is_bounded_command(tool_name: str, command: str) -> tuple[bool, str]:
-    normalized = command.strip().lower()
+    normalized = _normalize_command_text(command)
     if any(token in normalized for token in _DENY_TOKEN_HINTS):
         return False, "command contains prohibited mutation token"
     if tool_name == "git":
@@ -340,6 +342,21 @@ def _is_bounded_command(tool_name: str, command: str) -> tuple[bool, str]:
             return True, "bounded shell command mapped to package dry-run flow"
         return False, "shell execution is bounded to git status/diff and package list/check"
     return False, "unsupported governed tool"
+
+
+def _resolve_subprocess_invocation(command: str) -> tuple[str | list[str], bool]:
+    normalized = _normalize_command_text(command)
+    if _can_execute_without_shell(normalized):
+        return shlex.split(command, posix=False), False
+    return command, True
+
+
+def _can_execute_without_shell(normalized_command: str) -> bool:
+    return normalized_command.startswith("git status") or normalized_command.startswith("git diff") or normalized_command.startswith("git log")
+
+
+def _normalize_command_text(command: str) -> str:
+    return " ".join(command.strip().lower().split())
 
 
 def _required_string(value: str, field_name: str) -> str:

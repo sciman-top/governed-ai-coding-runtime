@@ -568,9 +568,9 @@ class SelfEvolutionReadinessTests(unittest.TestCase):
 
         self.assertEqual("pass", result["status"])
         self.assertFalse(result["effective_change_allowed"])
-        self.assertEqual("blocked_by_selector", result["promotion_stage"])
-        self.assertEqual("refresh_evidence_first", result["selector_next_action"])
-        self.assertTrue(all(item["status"] == "blocked" for item in result["lane_status"].values()))
+        self.assertEqual("review_required", result["promotion_stage"])
+        self.assertEqual("defer_ltp_and_refresh_evidence", result["selector_next_action"])
+        self.assertTrue(all(item["status"] == "review_required" for item in result["lane_status"].values()))
         self.assertEqual(
             {"policy_mutation", "skill_enablement", "push_or_merge"},
             set(result["lane_status"].keys()),

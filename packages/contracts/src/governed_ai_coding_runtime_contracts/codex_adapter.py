@@ -137,6 +137,32 @@ class CodexAdapterTrialResult:
     handoff_ref: str
 
 
+@dataclass(frozen=True, slots=True)
+class _CodexHelpSurface:
+    help_output: str
+    help_lower: str
+    help_commands: set[str]
+    exec_help_output: str
+    exec_help_lower: str
+    status_command_available: bool
+    status_exit: int
+    status_output: str
+    status_lower: str
+    app_server_thread_boundary_available: bool
+    resume_surface_available: bool
+
+
+@dataclass(frozen=True, slots=True)
+class _CodexCapabilitySurface:
+    native_attach_available: bool
+    process_bridge_available: bool
+    structured_events_available: bool
+    evidence_export_available: bool
+    resume_available: bool
+    live_session_id: str | None
+    live_resume_id: str | None
+
+
 def build_codex_adapter_profile(
     *,
     native_attach_available: bool,
@@ -563,6 +589,42 @@ def _probe_codex_surface(
     codex_executable: str,
 ) -> CodexSurfaceProbe:
     commands: list[CodexProbeCommand] = []
+    effective_executable, version_exit, version_output = _probe_codex_executable_version(
+        cwd=cwd,
+        command_runner=command_runner,
+        codex_executable=codex_executable,
+        commands=commands,
+    )
+    if version_exit != 0:
+        return _build_failed_probe_from_version(
+            effective_executable=effective_executable,
+            version_output=version_output,
+            commands=commands,
+        )
+
+    help_surface = _probe_codex_help_surface(
+        cwd=cwd,
+        command_runner=command_runner,
+        effective_executable=effective_executable,
+        commands=commands,
+    )
+    capability_surface = _derive_probe_capabilities(help_surface)
+    return _build_successful_probe(
+        effective_executable=effective_executable,
+        version_output=version_output,
+        help_surface=help_surface,
+        capability_surface=capability_surface,
+        commands=commands,
+    )
+
+
+def _probe_codex_executable_version(
+    *,
+    cwd: Path | None,
+    command_runner: Callable[[list[str], Path | None], tuple[int, str, str]],
+    codex_executable: str,
+    commands: list[CodexProbeCommand],
+) -> tuple[str, int, str]:
     effective_executable = codex_executable
     version_exit, version_output = _run_probe_command(
         command_runner=command_runner,
@@ -585,38 +647,54 @@ def _probe_codex_surface(
             effective_executable = fallback[0]
             version_exit = fallback[1]
             version_output = fallback[2]
-    if version_exit != 0:
-        normalized_output = _safe_ascii(version_output)
-        if _looks_like_missing_command(normalized_output):
-            reason = f"codex CLI is unavailable: {_truncate_output(normalized_output) or 'command not found'}"
-            failure_stage = "codex_command_unavailable"
-            remediation_hint = (
-                f"Make `{effective_executable}` runnable in this shell, then verify "
-                f"`{effective_executable} --version`, `{effective_executable} --help`, `{effective_executable} status`."
-            )
-        else:
-            reason = normalized_output or "codex version probe failed"
-            failure_stage = "codex_version_probe_failed"
-            remediation_hint = (
-                f"Run `{effective_executable} --version` manually and fix the failing runtime environment before "
-                "enabling live attach."
-            )
-        return CodexSurfaceProbe(
-            codex_cli_available=False,
-            version=None,
-            native_attach_available=False,
-            process_bridge_available=False,
-            structured_events_available=False,
-            evidence_export_available=False,
-            resume_available=False,
-            live_session_id=None,
-            live_resume_id=None,
-            reason=reason,
-            probe_commands=commands,
-            failure_stage=failure_stage,
-            remediation_hint=remediation_hint,
-        )
+    return effective_executable, version_exit, version_output
 
+
+def _build_failed_probe_from_version(
+    *,
+    effective_executable: str,
+    version_output: str,
+    commands: list[CodexProbeCommand],
+) -> CodexSurfaceProbe:
+    normalized_output = _safe_ascii(version_output)
+    if _looks_like_missing_command(normalized_output):
+        reason = f"codex CLI is unavailable: {_truncate_output(normalized_output) or 'command not found'}"
+        failure_stage = "codex_command_unavailable"
+        remediation_hint = (
+            f"Make `{effective_executable}` runnable in this shell, then verify "
+            f"`{effective_executable} --version`, `{effective_executable} --help`, `{effective_executable} status`."
+        )
+    else:
+        reason = normalized_output or "codex version probe failed"
+        failure_stage = "codex_version_probe_failed"
+        remediation_hint = (
+            f"Run `{effective_executable} --version` manually and fix the failing runtime environment before "
+            "enabling live attach."
+        )
+    return CodexSurfaceProbe(
+        codex_cli_available=False,
+        version=None,
+        native_attach_available=False,
+        process_bridge_available=False,
+        structured_events_available=False,
+        evidence_export_available=False,
+        resume_available=False,
+        live_session_id=None,
+        live_resume_id=None,
+        reason=reason,
+        probe_commands=commands,
+        failure_stage=failure_stage,
+        remediation_hint=remediation_hint,
+    )
+
+
+def _probe_codex_help_surface(
+    *,
+    cwd: Path | None,
+    command_runner: Callable[[list[str], Path | None], tuple[int, str, str]],
+    effective_executable: str,
+    commands: list[CodexProbeCommand],
+) -> _CodexHelpSurface:
     _, help_output = _run_probe_command(
         command_runner=command_runner,
         cwd=cwd,
@@ -658,36 +736,68 @@ def _probe_codex_surface(
         commands=commands,
     )
 
-    resume_surface_available = "resume" in help_commands or "resume" in exec_help_lower
-    native_attach_available = (status_command_available and status_exit == 0) or app_server_thread_boundary_available
-    process_bridge_available = True
-    structured_events_available = _detect_structured_events(
+    return _CodexHelpSurface(
+        help_output=help_output,
         help_lower=help_lower,
+        help_commands=help_commands,
+        exec_help_output=exec_help_output,
         exec_help_lower=exec_help_lower,
+        status_command_available=status_command_available,
+        status_exit=status_exit,
+        status_output=status_output,
+        status_lower=status_lower,
+        app_server_thread_boundary_available=app_server_thread_boundary_available,
+        resume_surface_available=("resume" in help_commands or "resume" in exec_help_lower),
+    )
+
+
+def _derive_probe_capabilities(help_surface: _CodexHelpSurface) -> _CodexCapabilitySurface:
+    native_attach_available = (
+        help_surface.status_command_available and help_surface.status_exit == 0
+    ) or help_surface.app_server_thread_boundary_available
+    structured_events_available = _detect_structured_events(
+        help_lower=help_surface.help_lower,
+        exec_help_lower=help_surface.exec_help_lower,
     )
     evidence_export_available = _detect_evidence_export(
-        help_lower=help_lower,
-        exec_help_lower=exec_help_lower,
+        help_lower=help_surface.help_lower,
+        exec_help_lower=help_surface.exec_help_lower,
         structured_events_available=structured_events_available,
     )
     resume_available = _detect_resume_available(
-        help_commands=help_commands,
-        help_lower=help_lower,
-        exec_help_lower=exec_help_lower,
-        status_lower=status_lower,
+        help_commands=help_surface.help_commands,
+        help_lower=help_surface.help_lower,
+        exec_help_lower=help_surface.exec_help_lower,
+        status_lower=help_surface.status_lower,
+    )
+    return _CodexCapabilitySurface(
+        native_attach_available=native_attach_available,
+        process_bridge_available=True,
+        structured_events_available=structured_events_available,
+        evidence_export_available=evidence_export_available,
+        resume_available=resume_available,
+        live_session_id=_extract_identity_token(help_surface.status_output, "session"),
+        live_resume_id=_extract_identity_token(help_surface.status_output, "resume"),
     )
 
-    live_session_id = _extract_identity_token(status_output, "session")
-    live_resume_id = _extract_identity_token(status_output, "resume")
+
+def _build_successful_probe(
+    *,
+    effective_executable: str,
+    version_output: str,
+    help_surface: _CodexHelpSurface,
+    capability_surface: _CodexCapabilitySurface,
+    commands: list[CodexProbeCommand],
+) -> CodexSurfaceProbe:
     failure_stage: str | None = None
     remediation_hint: str | None = None
-    if app_server_thread_boundary_available:
-        if status_command_available and status_exit != 0:
+    if help_surface.app_server_thread_boundary_available:
+        if help_surface.status_command_available and help_surface.status_exit != 0:
             reason = "codex app-server thread boundary signal succeeded even though status handshake was unavailable"
         else:
             reason = "codex app-server thread boundary signal succeeded"
-    elif not status_command_available:
-        if resume_surface_available:
+    elif not help_surface.status_command_available:
+        if help_surface.resume_surface_available:
             reason = "codex status command is unavailable; keep process bridge and treat resume command surface as supporting evidence only"
             remediation_hint = (
                 f"Treat `{effective_executable} exec resume --help` as supporting evidence only. "
@@ -701,17 +811,17 @@ def _probe_codex_surface(
                 f"Use `{effective_executable} exec --json` for process-bridge runs with structured events/evidence. "
                 "Native attach requires a Codex build that exposes a status handshake command."
             )
-    elif not native_attach_available and "stdin is not a terminal" in status_lower:
+    elif not capability_surface.native_attach_available and "stdin is not a terminal" in help_surface.status_lower:
         reason = "codex status requires interactive terminal; live attach unavailable in non-interactive mode"
         failure_stage = "live_attach_unavailable_non_interactive"
         remediation_hint = (
             f"Run `{effective_executable} status` in an interactive terminal to validate live attach. "
             "For non-interactive automation, keep process_bridge/manual_handoff."
         )
-    elif native_attach_available:
+    elif capability_surface.native_attach_available:
         reason = "codex status handshake succeeded"
     else:
-        reason = _safe_ascii(status_output) or "codex status handshake failed; process bridge fallback remains available"
+        reason = _safe_ascii(help_surface.status_output) or "codex status handshake failed; process bridge fallback remains available"
         failure_stage = "codex_status_probe_failed"
         remediation_hint = (
             f"Inspect `{effective_executable} status` output and ensure active auth/session. "
@@ -721,13 +831,13 @@ def _probe_codex_surface(
     return CodexSurfaceProbe(
         codex_cli_available=True,
         version=version,
-        native_attach_available=native_attach_available,
-        process_bridge_available=process_bridge_available,
-        structured_events_available=structured_events_available,
-        evidence_export_available=evidence_export_available,
-        resume_available=resume_available,
-        live_session_id=live_session_id,
-        live_resume_id=live_resume_id,
+        native_attach_available=capability_surface.native_attach_available,
+        process_bridge_available=capability_surface.process_bridge_available,
+        structured_events_available=capability_surface.structured_events_available,
+        evidence_export_available=capability_surface.evidence_export_available,
+        resume_available=capability_surface.resume_available,
+        live_session_id=capability_surface.live_session_id,
+        live_resume_id=capability_surface.live_resume_id,
         reason=reason,
         probe_commands=commands,
         failure_stage=failure_stage,

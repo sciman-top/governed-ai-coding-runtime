@@ -1,0 +1,93 @@
+{
+  "artifact_refs": {},
+  "artifact_type": "self_evolution_recommendation_report",
+  "as_of": "2026-07-15",
+  "guards": {
+    "automatic_policy_mutation": false,
+    "automatic_push_or_merge": false,
+    "automatic_skill_enablement": false,
+    "requires_human_review_before_effective_change": true
+  },
+  "materialization_blocked": false,
+  "mutation_allowed": false,
+  "readiness_overall_state": "complete",
+  "ready_for_unattended_self_update": false,
+  "recommendations": [
+    {
+      "commands": [
+        "python scripts/evaluate-self-evolution-readiness.py --write-artifacts"
+      ],
+      "decision": "no_addition_recommended",
+      "evidence_refs": [
+        "D:/CODE/governed-ai-coding-runtime/.worktrees/codex/runtime-hardening/docs/architecture/self-evolution-readiness-policy.json"
+      ],
+      "lane": "add",
+      "mutation_allowed": false,
+      "priority": "P3",
+      "reason": "The readiness ledger reports implemented=total and no next_gap.",
+      "recommendation_id": "add.none_terminal_capabilities_complete",
+      "risk_level": "low",
+      "title": "No new terminal self-evolution capability is currently required."
+    },
+    {
+      "commands": [
+        "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action SelfEvolutionVariantEvaluate",
+        "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action EvolutionMaterialize"
+      ],
+      "decision": "review_candidate_variants",
+      "evidence_refs": [
+        "docs/change-evidence/self-evolution-variant-evaluations/20260715-self-evolution-variant-evaluation.json"
+      ],
+      "lane": "optimize",
+      "mutation_allowed": false,
+      "priority": "P1",
+      "reason": "4 variant(s) reached review_candidate; selector_next_action=defer_ltp_and_refresh_evidence.",
+      "recommendation_id": "optimize.review_candidate_variants",
+      "risk_level": "medium",
+      "title": "Review evaluated self-evolution variants before materialization."
+    },
+    {
+      "commands": [
+        "python scripts/review-runtime-evolution-retirements.py"
+      ],
+      "decision": "no_delete_recommended",
+      "evidence_refs": [],
+      "lane": "delete_or_retire",
+      "mutation_allowed": false,
+      "priority": "P3",
+      "reason": "Retirement review produced zero retire proposals.",
+      "recommendation_id": "delete.none_retirement_candidates",
+      "risk_level": "low",
+      "title": "No deletion or retirement is currently recommended."
+    }
+  ],
+  "recommended_next_action": "review_candidate_variants",
+  "retire_proposal_count": 0,
+  "rollback": "Delete the generated recommendation artifact. No active runtime behavior is changed.",
+  "schema_version": "0.1-draft",
+  "selector_next_action": "defer_ltp_and_refresh_evidence",
+  "selector_why": "No heavy LTP package is currently trigger-selected and no safer autonomous continuation signal is available; defer heavy implementation and keep evidence/gate upkeep bounded.",
+  "status": "pass",
+  "trigger_model": {
+    "automatic_effective_change": false,
+    "cycle_steps": [
+      "SelfEvolutionReadiness",
+      "SelfEvolutionEvalDataset",
+      "SelfEvolutionOptimize",
+      "SelfEvolutionVariantEvaluate",
+      "SelfEvolutionRecommend"
+    ],
+    "manual_trigger_command": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/operator.ps1 -Action SelfEvolutionRecommend",
+    "proactive_operator_triggers": [
+      "SelfEvolutionRecommend",
+      "FeedbackReport"
+    ],
+    "proactive_report_sources": [
+      "after Readiness closeout",
+      "after FeedbackReport evidence refresh",
+      "manual SelfEvolutionRecommend refresh"
+    ],
+    "recommended_operator_action": "SelfEvolutionRecommend"
+  },
+  "variant_review_candidate_count": 4
+}

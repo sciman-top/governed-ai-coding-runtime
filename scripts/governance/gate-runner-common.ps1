@@ -3,6 +3,7 @@ $ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "..\Initialize-WindowsProcessEnvironment.ps1")
 Initialize-WindowsProcessEnvironment
+. (Join-Path $PSScriptRoot "..\lib\ProcessCapture.ps1")
 
 function Test-ObjectProperty {
   param(
@@ -844,27 +845,6 @@ function Invoke-AutoCommit {
   }
 }
 
-function Stop-ProcessTree {
-  param(
-    [Parameter(Mandatory)]
-    [int]$ProcessId
-  )
-
-  $cim = Get-Command Get-CimInstance -ErrorAction SilentlyContinue
-  if ($cim) {
-    $children = @(Get-CimInstance Win32_Process -Filter "ParentProcessId=$ProcessId" -ErrorAction SilentlyContinue)
-    foreach ($child in $children) {
-      Stop-ProcessTree -ProcessId ([int]$child.ProcessId)
-    }
-  }
-
-  try {
-    Stop-Process -Id $ProcessId -Force -ErrorAction Stop
-  }
-  catch {
-  }
-}
-
 function Invoke-GateCommand {
   param(
     [Parameter(Mandatory)]
@@ -887,65 +867,15 @@ function Invoke-GateCommand {
     Write-Host ("==> [{0}] {1}" -f $Gate.gate_id, $Gate.command)
   }
 
-  $timedOut = $false
-  $exitCode = 0
-  $outputText = ""
-  if ($effectiveTimeoutSeconds -gt 0) {
-    $stdoutPath = [System.IO.Path]::GetTempFileName()
-    $stderrPath = [System.IO.Path]::GetTempFileName()
-    try {
-      $process = Start-Process `
-        -FilePath "pwsh" `
-        -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $Gate.command) `
-        -WorkingDirectory $WorkingDirectory `
-        -NoNewWindow `
-        -PassThru `
-        -RedirectStandardOutput $stdoutPath `
-        -RedirectStandardError $stderrPath
-      $completed = $process.WaitForExit($effectiveTimeoutSeconds * 1000)
-      if (-not $completed) {
-        $timedOut = $true
-        Stop-ProcessTree -ProcessId ([int]$process.Id)
-        $null = $process.WaitForExit(5000)
-        $exitCode = 124
-      }
-      else {
-        $exitCode = [int]$process.ExitCode
-      }
-
-      $stdoutText = Get-Content -LiteralPath $stdoutPath -Raw -ErrorAction SilentlyContinue
-      $stderrText = Get-Content -LiteralPath $stderrPath -Raw -ErrorAction SilentlyContinue
-      $segments = @()
-      if (-not [string]::IsNullOrWhiteSpace($stdoutText)) {
-        $segments += $stdoutText.TrimEnd()
-      }
-      if (-not [string]::IsNullOrWhiteSpace($stderrText)) {
-        $segments += $stderrText.TrimEnd()
-      }
-      if ($timedOut) {
-        $segments += ("gate timed out after {0}s" -f $effectiveTimeoutSeconds)
-      }
-      $outputText = ($segments -join [Environment]::NewLine).TrimEnd()
-    }
-    finally {
-      Remove-Item -LiteralPath $stdoutPath -ErrorAction SilentlyContinue
-      Remove-Item -LiteralPath $stderrPath -ErrorAction SilentlyContinue
-    }
-  }
-  else {
-    Push-Location -LiteralPath $WorkingDirectory
-    try {
-      $outputLines = & pwsh -NoProfile -ExecutionPolicy Bypass -Command $Gate.command 2>&1
-      $exitCode = $LASTEXITCODE
-      if ($null -eq $exitCode) {
-        $exitCode = 0
-      }
-    }
-    finally {
-      Pop-Location
-    }
-    $outputText = (($outputLines | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).TrimEnd()
-  }
+  $commandResult = Invoke-ProcessCapture `
+    -FilePath "pwsh" `
+    -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $Gate.command) `
+    -WorkingDirectory $WorkingDirectory `
+    -TimeoutSeconds $effectiveTimeoutSeconds `
+    -TimeoutMessage $(if ($effectiveTimeoutSeconds -gt 0) { "gate timed out after {0}s" -f $effectiveTimeoutSeconds } else { "" })
+  $timedOut = [bool]$commandResult.timed_out
+  $exitCode = [int]$commandResult.exit_code
+  $outputText = [string]$commandResult.output
 
   if (-not [string]::IsNullOrWhiteSpace($outputText)) {
     Write-Host $outputText
@@ -966,7 +896,7 @@ function Invoke-GateCommand {
     timed_out    = [bool]$timedOut
     timeout_seconds = [int]$effectiveTimeoutSeconds
     exit_code    = [int]$exitCode
-    duration_ms  = [int][Math]::Round(($finishedAt - $startedAt).TotalMilliseconds)
+    duration_ms  = [int]$commandResult.duration_ms
     started_at   = $startedAt.ToString("o")
     finished_at  = $finishedAt.ToString("o")
     satisfies_gate_ids = if ((Test-ObjectProperty -Object $Gate -Name "satisfies_gate_ids") -and $null -ne $Gate.satisfies_gate_ids) { @($Gate.satisfies_gate_ids) } else { @($Gate.gate_id) }

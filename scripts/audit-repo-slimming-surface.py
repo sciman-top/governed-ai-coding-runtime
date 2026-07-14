@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -33,6 +34,14 @@ TRANSIENT_DIRECTORY_NAMES = {
     "dist",
 }
 LARGE_BINARY_THRESHOLD_BYTES = 200_000
+GIT_ENV_OVERRIDE_KEYS = (
+    "GIT_DIR",
+    "GIT_WORK_TREE",
+    "GIT_COMMON_DIR",
+    "GIT_INDEX_FILE",
+    "GIT_OBJECT_DIRECTORY",
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+)
 
 
 def main() -> int:
@@ -52,8 +61,7 @@ def main() -> int:
 def audit_repo_slimming_surface(*, repo_root: Path, output_path: Path) -> dict[str, Any]:
     root = repo_root.resolve(strict=False)
     canonical_repo_root = _resolve_canonical_repo_root(root)
-    visible_files = _collect_visible_files(root)
-    transient_inventory = _collect_transient_inventory(root)
+    visible_files, transient_inventory = _collect_repo_inventory(root)
     worktree_status = _git_status(root)
 
     files_by_area = _group_by_area(visible_files)
@@ -135,57 +143,57 @@ def audit_repo_slimming_surface(*, repo_root: Path, output_path: Path) -> dict[s
     return payload
 
 
-def _collect_visible_files(root: Path) -> list[dict[str, Any]]:
+def _collect_repo_inventory(root: Path) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
     files: list[dict[str, Any]] = []
-    for path in _iter_visible_files(root):
-        relative_path = path.relative_to(root).as_posix()
-        extension = path.suffix.lower()
-        line_count = _line_count(path) if extension in TEXT_EXTENSIONS else None
-        files.append(
-            {
-                "relative_path": relative_path,
-                "bytes": path.stat().st_size,
-                "extension": extension,
-                "line_count": line_count,
-                "top_level": _top_level(relative_path),
-                "area": _classify_area(relative_path),
-            }
-        )
-    return files
-
-
-def _iter_visible_files(root: Path):
-    for path in sorted(root.rglob("*")):
-        if not path.is_file():
-            continue
-        if any(part in TRANSIENT_DIRECTORY_NAMES for part in path.relative_to(root).parts):
-            continue
-        yield path
-
-
-def _collect_transient_inventory(root: Path) -> dict[str, dict[str, Any]]:
-    summary: dict[str, dict[str, Any]] = {}
-    for name in sorted(TRANSIENT_DIRECTORY_NAMES):
-        matches = [path for path in root.rglob(name) if path.is_dir()]
-        file_count = 0
-        byte_count = 0
-        for directory in matches:
-            for path in directory.rglob("*"):
-                if not path.is_file():
-                    continue
-                try:
-                    size = path.stat().st_size
-                except FileNotFoundError:
-                    continue
-                file_count += 1
-                byte_count += size
-        summary[name] = {
-            "directory_count": len(matches),
-            "file_count": file_count,
-            "byte_count": byte_count,
-            "megabytes": _round_mb(byte_count),
+    summary: dict[str, dict[str, Any]] = {
+        name: {
+            "directory_count": 0,
+            "file_count": 0,
+            "byte_count": 0,
+            "megabytes": 0.0,
         }
-    return summary
+        for name in sorted(TRANSIENT_DIRECTORY_NAMES)
+    }
+
+    for current_root, _, filenames in root.walk():
+        current_root_path = Path(current_root)
+        if current_root_path != root and current_root_path.name in summary:
+            summary[current_root_path.name]["directory_count"] += 1
+
+        for filename in filenames:
+            path = current_root_path / filename
+            try:
+                size = path.stat().st_size
+            except FileNotFoundError:
+                continue
+
+            relative_path = path.relative_to(root).as_posix()
+            parts = Path(relative_path).parts[:-1]
+            transient_parts = [part for part in parts if part in summary]
+            for transient_name in transient_parts:
+                summary[transient_name]["file_count"] += 1
+                summary[transient_name]["byte_count"] += size
+
+            if transient_parts:
+                continue
+
+            extension = path.suffix.lower()
+            line_count = _line_count(path) if extension in TEXT_EXTENSIONS else None
+            files.append(
+                {
+                    "relative_path": relative_path,
+                    "bytes": size,
+                    "extension": extension,
+                    "line_count": line_count,
+                    "top_level": _top_level(relative_path),
+                    "area": _classify_area(relative_path),
+                }
+            )
+
+    files.sort(key=lambda item: str(item["relative_path"]))
+    for item in summary.values():
+        item["megabytes"] = _round_mb(int(item["byte_count"]))
+    return files, summary
 
 
 def _git_status(root: Path) -> list[str]:
@@ -196,6 +204,7 @@ def _git_status(root: Path) -> list[str]:
         text=True,
         encoding="utf-8",
         cwd=root,
+        env=_git_env_for_repo(root),
     )
     if completed.returncode != 0:
         return [f"git-status-unavailable: {completed.stderr.strip() or completed.returncode}"]
@@ -210,6 +219,7 @@ def _resolve_canonical_repo_root(root: Path) -> Path:
         text=True,
         encoding="utf-8",
         cwd=root,
+        env=_git_env_for_repo(root),
     )
     if completed.returncode != 0:
         return root
@@ -220,6 +230,14 @@ def _resolve_canonical_repo_root(root: Path) -> Path:
     if resolved_common_dir.is_file():
         return resolved_common_dir.parent
     return resolved_common_dir.parent
+
+
+def _git_env_for_repo(root: Path) -> dict[str, str]:
+    env = os.environ.copy()
+    for key in GIT_ENV_OVERRIDE_KEYS:
+        env.pop(key, None)
+    env["GIT_CEILING_DIRECTORIES"] = str(root.parent.resolve(strict=False))
+    return env
 
 
 def _line_count(path: Path) -> int:

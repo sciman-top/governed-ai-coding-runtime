@@ -48,13 +48,6 @@ ALLOWLIST = (
         "reason": "central governed gate command runner preserves existing shell-style gate contracts and applies timeout handling",
     },
     {
-        "kind": "python_shell_true",
-        "path": "packages/contracts/src/governed_ai_coding_runtime_contracts/tool_runner.py",
-        "line_contains": "shell=True",
-        "expected_count": 1,
-        "reason": "governed tool execution normalizes timeout policy before invoking the configured command string",
-    },
-    {
         "kind": "powershell_remove_item",
         "path": "scripts/git-acl-guard.ps1",
         "line_contains": "Remove-Item -LiteralPath $indexLock -Force",
@@ -84,17 +77,17 @@ ALLOWLIST = (
     },
     {
         "kind": "powershell_remove_item",
-        "path": "scripts/governance/gate-runner-common.ps1",
+        "path": "scripts/lib/ProcessCapture.ps1",
         "line_contains": "Remove-Item -LiteralPath $stdoutPath -ErrorAction SilentlyContinue",
         "expected_count": 1,
-        "reason": "gate runner deletes temporary stdout capture files after bounded process execution",
+        "reason": "shared process capture deletes temporary stdout capture files after bounded process execution",
     },
     {
         "kind": "powershell_remove_item",
-        "path": "scripts/governance/gate-runner-common.ps1",
+        "path": "scripts/lib/ProcessCapture.ps1",
         "line_contains": "Remove-Item -LiteralPath $stderrPath -ErrorAction SilentlyContinue",
         "expected_count": 1,
-        "reason": "gate runner deletes temporary stderr capture files after bounded process execution",
+        "reason": "shared process capture deletes temporary stderr capture files after bounded process execution",
     },
     {
         "kind": "powershell_remove_item",

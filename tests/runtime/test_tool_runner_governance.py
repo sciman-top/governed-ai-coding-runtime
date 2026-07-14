@@ -68,6 +68,31 @@ class ToolRunnerGovernanceTests(unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
         self.assertIn("tool-ok", result.output)
 
+    def test_govern_execution_request_accepts_git_diff_with_extra_whitespace(self) -> None:
+        tool_runner = importlib.import_module("governed_ai_coding_runtime_contracts.tool_runner")
+
+        decision = tool_runner.govern_execution_request(
+            tool_name="git",
+            command="   GIT   DIFF   --name-only   ",
+            tier="low",
+            rollback_reference="git diff",
+        )
+
+        self.assertEqual(decision.status, "allow")
+
+    def test_govern_execution_request_rejects_git_diff_chained_with_mutation(self) -> None:
+        tool_runner = importlib.import_module("governed_ai_coding_runtime_contracts.tool_runner")
+
+        decision = tool_runner.govern_execution_request(
+            tool_name="shell",
+            command="git diff --name-only && git commit -m test",
+            tier="low",
+            rollback_reference="git diff",
+        )
+
+        self.assertEqual(decision.status, "deny")
+        self.assertIn("prohibited mutation token", decision.reason)
+
     def test_tool_runner_cli_emits_structured_result(self) -> None:
         completed = subprocess.run(
             [

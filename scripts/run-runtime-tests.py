@@ -39,6 +39,7 @@ class TestResult:
     duration_seconds: float
     stdout: str
     stderr: str
+    execution_mode: str = "parallel"
 
 
 def _parse_suite(value: str) -> tuple[str, Path]:
@@ -177,7 +178,7 @@ def _resolve_timeout_seconds(requested: int) -> int:
     return DEFAULT_PER_FILE_TIMEOUT_SECONDS
 
 
-def _run_target(target: TestTarget, timeout_seconds: int) -> TestResult:
+def _run_target(target: TestTarget, timeout_seconds: int, *, execution_mode: str = "parallel") -> TestResult:
     env = os.environ.copy()
     env.setdefault("PYTHONIOENCODING", "utf-8")
     started = time.perf_counter()
@@ -208,6 +209,7 @@ def _run_target(target: TestTarget, timeout_seconds: int) -> TestResult:
             duration_seconds=elapsed,
             stdout=str(stdout),
             stderr=(str(stderr).rstrip() + "\n" + timeout_message).strip(),
+            execution_mode=execution_mode,
         )
     return TestResult(
         target=target,
@@ -215,6 +217,7 @@ def _run_target(target: TestTarget, timeout_seconds: int) -> TestResult:
         duration_seconds=time.perf_counter() - started,
         stdout=completed.stdout,
         stderr=completed.stderr,
+        execution_mode=execution_mode,
     )
 
 
@@ -291,7 +294,7 @@ def main() -> int:
     if serial_targets:
         print(f"Serializing {len(serial_targets)} resource-sensitive test files before the parallel pool")
     for target in serial_targets:
-        result = _run_target(target, timeout_seconds)
+        result = _run_target(target, timeout_seconds, execution_mode="serial")
         results.append(result)
         _print_result(result)
 
@@ -299,7 +302,8 @@ def main() -> int:
         parallel_workers = min(workers, len(parallel_targets))
         with concurrent.futures.ThreadPoolExecutor(max_workers=parallel_workers) as executor:
             future_to_target = {
-                executor.submit(_run_target, target, timeout_seconds): target for target in parallel_targets
+                executor.submit(_run_target, target, timeout_seconds, execution_mode="parallel"): target
+                for target in parallel_targets
             }
             for future in concurrent.futures.as_completed(future_to_target):
                 result = future.result()
@@ -323,7 +327,11 @@ def main() -> int:
         payload = {
             "target_count": len(results),
             "worker_count": workers,
+            "parallel_worker_count": min(workers, len(parallel_targets)) if parallel_targets else 0,
             "serial_target_count": len(serial_targets),
+            "parallel_target_count": len(parallel_targets),
+            "serial_target_modules": [target.module for target in serial_targets],
+            "parallel_target_modules": [target.module for target in parallel_targets],
             "timeout_seconds": timeout_seconds,
             "timing_history_path": str(history_path.relative_to(ROOT)) if history_path else None,
             "prioritized_target_count": prioritized_target_count,
@@ -336,6 +344,9 @@ def main() -> int:
                     "path": str(result.target.path.relative_to(ROOT)),
                     "exit_code": result.exit_code,
                     "duration_seconds": result.duration_seconds,
+                    "execution_mode": result.execution_mode,
+                    "stdout": result.stdout,
+                    "stderr": result.stderr,
                 }
                 for result in failed
             ],
@@ -348,6 +359,7 @@ def main() -> int:
                     },
                     "exit_code": result.exit_code,
                     "duration_seconds": result.duration_seconds,
+                    "execution_mode": result.execution_mode,
                 }
                 for result in results[:10]
             ],

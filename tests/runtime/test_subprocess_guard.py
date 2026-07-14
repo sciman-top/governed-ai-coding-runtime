@@ -68,6 +68,33 @@ class SubprocessGuardTests(unittest.TestCase):
         self.assertEqual(exit_code, 124)
         self.assertIn("timed out after 1s", output)
 
+    def test_timeout_policy_rejects_non_boolean_timeout_exempt(self) -> None:
+        from governed_ai_coding_runtime_contracts.subprocess_guard import resolve_timeout_policy
+
+        with self.assertRaisesRegex(ValueError, "timeout_exempt must be a boolean"):
+            resolve_timeout_policy(
+                command_text="git status --short",
+                timeout_seconds=30,
+                timeout_exempt="true",
+            )
+
+    def test_timeout_policy_rejects_blank_allowlist_patterns(self) -> None:
+        from governed_ai_coding_runtime_contracts.subprocess_guard import resolve_timeout_policy
+
+        with self.assertRaisesRegex(ValueError, "timeout_exempt_allowlist\\[0\\] must be a non-empty string"):
+            resolve_timeout_policy(
+                command_text="git status --short",
+                timeout_seconds=30,
+                timeout_exempt=True,
+                allowlist_patterns=["   "],
+            )
+
+    def test_timeout_parser_rejects_boolean_values(self) -> None:
+        from governed_ai_coding_runtime_contracts.subprocess_guard import parse_optional_positive_timeout
+
+        with self.assertRaisesRegex(ValueError, "timeout_seconds must be a positive number"):
+            parse_optional_positive_timeout(True, "timeout_seconds")
+
     @unittest.skipUnless(os.name == "nt", "Windows environment normalization")
     def test_normalizes_programdata_for_windows_subprocesses(self) -> None:
         import governed_ai_coding_runtime_contracts.subprocess_guard as guard

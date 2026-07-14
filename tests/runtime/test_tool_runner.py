@@ -2,6 +2,7 @@ import sys
 import unittest
 from pathlib import Path
 import importlib
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACTS_SRC = ROOT / "packages" / "contracts" / "src"
@@ -148,6 +149,44 @@ class ReadOnlyToolRunnerTests(unittest.TestCase):
         self.assertFalse(result.timed_out)
         self.assertIsNone(result.timeout_seconds)
         self.assertTrue(result.timeout_exempt)
+
+    def test_execute_governed_command_uses_parameterized_path_when_shell_is_not_required(self) -> None:
+        tool_runner = importlib.import_module("governed_ai_coding_runtime_contracts.tool_runner")
+        subprocess_guard = importlib.import_module("governed_ai_coding_runtime_contracts.subprocess_guard")
+
+        with mock.patch.object(tool_runner, "run_subprocess") as run_mock:
+            run_mock.return_value = subprocess_guard.SubprocessResult(
+                returncode=0,
+                stdout="ok",
+                stderr="",
+                timed_out=False,
+            )
+            tool_runner.execute_governed_command(
+                command="git status --short",
+                cwd=str(ROOT),
+            )
+
+        self.assertEqual(run_mock.call_args.kwargs["command"], ["git", "status", "--short"])
+        self.assertFalse(run_mock.call_args.kwargs["shell"])
+
+    def test_execute_governed_command_keeps_shell_for_inline_python(self) -> None:
+        tool_runner = importlib.import_module("governed_ai_coding_runtime_contracts.tool_runner")
+        subprocess_guard = importlib.import_module("governed_ai_coding_runtime_contracts.subprocess_guard")
+
+        with mock.patch.object(tool_runner, "run_subprocess") as run_mock:
+            run_mock.return_value = subprocess_guard.SubprocessResult(
+                returncode=0,
+                stdout="ok",
+                stderr="",
+                timed_out=False,
+            )
+            tool_runner.execute_governed_command(
+                command=f"{sys.executable} -c \"print('ok')\"",
+                cwd=str(ROOT),
+            )
+
+        self.assertIsInstance(run_mock.call_args.kwargs["command"], str)
+        self.assertTrue(run_mock.call_args.kwargs["shell"])
 
     def test_containment_profile_registry_requires_all_executable_families(self) -> None:
         tool_runner = importlib.import_module("governed_ai_coding_runtime_contracts.tool_runner")
