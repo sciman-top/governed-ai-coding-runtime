@@ -1,12 +1,12 @@
 {
-  "elapsed_seconds": 268.48994239999956,
+  "elapsed_seconds": 287.22578310000245,
   "failure_count": 0,
   "failures": [],
   "prioritized_target_count": 10,
   "serial_target_count": 4,
   "slowest": [
     {
-      "duration_seconds": 256.91241660000014,
+      "duration_seconds": 273.3815472999995,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_repo_slimming_surface",
@@ -15,7 +15,7 @@
       }
     },
     {
-      "duration_seconds": 122.99031660000037,
+      "duration_seconds": 126.03424610000366,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_governance_hub_certification",
@@ -24,16 +24,7 @@
       }
     },
     {
-      "duration_seconds": 101.18336269999963,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_repo_map_context_artifact",
-        "path": "tests\\runtime\\test_repo_map_context_artifact.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 99.00212490000013,
+      "duration_seconds": 120.11207180000201,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_evolution",
@@ -42,7 +33,16 @@
       }
     },
     {
-      "duration_seconds": 77.59777479999957,
+      "duration_seconds": 106.39537359999667,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_repo_map_context_artifact",
+        "path": "tests\\runtime\\test_repo_map_context_artifact.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 77.30007430000114,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_self_evolution_readiness",
@@ -51,7 +51,7 @@
       }
     },
     {
-      "duration_seconds": 45.13244080000004,
+      "duration_seconds": 44.81155630000285,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_autonomous_next_work_selection",
@@ -60,16 +60,7 @@
       }
     },
     {
-      "duration_seconds": 31.554138600000442,
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_operator_entrypoint",
-        "path": "tests\\runtime\\test_operator_entrypoint.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 30.607820700000048,
+      "duration_seconds": 31.315798599993286,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_evidence_recovery_posture",
@@ -78,7 +69,16 @@
       }
     },
     {
-      "duration_seconds": 27.486616199999844,
+      "duration_seconds": 29.3519382999948,
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_operator_entrypoint",
+        "path": "tests\\runtime\\test_operator_entrypoint.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 27.14317750000191,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_issue_seeding",
@@ -87,7 +87,7 @@
       }
     },
     {
-      "duration_seconds": 22.848419099999774,
+      "duration_seconds": 22.480673899997782,
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_doctor",
