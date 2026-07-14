@@ -1,5 +1,5 @@
 {
-  "elapsed_seconds": 179.43714650000038,
+  "elapsed_seconds": 134.81593910000083,
   "failure_count": 0,
   "failures": [],
   "parallel_target_count": 100,
@@ -9,9 +9,9 @@
     "tests.runtime.test_self_evolution_readiness",
     "tests.runtime.test_autonomous_next_work_selection",
     "tests.runtime.test_evidence_recovery_posture",
-    "tests.runtime.test_issue_seeding",
-    "tests.runtime.test_operator_entrypoint",
     "tests.runtime.test_repo_map_context_artifact",
+    "tests.runtime.test_operator_entrypoint",
+    "tests.runtime.test_issue_seeding",
     "tests.runtime.test_runtime_doctor",
     "tests.runtime.test_governance_gate_runner",
     "tests.runtime.test_adapter_conformance",
@@ -116,7 +116,7 @@
   ],
   "slowest": [
     {
-      "duration_seconds": 168.8992775999941,
+      "duration_seconds": 123.3784381000005,
       "execution_mode": "parallel",
       "exit_code": 0,
       "target": {
@@ -126,47 +126,7 @@
       }
     },
     {
-      "duration_seconds": 89.83314429999882,
-      "execution_mode": "parallel",
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_runtime_evolution",
-        "path": "tests\\runtime\\test_runtime_evolution.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 72.58180670000002,
-      "execution_mode": "parallel",
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_self_evolution_readiness",
-        "path": "tests\\runtime\\test_self_evolution_readiness.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 41.84197259999928,
-      "execution_mode": "parallel",
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_autonomous_next_work_selection",
-        "path": "tests\\runtime\\test_autonomous_next_work_selection.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 27.53520430000208,
-      "execution_mode": "parallel",
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_evidence_recovery_posture",
-        "path": "tests\\runtime\\test_evidence_recovery_posture.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 26.855094800004736,
+      "duration_seconds": 109.27895770000032,
       "execution_mode": "parallel",
       "exit_code": 0,
       "target": {
@@ -176,7 +136,57 @@
       }
     },
     {
-      "duration_seconds": 26.837549099996977,
+      "duration_seconds": 97.59139900000446,
+      "execution_mode": "parallel",
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_runtime_evolution",
+        "path": "tests\\runtime\\test_runtime_evolution.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 96.20929569999862,
+      "execution_mode": "parallel",
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_self_evolution_readiness",
+        "path": "tests\\runtime\\test_self_evolution_readiness.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 44.56052279999858,
+      "execution_mode": "parallel",
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_autonomous_next_work_selection",
+        "path": "tests\\runtime\\test_autonomous_next_work_selection.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 37.4061892000027,
+      "execution_mode": "parallel",
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_repo_slimming_surface",
+        "path": "tests\\runtime\\test_repo_slimming_surface.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 29.734130199998617,
+      "execution_mode": "parallel",
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_evidence_recovery_posture",
+        "path": "tests\\runtime\\test_evidence_recovery_posture.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 27.160625799995614,
       "execution_mode": "parallel",
       "exit_code": 0,
       "target": {
@@ -186,7 +196,7 @@
       }
     },
     {
-      "duration_seconds": 26.240549900001497,
+      "duration_seconds": 25.853188700006285,
       "execution_mode": "parallel",
       "exit_code": 0,
       "target": {
@@ -196,22 +206,12 @@
       }
     },
     {
-      "duration_seconds": 22.526097200003278,
+      "duration_seconds": 25.30086029999802,
       "execution_mode": "parallel",
       "exit_code": 0,
       "target": {
         "module": "tests.runtime.test_runtime_doctor",
         "path": "tests\\runtime\\test_runtime_doctor.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 18.271233800005575,
-      "execution_mode": "parallel",
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_governance_gate_runner",
-        "path": "tests\\runtime\\test_governance_gate_runner.py",
         "suite": "runtime"
       }
     }
