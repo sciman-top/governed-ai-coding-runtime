@@ -54,19 +54,19 @@ The task used isolated worktrees from the frozen baselines below. Original local
 | `k12-question-graph` | `d6239a7671bd` | `bff71e30` | PR #3 merged as `69750bc51f3b`; original local `main` remains divergent and protected |
 | `local-ai-dev-orchestrator` | `a15021fb8dd7` | `465e81f4` | PR #3 merged as `7e9f993c7a13`; original local `main` remains divergent and protected |
 | `qq-codex-bot` | `47c7d71a50cd` | `6af6409d` | PR #2 merged as `6b3f0a9bc997` |
-| `skills-manager` | `4addb13e201e` | `c5a586215db3` | governance PR #2 open; repair PR #3 frozen at `6fd9fccc61e2`; original dirty/ahead `main` remains protected |
+| `skills-manager` | `4addb13e201e` | `c5a586215db3`, final head `0ddace69` | repair PR #3 merged as `e3456a8862e7`; governance PR #2 merged as `632b37bfbe11`; original local `main` remains divergent and protected |
 | `vps-ssh-launcher` | `2a575120314f` | `48c1a2b4` | PR #2 merged as `b34e3abfe3ff` |
 
-All eight merged governance heads were re-fetched, proved as ancestors of fresh `origin/main`, and had only their merged task branches/worktrees removed. The two merged independent repair branches were likewise removed. The unmerged `skills-manager` governance and repair branches remain intact.
+All nine governance heads were re-fetched and proved as ancestors of fresh target `origin/main` refs. Only merged task branches and their dedicated worktrees were removed; original divergent/dirty local worktrees were preserved. The control release and stacked Windows CI repair were merged through PR #12 and PR #13 at frozen head `9fd37702ef3fc22fe1155e6812b06f45bc6f2c24`; fresh control `origin/main=33e218fb8ae34ed02428814b61b2cc599e3a5124` has that head as its second parent, and both merged task branches plus the dedicated PR #13 worktree were removed.
 
 ## Verification ledger
 
 ### Rule family, sync, and loading
 
-- `python scripts/verify-agent-rule-family.py`: exit `0`; Codex source `10513` bytes, Claude source `11059` bytes, shared A/C/D hash `cb43a7d50fab3fefe902c2c41c80a1c2d67175564174faa2166f904f250cd92d`.
+- `python scripts/verify-agent-rule-family.py`: post-merge exit `0`; Codex source `10517` bytes, Claude source `11064` bytes, shared A/C/D hash `cb43a7d50fab3fefe902c2c41c80a1c2d67175564174faa2166f904f250cd92d`.
 - `python scripts/sync-agent-rules.py --scope All --fail-on-change`: before apply reported exactly two managed-copy changes.
 - backup confirmed at `docs/change-evidence/rule-sync-backups/20260715-154520/`; protected apply updated only `~/.codex/AGENTS.md` and `~/.claude/CLAUDE.md`.
-- final post-apply dry-run: exit `0`, `changed_count=0`; source and managed-copy hashes are exactly equal (`Codex=44a9e0f2fc01d6edfeb0663783c6fe389849ff2c46d7f070ae4fe89dba342820`, `Claude=87b7a4a6afd2994e760819e62ea9f350144491c4ecf72046ddcf24b73066fd23`).
+- final post-apply dry-run: exit `0`, `changed_count=0`; post-merge source and managed-copy hashes are exactly equal (`Codex=b69b51b224432b9414ef66627e0d01e037c51fdf4012ad65e6ac93f7325af8ed`, `Claude=4a3819e6821bc4990841227a69545169551b8c90ad703353580e0ac5e780571a`).
 - fresh Codex `debug prompt-input` probes passed for the control repo and all nine isolated target worktrees; each contained release `9.57`, the repository marker, and the unique probe text.
 - `claude doctor` passed installation checks for Claude Code `2.1.206`, but the CLI is not signed into Anthropic API or claude.ai. No auth/account change was authorized or attempted.
 
@@ -79,18 +79,20 @@ All eight merged governance heads were re-fetched, proved as ancestors of fresh 
 - `k12-question-graph`: build passed with 0 errors and two existing `Microsoft.OpenApi 2.0.0` high-advisory warnings; roadmap guard passed and preserved `REAL005=not_closed`; test/hotspot process-controlled gaps are recorded as compliant `gate_na`.
 - `local-ai-dev-orchestrator`: 231 tests and planning/selection contracts passed; build/hotspot `gate_na` are recorded in its repository evidence.
 - `qq-codex-bot`: fast verifier passed 284 tests; same-SHA canonical full verifier passed 13/13 steps; isolated pytest passed 864 with 10 skips and three documented environment-bound observations; no secret or live VPS action occurred.
-- `skills-manager`: build/generated sync, Pester 454+12, strict doctor, dependency baseline, 108-skill integrity, and full quality passed locally. Hosted CI still reproduces the inherited Windows hidden-directory failure.
+- `skills-manager`: build/generated sync, Pester 454+12, strict doctor, dependency baseline, 108-skill integrity, and full quality passed locally. The clean Windows runner failure was repaired in isolated PR #3; its final head `3e2afa613615a4ac446c712e32edaedc380612fb` and the subsequent governance PR #2 head `0ddace696f77078b6baf5cde26d55b41f56c3950` both passed task-relevant hosted checks before merge.
 - `vps-ssh-launcher`: pytest 93/1 skip, unittest 94/1 skip, pip check/audit, Bandit, vulture, Ruff/format, mypy, pyright, and full gates passed; no SSH/VPS action occurred.
 
 ### Aggregate and fixed gates
 
-- candidate audit: all nine task heads passed the target-rule verifier; the still-open `skills-manager` head independently re-passed with `selected_target_count=1`, `failed_target_count=0`.
-- fresh remote-default audit: eight repositories passed; only `skills-manager` failed with `reviewed_global_release_mismatch:9.55->9.57`, exactly matching the open governance PR boundary.
-- control build: exit `0`.
-- control Runtime test: 104 test files, failures `0`.
+- post-merge candidate audit: all nine fresh target default heads passed the target-rule verifier with `selected_target_count=9`, `failed_target_count=0`, `unavailable_target_count=0`; `ClassroomToolkit:dirty_worktree` is an observation only.
+- fresh remote-default audit: all nine target default branches contain their governance heads; Agent Rule Coordination run `29422890087` attempt `2` and the final PR #12 coordination run `29429280201` completed matrix generation plus all nine target jobs successfully.
+- control build: post-merge exit `0`.
+- control Runtime test: post-merge 104 test files with 8 workers, failures `0`.
 - control contract/invariant default-root observation: schema, dependency, sync, family, and preceding checks passed; the unqualified command then exited `1` because it intentionally audited untouched original `D:\CODE` worktrees whose current local branches still expose old `9.55/9.56` review markers. Those user worktrees were not moved merely to manufacture a green result.
 - protected candidate Contract: added the tested `GACR_TARGET_PROJECT_RULE_WORKSPACE_ROOT` input to `scripts/verify-repo.ps1`; when set it forces `--workspace-root ... --require-all`. With eight fresh `origin/main` worktrees plus frozen `skills-manager` head `c5a58621`, the same fixed Contract command exited `0` through target rules, pre-change review, reference-required changes, reference basis, and functional effectiveness. The focused verifier suite passed 22 tests and PowerShell parsing passed.
 - control hotspot: `scripts/doctor-runtime.ps1` exited `0`; all reported doctor checks passed.
+- final default-branch gate at `2026-07-15T23:54:39+08:00`: on exact `main=origin/main=33e218fb8ae34ed02428814b61b2cc599e3a5124`, family and 9/9 target audit passed, then fixed order `build -> Runtime -> Contract -> hotspot` completed with exit `0` in every segment. Gate-generated certification, policy-audit, and runtime-speed reports were restored to their pre-gate HEAD blobs and were not published as host-specific drift.
+- closeout ledger update: `gate_na`; `reason=only Markdown evidence and index routing changed after the complete default-branch gate`; `alternative_verification=git diff --check, direct reference-required/reference-basis verifiers, five-axis diff review, and fresh PR Verify plus Agent Rule Coordination checks`; `evidence_link=docs/change-evidence/20260715-agent-rule-governance-9.57.md`; `expires_at=the next executable/config/schema/test/rule change`; `recovery_condition=rerun build -> test -> contract/invariant -> hotspot when that condition is met`.
 
 ### Hosted and manual boundary
 
@@ -98,21 +100,20 @@ All eight merged governance heads were re-fetched, proved as ancestors of fresh 
 - `platform_na`: Claude Code local model-visible loading. `reason=Claude Code is installed but not signed in and account/auth changes are out of scope`; `alternative_verification=claude doctor plus deployed-file zero-drift, explicitly not a model-visible acceptance`; `evidence_link=this ledger`; `expires_at=next authorized signed-in Claude session`; `recovery_condition=user signs in independently and runs a fresh /context or equivalent probe`.
 - Codex App/CLI processes were not stopped, restarted, killed, or auto-launched; no auth, provider, secret, MCP endpoint, live VPS, or user-account state was changed.
 
-## Active blocker
+## Remaining external acceptance
 
-- `skills-manager` governance PR #2 is mergeable and its rule-contract checks pass, but both CI runs inherit the same Windows hidden-directory failure.
-- independent repair PR #3 passed all local full gates but repeated the same hosted failure twice and is therefore frozen at `clarify_required` under `issue_id=skills-manager-hidden-directory-ci`, `attempt_count=2`.
-- owner: user/repository owner; next action: authorize either additional hosted-runner instrumentation or a Windows attribute-aware fallback contract; retest condition: PR #3 gets a new frozen head and both push/PR CI runs pass, after which PR #3 and then governance PR #2 can be merged and cleaned up.
+- No repository, default-branch, CI, rule-family, sync, or Git-closeout blocker remains for the discovered control plus nine-target scope.
+- owner: user; next action: run the supplied model-visible acceptance prompts in safe signed-in ChatGPT Work, Codex cloud, Claude Chat, and Claude Code cloud sessions, plus a signed-in fresh local Claude Code session; required authorization: user-operated hosted/session access only, with no Browser, Chrome, Computer Use, auth, provider, or process mutation by this task; retest condition: capture the fresh outputs and link them into this ledger or a dated successor.
 
 ## Completion boundary
 
 - `repo-side completed=true`
 - `published branch=true`
-- `default-branch effective=false`
+- `default-branch effective=true`
 - `hosted/manual accepted=false`
 - `fully completed=false`
 
-Eight of nine target default branches are effective. The control repository release branch is publishable but must not be merged while the downstream `skills-manager` default-branch audit remains red.
+All nine target default branches and the control default branch contain the governed release changes, required/task-relevant checks passed at frozen heads, protected sync is zero-drift, and merged task branches/worktrees are closed out. `published branch=true` is retained as a historical publication stage; the stronger current state is `default-branch effective=true`.
 
 Hosted ChatGPT Work, Codex cloud, Claude Chat, and Claude Code cloud remain user-operated acceptance surfaces. Browser, Chrome, and Computer Use integrations are prohibited for this task and local hashes/CLI probes cannot substitute for hosted model-visible acceptance.
 
