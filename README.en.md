@@ -10,7 +10,7 @@
   - global user-rule synchronization for `~/.codex` and `~/.claude`
   - target-project rule coordination audit for `AGENTS.md + CLAUDE.md` thin-wrapper projects
   - host/self-evolution/continuity read-only feedback, evidence, and gates
-- The active coordination versions are `rule_release=9.56 / project_contract_version=2.0 / coordination_schema=2.3`. Scope is discovered from direct-child Git roots under `D:\CODE` and reconciled with the explicit nine-target allowlist. Discovery never auto-enrolls a repository; unlisted Git roots or missing targets block according to the contract.
+- The active coordination versions are `rule_release=9.57 / project_contract_version=2.0 / coordination_schema=2.3`. Scope is discovered from direct-child Git roots under `D:\CODE` and reconciled with the explicit nine-target allowlist. Discovery never auto-enrolls a repository; unlisted Git roots or missing targets block according to the contract.
 - A target `AGENTS.md` is host-neutral. Its `CLAUDE.md` is normally a BOM-free, one-line `@AGENTS.md` wrapper. Global sync never distributes target rule bodies.
 - CI coordination uses `coordination_schema=2.3 / ci_contract=2.1 / workflow_hash_mode=utf8_lf_v1`: a local workflow proves each target's rule changes. The control repository generates a nine-target matrix, checks out and audits seven public repositories, and explicitly routes two private repositories to target-local enforcement. Neither layer replaces product gates.
 - Historical `docs/change-evidence/**` records remain archived, but they no longer imply that target-repo rollout, attachment, or session-bridge write flows are still live features.

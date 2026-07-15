@@ -1,9 +1,9 @@
-# CLAUDE.md - Universal Agent Protocol v9.56
+# CLAUDE.md - Universal Agent Protocol v9.57
 # Anthropic Claude Code / Claude CLI - Global User Rules
-**版本**: 9.56
+**版本**: 9.57
 **项目契约版本**: 2.0
 **适用范围**: 全局用户级（GlobalUser/）
-**最后更新**: 2026-07-14
+**最后更新**: 2026-07-15
 
 ## 1. 阅读指引
 - 本文件定义跨仓稳定语义（WHAT）；项目根 `AGENTS.md` 定义仓库事实与动作（WHERE/HOW）；平台章节只定义宿主差异（DELTA）。
@@ -67,7 +67,7 @@
 ### B.1 加载链
 - 用户规则为 `~/.claude/CLAUDE.md`；项目规则可位于仓库根 `CLAUDE.md` 或 `.claude/CLAUDE.md`，个人项目偏好放 `CLAUDE.local.md` 并保持 gitignored。
 - Claude 会把适用规则加入上下文；多个文件通常是拼接关系，不应依赖确定性 override 来隐藏上层内容。settings 的优先级与 memory 加载语义是不同机制。
-- 项目 `CLAUDE.md` 用首行 `@AGENTS.md` 承接共用项目契约；import 相对包含它的文件解析，最多按官方四跳限制展开，组织拆分不节省 context。
+- 项目 `CLAUDE.md` 用首行 `@AGENTS.md` 承接共用项目契约；import 相对包含它的文件解析，最多按官方五跳限制展开，组织拆分不节省 context。
 - `.claude/rules/` 无 `paths` 的规则常驻；带 `paths` 的规则通常由相关文件 Read 触发。关键安全规则不得只放在延迟触发规则中。
 - 内置 Explore/Plan 子代理不自动继承完整 `CLAUDE.md` 上下文；委派时显式传递任务所需约束，或使用已验证的自定义 agent 配置。
 - `--bare` 会跳过 hooks、plugins、skills、auto memory 和 `CLAUDE.md` 自动发现等普通 customization；`--safe-mode` 同样禁用普通 customization，但 managed policy 仍适用。两者都不能充当正常规则已加载的证据。
@@ -89,7 +89,7 @@
 ## C. 项目级承接契约
 ### C.1 边界与版本
 - 项目根 `AGENTS.md` 是 Codex/Claude 共用、宿主中立的项目契约；记录 `**项目契约**: 2.0` 与 `**全局规则复核**: <release>`。
-- 受管全局副本标识为 `GlobalUser/AGENTS.md v9.56` 与 `GlobalUser/CLAUDE.md v9.56`；项目契约不兼容必须阻断，兼容范围内的全局复核滞后只作 observation。
+- 受管全局副本标识为 `GlobalUser/AGENTS.md v9.57` 与 `GlobalUser/CLAUDE.md v9.57`；项目契约不兼容必须阻断，兼容范围内的全局复核滞后只作 observation。
 - Claude 项目 wrapper 的第一物理行必须是无 BOM 的独立 `@AGENTS.md`；无真实仓库级 Claude 差异时只保留这一行。
 - 项目规则不复述全局 R/E 正文、语言偏好、通用 N/A 或宿主加载教程，也不复制 README/PRD/架构全文。
 

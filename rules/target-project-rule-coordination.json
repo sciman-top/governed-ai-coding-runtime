@@ -2,10 +2,10 @@
   "$schema": "../schemas/jsonschema/target-project-rule-coordination.schema.json",
   "schema_version": "2.3",
   "coordination_id": "target-project-rule-coordination",
-  "rule_release": "9.56",
+  "rule_release": "9.57",
   "project_contract_version": "2.0",
   "workspace_root": "D:\\CODE",
-  "updated_on": "2026-07-14",
+  "updated_on": "2026-07-15",
   "workspace_inventory": {
     "mode": "direct_git_roots",
     "excluded_directories": [
@@ -36,7 +36,7 @@
       "claude_wrapper_rule": "CLAUDE.md",
       "claude_wrapper_mode": "import_only",
       "project_contract_version": "2.0",
-      "reviewed_global_release": "9.56",
+      "reviewed_global_release": "9.57",
       "required_anchors": ["ContentDeliveryStudio.sln", "src/", "tests/"],
       "evidence_path": "docs/change-evidence/",
       "budgets": {
@@ -59,7 +59,7 @@
       "claude_wrapper_rule": "CLAUDE.md",
       "claude_wrapper_mode": "import_only",
       "project_contract_version": "2.0",
-      "reviewed_global_release": "9.56",
+      "reviewed_global_release": "9.57",
       "required_anchors": ["ClassroomToolkit.sln", "prompts/specs/compiled/", "snapshot"],
       "evidence_path": "docs/change-evidence/",
       "budgets": {
@@ -82,7 +82,7 @@
       "claude_wrapper_rule": "CLAUDE.md",
       "claude_wrapper_mode": "import_only",
       "project_contract_version": "2.0",
-      "reviewed_global_release": "9.56",
+      "reviewed_global_release": "9.57",
       "required_anchors": ["ClassroomToolkit.sln", "scripts/quality/run-local-quality-gates.ps1", "students.xlsx"],
       "evidence_path": "docs/change-evidence/",
       "budgets": {
@@ -105,7 +105,7 @@
       "claude_wrapper_rule": "CLAUDE.md",
       "claude_wrapper_mode": "import_only",
       "project_contract_version": "2.0",
-      "reviewed_global_release": "9.56",
+      "reviewed_global_release": "9.57",
       "required_anchors": ["sync-forks.py", "test_toolkit.py", "GH_TOKEN"],
       "evidence_path": "docs/change-evidence/",
       "budgets": {
@@ -128,7 +128,7 @@
       "claude_wrapper_rule": "CLAUDE.md",
       "claude_wrapper_mode": "import_only",
       "project_contract_version": "2.0",
-      "reviewed_global_release": "9.56",
+      "reviewed_global_release": "9.57",
       "required_anchors": ["apps/", "schemas/", "C002R"],
       "evidence_path": "docs/evidence/",
       "budgets": {
@@ -151,7 +151,7 @@
       "claude_wrapper_rule": "CLAUDE.md",
       "claude_wrapper_mode": "import_only",
       "project_contract_version": "2.0",
-      "reviewed_global_release": "9.56",
+      "reviewed_global_release": "9.57",
       "required_anchors": ["runtime/host-orchestrator", ".ai/state/control-plane.db", ".ai/runs/<run_id>/<task_id>/"],
       "evidence_path": "docs/change-evidence/",
       "budgets": {
@@ -174,7 +174,7 @@
       "claude_wrapper_rule": "CLAUDE.md",
       "claude_wrapper_mode": "import_only",
       "project_contract_version": "2.0",
-      "reviewed_global_release": "9.56",
+      "reviewed_global_release": "9.57",
       "required_anchors": ["compose.yml", "scripts/verify-repo.py", ".env.example"],
       "evidence_path": "docs/change-evidence/",
       "budgets": {
@@ -197,7 +197,7 @@
       "claude_wrapper_rule": "CLAUDE.md",
       "claude_wrapper_mode": "import_only",
       "project_contract_version": "2.0",
-      "reviewed_global_release": "9.56",
+      "reviewed_global_release": "9.57",
       "required_anchors": ["skills.ps1", "skills.json", "scripts/quality/run-local-quality-gates.ps1"],
       "evidence_path": "docs/change-evidence/",
       "budgets": {
@@ -220,7 +220,7 @@
       "claude_wrapper_rule": "CLAUDE.md",
       "claude_wrapper_mode": "import_only",
       "project_contract_version": "2.0",
-      "reviewed_global_release": "9.56",
+      "reviewed_global_release": "9.57",
       "required_anchors": ["ssh_tool.py", "scripts/run_gates.ps1", "target.example.json"],
       "evidence_path": "docs/change-evidence/",
       "budgets": {

@@ -172,11 +172,17 @@ class VerifyTargetProjectRulesTests(unittest.TestCase):
         contract_body = verifier.split("function Invoke-ContractChecks", 1)[1].split(
             "function Invoke-DependencyBaselineChecks", 1
         )[0]
+        target_audit_body = verifier.split("function Invoke-TargetProjectRuleChecks", 1)[1].split(
+            "function Invoke-PreChangeReviewChecks", 1
+        )[0]
 
         self.assertIn("Invoke-TargetProjectRuleCoordinationSchemaCheck", verifier)
         self.assertIn("Invoke-TargetProjectRuleChecks", verifier)
         self.assertIn("Invoke-TargetProjectRuleCoordinationSchemaCheck", contract_body)
         self.assertIn("Invoke-TargetProjectRuleChecks", contract_body)
+        self.assertIn("GACR_TARGET_PROJECT_RULE_WORKSPACE_ROOT", target_audit_body)
+        self.assertIn('"--workspace-root"', target_audit_body)
+        self.assertIn('"--require-all"', target_audit_body)
 
     def test_v2_contract_passes_with_relative_repo_and_one_line_wrapper(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

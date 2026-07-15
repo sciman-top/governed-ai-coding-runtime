@@ -1,19 +1,19 @@
 {
-  "elapsed_seconds": 134.81593910000083,
+  "elapsed_seconds": 120.65731489999962,
   "failure_count": 0,
   "failures": [],
   "parallel_target_count": 100,
   "parallel_target_modules": [
     "tests.runtime.test_governance_hub_certification",
+    "tests.runtime.test_repo_map_context_artifact",
     "tests.runtime.test_runtime_evolution",
     "tests.runtime.test_self_evolution_readiness",
     "tests.runtime.test_autonomous_next_work_selection",
-    "tests.runtime.test_evidence_recovery_posture",
-    "tests.runtime.test_repo_map_context_artifact",
+    "tests.runtime.test_repo_slimming_surface",
     "tests.runtime.test_operator_entrypoint",
+    "tests.runtime.test_evidence_recovery_posture",
     "tests.runtime.test_issue_seeding",
     "tests.runtime.test_runtime_doctor",
-    "tests.runtime.test_governance_gate_runner",
     "tests.runtime.test_adapter_conformance",
     "tests.runtime.test_adapter_registry",
     "tests.runtime.test_agent_continuity",
@@ -49,6 +49,7 @@
     "tests.runtime.test_evidence_timeline",
     "tests.runtime.test_execution_runtime",
     "tests.runtime.test_file_guard",
+    "tests.runtime.test_governance_gate_runner",
     "tests.runtime.test_host_capability_claim_upgrade_policy",
     "tests.runtime.test_host_feedback_summary",
     "tests.runtime.test_interaction_governance",
@@ -72,7 +73,6 @@
     "tests.runtime.test_replay",
     "tests.runtime.test_repo_hook_enforcement",
     "tests.runtime.test_repo_profile",
-    "tests.runtime.test_repo_slimming_surface",
     "tests.runtime.test_run_governed_task_cli",
     "tests.runtime.test_run_governed_task_service_wrapper",
     "tests.runtime.test_run_runtime_tests_runner",
@@ -116,7 +116,7 @@
   ],
   "slowest": [
     {
-      "duration_seconds": 123.3784381000005,
+      "duration_seconds": 108.74710180000329,
       "execution_mode": "parallel",
       "exit_code": 0,
       "target": {
@@ -126,7 +126,7 @@
       }
     },
     {
-      "duration_seconds": 109.27895770000032,
+      "duration_seconds": 95.31959559999814,
       "execution_mode": "parallel",
       "exit_code": 0,
       "target": {
@@ -136,7 +136,7 @@
       }
     },
     {
-      "duration_seconds": 97.59139900000446,
+      "duration_seconds": 87.22236709999925,
       "execution_mode": "parallel",
       "exit_code": 0,
       "target": {
@@ -146,7 +146,7 @@
       }
     },
     {
-      "duration_seconds": 96.20929569999862,
+      "duration_seconds": 66.56312339999931,
       "execution_mode": "parallel",
       "exit_code": 0,
       "target": {
@@ -156,17 +156,7 @@
       }
     },
     {
-      "duration_seconds": 44.56052279999858,
-      "execution_mode": "parallel",
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_autonomous_next_work_selection",
-        "path": "tests\\runtime\\test_autonomous_next_work_selection.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 37.4061892000027,
+      "duration_seconds": 38.08062620000055,
       "execution_mode": "parallel",
       "exit_code": 0,
       "target": {
@@ -176,27 +166,17 @@
       }
     },
     {
-      "duration_seconds": 29.734130199998617,
+      "duration_seconds": 38.01679689999946,
       "execution_mode": "parallel",
       "exit_code": 0,
       "target": {
-        "module": "tests.runtime.test_evidence_recovery_posture",
-        "path": "tests\\runtime\\test_evidence_recovery_posture.py",
+        "module": "tests.runtime.test_autonomous_next_work_selection",
+        "path": "tests\\runtime\\test_autonomous_next_work_selection.py",
         "suite": "runtime"
       }
     },
     {
-      "duration_seconds": 27.160625799995614,
-      "execution_mode": "parallel",
-      "exit_code": 0,
-      "target": {
-        "module": "tests.runtime.test_operator_entrypoint",
-        "path": "tests\\runtime\\test_operator_entrypoint.py",
-        "suite": "runtime"
-      }
-    },
-    {
-      "duration_seconds": 25.853188700006285,
+      "duration_seconds": 26.54521240000031,
       "execution_mode": "parallel",
       "exit_code": 0,
       "target": {
@@ -206,7 +186,27 @@
       }
     },
     {
-      "duration_seconds": 25.30086029999802,
+      "duration_seconds": 25.737664799999038,
+      "execution_mode": "parallel",
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_evidence_recovery_posture",
+        "path": "tests\\runtime\\test_evidence_recovery_posture.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 25.421276000000944,
+      "execution_mode": "parallel",
+      "exit_code": 0,
+      "target": {
+        "module": "tests.runtime.test_operator_entrypoint",
+        "path": "tests\\runtime\\test_operator_entrypoint.py",
+        "suite": "runtime"
+      }
+    },
+    {
+      "duration_seconds": 20.840046600002097,
       "execution_mode": "parallel",
       "exit_code": 0,
       "target": {

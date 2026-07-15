@@ -124,6 +124,7 @@
 - Coordination contract and evidence:
   - [Agent Rule Coordination v2 Spec](./specs/agent-rule-coordination-v2-spec.md)
   - [Official And Community Practices Research](./research/2026-07-10-agent-rules-official-and-community-practices.md)
+  - [Claude Import Depth Correction](./research/2026-07-15-claude-import-depth-correction.md)
 - Verifiers:
   - `python scripts/verify-agent-rule-family.py`
   - `python scripts/verify-target-project-rules.py --require-all`
