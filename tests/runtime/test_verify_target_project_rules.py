@@ -1,5 +1,6 @@
 import json
 import hashlib
+import os
 import subprocess
 import sys
 import tempfile
@@ -200,6 +201,36 @@ class VerifyTargetProjectRulesTests(unittest.TestCase):
         self.assertEqual(payload["project_contract_version"], "2.0")
         self.assertEqual(payload["results"][0]["status"], "pass")
         self.assertEqual(payload["results"][0]["blocking_findings"], [])
+
+    def test_cli_emits_json_when_stdout_uses_cp1252(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "workspace"
+            _write_target(workspace / "pilot")
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(
+                json.dumps(_coordination_payload(workspace), ensure_ascii=False), encoding="utf-8"
+            )
+            env = os.environ.copy()
+            env["PYTHONIOENCODING"] = "cp1252"
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--coordination-path",
+                    str(coordination_path),
+                    "--require-all",
+                ],
+                cwd=ROOT,
+                check=False,
+                capture_output=True,
+                text=True,
+                env=env,
+            )
+
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        payload = json.loads(completed.stdout)
+        self.assertIn("文档", json.dumps(payload, ensure_ascii=False))
 
     def test_workspace_root_override_supports_ci_checkout_layout(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
