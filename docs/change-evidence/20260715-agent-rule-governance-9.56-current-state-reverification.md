@@ -33,10 +33,12 @@ No new community mechanism was promoted in this refresh. Existing fixed-commit c
 
 ## Changes
 
-- No global rule, manifest, schema, verifier, target project rule, wrapper, host config, provider, auth, credential, MCP endpoint, or runtime process was changed.
+- No global rule, manifest, schema, verifier, target project rule, wrapper, host config, provider, auth, credential, or MCP endpoint was changed. A browser-integrated hosted-surface probe caused the Codex desktop host container to exit twice; no process stop/start command was issued, and the user manually relaunched the host after each exit.
 - Added only this current-state verification ledger and its evidence-index link.
 - Recognized an external state change since the primary release: `ClassroomToolkit` integrated the `9.56` task commit and dependency-governance repair into remote `main` at `d364d547002fffd2fa7f64199d9209feaf7ebb98`.
 - Preserved existing local-ahead `main` histories in `k12-question-graph`, `local-ai-dev-orchestrator`, and `skills-manager`; this task did not push those pre-existing commits.
+- During the continuation window, a separate concurrent process created local-only `skills-manager` commit `579ef622590b2c97bf93d3c3907af658adc5f2d1` at `2026-07-15T13:49:44+08:00` from the previously observed non-task `skills.json` and audit-evidence changes. This task did not stage, commit, merge, or push that commit.
+- Opened review PRs from the already-pushed, `origin/main`-based governance branches without merging them: [k12-question-graph #2](https://github.com/sciman-top/k12-question-graph/pull/2), [local-ai-runtime #2](https://github.com/sciman-top/local-ai-runtime/pull/2), and [skills-manager #2](https://github.com/sciman-top/skills-manager/pull/2).
 
 ## Integration
 
@@ -44,7 +46,7 @@ No new community mechanism was promoted in this refresh. Existing fixed-commit c
 - Guarded sync dry-run returned `changed_count=0` and `blocked_count=0`; no redundant apply was performed because the prior protected apply was already effective.
 - The existing rollback backup `docs/change-evidence/rule-sync-backups/20260715-003426/` was rechecked recursively: two files exist with SHA-256 `6B6D478CCD29BB5406F9B586C72AF9B34CE9DFF6BA25E629C6FE8B314C237E0F` (Codex 9.55) and `92348E2BFA1AB06528CFBAF8E86C10BE9DB5E37785C23CAFB6977BF1B9D6956D` (Claude 9.55).
 - Gate-generated tracked reports in the control repository and K12, plus four generated K12/skills-manager reports, were compared with the clean baseline and removed or restored by exact path. Final repository content returned to the frozen baseline before this ledger was added.
-- No broad cleanup, reset, branch deletion, worktree deletion, process restart, live VPS action, or hosted workspace mutation occurred.
+- No broad cleanup, reset, branch deletion, worktree deletion, agent-issued process stop/restart, live VPS action, hosted message send, or PR merge occurred. The hosted probe selected the visible ChatGPT `Work` surface but sent no prompt; after the repeated host exits, all Browser/Chrome/Computer Use probing was stopped.
 
 ## Verification
 
@@ -66,6 +68,7 @@ No new community mechanism was promoted in this refresh. Existing fixed-commit c
 - Claude: `claude doctor` returned `exit=0`, version `2.1.206`, commit `edc8ebf7f852`, and no installation issue. Model-visible loading continues to rely on the unchanged same-day ten-repository interactive `/context` evidence in the primary release record; a non-interactive `claude -p` self-report was deliberately not substituted for `/context`.
 - The Codex/Claude global and project files, hashes, wrappers, and CLI versions did not drift between the primary interactive proof and this refresh.
 - These results prove local loading only. ChatGPT Work web/mobile, Codex cloud, Claude Chat, and Claude Code cloud remain onsite/manual acceptance pending.
+- Hosted probe safety evidence: Node REPL executions started at `13:36:31` and `13:37:57`; `Codex\\Default\\Partitions\\codex-browser-app` was created/refreshed immediately afterwards; Windows AppModel recorded `OpenAI.Codex` container destruction at `13:36:33` and `13:37:59`. The user manually relaunched at `13:36:41` and `13:38:03`. No WER report or Crashpad dump identified the internal fault, so the direct trigger is established but the product-internal exception remains unresolved. This task must not retry integrated browser automation.
 
 ### Target Gates
 
@@ -75,9 +78,9 @@ No new community mechanism was promoted in this refresh. Existing fixed-commit c
 | `classroom-answer-toolkit` | build; 57 tests; 43 assets / 3 packs / 3 snapshots; toolchain | pass; cloud-backed lanes remain disabled without egress/secrets |
 | `ClassroomToolkit` | build; 3544 tests; 29 contract tests; hotspot; standard quality profile | pass; dependency governance and vulnerability scan now pass |
 | `github-toolkit` | compile; 189 tests; benchmark; Ruff; Mypy | pass; independent contract remains compliant `gate_na`; no GitHub write occurred |
-| `k12-question-graph` | build; C002 dry-run; roadmap guard; structured parse | pass; `REAL005=not_closed`; process-impacting full gate and independent hotspot remain compliant `gate_na` |
+| `k12-question-graph` | build; C002 dry-run; roadmap guard; structured parse; `pg_isready` | repository checks pass and PostgreSQL accepts connections on `localhost:5432`; `PGPASSWORD` is absent; `REAL005=not_closed`; `tools/run-gates.ps1` has no non-process-impact mode and explicitly stops/starts APIs, so full gate and independent hotspot remain compliant `gate_na` |
 | `local-ai-dev-orchestrator` | 307 tests; planning verifier; selector; preflight | pass; build/hotspot remain compliant `gate_na`; baseline is still candidate |
-| `qq-codex-bot` | fast; 867 tests / 10 skipped; full verifier; local health | repository full gate pass; `all_checks_ok=false`, Docker daemon/local runtime absent, no VPS projection |
+| `qq-codex-bot` | fast; 867 tests / 10 skipped; full verifier; fresh local health | repository full gate pass; probe exit `0`, `all_checks_ok=false`, 53 checks / 42 failed / 1 N/A because the `desktop-linux` Docker daemon and local deployment state are absent; no VPS projection |
 | `skills-manager` | build; 485 Unit; 12 E2E; doctor/dependency; full profile | pass |
 | `vps-ssh-launcher` | compile; 93 pytest / 1 skipped / 20 subtests; 94 unittest / 1 skipped; offline full gate | pass; no real SSH integration |
 
@@ -85,32 +88,34 @@ No new community mechanism was promoted in this refresh. Existing fixed-commit c
 
 | repository | local state | remote governance state | default_branch_effective | hosted rule-contract state |
 |---|---|---|---:|---|
-| `governed-ai-coding-runtime` | `main=24f0b5f`, clean, equals `origin/main` before this ledger | `main=24f0b5f` | yes | fresh aggregate run `29390285293` failed on the three non-effective targets below |
+| `governed-ai-coding-runtime` | `main=dd1af65`, clean, equals `origin/main` before this continuation update | `main=dd1af65` | yes | fresh aggregate run `29390285293` failed on the three non-effective targets below |
 | `ai-content-delivery-studio` | clean `main=3749054` | `main=3749054` | yes | success `29351469072` |
 | `classroom-answer-toolkit` | clean `main=6486358` | `main=6486358` | yes | success `29351470237` |
 | `ClassroomToolkit` | clean `main=d364d54` | `main=d364d54`, includes `cd49d47` | yes | success `29356760034`; aggregate job fresh success |
 | `github-toolkit` | clean `main=811afc3` | `main=811afc3` | yes | success `29351467159` |
-| `k12-question-graph` | clean `main=4821492`, ahead 4 | `main=46a4b31`; task `5c987ce` | no | task success `29351490041`; aggregate job fresh failure on default main |
-| `local-ai-dev-orchestrator` | clean `main=2fd4f62`, ahead 11 | `main=29dea22`; task `c9f70f5` | no | task success `29351495377`; aggregate job fresh failure on default main |
+| `k12-question-graph` | clean `main=4821492`, ahead 4 | `main=46a4b31`; task `5c987ce`; [PR #2](https://github.com/sciman-top/k12-question-graph/pull/2) open | no | PR rule contract and preflight success; aggregate job fresh failure on default main |
+| `local-ai-dev-orchestrator` | clean `main=2fd4f62`, ahead 11 | `main=29dea22`; task `c9f70f5`; [PR #2](https://github.com/sciman-top/local-ai-runtime/pull/2) open | no | PR rule contract success; aggregate job fresh failure on default main |
 | `qq-codex-bot` | clean `main=47c7d71` | `main=47c7d71` | yes | success `29351470041` |
-| `skills-manager` | clean `main=adbb8fe`, ahead 9 | `main=ae8a860`; task `4addb13` | no | task workflow success at the rule-changing SHA; aggregate job fresh failure on default main |
+| `skills-manager` | clean `main=579ef62`, ahead 10; includes concurrent non-task commit `579ef622` that this task did not publish | `main=ae8a860`; task `4addb13`; [PR #2](https://github.com/sciman-top/skills-manager/pull/2) open | no | PR rule contract success; general CI fails on inherited remote-main `sync_mcp` baseline; aggregate job fresh failure on default main |
 | `vps-ssh-launcher` | clean `main=2a57512` | `main=2a57512` | yes | success `29351466033` |
 
 The aggregate failure is not a verifier defect: its contract intentionally audits remote default branches. Pointing the aggregate workflow at task branches would conceal the required `default_branch_effective=false` state.
 
 ## Risks
 
-- `platform_na`: ChatGPT Work web/mobile, Codex cloud, Claude Chat, and Claude Code cloud local-file loading. `alternative_verification=official surface docs plus local source/deployed hashes`; `evidence_link=this file and the primary research`; `expires_at=next authorized hosted acceptance window`; `recovery_condition=run an authorized fresh hosted workspace/session check`.
-- K12 test/full `gate_na`: `reason=PostgreSQL and API process impact lacks authorization`; `alternative_verification=build + C002 dry-run + roadmap guard + structured parse + rule audit`; `evidence_link=D:\CODE\k12-question-graph\docs\evidence\20260715-agent-rule-governance-9.56.md`; `expires_at=next executable change`; `recovery_condition=obtain explicit process-impact authorization and run tools/run-gates.ps1`.
+- `platform_na`: ChatGPT Work web/mobile, Codex cloud, Claude Chat, and Claude Code cloud local-file loading. `reason=integrated browser automation caused two repeatable host exits and is disabled for this task`; `alternative_verification=official surface docs plus local source/deployed hashes and user-operated hosted checks`; `evidence_link=this file and Windows AppModel events`; `expires_at=after the browser-host exit defect is resolved or a user-operated acceptance window is available`; `recovery_condition=complete fresh hosted checks without using the unsafe integration path`.
+- K12 test/full `gate_na`: `reason=tools/run-gates.ps1 explicitly stops and starts API processes, PGPASSWORD is absent, and process impact lacks authorization`; `alternative_verification=build + C002 dry-run + roadmap guard + structured parse + rule audit + pg_isready`; `evidence_link=D:\CODE\k12-question-graph\docs\evidence\20260715-agent-rule-governance-9.56.md`; `expires_at=next executable change`; `recovery_condition=obtain explicit process-impact authorization, provide the controlled database credential path, and run tools/run-gates.ps1`.
 - K12 hotspot `gate_na`: no independent command; recovery is to add and execute one at the next executable hotspot change.
 - QQ live acceptance: repository verification passes, but local Docker/runtime health and VPS projection are not accepted; recovery requires an authorized runtime/VPS window.
-- Three task branches are pushed but not default-branch effective. Their local `main` histories contain pre-existing commits, so this task cannot safely push them as this task's write-set or merge task branches without additional authorization.
+- Three task branches and their review PRs are published but not default-branch effective. Each remote task branch is directly based on `origin/main` and does not contain the local `main` ahead history; merging the PRs still requires repository-owner authorization.
+- `skills-manager` PR #2 is `MERGEABLE` but `UNSTABLE`: `Agent Rule Contract` passes, while general CI fails because `doctor --json` lacks `performance.summary.sync_mcp`. The same failure is present on remote `main=ae8a860` and the twelve most recent listed `main` CI runs; the governance PR changes no doctor, workflow, script, or test file. A baseline CI repair must remain a separate explicitly authorized slice.
+- Before the concurrent commit, the `skills-manager` non-task files were preserved byte-for-byte by this task: `skills.json` SHA-256 `01FAEA232C119E94A896C1A2D01EEFCCD002CE2FEAC7D4000A43201ECFF5977C`; audit evidence SHA-256 `CA083FC7F8CA1500D7AAA55F862D75A8EEAE33EAB57C2BE9EDD8D0B5D38E6236`. The concurrent commit used those same bytes and remains local-only.
 
 ## Completion Boundary
 
 - `fully completed`: **no**. Global rule optimization and protected sync are published, source/deployed copies remain zero-drift, the control contract and six target default branches are current, and all authorized local gates pass or use compliant N/A; the open items below still prevent overall completion.
 - `repo-side completed`: all nine targets remain discovered, audited, rule-contract verified, and have published governance commits.
-- `pushed but not default-branch effective`: `k12-question-graph`, `local-ai-dev-orchestrator`, `skills-manager`.
+- `PR open but not default-branch effective`: `k12-question-graph` #2, `local-ai-dev-orchestrator` #2, `skills-manager` #2.
 - `onsite/manual acceptance pending`: ChatGPT Work, Codex cloud, Claude Chat, Claude Code cloud, K12 process-impacting full gate, QQ local/VPS live health.
 - `blocked`: overall `fully completed` claim is blocked by the three non-effective default branches and onsite/manual items; there is no remaining `ClassroomToolkit` dependency blocker.
 
@@ -118,9 +123,10 @@ Open items:
 
 | item | next_action | responsible_party | authorization_needed | retest_condition |
 |---|---|---|---|---|
-| three non-effective default branches | review the pre-existing local-ahead histories, then explicitly authorize a merge/push strategy per repository | repository owner | merge task branches and/or push pre-existing main commits | remote `main` contains the governance SHA and aggregate job passes |
-| hosted OpenAI/Anthropic surfaces | run fresh workspace/session checks on each hosted surface | workspace owner/admin | hosted account/session access | model-visible/project rule source is proven on that surface |
-| K12 process full gate | run `tools/run-gates.ps1` in a controlled PostgreSQL/API window | K12 operator | process-impact authorization | full gate exits 0 without losing prior process state |
+| three non-effective default branches | review and merge the already-open governance PRs #2; do not push the unrelated local-ahead histories | repository owner | explicit PR merge authorization | remote `main` contains the governance SHA and aggregate job passes |
+| `skills-manager` inherited general CI failure | repair the `doctor --json` / `sync_mcp` contract in a separate branch without mixing it into the documentation-only governance PR | skills-manager owner | explicit CI-fix scope approval | both remote `main` CI and the governance PR CI pass |
+| hosted OpenAI/Anthropic surfaces | use a user-operated fresh workspace/session check; do not retry the integrated Browser/Chrome path in this task | workspace owner/admin | hosted account/session access and a safe interaction channel | model-visible/project rule source is proven without another host exit |
+| K12 process full gate | run `tools/run-gates.ps1` in a controlled PostgreSQL/API window with a valid credential path | K12 operator | process-impact and credential-use authorization | full gate exits 0 without losing prior process state |
 | QQ live health | restore/authorize local Docker or VPS runtime and run the live acceptance runbook | QQ/VPS operator | runtime/VPS authorization | `all_checks_ok=true` and real message-path acceptance is recorded |
 
 No overall `fully completed` claim is made while these items remain open.
