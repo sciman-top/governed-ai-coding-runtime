@@ -66,9 +66,9 @@ All nine governance heads were re-fetched and proved as ancestors of fresh targe
 - `python scripts/verify-agent-rule-family.py`: post-merge exit `0`; Codex source `10517` bytes, Claude source `11064` bytes, shared A/C/D hash `cb43a7d50fab3fefe902c2c41c80a1c2d67175564174faa2166f904f250cd92d`.
 - `python scripts/sync-agent-rules.py --scope All --fail-on-change`: before apply reported exactly two managed-copy changes.
 - backup confirmed at `docs/change-evidence/rule-sync-backups/20260715-154520/`; protected apply updated only `~/.codex/AGENTS.md` and `~/.claude/CLAUDE.md`.
-- final post-apply dry-run: exit `0`, `changed_count=0`; post-merge source and managed-copy hashes are exactly equal (`Codex=b69b51b224432b9414ef66627e0d01e037c51fdf4012ad65e6ac93f7325af8ed`, `Claude=4a3819e6821bc4990841227a69545169551b8c90ad703353580e0ac5e780571a`).
-- fresh Codex `debug prompt-input` probes passed for the control repo and all nine isolated target worktrees; each contained release `9.57`, the repository marker, and the unique probe text.
-- `claude doctor` passed installation checks for Claude Code `2.1.206`, but the CLI is not signed into Anthropic API or claude.ai. No auth/account change was authorized or attempted.
+- final post-apply and post-merge dry-runs: exit `0`, `changed_count=0`, `blocked_count=0`; synchronization-normalized source/target hashes are exactly equal (`Codex=44a9e0f2fc01d6edfeb0663783c6fe389849ff2c46d7f070ae4fe89dba342820`, `Claude=87b7a4a6afd2994e760819e62ea9f350144491c4ecf72046ddcf24b73066fd23`). The corresponding physical worktree/managed-copy byte hashes are also equal (`Codex=b69b51b224432b9414ef66627e0d01e037c51fdf4012ad65e6ac93f7325af8ed`, `Claude=4a3819e6821bc4990841227a69545169551b8c90ad703353580e0ac5e780571a`). No redundant apply was performed.
+- fresh Codex `debug prompt-input` probes passed for the control repo and all nine isolated target worktrees; all 10/10 fresh processes returned parseable JSON containing release `9.57`, project contract `2.0`, the repository marker, and a unique probe token.
+- Claude Code `2.1.206` version/help/doctor completed in fresh processes. Doctor reported no installation issue but an unavailable Remote Control/API connection and missing `user:profile` scope; `claude auth status --json` independently reported an existing first-party OAuth token. A no-tool, no-session-persistence, no-Chrome, `$0.10`-capped fresh `claude -p` probe then exited `0` at cost `$0.050685` and returned exactly `GLOBAL_RELEASE=9.57`, `PROJECT_CONTRACT=2.0`, and `REPO_MARKER=governed-ai-coding-runtime`. No auth/account change was made.
 
 ### Per-repository gates
 
@@ -97,13 +97,13 @@ All nine governance heads were re-fetched and proved as ancestors of fresh targe
 ### Hosted and manual boundary
 
 - `platform_na`: ChatGPT Work, Codex cloud, Claude Chat, and Claude Code web model-visible acceptance. `reason=the task prohibits Browser, Chrome, and Computer Use after two host exits and these surfaces require a safe user-operated session`; `alternative_verification=fresh local loading probes and remote rule checks, explicitly not a substitute for hosted acceptance`; `evidence_link=this ledger`; `expires_at=next safe user-operated acceptance window`; `recovery_condition=user runs the supplied hosted acceptance prompts and records outputs`.
-- `platform_na`: Claude Code local model-visible loading. `reason=Claude Code is installed but not signed in and account/auth changes are out of scope`; `alternative_verification=claude doctor plus deployed-file zero-drift, explicitly not a model-visible acceptance`; `evidence_link=this ledger`; `expires_at=next authorized signed-in Claude session`; `recovery_condition=user signs in independently and runs a fresh /context or equivalent probe`.
+- Claude Code local model-visible loading is accepted for the control repository by the fresh bounded `claude -p` probe above. This local result does not substitute for Claude Chat or Claude Code cloud acceptance.
 - Codex App/CLI processes were not stopped, restarted, killed, or auto-launched; no auth, provider, secret, MCP endpoint, live VPS, or user-account state was changed.
 
 ## Remaining external acceptance
 
 - No repository, default-branch, CI, rule-family, sync, or Git-closeout blocker remains for the discovered control plus nine-target scope.
-- owner: user; next action: run the supplied model-visible acceptance prompts in safe signed-in ChatGPT Work, Codex cloud, Claude Chat, and Claude Code cloud sessions, plus a signed-in fresh local Claude Code session; required authorization: user-operated hosted/session access only, with no Browser, Chrome, Computer Use, auth, provider, or process mutation by this task; retest condition: capture the fresh outputs and link them into this ledger or a dated successor.
+- owner: user; next action: run the supplied model-visible acceptance prompts in safe signed-in ChatGPT Work, Codex cloud, Claude Chat, and Claude Code cloud sessions; required authorization: user-operated hosted/session access only, with no Browser, Chrome, Computer Use, auth, provider, or process mutation by this task; retest condition: capture the fresh outputs and link them into this ledger or a dated successor.
 
 ## Completion boundary
 
