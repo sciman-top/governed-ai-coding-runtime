@@ -1,11 +1,13 @@
 import datetime as dt
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -28,12 +30,14 @@ class RuntimeEvolutionTests(unittest.TestCase):
 
     def test_repo_runtime_evolution_dry_run_succeeds(self) -> None:
         module = _load_runtime_evolution_script()
+        fixture_path = ROOT / "tests" / "fixtures" / "host-feedback" / "clean-windows-runner.json"
 
-        payload = module.assert_runtime_evolution_policy(
-            repo_root=ROOT,
-            policy_path=ROOT / "docs" / "architecture" / "runtime-evolution-policy.json",
-            as_of=dt.date(2026, 6, 6),
-        )
+        with mock.patch.dict(os.environ, {"GACR_HOST_FEEDBACK_FIXTURE": str(fixture_path)}):
+            payload = module.assert_runtime_evolution_policy(
+                repo_root=ROOT,
+                policy_path=ROOT / "docs" / "architecture" / "runtime-evolution-policy.json",
+                as_of=dt.date(2026, 6, 6),
+            )
 
         self.assertEqual(payload["status"], "pass")
         self.assertEqual(payload["policy_id"], "default-runtime-evolution-review")
@@ -44,6 +48,12 @@ class RuntimeEvolutionTests(unittest.TestCase):
         self.assertIn("evidence_snapshot", payload)
         self.assertEqual(payload["evidence_snapshot"]["current_source"]["status"], "pass")
         self.assertEqual(payload["evidence_snapshot"]["host_feedback"]["status"], "pass")
+        self.assertEqual(payload["evidence_snapshot"]["host_feedback"]["input_mode"], "test_fixture")
+        self.assertEqual(
+            payload["evidence_snapshot"]["host_feedback"]["acceptance_scope"],
+            "test_only_not_hosted",
+        )
+        self.assertFalse(payload["evidence_snapshot"]["host_feedback"]["hosted_acceptance"])
         self.assertTrue(any(item["retrieval_mode"] == "dry_run_catalog" for item in payload["source_records"]))
         self.assertTrue(any(item["source_type"] == "internal_ai_coding_experience" for item in payload["source_records"]))
         self.assertTrue(any(item["candidate_id"] == "EVOL-AI-EXPERIENCE" for item in payload["candidates"]))
@@ -125,18 +135,18 @@ class RuntimeEvolutionTests(unittest.TestCase):
         refresh = next(item for item in result["candidates"] if item["candidate_id"] == "EVOL-REVIEW-FRESHNESS")
         self.assertEqual(refresh["proposed_action"], "modify")
 
-    def test_ai_coding_experience_candidate_uses_fresh_artifact_ref(self) -> None:
+    def test_ai_coding_experience_candidate_uses_resolved_artifact_ref(self) -> None:
         module = _load_runtime_evolution_script()
+        expected_ref = ".runtime/artifacts/ai-coding-experience/20260620-ai-coding-experience-review.json"
 
-        result = module.inspect_runtime_evolution_policy(
-            repo_root=ROOT,
-            policy_path=ROOT / "docs" / "architecture" / "runtime-evolution-policy.json",
-            as_of=dt.date(2026, 6, 20),
-        )
+        with mock.patch.object(module, "_resolve_ai_coding_experience_artifact_ref", return_value=expected_ref):
+            result = module.inspect_runtime_evolution_policy(
+                repo_root=ROOT,
+                policy_path=ROOT / "docs" / "architecture" / "runtime-evolution-policy.json",
+                as_of=dt.date(2026, 6, 20),
+            )
 
         candidate = next(item for item in result["candidates"] if item["candidate_id"] == "EVOL-AI-EXPERIENCE")
-        latest_artifact = sorted((ROOT / ".runtime" / "artifacts" / "ai-coding-experience").glob("*-ai-coding-experience-review.json"))[-1]
-        expected_ref = latest_artifact.relative_to(ROOT).as_posix()
         self.assertEqual(
             candidate["source_ref"],
             expected_ref,
@@ -145,6 +155,24 @@ class RuntimeEvolutionTests(unittest.TestCase):
             result["evidence_snapshot"]["ai_coding_experience"]["artifact_source_ref"],
             expected_ref,
         )
+
+    def test_ai_coding_experience_artifact_resolver_uses_latest_available_ref(self) -> None:
+        module = _load_runtime_evolution_script()
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            repo_root = Path(tmp_dir)
+            artifact_root = repo_root / module.AI_CODING_EXPERIENCE_ARTIFACT_ROOT
+            artifact_root.mkdir(parents=True)
+            (artifact_root / "20260618-ai-coding-experience-review.json").write_text("{}", encoding="utf-8")
+            latest = artifact_root / "20260619-ai-coding-experience-review.json"
+            latest.write_text("{}", encoding="utf-8")
+
+            resolved = module._resolve_ai_coding_experience_artifact_ref(
+                repo_root=repo_root,
+                as_of=dt.date(2026, 6, 20),
+            )
+
+        self.assertEqual(latest.relative_to(repo_root).as_posix(), resolved)
 
     def test_runtime_evolution_rejects_invalid_candidate_action(self) -> None:
         module = _load_runtime_evolution_script()

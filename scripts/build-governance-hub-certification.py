@@ -205,6 +205,11 @@ def build_governance_hub_certification(*, repo_root: Path, config_path: Path) ->
             "scope": "repo_local_host_feedback",
             "decision": selector_result["next_action"],
             "host_feedback_status": host_feedback_result["status"],
+            "input_mode": host_feedback_result.get("input_provenance", {}).get("mode"),
+            "acceptance_scope": host_feedback_result.get("input_provenance", {}).get("acceptance_scope"),
+            "hosted_acceptance": bool(
+                host_feedback_result.get("input_provenance", {}).get("hosted_acceptance")
+            ),
             "recommendation_count": len(host_feedback_result.get("recommendations", [])),
             "selector_status": selector_result["status"],
             "selector_gate_state": selector_result["gate_state"],

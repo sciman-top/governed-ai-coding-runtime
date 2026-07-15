@@ -34,6 +34,8 @@ jobs:
 
       - name: Run repository verification
         shell: pwsh
+        env:
+          GACR_HOST_FEEDBACK_FIXTURE: tests/fixtures/host-feedback/clean-windows-runner.json
         run: ./scripts/verify-repo.ps1 -Check All
 
   release-preflight:
@@ -55,4 +57,6 @@ jobs:
 
       - name: Run release preflight
         shell: pwsh
+        env:
+          GACR_HOST_FEEDBACK_FIXTURE: tests/fixtures/host-feedback/clean-windows-runner.json
         run: ./scripts/governance/preflight.ps1 -DisableAutoCommit

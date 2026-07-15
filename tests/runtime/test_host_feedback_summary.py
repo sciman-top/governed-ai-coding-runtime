@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -22,7 +23,14 @@ def _load_host_feedback_summary_script():
 
 
 class HostFeedbackSummaryTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._fixture_env = os.environ.pop("GACR_HOST_FEEDBACK_FIXTURE", None)
+
     def tearDown(self) -> None:
+        if self._fixture_env is None:
+            os.environ.pop("GACR_HOST_FEEDBACK_FIXTURE", None)
+        else:
+            os.environ["GACR_HOST_FEEDBACK_FIXTURE"] = self._fixture_env
         sys.modules.pop("host_feedback_summary_script", None)
 
     def test_repo_summary_cli_succeeds(self) -> None:
@@ -51,6 +59,7 @@ class HostFeedbackSummaryTests(unittest.TestCase):
                 mock.patch.object(module, "codex_status", return_value={"login_status": {"exit_code": 0}, "config": {"status": "ok"}}),
                 mock.patch.object(module, "claude_status", return_value={"active_provider": {"name": "glm"}, "config": {"status": "ok"}, "command": {"exit_code": 0}, "mcp": {"exit_code": 0}}),
                 mock.patch.object(module, "probe_claude_code_surface", return_value=self._claude_probe(module)),
+                mock.patch.object(module.Path, "home", return_value=repo_root),
             ):
                 payload = module.build_host_feedback_summary(repo_root=repo_root)
                 failures = module.validate_minimum_feedback_surface(payload)
@@ -71,6 +80,7 @@ class HostFeedbackSummaryTests(unittest.TestCase):
                 mock.patch.object(module, "codex_status", return_value={"login_status": {"exit_code": 0}, "config": {"status": "ok"}}),
                 mock.patch.object(module, "claude_status", return_value={"active_provider": {"name": "glm"}, "config": {"status": "ok"}, "command": {"exit_code": 0}, "mcp": {"exit_code": 0}}),
                 mock.patch.object(module, "probe_claude_code_surface", return_value=self._claude_probe(module)),
+                mock.patch.object(module.Path, "home", return_value=repo_root),
             ):
                 payload = module.build_host_feedback_summary(repo_root=repo_root)
                 failures = module.validate_minimum_feedback_surface(payload)
@@ -88,6 +98,7 @@ class HostFeedbackSummaryTests(unittest.TestCase):
                 mock.patch.object(module, "codex_status", return_value={"login_status": {"exit_code": 0}, "config": {"status": "attention"}}),
                 mock.patch.object(module, "claude_status", return_value={"status": "ok", "active_provider": {"name": "glm"}, "config": {"status": "ok"}, "command": {"exit_code": 0}, "mcp": {"exit_code": 0}}),
                 mock.patch.object(module, "probe_claude_code_surface", return_value=self._claude_probe(module)),
+                mock.patch.object(module.Path, "home", return_value=repo_root),
             ):
                 payload = module.build_host_feedback_summary(repo_root=repo_root)
 
@@ -121,6 +132,7 @@ class HostFeedbackSummaryTests(unittest.TestCase):
                 mock.patch.object(module, "codex_status", return_value={"login_status": {"exit_code": 0}, "config": {"status": "ok"}}),
                 mock.patch.object(module, "claude_status", return_value={"active_provider": {"name": "glm"}, "config": {"status": "ok"}, "command": {"exit_code": 0}, "mcp": {"exit_code": 0}}),
                 mock.patch.object(module, "probe_claude_code_surface", return_value=self._claude_probe(module, native_attach_available=False, structured_events_available=False)),
+                mock.patch.object(module.Path, "home", return_value=repo_root),
             ):
                 payload = module.build_host_feedback_summary(repo_root=repo_root)
                 failures = module.validate_minimum_feedback_surface(payload)
@@ -148,6 +160,68 @@ class HostFeedbackSummaryTests(unittest.TestCase):
         self.assertNotIn("DailyAll", recommendations[0])
         self.assertNotIn("target-run", recommendations[0])
 
+    def test_test_fixture_is_traceable_and_does_not_call_live_host_loaders(self) -> None:
+        module = _load_host_feedback_summary_script()
+        fixture_path = ROOT / "tests" / "fixtures" / "host-feedback" / "clean-windows-runner.json"
+
+        with (
+            mock.patch.dict(os.environ, {"GACR_HOST_FEEDBACK_FIXTURE": str(fixture_path)}),
+            mock.patch.object(module, "codex_status", side_effect=AssertionError("live Codex status must not run")),
+            mock.patch.object(module, "claude_status", side_effect=AssertionError("live Claude status must not run")),
+            mock.patch.object(
+                module,
+                "probe_claude_code_surface",
+                side_effect=AssertionError("live Claude probe must not run"),
+            ),
+        ):
+            payload = module.build_host_feedback_summary(repo_root=ROOT)
+
+        self.assertEqual("pass", payload["status"])
+        self.assertEqual("test_fixture", payload["input_provenance"]["mode"])
+        self.assertEqual("test_only_not_hosted", payload["input_provenance"]["acceptance_scope"])
+        self.assertEqual("clean-windows-runner", payload["input_provenance"]["fixture_id"])
+        self.assertRegex(payload["input_provenance"]["fixture_sha256"], r"^[0-9a-f]{64}$")
+
+    def test_test_fixture_outside_repo_fixture_root_is_rejected(self) -> None:
+        module = _load_host_feedback_summary_script()
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            fixture_path = Path(tmp_dir) / "host-feedback.json"
+            fixture_path.write_text("{}", encoding="utf-8")
+            with mock.patch.dict(os.environ, {"GACR_HOST_FEEDBACK_FIXTURE": str(fixture_path)}):
+                with self.assertRaisesRegex(ValueError, "tests/fixtures/host-feedback"):
+                    module.build_host_feedback_summary(repo_root=ROOT)
+
+    def test_malformed_test_fixture_fails_closed(self) -> None:
+        module = _load_host_feedback_summary_script()
+        fixture_root = ROOT / "tests" / "fixtures" / "host-feedback"
+        base_payload = json.loads((fixture_root / "clean-windows-runner.json").read_text(encoding="utf-8"))
+
+        missing_key = dict(base_payload)
+        missing_key.pop("claude_probe")
+        extra_key = dict(base_payload)
+        extra_key["unexpected"] = "rejected"
+        wrong_type = json.loads(json.dumps(base_payload))
+        wrong_type["codex_status"]["login_status"]["exit_code"] = True
+        wrong_scope = dict(base_payload)
+        wrong_scope["acceptance_scope"] = "hosted"
+
+        cases = (
+            ("missing-key", missing_key, "keys are invalid"),
+            ("extra-key", extra_key, "keys are invalid"),
+            ("wrong-type", wrong_type, "must have type int"),
+            ("wrong-scope", wrong_scope, "acceptance_scope must be test_only_not_hosted"),
+        )
+
+        with tempfile.TemporaryDirectory(dir=fixture_root) as tmp_dir:
+            for case_id, payload, expected_error in cases:
+                with self.subTest(case_id=case_id):
+                    fixture_path = Path(tmp_dir) / f"{case_id}.json"
+                    fixture_path.write_text(json.dumps(payload), encoding="utf-8")
+                    with mock.patch.dict(os.environ, {"GACR_HOST_FEEDBACK_FIXTURE": str(fixture_path)}):
+                        with self.assertRaisesRegex(ValueError, expected_error):
+                            module.build_host_feedback_summary(repo_root=ROOT)
+
     def _write_minimal_repo(self, repo_root: Path) -> None:
         for relative in (
             "docs/product/host-feedback-loop.md",
@@ -172,6 +246,11 @@ class HostFeedbackSummaryTests(unittest.TestCase):
         manifest_path = repo_root / "rules" / "manifest.json"
         manifest_path.parent.mkdir(parents=True, exist_ok=True)
         manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+        for relative in (".codex/AGENTS.md", ".claude/CLAUDE.md"):
+            target = repo_root / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text("test-only global rule fixture\n", encoding="utf-8")
 
     def _claude_probe(
         self,

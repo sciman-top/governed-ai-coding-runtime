@@ -12,6 +12,14 @@ if str(CONTRACTS_SRC) not in sys.path:
     sys.path.insert(0, str(CONTRACTS_SRC))
 
 
+def _fixture_env() -> dict[str, str]:
+    env = os.environ.copy()
+    env["GACR_HOST_FEEDBACK_FIXTURE"] = str(
+        ROOT / "tests" / "fixtures" / "host-feedback" / "clean-windows-runner.json"
+    )
+    return env
+
+
 class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
     def test_build_runtime_script_succeeds(self) -> None:
         script = ROOT / "scripts" / "build-runtime.ps1"
@@ -42,6 +50,7 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             capture_output=True,
             text=True,
             cwd=ROOT,
+            env=_fixture_env(),
         )
 
         self.assertIn("OK python-command", completed.stdout)
@@ -68,6 +77,9 @@ class RuntimeBuildAndDoctorScriptTests(unittest.TestCase):
             self.skipTest("codex is not available")
 
         env = os.environ.copy()
+        env["GACR_HOST_FEEDBACK_FIXTURE"] = str(
+            ROOT / "tests" / "fixtures" / "host-feedback" / "clean-windows-runner.json"
+        )
         env.pop("SystemRoot", None)
         env.pop("WINDIR", None)
         env.pop("ComSpec", None)
