@@ -28,6 +28,12 @@ class PreflightCiWiringTests(unittest.TestCase):
 
         self.assertIn("release-preflight:", workflow)
         self.assertIn("./scripts/governance/preflight.ps1", workflow)
+        self.assertEqual(2, workflow.count("- name: Install repo hooks"))
+        self.assertEqual(2, workflow.count("- name: Prepare ephemeral managed rule copies"))
+        self.assertEqual(2, workflow.count("python scripts/verify-agent-rule-family.py"))
+        self.assertEqual(2, workflow.count("python scripts/sync-agent-rules.py --scope All --apply"))
+        self.assertEqual(2, workflow.count("python scripts/sync-agent-rules.py --scope All --fail-on-change"))
+        self.assertEqual(2, workflow.count("GACR_HOST_FEEDBACK_FIXTURE"))
 
 
 if __name__ == "__main__":
