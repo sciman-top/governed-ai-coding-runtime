@@ -1,7 +1,7 @@
 # Agent Rule Coordination v2 Spec
 
 ## Status
-Active design baseline, refreshed on 2026-07-14 for the Codex, ChatGPT Work,
+Active design baseline, refreshed on 2026-07-15 for the Codex, ChatGPT Work,
 and Claude rule-governance audit.
 
 ## Purpose
@@ -28,7 +28,7 @@ The contract must produce a practical `global WHAT + project WHERE/HOW + host DE
 
 ## Version Model
 
-- `rule_release` identifies the deployed global rule content release. This refresh uses `9.56`.
+- `rule_release` identifies the deployed global rule content release. This refresh uses `9.57`.
 - `project_contract_version` identifies the machine-audited project integration interface. This rollout uses `2.0`.
 - `schema_version=2.3` adds deterministic workspace inventory and a line-ending-neutral
   workflow hash contract without changing the project integration interface.
@@ -116,6 +116,12 @@ allowlisted target blocks rollout. Filtered or isolated CI target audits report 
 inventory as skipped because those layouts deliberately contain only one checkout.
 `--workspace-root` provides an explicit CI checkout override without changing the local
 manifest path.
+
+When a protected release cannot move existing divergent or dirty user worktrees, the
+control Contract gate may set `GACR_TARGET_PROJECT_RULE_WORKSPACE_ROOT` to a task-isolated
+workspace containing the complete allowlist. The override always adds `--require-all`,
+so a partial, missing, or extra repository set remains blocking. With the variable unset,
+the configured `workspace_root` behavior is unchanged.
 
 Hard failures include:
 

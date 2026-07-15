@@ -17,7 +17,7 @@
   - 用户目录级全局规则同步：`~/.codex`、`~/.claude`
   - 目标仓项目规则协同审计：`AGENTS.md + CLAUDE.md thin wrapper`
   - host/self-evolution/continuity 的只读反馈、证据与门禁
-- 当前规则协调版本为 `rule_release=9.56 / project_contract_version=2.0 / coordination_schema=2.3`；目标范围先从 `D:\CODE` 直接子 Git 根动态发现，再与 9 仓显式 allowlist 对账。发现不会自动纳管，未登记 Git 根或缺失目标会按契约阻断。
+- 当前规则协调版本为 `rule_release=9.57 / project_contract_version=2.0 / coordination_schema=2.3`；目标范围先从 `D:\CODE` 直接子 Git 根动态发现，再与 9 仓显式 allowlist 对账。发现不会自动纳管，未登记 Git 根或缺失目标会按契约阻断。
 - 目标仓 `AGENTS.md` 是宿主中立项目契约；`CLAUDE.md` 默认只有无 BOM 的首行 `@AGENTS.md`。全局同步不分发目标仓正文。
 - CI 协同采用 `coordination_schema=2.3 / ci_contract=2.1 / workflow_hash_mode=utf8_lf_v1`：每个目标仓本地 workflow 自证规则变更；控制仓按清单生成 9 仓矩阵，实际 checkout 审计 7 个公开仓，并将 2 个私有仓明确分流到 target-local enforcement；两层都不替代产品门禁。
 - 历史 `docs/change-evidence/**` 继续保留，但不再代表当前 target-repo rollout、attachment、session-bridge write 能力仍然存在。

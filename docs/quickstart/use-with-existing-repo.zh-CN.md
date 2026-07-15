@@ -16,7 +16,7 @@
 直接在那一仓库内维护。
 
 推荐做法：
-1. 在目标仓根 `AGENTS.md` 记录 `**项目契约**: 2.0`、`**全局规则复核**: 9.56`、当前落点、目标归宿、仓库事实、真实门禁、证据和回滚。
+1. 在目标仓根 `AGENTS.md` 记录 `**项目契约**: 2.0`、`**全局规则复核**: 9.57`、当前落点、目标归宿、仓库事实、真实门禁、证据和回滚。
 2. 保持 `AGENTS.md` 宿主中立，不复制全局 R/E 或平台加载教程；固定门禁仍是 `build -> test -> contract/invariant -> hotspot`。
 3. 目标仓 `CLAUDE.md` 第一物理行写裸文本 `@AGENTS.md`，无 BOM；没有真实仓库级差异时文件只保留这一行。
 4. 在 `rules/target-project-rule-coordination.json` 显式登记目标，并填写 `github_repository` 与 `ci_workflow_path`；控制仓只审计，不保存或盲覆盖目标正文。

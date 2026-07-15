@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import os
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -47,6 +49,43 @@ REQUIRED_GLOBAL_TARGETS = (
     ("codex", ".codex/AGENTS.md"),
     ("claude", ".claude/CLAUDE.md"),
 )
+HOST_FEEDBACK_FIXTURE_ENV = "GACR_HOST_FEEDBACK_FIXTURE"
+HOST_FEEDBACK_FIXTURE_ROOT = ROOT / "tests" / "fixtures" / "host-feedback"
+HOST_FEEDBACK_FIXTURE_SHAPE = {
+    "schema_version": str,
+    "fixture_id": str,
+    "acceptance_scope": str,
+    "global_target_presence": {"codex": bool, "claude": bool},
+    "codex_status": {
+        "login_status": {"exit_code": int, "summary": str},
+        "config": {"status": str},
+        "active_account": {"account_label": str},
+    },
+    "claude_status": {
+        "active_provider": {"name": str},
+        "config": {"status": str},
+        "command": {"exit_code": int, "summary": str},
+        "mcp": {"exit_code": int, "summary": str},
+    },
+    "claude_probe": {
+        "claude_cli_available": bool,
+        "version": (str, type(None)),
+        "native_attach_available": bool,
+        "process_bridge_available": bool,
+        "settings_available": bool,
+        "hooks_available": bool,
+        "session_id_available": bool,
+        "structured_events_available": bool,
+        "evidence_export_available": bool,
+        "resume_available": bool,
+        "live_session_id": (str, type(None)),
+        "live_resume_id": (str, type(None)),
+        "reason": str,
+        "failure_stage": (str, type(None)),
+        "remediation_hint": (str, type(None)),
+        "probe_commands": [{"cmd": str, "exit_code": int, "key_output": str, "timestamp": str}],
+    },
+}
 
 
 @dataclass(frozen=True)
@@ -65,6 +104,29 @@ class FeedbackDimension:
         }
 
 
+@dataclass(frozen=True)
+class HostFeedbackInputs:
+    mode: str
+    acceptance_scope: str
+    fixture_id: str | None = None
+    fixture_ref: str | None = None
+    fixture_sha256: str | None = None
+    global_target_presence: dict[str, bool] | None = None
+    codex_status_payload: dict[str, Any] | None = None
+    claude_status_payload: dict[str, Any] | None = None
+    claude_probe: ClaudeCodeSurfaceProbe | None = None
+
+    def provenance(self) -> dict[str, Any]:
+        return {
+            "mode": self.mode,
+            "acceptance_scope": self.acceptance_scope,
+            "hosted_acceptance": False,
+            "fixture_id": self.fixture_id,
+            "fixture_ref": self.fixture_ref,
+            "fixture_sha256": self.fixture_sha256,
+        }
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Summarize Codex/Claude host feedback surfaces, global rule distribution, and repo-local parity posture."
@@ -78,7 +140,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     repo_root = Path(args.repo_root)
-    payload = build_host_feedback_summary(repo_root=repo_root)
+    try:
+        payload = build_host_feedback_summary(repo_root=repo_root)
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
 
     if args.write_markdown:
         output = Path(args.write_markdown)
@@ -102,11 +168,12 @@ def main(argv: list[str] | None = None) -> int:
 def build_host_feedback_summary(*, repo_root: Path) -> dict[str, Any]:
     resolved_root = repo_root.resolve(strict=False)
     generated_at = datetime.now(timezone.utc)
+    inputs = _resolve_host_feedback_inputs()
     docs_dimension = _build_docs_dimension(resolved_root)
-    rules_dimension = _build_rules_dimension(resolved_root)
-    hosts_dimension = _build_hosts_dimension()
+    rules_dimension = _build_rules_dimension(resolved_root, inputs=inputs)
+    hosts_dimension = _build_hosts_dimension(inputs=inputs)
     parity_dimension = _build_parity_dimension(resolved_root)
-    claude_workload_dimension = _build_claude_workload_dimension(resolved_root)
+    claude_workload_dimension = _build_claude_workload_dimension(resolved_root, inputs=inputs)
 
     dimensions = [
         docs_dimension,
@@ -123,14 +190,15 @@ def build_host_feedback_summary(*, repo_root: Path) -> dict[str, Any]:
         "dimensions_fail": sum(1 for item in dimensions if item.status == "fail"),
         "codex_host_status": hosts_dimension.details["codex"].get("status"),
         "claude_host_status": hosts_dimension.details["claude"].get("status"),
-        "claude_workload_status": claude_workload_dimension.details.get("readiness", {}).get("status"),
-        "claude_adapter_tier": claude_workload_dimension.details.get("readiness", {}).get("adapter_tier"),
+        "claude_workload_status": (claude_workload_dimension.details.get("readiness") or {}).get("status"),
+        "claude_adapter_tier": (claude_workload_dimension.details.get("readiness") or {}).get("adapter_tier"),
         "rule_manifest_revision": rules_dimension.details.get("sync_revision"),
     }
     return {
         "status": status,
         "generated_at": generated_at.isoformat(),
         "repo_root": resolved_root.as_posix(),
+        "input_provenance": inputs.provenance(),
         "guide_path": GUIDE_PATH_ZH,
         "guide_path_en": GUIDE_PATH_EN,
         "parity_path": PARITY_PATH,
@@ -226,6 +294,96 @@ def render_markdown_report(payload: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _resolve_host_feedback_inputs() -> HostFeedbackInputs:
+    raw_fixture_path = os.environ.get(HOST_FEEDBACK_FIXTURE_ENV, "").strip()
+    if not raw_fixture_path:
+        return HostFeedbackInputs(
+            mode="live_host",
+            acceptance_scope="repo_local_host_only",
+        )
+
+    fixture_path = Path(raw_fixture_path)
+    if not fixture_path.is_absolute():
+        fixture_path = ROOT / fixture_path
+    fixture_path = fixture_path.resolve(strict=False)
+    fixture_root = HOST_FEEDBACK_FIXTURE_ROOT.resolve(strict=False)
+    try:
+        fixture_ref = fixture_path.relative_to(ROOT.resolve(strict=False)).as_posix()
+        fixture_path.relative_to(fixture_root)
+    except ValueError as exc:
+        raise ValueError(
+            f"{HOST_FEEDBACK_FIXTURE_ENV} must point inside tests/fixtures/host-feedback: {fixture_path}"
+        ) from exc
+    if fixture_path.suffix.lower() != ".json":
+        raise ValueError(f"host feedback fixture must be JSON: {fixture_ref}")
+
+    try:
+        fixture_bytes = fixture_path.read_bytes()
+    except OSError as exc:
+        raise ValueError(f"host feedback fixture is not readable: {fixture_ref} ({exc})") from exc
+    try:
+        payload = json.loads(fixture_bytes.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"host feedback fixture is invalid UTF-8 JSON: {fixture_ref} ({exc})") from exc
+
+    fixture = _validate_host_feedback_fixture(payload, fixture_ref=fixture_ref)
+    return HostFeedbackInputs(
+        mode="test_fixture",
+        acceptance_scope=fixture["acceptance_scope"],
+        fixture_id=fixture["fixture_id"],
+        fixture_ref=fixture_ref,
+        fixture_sha256=hashlib.sha256(fixture_bytes).hexdigest(),
+        global_target_presence=fixture["global_target_presence"],
+        codex_status_payload=fixture["codex_status"],
+        claude_status_payload=fixture["claude_status"],
+        claude_probe=_claude_probe_from_fixture(fixture["claude_probe"], fixture_ref=fixture_ref),
+    )
+
+
+def _validate_host_feedback_fixture(payload: object, *, fixture_ref: str) -> dict[str, Any]:
+    _validate_fixture_shape(payload, HOST_FEEDBACK_FIXTURE_SHAPE, path="fixture", fixture_ref=fixture_ref)
+    fixture = payload
+    if fixture["schema_version"] != "1.0":
+        raise ValueError(f"host feedback fixture schema_version must be 1.0: {fixture_ref}")
+    if fixture["acceptance_scope"] != "test_only_not_hosted":
+        raise ValueError(f"host feedback fixture acceptance_scope must be test_only_not_hosted: {fixture_ref}")
+    return fixture
+
+
+def _claude_probe_from_fixture(payload: object, *, fixture_ref: str) -> ClaudeCodeSurfaceProbe:
+    probe = dict(payload)
+    commands = [ClaudeCodeProbeCommand(**command) for command in probe.pop("probe_commands")]
+    return ClaudeCodeSurfaceProbe(probe_commands=commands, **probe)
+
+
+def _validate_fixture_shape(value: object, shape: object, *, path: str, fixture_ref: str) -> None:
+    if isinstance(shape, dict):
+        if not isinstance(value, dict):
+            raise ValueError(f"host feedback fixture {path} must be an object: {fixture_ref}")
+        missing = sorted(set(shape) - set(value))
+        unexpected = sorted(set(value) - set(shape))
+        if missing or unexpected:
+            raise ValueError(
+                f"host feedback fixture {path} keys are invalid: missing={missing}, unexpected={unexpected}: {fixture_ref}"
+            )
+        for key, child_shape in shape.items():
+            _validate_fixture_shape(value[key], child_shape, path=f"{path}.{key}", fixture_ref=fixture_ref)
+        return
+    if isinstance(shape, list):
+        if not isinstance(value, list) or not value:
+            raise ValueError(f"host feedback fixture {path} must be a non-empty array: {fixture_ref}")
+        for index, item in enumerate(value):
+            _validate_fixture_shape(item, shape[0], path=f"{path}[{index}]", fixture_ref=fixture_ref)
+        return
+
+    expected_types = shape if isinstance(shape, tuple) else (shape,)
+    if type(value) not in expected_types:
+        names = ", ".join(expected.__name__ for expected in expected_types)
+        raise ValueError(f"host feedback fixture {path} must have type {names}: {fixture_ref}")
+    if isinstance(value, str) and not value.strip():
+        raise ValueError(f"host feedback fixture {path} must be non-empty: {fixture_ref}")
+
+
 def _build_docs_dimension(repo_root: Path) -> FeedbackDimension:
     missing = [path for path in REQUIRED_DOCS if not (repo_root / path).exists()]
     status = "ok" if not missing else "fail"
@@ -244,7 +402,7 @@ def _build_docs_dimension(repo_root: Path) -> FeedbackDimension:
     )
 
 
-def _build_rules_dimension(repo_root: Path) -> FeedbackDimension:
+def _build_rules_dimension(repo_root: Path, *, inputs: HostFeedbackInputs) -> FeedbackDimension:
     manifest_path = repo_root / "rules" / "manifest.json"
     details: dict[str, Any] = {
         "manifest_path": manifest_path.as_posix(),
@@ -254,6 +412,7 @@ def _build_rules_dimension(repo_root: Path) -> FeedbackDimension:
         "global_entries": [],
         "required_global_tools_present": [],
         "missing_global_targets": [],
+        "target_presence_source": inputs.mode,
     }
     if not manifest_path.exists():
         return FeedbackDimension("rules", "fail", "rule manifest is missing", details)
@@ -275,9 +434,13 @@ def _build_rules_dimension(repo_root: Path) -> FeedbackDimension:
     details["required_global_tools_present"] = [tool for tool, _suffix in REQUIRED_GLOBAL_TARGETS if tool in global_tools]
     missing_targets: list[str] = []
     for tool, suffix in REQUIRED_GLOBAL_TARGETS:
-        expected = Path.home() / suffix
-        if not expected.exists():
-            missing_targets.append(f"{tool}:{expected.as_posix()}")
+        if inputs.global_target_presence is not None:
+            if not inputs.global_target_presence[tool]:
+                missing_targets.append(f"{tool}:fixture-declared-absent")
+        else:
+            expected = Path.home() / suffix
+            if not expected.exists():
+                missing_targets.append(f"{tool}:{expected.as_posix()}")
     details["missing_global_targets"] = missing_targets
     status = "ok" if not missing_targets else "attention"
     summary = "manifest-backed global rule distribution is present"
@@ -286,9 +449,15 @@ def _build_rules_dimension(repo_root: Path) -> FeedbackDimension:
     return FeedbackDimension("rules", status, summary, details)
 
 
-def _build_hosts_dimension() -> FeedbackDimension:
-    codex = _safe_host_status(codex_status)
-    claude = _safe_host_status(claude_status)
+def _build_hosts_dimension(*, inputs: HostFeedbackInputs) -> FeedbackDimension:
+    codex_loader = codex_status
+    claude_loader = claude_status
+    if inputs.codex_status_payload is not None:
+        codex_loader = lambda: dict(inputs.codex_status_payload or {})
+    if inputs.claude_status_payload is not None:
+        claude_loader = lambda: dict(inputs.claude_status_payload or {})
+    codex = _safe_host_status(codex_loader)
+    claude = _safe_host_status(claude_loader)
     codex_health = _host_health(
         loader_status=codex.get("status"),
         config_status=_nested_value(codex, "config", "status"),
@@ -348,15 +517,15 @@ def _build_parity_dimension(repo_root: Path) -> FeedbackDimension:
     return FeedbackDimension("parity", status, summary, details)
 
 
-def _build_claude_workload_dimension(repo_root: Path) -> FeedbackDimension:
+def _build_claude_workload_dimension(repo_root: Path, *, inputs: HostFeedbackInputs) -> FeedbackDimension:
     details: dict[str, Any] = {
-        "probe_source": "live_claude_code_adapter_probe",
+        "probe_source": "test_fixture" if inputs.claude_probe is not None else "live_claude_code_adapter_probe",
         "probe": None,
         "readiness": None,
         "trial": None,
     }
     try:
-        probe = probe_claude_code_surface(cwd=repo_root)
+        probe = inputs.claude_probe or probe_claude_code_surface(cwd=repo_root)
         readiness = summarize_claude_code_capability_readiness(probe)
         trial = build_claude_code_adapter_trial_result(
             repo_id="governed-ai-coding-runtime",
@@ -370,7 +539,7 @@ def _build_claude_workload_dimension(repo_root: Path) -> FeedbackDimension:
             structured_events_available=probe.structured_events_available,
             evidence_export_available=probe.evidence_export_available,
             resume_available=probe.resume_available,
-            run_id="host-feedback-live-probe",
+            run_id="host-feedback-test-fixture" if inputs.claude_probe is not None else "host-feedback-live-probe",
             probe=probe,
         )
     except Exception as exc:
@@ -385,6 +554,8 @@ def _build_claude_workload_dimension(repo_root: Path) -> FeedbackDimension:
     details["probe"] = claude_code_probe_to_dict(probe)
     details["readiness"] = claude_code_capability_readiness_to_dict(readiness)
     details["trial"] = claude_code_adapter_trial_to_dict(trial)
+    if inputs.claude_probe is not None:
+        details["trial"]["probe_source"] = "test_fixture"
 
     if readiness.status == "ready":
         status = "ok"

@@ -1,8 +1,10 @@
 import datetime as dt
 import importlib.util
+import os
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -35,10 +37,12 @@ class EvidenceRecoveryPostureTests(unittest.TestCase):
     def _live_recovery_payload(cls) -> dict:
         if cls._live_payload is None:
             module = _load_script()
-            cls._live_payload = module.assert_evidence_recovery_posture(
-                repo_root=ROOT,
-                as_of=dt.date(2026, 7, 5),
-            )
+            fixture_path = ROOT / "tests" / "fixtures" / "host-feedback" / "clean-windows-runner.json"
+            with mock.patch.dict(os.environ, {"GACR_HOST_FEEDBACK_FIXTURE": str(fixture_path)}):
+                cls._live_payload = module.assert_evidence_recovery_posture(
+                    repo_root=ROOT,
+                    as_of=dt.date(2026, 7, 5),
+                )
         return dict(cls._live_payload)
 
     def test_live_recovery_posture_requires_fresh_repo_local_feedback(self) -> None:
@@ -49,6 +53,9 @@ class EvidenceRecoveryPostureTests(unittest.TestCase):
         self.assertIsNone(payload["selector"]["evidence_blocker"])
         self.assertEqual(payload["host_feedback"]["status"], "pass")
         self.assertEqual(payload["host_feedback"]["claude_workload_status"], "ready")
+        self.assertEqual(payload["host_feedback"]["input_mode"], "test_fixture")
+        self.assertEqual(payload["host_feedback"]["acceptance_scope"], "test_only_not_hosted")
+        self.assertFalse(payload["host_feedback"]["hosted_acceptance"])
 
     def test_recovery_posture_fails_closed_when_selector_is_not_in_recovered_defer_state(self) -> None:
         result = self._live_recovery_payload()

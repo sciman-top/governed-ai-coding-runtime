@@ -322,7 +322,7 @@ claude plugin --help
 
 1. OpenAI / Anthropic 全局共同段逐字或语义一致，platform DELTA 不含目标仓私有事实。
 2. Codex 每条 root-to-cwd chain 每层最多一个候选，总字节不超过 `project_doc_max_bytes`，fallback 名来自 current config。
-3. `CLAUDE.md` 第一物理行等于 `@AGENTS.md`，UTF-8 无 BOM，无循环 import，import depth `<= 4`。
+3. `CLAUDE.md` 第一物理行等于 `@AGENTS.md`，UTF-8 无 BOM，无循环 import，import depth `<= 5`。此项于 2026-07-15 按官方现行文档校正。
 4. wrapper 与 `AGENTS.md` 共同段落重复率低于阈值；无 Claude 差异时 wrapper 只能有一行。
 5. global / project / nested rules 无相反指令；不能用“project override global”豁免 Claude 冲突。
 6. 每个 `.claude/rules/*.md` 的 frontmatter 可解析、glob 合法；关键安全约束不得只放 Read-trigger 的 path rule。

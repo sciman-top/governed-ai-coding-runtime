@@ -730,7 +730,7 @@ def main(argv: list[str] | None = None) -> int:
         require_all=args.require_all,
         workspace_root_override=Path(args.workspace_root) if args.workspace_root else None,
     )
-    print(json.dumps(result, ensure_ascii=False, indent=2))
+    print(json.dumps(result, ensure_ascii=True, indent=2))
     return 0 if result["status"] == "pass" else 1
 
 

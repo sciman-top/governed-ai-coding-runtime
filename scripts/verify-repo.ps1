@@ -993,7 +993,23 @@ function Invoke-AgentRuleFamilyChecks {
 
 function Invoke-TargetProjectRuleChecks {
   $python = Resolve-PythonCommand
-  $output = & $python.Source "scripts/verify-target-project-rules.py" 2>&1
+  $auditArguments = @("scripts/verify-target-project-rules.py")
+  $workspaceRootOverride = [Environment]::GetEnvironmentVariable(
+    "GACR_TARGET_PROJECT_RULE_WORKSPACE_ROOT"
+  )
+  if (-not [string]::IsNullOrWhiteSpace($workspaceRootOverride)) {
+    $resolvedWorkspaceRoot = Resolve-Path -LiteralPath $workspaceRootOverride -ErrorAction Stop
+    if (-not (Test-Path -LiteralPath $resolvedWorkspaceRoot.Path -PathType Container)) {
+      throw "Target project rule workspace override must resolve to a directory"
+    }
+    $auditArguments += @(
+      "--workspace-root",
+      $resolvedWorkspaceRoot.Path,
+      "--require-all"
+    )
+  }
+
+  $output = & $python.Source @auditArguments 2>&1
   if ($LASTEXITCODE -ne 0) {
     $detail = ($output | Out-String).Trim()
     if (-not $detail) {

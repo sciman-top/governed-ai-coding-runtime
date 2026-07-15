@@ -63,6 +63,7 @@ Allowed `declared_rule` values:
 - target-repo overrides in this audit boundary may only tighten policy or declare platform limitations
 - Codex and Claude Code remain cooperation hosts; credential ownership stays user-owned unless a later bounded contract proves otherwise
 - local Codex and Claude user configuration may preserve operator convenience settings only when deterministic guard evidence remains present
+- managed `AGENTS.md` / `CLAUDE.md` copies alone do not activate local credential-policy checks; when no supported config, settings, or MCP surface exists, the local audit reports `platform_na`, while any supported surface keeps the managed host-family checks fail closed
 - Gemini or other non-managed host-family local configuration may still be observed for compatibility, but it must not block the current rule-governance slice unless a later policy explicitly promotes it back into managed scope
 - plaintext local login tokens are accepted operator-owned state only when credential-bearing config files are denied to agents and are not synchronized into repositories
 - MCP server synchronization is acceptable only when credentials remain indirect through environment-variable references rather than expanded token values

@@ -147,7 +147,7 @@
         },
         {
           "details": {
-            "default_version": "9.56",
+            "default_version": "9.57",
             "global_entries": [
               {
                 "id": "global-codex-agents",
@@ -167,7 +167,7 @@
               "codex",
               "claude"
             ],
-            "sync_revision": "2026-07-14.1"
+            "sync_revision": "2026-07-15.1"
           },
           "dimension_id": "rules",
           "status": "ok",
@@ -182,7 +182,7 @@
               "config_status": "attention",
               "health": "ok",
               "mcp_exit_code": 0,
-              "mcp_summary": "Checking MCP server health…\n\nweb-search-prime: https://open.bigmodel.cn/api/mcp/web_search_prime/mcp (HTTP) - √ Connected\nweb-reader: https://open.bigmodel.cn/api/mcp/web_reader/mcp (HTTP) - √ Connected\nzai-mcp-server: cmd /c npx -y @z_ai/mcp-server@latest - √ Connected\nzread: https://open.bigmodel.cn/api/mcp/zread/mcp (HTTP) - √ Connected\ncontext7: npx -y @upstash/context7-mcp - √ Connected\ngithub: https://api.githubcopilot.com/mcp/ (HTTP) - √ Connected\nmicrosoft-learn: https://learn.microsoft.com/api/mcp (HTTP) - √ Connected\nopenaiDeveloperDocs: https://developers.openai.com/mcp (HTTP) - √ Connected\nplaywright: npx @playwright/mcp@latest --isolated - √ Connected\nfilesystem: npx -y @modelcontextprotocol/server-filesystem D:\\CODE - √ Connected\npostgres: pwsh -NoLogo -NoProfile -Command $conn = $env:POSTGRES_CONNECTION_STRING; if ([string]::IsNullOrWhiteSpace($conn)) { $conn = [Environment]::GetEnvironmentVariable(\"POSTGRES_CONNECTION_STRING\", \"User\") }; if ([string]::IsNullOrWhiteSpace($conn)) { $conn = [Environment]::GetEnvironmentVariable(\"POSTGRES_CONNECTION_STRING\", \"Machine\") }; if ([string]::IsNullOrWhiteSpace($conn)) { Write-Error \"POSTGRES_CONNECTION_STRING is required for postgres MCP.\"; exit 64 }; $env:POSTGRES_CONNECTION_STRING = $conn; npx -y @modelcontextprotocol/server-postgres $conn - √ Connected\ncodebase-memory-mcp: pwsh -NoLogo -NoProfile -Command $exe = Join-Path $env:LOCALAPPDATA 'Programs\\codebase-memory-mcp\\codebase-memory-mcp.exe'; if (-not (Test-Path -LiteralPath $exe)) { $cmd = Get-Command codebase-memory-mcp -ErrorAction SilentlyContinue; if ($cmd) { $exe = [string]$cmd.Source } else { Write-Error 'codebase-memory-mcp.exe not found. Run the official installer first.'; exit 64 } }; & $exe - √ Connected",
+              "mcp_summary": "Checking MCP server health…\n\nweb-search-prime: https://open.bigmodel.cn/api/mcp/web_search_prime/mcp (HTTP) - √ Connected\nweb-reader: https://open.bigmodel.cn/api/mcp/web_reader/mcp (HTTP) - √ Connected\nzai-mcp-server: cmd /c npx -y @z_ai/mcp-server@latest - √ Connected\nzread: https://open.bigmodel.cn/api/mcp/zread/mcp (HTTP) - √ Connected\ncontext7: npx -y @upstash/context7-mcp - √ Connected\ngithub: https://api.githubcopilot.com/mcp/ (HTTP) - √ Connected\nmicrosoft-learn: https://learn.microsoft.com/api/mcp (HTTP) - √ Connected\nopenaiDeveloperDocs: https://developers.openai.com/mcp (HTTP) - √ Connected\nplaywright: npx @playwright/mcp@latest --isolated - √ Connected\nfilesystem: npx -y @modelcontextprotocol/server-filesystem D:\\CODE - √ Connected\ncodebase-memory-mcp: pwsh -NoLogo -NoProfile -Command $exe = Join-Path $env:LOCALAPPDATA 'Programs\\codebase-memory-mcp\\codebase-memory-mcp.exe'; if (-not (Test-Path -LiteralPath $exe)) { $cmd = Get-Command codebase-memory-mcp -ErrorAction SilentlyContinue; if ($cmd) { $exe = [string]$cmd.Source } else { Write-Error 'codebase-memory-mcp.exe not found. Run the official installer first.'; exit 64 } }; & $exe - √ Connected",
               "nonblocking_config_attention": true,
               "status": "ok"
             },
@@ -225,13 +225,13 @@
                   "cmd": "claude --version",
                   "exit_code": 0,
                   "key_output": "2.1.206 (Claude Code)",
-                  "timestamp": "2026-07-14T18:43:05.262903+00:00"
+                  "timestamp": "2026-07-15T08:58:58.529916+00:00"
                 },
                 {
                   "cmd": "claude --help",
                   "exit_code": 0,
                   "key_output": "Usage: claude [options] [command] [prompt]\n\nClaude Code - starts an interactive session by default, use -p/--print for\nnon-interactive output\n\nArguments:\n  prompt                                Your prompt\n\nOptions:\n  --add-dir <director...",
-                  "timestamp": "2026-07-14T18:43:05.698526+00:00"
+                  "timestamp": "2026-07-15T08:58:58.922475+00:00"
                 }
               ],
               "process_bridge_available": true,
@@ -289,7 +289,7 @@
           "summary": "Claude Code workload adapter probe is ready"
         }
       ],
-      "generated_at": "2026-07-14T18:42:57.406899+00:00",
+      "generated_at": "2026-07-15T08:58:51.928045+00:00",
       "guide_path": "docs/product/host-feedback-loop.zh-CN.md",
       "guide_path_en": "docs/product/host-feedback-loop.md",
       "parity_path": "docs/product/adapter-conformance-parity-matrix.md",
@@ -306,7 +306,7 @@
         "dimensions_attention": 0,
         "dimensions_fail": 0,
         "dimensions_ok": 5,
-        "rule_manifest_revision": "2026-07-14.1"
+        "rule_manifest_revision": "2026-07-15.1"
       }
     },
     "knowledge_memory_lifecycle": {

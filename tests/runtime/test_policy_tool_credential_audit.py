@@ -11,6 +11,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def _write_managed_rule_copies(home: Path) -> tuple[Path, Path]:
+    codex_dir = home / ".codex"
+    claude_dir = home / ".claude"
+    codex_dir.mkdir()
+    claude_dir.mkdir()
+    shutil.copy2(ROOT / "rules" / "global" / "codex" / "AGENTS.md", codex_dir / "AGENTS.md")
+    shutil.copy2(ROOT / "rules" / "global" / "claude" / "CLAUDE.md", claude_dir / "CLAUDE.md")
+    return codex_dir, claude_dir
+
+
 class PolicyToolCredentialAuditTests(unittest.TestCase):
     def test_builder_generates_fail_closed_report(self) -> None:
         completed = subprocess.run(
@@ -43,6 +53,75 @@ class PolicyToolCredentialAuditTests(unittest.TestCase):
         payload = json.loads(completed.stdout)
         self.assertEqual(payload["status"], "pass")
         self.assertFalse(payload["invalid_reasons"])
+
+    def test_builder_treats_rule_only_managed_home_as_platform_na(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="policy-tool-rule-only-") as tmp_dir:
+            home = Path(tmp_dir)
+            _write_managed_rule_copies(home)
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/build-policy-tool-credential-audit.py",
+                    "--home",
+                    str(home),
+                    "--output",
+                    str(home / "report.json"),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=ROOT,
+            )
+
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        payload = json.loads(completed.stdout)
+        local_audit = payload["local_agent_config_audit"]
+        self.assertEqual("platform_na", local_audit["status"])
+        self.assertFalse(local_audit["checks"])
+        self.assertFalse(local_audit["failed_checks"])
+
+    def test_builder_keeps_partial_managed_config_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="policy-tool-partial-config-") as tmp_dir:
+            home = Path(tmp_dir)
+            codex_dir, _ = _write_managed_rule_copies(home)
+            (codex_dir / "config.toml").write_text(
+                '\n'.join(
+                    [
+                        "model_context_window = 1000000",
+                        "model_auto_compact_token_limit = 810000",
+                        "[analytics]",
+                        "enabled = false",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "scripts/build-policy-tool-credential-audit.py",
+                    "--home",
+                    str(home),
+                    "--output",
+                    str(home / "report.json"),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=ROOT,
+            )
+
+        self.assertNotEqual(completed.returncode, 0, completed.stdout)
+        payload = json.loads(completed.stdout)
+        local_audit = payload["local_agent_config_audit"]
+        self.assertEqual("fail", local_audit["status"])
+        self.assertIn("claude_sensitive_settings_read_denied", local_audit["failed_required_checks"])
 
     def test_builder_audits_local_agent_config_without_exposing_tokens(self) -> None:
         home = Path(tempfile.gettempdir()) / f"policy-tool-audit-{uuid.uuid4().hex}"

@@ -85,6 +85,9 @@ def inspect_evidence_recovery_posture(*, repo_root: Path, as_of: dt.date | None 
             "codex_host_status": host_feedback_details.get("codex_host_status"),
             "claude_host_status": host_feedback_details.get("claude_host_status"),
             "claude_workload_status": host_feedback_details.get("claude_workload_status"),
+            "input_mode": host_feedback_details.get("input_mode"),
+            "acceptance_scope": host_feedback_details.get("acceptance_scope"),
+            "hosted_acceptance": bool(host_feedback_details.get("hosted_acceptance")),
         },
     }
 

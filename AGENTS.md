@@ -1,13 +1,13 @@
 # AGENTS.md - governed-ai-coding-runtime
 **项目契约**: 2.0
-**全局规则复核**: 9.56
+**全局规则复核**: 9.57
 **适用范围**: 仓库根
-**最后更新**: 2026-07-14
+**最后更新**: 2026-07-15
 
 ## 1. 当前落点与目标归宿
 - 当前落点：本仓是 governed AI coding runtime 的控制仓，负责全局规则源、机器契约、治理运行时、审计与同步工具。
 - 目标归宿：保持“全局 WHAT + 项目 WHERE/HOW + 宿主 DELTA + 确定性 enforcement”的治理 sidecar；不替代 Codex、Claude Code 或目标仓自身事实。
-- 当前最小里程碑：完成 `9.56 / 项目契约 2.0 / coordination 2.3` 发布、9 个动态发现且显式登记的目标仓审计、受保护全局同步与 fresh-process 加载证明。
+- 当前最小里程碑：完成 `9.57 / 项目契约 2.0 / coordination 2.3` 发布、9 个动态发现且显式登记的目标仓审计、受保护全局同步与 fresh-process 加载证明。
 - 事实裁决顺序：运行事实/代码 -> 根 `README.md` -> `docs/README.md` -> PRD/Architecture/Roadmap/Backlog -> Specs/Schemas；这不是宿主指令优先级。
 - 根规则只保留本仓高频事实、阻断、门禁、证据和回滚；长研究、runbook、计划与历史证据放入 `docs/`。
 
@@ -53,6 +53,7 @@
 - target CI matrix：`python scripts/export-target-rule-ci-matrix.py`
 - global dry-run：`python scripts/sync-agent-rules.py --scope All --fail-on-change`
 - global apply：`pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply`
+- isolated candidate Contract：仅当不得移动原始 divergent/dirty 工作树时，设置 `GACR_TARGET_PROJECT_RULE_WORKSPACE_ROOT` 指向包含完整 9 仓的任务隔离根；Contract 会强制 `--require-all`，缺仓或额外仓均阻断。
 - 发布顺序：静态 family/target 审计 -> dry-run 与备份确认 -> apply -> 零漂移 -> fresh loading probes -> 固定门禁。
 
 ### C.3 阻断、证据与回滚

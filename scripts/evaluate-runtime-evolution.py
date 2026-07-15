@@ -424,6 +424,9 @@ def _build_evidence_snapshot(*, repo_root: Path, as_of: dt.date) -> dict[str, di
         "codex_host_status": host_feedback.get("summary", {}).get("codex_host_status"),
         "claude_host_status": host_feedback.get("summary", {}).get("claude_host_status"),
         "claude_workload_status": host_feedback.get("summary", {}).get("claude_workload_status"),
+        "input_mode": host_feedback.get("input_provenance", {}).get("mode"),
+        "acceptance_scope": host_feedback.get("input_provenance", {}).get("acceptance_scope"),
+        "hosted_acceptance": bool(host_feedback.get("input_provenance", {}).get("hosted_acceptance")),
     }
 
     ai_experience_module = _load_script_module(

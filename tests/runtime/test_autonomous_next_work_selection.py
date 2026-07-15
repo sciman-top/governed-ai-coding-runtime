@@ -1,6 +1,7 @@
 import datetime as dt
 import importlib.util
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -29,13 +30,15 @@ class AutonomousNextWorkSelectionTests(unittest.TestCase):
 
     def test_repo_selector_defers_ltp_after_fresh_host_recovery_evidence(self) -> None:
         module = _load_selector_script()
+        fixture_path = ROOT / "tests" / "fixtures" / "host-feedback" / "clean-windows-runner.json"
 
-        payload = module.assert_next_work_selection(
-            repo_root=ROOT,
-            policy_path=ROOT / "docs" / "architecture" / "autonomous-next-work-selection-policy.json",
-            ltp_policy_path=ROOT / "docs" / "architecture" / "ltp-autonomous-promotion-policy.json",
-            as_of=dt.date(2026, 7, 5),
-        )
+        with mock.patch.dict(os.environ, {"GACR_HOST_FEEDBACK_FIXTURE": str(fixture_path)}):
+            payload = module.assert_next_work_selection(
+                repo_root=ROOT,
+                policy_path=ROOT / "docs" / "architecture" / "autonomous-next-work-selection-policy.json",
+                ltp_policy_path=ROOT / "docs" / "architecture" / "ltp-autonomous-promotion-policy.json",
+                as_of=dt.date(2026, 7, 5),
+            )
 
         self.assertEqual(payload["status"], "pass")
         self.assertEqual(payload["policy_id"], "default-autonomous-next-work-selection")
@@ -48,6 +51,12 @@ class AutonomousNextWorkSelectionTests(unittest.TestCase):
         self.assertIsNone(payload["evidence_blocker"])
         self.assertEqual(payload["auto_detected_inputs"]["details"]["host_feedback"]["status"], "pass")
         self.assertEqual(payload["auto_detected_inputs"]["details"]["host_feedback"]["claude_workload_status"], "ready")
+        self.assertEqual(payload["auto_detected_inputs"]["details"]["host_feedback"]["input_mode"], "test_fixture")
+        self.assertEqual(
+            payload["auto_detected_inputs"]["details"]["host_feedback"]["acceptance_scope"],
+            "test_only_not_hosted",
+        )
+        self.assertFalse(payload["auto_detected_inputs"]["details"]["host_feedback"]["hosted_acceptance"])
         self.assertIn("auto_detected_inputs", payload)
 
     def test_selector_promotes_one_auto_selected_ltp_package(self) -> None:

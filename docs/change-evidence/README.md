@@ -17,6 +17,8 @@ This directory stores dated evidence for planning, schema, script, and documenta
 - `archive_candidate`: older operator UI screenshots outside the `latest` and `milestone` sets should move only through `python scripts/prune-operator-ui-screenshots.py --apply`, which writes a manifest and rollback instructions.
 
 ## Current Evidence Baseline
+- [20260715 Agent Rule Governance 9.57](./20260715-agent-rule-governance-9.57.md)
+  - current evidence ledger for the official five-hop Claude import correction, protected global sync, nine-target review-marker rollout, default-branch proof, and hosted/manual boundary
 - [20260715 Agent Rule Governance 9.56 Current-State Reverification](./20260715-agent-rule-governance-9.56-current-state-reverification.md)
   - fresh current-state companion for ten-repository local gates, Codex loading, global zero-drift, six effective target default branches, three task-only branches, aggregate CI truth, and hosted/manual acceptance boundaries
 - [20260715 Agent Rule Governance 9.56](./20260715-agent-rule-governance-9.56.md)
