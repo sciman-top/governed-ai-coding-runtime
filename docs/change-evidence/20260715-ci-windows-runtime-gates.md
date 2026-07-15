@@ -8,6 +8,8 @@
 - cause: both Verify jobs ran on `ubuntu-latest`, while the executed runtime contract explicitly checks the Windows process environment and uses executable `.cmd` fixtures. The Linux runner therefore produced nine inherited runtime test-file failures, including `PermissionError` for `fake-dotnet.cmd`.
 - inherited proof: default-branch run `29394031470` at exact main SHA `4fd39cd0` and governance PR run `29403150644` at `9be5746a` both report `Completed 104 test files ... failures=9` with the same `.cmd` permission failure.
 - change: move only `Repository integrity` and `Release preflight` to the supported `windows-latest` GitHub-hosted runner. The independent target-rule matrix remains on Ubuntu.
+- hosted attempt 1: PR run `29404496213` proved both jobs selected Windows, then failed during checkout before tests because Git could not create the repository's deeply archived path (`Filename too long`).
+- checkout repair: run `git config --global core.longpaths true` in each fresh job before `actions/checkout`; no repository content is excluded from verification.
 
 ## pre_change_review
 
@@ -25,7 +27,7 @@
 - `official_sources_reviewed`: [GitHub-hosted runners reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners).
 - `primary_references_reviewed`: exact default-branch and governance-branch GitHub Actions logs, repository workflow YAML, fixed gate scripts, and failing runtime tests.
 - `local_runtime_evidence_reviewed`: YAML parse assertions, focused Windows tests, 9/9 candidate target audit, source/deployed rule zero-drift, and normal pre-commit output.
-- `source_decision`: change only the two mismatched runner labels; do not weaken tests, skip hooks, alter scripts, or move the independent target-rule matrix.
+- `source_decision`: align the two runner labels and enable Git long-path support before checkout; do not weaken tests, omit archived repository content, skip hooks, alter runtime scripts, or move the independent target-rule matrix.
 
 ## reference_basis_review
 
@@ -37,7 +39,7 @@
 ## Verification and publication boundary
 
 - `git diff --check`: pass.
-- YAML assertion: `repo-integrity.runs-on=windows-latest` and `release-preflight.runs-on=windows-latest`.
+- YAML assertion: `repo-integrity.runs-on=windows-latest`, `release-preflight.runs-on=windows-latest`, and both jobs enable `core.longpaths` before checkout.
 - focused Windows tests: `test_preflight_ci_wiring`, `test_repo_hook_enforcement`, and `test_runtime_doctor`; 21 tests passed.
 - target contract: frozen candidate workspace passed 9/9; `skills-manager` uses governance head `c5a58621` only and is not claimed default-branch effective.
 - required hosted proof: both Windows Verify jobs must pass at the frozen repair head before merge. If either repeats the same root cause twice, keep the PR open and enter `clarify_required`.
