@@ -249,13 +249,24 @@ def _inspect_local_agent_config(
     observed = _normalize_host_families(observed_host_families)
     observed -= managed
 
-    if not codex_dir.exists() and not claude_dir.exists() and not gemini_dir.exists():
+    auditable_config_paths = (
+        codex_dir / "config.toml",
+        claude_dir / "settings.json",
+        claude_dir / ".mcp.json",
+        gemini_dir / "settings.json",
+        gemini_dir / ".mcp.json",
+        gemini_dir / "antigravity" / "settings.json",
+    )
+    if not any(path.exists() for path in auditable_config_paths):
         return {
             "status": "platform_na",
             "home_ref": "~",
             "managed_host_families": sorted(managed),
             "observed_host_families": sorted(observed),
-            "reason": "No Codex, Claude, or Gemini user config directory is present under the inspected home path.",
+            "reason": (
+                "No auditable Codex, Claude, or Gemini security configuration is present under the inspected home "
+                "path; managed rule copies alone do not activate local credential-policy checks."
+            ),
             "checks": [],
             "failed_checks": [],
         }
