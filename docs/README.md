@@ -136,6 +136,8 @@
 ## Evidence, History, And Rollback
 - Current evidence index: [Change Evidence Index](./change-evidence/README.md)
 - Latest posture proof:
+  - [20260715 Agent Rule Governance 9.57](./change-evidence/20260715-agent-rule-governance-9.57.md)
+  - [20260715 Windows Runtime Gates](./change-evidence/20260715-ci-windows-runtime-gates.md)
   - [20260711 Agent Rule Cross-Repo CI](./change-evidence/20260711-agent-rule-cross-repo-ci.md)
   - [20260710 Agent Rule Coordination v2](./change-evidence/20260710-agent-rule-coordination-v2.md)
   - [20260705 Readme And Docs Current-State Refresh](./change-evidence/20260705-readme-and-docs-current-state-refresh.md)
