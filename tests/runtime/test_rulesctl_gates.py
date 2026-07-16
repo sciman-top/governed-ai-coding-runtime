@@ -91,6 +91,28 @@ class RulesCtlGateTests(unittest.TestCase):
         self.assertTrue(parser.parse_args(["verify"]).skip_targets)
         self.assertFalse(parser.parse_args(["verify", "--include-targets"]).skip_targets)
 
+    def test_repo_local_contract_marks_targets_as_separate_state_not_na(self) -> None:
+        with mock.patch.object(
+            rulesctl,
+            "_run_json_script",
+            return_value={"status": "pass", "exit_code": 0},
+        ):
+            result = rulesctl.contract_gate(
+                manifest_path=rulesctl.DEFAULT_MANIFEST,
+                coordination_path=rulesctl.DEFAULT_COORDINATION,
+                workspace_root=None,
+                default_ref="origin/main",
+                user_profile=None,
+                skip_projection=True,
+                skip_targets=True,
+            )
+
+        target_check = next(
+            check for check in result["checks"] if check["check"] == "target_default_branches"
+        )
+        self.assertEqual(target_check["state_boundary"], "separate_mutable_state")
+        self.assertNotIn("na_kind", target_check)
+
     def test_json_adapter_marks_successful_domain_payload_as_pass(self) -> None:
         with mock.patch.object(
             rulesctl,

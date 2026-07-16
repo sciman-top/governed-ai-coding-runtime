@@ -1,108 +1,67 @@
-# Governed AI Coding Runtime 中文说明
+# Codex + Claude 规则治理控制仓
 
-## 当前边界
-- 唯一状态真源：`docs/architecture/planning-status.json`
-- 唯一规划真源仍是 `docs/architecture/planning-status.json`。
-- 当前 active queue：`Continuous-Execution`
-- `current decision gate`：`defer_ltp_and_refresh_evidence`
-- 本仓当前只保留四类 live 能力：
-  - 本仓自治理：`build -> test -> contract/invariant -> hotspot`
-  - 用户目录级全局规则同步：`~/.codex`、`~/.claude`
-  - 目标仓项目规则协同审计：`AGENTS.md + CLAUDE.md thin wrapper`
-  - host/self-evolution/continuity 的只读反馈、证据与门禁
-- 当前规则协调版本：`rule_release=9.57 / project_contract_version=2.0 / coordination_schema=2.3`。目标范围先从 `D:\CODE` 直接子 Git 根动态发现，再与 9 仓显式 allowlist 对账；发现不会自动纳管，未登记 Git 根或缺失目标会按契约阻断。
-- 目标仓 `AGENTS.md` 保持宿主中立；`CLAUDE.md` 默认仅含无 BOM 首行 `@AGENTS.md`。全局同步只写两个用户级副本，不写目标仓正文。
-- CI 协同版本为 `coordination_schema=2.3 / ci_contract=2.1 / workflow_hash_mode=utf8_lf_v1`：每仓本地 workflow 验证规则变更；控制仓按清单生成 9 仓矩阵，实际 checkout 审计 7 个公开仓，并将 2 个私有仓明确分流到 target-local enforcement；两者都不能替代产品门禁。
-- 历史 `docs/change-evidence/**` 继续保留，但不再表示 target-repo rollout、attachment、session-bridge write 仍是当前能力。
+## 结论
 
-## 最快路径
-```powershell
-.\run.ps1
-```
+本项目的最优终态不是“通用 AI coding runtime”，而是一个无服务、静态、可审计的
+规则治理控制仓，只负责 OpenAI Codex 与 Anthropic Claude Code 两套规则。
 
-```powershell
-.\run.ps1 fast
-```
+技术栈保持为 Markdown、JSON/JSON Schema、Python、PowerShell、Git 与 GitHub
+Actions。现有需求不需要数据库、Web UI、HTTP API、daemon、消息队列、模型调用层，
+也没有依据改写为 Node.js、Rust 或另建微服务。
 
-```powershell
-.\run.ps1 readiness -OpenUi
-```
+## 所有权边界
+
+- 本仓拥有：全局 canonical sources、Codex/Claude 宿主差异、显式九仓登记、确定性
+  校验、受保护全局投影、跨仓 CI matrix 与发布证据。
+- 目标仓拥有：项目 `AGENTS.md`、一行 `CLAUDE.md` wrapper、真实产品命令、门禁、
+  证据与回滚。
+- 本地审计不移动、reset、clean、覆盖或 blind-sync 现有目标工作树；聚合 CI 只使用
+  隔离 checkout，不写回目标仓。
+- provider、base URL、API key、OAuth、账号、session/history、MCP、gateway、进程启停
+  均不属于本产品。
+
+旧 runtime 完整树保存在 tag `archive/runtime-v1-20260716`，不在活动树提供兼容入口。
+
+## 使用
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -DisableAutoCommit
+python scripts/rulesctl.py status
+python scripts/rulesctl.py verify
 ```
 
-- `run.ps1`：仓库根短入口
-- `run.ps1 fast`：执行 `build + RuntimeQuick`
-- `run.ps1 readiness -OpenUi`：执行完整硬门禁并打开 operator UI
-- `preflight.ps1`：在完整门禁之上追加 `Docs`、`Scripts`、`git diff --check`
+- `status` 严格报告 source、global projection、target default branch 与 workspace；
+  外部目标不合规时可以失败。
+- `verify` 是控制仓可复现门禁，固定执行
+  `build -> test -> contract/invariant -> hotspot`。
+- `verify --include-targets` 才显式把可变九仓审计加入门禁。
 
-## 本仓现在负责什么
-- 运行本仓 canonical gate：`scripts/build-runtime.ps1`、`scripts/verify-repo.ps1`、`scripts/doctor-runtime.ps1`
-- 通过 `scripts/run-governed-task.py` 生成 repo-local task/evidence/handoff/status
-- 通过 `scripts/sync-agent-rules.ps1` 同步 Codex/Claude 全局规则文件
-- 通过 `scripts/verify-target-project-rules.py` 审计受管目标仓的项目规则协同
-- 通过 `scripts/export-target-rule-ci-matrix.py` 生成跨仓 CI matrix
-- 生成 host feedback、自演化建议、continuity 证据与 operator UI
-- 通过 `scripts/package-runtime.ps1` 组装 portable release
-- 只保留旧 Codex shim 的清理与缺席验证
-- Codex and Claude Code are cooperation hosts, not competitors.
-- Codex/Cockpit 的 Direct OAuth、Direct API、Cockpit API service 往返切换由 `Cockpit Tools` 负责。
-
-## 已退休 Codex/Cockpit Shim
-- 当前只保留 `Disable-CodexProjectInterop.ps1` 与 `Test-CodexGuardAbsence.ps1`。
-- 禁止恢复或推荐旧路径：`CodexProjectionSmoke`、`CodexApiProjectionRepair`、`CodexOauthProjectionRepair`、`CodexLaunchBindingRepair`、`Manage-LiteLLMGateway.ps1`、`codex-mode-*`、`--migrate-provider-bucket`、`SQLite provider trigger`、`no-op launcher`、`restart wrapper`。
-
-## 已退役能力
-- 不再提供 target-repo `daily`、`governance-baseline`、`apply-all`、`cleanup-targets`、`uninstall-governance`
-- 不再提供 attachment/light-pack/session-bridge/attached-write 桥接链
-- `rules/manifest.json` 不再分发任何 `rules/projects/**` 项目规则副本
-- 不再向目标仓 blind sync `AGENTS.md` / `CLAUDE.md`；目标差异只允许通过 audit + integration + verification 闭环处理
-- target-run、KPI、effect 相关文件只保留历史证据意义
-
-已退役命令名仍会 fail-closed 返回退休提示，不会静默兼容执行。
-
-## 主要入口
-- `run.ps1`
-- `scripts/operator.ps1`
-- `scripts/verify-repo.ps1`
-- `scripts/governance/preflight.ps1`
-- `scripts/sync-agent-rules.ps1`
-- `scripts/verify-agent-rule-family.py`
-- `scripts/verify-target-project-rules.py`
-- `scripts/export-target-rule-ci-matrix.py`
-- `scripts/run-governed-task.py`
-- `scripts/package-runtime.ps1`
-
-## 验证命令
-```powershell
-python scripts/verify-agent-rule-family.py
-python scripts/verify-target-project-rules.py --require-all
-python scripts/export-target-rule-ci-matrix.py
-python scripts/sync-agent-rules.py --scope All --fail-on-change
-```
+其他入口：
 
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
+python scripts/rulesctl.py audit --state default
+python scripts/rulesctl.py audit --state workspace
+python scripts/rulesctl.py sync --check
+python scripts/rulesctl.py matrix
 ```
 
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime
-```
+`sync --apply` 会写用户级全局规则，属于独立持久化动作；它不会分发目标仓规则正文。
 
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract
-```
+## 状态边界
 
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1
-```
+`workspace_effective`、`default_branch_effective`、`host_loaded`、
+`hosted_accepted` 必须分别取证。控制仓通过不代表九仓全通过，本地文件 hash 相等也不
+代表 native host 已加载或 hosted surface 已接受。
 
-## 继续阅读
-- [docs/README.md](docs/README.md)
-- [单机 Runtime 快速开始](docs/quickstart/single-machine-runtime-quickstart.zh-CN.md)
-- [在现有仓库中使用](docs/quickstart/use-with-existing-repo.zh-CN.md)
-- [功能反馈闭环](docs/product/host-feedback-loop.zh-CN.md)
-- [共享上下文连续性指南](docs/product/agent-continuity.zh-CN.md)
-- [20260617 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260617-active-queue-evidence-upkeep-refresh.md)
-- [20260617 Planning EntryPoint Proof Refresh](docs/change-evidence/20260617-planning-entrypoint-proof-refresh.md)
+## 为什么这是当前最优架构
+
+- 符合宿主原生机制：Codex 原生读取 `AGENTS.md`；Claude Code 读取 `CLAUDE.md`，
+  并可通过 `@AGENTS.md` 复用共同正文。
+- 目标仓事实不离开目标仓，避免中央副本与真实命令漂移。
+- 两个宿主的加载、信任、settings、permissions 与 hooks 语义不同，分别适配比伪造
+  统一运行时更准确。
+- immutable Git revision audit、dry-run、原子投影、backup、回滚与 CI drift gate 已
+  覆盖真实风险，运维面最小。
+
+后续阅读：[文档索引](docs/README.md)、[架构](docs/architecture/agent-rule-governance-v2.md)、
+[发布 runbook](docs/runbooks/agent-rule-release.md)、
+[来源依据](docs/research/agent-rule-governance-v2-sources.md)。

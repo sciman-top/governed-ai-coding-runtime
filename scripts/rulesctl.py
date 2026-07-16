@@ -183,6 +183,23 @@ def _skipped_check(
     }
 
 
+def _separate_state_check(
+    check: str,
+    reason: str,
+    *,
+    alternative_verification: str,
+    evidence_link: str,
+) -> dict[str, Any]:
+    return {
+        "status": "skipped",
+        "check": check,
+        "state_boundary": "separate_mutable_state",
+        "reason": reason,
+        "alternative_verification": alternative_verification,
+        "evidence_link": evidence_link,
+    }
+
+
 def contract_gate(
     *,
     manifest_path: Path,
@@ -230,16 +247,13 @@ def contract_gate(
 
     if skip_targets:
         checks.append(
-            _skipped_check(
+            _separate_state_check(
                 "target_default_branches",
                 "cross-repository audit is a separate mutable-state gate",
                 alternative_verification=(
                     "python scripts/rulesctl.py audit --state default"
                 ),
                 evidence_link=".github/workflows/agent-rule-coordination.yml",
-                recovery_condition=(
-                    "remove this N/A when the current job checks out every registered target"
-                ),
             )
         )
     else:
@@ -553,7 +567,8 @@ def build_parser() -> argparse.ArgumentParser:
     test.set_defaults(handler=_test_command)
 
     contract = subparsers.add_parser(
-        "contract", help="Verify global sources, projection, targets, and CI matrix."
+        "contract",
+        help="Verify global sources, projection, optional targets, and CI matrix.",
     )
     _add_contract_arguments(contract)
     contract.set_defaults(handler=_contract_command)

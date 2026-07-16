@@ -2,73 +2,75 @@
 **项目契约**: 2.0
 **全局规则复核**: 9.57
 **适用范围**: 仓库根
-**最后更新**: 2026-07-15
+**最后更新**: 2026-07-17
 
 ## 1. 当前落点与目标归宿
-- 当前落点：本仓是 governed AI coding runtime 的控制仓，负责全局规则源、机器契约、治理运行时、审计与同步工具。
-- 目标归宿：保持“全局 WHAT + 项目 WHERE/HOW + 宿主 DELTA + 确定性 enforcement”的治理 sidecar；不替代 Codex、Claude Code 或目标仓自身事实。
-- 当前最小里程碑：完成 `9.57 / 项目契约 2.0 / coordination 2.3` 发布、9 个动态发现且显式登记的目标仓审计、受保护全局同步与 fresh-process 加载证明。
-- 事实裁决顺序：运行事实/代码 -> 根 `README.md` -> `docs/README.md` -> PRD/Architecture/Roadmap/Backlog -> Specs/Schemas；这不是宿主指令优先级。
-- 根规则只保留本仓高频事实、阻断、门禁、证据和回滚；长研究、runbook、计划与历史证据放入 `docs/`。
+- 当前落点：本仓是 OpenAI Codex 与 Anthropic Claude Code 规则治理控制仓，不是 AI coding runtime。
+- 目标归宿：以静态文件和短生命周期 CLI 管理全局规则源、宿主差异、目标仓登记、确定性审计、受保护同步、CI 协同与发布证据。
+- 当前最小里程碑：完成治理 v2 裁剪，使 `python scripts/rulesctl.py verify` 在控制仓内可复现通过，并让跨仓动态失败继续由 `status` / `audit` 独立暴露。
+- 事实裁决顺序：当前代码与命令输出 -> 根 `README.md` -> `docs/README.md` -> 架构、runbook 与证据；这不改变宿主指令优先级。
+- 旧 runtime 完整树由 tag `archive/runtime-v1-20260716` 和 Git 历史保留，不在活动树维护兼容入口。
 
 ## A. 仓库事实与模块边界
-- `rules/global/`：Codex/Claude 全局用户规则源；`rules/manifest.json` 只分发两个用户级全局副本。
-- `rules/target-project-rule-coordination.json`：9 个目标仓的显式 allowlist、直接子 Git 根发现契约与审计契约；只审计，不保存或覆盖目标仓正文。
-- `schemas/jsonschema/`：机器可读契约；`docs/specs/`：对应语义规范；修改任一侧必须检查另一侧与 schema catalog。
-- `scripts/sync-agent-rules.py` / `.ps1`：global-only 同步入口；`scripts/verify-agent-rule-family.py` 与 `scripts/verify-target-project-rules.py`：规则协同 verifier。
-- `rules/templates/github/agent-rule-contract.yml` 是目标仓规则 CI 规范模板；`scripts/export-target-rule-ci-matrix.py` 与 `.github/workflows/agent-rule-coordination.yml` 承接九仓矩阵聚合审计。
-- `packages/contracts/`、`tests/runtime/`：运行时契约与回归测试；`scripts/verify-repo.ps1`、`scripts/doctor-runtime.ps1`：聚合门禁。
-- 文档/决策/证据归 `docs/`；schema 归 `schemas/`；自动化归 `scripts/`；运行时代码归 `packages/`；测试归 `tests/`。
-- `scripts/github/create-roadmap-issues.ps1` 只生成 backlog/issue 种子，不证明运行时实现已经存在。
-- 本仓长期原则的机器细则以 `docs/architecture/core-principles-policy.json` 为准，根规则保留以下会改变执行和验收的五条口径。
-- `综合效率优先，安全边界约束`：少打扰、自动连续执行、节省 token / 成本、保留必要解释、高效率；阶段性模型/provider/profile 选择不得绕过安全、证据、回滚、review 和门禁。
-- `自动优先，外层 AI 辅助，门禁控制演进`：确定性治理工作优先自动化；外层 AI 只生成 review、知识、候选和建议，有效变更仍须经过风险分级、机器门禁、证据、回滚和必要 review。
-- `治理中枢，可复用契约，宿主兼容执行`：本仓是治理 sidecar/control plane，不竞争或替代 Codex、Claude Code 等宿主；外部 agent 项目只作为可验证机制来源。
-- `上下文预算与指令最小化 + 最小权限工具/凭据边界`：根规则短而硬；工具输出必须保持高信号、可裁剪、可复用；工具权限、凭据、sandbox、mount、network、provider secret 和 MCP/tool identity 必须可审计并尽量由确定性控制执行。
-- `效果反馈优先于完成声明`：完成声明必须有 fresh repo-local evidence、eval trace、trace/replay/trajectory refs、effect feedback、verification command 与 rollback；文档、代码或候选文件存在本身不等于完成。
+- `rules/global/sources/` 与 `rules/global/source-manifest.json`：Codex/Claude 全局规则的唯一装配源。
+- `rules/global/codex/AGENTS.md` 与 `rules/global/claude/CLAUDE.md`：确定性生成并提交的全局投影。
+- `rules/manifest.json`：只定义两个用户级全局投影；不得加入目标仓规则正文。
+- `rules/target-project-rule-coordination.json`：9 个目标仓的显式 allowlist、Git 根发现和审计契约；发现不等于自动纳管。
+- `rules/templates/github/agent-rule-contract.yml`：目标仓规则 CI 契约模板。
+- `schemas/jsonschema/target-project-rule-coordination.schema.json`：跨仓登记表的唯一活动 schema。
+- `scripts/rulesctl.py`：唯一主入口；其余保留脚本只实现装配、family 校验、目标审计、全局同步和 CI matrix 导出。
+- `tests/runtime/`：只保留规则治理测试；`docs/`：只保留当前架构、runbook、来源依据和发布证据。
+- 目标仓拥有自己的 `AGENTS.md`、一行 `CLAUDE.md` wrapper、真实产品门禁、证据和回滚。本地审计不移动、清理、覆盖或 blind-sync 现有目标工作树；聚合 CI 只使用隔离 checkout，不写回目标仓。
+
+### A.1 产品非目标
+- 不提供数据库、HTTP API、Web UI、daemon、task runtime、模型调用层或多代理编排。
+- 不管理 provider、base URL、API key、OAuth、账号、计费、模型路由、MCP、session/history 或 gateway。
+- 不启动、停止、重启或监督 Codex、Claude、Cockpit 或相关进程。
+- 不把本地 hash、静态审计或控制仓通过解释为 native host 已加载、hosted surface 已接受或目标产品已验收。
 
 ## B. 执行与风险边界
-- 改动前声明当前落点 -> 目标归宿 -> 验证方式，并比对规则源、已部署副本、manifest、coordination allowlist、目标真实 gate/CI/script/README 与当前官方加载模型。
-- 全局共同 A/C/D 必须逐字一致，平台差异只在 B；目标 `AGENTS.md` 必须宿主中立，目标 `CLAUDE.md` 默认只有无 BOM 首行 `@AGENTS.md`。
-- 同版本内容漂移不得盲覆盖；先整合源文件，再 dry-run、备份、apply、零漂移复核。
-- 规则 prose 不代替 permissions、sandbox、exec policy、hooks、scripts、schema 或 CI；强制性声明必须能指向机器控制或明确记录缺口。
-- 本机 Codex/Cockpit Direct OAuth、Direct API 和 Cockpit API service 往返切换由 Cockpit Tools 完全负责；本仓不得提供 8770 页面动作、operator action、repair/smoke/checker、profile 写入、LiteLLM gateway 管理、history bucket 写入、launcher/no-op 包装或后台切换守护。
-- 本仓只允许保留旧项目 shim 清理和缺席验证：`Disable-CodexProjectInterop.ps1` 与 `Test-CodexGuardAbsence.ps1`。它们只能证明或移除旧 guard/wrapper/shortcut，不得写入当前 Codex auth/provider/history/Cockpit account state。
-- 禁止恢复 `codex-interop-check.py`、`CodexProjectionSmoke`、`CodexApiProjectionRepair`、`CodexOauthProjectionRepair`、`CodexLaunchBindingRepair`、`Manage-LiteLLMGateway.ps1`、`codex-cockpit-switch-guard.py`、generic `--apply`、`--migrate-provider-bucket`、SQLite provider trigger、后台 guard、no-op launcher、restart wrapper 或自动重启 Codex。
-- 未经当前任务明确确认，不得重启、停止、杀掉或自动拉起 Codex App、`codex`、Claude Code、Claude Desktop 或 `claude` 进程。
-- 面向操作者的指南/教程保持中英双语可用；策略、研究、架构、规划与 ADR 默认不要求逐篇双语。
+- 改动前声明当前落点 -> 目标归宿 -> 验证方式；优先选择边界清楚、可验证、可回滚的最大合理切片。
+- 全局 A/C/D 共同正文必须一致，平台差异只进入各自 B；生成文件不得手工漂移，先改 canonical sources，再执行 build/check。
+- 目标 `AGENTS.md` 必须宿主中立；`CLAUDE.md` 默认是无 BOM、仅一行 `@AGENTS.md` 的适配器，除非存在已验证的 Claude-only delta。
+- 同版本全局投影漂移必须阻断；同步先 dry-run，apply 属于持久化动作，必须保留 backup、零漂移复核和回滚证据。
+- 规则 prose 不等于权限或安全强制；确定性约束应落到宿主 settings/policy/hooks、仓库脚本或 CI，并由各自所有者管理。
+- 跨仓审计默认读取 `origin/main` 的 Git 对象，不 checkout、不 reset、不 clean 目标仓；workspace 审计是独立观察面。
+- 未经当前任务明确确认，不得重启、停止、杀掉或自动拉起 Codex App、`codex`、Claude Code、Claude Desktop 或 `claude`。
+- 不得恢复 archive 中的 runtime、Gemini、provider、session、operator UI、orchestration 或 Codex/Cockpit shim。
 
 ## C. 门禁、阻断与证据
 ### C.1 固定门禁
 - fixed order：`build -> test -> contract/invariant -> hotspot`。
-- build：`pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1`
-- test：`pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime`
-- contract/invariant：`pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract`；包含全局 family、目标清单 schema 与当前可用目标仓审计，正式发布仍额外执行 `--require-all`。
-- hotspot：`pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1`
-- quick feedback：`python -m unittest tests.runtime.test_verify_target_project_rules tests.runtime.test_verify_agent_rule_family tests.runtime.test_agent_rule_sync`；只作日常切片，不替代 full gate。
+- build：`python scripts/rulesctl.py build`
+- test：`python scripts/rulesctl.py test`
+- contract/invariant：`python scripts/rulesctl.py contract`
+- hotspot：`python scripts/rulesctl.py hotspot`
+- full repo-local gate：`python scripts/rulesctl.py verify`
+- `verify` 默认不纳入外部可变九仓状态；显式 `--include-targets` 才把 default-branch audit 加入 contract。
 
-### C.2 规则发布入口
-- family：`python scripts/verify-agent-rule-family.py`
-- target audit：`python scripts/verify-target-project-rules.py --require-all`
-- target CI matrix：`python scripts/export-target-rule-ci-matrix.py`
-- global dry-run：`python scripts/sync-agent-rules.py --scope All --fail-on-change`
-- global apply：`pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/sync-agent-rules.ps1 -Scope All -Apply`
-- isolated candidate Contract：仅当不得移动原始 divergent/dirty 工作树时，设置 `GACR_TARGET_PROJECT_RULE_WORKSPACE_ROOT` 指向包含完整 9 仓的任务隔离根；Contract 会强制 `--require-all`，缺仓或额外仓均阻断。
-- 发布顺序：静态 family/target 审计 -> dry-run 与备份确认 -> apply -> 零漂移 -> fresh loading probes -> 固定门禁。
+### C.2 动态状态与发布入口
+- 分层状态：`python scripts/rulesctl.py status`
+- 九仓 default branch 审计：`python scripts/rulesctl.py audit --state default`
+- 九仓 workspace 审计：`python scripts/rulesctl.py audit --state workspace`
+- CI matrix：`python scripts/rulesctl.py matrix`
+- 全局 dry-run：`python scripts/rulesctl.py sync --check`
+- 全局 apply：`python scripts/rulesctl.py sync --apply`
+- 发布顺序：canonical build/check -> repo-local verify -> default-branch audit -> sync dry-run -> 授权后 apply -> 零漂移 -> fresh native loading probes -> hosted acceptance（若适用）。
 
 ### C.3 阻断、证据与回滚
-- `docs/specs/*` 与 `schemas/jsonschema/*` 只改一侧、schema catalog 未登记、规则 family 漂移、目标契约不兼容或依赖 baseline 漂移时阻断。
-- README/docs/roadmap/backlog 与代码事实不一致，或把 setup/install、重复命令伪装为独立门禁时阻断。
-- 证据落在 `docs/change-evidence/`；最低字段为规则/issue ID、风险、命令、exit code、关键输出、兼容性、N/A、回滚与 fresh evidence 时间。
-- 全局部署回滚使用 sync backup + 回退后的规则源；控制仓回滚仅撤销本任务文件；各目标仓只撤销各自 `AGENTS.md / CLAUDE.md / rollout evidence`，不得碰既有脏工作树。
-- 额外快照仅在 Git 历史不足时放入 `docs/change-evidence/snapshots/<date>-<slug>/`。
+- canonical source/output 漂移、manifest/schema 不兼容、wrapper 形态错误、未登记/缺失目标仓、旧产品 surface 回流时阻断。
+- 控制仓 `verify` 通过不消除 `status` / `audit` 的目标失败；任一聚合状态不得覆盖 target-level finding。
+- `host_loaded` 与 `hosted_accepted` 没有 fresh native/hosted evidence 时保持 `unknown`，不得推断。
+- 当前证据落在 `docs/change-evidence/`；最低字段为 scope、revision、risk、command、exit code、关键输出、兼容性、N/A、回滚和 fresh timestamp。
+- 控制仓回滚只撤销本切片；全局同步回滚使用同步 backup 与恢复后的 canonical source；目标仓回滚只由目标仓执行。
+- 旧 runtime 回溯使用 `git show archive/runtime-v1-20260716:<path>`，不得把 archive 文件复制回活动树充当兼容层。
 
 ## D. Global Rule -> Repo Action
-- `R1/R2/R3/R5`：先声明落点/归宿/验证，以计划与小步测试闭环；临时兼容必须写回收条件。
-- `R4/R7`：规则发布先静态审计与 dry-run；同步、持久化、provider/auth 和进程操作遵守确认与兼容边界。
-- `R6`：交付前严格执行 C.1；quick feedback 不能替代 full gate。
-- `R8`：`docs/change-evidence/` 承接依据、命令、证据与回滚，缺失项按全局 N/A 字段记录。
-- `E4`：`doctor-runtime.ps1` 与 `verify-repo.ps1 -Check Doctor` 承接健康/热点。
-- `E5`：`docs/dependency-baseline.*` 与 `scripts/verify-dependency-baseline.py` 承接供应链。
-- `E6`：Specs/Schemas/catalog/manifest 结构变化必须记录兼容、迁移与回滚。
-- 协同验收：仅凭全局 + 本文件必须能推出当前落点、目标归宿、门禁顺序、证据路径和回滚入口。
+- `R1/R2/R3/R5`：以本文件 1/B 和 `tasks/plan.md` 确定归宿，按测试后提交的小步闭环推进；临时兼容必须写回收条件。
+- `R4/R7`：同步先 dry-run；目标审计只读 Git 对象；provider/auth/进程和目标仓写入不在本产品授权内。
+- `R6`：交付前严格执行 C.1；动态 fleet 审计按 C.2 单独报告，不伪装为 repo-local gate。
+- `R8`：`docs/change-evidence/` 记录依据、命令、结果和回滚；缺失能力按全局 N/A 字段完整留痕。
+- `E4`：`rulesctl status`、`verify` 和 `audit` 提供健康状态；JSON 输出是机器证据。
+- `E5`：`gate_na`；reason=`活动树无第三方运行时依赖或包管理器`；alternative_verification=`rulesctl build + GitHub Actions pinned action review`；evidence_link=`docs/research/agent-rule-governance-v2-sources.md`；expires_at=`2026-10-15`；recovery_condition=`新增依赖清单或外部执行依赖时恢复供应链门禁`。
+- `E6`：只保留 coordination JSON/schema；修改时必须同步 schema、测试、兼容说明和回滚。数据库迁移为 `gate_na`；reason=`活动树无数据库或持久化服务`；alternative_verification=`coordination schema + JSON parse + contract tests`；evidence_link=`schemas/jsonschema/target-project-rule-coordination.schema.json`；expires_at=`2026-10-15`；recovery_condition=`活动树重新引入持久化数据结构时恢复迁移门禁`。
+- 协同验收：仅凭全局规则与本文件，应能推出产品边界、唯一入口、门禁顺序、动态状态、证据路径和回滚入口。

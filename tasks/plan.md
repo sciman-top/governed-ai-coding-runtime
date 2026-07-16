@@ -62,31 +62,31 @@ Git archive boundary
 
 ### Checkpoint: Rule Toolchain
 
-- [ ] Build, focused tests, contract/invariant, and hotspot pass in order.
-- [ ] Global sync dry-run reports zero drift.
-- [ ] Generated global outputs match committed files exactly.
+- [x] Build, focused tests, contract/invariant, and hotspot pass in order.
+- [x] Global sync dry-run reports zero drift.
+- [x] Generated global outputs match committed files exactly.
 
 ### Phase 3: Product Truth And Pruning
 
-- [ ] Task 7: Rewrite root contracts, README variants, architecture, runbook,
+- [x] Task 7: Rewrite root contracts, README variants, architecture, runbook,
   and release evidence for the v2 boundary.
-- [ ] Task 8: Remove runtime apps, packages, service infrastructure, unrelated
+- [x] Task 8: Remove runtime apps, packages, service infrastructure, unrelated
   schemas/scripts/tests, Gemini assets, UI media, and obsolete active docs.
-- [ ] Task 9: Keep only current rule-governance evidence and route historical
+- [x] Task 9: Keep only current rule-governance evidence and route historical
   recovery to the archive tag and Git history.
 
 ### Checkpoint: Minimal Active Tree
 
-- [ ] No active runtime, database, UI, Gemini, provider, auth, session, or
+- [x] No active runtime, database, UI, Gemini, provider, auth, session, or
   orchestration surface remains.
-- [ ] All retained files are reachable from README, a command, a test, or CI.
-- [ ] `git diff --check` passes and no secrets appear in the diff.
+- [x] All retained files are reachable from README, a command, a test, or CI.
+- [x] `git diff --check` passes and no secrets appear in the diff.
 
 ### Phase 4: Review And Closeout
 
-- [ ] Task 10: Run independent multi-axis code review and fix findings.
-- [ ] Task 11: Run fresh fixed-order gates and record exact state boundaries.
-- [ ] Task 12: Commit the verified v2 slices with Chinese-first subjects and
+- [x] Task 10: Run independent multi-axis code review and fix findings.
+- [x] Task 11: Run fresh fixed-order gates and record exact state boundaries.
+- [x] Task 12: Commit the verified v2 slices with Chinese-first subjects and
   report any external actions that remain intentionally open.
 
 ## Risks And Mitigations

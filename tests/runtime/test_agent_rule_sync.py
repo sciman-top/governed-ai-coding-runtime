@@ -1,4 +1,5 @@
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -16,6 +17,34 @@ def _write_json(path: Path, payload: dict) -> None:
 
 
 class AgentRuleSyncTests(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("pwsh"), "PowerShell is not available")
+    def test_powershell_wrapper_resolves_repo_paths_from_another_cwd(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            user_profile = Path(tmp_dir) / "user"
+            completed = subprocess.run(
+                [
+                    "pwsh",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ROOT / "scripts" / "sync-agent-rules.ps1"),
+                    "-FailOnChange",
+                    "-ManifestPath",
+                    "rules/manifest.json",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=tmp_dir,
+                env={**os.environ, "USERPROFILE": str(user_profile)},
+            )
+
+        self.assertEqual(completed.returncode, 1, completed.stdout + completed.stderr)
+        payload = json.loads(completed.stdout)
+        self.assertEqual(payload["status"], "dry_run_changes")
+        self.assertEqual(payload["changed_count"], 2)
+
     def test_default_manifest_covers_global_rule_sources_only(self) -> None:
         manifest_path = ROOT / "rules" / "manifest.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))

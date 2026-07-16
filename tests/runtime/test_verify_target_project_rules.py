@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts" / "verify-target-project-rules.py"
 SCHEMA = ROOT / "schemas" / "jsonschema" / "target-project-rule-coordination.schema.json"
-VERIFY_REPO = ROOT / "scripts" / "verify-repo.ps1"
+RULESCTL = ROOT / "scripts" / "rulesctl.py"
 WORKFLOW_BYTES = b"name: Agent Rule Contract\n# agent-rule-contract-ci: 2.1\n"
 
 
@@ -135,6 +135,28 @@ def _run(coordination_path: Path, *extra: str) -> subprocess.CompletedProcess[st
     )
 
 
+def _run_contract(
+    coordination_path: Path, workspace_root: Path
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [
+            sys.executable,
+            str(RULESCTL),
+            "contract",
+            "--coordination-path",
+            str(coordination_path),
+            "--workspace-root",
+            str(workspace_root),
+            "--skip-projection",
+            "--include-targets",
+        ],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+
 def _commit_target(repo_root: Path) -> None:
     subprocess.run(["git", "add", "-A"], cwd=repo_root, check=True, capture_output=True)
     subprocess.run(
@@ -195,23 +217,25 @@ class VerifyTargetProjectRulesTests(unittest.TestCase):
         self.assertIn("updated_on_invalid:missing", findings)
 
     def test_control_contract_gate_wires_schema_and_target_audit(self) -> None:
-        verifier = VERIFY_REPO.read_text(encoding="utf-8")
-        contract_body = verifier.split("function Invoke-ContractChecks", 1)[1].split(
-            "function Invoke-DependencyBaselineChecks", 1
-        )[0]
-        target_audit_body = verifier.split("function Invoke-TargetProjectRuleChecks", 1)[1].split(
-            "function Invoke-PreChangeReviewChecks", 1
-        )[0]
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "workspace"
+            target = workspace / "pilot"
+            _write_target(target)
+            _commit_target(target)
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(
+                json.dumps(_coordination_payload(workspace), ensure_ascii=False), encoding="utf-8"
+            )
 
-        self.assertIn("Invoke-TargetProjectRuleCoordinationSchemaCheck", verifier)
-        self.assertIn("Invoke-TargetProjectRuleChecks", verifier)
-        self.assertIn("Invoke-TargetProjectRuleCoordinationSchemaCheck", contract_body)
-        self.assertIn("Invoke-TargetProjectRuleChecks", contract_body)
-        self.assertIn("GACR_TARGET_PROJECT_RULE_WORKSPACE_ROOT", target_audit_body)
-        self.assertIn('"--workspace-root"', target_audit_body)
-        self.assertIn('"--git-ref"', target_audit_body)
-        self.assertIn('"origin/main"', target_audit_body)
-        self.assertIn('"--require-all"', target_audit_body)
+            completed = _run_contract(coordination_path, workspace)
+
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        payload = json.loads(completed.stdout)
+        checks = {check["check"]: check for check in payload["checks"]}
+        self.assertEqual(checks["target_default_branches"]["status"], "pass")
+        self.assertEqual(checks["target_default_branches"]["target_state"], "git_ref")
+        self.assertEqual(checks["target_default_branches"]["git_ref"], "origin/main")
+        self.assertEqual(checks["target_ci_matrix"]["status"], "pass")
 
     def test_v2_contract_passes_with_relative_repo_and_one_line_wrapper(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

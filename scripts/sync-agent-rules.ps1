@@ -9,9 +9,12 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+$SyncScript = Join-Path $PSScriptRoot "sync-agent-rules.py"
 
-. "$PSScriptRoot\Initialize-WindowsProcessEnvironment.ps1"
-Initialize-WindowsProcessEnvironment
+if (-not [System.IO.Path]::IsPathRooted($ManifestPath)) {
+  $ManifestPath = Join-Path $RepoRoot $ManifestPath
+}
 
 $python = Get-Command python -ErrorAction SilentlyContinue
 if (-not $python) {
@@ -22,7 +25,7 @@ if (-not $python) {
 }
 
 $argsList = @(
-  "scripts/sync-agent-rules.py",
+  $SyncScript,
   "--scope",
   $Scope,
   "--manifest-path",

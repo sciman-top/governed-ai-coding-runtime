@@ -1,9 +1,0 @@
-{
-  "baseline_kind": "repo_local_dependency_baseline_marker",
-  "generated_at": "2026-07-06T00:00:00+08:00",
-  "owner_runtime": "governed-ai-coding-runtime",
-  "repo_id": "governed-ai-coding-runtime",
-  "schema_version": "1.0",
-  "scope": "repo_local_compatibility_marker",
-  "verify_command": "python scripts/verify-dependency-baseline.py"
-}

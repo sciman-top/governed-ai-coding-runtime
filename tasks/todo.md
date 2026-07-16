@@ -6,8 +6,8 @@
 - [x] Add the `rulesctl` entrypoint and minimal fixed-order verifier.
 - [x] Build global Codex/Claude rules from canonical common/platform sources.
 - [x] Reduce CI to rule-family, sync, target contract, and tests.
-- [ ] Rewrite project contract, README, architecture, runbook, and evidence.
-- [ ] Remove runtime, UI, database, Gemini, and obsolete evidence surfaces.
-- [ ] Run code review and repair findings.
-- [ ] Run final build -> test -> contract/invariant -> hotspot gates.
-- [ ] Commit verified slices and report remaining external release actions.
+- [x] Rewrite project contract, README, architecture, runbook, and evidence.
+- [x] Remove runtime, UI, database, Gemini, and obsolete evidence surfaces.
+- [x] Run code review and repair findings.
+- [x] Run final build -> test -> contract/invariant -> hotspot gates.
+- [x] Commit verified slices and report remaining external release actions.

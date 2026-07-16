@@ -48,3 +48,6 @@ tmp*/
 .codex/
 .worktrees/
 .runtime/
+
+# Local global-rule projection backups
+docs/change-evidence/rule-sync-backups/

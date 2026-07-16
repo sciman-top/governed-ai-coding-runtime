@@ -1,116 +1,94 @@
-# Governed AI Coding Runtime
+# Codex + Claude Agent Rule Governance
 
-## Language / 语言
-- 中文说明: [README.zh-CN.md](README.zh-CN.md)
-- English guide: [README.en.md](README.en.md)
-- 文档索引 / Docs index: [docs/README.md](docs/README.md)
+Static, service-free governance for OpenAI Codex and Anthropic Claude Code
+rules. 中文详见 [README.zh-CN.md](README.zh-CN.md); English details are in
+[README.en.md](README.en.md).
 
-## Current Boundary / 当前边界
-- 当前唯一状态真源：`docs/architecture/planning-status.json`
-- 唯一规划真源仍是 `docs/architecture/planning-status.json`。
-- Single source of planning truth: `docs/architecture/planning-status.json`
-- 当前 active queue：`Continuous-Execution`
-- `current decision gate`：`defer_ltp_and_refresh_evidence`
-- `current decision gate`: `defer_ltp_and_refresh_evidence`
-- 本仓当前定位已经收缩为四件事：
-  - 本仓自治理：`build -> test -> contract/invariant -> hotspot`
-  - 用户目录级全局规则同步：`~/.codex`、`~/.claude`
-  - 目标仓项目规则协同审计：`AGENTS.md + CLAUDE.md thin wrapper`
-  - host/self-evolution/continuity 的只读反馈、证据与门禁
-- 当前规则协调版本为 `rule_release=9.57 / project_contract_version=2.0 / coordination_schema=2.3`；目标范围先从 `D:\CODE` 直接子 Git 根动态发现，再与 9 仓显式 allowlist 对账。发现不会自动纳管，未登记 Git 根或缺失目标会按契约阻断。
-- 目标仓 `AGENTS.md` 是宿主中立项目契约；`CLAUDE.md` 默认只有无 BOM 的首行 `@AGENTS.md`。全局同步不分发目标仓正文。
-- CI 协同采用 `coordination_schema=2.3 / ci_contract=2.1 / workflow_hash_mode=utf8_lf_v1`：每个目标仓本地 workflow 自证规则变更；控制仓按清单生成 9 仓矩阵，实际 checkout 审计 7 个公开仓，并将 2 个私有仓明确分流到 target-local enforcement；两层都不替代产品门禁。
-- 历史 `docs/change-evidence/**` 继续保留，但不再代表当前 target-repo rollout、attachment、session-bridge write 能力仍然存在。
+## Product Boundary / 产品边界
 
-## Fastest Path / 最快路径
-```powershell
-.\run.ps1
-```
+This repository owns global rule sources, host-specific deltas, explicit
+target registration, deterministic validation, protected global projection,
+cross-repository CI coordination, and release evidence.
+
+本仓不再是 AI coding runtime。它不提供数据库、API、UI、daemon、模型调用、
+provider/auth/session/gateway 管理或多代理编排。目标仓始终拥有自己的项目规则、
+真实命令、产品门禁、证据与回滚。
+
+The pre-migration runtime tree is preserved at
+`archive/runtime-v1-20260716`; it is history, not an active compatibility
+surface.
+
+## Quick Start / 快速入口
 
 ```powershell
-.\run.ps1 fast
+python scripts/rulesctl.py status
+python scripts/rulesctl.py verify
 ```
+
+- `status` reports source, global projection, target default branches, and
+  target workspaces separately. It can fail when an external target drifts.
+- `verify` is the reproducible control-repository gate and runs
+  `build -> test -> contract -> hotspot`.
+- `verify --include-targets` explicitly adds the mutable nine-target audit.
+
+## Architecture / 架构
+
+```text
+canonical global sources -> deterministic Codex/Claude outputs
+                         -> protected user-profile projection
+
+explicit target registry -> immutable default-branch audit
+                         -> workspace observation
+                         -> per-target CI contract
+```
+
+The design deliberately separates four evidence states:
+
+| State | Meaning |
+| --- | --- |
+| `workspace_effective` | Current local target worktree satisfies the contract. |
+| `default_branch_effective` | Configured immutable/default Git revision satisfies the contract. |
+| `host_loaded` | A fresh native Codex or Claude probe loaded the intended rule chain. |
+| `hosted_accepted` | A hosted surface separately accepted the intended rule chain. |
+
+No state implies another. Control-repo health does not erase target failures,
+and local file equality does not prove hosted acceptance.
+
+## Main Commands / 主要命令
 
 ```powershell
-.\run.ps1 readiness -OpenUi
+python scripts/rulesctl.py build
+python scripts/rulesctl.py test
+python scripts/rulesctl.py contract
+python scripts/rulesctl.py hotspot
+python scripts/rulesctl.py verify
+python scripts/rulesctl.py audit --state default
+python scripts/rulesctl.py audit --state workspace
+python scripts/rulesctl.py sync --check
+python scripts/rulesctl.py matrix
 ```
 
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/governance/preflight.ps1 -DisableAutoCommit
-```
+`sync --apply` writes managed user-level global files and is intentionally
+separate from verification. It never distributes target-repository rule
+bodies.
 
-- `run.ps1`：仓库根短入口，转发到 `scripts/operator.ps1`
-- `run.ps1 fast`：执行 `build + RuntimeQuick`
-- `run.ps1 readiness -OpenUi`：执行完整硬门禁并打开 operator UI
-- `preflight.ps1`：在完整门禁之上追加 `Docs`、`Scripts`、`git diff --check`
+## Why This End State / 为什么采用此终态
 
-## What This Repo Does / 本仓当前负责
-- 运行本仓 canonical gate：`scripts/build-runtime.ps1`、`scripts/verify-repo.ps1`、`scripts/doctor-runtime.ps1`
-- 生成 repo-local task/evidence/handoff/status：`scripts/run-governed-task.py`
-- 同步 Codex/Claude 全局规则文件：`scripts/sync-agent-rules.ps1`
-- 审计受管目标仓的项目规则协同：`scripts/verify-target-project-rules.py`
-- 从显式清单导出跨仓 CI matrix：`scripts/export-target-rule-ci-matrix.py`
-- 校验两个全局源的共同 A/C/D 正文一致：`scripts/verify-agent-rule-family.py`
-- 生成 host feedback、自演化建议、continuity 证据和 operator UI
-- 组装 portable release：`scripts/package-runtime.ps1`
-- 仅保留旧 Codex shim 的清理与缺席验证：`Disable-CodexProjectInterop.ps1`、`Test-CodexGuardAbsence.ps1`
-- Codex and Claude Code are cooperation hosts, not competitors.
-- Codex/Cockpit 的 Direct OAuth、Direct API、Cockpit API service 往返切换由 `Cockpit Tools` 负责。
-
-## Retired Codex/Cockpit Shims / 已退休 Codex/Cockpit Shim
-- 当前只保留 `Disable-CodexProjectInterop.ps1` 与 `Test-CodexGuardAbsence.ps1`，用于旧 shim 的清理与缺席验证。
-- 禁止恢复或推荐旧路径：`CodexProjectionSmoke`、`CodexApiProjectionRepair`、`CodexOauthProjectionRepair`、`CodexLaunchBindingRepair`、`Manage-LiteLLMGateway.ps1`、`codex-mode-*`、`--migrate-provider-bucket`、`SQLite provider trigger`、`no-op launcher`、`restart wrapper`。
-
-## Retired Surface / 已退役能力
-- 不再提供 target-repo `daily`、`governance-baseline`、`apply-all`、`cleanup-targets`、`uninstall-governance`
-- 不再提供 attachment/light-pack/session-bridge/attached-write 桥接链
-- `rules/manifest.json` 不再分发任何 `rules/projects/**` project rule 副本
-- 不再向目标仓 blind sync `AGENTS.md` / `CLAUDE.md`；目标差异只允许通过 audit + integration + verification 闭环处理
-- 本仓不会再把外部仓 rollout、KPI、effect 证据当作当前 live capability
-
-对已退役名称，CLI 会 fail-closed 返回退休提示，不会静默兼容执行。
-
-## Main Entrypoints / 主要入口
-- `run.ps1`
-- `scripts/operator.ps1`
-- `scripts/verify-repo.ps1`
-- `scripts/governance/preflight.ps1`
-- `scripts/sync-agent-rules.ps1`
-- `scripts/verify-agent-rule-family.py`
-- `scripts/verify-target-project-rules.py`
-- `scripts/export-target-rule-ci-matrix.py`
-- `scripts/run-governed-task.py`
-- `scripts/package-runtime.ps1`
-
-## Verification / 验证
-```powershell
-python scripts/verify-agent-rule-family.py
-python scripts/verify-target-project-rules.py --require-all
-python scripts/export-target-rule-ci-matrix.py
-python scripts/sync-agent-rules.py --scope All --fail-on-change
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-runtime.ps1
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Runtime
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/verify-repo.ps1 -Check Contract
-```
-
-```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/doctor-runtime.ps1
-```
+- It matches native ownership: Codex loads `AGENTS.md`; Claude Code loads
+  `CLAUDE.md` and can import `@AGENTS.md`.
+- It keeps target facts in target repositories instead of creating a second
+  central source of truth.
+- Markdown, JSON/JSON Schema, Python, PowerShell, Git, and GitHub Actions cover
+  every proven requirement without an always-on service.
+- Host-specific loading, trust, settings, permissions, and hooks remain
+  explicit adapters rather than a false common abstraction.
+- Dry-run, immutable Git-revision audit, atomic projection, backups, and CI
+  drift checks provide traceability and rollback with low operational cost.
 
 ## Read Next / 继续阅读
-- [docs/README.md](docs/README.md)
-- [docs/quickstart/single-machine-runtime-quickstart.md](docs/quickstart/single-machine-runtime-quickstart.md)
-- [docs/quickstart/use-with-existing-repo.md](docs/quickstart/use-with-existing-repo.md)
-- [docs/product/host-feedback-loop.md](docs/product/host-feedback-loop.md)
-- [docs/product/agent-continuity.md](docs/product/agent-continuity.md)
-- [20260617 Active Queue Evidence-Upkeep Refresh](docs/change-evidence/20260617-active-queue-evidence-upkeep-refresh.md)
-- [20260617 Planning EntryPoint Proof Refresh](docs/change-evidence/20260617-planning-entrypoint-proof-refresh.md)
+
+- [Documentation index](docs/README.md)
+- [Architecture](docs/architecture/agent-rule-governance-v2.md)
+- [Rule release runbook](docs/runbooks/agent-rule-release.md)
+- [Source basis](docs/research/agent-rule-governance-v2-sources.md)
+- [Current migration evidence](docs/change-evidence/20260717-agent-rule-governance-v2-current-state.md)
