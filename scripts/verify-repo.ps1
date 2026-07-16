@@ -1008,6 +1008,13 @@ function Invoke-TargetProjectRuleChecks {
       "--require-all"
     )
   }
+  else {
+    $auditArguments += @(
+      "--git-ref",
+      "origin/main",
+      "--require-all"
+    )
+  }
 
   $output = & $python.Source @auditArguments 2>&1
   if ($LASTEXITCODE -ne 0) {

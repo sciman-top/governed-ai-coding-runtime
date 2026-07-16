@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_COORDINATION_PATH = ROOT / "rules" / "target-project-rule-coordination.json"
 EXPECTED_TOOLS = ["codex", "claude"]
 GITHUB_REPOSITORY_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+GIT_REF_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]*$")
 REQUIRED_SECTION_PATTERNS = {
     "1": r"(?m)^## 1(?:\.|\s)",
     "A": r"(?m)^## A(?:\.|\s)",
@@ -134,6 +135,45 @@ def _git_root(candidate: Path) -> Path | None:
     return Path(completed.stdout.strip()).resolve(strict=False)
 
 
+def _git_ref_is_safe(value: str) -> bool:
+    return bool(GIT_REF_PATTERN.fullmatch(value)) and not any(
+        token in value for token in ("..", "//", "@{")
+    )
+
+
+def _resolve_git_commit(repo_root: Path, git_ref: str) -> str | None:
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "--verify", f"{git_ref}^{{commit}}"],
+            cwd=repo_root,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    commit = completed.stdout.strip()
+    return commit if completed.returncode == 0 and re.fullmatch(r"[0-9a-fA-F]{40,64}", commit) else None
+
+
+def _read_repo_bytes(repo_root: Path, relative_path: str, git_commit: str | None) -> bytes | None:
+    path = repo_root / relative_path
+    if git_commit is None:
+        return path.read_bytes() if path.is_file() else None
+    try:
+        completed = subprocess.run(
+            ["git", "show", f"{git_commit}:{relative_path}"],
+            cwd=repo_root,
+            check=False,
+            capture_output=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return completed.stdout if completed.returncode == 0 else None
+
+
 def _discover_direct_git_roots(workspace_root: Path, excluded: set[str]) -> list[str]:
     if not workspace_root.is_dir():
         return []
@@ -191,7 +231,38 @@ def _audit_na_contract(project_text: str, blocking: list[str]) -> None:
                 blocking.append(finding)
 
 
-def _nested_rule_files(repo_root: Path, project_rule: str, wrapper_rule: str) -> list[str]:
+def _nested_rule_files(
+    repo_root: Path,
+    project_rule: str,
+    wrapper_rule: str,
+    git_commit: str | None = None,
+) -> list[str]:
+    if git_commit is not None:
+        try:
+            completed = subprocess.run(
+                ["git", "ls-tree", "-r", "--name-only", git_commit],
+                cwd=repo_root,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+        except (OSError, subprocess.SubprocessError):
+            completed = None
+        if completed is None or completed.returncode != 0:
+            return []
+        matches = []
+        for raw_path in completed.stdout.splitlines():
+            normalized = raw_path.replace("\\", "/").strip()
+            if not normalized or normalized in {project_rule, wrapper_rule}:
+                continue
+            if Path(normalized).name not in {"AGENTS.md", "CLAUDE.md"}:
+                continue
+            if any(part in NESTED_RULE_EXCLUDED_DIRS for part in Path(normalized).parts):
+                continue
+            matches.append(normalized)
+        return sorted(matches)[:20]
+
     try:
         completed = subprocess.run(
             [
@@ -257,16 +328,16 @@ def _new_audit(target: dict[str, Any], repo_root: Path) -> dict[str, Any]:
 
 def _audit_wrapper(
     *,
-    wrapper_path: Path,
+    wrapper_raw: bytes | None,
     wrapper_mode: str,
     wrapper_max_lines: int,
     audit: dict[str, Any],
 ) -> tuple[str, int]:
-    if not wrapper_path.exists():
+    if wrapper_raw is None:
         audit["blocking_findings"].append("wrapper_missing")
         return "", 0
 
-    raw = wrapper_path.read_bytes()
+    raw = wrapper_raw
     if raw.startswith(b"\xef\xbb\xbf"):
         audit["blocking_findings"].append("wrapper_utf8_bom")
     try:
@@ -306,6 +377,7 @@ def _classify_target(
     rule_release: str,
     project_contract_version: str,
     expected_ci_workflow_sha256: str,
+    git_ref: str | None,
 ) -> dict[str, Any]:
     repo_path_raw = str(target.get("repo_path") or "").strip()
     candidate = Path(repo_path_raw)
@@ -324,6 +396,14 @@ def _classify_target(
         return audit
     if _git_root(repo_root) != repo_root:
         blocking.append("target_not_git_root")
+
+    git_commit = None
+    if git_ref is not None:
+        git_commit = _resolve_git_commit(repo_root, git_ref)
+        if git_commit is None:
+            blocking.append(f"git_ref_unavailable:{git_ref}")
+            audit["status"] = "fail"
+            return audit
 
     tools = target.get("tools")
     if tools != EXPECTED_TOOLS:
@@ -354,7 +434,10 @@ def _classify_target(
         blocking.append("rule_path_escapes_repository")
         audit["status"] = "fail"
         return audit
-    if not project_path.exists():
+    project_raw = _read_repo_bytes(repo_root, project_rule, git_commit)
+    wrapper_raw = _read_repo_bytes(repo_root, wrapper_rule, git_commit)
+    ci_workflow_raw = _read_repo_bytes(repo_root, ci_workflow_rule, git_commit)
+    if project_raw is None:
         blocking.append("project_rule_missing")
         audit["status"] = "fail"
         return audit
@@ -362,10 +445,9 @@ def _classify_target(
     ci_workflow_sha256 = None
     ci_workflow_raw_sha256 = None
     ci_workflow_line_endings = None
-    if not ci_workflow_path.is_file():
+    if ci_workflow_raw is None:
         blocking.append("ci_workflow_missing")
     else:
-        ci_workflow_raw = ci_workflow_path.read_bytes()
         ci_workflow_raw_sha256 = hashlib.sha256(ci_workflow_raw).hexdigest()
         ci_workflow_line_endings = _workflow_line_endings(ci_workflow_raw)
         try:
@@ -378,7 +460,6 @@ def _classify_target(
             if ci_workflow_sha256 != expected_ci_workflow_sha256:
                 blocking.append("ci_workflow_hash_mismatch")
 
-    project_raw = project_path.read_bytes()
     try:
         project_text = project_raw.decode("utf-8")
     except UnicodeDecodeError:
@@ -461,7 +542,7 @@ def _classify_target(
 
     wrapper_mode = str(target.get("claude_wrapper_mode") or "import_only")
     _, wrapper_line_count = _audit_wrapper(
-        wrapper_path=wrapper_path,
+        wrapper_raw=wrapper_raw,
         wrapper_mode=wrapper_mode,
         wrapper_max_lines=wrapper_max_lines,
         audit=audit,
@@ -471,9 +552,9 @@ def _classify_target(
         observations.append(
             f"effective_context_warning:{effective_lines}>{effective_warning_lines}"
         )
-    if _git_dirty(repo_root):
+    if git_commit is None and _git_dirty(repo_root):
         observations.append("dirty_worktree")
-    nested_rules = _nested_rule_files(repo_root, project_rule, wrapper_rule)
+    nested_rules = _nested_rule_files(repo_root, project_rule, wrapper_rule, git_commit)
     if nested_rules:
         observations.append(f"nested_rule_files:{len(nested_rules)}")
 
@@ -493,6 +574,9 @@ def _classify_target(
         "host_specific_hits": host_specific_hits,
         "managed_family_hits": managed_family_hits,
         "nested_rule_files": nested_rules,
+        "target_state": "git_ref" if git_commit else "workspace",
+        "git_ref": git_ref,
+        "resolved_revision": git_commit,
     }
     audit["status"] = "fail" if blocking else "pass"
     return audit
@@ -504,6 +588,7 @@ def verify(
     target_filters: list[str] | None = None,
     require_all: bool = False,
     workspace_root_override: Path | None = None,
+    git_ref: str | None = None,
 ) -> dict[str, Any]:
     coordination_path = coordination_path.resolve(strict=False)
     payload = _load_json(coordination_path)
@@ -511,6 +596,9 @@ def verify(
     schema_version = str(payload.get("schema_version") or "").strip()
     rule_release = str(payload.get("rule_release") or "").strip()
     project_contract_version = str(payload.get("project_contract_version") or "").strip()
+    if git_ref is not None and not _git_ref_is_safe(git_ref):
+        top_level_blocking.append(f"git_ref_invalid:{git_ref}")
+        git_ref = None
     if schema_version != "2.3":
         top_level_blocking.append(f"schema_version_unsupported:{schema_version or 'missing'}")
     if payload.get("coordination_id") != "target-project-rule-coordination":
@@ -665,6 +753,7 @@ def verify(
             rule_release=rule_release,
             project_contract_version=project_contract_version,
             expected_ci_workflow_sha256=expected_ci_workflow_sha256,
+            git_ref=git_ref,
         )
 
     with ThreadPoolExecutor(max_workers=min(4, max(1, len(selected)))) as executor:
@@ -695,6 +784,8 @@ def verify(
             "workflow_sha256": expected_ci_workflow_sha256,
         },
         "workspace_root": _display_path(workspace_root),
+        "target_state": "git_ref" if git_ref else "workspace",
+        "git_ref": git_ref,
         "workspace_inventory": inventory_result,
         "require_all": require_all,
         "selected_target_count": len(audits),
@@ -718,6 +809,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Override the manifest workspace root for CI or isolated checkout layouts.",
     )
     parser.add_argument(
+        "--git-ref",
+        default=None,
+        help="Audit each target repository at this Git revision without moving its worktree.",
+    )
+    parser.add_argument(
         "--require-all",
         action="store_true",
         help="Treat unavailable allowlisted target repositories as blocking.",
@@ -729,6 +825,7 @@ def main(argv: list[str] | None = None) -> int:
         target_filters=list(args.targets) if args.targets else None,
         require_all=args.require_all,
         workspace_root_override=Path(args.workspace_root) if args.workspace_root else None,
+        git_ref=args.git_ref,
     )
     print(json.dumps(result, ensure_ascii=True, indent=2))
     return 0 if result["status"] == "pass" else 1

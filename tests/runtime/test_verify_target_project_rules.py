@@ -135,6 +135,32 @@ def _run(coordination_path: Path, *extra: str) -> subprocess.CompletedProcess[st
     )
 
 
+def _commit_target(repo_root: Path) -> None:
+    subprocess.run(["git", "add", "-A"], cwd=repo_root, check=True, capture_output=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=Rule Tests",
+            "-c",
+            "user.email=rules@example.invalid",
+            "commit",
+            "--quiet",
+            "-m",
+            "fixture",
+        ],
+        cwd=repo_root,
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        ["git", "update-ref", "refs/remotes/origin/main", "HEAD"],
+        cwd=repo_root,
+        check=True,
+        capture_output=True,
+    )
+
+
 class VerifyTargetProjectRulesTests(unittest.TestCase):
     def test_schema_requires_explicit_wrapper_mode(self) -> None:
         schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
@@ -183,6 +209,8 @@ class VerifyTargetProjectRulesTests(unittest.TestCase):
         self.assertIn("Invoke-TargetProjectRuleChecks", contract_body)
         self.assertIn("GACR_TARGET_PROJECT_RULE_WORKSPACE_ROOT", target_audit_body)
         self.assertIn('"--workspace-root"', target_audit_body)
+        self.assertIn('"--git-ref"', target_audit_body)
+        self.assertIn('"origin/main"', target_audit_body)
         self.assertIn('"--require-all"', target_audit_body)
 
     def test_v2_contract_passes_with_relative_repo_and_one_line_wrapper(self) -> None:
@@ -249,6 +277,56 @@ class VerifyTargetProjectRulesTests(unittest.TestCase):
 
         self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
         self.assertEqual(json.loads(completed.stdout)["workspace_root"], str(workspace).replace("\\", "/"))
+
+    def test_git_ref_audit_is_independent_from_workspace_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "workspace"
+            repo_root = workspace / "pilot"
+            _write_target(repo_root)
+            _commit_target(repo_root)
+            (repo_root / "AGENTS.md").write_text(
+                _project_body(reviewed_release="9.54"), encoding="utf-8"
+            )
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(
+                json.dumps(_coordination_payload(workspace)), encoding="utf-8"
+            )
+
+            workspace_result = _run(coordination_path, "--require-all")
+            default_branch_result = _run(
+                coordination_path,
+                "--git-ref",
+                "origin/main",
+                "--require-all",
+            )
+
+        self.assertEqual(workspace_result.returncode, 1)
+        self.assertEqual(default_branch_result.returncode, 0, default_branch_result.stderr)
+        payload = json.loads(default_branch_result.stdout)
+        self.assertEqual(payload["target_state"], "git_ref")
+        self.assertEqual(payload["git_ref"], "origin/main")
+        self.assertEqual(payload["results"][0]["details"]["reviewed_global_release"], "9.55")
+        self.assertNotIn("dirty_worktree", payload["results"][0]["observations"])
+
+    def test_git_ref_audit_rejects_unsafe_revision(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            workspace = Path(tmp_dir) / "workspace"
+            _write_target(workspace / "pilot")
+            coordination_path = Path(tmp_dir) / "coordination.json"
+            coordination_path.write_text(
+                json.dumps(_coordination_payload(workspace)), encoding="utf-8"
+            )
+
+            completed = _run(
+                coordination_path,
+                "--git-ref",
+                "origin/main:AGENTS.md",
+                "--require-all",
+            )
+
+        self.assertEqual(completed.returncode, 1)
+        payload = json.loads(completed.stdout)
+        self.assertIn("git_ref_invalid:origin/main:AGENTS.md", payload["blocking_findings"])
 
     def test_ci_workflow_hash_drift_is_blocking(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
