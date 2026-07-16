@@ -18,10 +18,14 @@ class RulesCtlGateTests(unittest.TestCase):
         result = rulesctl.build_gate()
 
         self.assertEqual(result["status"], "pass", result)
-        checked_paths = {item["path"] for item in result["checks"]}
+        checked_paths = {item["path"] for item in result["checks"] if "path" in item}
         self.assertIn("scripts/rulesctl.py", checked_paths)
         self.assertIn("rules/manifest.json", checked_paths)
         self.assertNotIn("scripts/run-governed-task.py", checked_paths)
+        self.assertIn(
+            "global_rule_assembly",
+            {item["check"] for item in result["checks"]},
+        )
 
     def test_product_boundary_rejects_runtime_gemini_and_ui_paths(self) -> None:
         findings = rulesctl.product_boundary_findings(

@@ -4,7 +4,7 @@
 - [x] Implement explicit default-branch and workspace audit modes.
 - [x] Implement structured multi-state status output.
 - [x] Add the `rulesctl` entrypoint and minimal fixed-order verifier.
-- [ ] Build global Codex/Claude rules from canonical common/platform sources.
+- [x] Build global Codex/Claude rules from canonical common/platform sources.
 - [ ] Reduce CI to rule-family, sync, target contract, and tests.
 - [ ] Rewrite project contract, README, architecture, runbook, and evidence.
 - [ ] Remove runtime, UI, database, Gemini, and obsolete evidence surfaces.

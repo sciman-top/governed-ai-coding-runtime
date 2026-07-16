@@ -12,8 +12,10 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
 DEFAULT_MANIFEST = ROOT / "rules" / "manifest.json"
 DEFAULT_COORDINATION = ROOT / "rules" / "target-project-rule-coordination.json"
+DEFAULT_SOURCE_MANIFEST = ROOT / "rules" / "global" / "source-manifest.json"
 RULE_SCRIPTS = (
     SCRIPTS / "rulesctl.py",
+    SCRIPTS / "build-global-rules.py",
     SCRIPTS / "verify-agent-rule-family.py",
     SCRIPTS / "verify-target-project-rules.py",
     SCRIPTS / "sync-agent-rules.py",
@@ -21,6 +23,7 @@ RULE_SCRIPTS = (
 )
 RULE_TEST_MODULES = (
     "tests.runtime.test_agent_rule_sync",
+    "tests.runtime.test_build_global_rules",
     "tests.runtime.test_rulesctl",
     "tests.runtime.test_rulesctl_gates",
     "tests.runtime.test_target_rule_ci",
@@ -121,7 +124,7 @@ def build_gate() -> dict[str, Any]:
                     "path": str(path.relative_to(ROOT)).replace("\\", "/"),
                 }
             )
-    for path in (DEFAULT_MANIFEST, DEFAULT_COORDINATION):
+    for path in (DEFAULT_MANIFEST, DEFAULT_COORDINATION, DEFAULT_SOURCE_MANIFEST):
         try:
             payload = json.loads(path.read_text(encoding="utf-8"))
             if not isinstance(payload, dict):
@@ -143,6 +146,12 @@ def build_gate() -> dict[str, Any]:
                     "path": str(path.relative_to(ROOT)).replace("\\", "/"),
                 }
             )
+    assembly = _run_json_script(
+        "build-global-rules.py",
+        ["--manifest-path", str(DEFAULT_SOURCE_MANIFEST), "--check"],
+    )
+    assembly["check"] = "global_rule_assembly"
+    checks.append(assembly)
     return _gate_result("build", checks)
 
 
@@ -296,10 +305,23 @@ def build_status(
     workspace_root: Path | None,
     default_ref: str,
 ) -> dict[str, Any]:
-    source = _run_json_script(
+    assembly = _run_json_script(
+        "build-global-rules.py",
+        ["--manifest-path", str(DEFAULT_SOURCE_MANIFEST), "--check"],
+    )
+    family = _run_json_script(
         "verify-agent-rule-family.py",
         ["--manifest-path", str(manifest_path)],
     )
+    source = {
+        "status": (
+            "pass"
+            if assembly.get("status") == "pass" and family.get("status") == "pass"
+            else "fail"
+        ),
+        "assembly": assembly,
+        "family": family,
+    }
     projection = _run_json_script(
         "sync-agent-rules.py",
         ["--manifest-path", str(manifest_path), "--scope", "All", "--fail-on-change"],
@@ -432,6 +454,13 @@ def _audit_command(args: argparse.Namespace) -> int:
 
 
 def _sync_command(args: argparse.Namespace) -> int:
+    assembly = _run_json_script(
+        "build-global-rules.py",
+        ["--manifest-path", str(DEFAULT_SOURCE_MANIFEST), "--check"],
+    )
+    if assembly.get("status") != "pass":
+        assembly["reason"] = "canonical source drift must be resolved before projection"
+        return _emit(assembly)
     arguments = [
         "--manifest-path",
         args.manifest_path,
