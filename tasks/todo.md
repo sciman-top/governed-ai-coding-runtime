@@ -3,7 +3,7 @@
 - [x] Archive the runtime-era tree and create the v2 branch.
 - [x] Implement explicit default-branch and workspace audit modes.
 - [x] Implement structured multi-state status output.
-- [ ] Add the `rulesctl` entrypoint and minimal fixed-order verifier.
+- [x] Add the `rulesctl` entrypoint and minimal fixed-order verifier.
 - [ ] Build global Codex/Claude rules from canonical common/platform sources.
 - [ ] Reduce CI to rule-family, sync, target contract, and tests.
 - [ ] Rewrite project contract, README, architecture, runbook, and evidence.

@@ -48,13 +48,13 @@ Git archive boundary
 
 ### Checkpoint: State Model
 
-- [ ] Focused unit tests pass.
-- [ ] Current `origin/main` refs pass independently of local workspace drift.
-- [ ] Current local workspace drift remains visible and non-destructive.
+- [x] Focused unit tests pass.
+- [x] Current `origin/main` refs pass independently of local workspace drift.
+- [x] Current local workspace drift remains visible and non-destructive.
 
 ### Phase 2: Minimal Product Surface
 
-- [ ] Task 4: Add a single `rulesctl` entrypoint and minimal fixed-order gates.
+- [x] Task 4: Add a single `rulesctl` entrypoint and minimal fixed-order gates.
 - [ ] Task 5: Introduce canonical common/platform rule fragments with a
   deterministic build/check path for the two global outputs.
 - [ ] Task 6: Replace broad Windows CI and operator entrypoints with rule-only
