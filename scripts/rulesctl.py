@@ -163,11 +163,23 @@ def test_gate() -> dict[str, Any]:
     return _gate_result("test", [check])
 
 
-def _skipped_check(check: str, reason: str) -> dict[str, Any]:
+def _skipped_check(
+    check: str,
+    reason: str,
+    *,
+    alternative_verification: str,
+    evidence_link: str,
+    recovery_condition: str,
+) -> dict[str, Any]:
     return {
         "status": "skipped",
         "check": check,
+        "na_kind": "platform_na",
         "reason": reason,
+        "alternative_verification": alternative_verification,
+        "evidence_link": evidence_link,
+        "expires_at": "2026-10-15",
+        "recovery_condition": recovery_condition,
     }
 
 
@@ -193,6 +205,13 @@ def contract_gate(
             _skipped_check(
                 "global_projection",
                 "explicitly skipped for an isolated CI home; sync behavior remains unit-tested",
+                alternative_verification=(
+                    "python -m unittest tests.runtime.test_agent_rule_sync"
+                ),
+                evidence_link=".github/workflows/verify.yml",
+                recovery_condition=(
+                    "run projection check when the job receives an authorized user-profile target"
+                ),
             )
         )
     else:
@@ -214,6 +233,13 @@ def contract_gate(
             _skipped_check(
                 "target_default_branches",
                 "aggregate agent-rule-coordination CI owns cross-repository audits",
+                alternative_verification=(
+                    "python scripts/rulesctl.py audit --state default"
+                ),
+                evidence_link=".github/workflows/agent-rule-coordination.yml",
+                recovery_condition=(
+                    "remove this N/A when the current job checks out every registered target"
+                ),
             )
         )
     else:

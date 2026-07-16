@@ -1,4 +1,4 @@
-name: Verify
+name: Verify Agent Rule Governance
 
 on:
   pull_request:
@@ -6,93 +6,28 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 concurrency:
-  group: verify-${{ github.workflow }}-${{ github.ref }}
+  group: rule-governance-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  repo-integrity:
-    name: Repository integrity
-    runs-on: windows-latest
-    timeout-minutes: 30
+  verify:
+    name: Build, test, contract, hotspot
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - name: Enable long paths
-        shell: pwsh
-        run: git config --global core.longpaths true
-
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
-          python-version: "3.x"
+          python-version: "3.11"
 
-      - name: Install repo hooks
-        shell: pwsh
-        run: ./scripts/install-repo-hooks.ps1
-
-      - name: Prepare ephemeral managed rule copies
-        shell: pwsh
-        run: |
-          python scripts/verify-agent-rule-family.py
-          if ($LASTEXITCODE -ne 0) { throw "Agent rule family audit failed" }
-          $dryRun = (& python scripts/sync-agent-rules.py --scope All | Out-String) | ConvertFrom-Json
-          if ($LASTEXITCODE -ne 0) { throw "Agent rule sync dry-run failed" }
-          if ([int]$dryRun.changed_count -gt 0) {
-            $apply = (& python scripts/sync-agent-rules.py --scope All --apply | Out-String) | ConvertFrom-Json
-            if ($LASTEXITCODE -ne 0) { throw "Agent rule sync apply failed" }
-            $missingBackups = @($apply.results | Where-Object { $_.status -eq "updated" -and [string]::IsNullOrWhiteSpace([string]$_.backup_path) })
-            if ($missingBackups.Count -gt 0) { throw "Updated agent rule copies are missing backups" }
-          }
-          $zeroDrift = (& python scripts/sync-agent-rules.py --scope All --fail-on-change | Out-String) | ConvertFrom-Json
-          if ($LASTEXITCODE -ne 0 -or $zeroDrift.status -ne "pass" -or [int]$zeroDrift.changed_count -ne 0) { throw "Agent rule copies are not at zero drift" }
-
-      - name: Run repository verification
-        shell: pwsh
-        env:
-          GACR_HOST_FEEDBACK_FIXTURE: tests/fixtures/host-feedback/clean-windows-runner.json
-        run: ./scripts/verify-repo.ps1 -Check All
-
-  release-preflight:
-    name: Release preflight
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Enable long paths
-        shell: pwsh
-        run: git config --global core.longpaths true
-
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
-      - name: Install repo hooks
-        shell: pwsh
-        run: ./scripts/install-repo-hooks.ps1
-
-      - name: Prepare ephemeral managed rule copies
-        shell: pwsh
-        run: |
-          python scripts/verify-agent-rule-family.py
-          if ($LASTEXITCODE -ne 0) { throw "Agent rule family audit failed" }
-          $dryRun = (& python scripts/sync-agent-rules.py --scope All | Out-String) | ConvertFrom-Json
-          if ($LASTEXITCODE -ne 0) { throw "Agent rule sync dry-run failed" }
-          if ([int]$dryRun.changed_count -gt 0) {
-            $apply = (& python scripts/sync-agent-rules.py --scope All --apply | Out-String) | ConvertFrom-Json
-            if ($LASTEXITCODE -ne 0) { throw "Agent rule sync apply failed" }
-            $missingBackups = @($apply.results | Where-Object { $_.status -eq "updated" -and [string]::IsNullOrWhiteSpace([string]$_.backup_path) })
-            if ($missingBackups.Count -gt 0) { throw "Updated agent rule copies are missing backups" }
-          }
-          $zeroDrift = (& python scripts/sync-agent-rules.py --scope All --fail-on-change | Out-String) | ConvertFrom-Json
-          if ($LASTEXITCODE -ne 0 -or $zeroDrift.status -ne "pass" -or [int]$zeroDrift.changed_count -ne 0) { throw "Agent rule copies are not at zero drift" }
-
-      - name: Run release preflight
-        shell: pwsh
-        env:
-          GACR_HOST_FEEDBACK_FIXTURE: tests/fixtures/host-feedback/clean-windows-runner.json
-        run: ./scripts/governance/preflight.ps1 -DisableAutoCommit
+      - name: Run fixed-order rule gates
+        run: python scripts/rulesctl.py verify --skip-projection --skip-targets

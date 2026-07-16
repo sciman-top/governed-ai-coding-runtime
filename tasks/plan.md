@@ -57,7 +57,7 @@ Git archive boundary
 - [x] Task 4: Add a single `rulesctl` entrypoint and minimal fixed-order gates.
 - [x] Task 5: Introduce canonical common/platform rule fragments with a
   deterministic build/check path for the two global outputs.
-- [ ] Task 6: Replace broad Windows CI and operator entrypoints with rule-only
+- [x] Task 6: Replace broad Windows CI and operator entrypoints with rule-only
   verification and coordination workflows.
 
 ### Checkpoint: Rule Toolchain

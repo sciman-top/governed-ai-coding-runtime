@@ -13,6 +13,7 @@ COORDINATION = ROOT / "rules" / "target-project-rule-coordination.json"
 TEMPLATE = ROOT / "rules" / "templates" / "github" / "agent-rule-contract.yml"
 MATRIX_SCRIPT = ROOT / "scripts" / "export-target-rule-ci-matrix.py"
 AGGREGATE_WORKFLOW = ROOT / ".github" / "workflows" / "agent-rule-coordination.yml"
+VERIFY_WORKFLOW = ROOT / ".github" / "workflows" / "verify.yml"
 CHECKOUT_V4_SHA = "34e114876b0b11c390a56381ad16ebd13914f8d5"
 
 
@@ -142,6 +143,15 @@ class TargetRuleCiTests(unittest.TestCase):
         self.assertIn(expected, template)
         self.assertEqual(aggregate.count(expected), 3)
         self.assertNotIn("actions/checkout@v4", template + aggregate)
+
+    def test_control_repo_ci_uses_only_rule_governance_gates(self) -> None:
+        workflow = VERIFY_WORKFLOW.read_text(encoding="utf-8")
+
+        self.assertIn("python scripts/rulesctl.py verify --skip-projection --skip-targets", workflow)
+        self.assertIn("runs-on: ubuntu-latest", workflow)
+        self.assertNotIn("verify-repo.ps1", workflow)
+        self.assertNotIn("preflight.ps1", workflow)
+        self.assertNotIn("runtime", workflow.lower())
 
 
 if __name__ == "__main__":

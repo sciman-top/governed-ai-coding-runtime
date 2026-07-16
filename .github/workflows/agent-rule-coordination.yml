@@ -4,11 +4,22 @@ on:
   pull_request:
     paths:
       - .github/workflows/agent-rule-coordination.yml
+      - .github/workflows/verify.yml
+      - rules/global/**
+      - rules/manifest.json
       - rules/target-project-rule-coordination.json
       - rules/templates/github/agent-rule-contract.yml
       - schemas/jsonschema/target-project-rule-coordination.schema.json
       - scripts/export-target-rule-ci-matrix.py
+      - scripts/build-global-rules.py
+      - scripts/rulesctl.py
+      - scripts/sync-agent-rules.py
+      - scripts/verify-agent-rule-family.py
       - scripts/verify-target-project-rules.py
+      - tests/runtime/test_agent_rule_sync.py
+      - tests/runtime/test_build_global_rules.py
+      - tests/runtime/test_rulesctl.py
+      - tests/runtime/test_rulesctl_gates.py
       - tests/runtime/test_target_rule_ci.py
       - tests/runtime/test_verify_target_project_rules.py
   push:
@@ -16,11 +27,22 @@ on:
       - main
     paths:
       - .github/workflows/agent-rule-coordination.yml
+      - .github/workflows/verify.yml
+      - rules/global/**
+      - rules/manifest.json
       - rules/target-project-rule-coordination.json
       - rules/templates/github/agent-rule-contract.yml
       - schemas/jsonschema/target-project-rule-coordination.schema.json
       - scripts/export-target-rule-ci-matrix.py
+      - scripts/build-global-rules.py
+      - scripts/rulesctl.py
+      - scripts/sync-agent-rules.py
+      - scripts/verify-agent-rule-family.py
       - scripts/verify-target-project-rules.py
+      - tests/runtime/test_agent_rule_sync.py
+      - tests/runtime/test_build_global_rules.py
+      - tests/runtime/test_rulesctl.py
+      - tests/runtime/test_rulesctl_gates.py
       - tests/runtime/test_target_rule_ci.py
       - tests/runtime/test_verify_target_project_rules.py
   workflow_dispatch:

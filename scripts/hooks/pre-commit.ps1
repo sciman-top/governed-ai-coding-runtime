@@ -5,32 +5,26 @@ $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 Push-Location $RepoRoot
 
 try {
-  $initializer = Join-Path $RepoRoot "scripts\Initialize-WindowsProcessEnvironment.ps1"
-  if (Test-Path -LiteralPath $initializer) {
-    . $initializer
-    if (Get-Command Initialize-WindowsProcessEnvironment -ErrorAction SilentlyContinue) {
-      Initialize-WindowsProcessEnvironment | Out-Null
-    }
-  }
-
   $python = Get-Command python -ErrorAction SilentlyContinue
   if (-not $python) {
     throw "Python command not found on PATH"
   }
 
-  Write-Host "pre-commit: Contract gate"
-  & (Join-Path $RepoRoot "scripts\verify-repo.ps1") -Check Contract
-  if ($LASTEXITCODE -ne 0) {
-    throw "Contract gate failed"
+  foreach ($gate in @("build", "test")) {
+    Write-Host "pre-commit: rulesctl $gate"
+    & $python.Source (Join-Path $RepoRoot "scripts\rulesctl.py") $gate
+    if ($LASTEXITCODE -ne 0) {
+      throw "rulesctl $gate failed"
+    }
   }
 
-  Write-Host "pre-commit: Codex executable reference guard"
-  & $python.Source -m unittest tests.runtime.test_codex_executable_reference_guard
+  Write-Host "pre-commit: rulesctl contract (repo-local quick feedback)"
+  & $python.Source (Join-Path $RepoRoot "scripts\rulesctl.py") contract --skip-targets
   if ($LASTEXITCODE -ne 0) {
-    throw "Codex executable reference guard failed"
+    throw "rulesctl contract failed"
   }
 
-  Write-Host "pre-commit: target repo rollout hook checks passed"
+  Write-Host "pre-commit: quick feedback passed; full delivery still requires rulesctl verify"
 }
 finally {
   Pop-Location
