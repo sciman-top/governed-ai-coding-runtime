@@ -232,7 +232,7 @@ def contract_gate(
         checks.append(
             _skipped_check(
                 "target_default_branches",
-                "aggregate agent-rule-coordination CI owns cross-repository audits",
+                "cross-repository audit is a separate mutable-state gate",
                 alternative_verification=(
                     "python scripts/rulesctl.py audit --state default"
                 ),
@@ -518,7 +518,20 @@ def _add_contract_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--default-ref", default="origin/main")
     parser.add_argument("--user-profile", default=None)
     parser.add_argument("--skip-projection", action="store_true")
-    parser.add_argument("--skip-targets", action="store_true")
+    target_mode = parser.add_mutually_exclusive_group()
+    target_mode.add_argument(
+        "--include-targets",
+        dest="skip_targets",
+        action="store_false",
+        help="Include the mutable nine-target default-branch audit.",
+    )
+    target_mode.add_argument(
+        "--skip-targets",
+        dest="skip_targets",
+        action="store_true",
+        help="Keep cross-repository audit separate (the default).",
+    )
+    parser.set_defaults(skip_targets=True)
 
 
 def build_parser() -> argparse.ArgumentParser:

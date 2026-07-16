@@ -88,6 +88,9 @@ class RulesCtlGateTests(unittest.TestCase):
             parsed = parser.parse_args([command])
             self.assertEqual(parsed.command, command)
 
+        self.assertTrue(parser.parse_args(["verify"]).skip_targets)
+        self.assertFalse(parser.parse_args(["verify", "--include-targets"]).skip_targets)
+
     def test_json_adapter_marks_successful_domain_payload_as_pass(self) -> None:
         with mock.patch.object(
             rulesctl,
