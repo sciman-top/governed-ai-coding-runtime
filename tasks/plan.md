@@ -43,7 +43,7 @@ Git archive boundary
 - [x] Task 1: Create the archive tag and v2 feature branch.
 - [x] Task 2: Add a git-ref audit mode and tests so published default branches
   can be verified without moving dirty or divergent target worktrees.
-- [ ] Task 3: Add a machine-readable status command that reports source,
+- [x] Task 3: Add a machine-readable status command that reports source,
   global projection, target default branch, and local workspace separately.
 
 ### Checkpoint: State Model
